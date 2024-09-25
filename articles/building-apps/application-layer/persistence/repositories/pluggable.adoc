@@ -1,0 +1,305 @@
+---
+title: Pluggable Persistence
+description: How to support multiple persistence solutions with a single SPI.
+order: 40
+---
+
+= Pluggable Persistence
+
+Most business applications only need a single persistence solution that remains for the lifetime of the application. In these cases, there is no point in hiding the persistence solution below a large abstraction layer. However, there are applications where you have to do this. For instance, some customers may want to use your application with a local database, while others want to use it with a remote web service.
+
+Persistence solutions tend to leak through their abstractions. This is because they are designed for different use cases. To get the most out of a persistence solution, you can't abstract away the features that makes it unique. These features could even have been the reason you chose it in the first place.
+
+When you have to support multiple persistence solutions, you have to design an abstraction layer that can be implemented for them all. This means you have to make compromises, and may not be able to use any of the persistence solutions to its fullest. It helps if you know what the persistence solutions are when you start designing the abstraction layer.
+
+In practice, the abstraction layer is a _Service Provider Interface_ (SPI) that your application uses to communicate with the persistence solution. Then, you implement this SPI for each persistence solution. These implementations are typically stored in different Maven modules. During the final build, you select which solution you want to use.
+
+You can read more about SPI:s on the <<{articles}/building-apps/architecture/components#service-provider-interfaces,System Components>> documentation page.
+
+You can read more about pluggable implementations on the <<{articles}/building-apps/project-structure/multi-module#supporting-pluggable-implementations,Multi-module Projects>> documentation page.
+
+[NOTE]
+This page describes how to design entities and repositories as an SPI for other modules to implement. It assumes you have read the <<index#,Repositories>> documentation page.
+
+== Entities
+
+You have three options when it comes to designing entities for your persistence SPI: POJO:s, records, or interfaces.
+
+=== POJO:s
+
+POJO:s, or Plain Old Java Objects, are just that: ordinary Java objects. They may be mutable or immutable. They may contain business logic, or only act as data structures. They have to expose all the data that a repository needs to persist them. The easiest way of doing this is to expose the data through public getter methods, for example like this:
+
+[source,java]
+----
+public class Product {
+    private ProductId productId;
+    private String name;
+    private String description;
+
+    public ProductId getProductId() {
+        return productId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+----
+
+The repository must also be able to re-create the POJO from the persisted data. How you do this depends on how big the POJO is. For small POJO:s, you can use an initializing constructor, for example like this:
+
+[source,java]
+----
+public class Product {
+    private ProductId productId;
+    private String name;
+    private String description;
+
+    public Product(ProductId productId, String name, String description) {
+        this.productId = productId;
+        this.name = name;
+        this.description = description;
+    }
+    ...
+}
+----
+
+For bigger POJO:s, setter methods may be a more convenient choice, for example like this:
+
+[source,java]
+----
+public class Product {
+    private ProductId productId;
+    private String name;
+    private String description;
+
+    public void setProductId(ProductId productId) {
+        this.productId = productId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    ...
+}
+----
+
+In more advanced cases, you can use sealed classes to represent entity states, for example like this:
+
+[source,java]
+----
+public abstract sealed class Order {
+
+    private OrderId orderId;
+
+    public OrderId getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(OrderId orderId) {
+        this.orderId = orderId;
+    }
+    
+    public static final class DraftOrder extends Order {
+        ...
+    }
+    
+    public static final class PendingOrder extends Order {
+        ...
+    }
+    
+    public static final class CancelledOrder extends Order {
+        ...
+    }
+    
+    public static final class CompletedOrder extends Order {
+        ...
+    }
+}
+----
+
+Regardless of how you implement your POJO:s, pay close attention to validation. You don't want to end up with inconsistent data in your database.
+
+// TODO Add links to validation.
+
+=== Records
+
+Java records are immutable, initialized through the constructor, and expose all their fields through public getter methods. This makes your SPI simpler, as there are less moving parts. It also makes your entities more like Data Transfer Objects (DTO), than entities. The `Project` POJO from the earlier example would look like this as a record:
+
+[source,java]
+----
+public record Project(ProductId productId, String name, String description) {
+    public Project {
+        // Validate your data here
+    }
+}
+----
+
+In more advanced cases, you can use sealed interfaces to represent entity states, for example like this:
+
+[source,java]
+----
+public sealed interface Order {
+
+    OrderId orderId();
+
+    record DraftOrder(OrderId orderId, ...) implements Order {
+    }
+
+    record PendingOrder(OrderId orderId, ...) implements Order {
+    }
+
+    record CancelledOrder(OrderId orderId, ...) implements Order {
+    }
+
+    record CompletedOrder(OrderId orderId, ...) implements Order {
+    }
+}
+----
+
+Records are useful if you want to use the latest Java features to implement your business logic in a more functional, rather than object oriented, way.
+
+// TODO Should write an article about how to do this.
+
+=== Interfaces
+
+If you want to give the repository implementation full control over your entities, you can define them as interfaces. For example, a `Product` entity interface could look like this:
+
+[source,java]
+----
+public interface Product {
+    Long getProductId();
+    void setProductId(Long productId);
+
+    String getName();
+    void setName(String name);
+
+    String getDescription();
+    void setDescription(String description);
+}
+----
+
+If one of the persistence technologies is <<jpa#,JPA>>, its implementation could look like this:
+
+[source,java]
+----
+@Entity
+@Table(name = "product")
+public class ProductEntity implements Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_id")
+    private Long productId;
+
+    @Column(name = "product_name")
+    private String name;
+
+    @Column(name = "product_description")
+    private String description;
+
+
+    @Override
+    public Long getProductId() {
+        return productId;
+    }
+
+    @Override
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+    ...
+}
+----
+
+When you are using entity interfaces, you have to remember to create factory methods so that clients can create new entity instances. You could put the factory methods into your repository interfaces, like this:
+
+[source,java]
+----
+public interface Repository<T, ID> {
+    T createEmptyEntity();
+    ...
+}
+
+...
+var product = productRepository.createEmptyEntity();
+product.setName("Foo");
+product.setDescription("Bar");
+...
+----
+
+You could also create dedicated factory interfaces, like this:
+
+[source,java]
+----
+public interface ProductFactory {
+    Product createEmptyProduct();
+}
+
+...
+var product = productFactory.createEmptyProduct();
+product.setName("Foo");
+product.setDescription("Bar");
+...
+----
+
+The factory implementation would have to be a Spring managed bean, so that it can be injected into your services, or wherever it is needed.
+
+==== Read-Only Entity Interfaces
+
+If you declare entity interfaces that are read-only, leave out the `get` prefix from the getter methods. This makes them much easier to combine with Java records. Consider the following interface:
+
+[source,java]
+----
+public interface Product {
+    Long productId();
+    String name();
+    String description();
+}
+----
+
+You can implement it using a Java record like this:
+
+[source,java]
+----
+public record ProductRecord(Long productId, String name, String description) implements Product {}
+----
+
+== Repositories
+
+The repositories are themselves a part of your SPI. Therefore, they are either interfaces, or abstract classes.
+
+Persistence oriented repositories are easier to implement than collection oriented ones. Unless you know, that your persistence solutions support collection oriented repositories, you should go for a persistence oriented design. Here is an example of a persistence oriented repository:
+
+[source,java]
+----
+public interface Repository<ID, E> {
+    Optional<E> findById(ID id);
+    E save(E entity);
+    void delete(ID id);
+}
+----
+
+Declare repository interfaces for each entity you want to persist, for example like this:
+
+[source,java]
+----
+public interface ProductRepositiory extends Repository<ProductId, Product> {    
+}
+----
+
+Each SPI-implementation module would then implement these interfaces, and make them available as Spring managed beans.
+
+When you design your repositories, you also have to think about transactions. The easiest solution is to put the application's transaction boundary at the repositories. In other words, every repository operation runs inside its own transaction. This moves the responsibility of managing transactions to the SPI-implementation modules.
+
+Things get more difficult if you want to manage the transactions at a higher level. One way of doing this is to have your SPI-modules provide their own implementations of Spring's `PlatformTransactionManager`. However, how to do this is out of the scope of this documentation page.
+
+// TODO Write a deep dive about how to do this.
