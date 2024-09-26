@@ -3,7 +3,7 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { addDays, formatISO, isAfter, isBefore, parse } from 'date-fns';
 import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
-import { DatePicker, type DatePickerElement } from '@vaadin/react-components';
+import { DatePicker, type DatePickerElement } from '@vaadin/react-components/DatePicker.js';
 
 function Example() {
   useSignals(); // hidden-source-line

@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.datetimepicker;
 
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker.DateTimePickerI18n;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
@@ -14,24 +15,18 @@ public class DateTimePickerValidation extends Div {
     public DateTimePickerValidation() {
         // tag::snippet[]
         DateTimePicker dateTimePicker = new DateTimePicker();
+        dateTimePicker.setRequiredIndicatorVisible(true);
         dateTimePicker.setLabel("Appointment date and time");
         dateTimePicker.setHelperText("Must be within 60 days from today");
-        dateTimePicker.setAutoOpen(true);
         dateTimePicker.setMin(LocalDateTime.now());
         dateTimePicker.setMax(LocalDateTime.now().plusDays(60));
-        dateTimePicker.setValue(LocalDateTime.now().plusDays(7));
-        dateTimePicker.addValueChangeListener(event -> {
-            LocalDateTime value = event.getValue();
-            String errorMessage = null;
-            if (value != null) {
-                if (value.compareTo(dateTimePicker.getMin()) < 0) {
-                    errorMessage = "Too early, choose another date and time";
-                } else if (value.compareTo(dateTimePicker.getMax()) > 0) {
-                    errorMessage = "Too late, choose another date and time";
-                }
-            }
-            dateTimePicker.setErrorMessage(errorMessage);
-        });
+
+        dateTimePicker.setI18n(new DateTimePickerI18n()
+            .setRequiredErrorMessage("Field is required")
+            .setBadInputErrorMessage("Invalid date or time format")
+            .setMinErrorMessage("Too early, choose another date and time")
+            .setMaxErrorMessage("Too late, choose another date and time"));
+
         add(dateTimePicker);
         // end::snippet[]
     }
