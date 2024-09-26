@@ -10,7 +10,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class GridEmptyState extends Div {
 
     public GridEmptyState() {
-        
+
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");

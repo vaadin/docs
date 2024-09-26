@@ -1,8 +1,8 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { isAuthorizedViewRoute, routes } from './routes';
 import { Router } from '@vaadin/router';
+import { isAuthorizedViewRoute, routes } from './routes';
 
 export const router = new Router(document.querySelector('#outlet'));
 

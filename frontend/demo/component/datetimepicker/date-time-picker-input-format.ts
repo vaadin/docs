@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
 import '@vaadin/date-time-picker';
-import { applyTheme } from 'Frontend/generated/theme';
-import type { DateTimePicker } from '@vaadin/date-time-picker';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
+import { html, LitElement } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import type { DatePickerDate } from '@vaadin/date-picker';
+import type { DateTimePicker } from '@vaadin/date-time-picker';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-time-picker-input-format')
 export class Example extends LitElement {

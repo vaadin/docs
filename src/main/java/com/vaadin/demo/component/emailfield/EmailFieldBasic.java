@@ -25,7 +25,6 @@ public class EmailFieldBasic extends HorizontalLayout {
         invalidEmailField.setValue("This is not an email");
         invalidEmailField.setErrorMessage("Enter a valid email address");
         invalidEmailField.setClearButtonVisible(true);
-        invalidEmailField.setInvalid(true);
 
         add(validEmailField, invalidEmailField);
         // end::snippet[]

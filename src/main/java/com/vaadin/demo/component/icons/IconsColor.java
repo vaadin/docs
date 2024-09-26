@@ -11,25 +11,25 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("icons-color")
 public class IconsColor extends Div {
 
-  public IconsColor() {
-    HorizontalLayout layout = new HorizontalLayout();
-    layout.setSpacing(true);
-    layout.addClassName("items-center");
+    public IconsColor() {
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setSpacing(true);
+        layout.addClassName("items-center");
 
-    // tag::snippet[]
-    StreamResource codeBranch = new StreamResource("svg-branch.svg",
-        () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
-    SvgIcon svgIcon = new SvgIcon(codeBranch);
-    svgIcon.setColor("red");
+        // tag::snippet[]
+        StreamResource codeBranch = new StreamResource("svg-branch.svg",
+                () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
+        SvgIcon svgIcon = new SvgIcon(codeBranch);
+        svgIcon.setColor("red");
 
-    FontIcon fontIcon = new FontIcon("fa", "fa-user");
-    fontIcon.setColor("red");
+        FontIcon fontIcon = new FontIcon("fa", "fa-user");
+        fontIcon.setColor("red");
 
-    layout.add(svgIcon, fontIcon);
-    // end::snippet[]
-    add(layout);
-  }
+        layout.add(svgIcon, fontIcon);
+        // end::snippet[]
+        add(layout);
+    }
 
-  public static class Exporter extends DemoExporter<IconsColor> { // hidden-source-line
-  }
+    public static class Exporter extends DemoExporter<IconsColor> { // hidden-source-line
+    } // hidden-source-line
 }

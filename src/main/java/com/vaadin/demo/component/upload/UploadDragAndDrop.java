@@ -28,7 +28,8 @@ public class UploadDragAndDrop extends Div {
         dropEnabledUpload.setId("upload-drop-enabled");
         dropEnabledLabel.setFor(dropEnabledUpload.getId().get());
 
-        NativeLabel dropDisabledLabel = new NativeLabel("Drag and drop disabled");
+        NativeLabel dropDisabledLabel = new NativeLabel(
+                "Drag and drop disabled");
         dropDisabledLabel.getStyle().set("font-weight", "600");
         dropDisabledUpload.setId("upload-drop-disabled");
         dropDisabledLabel.setFor(dropDisabledUpload.getId().get());

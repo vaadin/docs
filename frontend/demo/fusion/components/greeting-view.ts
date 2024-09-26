@@ -1,8 +1,7 @@
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-
 import '@vaadin/checkbox';
 import '@vaadin/combo-box';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 
 @customElement('greeting-view')

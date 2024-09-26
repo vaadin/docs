@@ -22,6 +22,7 @@ public class RadioButtonGroupBasicFeatures extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<RadioButtonGroupBasicFeatures> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<RadioButtonGroupBasicFeatures> { // hidden-source-line
     } // hidden-source-line
 }

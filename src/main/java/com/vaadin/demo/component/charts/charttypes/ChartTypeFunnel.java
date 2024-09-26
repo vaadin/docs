@@ -40,7 +40,6 @@ public class ChartTypeFunnel extends Div {
         dataSeries.add(new DataSeriesItem("Invoice sent", 976));
         dataSeries.add(new DataSeriesItem("Finalized", 846));
 
-
         dataSeries.setPlotOptions(options);
         conf.addSeries(dataSeries);
         // end::snippet[]

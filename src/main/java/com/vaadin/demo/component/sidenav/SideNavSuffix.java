@@ -1,4 +1,5 @@
 package com.vaadin.demo.component.sidenav;
+
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -17,19 +18,24 @@ public class SideNavSuffix extends Div {
         // tag::snippet[]
         SideNav nav = new SideNav();
 
-        SideNavItem inboxLink = new SideNavItem("Inbox", InboxView.class, VaadinIcon.ENVELOPE.create());
+        SideNavItem inboxLink = new SideNavItem("Inbox", InboxView.class,
+                VaadinIcon.ENVELOPE.create());
         Span inboxCounter = new Span("12");
         inboxCounter.getElement().getThemeList().add("badge contrast pill");
-        inboxCounter.getElement().setAttribute("aria-label", "12 unread messages");
+        inboxCounter.getElement().setAttribute("aria-label",
+                "12 unread messages");
         inboxLink.setSuffixComponent(inboxCounter);
 
-        SideNavItem calendarLink = new SideNavItem("Calendar", CalendarView.class, VaadinIcon.CALENDAR.create());
+        SideNavItem calendarLink = new SideNavItem("Calendar",
+                CalendarView.class, VaadinIcon.CALENDAR.create());
         Icon calendarNotification = VaadinIcon.BELL.create();
-        calendarNotification.getElement().getThemeList().add("badge error pill");
+        calendarNotification.getElement().getThemeList()
+                .add("badge error pill");
         calendarNotification.getStyle().set("padding", "var(--lumo-space-xs");
-        calendarNotification.getElement().setAttribute("aria-label", "Upcoming appointment");
+        calendarNotification.getElement().setAttribute("aria-label",
+                "Upcoming appointment");
         calendarLink.setSuffixComponent(calendarNotification);
-        
+
         nav.addItem(inboxLink, calendarLink);
         // end::snippet[]
 

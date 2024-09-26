@@ -1,17 +1,17 @@
-import { getPeople } from 'Frontend/demo/domain/DataService'; // hidden-source-line
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/combo-box';
+import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
-import type { Button } from '@vaadin/button';
-import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
+import type { Button } from '@vaadin/button';
+import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
+import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/generated/theme';
 
 type Profession = string;

@@ -25,6 +25,7 @@ public class PasswordFieldBasicFeatures extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<PasswordFieldBasicFeatures> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<PasswordFieldBasicFeatures> { // hidden-source-line
     } // hidden-source-line
 }

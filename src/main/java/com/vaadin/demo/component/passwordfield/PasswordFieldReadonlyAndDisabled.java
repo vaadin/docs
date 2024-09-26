@@ -24,6 +24,7 @@ public class PasswordFieldReadonlyAndDisabled extends HorizontalLayout {
         add(readonlyField, disabledField);
     }
 
-    public static class Exporter extends DemoExporter<PasswordFieldReadonlyAndDisabled> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<PasswordFieldReadonlyAndDisabled> { // hidden-source-line
     } // hidden-source-line
 }

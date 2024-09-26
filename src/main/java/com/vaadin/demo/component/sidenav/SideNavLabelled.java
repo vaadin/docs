@@ -1,4 +1,5 @@
 package com.vaadin.demo.component.sidenav;
+
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -21,15 +22,20 @@ public class SideNavLabelled extends Div {
         // tag::snippet[]
         SideNav messagesNav = new SideNav();
         messagesNav.setLabel("Messages");
-        messagesNav.addItem(new SideNavItem("Inbox", InboxView.class, VaadinIcon.INBOX.create()));
-        messagesNav.addItem(new SideNavItem("Sent", SentView.class, VaadinIcon.PAPERPLANE.create()));
-        messagesNav.addItem(new SideNavItem("Trash", TrashView.class, VaadinIcon.TRASH.create()));
+        messagesNav.addItem(new SideNavItem("Inbox", InboxView.class,
+                VaadinIcon.INBOX.create()));
+        messagesNav.addItem(new SideNavItem("Sent", SentView.class,
+                VaadinIcon.PAPERPLANE.create()));
+        messagesNav.addItem(new SideNavItem("Trash", TrashView.class,
+                VaadinIcon.TRASH.create()));
 
         SideNav adminNav = new SideNav();
         adminNav.setLabel("Admin");
         adminNav.setCollapsible(true);
-        adminNav.addItem(new SideNavItem("Users", UsersView.class, VaadinIcon.GROUP.create()));
-        adminNav.addItem(new SideNavItem("Permissions", PermissionsView.class, VaadinIcon.KEY.create()));
+        adminNav.addItem(new SideNavItem("Users", UsersView.class,
+                VaadinIcon.GROUP.create()));
+        adminNav.addItem(new SideNavItem("Permissions", PermissionsView.class,
+                VaadinIcon.KEY.create()));
 
         // end::snippet[]
 
@@ -40,7 +46,8 @@ public class SideNavLabelled extends Div {
         adminNav.setWidthFull();
         add(navWrapper);
 
-        messagesNav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+        messagesNav.getElement() // hidden-source-line
+                .executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
         adminNav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         this.addClassName("side-nav-sample");

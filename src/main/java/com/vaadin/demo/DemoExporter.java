@@ -36,7 +36,10 @@ public abstract class DemoExporter<T extends Component>
     @Override
     protected void configureInstance(final WebComponent<T> webComponent,
             final T demo) {
-        int interval = (int) Duration.ofSeconds(VaadinSession.getCurrent().getSession().getMaxInactiveInterval() - 10 * 60).toMillis();
+        int interval = (int) Duration.ofSeconds(
+                VaadinSession.getCurrent().getSession().getMaxInactiveInterval()
+                        - 10 * 60)
+                .toMillis();
         if (UI.getCurrent().getPollInterval() == -1) {
             UI.getCurrent().setPollInterval(interval);
             UI.getCurrent().addPollListener(e -> emitUpdateTimestamp(interval));
@@ -45,6 +48,8 @@ public abstract class DemoExporter<T extends Component>
     }
 
     private void emitUpdateTimestamp(int interval) {
-        UI.getCurrent().getPage().executeJs("window.dispatchEvent(new CustomEvent('update-timestamp', {detail: $0}))", interval);
+        UI.getCurrent().getPage().executeJs(
+                "window.dispatchEvent(new CustomEvent('update-timestamp', {detail: $0}))",
+                interval);
     }
 }

@@ -7,11 +7,9 @@ order: 10
 
 = [since:com.vaadin:vaadin@V24.4]#Flow-Hilla Hybrid Applications#
 
-Hilla is part of Vaadin. It's used for building Reactive web applications on Java backends. It integrates seamlessly a https://reactjs.org/[React] TypeScript frontend with a https://spring.io/projects/spring-boot[Spring Boot] backend.
+Hilla, which is part of Vaadin, is used for building Reactive web applications on Java backends. It integrates seamlessly a https://reactjs.org/[React] TypeScript frontend with a https://spring.io/projects/spring-boot[Spring Boot] backend.
 
-You can develop hybrid applications that leverage Vaadin Flow and Hilla features. This allows you to combine in one application, Vaadin Flow routes written in pure Java with the Hilla ones written in React.
-
-This page shows how <<#hilla-to-flow, to add Hilla to an existing Vaadin Flow application>>. And it includes the reverse: how <<#flow-to-hilla, to add Vaadin Flow to an existing Hilla application>>.
+You can develop hybrid applications that leverage Vaadin Flow and Hilla features. This allows you to combine in one application, Vaadin Flow routes written in pure Java with the Hilla ones written in React. This page shows how <<#hilla-to-flow, to add Hilla to an existing Vaadin Flow application>>. And it includes the reverse: how <<#flow-to-hilla, to add Vaadin Flow to an existing Hilla application>>.
 
 See the https://github.com/vaadin/flow-hilla-hybrid-example[source code for a complete Vaadin Flow-Hilla application].
 
@@ -70,6 +68,7 @@ Once you add a frontend view, Vaadin starts the Vite development server on the n
 If you already have a Hilla application, you can add Vaadin Flow to it. For example, starting from the Hilla https://github.com/vaadin/skeleton-starter-hilla-react[project starter]), you can add Vaadin Flow to the project using the steps in the sub-sections that follow.
 
 Vaadin includes Hilla dependencies, so no dependency adjustment is needed.
+
 
 === Add Server-Side Routes
 
@@ -221,5 +220,58 @@ export default function Layout() {
     );
 }
 ----
+
+[[hilla-server-side-layout]]
+== Flow Server Side Layout for Hilla Views
+
+It's possible to use a Flow server side main layout for both server views and Hilla client views. The server view needs to implement [classname]`RouterLayout` and be annotated with[annotationname]`@Layout`.
+
+[source,java]
+----
+@Layout
+public class MainView extends Div implements RouterLayout {
+    // Implementation omitted
+}
+----
+
+If the application is using access protection, add [annotationname]`@AnonymousAllowed` on the `MainView` so that the request is not denied.
+
+For more information on `RouterLayout`, see <<../routing/layout.adoc#,Router Layouts & Nested Router Targets>>.
+
+For Hilla views to use the server side layout, copy [filename]`routes.tsx` and add the `withLayout` call to route builder.
+
+[source,javascript]
+----
+import { RouterConfigurationBuilder } from '@vaadin/hilla-file-router/runtime.js';
+import Flow from 'Frontend/generated/flow/Flow';
+import fileRoutes from 'Frontend/generated/file-routes';
+
+export const { router, routes } = new RouterConfigurationBuilder()
+    .withFileRoutes(fileRoutes)
+    .withLayout(Flow)
+    .withFallback(Flow)
+    .protect()
+    .build();
+----
+
+This tells the builder that `Flow` should be used as a main layout for Hilla views where `ViewConfig` contains `flowLayout: true`.
+
+.Sample Client File with Configuration
+[source,javascript]
+----
+export const config: ViewConfig = {
+    flowLayout: true
+};
+
+export default function ClientView() {
+  return (
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
+      <p>Client layout with server side main layout</p>
+    </HorizontalLayout>
+  );
+}
+----
+
+If the `flowLayout` is not defined or set to `false`, the view won't ask the server for a route layout to embed into. Also, only one layout type (Hilla react or Flow) is supported at one time.
 
 [discussion-id]`9da82521-5074-42b6-82a5-88fc207987d0`

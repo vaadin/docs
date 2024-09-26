@@ -19,10 +19,9 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
         layout.add(textArea1);
         layout.setAlignSelf(FlexComponent.Alignment.START, textArea1);
         layout.add(new TextArea("Text area 2"));
-		TextArea textArea3 = new TextArea("Text area 3");
+        TextArea textArea3 = new TextArea("Text area 3");
         layout.add(textArea3);
         layout.setAlignSelf(FlexComponent.Alignment.END, textArea3);
-        
         // end::layout[]
 
         this.setClassName("basic-layouts-example");

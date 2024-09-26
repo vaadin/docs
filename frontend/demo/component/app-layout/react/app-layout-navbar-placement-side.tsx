@@ -1,12 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { AppLayout } from '@vaadin/react-components/AppLayout.js';
-import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
+import {
+  AppLayout,
+  DrawerToggle,
+  Icon,
+  Scroller,
+  SideNav,
+  SideNavItem,
+  type SideNavElement,
+} from '@vaadin/react-components';
 import '@vaadin/icons';
-import { Scroller } from '@vaadin/react-components/Scroller.js';
-import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
-import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 
 const h1Style = {

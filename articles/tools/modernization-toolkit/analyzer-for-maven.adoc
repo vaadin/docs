@@ -1,0 +1,122 @@
+---
+title: Vaadin Modernization Toolkit Analyzer for Maven
+description: How to use the command-line Analyzer
+order: 130
+---
+
+
+= Modernization Toolkit Analyzer for Maven
+
+Modernization Toolkit Analyzer for Maven is a tool to assess how well your applications fit the latest Vaadin versions when migrating with the Vaadin Modernization Toolkit. It's a Vaadin product that accelerates your migration project. It has two components: a Dragonfly transpiler that does automated refactoring of your code; and a Feature Pack that identifies and isolates useful features from your application's current application platform and makes them available in Vaadin Flow.
+
+The Analyzer works by parsing your project's Java code and resolving your application's references to the libraries you specify, and outputting the high-level results to the Maven console. 
+
+The Analyzer report is something you can copy and share with colleagues, application stakeholders, or with Vaadin experts to discuss. This gives you concrete data to consider and can be the start of your discovery and planning for your application's future.
+
+
+== Limitations
+
+To satisfy organizations with strict security policies on installing tools in their network, the Modernization Toolkit Analyzer for Maven is limited in two ways.
+
+First, the Analyzer doesn't change your code. It writes all output to the console, not the disk.
+
+Second, the Analyzer connects to Vaadin servers to retrieve data files, but it doesn't send any information to Vaadin. You have full discretion over what about your application or the Analyzer report you might discuss with Vaadin. The Analyzer tool doesn't have a feature for transmitting information. Therefore, you can't use it intentionally or accidentally to send information.
+
+
+== Requirements & Preparations
+
+The requirements are related to JDK and Maven: For JDK use version 17. Your `JAVA_HOME` for Maven must be JDK 17 or later. It's not necessary to change your actual project's target Java runtime, regardless of whether it's below JDK 17 or not. For Maven, use version 3.9.3 or later.
+
+With those versions installed, prepare your project to use Modernization Toolkit Analyzer for Maven through the Vaadin Directory. Include Vaadin `addons` repository as Maven plugin repository:
+
+[source,terminal]
+----
+<pluginRepositories>
+        <pluginRepository>
+            <id>vaadin-addons</id>
+            <url>https://maven.vaadin.com/vaadin-addons</url>
+        </pluginRepository>
+    </pluginRepositories>
+----
+
+Add Modernization as a plugin:
+
+[source,terminal]
+----
+<build>
+        <plugins>
+            <plugin>
+                <groupId>com.vaadin.addons.modernization</groupId>
+                <artifactId>mtk-maven-plugin</artifactId>
+                <version>2.0.5</version>
+            </plugin>
+            .
+            .
+            .
+----
+
+If your project has test classes and has dependencies with test scope, change those dependencies to what's provided in order to calculate the coverage for Vaadin components in test classes. Otherwise those dependencies won't be added to classpath in type resolution and coverage results won't be accurate.
+
+Check your `JAVA_HOME` points to JDK 17 or later, and points to Maven 3.9.3 or later. If your project requires older Java and Maven versions, see the next section.
+
+[source,terminal]
+----
+mvn -v
+
+Apache Maven 3.9.3 (21122926829f1ead511c958d89bd2f672198ae9f)
+Maven home: C:\dev\mvn\apache-maven-3.9.3
+Java version: 17.0.8, vendor: Oracle Corporation, runtime: C:\dev\jdks\jdk-17.0.8
+----
+
+Before running the Modernization Toolkit Analyzer, make sure your project builds completely without any errors. The Analyzer requires compiled classes in order to resolve type dependencies.
+
+[source,terminal]
+----
+mvn clean install
+----
+
+Finally, run the Analyzer as shown:
+
+[source,terminal]
+----
+mvn mtk:analyze
+----
+
+
+== Older Java & Maven Versions
+
+If your projects require older Java and Maven versions, you'll have to do a few things. Compiling projects and running Modernization Toolkit Analyzer are two separate processes. You can compile projects with older Java and Maven versions, and then run the Analyzer with new Java and Maven versions.
+
+First, download JDK 17 and extract it to a suitable directory (see `https://jdk.java.net/archive/`). Then download Maven 3.9.3 or newer, and extract it to a suitable directory (see `https://maven.apache.org/download.cgi`). Alternatively, you can use Maven wrapper: `mvn wrapper:wrapper -Dmaven=3.9.5`
+
+When that's all done, switch to new Maven directory. In your current terminal, set `JAVA_HOME`: for Mac or Linux, use `export JAVA_HOME=/home/deb/jdk-17.0.2`; for Windows use `set JAVA_HOME=C:/users/deb/jdk-17.0.2`. 
+
+Then make sure that the project is already compiled with older JDK before running the Analyzer:
+
+[source,terminal]
+----
+mvn mtk:analyze
+----
+
+
+== Determining a Pattern
+
+To run the Analyzer for Maven effectively, you'll need to have a precise goal to search for. As a basic rule, a reference in your source code is marked on the analyzer report if it can be resolved to a class that matches the given pattern. Patterns are a semicolon-separated list of starting strings to match with the package names of any class to which the reference can be resolved.
+
+The most common pattern for Vaadin applications is `com.vaadin`. For Vaadin applications there are many other libraries that you might want to understand at the same time like specific add-ons being used that might require attention. If you know you use the Viritin addon in your Vaadin application, for example, it would be valid to use the pattern `com.vaadin;org.vaadin.viritin`.
+
+The most common pattern for Swing applications is to search for `java.awt;javax.swing` However, there are many other libraries that are popular in Swing applications like JGoodies or JDesktop. To analyze a Swing application more thoroughly, consider using the pattern  `javax.swing;java.awt;com.jgoodies;org.jdesktop.layout`.
+
+
+== Passing Pattern to Analyzer
+
+Use the Maven option, `-Dpattern` to pass a search pattern to the Analyzer, like this:
+
+[source,terminal]
+----
+mvn mtk:analyze -Dpatterns=javax.swing;java.awt;com.jgoodies
+----
+
+The ordering of the individual strings in the pattern doesn't matter. There aren't any wildcards supported -- the match is done with a `String.startsWith` test.
+
+When execution completes, you'll see the summarized report in Maven output. To better understand the results and what your options are moving forward, please contact Vaadin to discuss this.

@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/grid';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/grid';
-import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import type { GridItemModel } from '@vaadin/grid';
+import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import type { GridColumn } from '@vaadin/grid/vaadin-grid-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -40,12 +39,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-grid
-        .items="${this.items}"
-        .cellPartNameGenerator="${this.cellPartNameGenerator}"
-        class="styling"
-      >
-        <vaadin-grid-column path="firstName"></vaadin-grid-column>
+      <vaadin-grid .items="${this.items}" .cellPartNameGenerator="${this.cellPartNameGenerator}">
         <vaadin-grid-column path="lastName"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column

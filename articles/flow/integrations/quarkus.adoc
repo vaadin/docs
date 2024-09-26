@@ -1,6 +1,6 @@
 ---
 title: Quarkus
-description: How to use Quarkus with Vaadin.
+description: Using Quarkus with Vaadin to optimize Java for containers in serverless, cloud and Kubernetes environments.
 order: 250
 ---
 
@@ -21,7 +21,7 @@ It's also available with Gradle configuration in the https://github.com/vaadin/b
 
 
 [[quarkus.setup]]
-== Manual Setup
+== Existing Projects
 
 To be able to run an existing project with Quarkus, you'll need to have the `vaadin-quarkus` and `vaadin-jandex` Maven dependencies in the project, as well configure the `quarkus-maven-plugin`.
 
@@ -112,7 +112,7 @@ Below is an example of how that might be done:
 
 == Vaadin CDI Features
 
-Since Quarkus’s dependency injection solution is based on CDI, it's possible to use all CDI features.
+Since Quarkus's dependency injection solution is based on CDI, it's possible to use all of the CDI features.
 
 See these documentation pages for Vaadin CDI features:
 
@@ -122,10 +122,15 @@ See these documentation pages for Vaadin CDI features:
 - <<cdi/instantiated-beans#, Using CDI Beans>>
 
 
+.Unused Bean Removal in Quarkus
+[NOTE]
+Quarkus attempts to remove by default all unused beans during the build. However, it can't detect the programmatic lookup performed by the [classname]`QuarkusInstantiator` class in Vaadin. Therefore, when implementing beans that are not referenced directly by the application code, you might need to add the [annotationname]`@Unremovable` annotation to the class.
+
+
 [[quarkus.vaadin.addons]]
 == Vaadin Add-Ons in Quarkus
 
-Any Vaadin add-on used in a Quarkus application should contain a Jandex index. You can generate this using the `jandex-maven-plugin`. See https://quarkus.io/guides/cdi-reference#how-to-generate-a-jandex-index[How to Generate a Jandex Index].
+Any Vaadin add-on used in a Quarkus application should contain a Jandex index. You can generate an index using the `jandex-maven-plugin`. For more information on this, see the Quarkus documentation on https://quarkus.io/guides/cdi-reference#how-to-generate-a-jandex-index[How to Generate a Jandex Index].
 
 If you can't modify the dependency, you can still have Quarkus index it by adding `quarkus.index-dependency` entries to your [filename]`application.properties`:
 
@@ -170,11 +175,14 @@ java -jar target/quarkus-app/quarkus-run.jar
 
 Live reload functionality is supported for changes in either Java or frontend files.
 
-When running in development mode (i.e., `quarkus:dev`), changes in Java or frontend files compile after saving and appear after the browser page is refreshed. For frontend changes, the browser page is automatically reloaded. However, for Java changes a manual refresh is required. Furthermore, Java hot reload may sometimes break frontend live reload. If this happens, the server needs to be restarted.
+When running in development mode (i.e., `quarkus:dev`), changes in Java or frontend files compile after saving. They'll appear in the browser page after it's refreshed. For frontend changes, though, the browser page is reloaded automatically. 
 
-== Integrating Vaadin With an Existing Quarkus Application
+For Java changes, a manual refresh is required. Furthermore, Java hot reload may sometimes break frontend live reload. If this happens, the server needs to be restarted.
 
-One of the things to consider when integrating Vaadin with an existing Quarkus application is that the application may already have set up routes that may effectively "shadow" the Vaadin UI. A typical scenario for adding Vaadin to an existing Quarkus application is providing some sort of administration dashboard functionality that sits under a sub-root path, e.g., `/admin`. Going with the documented way of setting a `@Route` at the view level, won't solve the issue:
+
+== Integrating Vaadin with Existing Quarkus Application
+
+One of the things to consider when integrating Vaadin with an existing Quarkus application is that the application may already have set up routes that may effectively "shadow" the Vaadin UI. A typical scenario for adding Vaadin to an existing Quarkus application is providing some sort of administration dashboard functionality that sits under a sub-root path (e.g., `/admin`). Using the documented way of setting a `@Route` at the view level won't solve the issue:
 
 ```java
 // This won't solve the issue
@@ -182,28 +190,30 @@ One of the things to consider when integrating Vaadin with an existing Quarkus a
 public class MainView extends VerticalLayout {
 ```
 
-The problem is that by default, Vaadin's Quarkus extension would spin a `QuarkusVaadinServlet` instance that expects every call to the root (`/`) of your Quarkus app to go through it. If there is even a single `@Path("/")` annotation anywhere in the app's code, it may effectively "shadow" the access to the servlet.
+The problem is that, by default, Vaadin's Quarkus extension would spin a `QuarkusVaadinServlet` instance that expects every call to the root (i.e., `/`) of your Quarkus application to go through it. If there is even a single `@Path("/")` annotation anywhere in the application's code, it may effectively "shadow" the access to the servlet.
 
-To solve that, you need to either remove the `@Path("/")` annotations if possible (may be impossible if those serve the index page of your site alredy, for instance), or create a custom instance of `QuarkusVaadinServlet` that would take place instead of the default one:
+To solve this problem, you'll need to either remove the `@Path("/")` annotations if possible -- it may not be possible if they already serve the index page of your site -- or create a custom instance of `QuarkusVaadinServlet` that would take place instead of the default one:
 
 ```java
 @WebServlet(urlPatterns = "/admin/*", name = "AdminServlet", asyncSupported = true)
 public class AdminServlet extends QuarkusVaadinServlet {
 ```
 
-See how the servlet listens to incoming requests matching the `/admin/*` mapping and not the root anymore. In this case, you also need to adjust Vaadin's `@Route` annotations accordingly. For example, `@Route("/admin")` would now simply turn into `@Route("")`, otherwise, your view would expect to be called with `/admin/admin`, which is likely not what you desire.
+Notice how the servlet listens to incoming requests matching the `/admin/*` mapping and no longer the root. In this case, you'll also need to adjust Vaadin's `@Route` annotations, accordingly. For example, `@Route("/admin")` would now turn into `@Route("")`. Otherwise, your view would expect to be called with `/admin/admin`, which is likely not what you want.
+
 
 [[quarkus.vaadin.limitations]]
 == Limitations
 
-The Vaadin Quarkus add-on doesn't support Hilla because Hilla requires the use of Spring. Adding the Quarkus Spring extensions doesn't allow Hilla to work correctly because the extensions don't provide a complete Spring implementation. This is explained in the https://quarkus.io/guides/spring-di#important-technical-note[Important Technical Note] paragraph of the Quarkus Spring DI documentation.
+The Vaadin Quarkus add-on doesn't support Hilla because Hilla requires the use of Spring. Adding the Quarkus Spring extensions doesn't allow Hilla to work correctly. The extensions don't provide a complete Spring implementation. This is explained in the https://quarkus.io/guides/spring-di#important-technical-note[Important Technical Note] paragraph of the Quarkus Spring DI documentation.
+
 
 [[quarkus.vaadin.knownissues]]
 == Known Issues
 
-Quarkus Bill-of-Materials (BOM) may pin libraries to a version that conflicts with Vaadin. This can result in runtime or test failures during development because of changes in method signatures.
+Quarkus Bill-of-Materials (BOM) may pin libraries to a version that conflicts with Vaadin. This can result in runtime errors or test failures during development because of changes in method signatures.
 
-For example, one common problem is a conflict with the Java Native Access (JNA) version. That may cause runtime errors such as `java.lang.NoClassDefFoundError: com/sun/jna/platform/unix/LibCAPI$size_t$ByReference` or `java.lang.NoSuchMethodError: 'void com.sun.jna.Memory.close()'`, depending on the platform the application is running.
+For example, a common problem is a conflict with the Java Native Access (JNA) version. That may cause runtime errors such as `java.lang.NoClassDefFoundError: com/sun/jna/platform/unix/LibCAPI$size_t$ByReference` or `java.lang.NoSuchMethodError: 'void com.sun.jna.Memory.close()'`, depending on the platform the application is running.
 
 This can be fixed by making sure the Vaadin BOM in the dependency management section of the project's [filename]`pom.xml` file is located immediately above the reference to Quarkus BOM.
 

@@ -4,9 +4,10 @@ description: Using React components in Flow.
 order: 20
 ---
 
+
 = [since:com.vaadin:vaadin@V24.4]#Using React Components in Flow#
 
-https://reactjs.org/[React] is a popular JS-based frontend UI library with a wide adoption and many components. This documentation page explains how to integrate existing React components with Flow by using an intermediate adapter Web Component, and then using it in Java applications.
+https://reactjs.org/[React] is a popular JS-based frontend UI library with many components and is widely adopted. This documentation page explains how to integrate existing React components with Flow by using an intermediate adapter Web Component, and then using it in Java applications.
 
 This integration involves two parts: creating a Java class for the server-side adapter component; and a client-side adapter counterpart with TypeScript and React. For examples here, the https://omgovich.github.io/react-colorful/[React Colorful] color picker component is used.
 
@@ -20,12 +21,13 @@ For the server-side part of the integration, create a Java class that extends fr
 ----
 include::../../../src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=annotations]
 ----
-<1> Since this will integrate a third-party React component, the [annotationname]`@NpmPackage` annotation is added to get it installed from npm.
+
+<1> Since this will integrate a third-party React component, the [annotationname]`@NpmPackage` annotation is added to be installed from npm.
 <2> The [annotationname]`@Tag` annotation defines the DOM element name of the adapter Web Component (see below).
 <3> The client-side part of the integration (i.e., the adapter Web Component) is yet to be defined and implemented in TypeScript. Therefore, you'll need a separate file for it. Although this file will be created later, the [annotationname]`@JsModule` annotation is added here to import it.
 
 
-=== Java and React States Synchronized
+=== Java & React States Synchronized
 
 The Web Component adapter allows the state to be sent from Java to React and back by using named properties and events in the intermediate Web Component. On the server side, the `ReactAdapterComponent` class provides the following APIs for synchronizing the state with the adapter Web Component:
 
@@ -44,14 +46,14 @@ include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPi
 [NOTE]
 Call `setState` from the Java constructor to ensure the state is initialized from Java. Doing so enables [annotationname]`@PreserveOnRefresh` to work correctly.
 
-Next, invoke [methodname]`setColor(RgbaColor)` from the constructor to define the initial state:
+Next, invoke [methodname]`setColor(RgbaColor)` from the constructor to define the initial state like so:
 
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPicker.java[tags=constructor]
 ----
 
-Also, add the [methodname]`addColorChangeListener(Consumer<T>)` state change callback:
+Also, you'll need to add the [methodname]`addColorChangeListener(Consumer<T>)` state change callback:
 
 [source,java]
 ----
@@ -63,7 +65,7 @@ include::{root}/src/main/java/com/vaadin/demo/flow/integration/react/RgbaColorPi
 
 On the client, the React state can be any JS value. To support that, the methods above accept Java boxed primitive types, as well as Beans and collections that are representable with JSON.
 
-In the example, the component has the `color` property, which is a JS object with the following format:
+In the example here, the component has the `color` property, which is a JS object with the following format:
 
 [source,typescript]
 ----
@@ -94,18 +96,19 @@ The following example uses `ReactAdapterElement` to create the `<rgba-color-pick
 ----
 include::{root}/frontend/demo/flow/integration/react/rgba-color-picker.tsx[tags=class]
 ----
+
 <1> The main part of the Web Component is the [methodname]`render(RenderHooks)` callback, which defines the rendering using React JSX tags. You could also define state and events using the APIs provided with the `hooks` argument.
-<2> This example calls `hooks.useState<RgbaColor>("color")` to define that the `color` property of the adapter Web Component is going to be used for synchronizing the state with the server.
+<2> This calls `hooks.useState<RgbaColor>("color")` to define the `color` property of the adapter Web Component that is to be used for synchronizing the state with the server.
 <3> The JSX rendering uses the adapter state (i.e., `color` and `setColor`) with the `<RgbaColorPicker>` React component, following the third-party component's API.
 <4> As usual with Web Components, the JS class is registered for its DOM element name using `CustomElements.define()` standard web API.
 
 
 === RenderHooks APIs
 
-The `RenderHooks` render callback argument provides the following methods:
+The `RenderHooks` render callback argument provides the following two methods:
 
 - [methodname]`useState<T>(string)` method defines and uses a named state JS property of the adapter Web Component; and
-- [methodname]`useCustomEvent<T | undefined>(string, CustomEventInit<T>)` method returns a simple to use callback that dispatches a Custom Event with the given name on the adapter Web Component:
+- [methodname]`useCustomEvent<T | undefined>(string, CustomEventInit<T>)` method returns a simple-to-use callback that dispatches a Custom Event with the given name on the adapter Web Component.
 
 .Firing a CustomEvent
 [source,jsx]
@@ -134,7 +137,7 @@ class PersonDataElement extends ReactAdapterElement {
 }
 ----
 
-When the user action is not related to a state change, you could use this hook and subscribe to this event in Java:
+When the user action is not related to a state change, you could use this hook and subscribe to the event in Java:
 
 .Listening for a CustomEvent
 [source,java]
@@ -145,4 +148,147 @@ public void addPersonDataUpdateListener() {
         // person update code goes here...
     }).addEventData("event.detail");
 }
+----
+
+
+== Adding Flow Components to React Component
+
+It's possible to put Flow [classname]`Component` elements inside a React component implemented with [classname]`ReactAdapterElement`. You could generate a [classname]`RouterLayout` in React that has a navigation menu and the Flow route content on the right side. See <<../routing/layout#, RouterLayout Interface>> for more information.
+
+Create a [classname]`ReactAdapterComponent` that implements the [interfacename]`RouterLayout` interface so that the `showRouterLayoutContent` is appended into the content element from [methodname]`getContentElement(String)`.
+
+[classname]`RouterLinks` are added to a `Div` that's bound to the `menu` content element on the client.
+
+.Server Router Layout
+[source,java]
+----
+@JsModule("./ReactRouterLayout.tsx")
+@Tag("react-router-layout")
+public class ReactRouterLayout extends ReactAdapterComponent implements RouterLayout {
+
+    public ReactRouterLayout() {
+        Div links = new Div(
+                new RouterLink("Main view", MainView.class),
+                new Div(),
+                new RouterLink("Information", InfoView.class)
+        );
+        links.getStyle().setMargin("10px");
+        getContentElement("menu").appendChild(links.getElement());
+    }
+
+    @Override
+    public void showRouterLayoutContent(HasElement content) {
+        if (content != null) {
+            // Bind the flow element to the 'flowContent' element on the client
+            getContentElement("flowContent")
+                    .appendChild(Objects.requireNonNull(content.getElement()));
+        }
+    }
+}
+
+----
+
+On the client, there are two places for Flow components to bind: one for `menu`; and one for `flowContent`, using the [methodname]`userContent(string)`.
+
+.Client Router Layout
+[source,jsx]
+----
+class ReactRouterLayoutElement extends ReactAdapterElement {
+    protected render(hooks: RenderHooks): React.ReactElement | null {
+        // create content element for name attribute 'menu'
+        const menu = hooks.useContent('menu');
+        // create content element for name attribute 'flowContent'
+        const content = hooks.useContent('flowContent');
+
+        return §div style={{display: 'flex', flex: 1, flexDirection: 'row', height: '100%'}}>
+            <div style={{flex: 1}}>{menu}</div>
+            <div style={{flex: 5}}>{content}</div>
+        </div>;
+    }
+}
+
+customElements.define('react-router-layout', ReactRouterLayoutElement);
+----
+
+
+[[wrap-react-component]]
+== Wrapping a React Input Component into a Flow Field Component
+
+When integrating React components into Vaadin applications, one common requirement is to enable these components to participate in Vaadin's data binding and form handling. This can be accomplished by wrapping the React component in a Vaadin component that extends `AbstractSinglePropertyField`. This allows the React component to be used like any other field in Vaadin, making it compatible with the `Binder` API.
+
+This integration process involves two main parts: creating a Java class for the server-side adapter component; and developing a client-side adapter using TypeScript and React. 
+ 
+This process is demonstrated in the next sections using a simple React text input component as an example.
+
+=== Create Client-Side React Component
+
+First, define your React component. For this example, assume a simple text input component.
+
+[source,jsx]
+----
+// File: frontend/react-text-input.tsx
+
+import React, { useState } from 'react';
+import {ReactAdapterElement, type RenderHooks} from "Frontend/generated/flow/ReactAdapter";
+
+class ReactTextInputElement extends ReactAdapterElement {
+    constructor() {
+        super();
+    }
+
+    protected override render(hooks: RenderHooks): React.ReactElement | null {
+        const [value, setValue] = hooks.useState<string>("value");
+
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            setValue(event.target.value);
+            this.dispatchEvent(new CustomEvent('value-changed', { detail: { value: event.target.value } }));
+        };
+
+        return (
+            <div>
+                <input type="text" value={value} onChange={handleChange} />
+                <span>{value?.length} characters</span>
+            </div>
+        );
+    }
+}
+
+customElements.define('react-text-input', ReactTextInputElement);
+----
+
+
+=== Server-Side Vaadin Component Wrapping the React Component
+
+Next, create a Vaadin component that wraps the React component and extends `AbstractSinglePropertyField`.
+
+[source,java]
+----
+// Package: com.example.application.ui
+
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.AbstractSinglePropertyField;
+
+@Tag("react-text-input")
+@JsModule("./react-text-input.tsx")
+public class ReactTextField extends AbstractSinglePropertyField<ReactTextField, String> {
+    public ReactTextField() {
+        super("value", "", false);
+    }
+}
+----
+
+
+=== Using React Component in a Vaadin Form
+
+Now, you can use `ReactTextField` like any other Vaadin component within a form:
+
+[source,java]
+----
+Binder<Person> binder = new Binder<>(Person.class);
+ReactTextField reactTextField = new ReactTextField();
+
+binder.forField(reactTextField).bind(Person::getName, Person::setName);
+
+add(reactTextField);
 ----

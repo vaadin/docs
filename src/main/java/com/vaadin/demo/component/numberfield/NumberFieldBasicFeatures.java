@@ -27,6 +27,7 @@ public class NumberFieldBasicFeatures extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldBasicFeatures> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<NumberFieldBasicFeatures> { // hidden-source-line
     } // hidden-source-line
 }

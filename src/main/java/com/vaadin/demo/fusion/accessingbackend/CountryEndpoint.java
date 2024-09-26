@@ -20,8 +20,9 @@ public class CountryEndpoint {
      * A method that returns a collection of entities.
      */
     public List<City> getCities(Query query) {
-        return query.getNumberOfCities() <= cities.size() ?
-                cities.subList(0, query.getNumberOfCities() - 1) : cities;
+        return query.getNumberOfCities() <= cities.size()
+                ? cities.subList(0, query.getNumberOfCities() - 1)
+                : cities;
     }
 
     /**

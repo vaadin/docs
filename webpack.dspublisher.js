@@ -137,5 +137,5 @@ export default async function (config) {
     }
   };
 
-  config.resolve.extensionAlias = { '.js': ['.js', '.ts'] }
-};
+  config.resolve.extensionAlias = { '.js': ['.js', '.ts', '.tsx'] };
+}

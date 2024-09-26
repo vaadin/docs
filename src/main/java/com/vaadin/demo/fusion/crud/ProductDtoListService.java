@@ -20,15 +20,18 @@ public class ProductDtoListService implements ListService<ProductDto> {
     private final ProductRepository productRepository;
     private final JpaFilterConverter jpaFilterConverter;
 
-    public ProductDtoListService(ProductRepository productRepository, JpaFilterConverter jpaFilterConverter) {
+    public ProductDtoListService(ProductRepository productRepository,
+            JpaFilterConverter jpaFilterConverter) {
         this.productRepository = productRepository;
         this.jpaFilterConverter = jpaFilterConverter;
     }
 
     @Override
     @Nonnull
-    public List<@Nonnull ProductDto> list(Pageable pageable, @Nullable Filter filter) {
-        // Use the Hilla JpaFilterConverter to create a JPA specification from the filter
+    public List<@Nonnull ProductDto> list(Pageable pageable,
+            @Nullable Filter filter) {
+        // Use the Hilla JpaFilterConverter to create a JPA specification from
+        // the filter
         Specification<Product> spec = filter != null
                 ? jpaFilterConverter.toSpec(filter, Product.class)
                 : Specification.anyOf();
@@ -38,4 +41,4 @@ public class ProductDtoListService implements ListService<ProductDto> {
         return products.stream().map(ProductDto::fromEntity).toList();
     }
 }
-//end::snippet[]
+// end::snippet[]

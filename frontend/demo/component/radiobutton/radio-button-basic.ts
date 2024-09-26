@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/radio-group';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-basic')

@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/button';
+import '@vaadin/horizontal-layout';
+import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
-import '@vaadin/button';
-import '@vaadin/radio-group';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
-import '@vaadin/horizontal-layout';
+import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('basic-layouts-spacing')
+@customElement('basic-layouts-horizontal-layout-spacing')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();

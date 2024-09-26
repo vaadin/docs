@@ -1,20 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/button';
+import '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-tree-column.js';
+import '@vaadin/horizontal-layout';
+import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import '@vaadin/grid';
-import '@vaadin/button';
-import '@vaadin/integer-field';
-import '@vaadin/horizontal-layout';
-import type { IntegerFieldChangeEvent } from '@vaadin/integer-field';
 import type {
   Grid,
+  GridActiveItemChangedEvent,
+  GridBodyRenderer,
   GridDataProviderCallback,
   GridDataProviderParams,
-  GridBodyRenderer,
-  GridActiveItemChangedEvent,
 } from '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-tree-column.js';
+import type { IntegerFieldChangeEvent } from '@vaadin/integer-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -60,7 +59,7 @@ export class Example extends LitElement {
     people.forEach((person, idx) => {
       const index = startIndex + idx;
       const parentIndexes = params.parentItem
-        ? this.idToIndexes.get(params.parentItem.id) ?? []
+        ? (this.idToIndexes.get(params.parentItem.id) ?? [])
         : [];
       const indexes = [...parentIndexes, index];
       this.idToIndexes = new Map(this.idToIndexes).set(person.id, indexes);

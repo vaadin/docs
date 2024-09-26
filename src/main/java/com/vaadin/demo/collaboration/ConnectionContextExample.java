@@ -49,8 +49,8 @@ public class ConnectionContextExample extends VerticalLayout {
         // when passing a component (this) as the first argument.
         messageManager = new MessageManager(this, localUser, topicId);
         presenceManager = new PresenceManager(this, localUser, topicId);
-        registration = CollaborationEngine.getInstance().openTopicConnection(this, topicId,
-                localUser, connectionActivationCallback);
+        registration = CollaborationEngine.getInstance().openTopicConnection(
+                this, topicId, localUser, connectionActivationCallback);
         // end::component[]
     }
 
@@ -64,8 +64,8 @@ public class ConnectionContextExample extends VerticalLayout {
         messageManager = new MessageManager(context, localUser, topicId,
                 CollaborationEngine::getInstance);
 
-        registration = CollaborationEngine.getInstance().openTopicConnection(context, topicId,
-                localUser, connectionActivationCallback);
+        registration = CollaborationEngine.getInstance().openTopicConnection(
+                context, topicId, localUser, connectionActivationCallback);
         // end::component-context[]
     }
 

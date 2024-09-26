@@ -14,11 +14,9 @@ public class ComboBoxStyles extends HorizontalLayout {
 
         // tag::snippet[]
         ComboBox<String> field = new ComboBox<>();
-        field.addThemeVariants(
-            ComboBoxVariant.LUMO_SMALL,
-            ComboBoxVariant.LUMO_ALIGN_RIGHT,
-            ComboBoxVariant.LUMO_HELPER_ABOVE_FIELD
-        );
+        field.addThemeVariants(ComboBoxVariant.LUMO_SMALL,
+                ComboBoxVariant.LUMO_ALIGN_RIGHT,
+                ComboBoxVariant.LUMO_HELPER_ABOVE_FIELD);
         field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");

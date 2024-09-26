@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/text-field';
 import '@vaadin/tooltip';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tooltip-basic')

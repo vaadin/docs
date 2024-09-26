@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/button';
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import '@vaadin/button';
 
 // tag::snippet[]
 @customElement('reactive-view')

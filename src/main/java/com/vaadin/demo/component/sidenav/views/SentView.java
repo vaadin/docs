@@ -5,5 +5,6 @@ import com.vaadin.flow.router.Route;
 
 @Route("sent")
 public class SentView extends Div {
-    public SentView() {}
+    public SentView() {
+    }
 }

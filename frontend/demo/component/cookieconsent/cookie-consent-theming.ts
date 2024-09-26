@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import './example-cleanup'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/cookie-consent';
 import '@vaadin/vaadin-lumo-styles/all-imports';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
 @customElement('cookie-consent-theming')
 export class Example extends LitElement {
