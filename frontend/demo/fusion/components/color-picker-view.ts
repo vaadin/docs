@@ -1,10 +1,8 @@
+import '@vaadin/text-field';
+import 'vanilla-colorful';
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-
-import '@vaadin/text-field';
 import type { TextField } from '@vaadin/text-field';
-
-import 'vanilla-colorful';
 
 @customElement('color-picker-view')
 export class ColorPickerView extends LitElement {

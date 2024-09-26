@@ -1,16 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { live } from 'lit/directives/live.js';
 import '@vaadin/avatar';
 import '@vaadin/details';
-import type { Details } from '@vaadin/details';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import '@vaadin/virtual-list';
-import { virtualListRenderer } from '@vaadin/virtual-list/lit.js';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
+import type { Details } from '@vaadin/details';
 import type { VirtualListLitRenderer } from '@vaadin/virtual-list/lit.js';
+import { virtualListRenderer } from '@vaadin/virtual-list/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

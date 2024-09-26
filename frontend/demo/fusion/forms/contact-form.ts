@@ -1,17 +1,13 @@
-import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-
 import '@vaadin/button';
 import '@vaadin/upload';
+import { html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { readAsDataURL } from 'promise-file-reader';
+import { Binder } from '@vaadin/hilla-lit-form';
 import type { UploadBeforeEvent } from '@vaadin/upload';
-
-import Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
+import type Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
 import { ContactEndpoint } from 'Frontend/generated/endpoints';
-
-import { Binder } from '@vaadin/hilla-lit-form';
-
-import { readAsDataURL } from 'promise-file-reader';
 
 @customElement('contact-form')
 export class ContactForm extends LitElement {
@@ -21,6 +17,7 @@ export class ContactForm extends LitElement {
   set contact(value: Contact) {
     this.binder.read(value);
   }
+
   render() {
     return html`
       <img src="${this.binder.model.avatarBase64.valueOf()}" alt="contact's avatar" />

@@ -1,7 +1,7 @@
+import type { CrudService } from '@vaadin/hilla-react-crud';
 import type FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion';
 import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
 import type Pageable from 'Frontend/generated/com/vaadin/hilla/mappedtypes/Pageable';
-import type { CrudService } from '@vaadin/hilla-react-crud';
 import Direction from 'Frontend/generated/org/springframework/data/domain/Sort/Direction';
 
 type AbstractEntity = { id?: any };

@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/combo-box';
 import '@vaadin/crud';
-import '@vaadin/form-layout';
 import '@vaadin/email-field';
+import '@vaadin/form-layout';
 import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

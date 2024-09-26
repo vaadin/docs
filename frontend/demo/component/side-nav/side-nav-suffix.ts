@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import '@vaadin/side-nav';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import { applyTheme } from 'Frontend/generated/theme';
+import '@vaadin/side-nav';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('side-nav-suffix')
 export class Example extends LitElement {

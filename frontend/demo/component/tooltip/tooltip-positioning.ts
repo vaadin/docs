@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/tabs';
 import '@vaadin/tooltip';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('tooltip-positioning')

@@ -1,7 +1,7 @@
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 
 @customElement('fusion-application-events-basic')
 // tag::snippet[]

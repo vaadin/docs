@@ -1,7 +1,7 @@
-import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import '@vaadin/custom-field';
 import '@vaadin/text-field';
+import { html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
 
 // tag::snippet[]
@@ -15,7 +15,7 @@ export class MyTextField extends LitElement {
   @property({ type: Boolean }) hasError = false;
   @property({ type: String }) error = '';
 
-  //...
+  // ...
   // end::snippet[]
 
   render() {
