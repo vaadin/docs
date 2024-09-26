@@ -1,9 +1,9 @@
+import './my-text-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { field } from '@vaadin/hilla-lit-form';
-import './my-text-field';
-import { MyBinder } from './my-binder';
 import SamplePersonModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/fieldstrategy/SamplePersonModel';
+import { MyBinder } from './my-binder';
 
 @customElement('person-form-view')
 export class PersonFormViewElement extends LitElement {
@@ -20,5 +20,5 @@ export class PersonFormViewElement extends LitElement {
       </vaadin-form-layout>
     `;
   }
-  //...
+  // ...
 }

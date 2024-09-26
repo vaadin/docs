@@ -1,10 +1,10 @@
-import { Subscription } from '@vaadin/hilla-frontend';
 import '@vaadin/button';
 import '@vaadin/notification';
 import '@vaadin/text-field';
-import { ReactiveEndpoint } from 'Frontend/generated/endpoints';
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import type { Subscription } from '@vaadin/hilla-frontend';
+import { ReactiveEndpoint } from 'Frontend/generated/endpoints';
 
 @customElement('reactive-view')
 export class ReactiveView extends LitElement {

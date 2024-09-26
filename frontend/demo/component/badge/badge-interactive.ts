@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/combo-box';
+import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

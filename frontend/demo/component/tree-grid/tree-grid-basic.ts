@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/grid';
+import '@vaadin/grid/vaadin-grid-tree-column.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/grid';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-tree-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';

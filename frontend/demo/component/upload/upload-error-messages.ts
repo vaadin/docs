@@ -1,12 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-/* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
+import '@vaadin/form-layout';
+import '@vaadin/upload';
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
-import '@vaadin/form-layout';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import '@vaadin/upload';
 import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
+/* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
