@@ -1,4 +1,4 @@
-import '@vaadin/icons/';
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
