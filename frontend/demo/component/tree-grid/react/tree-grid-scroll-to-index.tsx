@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';

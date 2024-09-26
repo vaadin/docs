@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { LoginForm } from '@vaadin/react-components/LoginForm.js';
 import { loginHostStyles } from './login-host-styles'; // hidden-source-line
 

@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { Button, Popover, TextField } from '@vaadin/react-components';
 
 function Example() {

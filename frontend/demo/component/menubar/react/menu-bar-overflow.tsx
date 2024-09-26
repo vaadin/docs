@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 

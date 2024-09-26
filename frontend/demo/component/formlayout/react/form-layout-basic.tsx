@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { PasswordField } from '@vaadin/react-components/PasswordField.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
