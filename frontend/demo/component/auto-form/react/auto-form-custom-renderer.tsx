@@ -1,18 +1,18 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
-import { type AutoFormLayoutRendererProps, AutoForm } from '@vaadin/hilla-react-crud';
-import { EmployeeService } from 'Frontend/generated/endpoints.js';
-import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
-import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { Select } from '@vaadin/react-components/Select.js';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { AutoForm, type AutoFormLayoutRendererProps } from '@vaadin/hilla-react-crud';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Select } from '@vaadin/react-components/Select.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
+import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
+import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
+import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
 // tag::snippet[]
 function GroupingLayoutRenderer({ form }: AutoFormLayoutRendererProps<EmployeeModel>) {

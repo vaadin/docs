@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { useComputed } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { FormItem } from '@vaadin/react-components/FormItem.js';
-import { Select } from '@vaadin/react-components/Select.js';
+import { useComputed } from '@vaadin/hilla-react-signals';
 import { CustomField } from '@vaadin/react-components/CustomField.js';
+import { FormItem } from '@vaadin/react-components/FormItem.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Select } from '@vaadin/react-components/Select.js';
 
 function Example() {
   useSignals(); // hidden-source-line
