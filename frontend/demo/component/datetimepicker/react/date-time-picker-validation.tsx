@@ -35,7 +35,7 @@ function Example() {
           !timePicker.value && !!(timePicker.inputElement as HTMLInputElement).value;
 
         if (hasBadDateInput || hasBadTimeInput) {
-          errorMessage.value = 'Invalid date and time';
+          errorMessage.value = 'Invalid date or time';
         } else if (!field.value) {
           errorMessage.value = 'Field is required';
         } else if (isBefore(date, minDate.value)) {
