@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
 // tag::snippet[]
 import { AutoGrid } from '@vaadin/hilla-react-crud';
 // tag::apply-backend[]

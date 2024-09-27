@@ -1,5 +1,5 @@
 import '@vaadin/icons';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 

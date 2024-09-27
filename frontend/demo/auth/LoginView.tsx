@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
 import { useSignal } from '@vaadin/hilla-react-signals';

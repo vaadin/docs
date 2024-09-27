@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Required } from '@vaadin/hilla-lit-form';
 import { useForm, useFormPart } from '@vaadin/hilla-react-form';
 import { Button } from '@vaadin/react-components/Button.js';

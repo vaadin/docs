@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useForm } from '@vaadin/hilla-react-form';
 import { useSignal } from '@vaadin/hilla-react-signals';
