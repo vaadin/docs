@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-picker';
-import { addDays, formatISO, isAfter, isBefore } from 'date-fns';
-import dateFnsParse from 'date-fns/parse';
+import { addDays, formatISO, isAfter, isBefore, parseISO } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DatePicker, DatePickerValidatedEvent } from '@vaadin/date-picker';
@@ -37,9 +36,8 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: DatePickerValidatedEvent) => {
           const field = event.target as DatePicker;
-          const date = dateFnsParse(field.value ?? '', 'yyyy-MM-dd', new Date());
-          const inputElement = field.inputElement as HTMLInputElement;
-          if (!field.value && inputElement.value) {
+          const date = parseISO(field.value);
+          if (!field.value && (field.inputElement as HTMLInputElement).value) {
             this.errorMessage = 'Invalid date format';
           } else if (!field.value) {
             this.errorMessage = 'Field is required';

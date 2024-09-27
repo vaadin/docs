@@ -25,8 +25,7 @@ function Example() {
       }}
       onValidated={(event) => {
         const field = event.target as TimePickerElement;
-        const inputElement = field.inputElement as HTMLInputElement;
-        if (!field.value && inputElement.value) {
+        if (!field.value && (field.inputElement as HTMLInputElement).value) {
           errorMessage.value = 'Invalid time format';
         } else if (!field.value) {
           errorMessage.value = 'Field is required';

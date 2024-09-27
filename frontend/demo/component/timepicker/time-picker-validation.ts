@@ -31,8 +31,7 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: TimePickerValidatedEvent) => {
           const field = event.target as TimePicker;
-          const inputElement = field.inputElement as HTMLInputElement;
-          if (!field.value && inputElement.value) {
+          if (!field.value && (field.inputElement as HTMLInputElement).value) {
             this.errorMessage = 'Invalid time format';
           } else if (!field.value) {
             this.errorMessage = 'Field is required';
