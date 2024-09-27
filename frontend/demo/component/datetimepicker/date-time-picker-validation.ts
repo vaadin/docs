@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-time-picker';
-import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DatePicker } from '@vaadin/date-picker';
@@ -38,7 +38,6 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: DateTimePickerValidatedEvent) => {
           const field = event.target as DateTimePicker;
-          const date = parseISO(field.value);
           const datePicker: DatePicker = field.querySelector('[slot=date-picker]')!;
           const timePicker: TimePicker = field.querySelector('[slot=time-picker]')!;
           const hasBadDateInput =
@@ -50,9 +49,9 @@ export class Example extends LitElement {
             this.errorMessage = 'Invalid date or time';
           } else if (!field.value) {
             this.errorMessage = 'Field is required';
-          } else if (isBefore(date, this.minDate)) {
+          } else if (field.value < field.min!) {
             this.errorMessage = 'Too early, choose another date and time';
-          } else if (isAfter(date, this.maxDate)) {
+          } else if (field.value > field.max!) {
             this.errorMessage = 'Too late, choose another date and time';
           } else {
             this.errorMessage = '';

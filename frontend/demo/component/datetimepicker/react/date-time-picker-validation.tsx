@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   type DatePickerElement,
@@ -26,7 +26,6 @@ function Example() {
       errorMessage={errorMessage.value}
       onValidated={(event) => {
         const field = event.target as DateTimePickerElement;
-        const date = parseISO(field.value);
         const datePicker: DatePickerElement = field.querySelector('[slot=date-picker]')!;
         const timePicker: TimePickerElement = field.querySelector('[slot=time-picker]')!;
         const hasBadDateInput =
@@ -38,9 +37,9 @@ function Example() {
           errorMessage.value = 'Invalid date or time';
         } else if (!field.value) {
           errorMessage.value = 'Field is required';
-        } else if (isBefore(date, minDate.value)) {
+        } else if (field.value < field.min!) {
           errorMessage.value = 'Too early, choose another date and time';
-        } else if (isAfter(date, maxDate.value)) {
+        } else if (field.value > field.max!) {
           errorMessage.value = 'Too late, choose another date and time';
         } else {
           errorMessage.value = '';
