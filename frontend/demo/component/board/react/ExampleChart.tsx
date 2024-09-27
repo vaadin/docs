@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 import { getViewEvents } from 'Frontend/demo/domain/DataService';

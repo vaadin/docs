@@ -1,12 +1,11 @@
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { Notification } from '@vaadin/react-components/Notification.js';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 
 function Example() {
   useSignals(); // hidden-source-line

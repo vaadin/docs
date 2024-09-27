@@ -1,9 +1,8 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { getPeople } from 'Frontend/demo/domain/DataService';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import {
   Button,
   Checkbox,
@@ -14,7 +13,8 @@ import {
   Icon,
   Popover,
 } from '@vaadin/react-components';
-import '@vaadin/icons';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 type ColumnConfig = { label: string; key: string; visible: boolean };
 

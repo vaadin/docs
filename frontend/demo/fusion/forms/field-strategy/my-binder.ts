@@ -1,5 +1,9 @@
+import type {
+  AbstractModel,
+  DetachedModelConstructor,
+  FieldStrategy,
+} from '@vaadin/hilla-lit-form';
 import { Binder, StringModel } from '@vaadin/hilla-lit-form';
-import type { AbstractModel, DetachedModelConstructor, FieldStrategy } from '@vaadin/hilla-lit-form';
 import { MyTextFieldStrategy } from './my-text-field-strategy';
 
 export class MyBinder<M extends AbstractModel> extends Binder<M> {

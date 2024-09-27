@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/select';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/select';
 import type { SelectItem } from '@vaadin/select';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-complex-value-label')
 export class Example extends LitElement {

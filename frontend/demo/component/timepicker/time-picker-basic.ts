@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/time-picker';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('time-picker-basic')

@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/select';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/select';
 import '@vaadin/tooltip';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('select-basic-features')

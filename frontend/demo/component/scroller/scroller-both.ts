@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/scroller';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/scroller';
-import img from '../../../../src/main/resources/images/reindeer.jpg';
 import { applyTheme } from 'Frontend/generated/theme';
+import img from '../../../../src/main/resources/images/reindeer.jpg';
 
 @customElement('scroller-both')
 export class Example extends LitElement {

@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
+import '@vaadin/horizontal-layout';
 import '@vaadin/item';
 import '@vaadin/list-box';
-import '@vaadin/horizontal-layout';
 import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';

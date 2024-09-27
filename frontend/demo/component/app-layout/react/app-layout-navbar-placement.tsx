@@ -1,16 +1,16 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AppLayout,
   DrawerToggle,
   Icon,
   Scroller,
   SideNav,
-  SideNavItem,
   type SideNavElement,
+  SideNavItem,
 } from '@vaadin/react-components';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
-import '@vaadin/icons';
 
 const h1Style = {
   fontSize: 'var(--lumo-font-size-l)',

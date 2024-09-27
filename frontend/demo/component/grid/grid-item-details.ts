@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/grid';
 import '@vaadin/form-layout';
+import '@vaadin/grid';
 import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';

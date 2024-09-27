@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/custom-field';
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item';
-import '@vaadin/select';
-import '@vaadin/custom-field';
 import '@vaadin/horizontal-layout';
+import '@vaadin/select';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';

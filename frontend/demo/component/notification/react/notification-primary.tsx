@@ -1,6 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { Notification } from '@vaadin/react-components/Notification.js';
-import React from 'react';
 
 function Example() {
   // tag::snippet[]

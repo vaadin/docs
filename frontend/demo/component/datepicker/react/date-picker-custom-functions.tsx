@@ -1,14 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import {
-  DatePicker,
-  type DatePickerElement,
-  type DatePickerDate,
-} from '@vaadin/react-components/DatePicker.js';
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import {
+  DatePicker,
+  type DatePickerDate,
+  type DatePickerElement,
+} from '@vaadin/react-components/DatePicker.js';
 
 // tag::snippet[]
 function formatDateIso8601(dateParts: DatePickerDate) {

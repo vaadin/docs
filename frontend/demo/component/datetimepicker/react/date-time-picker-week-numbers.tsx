@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   DateTimePicker,
   type DateTimePickerElement,

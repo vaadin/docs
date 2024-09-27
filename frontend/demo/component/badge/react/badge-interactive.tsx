@@ -1,18 +1,17 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   Button,
+  type ButtonElement,
   ComboBox,
+  type ComboBoxChangeEvent,
   HorizontalLayout,
   Icon,
   VerticalLayout,
-  type ButtonElement,
-  type ComboBoxChangeEvent,
 } from '@vaadin/react-components';
-import '@vaadin/icons';
-
 import { getPeople } from 'Frontend/demo/domain/DataService';
 
 type Profession = string;

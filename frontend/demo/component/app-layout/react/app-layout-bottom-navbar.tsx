@@ -1,13 +1,13 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   AppLayout,
-  HorizontalLayout,
-  Icon,
   type AppLayoutElement,
+  HorizontalLayout,
   type HorizontalLayoutElement,
+  Icon,
 } from '@vaadin/react-components';
-import '@vaadin/icons';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {

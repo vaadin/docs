@@ -1,5 +1,3 @@
-import React from 'react';
-
 type DetailContentProps = {
   style?: React.CSSProperties;
 };

@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { MenuBar, type MenuBarI18n } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {

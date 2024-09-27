@@ -1,21 +1,20 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import {
   Grid,
   type GridDataProviderCallback,
   type GridDataProviderParams,
 } from '@vaadin/react-components/Grid.js';
-import { GridTreeToggle } from '@vaadin/react-components/GridTreeToggle.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { getPeople } from 'Frontend/demo/domain/DataService';
+import { GridTreeToggle } from '@vaadin/react-components/GridTreeToggle.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import '@vaadin/icons';
 import { Icon } from '@vaadin/react-components/Icon.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 async function dataProvider(
   params: GridDataProviderParams<Person>,

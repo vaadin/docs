@@ -1,5 +1,5 @@
-import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 import { Upload } from '@vaadin/upload';
+import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 
 // Used by `upload-basic.ts`
 export function createFakeFilesUploadBasic() {

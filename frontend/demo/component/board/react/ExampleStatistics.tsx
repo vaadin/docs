@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { getServiceHealth } from 'Frontend/demo/domain/DataService';
 import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 

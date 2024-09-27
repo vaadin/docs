@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
+import { useEffect } from 'react';
 import { useForm, useFormPart } from '@vaadin/hilla-react-form';
+import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 function Example() {
