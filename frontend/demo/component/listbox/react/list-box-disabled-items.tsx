@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { Item } from '@vaadin/react-components/Item.js';
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 

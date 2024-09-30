@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { MultiSelectComboBox } from '@vaadin/react-components/MultiSelectComboBox.js';
 
 function Example() {

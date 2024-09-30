@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
