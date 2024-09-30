@@ -1,14 +1,13 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import exampleStyles from './split-layout-example-styles'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import React from 'react';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
-import MasterContent from './master-content';
 import DetailContent from './detail-content';
-import '@vaadin/icons';
+import MasterContent from './master-content';
+import exampleStyles from './split-layout-example-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

@@ -1,6 +1,6 @@
-import Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
-import Gender from '../../generated/com/vaadin/demo/fusion/crud/Employee/Gender';
 import { CrudMockService } from 'Frontend/demo/services/CrudService';
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import Gender from '../../generated/com/vaadin/demo/fusion/crud/Employee/Gender';
 
 const employeeData: Employee[] = [
   {

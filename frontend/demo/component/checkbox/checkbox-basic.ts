@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/checkbox';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/checkbox';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('checkbox-basic')

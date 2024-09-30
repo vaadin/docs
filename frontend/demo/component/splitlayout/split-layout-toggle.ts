@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/split-layout';
-import { applyTheme } from 'Frontend/generated/theme';
 import './master-content';
 import './detail-content';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('split-layout-toggle')
 export class Example extends LitElement {

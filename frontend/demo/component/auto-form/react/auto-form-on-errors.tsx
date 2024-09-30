@@ -1,12 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
 import { AutoForm } from '@vaadin/hilla-react-crud';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints';
-import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
-import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   // tag::snippet[]

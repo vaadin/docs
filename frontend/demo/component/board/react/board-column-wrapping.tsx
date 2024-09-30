@@ -1,9 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 import { Board } from '@vaadin/react-components-pro/Board.js';
-import boardStyles from './board-styles';
 import { BoardRow } from '@vaadin/react-components-pro/BoardRow.js';
+import boardStyles from './board-styles';
 
 function Example() {
   return (

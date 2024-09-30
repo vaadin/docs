@@ -1,10 +1,10 @@
+import { Suspense } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
-import { Suspense } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { useRouteMetadata } from './routing';
 import { useAuth } from './auth';
+import { useRouteMetadata } from './routing';
 
 const navLinkClasses = ({ isActive }: any) =>
   `block rounded-m p-s ${isActive ? 'bg-primary-10 text-primary' : 'text-body'}`;

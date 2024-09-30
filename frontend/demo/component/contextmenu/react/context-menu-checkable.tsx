@@ -1,11 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   ContextMenu,
-  type ContextMenuItemSelectedEvent,
   type ContextMenuItem,
+  type ContextMenuItemSelectedEvent,
 } from '@vaadin/react-components/ContextMenu.js';
 
 function Example() {

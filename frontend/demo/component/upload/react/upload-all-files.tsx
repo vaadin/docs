@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useRef, useEffect } from 'react';
-import { useComputed } from '@vaadin/hilla-react-signals';
+import { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useComputed } from '@vaadin/hilla-react-signals';
+import { Button } from '@vaadin/react-components/Button.js';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
-import { Button } from '@vaadin/react-components/Button.js';
 
 function Example() {
   useSignals(); // hidden-source-line

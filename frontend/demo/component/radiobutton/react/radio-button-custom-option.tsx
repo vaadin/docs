@@ -1,15 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
-
-import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getCards } from 'Frontend/demo/domain/DataService';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 
 function Example() {
   useSignals(); // hidden-source-line

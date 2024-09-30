@@ -1,21 +1,19 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { ifDefined } from 'lit/directives/if-defined.js';
-
 import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/email-field';
 import '@vaadin/icon';
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/text-field';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import '@vaadin/vertical-layout';
-import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { ifDefined } from 'lit/directives/if-defined.js';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
-import { applyTheme } from 'Frontend/generated/theme';
+import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-header')
 export class Example extends LitElement {

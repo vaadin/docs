@@ -1,10 +1,8 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useMemo } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useMemo } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   Grid,
   type GridDataProviderCallback,
@@ -13,9 +11,11 @@ import {
   type GridSorterDirection,
 } from '@vaadin/react-components/Grid.js';
 import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import '@vaadin/icons';
 
 function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());

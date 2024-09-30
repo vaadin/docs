@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/popover';
 import '@vaadin/select';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { PopoverPosition } from '@vaadin/popover';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import type { SelectChangeEvent } from '@vaadin/select';

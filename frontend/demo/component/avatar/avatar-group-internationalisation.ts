@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/avatar-group';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/avatar-group';
 import type { AvatarGroupI18n } from '@vaadin/avatar-group';
-import { applyTheme } from 'Frontend/generated/theme';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('avatar-group-internationalistion')
 export class Example extends LitElement {

@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/menu-bar';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('menu-bar-open-on-hover')

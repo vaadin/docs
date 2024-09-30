@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/email-field';
-import type { EmailFieldValueChangedEvent } from '@vaadin/email-field';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { EmailFieldValueChangedEvent } from '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-labels')

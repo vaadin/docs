@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { Tab } from '@vaadin/react-components/Tab.js';
 import { Tabs, type TabsSelectedChangedEvent } from '@vaadin/react-components/Tabs.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { Tab } from '@vaadin/react-components/Tab.js';
 
 function Example() {
   useSignals(); // hidden-source-line

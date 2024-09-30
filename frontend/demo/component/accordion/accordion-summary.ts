@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/accordion';
 import '@vaadin/button';
 import '@vaadin/combo-box';
@@ -10,13 +7,15 @@ import '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
-import { getCountries } from 'Frontend/demo/domain/DataService';
 import { Binder, field } from '@vaadin/hilla-lit-form';
-import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
+import { getCountries } from 'Frontend/demo/domain/DataService';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import { applyTheme } from 'Frontend/generated/theme';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [

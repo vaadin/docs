@@ -1,16 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
 import '@vaadin/text-area';
+import { css, html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { Notification } from '@vaadin/notification';
+import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 import template from './dashboard-template.json';
-import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
-import { Notification } from '@vaadin/notification';
 
 @customElement('new-relic-dashboard-generator')
 export class DashboardGenerator extends LitElement {

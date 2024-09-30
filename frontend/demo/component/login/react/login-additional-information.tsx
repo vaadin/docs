@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { LoginOverlay, type LoginOverlayElement } from '@vaadin/react-components/LoginOverlay.js';
 
 function Example() {

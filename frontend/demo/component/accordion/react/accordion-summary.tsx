@@ -1,26 +1,26 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useForm } from '@vaadin/hilla-react-form';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   Accordion,
   AccordionHeading,
+  type AccordionOpenedChangedEvent,
   AccordionPanel,
   Button,
   ComboBox,
   EmailField,
   FormLayout,
+  type FormLayoutResponsiveStep,
   HorizontalLayout,
   TextField,
   VerticalLayout,
-  type AccordionOpenedChangedEvent,
-  type FormLayoutResponsiveStep,
 } from '@vaadin/react-components';
-import { useForm } from '@vaadin/hilla-react-form';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
-import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
-import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import { getCountries } from 'Frontend/demo/domain/DataService';
+import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
+import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
