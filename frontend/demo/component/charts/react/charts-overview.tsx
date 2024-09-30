@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
-import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

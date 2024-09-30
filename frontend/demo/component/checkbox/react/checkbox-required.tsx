@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import { Required } from '@vaadin/hilla-lit-form';
+import { useForm, useFormPart } from '@vaadin/hilla-react-form';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { Required } from '@vaadin/hilla-lit-form';
-import { useForm, useFormPart } from '@vaadin/hilla-react-form';
 import UserPermissionsModel from 'Frontend/generated/com/vaadin/demo/domain/UserPermissionsModel';
 
 function Example() {

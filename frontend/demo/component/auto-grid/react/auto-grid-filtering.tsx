@@ -1,16 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { AutoGrid } from '@vaadin/hilla-react-crud';
-import { ProductService } from 'Frontend/generated/endpoints';
-import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
-import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
-import { TextField } from '@vaadin/react-components/TextField.js';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { Select, type SelectItem } from '@vaadin/react-components/Select.js';
-import type PropertyStringFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import type AndFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/AndFilter';
+import type PropertyStringFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter';
+import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
+import { ProductService } from 'Frontend/generated/endpoints';
+import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 
 const categories: SelectItem[] = [
   { label: 'All', value: 'All' },

@@ -1,9 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
+import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 
 function Example() {
   useSignals(); // hidden-source-line

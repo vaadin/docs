@@ -1,17 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
 import { AutoForm } from '@vaadin/hilla-react-crud';
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { Button } from '@vaadin/react-components/Button.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Notification } from '@vaadin/react-components/Notification.js';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { autoGridHostStyles } from 'Frontend/demo/component/auto-grid/react/auto-grid-host-styles'; // hidden-source-line
+import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
+import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
 import EmployeeModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/EmployeeModel';
 import { EmployeeService } from 'Frontend/generated/endpoints.js';
-import Gender from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee/Gender';
-import type Employee from 'Frontend/generated/com/vaadin/demo/fusion/crud/Employee';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { Button } from '@vaadin/react-components/Button.js';
-import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   useSignals(); // hidden-source-line

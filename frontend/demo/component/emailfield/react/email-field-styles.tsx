@@ -1,5 +1,4 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
 
 function Example() {
