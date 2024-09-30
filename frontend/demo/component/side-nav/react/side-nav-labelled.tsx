@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
 import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { SideNav } from '@vaadin/react-components/SideNav.js';
 import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';

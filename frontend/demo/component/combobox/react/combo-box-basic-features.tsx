@@ -1,5 +1,6 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { Tooltip } from '@vaadin/react-components/Tooltip.js';
