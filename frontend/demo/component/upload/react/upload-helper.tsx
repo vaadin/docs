@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Notification } from '@vaadin/react-components/Notification.js';
 import { Upload } from '@vaadin/react-components/Upload.js';
 

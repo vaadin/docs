@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { RadioButton } from '@vaadin/react-components/RadioButton.js';
 import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';

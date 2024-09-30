@@ -1,5 +1,6 @@
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { Button, Icon, Popover } from '@vaadin/react-components';
 
 function Example() {

@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { IntegerField } from '@vaadin/react-components/IntegerField';
 
 function Example() {
