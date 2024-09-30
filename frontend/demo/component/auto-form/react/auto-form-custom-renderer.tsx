@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react'; // hidden-source-line
 import { AutoForm, type AutoFormLayoutRendererProps } from '@vaadin/hilla-react-crud';
 import { Checkbox } from '@vaadin/react-components/Checkbox.js';
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';

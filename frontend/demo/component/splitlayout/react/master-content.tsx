@@ -1,3 +1,5 @@
+import React from 'react';
+
 type MasterContentProps = {
   style?: React.CSSProperties;
 };
