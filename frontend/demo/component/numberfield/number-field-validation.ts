@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('email-field-constraints')
+@customElement('number-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,13 +16,14 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-email-field
-        pattern="^.+@example\\.com$"
-        required
-        label="Email address"
-        error-message="Enter a valid example.com email address"
-        helper-text="Only example.com addresses allowed"
-      ></vaadin-email-field>
+      <vaadin-integer-field
+        label="Quantity"
+        helper-text="Max 10 items"
+        min="0"
+        max="10"
+        value="2"
+        step-buttons-visible
+      ></vaadin-integer-field>
       <!-- end::snippet[] -->
     `;
   }

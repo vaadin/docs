@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/text-area';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('text-area-constraints')
+@customElement('text-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,16 +16,15 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-area
+      <vaadin-text-field
         required
         min-length="5"
-        max-length="50"
-        pattern="^[A-Z]([A-Za-z0-9,-\\s])*\\.$"
-        allowed-char-pattern="[A-Za-z0-9,.\\-\\s]"
-        label="Sentence"
-        helper-text="Must be one complete sentence ending in a period, between 5 and 50 characters long"
-        style="width:100%"
-      ></vaadin-text-area>
+        max-length="18"
+        pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$"
+        allowed-char-pattern="[0-9()+-]"
+        label="Phone number"
+        helper-text="Format: +(123)456-7890"
+      ></vaadin-text-field>
       <!-- end::snippet[] -->
     `;
   }

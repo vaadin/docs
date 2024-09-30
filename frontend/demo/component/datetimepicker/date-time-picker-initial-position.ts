@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/date-time-picker';
-import { applyTheme } from 'Frontend/generated/theme';
-import startOfMonth from 'date-fns/startOfMonth';
 import addMonths from 'date-fns/addMonths';
 import formatISO from 'date-fns/formatISO';
+import startOfMonth from 'date-fns/startOfMonth';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 const startOfNextMonth = startOfMonth(addMonths(new Date(), 1));
 const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 'date' });

@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/email-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/combo-box';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('combo-box-constraints')
+@customElement('email-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,14 +16,13 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-combo-box
+      <vaadin-email-field
+        pattern="^.+@example\\.com$"
         required
-        allowed-char-pattern="[A-Z]"
-        label="Country code"
-        helper-text="2-letter uppercase ISO country code"
-        allow-custom-value
-        .items="${['DE', 'FI', 'US']}"
-      ></vaadin-combo-box>
+        label="Email address"
+        error-message="Enter a valid example.com email address"
+        helper-text="Only example.com addresses allowed"
+      ></vaadin-email-field>
       <!-- end::snippet[] -->
     `;
   }

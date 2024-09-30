@@ -5,10 +5,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("combo-box-constraints")
-public class ComboBoxConstraints extends HorizontalLayout {
+@Route("combo-box-validation")
+public class ComboBoxValidation extends HorizontalLayout {
 
-    public ComboBoxConstraints() {
+    public ComboBoxValidation() {
         setPadding(false);
 
         // tag::snippet[]
@@ -24,6 +24,6 @@ public class ComboBoxConstraints extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<ComboBoxConstraints> { // hidden-source-line
+    public static class Exporter extends DemoExporter<ComboBoxValidation> { // hidden-source-line
     } // hidden-source-line
 }

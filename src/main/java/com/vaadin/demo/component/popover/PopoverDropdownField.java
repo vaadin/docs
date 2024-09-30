@@ -50,7 +50,9 @@ public class PopoverDropdownField extends Div {
         rangeSelector.setItems("Today", "Last week", "Last month",
                 "Year to date", "Last year", "Past 5 years");
         rangeSelector.addValueChangeListener((e) -> {
-            updateRange(e.getValue());
+            if (e.isFromClient()) {
+                updateRange(e.getValue());
+            }
         });
 
         fromPicker = new DatePicker("From");

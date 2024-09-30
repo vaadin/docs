@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/context-menu';
 import '@vaadin/grid';
-import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import type { Grid } from '@vaadin/grid';
 import '@vaadin/menu-bar';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import type { Grid } from '@vaadin/grid';
+import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 interface FileItem {

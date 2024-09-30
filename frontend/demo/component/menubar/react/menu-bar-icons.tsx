@@ -1,8 +1,8 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import '@vaadin/icons';
+import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 
 function createItem(iconName: string, text: string, isChild = false) {
   const iconStyle: React.CSSProperties = {

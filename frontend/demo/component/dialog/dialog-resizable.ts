@@ -1,18 +1,15 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-
 import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/grid';
 import '@vaadin/vertical-layout';
-import { dialogRenderer } from '@vaadin/dialog/lit.js';
-
-import { applyTheme } from 'Frontend/generated/theme';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { getPeople } from 'Frontend/demo/domain/DataService';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
+import { dialogRenderer } from '@vaadin/dialog/lit.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-resizable')
 export class Example extends LitElement {

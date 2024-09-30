@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/grid';
+import { format } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { format } from 'date-fns';
 
 @customElement('grid-column-alignment')
 export class Example extends LitElement {

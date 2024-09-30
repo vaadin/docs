@@ -1,5 +1,5 @@
 import type Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product.js';
-import Supplier from 'Frontend/generated/com/vaadin/demo/fusion/crud/Supplier.js';
+import type Supplier from 'Frontend/generated/com/vaadin/demo/fusion/crud/Supplier.js';
 import { CrudMockService } from './CrudService.js';
 
 const productData: Product[] = [

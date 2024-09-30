@@ -2,8 +2,8 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { DatePicker } from '@vaadin/react-components/DatePicker.js';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { TimePicker } from '@vaadin/react-components/TimePicker.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
 
 function Example() {
   const responsiveSteps = [

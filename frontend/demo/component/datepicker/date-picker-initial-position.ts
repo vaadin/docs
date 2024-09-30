@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/date-picker';
+import { formatISO, lastDayOfYear } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-import { formatISO, lastDayOfYear } from 'date-fns';
 
 @customElement('date-picker-initial-position')
 export class Example extends LitElement {

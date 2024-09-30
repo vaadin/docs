@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import type { TimePickerChangeEvent } from '@vaadin/react-components/TimePicker.js';
+import { TimePicker } from '@vaadin/react-components/TimePicker.js';
 
 function Example() {
   useSignals(); // hidden-source-line

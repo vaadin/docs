@@ -5,10 +5,10 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("number-field-min-max")
-public class NumberFieldMinMax extends Div {
+@Route("number-field-validation")
+public class NumberFieldValidation extends Div {
 
-    public NumberFieldMinMax() {
+    public NumberFieldValidation() {
         // tag::snippet[]
         IntegerField integerField = new IntegerField();
         integerField.setLabel("Quantity");
@@ -21,6 +21,6 @@ public class NumberFieldMinMax extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<NumberFieldMinMax> { // hidden-source-line
+    public static class Exporter extends DemoExporter<NumberFieldValidation> { // hidden-source-line
     } // hidden-source-line
 }

@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/context-menu';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import type { ContextMenuItem } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/generated/theme';
 

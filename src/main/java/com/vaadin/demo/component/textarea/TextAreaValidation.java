@@ -5,10 +5,10 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("text-area-constraints")
-public class TextAreaConstraints extends HorizontalLayout {
+@Route("text-area-validation")
+public class TextAreaValidation extends HorizontalLayout {
 
-    public TextAreaConstraints() {
+    public TextAreaValidation() {
         setPadding(false);
 
         // tag::snippet[]
@@ -25,6 +25,6 @@ public class TextAreaConstraints extends HorizontalLayout {
         add(field);
     }
 
-    public static class Exporter extends DemoExporter<TextAreaConstraints> { // hidden-source-line
+    public static class Exporter extends DemoExporter<TextAreaValidation> { // hidden-source-line
     } // hidden-source-line
 }

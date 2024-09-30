@@ -1,6 +1,6 @@
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import type RawReport from 'Frontend/generated/com/vaadin/demo/domain/Report';
 import type ServiceHealth from 'Frontend/generated/com/vaadin/demo/domain/ServiceHealth';
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';

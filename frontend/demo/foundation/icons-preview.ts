@@ -1,9 +1,9 @@
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
-import { LitElement, html } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
+import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 
 type VaadinIconset = Iconset & { _icons: string[] };
 
@@ -120,13 +120,12 @@ export class IconsPreview extends LitElement {
       />
       <ul>
         ${this.iconNames?.map(
-          (name: string) =>
-            html`
-              <li class="docs-icon-preview icon-${name}">
-                <vaadin-icon icon="${name}"></vaadin-icon>
-                <span class="docs-icon-preview-name">${name}</span>
-              </li>
-            `
+          (name: string) => html`
+            <li class="docs-icon-preview icon-${name}">
+              <vaadin-icon icon="${name}"></vaadin-icon>
+              <span class="docs-icon-preview-name">${name}</span>
+            </li>
+          `
         )}
       </ul>
     `;

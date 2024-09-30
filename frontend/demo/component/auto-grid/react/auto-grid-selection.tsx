@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { AutoGrid } from '@vaadin/hilla-react-crud';
-import { ProductService } from 'Frontend/generated/endpoints';
-import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import type Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product';
+import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
+import { ProductService } from 'Frontend/generated/endpoints';
+import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

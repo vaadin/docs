@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import '@vaadin/password-field';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/password-field';
 import '@vaadin/tooltip';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('password-field-basic-features')

@@ -1,5 +1,4 @@
 import { EndpointError } from '@vaadin/hilla-frontend';
-
 // Import the remote endpoint
 import { DataEndpoint } from 'Frontend/generated/endpoints';
 

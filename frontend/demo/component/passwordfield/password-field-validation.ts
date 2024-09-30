@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/password-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/text-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('text-field-constraints')
+@customElement('password-field-validation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -17,15 +16,14 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-text-field
+      <vaadin-password-field
+        allowed-char-pattern="[A-Za-z0-9]"
         required
-        min-length="5"
-        max-length="18"
-        pattern="^[+]?[\\(]?[0-9]{3}[\\)]?[\\-]?[0-9]{3}[\\-]?[0-9]{4,6}$"
-        allowed-char-pattern="[0-9()+-]"
-        label="Phone number"
-        helper-text="Format: +(123)456-7890"
-      ></vaadin-text-field>
+        min-length="6"
+        max-length="12"
+        label="Password"
+        helper-text="6 to 12 characters. Only letters A-Z and numbers supported."
+      ></vaadin-password-field>
       <!-- end::snippet[] -->
     `;
   }

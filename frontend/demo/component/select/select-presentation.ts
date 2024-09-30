@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/item';
 import '@vaadin/list-box';
 import '@vaadin/select';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { selectRenderer } from '@vaadin/select/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

@@ -1,11 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/date-picker';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/date-picker';
 import { Binder, field } from '@vaadin/hilla-lit-form';
-import { applyTheme } from 'Frontend/generated/theme';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('date-picker-custom-validation')
 export class Example extends LitElement {

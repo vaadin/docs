@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/email-field';
+import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/horizontal-layout';
-import '@vaadin/email-field';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('email-field-readonly-and-disabled')

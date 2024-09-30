@@ -1,9 +1,9 @@
-import { applyTheme } from 'Frontend/generated/theme';
-import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
+import { css, html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
