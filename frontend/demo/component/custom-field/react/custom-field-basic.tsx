@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { differenceInDays, isAfter, parseISO } from 'date-fns';
 import { useForm, useFormPart } from '@vaadin/hilla-react-form';
 import { CustomField } from '@vaadin/react-components/CustomField.js';
