@@ -1,17 +1,17 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { getPeople } from 'Frontend/demo/domain/DataService';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import '@vaadin/icons';
+import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Item({ person }: { person: Person }) {
   useSignals(); // hidden-source-line

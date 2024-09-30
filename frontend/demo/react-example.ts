@@ -1,7 +1,7 @@
 import 'Frontend/demo/init';
-import type { CSSResult } from 'lit';
 import React, { type ComponentClass, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { CSSResult } from 'lit';
 import { applyTheme } from 'Frontend/generated/theme';
 
 export function reactExample(

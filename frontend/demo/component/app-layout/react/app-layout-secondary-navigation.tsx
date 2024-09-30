@@ -1,17 +1,17 @@
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import {
   AppLayout,
   DrawerToggle,
   HorizontalLayout,
+  type HorizontalLayoutElement,
   Icon,
   Scroller,
   SideNav,
-  SideNavItem,
-  type HorizontalLayoutElement,
   type SideNavElement,
+  SideNavItem,
 } from '@vaadin/react-components';
-import '@vaadin/icons';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
