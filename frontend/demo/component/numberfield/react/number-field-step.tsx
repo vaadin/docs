@@ -26,7 +26,7 @@ function Example() {
         if (validity.badInput) {
           errorMessage.value = 'Invalid number format';
         } else if (validity.stepMismatch) {
-          errorMessage.value = `Duration must be a multiple of ${field.step}`;
+          errorMessage.value = `Must be a multiple of ${field.step}`;
         } else {
           errorMessage.value = '';
         }
