@@ -19,7 +19,9 @@ Also, you'll need to install https://helm.sh/[Helm]. It's a Kubernetes package m
 
 == Deploying Control Center
 
-To deploy Control Center to your Kubernetes cluster, run the following Helm command:
+To deploy Control Center to your Kubernetes cluster, run one of the following Helm commands.
+
+=== Development environment
 
 .Terminal
 [source,bash]
@@ -37,7 +39,47 @@ helm install control-center oci://docker.io/vaadin/control-center \  // <1>
 <4> Configures service settings for a load balancer on port `8000`. Change the port if necessary for your environment.
 <5> This says for Helm to wait until Control Center is fully deployed.
 
+=== Production environment
+
+.Terminal
+[source,bash]
+----
+helm install control-center oci://docker.io/vaadin/control-center \ # (1)
+    -n control-center --create-namespace \ # (2)
+    --set serviceAccount.clusterAdmin=true \  # (3)
+    -f values-ingress.yaml \ # (4)
+    --wait # (5)
+----
+
+<1> This installs Control Center.
+<2> This creates a dedicated namespace to isolate Control Center from other applications.
+<3> Grants administrative privileges that allow Control Center to manage cluster resources.
+<4> Configures a custom ingress configuration (see  below)
+<5> This says for Helm to wait until Control Center is fully deployed.
+
 Granting administrative privileges enables automatic installation of required dependencies. If you choose not to grant these privileges, though, you'll need to install necessary resources, manually.
+
+This is an example of a custom ingress configuration:
+
+[.example]
+--
+.values-ingress.yaml
+[source,yaml,subs="+quotes,verbatim"]
+----
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: "control-center.example.com"
+      paths:
+        - path: "/"
+          pathType: Prefix
+  tls:
+    - hosts:
+        - "control-center.example.com"
+      secretName: "control-center-tls"
+----
+--
 
 
 == Accessing Control Center
