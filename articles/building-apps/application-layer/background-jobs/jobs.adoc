@@ -1,0 +1,56 @@
+---
+title: Implementing Jobs
+description: How to implement backgorund jobs.
+order: 10
+---
+
+= Implementing Jobs
+
+When you implement a background job, you should decouple its implementation from how it is triggered, and where it is executed. This makes it possible to trigger the job in multiple ways.
+
+For instance, you may want to run the job every time the application starts up. In this case, you may want to run it in the main thread, blocking the initialization of the rest of the application until the job is finished. You may also want to run the job in a background thread every day at midnight, or whenever a certain application event is published.
+
+In code, a job is a Spring bean, annotated with the `@Component` annotation. It contains one or more methods, that when called, execute the job in the calling thread, like this:
+
+[source,java]
+----
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyBackgroundJob {
+
+    public void performBackgroundJob() {
+        ...
+    }
+}
+----
+
+== Transactions
+
+If the job works on the database, it should manage its own transactions. Because a job is a Spring bean, you can use either declarative, or programmatic transaction management. Here is the earlier example, with declarative transactions:
+
+[source,java]
+----
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+public class MyBackgroundJob {
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void performBackgroundJob() {
+        ...
+    }
+}
+----
+
+This guarantees that the job runs inside a new transaction, regardless of how it is triggered.
+
+== Security
+
+Unlike <<application-services#,application services>>, background jobs should _not_ use method security. The reason is that Spring Security uses the `SecurityContext` to access information about the current user. This context is typically thread local, which means it is not available in a background thread. Therefore, whenever the job is executed by a background thread, Spring would deny access.
+
+// TODO === Batch Jobs (copy from my blog post)
+
+// TODO === Simultaneous Executions (copy from my blog post)
