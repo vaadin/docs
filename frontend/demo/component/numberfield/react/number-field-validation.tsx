@@ -25,14 +25,15 @@ function Example() {
       }}
       onValidated={(event) => {
         const field = event.target as IntegerFieldElement;
-        if ((field.inputElement as HTMLInputElement).validity.badInput) {
+        const { validity } = field.inputElement as HTMLInputElement;
+        if (validity.badInput) {
           errorMessage.value = 'Invalid number format';
-        } else if (!field.value) {
+        } else if (validity.valueMissing) {
           errorMessage.value = 'Field is required';
-        } else if (Number(field.value) < 1) {
-          errorMessage.value = 'Quantity must be at least 1';
-        } else if (Number(field.value) > 10) {
-          errorMessage.value = 'Maximum 10 items available';
+        } else if (validity.rangeUnderflow) {
+          errorMessage.value = `Quantity must be at least ${field.min}`;
+        } else if (validity.rangeOverflow) {
+          errorMessage.value = `Maximum ${field.max} items available`;
         } else {
           errorMessage.value = '';
         }

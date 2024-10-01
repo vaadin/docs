@@ -22,14 +22,14 @@ function Example() {
       errorMessage={errorMessage.value}
       onValidated={(event) => {
         const field = event.target as TextAreaElement;
-        const value = field.value;
-        if (!value) {
+        const { validity } = field.inputElement as HTMLTextAreaElement;
+        if (validity.valueMissing) {
           errorMessage.value = 'Field is required';
-        } else if (value.length < field.minlength!) {
+        } else if (validity.tooShort) {
           errorMessage.value = `Minimum length is ${field.minlength} characters`;
-        } else if (value.length > field.maxlength!) {
+        } else if (validity.tooLong) {
           errorMessage.value = `Maximum length is ${field.maxlength} characters`;
-        } else if (!new RegExp(field.pattern).test(value)) {
+        } else if (!new RegExp(field.pattern).test(field.value)) {
           errorMessage.value = 'Must be one complete sentence ending in a period';
         } else {
           errorMessage.value = '';

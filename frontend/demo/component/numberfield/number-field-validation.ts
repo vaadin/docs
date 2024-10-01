@@ -31,14 +31,15 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: IntegerFieldValidatedEvent) => {
           const field = event.target as IntegerField;
-          if ((field.inputElement as HTMLInputElement).validity.badInput) {
+          const { validity } = field.inputElement as HTMLInputElement;
+          if (validity.badInput) {
             this.errorMessage = 'Invalid number format';
-          } else if (!field.value) {
+          } else if (validity.valueMissing) {
             this.errorMessage = 'Field is required';
-          } else if (Number(field.value) < 1) {
-            this.errorMessage = 'Quantity must be at least 1';
-          } else if (Number(field.value) > 10) {
-            this.errorMessage = 'Maximum 10 items available';
+          } else if (validity.rangeUnderflow) {
+            this.errorMessage = `Quantity must be at least ${field.min}`;
+          } else if (validity.rangeOverflow) {
+            this.errorMessage = `Maximum ${field.max} items available`;
           } else {
             this.errorMessage = '';
           }

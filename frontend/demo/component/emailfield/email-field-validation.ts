@@ -28,9 +28,10 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: EmailFieldValidatedEvent) => {
           const field = event.target as EmailField;
-          if (!field.value) {
+          const { validity } = field.inputElement as HTMLInputElement;
+          if (validity.valueMissing) {
             this.errorMessage = 'Field is required';
-          } else if (!new RegExp(field.pattern).test(field.value)) {
+          } else if (validity.patternMismatch) {
             this.errorMessage = 'Enter a valid example.com email address';
           } else {
             this.errorMessage = '';

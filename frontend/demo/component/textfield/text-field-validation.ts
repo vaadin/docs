@@ -31,14 +31,14 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: TextFieldValidatedEvent) => {
           const field = event.target as TextField;
-          const value = field.value;
-          if (!value) {
+          const { validity } = field.inputElement as HTMLInputElement;
+          if (validity.valueMissing) {
             this.errorMessage = 'Field is required';
-          } else if (value.length < field.minlength!) {
+          } else if (validity.tooShort) {
             this.errorMessage = `Minimum length is ${field.minlength} characters`;
-          } else if (value.length > field.maxlength!) {
+          } else if (validity.tooLong) {
             this.errorMessage = `Maximum length is ${field.maxlength} characters`;
-          } else if (!new RegExp(field.pattern).test(value)) {
+          } else if (validity.patternMismatch) {
             this.errorMessage = 'Invalid phone number format';
           } else {
             this.errorMessage = '';

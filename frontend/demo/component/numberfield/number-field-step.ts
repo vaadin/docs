@@ -28,10 +28,11 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: NumberFieldValidatedEvent) => {
           const field = event.target as NumberField;
-          if ((field.inputElement as HTMLInputElement).validity.badInput) {
+          const { validity } = field.inputElement as HTMLInputElement;
+          if (validity.badInput) {
             this.errorMessage = 'Invalid number format';
-          } else if (field.value && Number(field.value) % 0.5 !== 0) {
-            this.errorMessage = 'Duration must be a multiple of 0.5';
+          } else if (validity.stepMismatch) {
+            this.errorMessage = `Duration must be a multiple of ${field.step}`;
           } else {
             this.errorMessage = '';
           }

@@ -32,14 +32,14 @@ export class Example extends LitElement {
         .errorMessage="${this.errorMessage}"
         @validated="${(event: TextAreaValidatedEvent) => {
           const field = event.target as TextArea;
-          const value = field.value;
-          if (!value) {
+          const { validity } = field.inputElement as HTMLTextAreaElement;
+          if (validity.valueMissing) {
             field.errorMessage = 'Field is required';
-          } else if (value.length < field.minlength!) {
+          } else if (validity.tooShort) {
             field.errorMessage = `Minimum length is ${field.minlength} characters`;
-          } else if (value.length > field.maxlength!) {
+          } else if (validity.tooLong) {
             field.errorMessage = `Maximum length is ${field.maxlength} characters`;
-          } else if (!new RegExp(field.pattern).test(value)) {
+          } else if (!new RegExp(field.pattern).test(field.value)) {
             field.errorMessage = 'Must be one complete sentence ending in a period';
           } else {
             field.errorMessage = '';

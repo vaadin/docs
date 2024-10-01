@@ -22,10 +22,11 @@ function Example() {
       }}
       onValidated={(event) => {
         const field = event.target as NumberFieldElement;
-        if ((field.inputElement as HTMLInputElement).validity.badInput) {
+        const { validity } = field.inputElement as HTMLInputElement;
+        if (validity.badInput) {
           errorMessage.value = 'Invalid number format';
-        } else if (field.value && Number(field.value) % 0.5 !== 0) {
-          errorMessage.value = 'Duration must be a multiple of 0.5';
+        } else if (validity.stepMismatch) {
+          errorMessage.value = `Duration must be a multiple of ${field.step}`;
         } else {
           errorMessage.value = '';
         }

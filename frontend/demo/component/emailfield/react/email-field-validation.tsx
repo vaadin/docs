@@ -18,9 +18,10 @@ function Example() {
       errorMessage={errorMessage.value}
       onValidated={(event) => {
         const field = event.target as EmailFieldElement;
-        if (!field.value) {
+        const { validity } = field.inputElement as HTMLInputElement;
+        if (validity.valueMissing) {
           errorMessage.value = 'Field is required';
-        } else if (!new RegExp(field.pattern).test(field.value)) {
+        } else if (validity.patternMismatch) {
           errorMessage.value = 'Enter a valid example.com email address';
         } else {
           errorMessage.value = '';
