@@ -2,6 +2,7 @@ package com.vaadin.demo.component.timepicker;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.timepicker.TimePicker;
+import com.vaadin.flow.component.timepicker.TimePicker.TimePickerI18n;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 
@@ -22,6 +23,8 @@ public class TimePickerCustomValidation extends Div {
         timePicker.setStep(Duration.ofMinutes(30));
         timePicker.setMin(LocalTime.of(8, 0));
         timePicker.setMax(LocalTime.of(16, 0));
+        timePicker.setI18n(new TimePickerI18n()
+                .setBadInputErrorMessage("Invalid time format"));
         add(timePicker);
 
         Binder<Appointment> binder = new Binder<>(Appointment.class);
