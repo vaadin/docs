@@ -1,9 +1,9 @@
+import '@vaadin/login';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { LoginResult } from '@vaadin/hilla-frontend';
-import { login } from './auth';
 import type { AfterEnterObserver, RouterLocation } from '@vaadin/router';
-import '@vaadin/login';
+import { login } from './auth';
 
 @customElement('login-view')
 export class LoginView extends LitElement implements AfterEnterObserver {

@@ -1,10 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/checkbox';
 import '@vaadin/horizontal-layout';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { Binder, field, Required } from '@vaadin/hilla-lit-form';
 import UserPermissionsModel from 'Frontend/generated/com/vaadin/demo/domain/UserPermissionsModel';
 import { applyTheme } from 'Frontend/generated/theme';

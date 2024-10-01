@@ -1,9 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/grid-pro';
 import '@vaadin/grid-pro/vaadin-grid-pro-edit-column.js';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';

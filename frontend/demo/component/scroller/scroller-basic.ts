@@ -1,7 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 import '@vaadin/button';
 import '@vaadin/date-picker';
 import '@vaadin/icon';
@@ -10,6 +7,8 @@ import '@vaadin/scroller';
 import '@vaadin/text-area';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-basic')

@@ -1,12 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
+import dateFnsFormat from 'date-fns/format';
+import dateFnsParse from 'date-fns/parse';
+import type { DatePickerDate } from '@vaadin/date-picker';
 import {
   DateTimePicker,
   type DateTimePickerElement,
 } from '@vaadin/react-components/DateTimePicker.js';
-import dateFnsFormat from 'date-fns/format';
-import dateFnsParse from 'date-fns/parse';
-import type { DatePickerDate } from '@vaadin/date-picker';
 
 function DateTimePickerInputFormat() {
   const dateTimePickerRef = useRef<DateTimePickerElement>(null);

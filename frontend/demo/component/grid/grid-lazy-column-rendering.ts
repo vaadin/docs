@@ -1,12 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/grid';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '@vaadin/grid';
+import type { GridBodyRenderer } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { GridBodyRenderer } from '@vaadin/grid';
 
 @customElement('grid-lazy-column-rendering')
 export class Example extends LitElement {

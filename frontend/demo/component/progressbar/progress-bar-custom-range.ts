@@ -1,8 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
+import '@vaadin/progress-bar';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/progress-bar';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('progress-bar-custom-range')

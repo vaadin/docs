@@ -1,13 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import '@vaadin/side-nav';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/side-nav';
 import '@vaadin/vertical-layout';
-import { applyTheme } from 'Frontend/generated/theme';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('side-nav-labelled')
 export class Example extends LitElement {

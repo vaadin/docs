@@ -1,11 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import '@vaadin/avatar';
 import '@vaadin/horizontal-layout';
-import { applyTheme } from 'Frontend/generated/theme';
+import { html, LitElement } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('avatar-sizes')
 export class Example extends LitElement {

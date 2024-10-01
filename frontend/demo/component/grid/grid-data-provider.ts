@@ -1,15 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
-
-import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
 import '@vaadin/text-field';
 import '@vaadin/icon';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-sort-column.js';
 import '@vaadin/grid/vaadin-grid-filter-column.js';
-import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
+import { html, LitElement } from 'lit';
+import { customElement, query, state } from 'lit/decorators.js';
 import type {
   Grid,
   GridDataProviderCallback,
@@ -18,6 +14,9 @@ import type {
   GridSorterDirection,
 } from '@vaadin/grid';
 import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
+import { getPeople } from 'Frontend/demo/domain/DataService';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import { applyTheme } from 'Frontend/generated/theme';
 
 function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());

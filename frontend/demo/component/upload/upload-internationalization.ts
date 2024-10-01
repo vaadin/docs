@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
+import '@vaadin/upload';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/upload';
 import type { UploadI18n } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 

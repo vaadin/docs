@@ -2,9 +2,9 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Board } from '@vaadin/react-components-pro/Board.js';
 import { BoardRow } from '@vaadin/react-components-pro/BoardRow.js';
+import boardStyles from './board-styles';
 import ExampleIndicator from './ExampleIndicator';
 import ExampleStatistics from './ExampleStatistics';
-import boardStyles from './board-styles';
 
 function Example() {
   return (

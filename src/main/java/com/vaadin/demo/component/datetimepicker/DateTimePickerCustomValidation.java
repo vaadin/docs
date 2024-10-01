@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.datetimepicker;
 
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker.DateTimePickerI18n;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
@@ -21,6 +22,8 @@ public class DateTimePickerCustomValidation extends Div {
         dateTimePicker
                 .setHelperText("Open Mondays-Fridays, 8:00-12:00, 13:00-16:00");
         dateTimePicker.setStep(Duration.ofMinutes(30));
+        dateTimePicker.setI18n(new DateTimePickerI18n()
+            .setBadInputErrorMessage("Invalid date or time format"));
         add(dateTimePicker);
 
         String errorMessage = "The selected day of week or time is not available";

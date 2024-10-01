@@ -1,8 +1,8 @@
-import { protectRoutes } from '@vaadin/hilla-react-auth';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
-import MainLayout from './MainLayout';
-import LoginView from './LoginView';
+import { protectRoutes } from '@vaadin/hilla-react-auth';
 import AboutView from './AboutView';
+import LoginView from './LoginView';
+import MainLayout from './MainLayout';
 
 // tag::snippet[]
 export const routes: RouteObject[] = protectRoutes([
