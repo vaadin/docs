@@ -1,20 +1,17 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-time-picker';
-import { addDays, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DateTimePickerChangeEvent } from '@vaadin/date-time-picker';
+import type { DatePicker } from '@vaadin/date-picker';
+import type { DateTimePicker, DateTimePickerValidatedEvent } from '@vaadin/date-time-picker';
+import type { TimePicker } from '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/generated/theme';
-
-const dateTimeFormat = `yyyy-MM-dd'T'HH:00:00`;
 
 @customElement('date-time-picker-validation')
 export class Example extends LitElement {
   @state()
   private errorMessage = '';
-
-  @state()
-  private initialValue = addDays(new Date(), 7);
 
   @state()
   private minDate = new Date();
@@ -33,17 +30,28 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-date-time-picker
+        required
         label="Appointment date and time"
         helper-text="Must be within 60 days from today"
-        .value="${format(this.initialValue, dateTimeFormat)}"
-        .min="${format(this.minDate, dateTimeFormat)}"
-        .max="${format(this.maxDate, dateTimeFormat)}"
+        .min="${format(this.minDate, `yyyy-MM-dd'T'HH:00:00`)}"
+        .max="${format(this.maxDate, `yyyy-MM-dd'T'HH:00:00`)}"
         .errorMessage="${this.errorMessage}"
-        @change="${({ target }: DateTimePickerChangeEvent) => {
-          const date = parseISO(target.value ?? '');
-          if (isBefore(date, this.minDate)) {
+        @validated="${(event: DateTimePickerValidatedEvent) => {
+          const field = event.target as DateTimePicker;
+          const datePicker: DatePicker = field.querySelector('[slot=date-picker]')!;
+          const timePicker: TimePicker = field.querySelector('[slot=time-picker]')!;
+          const hasBadDateInput =
+            !datePicker.value && !!(datePicker.inputElement as HTMLInputElement).value;
+          const hasBadTimeInput =
+            !timePicker.value && !!(timePicker.inputElement as HTMLInputElement).value;
+
+          if (hasBadDateInput || hasBadTimeInput) {
+            this.errorMessage = 'Invalid date or time';
+          } else if (!field.value) {
+            this.errorMessage = 'Field is required';
+          } else if (field.value < field.min!) {
             this.errorMessage = 'Too early, choose another date and time';
-          } else if (isAfter(date, this.maxDate)) {
+          } else if (field.value > field.max!) {
             this.errorMessage = 'Too late, choose another date and time';
           } else {
             this.errorMessage = '';
