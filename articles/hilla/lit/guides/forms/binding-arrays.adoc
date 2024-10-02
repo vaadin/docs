@@ -34,30 +34,42 @@ public class Group {
 
 == Repeating the Array Item Template
 
-A common need when working with arrays is to iterate over the items and stamp a template for every item. With form binding, array models are iterable. You can iterate over the array model directly; there is no need to get the value of the array. When iterating over an array model, you receive a binder node for the child item, which provides the item `model` and `value` inside the loop.
+A common need when working with arrays is to iterate over the items and stamp a template for each item. With form binding, array models are iterable. You can use the `useFormArrayPart` hook to iterate over the model and to get and set the value of the array.
+
+As you also need to get the `field` function for each item using the `useFormPart` hook, you need to create a component for the array item template.
 
 ifdef::hilla-react[]
 [source,tsx]
 ----
-import { useForm } from '@vaadin/hilla-react-form';
+import { useForm, useFormArrayPart, useFormPart } from '@vaadin/hilla-react-form';
+import { NumberField } from '@vaadin/react-components';
+import { TextField } from "@vaadin/react-components/TextField.js";
 import GroupModel from '.../GroupModel';
-import { TextField } from '@vaadin/react-components/TextField.js';
+import PersonModel from '.../PersonModel';
+
+function PersonForm({ model }: { model: PersonModel }) {
+    const { field } = useFormPart(model);
+
+    return (
+        <div>
+            <TextField {...field(model.fullName)} />
+            <NumberField {...field(model.age)} />
+        </div>
+    );
+}
 
 export default function GroupFormView() {
+    const { field, model } = useForm(GroupModel);
+    const { items} = useFormArrayPart(model.people);
 
-  const { model, field } = useForm(GroupModel);
-
-  return (
-    <>
-      {model.people.map(personBinder => (
-        <div>
-          <TextField label="Full name" {...field(personBinder.model.fullName)} />
-          <strong>Full name:</strong>
-          {personBinder.value.fullName}
-        </div>
-      ))}
-    </>
-  );
+    return (
+        <>
+            <TextField {...field(model.name)} />
+            {items.map((person, index) => (
+                <PersonForm key={index} model={person} />
+            ))}
+        </>
+    );
 }
 ----
 endif::hilla-react[]
@@ -101,43 +113,63 @@ endif::hilla-lit[]
 
 == Adding & Removing Array Items
 
-To append or prepend a new item to an array, use the [methodname]`appendItem()` method on the array binder node:
-
 ifdef::hilla-react[]
+You can modify the array value by using the `value` and `setValue` functions provided by `useFormArrayPart`.
+
 [source,tsx]
 ----
-const { model } = useForm(GroupModel);
-// ...
-model.people.appendItem();
-model.people.prependItem();
+import { useForm, useFormArrayPart, useFormPart } from '@vaadin/hilla-react-form';
+import { Button, NumberField } from '@vaadin/react-components';
+import { TextField } from "@vaadin/react-components/TextField.js";
+import GroupModel from '.../GroupModel';
+import PersonModel from '.../PersonModel';
+
+function PersonForm({ model, remove }: { model: PersonModel, remove: () => void }) {
+    const { field } = useFormPart(model);
+
+    return (
+        <div>
+            <TextField {...field(model.fullName)} />
+            <NumberField {...field(model.age)} />
+            <Button onClick={remove}>Remove</Button>
+        </div>
+    );
+}
+
+export default function GroupFormView() {
+    const { field, model } = useForm(GroupModel);
+    const { items, value, setValue } = useFormArrayPart(model.people);
+
+    return (
+        <>
+            <TextField {...field(model.name)} />
+            {items.map((person, index) => (
+                <PersonForm key={index} model={person} remove={() => setValue(value!.filter((_, i) => i !== index))} />
+            ))}
+            <Button onClick={() => setValue([...(value ?? []), PersonModel.createEmptyValue()])}>Add person</Button>
+        </>
+    );
+}
 ----
 endif::hilla-react[]
+
 ifdef::hilla-lit[]
+To append or prepend a new item to an array, use the [methodname]`appendItem()` method on the array binder node:
+
 [source,typescript]
 ----
 this.binder.for(this.binder.model.people).appendItem();
 this.binder.for(this.binder.model.people).prependItem();
 ----
-endif::hilla-lit[]
 
-By default, the new item values are empty. You can optionally specify the new item value as an argument:
+By default, the new item values are empty. You can specify the new item value as an argument:
 
-ifdef::hilla-react[]
-[source,tsx]
-----
-const { model } = useForm(GroupModel);
-// ...
-model.people.appendItem({fullName: 'Jane Doe'});
-----
-endif::hilla-react[]
-ifdef::hilla-lit[]
 [source,typescript]
 ----
 this.binder.for(this.binder.model.people).appendItem({fullName: 'Jane Doe'});
 ----
-endif::hilla-lit[]
 
-To remove an item, use the [methodname]`removeSelf()` method on the item binder node:
+To remove an item, use the [methodname]`removeSelf()` method on the item binder node like this:
 
 [source,typescript]
 ----
@@ -146,34 +178,6 @@ personBinder.removeSelf();
 
 The following example demonstrates adding and removing array items with the form view template:
 
-ifdef::hilla-react[]
-[source,tsx]
-----
-import { useForm } from '@vaadin/hilla-react-form';
-import GroupModel from '.../GroupModel';
-import { Button } from '@vaadin/react-components/Button.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-
-export default function GroupFormView() {
-
-  const { model, field } = useForm(GroupModel);
-
-  return (
-    <>
-      {model.people.map(personBinder => (
-        <div>
-          <TextField label="Full name" {...field(personBinder.model.fullName)} />
-          <Button onClick={() => personBinder.removeSelf()}>Delete</Button>
-        </div>
-      ))}
-
-      <Button onClick={() => model.people.appendItem()}>Add</Button>
-    </>
-  );
-}
-----
-endif::hilla-react[]
-ifdef::hilla-lit[]
 [source,typescript]
 ----
 class GroupFormView extends LitElement {

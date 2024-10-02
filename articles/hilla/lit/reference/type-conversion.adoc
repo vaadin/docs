@@ -8,13 +8,13 @@ description: Understanding conversion of data types from Java to TypeScript and 
 = Type Conversion between Java & TypeScript
 :toclevels: 2
 
-When converting data types from Java to TypeScript and vice versa, there are certain particulars to understand so you won't have problems. They're explained on this page.
+When converting data types from Java to TypeScript and vice versa, you should understand certain particulars so you won't have problems. They're explained on this page.
 
 
 [[typescript-values-in-java]]
 == Receiving TypeScript Values in Java
 
-When calling a Java endpoint method from TypeScript, [classname]`ConnectClient` serializes TypeScript call parameters to JSON and sends them to the Java backend. There they're deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java endpoint method is sent back to TypeScript through the same pipeline in the opposite direction.
+When calling a Java endpoint method from TypeScript, [classname]`ConnectClient` serializes TypeScript call parameters to JSON and sends them to the Java backend. There they're deserialized into Java types using the https://github.com/FasterXML/jackson[Jackson] JSON processing library. The return value of the Java endpoint method is sent back to TypeScript through the same pipeline in the other direction.
 
 
 === JSON Object Mapper
@@ -25,7 +25,7 @@ The visibility level of the default [classname]`ObjectMapper` can be configured 
 
 Other properties of the default [classname]`ObjectMapper` can be customized by following the https://docs.spring.io/spring-boot/docs/current/reference/html/howto-spring-mvc.html#howto-customize-the-jackson-objectmapper[Spring Boot documentation] on the subject. Alternatively, the entire [classname]`ObjectMapper` can be replaced with a custom one by providing an `ObjectMapper` bean with the qualifier defined in `com.vaadin.connect.HillaConnectController#VAADIN_ENDPOINT_MAPPER_BEAN_QUALIFIER`.
 
-The default [classname]`ObjectMapper` always converts TypeScript values to a JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification. This only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `NaN` and `Infinity` are non-compliant. If these values are sent, the server returns an error response: `400 Bad Request`. Sending a parameter of `undefined` from TypeScript results in default values for primitive types, `null` for a Java object, and `Optional.empty()` for `Optional`.
+The default [classname]`ObjectMapper` always converts TypeScript values to a JSON object before sending them to the backend, so that the values need to be compliant with the JSON specification. It only accepts values from the following types: `string`, `number`, `array`, `boolean`, JSON object or `null`. This implies that `NaN` and `Infinity` are non-compliant. If these values are sent, the server returns an error response: `400 Bad Request`. Sending a parameter of `undefined` from TypeScript results in default values for primitive types, `null` for a Java object, and `Optional.empty()` for `Optional`.
 
 
 [discrete]
@@ -207,11 +207,7 @@ export enum Enumeration {
 // }
 // ----
 
-Non-compliant values:
-
-* A non-matched string with name of the expected enum type.
-* Any other types: `boolean`, `number`, `object`, or `array`.
-
+Non-compliant values include a non-matched string with name of the expected enum type, and any other types: `boolean`, `number`, `object`, or `array`.
 
 
 === Array
@@ -239,7 +235,7 @@ Compliant TypeScript values are arrays of items with the same type as is expecte
 | `["foo", 1, null, "bar"]`
 |===
 
-Values of any other type are non-compliant, for example, `true`, `"foo"`, `"[1,2,3]"`, or `1`.
+Values of any other type are non-compliant (e.g., `true`, `"foo"`, `"[1,2,3]"`, or `1`).
 
 
 === Collection
@@ -249,7 +245,7 @@ Compliant TypeScript values are arrays of items with the same type as expected i
 [.small]
 [cols="1,1,1"]
 |===
-| Expected type in Java | TypeScript value | Converted value in Java
+| Expected Type in Java | TypeScript Value | Converted Value in Java
 
 | `Collection<Integer>`
 | `[1, 2, 3]`
@@ -314,6 +310,11 @@ public class MyBean {
 ----
 
 
+=== JsonNode
+
+The `JsonNode` Jackson type can be used to receive any kind of JSON object in Java. The `JsonNode` type is a tree model for JSON objects, and it can be used to navigate through the JSON object. The `JsonNode` type is converted to a TypeScript object with the type `unknown`. This means that the client-side code must correctly handle the type.
+
+
 [[java-values-in-typescript]]
 == Receiving Java Types in TypeScript
 
@@ -324,14 +325,9 @@ Type Conversion can be customized by using annotations on the object to serializ
 
 === Number Type
 
-// Skipping "There is..."
-pass:[<!-- vale Vaadin.ThereIs = NO -->]
-
 All Java types that extend [classname]`java.lang.Number` are deserialized to `number` in TypeScript. There are a few exceptions with extremely large or extremely small numbers. The safe integer range is from `-(2^53^ &minus; 1)` to `2^53^ &minus; 1`. This means that only numbers in this range can be represented exactly and compared correctly. See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger[more information about safe integers].
 
 In fact, not all `long` numbers in Java can be converted correctly to TypeScript, since its range is `-2^63^` to `2^63^ &minus; 1`. Unsafe numbers are rounded using the rules defined in the https://en.wikipedia.org/wiki/IEEE_754#Rounding_rules[IEEE-754 standard].
-
-pass:[<!-- vale Vaadin.ThereIs = YES -->]
 
 Special values such as `NaN`, `POSITIVE_INFINITY` and `NEGATIVE_INFINITY` are converted into `string` when sent to TypeScript.
 
@@ -366,12 +362,14 @@ All types that inherit from [classname]`java.lang.Map` become objects in TypeScr
 By default, the [classname]`ObjectMapper` converts Java's date time to a string in TypeScript, with the following formats:
 
 - `java.util.Date` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00.000+0000'`
-
 - `java.time.Instant` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00Z'`
-
 - `java.time.LocalDate` of `00:00:00 January 1st, 2019` => `'2019-01-01'`
-
 - `java.time.LocalDateTime` of `00:00:00 January 1st, 2019` => `'2019-01-01T00:00:00'`
+
+
+=== JsonNode
+
+The `JsonNode` type in Java allows to send an arbitrary JSON to the client. It's converted to `unknown` in TypeScript. This means that the client-side code must handle correctly the type.
 
 
 === Null
@@ -447,7 +445,7 @@ public void setCategory(String category) {
 ----
 
 
-=== The `@JsonIgnoreProperties` Annotation
+=== `@JsonIgnoreProperties` Annotation
 
 The `@JsonIgnoreProperties` annotation ignores a set of logical properties in serializing and deserializing. It must be used at class level.
 
@@ -464,11 +462,7 @@ public class Product {
 
 In addition to the properties passed as the annotation value, the `@JsonIgnoreProperties` annotation accepts the following options:
 
-// Ignoring these section headings
-pass:[<!-- vale Vale.Spelling = NO -->]
-
-
-==== allowSetters
+==== `allowSetters`
 
 For ignored properties, `allowSetters` allows you to set properties when deserializing, but doesn't list them in serialization.
 
@@ -486,7 +480,7 @@ public class User {
 ----
 
 
-==== allowGetters
+==== `allowGetters`
 
 For ignored properties, `allowGetters` lists them in the serialized object, but doesn't allow you to set it.
 
@@ -504,15 +498,14 @@ public class Product {
 ----
 
 
-==== ignoreUnknown
+==== `ignoreUnknown`
 
 During deserializing, `ignoreUnknown` prevents an error caused by the presence of a property in the JSON object that has no corresponding property in the Java class.
 
 This is a corner case, and shouldn't be necessary in Hilla, since the TypeScript-generated API shouldn't pass unknown properties.
 
-pass:[<!-- vale Vale.Spelling = YES -->]
 
-=== The `@JsonIgnoreType` Annotation
+=== `@JsonIgnoreType` Annotation
 
 The `@JsonIgnoreType` annotation is a class-level annotation that indicates that all properties of the annotated class type should be ignored during serializing and deserializing.
 
@@ -536,5 +529,36 @@ public class Sale {
     ...
 }
 ----
+
+=== `@JsonCreator` & `@JsonValue` Annotations (Domain Objects)
+
+The `@JsonCreator` and `@JsonValue` annotations are powerful tools in the Jackson JSON library that allow you to create domain objects, also known as single-value objects.
+
+The `@JsonCreator` annotation is used to indicate a constructor or factory method that should be used for deserialization. By annotating a constructor or factory method with `@JsonCreator`, you can specify how the JSON data should be mapped to the object's properties.
+
+On the other hand, the `@JsonValue` annotation is used to indicate a method that should be used for serialization. By annotating a method with `@JsonValue`, you can specify how the object should be converted to a JSON representation.
+
+These annotations provide flexibility and control over the serialization and deserialization process, allowing you to customize how your domain objects are represented in JSON.
+
+When generating the corresponding TypeScript code, Hilla maps the domain object to its raw value type. For example, if the domain object is a single-value object that wraps a string, the TypeScript type is `string`.
+
+[source,java]
+----
+public class EmailAddress {
+    private final String value;
+
+    @JsonCreator
+    public EmailAddress(String value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+}
+----
+
+All usages of `EmailAddress` in Java are converted to `string` in TypeScript.
 
 // end::content[]
