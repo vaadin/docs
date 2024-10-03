@@ -10,7 +10,9 @@ When you implement a background job, you should decouple its implementation from
 
 For instance, you may want to run the job every time the application starts up. In this case, you may want to run it in the main thread, blocking the initialization of the rest of the application until the job is finished. You may also want to run the job in a background thread every day at midnight, or whenever a certain application event is published.
 
-In code, a job is a Spring bean, annotated with the `@Component` annotation. It contains one or more methods, that when called, execute the job in the calling thread, like this:
+image::images/job-and-triggers.png[A job with three triggers]
+
+In code, a job is a Spring bean, annotated with the `@Component` or `@Service` annotation. It contains one or more methods, that when called, execute the job in the calling thread, like this:
 
 [source,java]
 ----
@@ -24,6 +26,8 @@ public class MyBackgroundJob {
     }
 }
 ----
+
+If the job is <<triggers#,triggered>> from within the same package, the class should be package private. Otherwise, it has to be public.
 
 == Transactions
 
@@ -49,12 +53,39 @@ This guarantees that the job runs inside a new transaction, regardless of how it
 
 == Security
 
-Unlike <<application-services#,application services>>, background jobs should _not_ use method security. The reason is that Spring Security uses the `SecurityContext` to access information about the current user. This context is typically thread local, which means it is not available in a background thread. Therefore, whenever the job is executed by a background thread, Spring would deny access.
+Unlike <<../application-services#,application services>>, background jobs should _not_ use method security. The reason is that Spring Security uses the `SecurityContext` to access information about the current user. This context is typically thread local, which means it is not available in a background thread. Therefore, whenever the job is executed by a background thread, Spring would deny access.
+
+If the background job needs information about the current user, this information should be passed to it by the <<triggers#,trigger>>, as an immutable method parameter.
 
 == Batch Jobs
 
-// TODO Write me (copy from my blog post)
+If you are writing a batch job that processes multiple inputs, you should consider implementing two versions of it: one that processes all applicable inputs, and another that processes a given set of inputs. For example, a batch job that generates invoices for shipped orders could look like this:
 
-== Simultaneous Executions
+[source,java]
+----
+@Component
+public class InvoiceCreationJob {
 
-// TODO Write me (copy from my blog post)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void createInvoicesForOrders(Collection<OrderId> orders) {
+        ...
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void createInvoicesForAllApplicableOrders() {
+        ...
+    }
+}
+----
+
+In this example, the first method creates invoices for the orders whose ID:s have been passed as parameters. The second method creates invoices for all orders that have been shipped and not yet invoiced.
+
+Implementing batch jobs like this does not require much effort if done from the start, but allows for flexibility that may be useful. Continuing on the invoice generation example, you may discover a bug in production. This bug has caused some orders to have bad data in the database. As a result, the batch job has not been able to generate invoices for them. Fixing the bug is easy, but your users do not want to wait for the next batch run to occur. Instead, as a part of the fix, you can add a button to the user interface that allows a user to trigger invoice generation for an individual order.
+
+== Idempotent Jobs
+
+Whenever you build a background job that updates, or generates data, you should consider making the job _idempotent_. An idempotent job leaves the database in the same state regardless of how many times it has been executed on the same input.
+
+For example, a job that generates invoices for shipped orders should always check that no invoice already exists before it generates a new one. Otherwise, some customers may end up getting multiple invoices because of an error somewhere.
+
+How to make a job idempotent depends on the job itself. It is therefore outside the scope of this documentation page.
