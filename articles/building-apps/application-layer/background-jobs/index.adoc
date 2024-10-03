@@ -19,7 +19,7 @@ Instead, you should use thread pools, or virtual threads.
 A thread pool consists of a queue, and a pool of running threads. The threads pick tasks from the queue and execute them. When the thread pool receives a new job, it adds it to the queue.
 The queue has an upper size limit. If the queue is full, the thread pool rejects the job, and throws an exception.
 
-Virtual threads were added in Java 21. Whereas ordinary threads are managed by the operating system,virtual threads are managed by the Java virtual machine. They are cheaper to start and run, which means you can have a much higher number of concurrent virtual threads than ordinary threads. 
+Virtual threads were added in Java 21. Whereas ordinary threads are managed by the operating system, virtual threads are managed by the Java virtual machine. They are cheaper to start and run, which means you can have a much higher number of concurrent virtual threads than ordinary threads. 
 
 See the https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html[Java Documentation] for more information about virtual threads.
 
@@ -29,9 +29,11 @@ The background jobs themselves should not need to manage their own thread pools,
 
 By default, Spring Boot sets up a `ThreadPoolTaskExecutor` in your application context. You can tweak the parameters of this executor through the `spring.task.executor.*` configuration properties.
 
-If you are using a newer version of Java and Spring Boot, and want to use virtual threads, you can enable them by setting the `spring.threads.virtual.enabled` configuration property to `true`. In this case, Spring Boot sets up a `SimpleAsyncTaskExecutor`, and creates a new virtual thread for every task.
+If you want to use virtual threads, you can enable them by setting the `spring.threads.virtual.enabled` configuration property to `true`. In this case, Spring Boot sets up a `SimpleAsyncTaskExecutor`, and creates a new virtual thread for every task.
 
-In practice, you inject an instance of `TaskExecutor` into your code, and submit work to it. Here is an example of a class that uses the `TaskExecutor`:
+You can interact with the `TaskExecutor` either directly, or declaratively through annotations.
+
+When interacting with it directly, you inject an instance of `TaskExecutor` into your code, and submit work to it. Here is an example of a class that uses the `TaskExecutor`:
 
 [source,java]
 ----
@@ -54,7 +56,26 @@ public class MyWorker {
 }
 ----
 
-You can also use the `@Async` annotation to tell Spring to execute your code using the `TaskExecutor`:
+[IMPORTANT]
+When you inject the `TaskExecutor`, you have to name the parameter `taskExecutor`. The application context may contain more than one bean that implements the `TaskExecutor` interface. If the parameter name does not match the name of the bean, Spring does not know which instance to inject.
+
+If you want to use annotations, you have to enable them before you can use them. Do this by adding the `@EnableAsync` annotation to your main application class, or any other `@Configuration` class:
+
+[source,java]
+----
+import org.springframework.scheduling.annotation.EnableAsync;
+
+@SpringBootApplication
+@EnableAsync
+public class Application{
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+----
+
+You can now use the `@Async` annotation to tell Spring to execute your code in a background thread:
 
 [source,java]
 ----
@@ -70,41 +91,70 @@ public class MyWorker {
 }
 ----
 
-The annotated version is more concise, but has some pitfalls you need to be aware of.
+See the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation] for more information about task execution.
 
-First, support for the `@Async` annotation must be explicitly enabled in the Spring application context. If you forget to do this, and you call `performTask()`, the method executes in the calling thread, and not in a background thread.
+=== Caveats
 
-Second, you cannot call the `performTask()` method from within the `MyWorker` class itself. This is because Spring by default uses proxies to process `@Async` annotations, and local  method calls bypass the proxy.
+Using annotations makes the code more concise. However, they come with some caveats you need to be aware of.
 
-== Task Scheduling
+First, if you forget to add `@EnableAsync` to your application, and you call an `@Async` method, it executes in the calling thread, not in a background thread.
 
-// TODO Continue here
-
-Spring also has built in support for scheduling tasks. You can schedule jobs programmatically by injecting a `TaskScheduler` into your code, like this:
+Second, you cannot call an `@Async` method from within the bean itself. This is because Spring by default uses proxies to process `@Async` annotations, and local method calls bypass the proxy. In the following example, `performTask()` is executed in a background thread, and `performAnotherTask()` in the calling thread:
 
 [source,java]
 ----
-public class MyScheduler {
+@Component
+public class MyWorker {
 
+    @Async
+    public void performTask() {
+        System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+    }
 
+    public void performAnotherTask() {
+        performTask(); // This call runs in the calling thread
+    }
 }
 ----
 
-For this, it sets up a separate thread pool. You can interact with it through a `TaskScheduler`.
-
-== Spring Configuration
-
-Before you can schedule tasks, you have to enable scheduling and asynchronous execution. To do this, add the `@EnableAsync` and the `@EnableScheduling` annotations to your main application class:
+If you interact with `TaskExecutor` directly, you avoid this problem:
 
 [source,java]
 ----
-import org.springframework.scheduling.annotation.EnableAsync;
+@Component
+public class MyWorker {
+
+    private final TaskExecutor taskExecutor;
+
+    MyWorker(TaskExecutor taskExecutor) {
+        this.taskExecutor = taskExecutor;
+    }
+
+    public void performTask() {
+        taskExecutor.execute(() -> {
+            System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+        });
+    }
+
+    public void performAnotherTask() {
+        performTask(); // This call runs in a background thread
+    }
+}
+----
+
+In this case, both `performTask()` and `performAnotherTask()` execute in a background thread.
+
+== Task Scheduling
+
+Spring also has built in support for scheduling tasks through a `TaskScheduler`. You can interact with it either directly, or through annotations. In both cases, you have to enable it by adding the `@EnableScheduling` annotation to your main application class, or any other `@Configuration` class:
+
+[source,java]
+----
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableAsync
 @EnableScheduling
-public class Application implements AppShellConfigurator {
+public class Application{
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -112,13 +162,103 @@ public class Application implements AppShellConfigurator {
 }
 ----
 
-In addition to using the `TaskExecutor` and `TaskScheduler` interfaces, you can also use the `@Async` and `@Scheduled` annotations to execute and schedule tasks. You'll see examples of both later on this page.
+When interacting with the `TaskScheduler` directly, you inject it into your code, and schedule wok with it. Here is an example class that uses the `TaskScheduler`:
 
-[IMPORTANT]
-Because both the task executor and the task scheduler implement the `TaskExecutor` interface, you have to use the names `taskExecutor` and `taskScheduler` in the constructor parameters. Otherwise, Spring does not know which instance to inject.
+[source,java]
+----
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.TaskScheduler;
 
-See the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation] for more information about task execution.
+@Component
+public class MyScheduler implements ApplicationListener<ApplicationReadyEvent> {
+
+    private final TaskScheduler taskScheduler;
+
+    public MyScheduler(TaskScheduler taskScheduler) {
+        this.taskScheduler = taskScheduler;
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        taskScheduler.scheduleAtFixedRate(this::performTask, Duration.ofMinutes(5));
+    }
+
+    private void performTask() {
+        System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+    }
+}
+----
+
+This example starts to call `performTask()` every 5 minutes after the application has started up.
+
+You can achieve the same using the `@Scheduled` annotation, like this:
+
+[source,java]
+----
+import org.springframework.scheduling.annotation.Scheduled;
+
+@Component
+public class MyScheduler {
+
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)
+    public void performTask() {
+        System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+    }
+}
+----
+
+See the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation] for more information about task scheduling.
+
+=== Caveats
+
+Spring uses a separate thread pool for task scheduling. The tasks themselves are also executed in this thread pool. If you have a small number of short tasks, this is not a problem. However, if you have many tasks, or long-running tasks, you may run into problems. For instance, your scheduled jobs may stop running because the thread pool has become exhausted.
+
+To avoid problems, you should use the scheduling thread pool to schedule jobs, and then hand them over to the task execution thread pool for execution. You can combine the `@Async` and `@Scheduled` annotations, like this:
+
+[source,java]
+----
+@Component
+public class MyScheduler {
+
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)
+    @Async
+    public void performTask() {
+        System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+    }
+}
+----
+
+You can also interact with the `TaskScheduler` and `TaskExecutor` directly, like this:
+
+[source,java]
+----
+@Component
+public class MyScheduler implements ApplicationListener<ApplicationReadyEvent> {
+
+    private final TaskScheduler taskScheduler;
+    private final TaskExecutor taskExecutor;
+
+    public MyScheduler(TaskScheduler taskScheduler, TaskExecutor taskExecutor) {
+        this.taskScheduler = taskScheduler;
+        this.taskExecutor = taskExecutor;
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        taskScheduler.scheduleAtFixedRate(this::performTask, Duration.ofMinutes(5));
+    }
+
+    private void performTask() {
+        taskExecutor.execute(() -> {
+            System.out.println("Hello, I'm running inside thread " + Thread.currentThread());
+        });
+    }
+}
+----
 
 == Building
+
+// TODO Come up with a better heading, and maybe a short intro to this section.
 
 section_outline::[]
