@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '2.2.0-rc.9';
+const DSP_VERSION = !process.argv.includes('--next') ? '2.2.0-rc.9' : '3.0.0-alpha.1';
 
 async function checkPreConditions() {
   try {
@@ -177,7 +177,7 @@ const SCRIPTS = {
           },
           {
             text: 'Building development bundle',
-            readySignal: 'You can now view',
+            readySignal: ['You can now view', 'watching for file changes'],
             doneText: 'Ready at http://localhost:8000. Stop the server with Ctrl+C',
             weight: 95,
             lastPhase: true,
@@ -373,7 +373,10 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
       }
 
       // Find if the output includes the ready signal for one of the phases.
-      const phase = phases.find((p) => data.includes(p.readySignal));
+      const phase = phases.find((p) => {
+        const readySignals = Array.isArray(p.readySignal) ? p.readySignal : [p.readySignal];
+        return readySignals.some((signal) => data.includes(signal));
+      });
 
       if (phase && !phase.done) {
         // A phase was found and it wasn't marked as done yet
