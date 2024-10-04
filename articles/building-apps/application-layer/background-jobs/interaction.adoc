@@ -1,0 +1,157 @@
+---
+title: Interacting with Jobs
+description: How to interact with jobs from the user interface.
+order: 25
+---
+
+// TODO Re-write this page once the pages about server push are finished. This page should explain how to adapt the background jobs to the different patterns of updating the UI from a background thread.
+
+= Interacting with Jobs
+
+// TODO
+
+== Awaiting Completion
+
+// TODO
+
+== Handling Errors
+
+// TODO
+
+== Reporting Progress
+
+// TODO
+
+== Cancelling
+
+A background job needs to know whether it has been cancelled, so that it can stop what it is doing. This is typically done through a boolean flag that the job checks, for instance at the beginning of every loop iteration. If you have created a separate <<jobs#,job object>>, you can do this with a `Supplier`, like this:
+
+[source,java]
+----
+@Component
+public class MyBackgroundJob {
+
+    public void performBackgroundJob(Supplier<Boolean> isCancelled) {     
+        var thingsToProcess = fetchThingsToProcess();
+        for (var thing: thingsToProcess) {
+            if (isCancelled.get()) {
+                return;
+            }
+            processThing(thing);
+        }   
+    }
+    
+    private List<Thing> fetchThingsToProcess() {
+        ...
+    }
+
+    private void processThing(Thing thing) {
+        ...
+    }
+}
+----
+
+The caller must make sure the supplier is thread-safe, for instance by using an `AtomicBoolean`.
+
+You can implement the application service method in different ways, depending on whether you are using Flow or Hilla for the user interface. However, regardless of which way you choose, you have to call the `TaskExecutor` directly to execute the job. _Do not use the  `@Async` annotation._
+
+=== Return a Handle [badge-flow]#Flow#
+
+First, create a handle interface that the user interface can use to cancel the job:
+
+[source,java]
+----
+@FunctionalInterface
+public interface CancellableJob {
+    void cancel();
+}
+----
+
+Next, implement the service method like this:
+
+[source,java]
+----
+public CancellableJob startJob() {
+    var cancelled = new AtomicBoolean(false);
+    taskExecutor.execute(() -> {
+        try {
+            myBackgroundJob.performBackgroundJob(cancelled::get);
+        } catch (Exception ex) {
+            log.error("Error performing background job", ex);
+        }
+    });
+    return () -> cancelled.set(true);
+}
+----
+
+When you call the `startJob()` method from the user interface, you should store the returned handle in a variable. If you need to cancel the job, call the `cancel()` method on the handle.
+
+// TODO Mention something about
+
+=== Return a CompletableFuture [badge-flow]#Flow#
+
+Implement the service method like this:
+
+[source,java]
+----
+public CompletableFuture<Void> startJob() {
+    var future = new CompletableFuture<Void>();
+    taskExecutor.execute(() -> {
+        try {
+            myBackgroundJob.performBackgroundJob(future::isCancelled);
+            future.complete(null);
+        } catch (Exception ex) {
+            future.completeExceptionally(ex);
+        }
+    });
+    return future;
+}
+----
+
+Note, that the `CompletableFuture` itself completes exceptionally with a `CompletionException` caused by a `CancellationException`.
+
+The user interface can use the `CompletableFuture`` like this:
+
+[source,java]
+----
+public class MyJobUI extends HorizontalLayout {
+    private CompletableFuture job;
+
+    public MyView(MyService service) {
+        var startButton = new Button("Start", event -> {
+            job = service.startJob();
+        });
+        var cancelButton = new Button("Cancel", event -> {
+            if (job != null) {
+                job.cancel(true);
+            }
+        });
+        add(startButton, cancelButton);
+    }
+}
+----
+
+// TODO Add link to how to handle errors and completion.
+
+=== Return a Flux  [badge-flow]#Flow# [badge-hilla]#Hilla#
+
+Implement the service method like this:
+
+[source,java]
+----
+public Flux<Void> startJob() {
+    var cancelled = new AtomicBoolean(false);
+    return Mono.fromRunnable(() -> myBackgroundJob.performBackgroundJob(cancelled::get)) // <1>
+        .doOnCancel(() -> cancelled.set(true)) // <2>
+        .subscribeOn(Schedulers.fromExecutor(taskExecutor)) // <3>
+        .then() // <4>
+        .flux(); // <5>
+}
+----
+<1> Create a `Mono` that completes empty when the job has finished.
+<2> If the `Mono` is cancelled, set the `cancelled` flag to `true`.
+<3> Execute the job in the `TaskExecutor` when subscribed to.
+<4> This is needed because `subscribeOn` returns `Mono<Object>` and this method expects `Mono<Void>`.
+<5> Turn the `Mono` into a `Flux`, because Hilla only works with `Flux`.
+
+If the user interface cancels the subscription, the `cancelled` flag becomes `true`, and the job stops executing at its next iteration.

@@ -1,0 +1,122 @@
+---
+title: Callbacks
+description: How to use server push with callbacks.
+order: 20
+section-nav: badge-flow
+---
+
+= Callbacks [badge-flow]#Flow#
+
+If you are building the user interface with Flow, you can use callbacks to allow a background thread to update the user interface. This approach is easy to implement and understand.
+
+== Callback Interfaces
+
+You can use `Consumer` and `Runnable` as callback interfaces, depending on what information you want the background thread to send to your user interface.
+
+[cols="1,1"]
+|===
+|Event |Callback
+
+|Completed without a result
+|`Runnable`
+
+|Completed with a result of type `T`
+|`Consumer<T>`
+
+|Completed with an exception
+|`Consumer<Exception>`
+
+|Reported percentage done
+|`Consumer<Double>`
+
+|===
+
+For example, a background job that returns a string or an exception could be implemented like this:
+
+[source,java]
+----
+@Async
+public void startBackgroundJob(Consumer<String> onComplete, 
+                               Consumer<Exception> onError) {
+    try {
+        var result = doSomethingThatTakesALongTime();
+        onComplete.accept(result);
+    } catch (Exception ex) {
+        onError.accept(result);
+    }
+}
+----
+
+If the background job is also reporting its progress, for instance as a percentage number, it could look like this:
+
+[source,java]
+----
+@Async
+public void startBackgroundJob(Consumer<String> onComplete, 
+                               Consumer<Double> onProgress, 
+                               Consumer<Exception> onError) {
+    try {
+        onProgress.apply(0.0);
+
+        var step1Result = performStep1();
+        onProgress.apply(0.25);
+
+        var step2Result = performStep2(step1Result);
+        onProgress.apply(0.50);
+
+        var step3Result = performStep3(step2Result);
+        onProgress.apply(0.75);
+
+        var result = performStep4(step3Result);
+        onProgress.apply(1.0);
+
+        onComplete.accept(result);
+    } catch (Exception ex) {
+        onError.accept(ex);
+    }
+}
+----
+
+You can find more information about working with background threads on the <<{articles}/building-apps/application-layer/background-jobs#,Background Jobs>> and <<ui-threads#,UI Threads>> documentation pages.
+
+== Callback Implementations
+
+// This text assumes the logic behind `UI.access()` and `UI.accessLater()` has been explained earlier, including how to get the `UI` instance itself.
+
+Whenever you implement a callback, you have remember that the callback is called by the background thread. This means that any updates to the user interface, must happen inside a call to `UI.access()`. However, since you are using `Runnable` and `Consumer` callbacks, you can use `UI.accessLater()`.
+
+For every callback, you should create a private method in your user interface that you can pass as a method reference to `UI.accessLater`. For example, a method for handling successful completion could look like this:
+
+[source,java]
+----
+private void onJobCompleted(String result) {
+    Notification.show("Job completed: " + result);
+}
+----
+
+Likewise, a method for handling errors could look like this:
+
+[source,java]
+----
+private void onJobFailed(Exception error) {
+    Notification.show("Job failed: " + error.getMessage());
+}
+----
+
+For reporting progress, you can use a `<<{articles}/components/progress-bar#,ProgressBar>>`. If the background jobs reports the progress as a floating point value between 0.0 and 1.0, you can pass it directly to the `setValue` method of the progress bar.
+
+With these methods in place, the method that starts the background job could look like this:
+
+[source,java]
+----
+private void startJob() {
+    var ui = UI.getCurrent();
+    service.startBackgroundJob(
+        ui.accessLater(this::onJobCompleted, null),
+        ui.accessLater(progressBar::setValue, null),
+        ui.accessLater(this::onJobFailed, null)
+    );
+}
+----
+
+You would then call the `startJob()` method when a user clicks a button, for instance.
