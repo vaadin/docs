@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { patchSideNavNavigation } from './side-nav-helper'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
 import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { patchSideNavNavigation } from './side-nav-helper'; // hidden-source-line
 
 const Example = () => {
   const sideNavRef = useRef<SideNavElement>(null);

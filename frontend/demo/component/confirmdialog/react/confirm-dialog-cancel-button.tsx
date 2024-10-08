@@ -1,13 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import {
   ConfirmDialog,
   type ConfirmDialogOpenedChangedEvent,
 } from '@vaadin/react-components/ConfirmDialog.js';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   useSignals(); // hidden-source-line

@@ -2,6 +2,7 @@ package com.vaadin.demo.component.datepicker;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
@@ -16,21 +17,16 @@ public class DatePickerValidation extends Div {
         // tag::snippet[]
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
 
+        datePicker.setRequiredIndicatorVisible(true);
         datePicker.setMin(now);
         datePicker.setMax(now.plusDays(60));
         datePicker.setHelperText("Must be within 60 days from today");
-        datePicker.addValueChangeListener(event -> {
-            LocalDate value = datePicker.getValue();
-            String errorMessage = null;
-            if (value != null) {
-                if (value.compareTo(datePicker.getMin()) < 0) {
-                    errorMessage = "Too early, choose another date";
-                } else if (value.compareTo(datePicker.getMax()) > 0) {
-                    errorMessage = "Too late, choose another date";
-                }
-            }
-            datePicker.setErrorMessage(errorMessage);
-        });
+
+        datePicker.setI18n(new DatePickerI18n()
+                .setBadInputErrorMessage("Invalid date format")
+                .setRequiredErrorMessage("Field is required")
+                .setMinErrorMessage("Too early, choose another date")
+                .setMaxErrorMessage("Too late, choose another date"));
         // end::snippet[]
 
         add(datePicker);

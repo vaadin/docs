@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
+import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
 import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 
 interface FileItem {

@@ -10,6 +10,7 @@ function Example() {
       allowedCharPattern="[A-Z]"
       label="Country code"
       helperText="2-letter uppercase ISO country code"
+      errorMessage="Field is required"
       allowCustomValue
       items={['DE', 'FI', 'US']}
     />
