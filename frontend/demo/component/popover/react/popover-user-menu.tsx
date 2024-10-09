@@ -35,7 +35,7 @@ function Example() {
         >
           <Avatar
             tabIndex={-1}
-            style={{ display: 'block' }}
+            style={{ display: 'block', cursor: 'pointer' }}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
           />
@@ -48,13 +48,16 @@ function Example() {
         overlayRole="menu"
         modal
         accessibleName="User menu"
+        theme='no-padding'
       >
         <HorizontalLayout
-          theme="spacing"
           style={{
             background: 'var(--lumo-contrast-5pct)',
             padding: 'var(--lumo-space-s)',
-            margin: 'calc(var(--lumo-space-s) * -1)',
+            paddingInlineEnd: 'var(--lumo-space-l)',
+            margin: '2px',
+            alignItems: 'center',
+            gap: 'var(--lumo-space-s)'
           }}
         >
           <Avatar
@@ -62,33 +65,34 @@ function Example() {
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
             style={{ alignSelf: 'center' }}
+            theme='large'
           />
-          <VerticalLayout style={{ marginTop: 'var(--lumo-space-s)' }}>
-            <div style={{ fontWeight: 'bold', lineHeight: 1 }}>
+          <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-s)' }}>
+            <div style={{ fontWeight: 'bold'}}>
               {firstName} {lastName}
             </div>
-            <div>{nickName}</div>
+            <div style={{ fontSize: 'var(--lumo-font-size-s)', color: 'var(--lumo-secondary-text-color)'}}>{nickName}</div>
           </VerticalLayout>
         </HorizontalLayout>
-        <VerticalLayout style={{ marginTop: 'var(--lumo-space-s)', alignItems: 'stretch' }}>
+        <VerticalLayout style={{ paddingBottom: 'var(--lumo-space-xs)', alignItems: 'stretch', '--lumo-primary-text-color': 'var(--lumo-body-text-color)' }}>
           <a
             href="#"
             role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
+            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
           >
             User profile
           </a>
           <a
             href="#"
             role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
+            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
           >
             Preferences
           </a>
           <a
             href="#"
             role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
+            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
           >
             Sign out
           </a>
