@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';

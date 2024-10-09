@@ -1,4 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import getDaysInMonth from 'date-fns/getDaysInMonth';
 import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
