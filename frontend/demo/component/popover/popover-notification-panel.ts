@@ -88,14 +88,14 @@ export class Example extends LitElement {
   notificationsRenderer() {
     return html`
       <vaadin-horizontal-layout
-        style="align-items: baseline; padding: var(--lumo-space-s) var(--lumo-space-s) 0"
+        style="align-items: center; padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)"
       >
         <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
-        <vaadin-button style="margin-inline-start: auto" @click="${this.markAllRead}">
+        <vaadin-button theme="small" style="margin: 0 0 0 auto;" @click="${this.markAllRead}">
           Mark all read
         </vaadin-button>
       </vaadin-horizontal-layout>
-      <vaadin-tabsheet theme="no-padding">
+      <vaadin-tabsheet class="notifications" theme="small no-padding">
         <vaadin-tabs slot="tabs">
           <vaadin-tab id="unread-tab">Unread</vaadin-tab>
           <vaadin-tab id="all-tab">All</vaadin-tab>
@@ -105,15 +105,13 @@ export class Example extends LitElement {
             ? html`
                 <vaadin-message-list
                   .items="${this.unreadNotifications}"
-                  class="notifications"
                 ></vaadin-message-list>
               `
-            : 'No unread notifications'}
+            : html`<div class="no-notifications-msg">No unread notifications</div>`}
         </div>
         <div tab="all-tab">
           <vaadin-message-list
             .items="${this.allNotifications}"
-            class="notifications"
           ></vaadin-message-list>
         </div>
       </vaadin-tabsheet>

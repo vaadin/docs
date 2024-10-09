@@ -71,13 +71,14 @@ function Example() {
         accessibleNameRef="notifications-heading"
       >
         <HorizontalLayout
-          style={{ alignItems: 'baseline', padding: 'var(--lumo-space-s) var(--lumo-space-s) 0' }}
+          style={{ alignItems: 'baseline', padding: 'var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)' }}
         >
           <h4 style={{ margin: 0 }} id="notifications-heading">
             Notifications
           </h4>
           <Button
-            style={{ marginInlineStart: 'auto' }}
+            theme="small"
+            style={{ margin: '0 0 0 auto' }}
             onClick={() => {
               unreadNotifications.value = [];
             }}
@@ -85,19 +86,16 @@ function Example() {
             Mark all read
           </Button>
         </HorizontalLayout>
-        <TabSheet theme="no-padding">
+        <TabSheet theme="small no-padding" className="notifications">
           <TabSheetTab label="Unread">
             {unreadNotifications.value.length ? (
-              <MessageList
-                items={unreadNotifications.value}
-                className="notifications"
-              ></MessageList>
+              <MessageList items={unreadNotifications.value}></MessageList>
             ) : (
-              'No new notifications'
+              <div className="no-notifications-msg">No new notifications</div>
             )}
           </TabSheetTab>
           <TabSheetTab label="All">
-            <MessageList items={allNotifications.value} className="notifications"></MessageList>
+            <MessageList items={allNotifications.value}></MessageList>
           </TabSheetTab>
         </TabSheet>
       </Popover>
