@@ -44,7 +44,7 @@ function Example() {
   return (
     <>
       <HorizontalLayout style={{ alignItems: 'baseline' }}>
-        <strong style={{ flex: 1 }}>Employees</strong>
+        <h3 style={{ flex: 1 }}>Employees</h3>
         <Button id="toggle-columns" theme="icon" aria-label="Show / hide columns">
           <Icon icon="vaadin:grid-h" />
         </Button>
@@ -52,7 +52,7 @@ function Example() {
 
       {/* tag::snippet[] */}
       <Popover for="toggle-columns" modal withBackdrop position="bottom-end">
-        <h4 style={{ margin: 0 }}>Configure columns</h4>
+        <div style={{ fontWeight: '600', padding: 'var(--lumo-space-xs)' }}>Configure columns</div>
         <CheckboxGroup theme="vertical" value={visibleColumns.value}>
           {columns.value.map((item) => (
             <Checkbox
@@ -68,15 +68,15 @@ function Example() {
             ></Checkbox>
           ))}
         </CheckboxGroup>
-        <HorizontalLayout theme="spacing-xs">
-          <Button
+        <HorizontalLayout style={{ justifyContent: 'space-between' }}>
+          <Button theme='small'
             onClick={() => {
               columns.value = columns.value.map((column) => ({ ...column, visible: true }));
             }}
           >
             Show all
           </Button>
-          <Button
+          <Button theme='small'
             onClick={() => {
               columns.value = columns.value.map((column, idx) => ({
                 ...column,
