@@ -1,0 +1,101 @@
+---
+title: Full-stack Signals
+description: A Full-stack Signal is a special type that is designed to share and synchronize the state between the server and clients in real-time.
+order: 130
+---
+
+= [since:com.vaadin:vaadin@V24.5]#Full-stack Signals#
+
+When building a modern web application, you often need to synchronize the state between the server and clients. For example, you might want to notify all connected clients in a chat application when a new message is posted, visualize the interactions of multiple users editing the same record in a form, or when the status of an order in an e-commerce application changes. This is even more tricky when you this updates to be propagated to the clients in real-time. This is where Full-stack Signals come into play.
+
+A Full-stack Signal can be seen as a special data-type that holds the shared state, and enables the clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are automatically propagated to all other clients that are subscribed to the signal.
+
+In this guide, you will learn how to create and use Full-stack Signals in your Vaadin application.
+
+[NOTE]
+Full-stack Signals are still under active development and is not yet suitable for production use. Thus, to use them in your Vaadin projects, you need to explicitly enable the experimental feature in Copilot, or by manually adding `com.vaadin.experimental.fullstackSignals=true` to the [filename]`src/main/resources/vaadin-featureflags.properties` file.
+
+[NOTE]
+At the moment, the client-side implementation of Full-stack Signals is only available for Vaadin Hilla applications that use the **React** library for rendering the user interfaces.
+
+== Server-side Full-stack Signal Instance
+
+The purpose of a Full-stack Signal is to share and synchronize the state between the server and clients in real-time. In Vaadin Hilla applications, you can do that by creating an instance of one of the available Full-stack Signal types and returning it normally from your `@BrowserCallable` annotated endpoints. In the following example an instance of a `ValueSignal` is created and returned from a server-side endpoint:
+
+[source,java]
+.VoteService.java
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+
+import com.vaadin.hilla.signal.ValueSignal;
+
+@AnonymousAllowed
+@BrowserCallable
+public class VoteService {
+    private final ValueSignal<Boolean> started = new ValueSignal<>(false, Boolean.class); <1>
+
+    public ValueSignal<Boolean> startedSignal() {
+        return started; <2>
+    }
+}
+----
+
+<1> Create an instance of a `ValueSignal` with an initial value of false.
+<2> Return the instance of the `ValueSignal` from the `getSharedName` method.
+
+[CAUTION]
+It is important to note that the server-side instance of a Full-stack Signal is meant to be created once and shared across all clients. Thus, it is recommended to create the instance as a field in a service class, and return it from the server-side endpoints. This way, all clients will be able to subscribe to the same signal instance and receive real-time updates when the state changes.
+
+The above example demonstrates a simple polling service that uses a `ValueSignal` to share a boolean state of whether the voting has started or not. The clients can subscribe to this signal and receive real-time updates when the state changes. Based on this state, the clients can then start or stop the voting process.
+
+[NOTE]
+For a complete list of available Full-stack Signal types, see <<available-full-stack-signal-types>>.
+
+== Subscription to a Full-stack Signal
+
+For a client to receive real-time updates when the state of a Full-stack Signal changes, it needs to subscribe to the signal. This can be done as simple as calling any normal Vaadin endpoint. The following example demonstrates how to subscribe to the `started` signal created in the previous section:
+
+[source,tsx]
+.vote.tsx
+----
+import { VoteService } from "Frontend/generated/endpoints.js";
+import { Button } from '@vaadin/react-components/Button.js';
+
+const votingStarted = VoteService.startedSignal({ defaultValue: false }); <1>
+
+export default function VoteView() {
+  return (
+    <>
+      <span>Is voting in progress: {votingStarted.value ? 'Yes' : 'No'}</span> <2>
+      <Button onClick={() => votingStarted.value = !votingStarted.value} <3>
+              theme={votingStarted.value ? 'error' : ''}
+              >{votingStarted.value ? 'Stop' : 'Start'} Voting
+      </Button>
+    </>
+  );
+}
+----
+
+<1> Subscribe to the `started` signal and set the default value to `false`.
+<2> Render the current state of the signal by accessing its `value` property.
+<3> Toggling (changing) the state by setting the `value` property of the signal.
+
+[[available-full-stack-signal-types]]
+== Available Full-stack Signal Types
+
+The available Full-stack Signal types are:
+
+- `ValueSignal`: A signal that holds a single value of an arbitrary type.
+- `NumberSignal`: A signal that holds a number value.
+- `ListSignal`: A signal that holds a list of values of an arbitrary type.
+
+All the server-side Full-stack Signal types are available in the `com.vaadin.hilla.signal` package.
+
+== How Security Works with Full-stack Signals?
+Placeholder for the content.
+
+== Known Limitations
+Placeholder for the content.
