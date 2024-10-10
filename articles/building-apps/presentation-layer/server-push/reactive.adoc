@@ -16,7 +16,7 @@ Broadcasts typically use hot streams for output. A hot stream emits values regar
 
 In your user interfaces, you typically do not need to worry about unsubscribing from cold streams, as they are often short lived. However, if you subscribe to a hot stream, it is important that you remember to unsubscribe when no longer needed.
 
-=== Subscribing in Flow [badge-flow]#Flow#
+=== Flow
 
 In Flow, you can use both `Flux` and `Mono`. You subscribe to both by calling the `subscribe()` method. The method takes a <<callbacks#,callback>> that is called for each emitted value. You should implement the callback as a private method, and then wrap it inside `UI.accessLater()` when you subscribe.
 
@@ -54,7 +54,7 @@ protected void onAttach(AttachEvent attachEvent) {
 
 In this example, you are dealing with a hot stream. Therefore, you subscribe to it when your component is attached, and unsubscribe when it is detached.
 
-=== Subscribing in React [badge-hilla]#Hilla# 
+=== Hilla
 
 In Hilla, you can only use a `Flux`, even if you are only emitting a single value. You subscribe to it by calling the generated TypeScript endpoint method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
 
@@ -90,6 +90,55 @@ useEffect(() => {
 In this example, you are dealing with a hot stream. Therefore, you subscribe to it inside a React effect. As a cleanup function, you return the `cancel` method of the subscription object. This ensures that the subscription is cancelled whenever your component is removed from the DOM.
 
 == Handling Errors
+
+In a reactive stream, an error is a terminal event. This means that the subscription is cancelled and no more values are emitted. If you are dealing with a hot stream, you should therefore consider resubscribing to it as a part of error recovery.
+
+=== Flow
+
+In Flow, you can use the `doOnError()` method to attach a <<callbacks#,callback>> that gets called if an error occurs.
+
+If you add error handling to the earlier background job example, you end up with something like this:
+
+[source,java]
+----
+private void onJobCompleted(String result) {
+    Notification.show("Job completed: " + result);
+}
+
+private void onJobFailed(Throwable error) {
+    Notification.show("Job failed: " + error.getMessage());
+}
+
+private void startJob() {
+    var ui = UI.getCurrent();
+    service.startBackgroundJob()
+           .doOnError(ui.accessLater(this::onJobFailed, null))
+           .subscribe(ui.accessLater(this::onJobCompleted, null));
+}
+----
+
+=== Hilla
+
+In Hilla, you can use the `onError()` method of the `Subscription<T>` object to register a function that gets called if an error occurs.
+
+If you add error handling to the earlier background job example, you end up with something like this:
+
+[source,typescript]
+----
+const onJobCompleted = (result: string) => {
+    // Update the UI state
+}
+
+const onJobFailed = () => {
+    // Handle the error
+}
+
+const startJob = () => {
+    MyEndpoint.startBackgroundJob().onNext(onJobCompleted).onError(onJobFailed)
+}
+----
+
+Note, that the error callback function does not get any information about the error itself.
 
 == Buffering
 
@@ -143,4 +192,32 @@ public class EventEndpoint {
 }
 ----
 
-== Disconnects [badge-hilla]#Hilla#
+After this, the generated TypeScript endpoint method emits arrays of `Event` objects.
+
+== Lost Subscriptions [badge-hilla]#Hilla#
+
+In Hilla, you have to be prepared to handle the case where a subscription is lost without being cancelled. For instance, the user may close their laptop lid, or get temporarily disconnected from the network. Hilla automatically re-establishes the connection, but the subscription may no longer be valid. When this happen, Hilla calls the `onSubscriptionLost` callback function if one has been registered with the `Subscription<T>` object.
+
+This function can return two values:
+
+`REMOVE`:: Remove the subscription. No more values are received until the client has explicitly resubscribed.
+
+`RESUBSCRIBE`:: Re-subscribe by calling the same server method again.
+
+If you add automatic re-subscription to the earlier chat example, you end up with something like this:
+
+[source,typescript]
+----
+const onMessageReceived = (message: ChatMessage) => {
+    // Update the UI state
+}
+
+useEffect(() => {
+    const subscription = MyEndpoint.messages()
+        .onNext(onMessageReceived)
+        .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE)
+    return subscription.cancel
+}, [])
+----
+
+If no callback has been specified, `REMOVE` is the default action.
