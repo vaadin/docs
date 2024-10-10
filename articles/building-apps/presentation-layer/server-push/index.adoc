@@ -186,7 +186,7 @@ protected void onAttach(AttachEvent attachEvent) {
 
 The buffering duration depends on the size of the UI update, and the network latency. In some applications, you may need to use a longer buffer duration, in others, a shorter one might work. You should try various durations and see what works best for your application.
 
-// TODO Add link to subpage about reactive streams
+// TODO Add link to subpage about reactive streams and move the code example there.
 
 === Avoiding Unnecessary Pushes
 
@@ -228,4 +228,25 @@ if (ui.getSession().hasLock()) {
 
 == Reactive Endpoints [badge-hilla]#Hilla#
 
-TODO
+// TODO This text assumes that browser callable endpoints have already been explained earlier.
+
+If you are building your user interface with Hilla, you use reactive endpoints to push messages from the server to the browser. A reactive endpoint is an endpoint that returns a `Flux` from https://projectreactor.io/[Reactor]. For example, an endpoint that emits the current date and time every second could look like this:
+
+[source,java]
+----
+@BrowserCallable
+public class TimeEndpoint {
+
+    @AnonymousAllowed
+    public Flux<@Nonnull String> getClock() {
+        return Flux.interval(Duration.ofSeconds(1)) // <1>
+                .onBackpressureDrop() // <2>
+                .map(_interval -> Instant.now().toString()); // <3>
+    }
+}
+----
+<1> Emit a new message every second.
+<2> Drop any messages that for some reason cannot be sent to the client in time.
+<3> Output the current date and time as a string.
+
+Hilla generates the necessary TypeScript types to subscribe to this endpoint from the browser. The push connection is automatically established when the client subscribes. For more information about updating the UI using a reactive endpoint, see the <<reactive#,Reactive Streams>> documentation page.

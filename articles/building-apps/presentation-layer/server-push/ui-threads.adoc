@@ -7,4 +7,83 @@ section-nav: badge-flow
 
 = User Interface Threads [badge-flow]#Flow#
 
-// TODO This is about the use case when a Flow UI itself requires another thread to do UI-stuff. In other words, it is not starting a background job.
+You often use server push to update the user interface from background jobs. This is covered in the <<{articles}/building-apps/application-layer/background-jobs/interaction#,Background Jobs - UI Interaction>> documentation page. However, in Flow, there are also cases where you want to start up a separate thread for use by the user interface itself. You might, for instance, want to show the server date and time in "real time".
+
+If you have used Swing before, you might be tempted to use a `Timer`, or start a new `Thread` manually. In Flow, this is not a good idea. The reason is that Flow applications are multi-user applications, with potentially thousands of concurrent users. If each user creates its own `Timer`, or starts its own `Thread`, you may run out of threads. If that happens, the application crashes.
+
+Instead, you should use a shared `ExecutorService` or `ScheduledExecutorService`, or virtual threads.
+
+== Executor Service
+
+Although Spring has a `TaskExecutor`, you should create your own executor service for your user interface. Create a separate `@Configuration` class, like this:
+
+[source,java]
+----
+@Configuration
+class UIThreadConfiguration {
+
+    @Bean(destroyMethod = "shutdown")
+    public ScheduledExecutorService uiExecutor() {
+        return Executors.newSingleThreadScheduledExecutor();
+    }
+}
+----
+
+This example uses a single thread. If you need more threads, you can use `Executors.newScheduledThreadPool()`.
+
+Next, you inject the executor into your view, like this:
+
+[source,java]
+----
+@Route
+public class MyView extends VerticalLayout {
+
+    private final ScheduledExecutorService uiExecutor;
+
+    public MyView(ScheduledExecutorService uiExecutor) {
+        this.uiExecutor = uiExecutor;
+        ...
+    }
+}
+----
+
+Now, whenever you need to run a UI operation in a background thread, you can do this:
+
+[source,java]
+----
+uiExecutor.submit(UI.getCurrent().accessLater(() -> {
+    // Perform the UI operation here.
+}, null));
+----
+
+Because of the call to `UI.accessLater()`, the user interface is automatically updated through a server push when the task finishes.
+
+You can also use the executor to schedule tasks. In this case, you have to schedule the task when the component is attached, and cancel it when it is detached, like this:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var task = uiExecutor.scheduleAtFixedRate(
+        attachEvent.getUI().accessLater(() -> {
+            currentTimeLabel.setText(Instant.now().toString());
+        }, null), 0, 1, TimeUnit.SECONDS
+    );
+    addDetachListener(detachEvent -> task.cancel(true));
+}
+----
+
+This example schedules a task to be executed every second. The task sets the text of `currentTimeLabel` to the current date and time of the server. When the component is detached, the task is cancelled.
+
+== Virtual Threads
+
+If you use a Java version that supports virtual threads, you do not need to worry about setting up a thread pool. Just start up a new virtual thread whenever you need one, like this:
+
+[source,java]
+----
+Thread.ofVirtual().start(UI.getCurrent().accessLater(() -> {
+    // Perform the UI operation here.
+}, null));
+----
+
+For scheduled tasks, you should still use a `ScheduledExecutorService`.
