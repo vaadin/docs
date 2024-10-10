@@ -4,21 +4,143 @@ description: How to use server push with reactive streams.
 order: 40
 ---
 
-// TODO Write the text first, and then worry about how to group the texts later. Hilla and Flow on the same page, or on different pages? 
-
 = Reactive Streams
 
-If you are building the user interface with either Flow or Hilla, you can use reactive streams to allow a background thread to update the user interface. Reactive streams are also useful for broadcasts, where .... CONTINUE HERE
+If you are building the user interface with either Flow or Hilla, you can use <<{articles}/building-apps/application-layer/background-jobs/interaction/reactive#,reactive streams>> to allow a background thread to update the user interface. 
 
-== Background Threads
+== Subscribing
 
-=== Flow
+Background threads typically use cold streams for output. A cold stream starts emitting values when the client subscribes to it, and then completes.
 
-=== Hilla
+Broadcasts typically use hot streams for output. A hot stream emits values regardless of whether a client is subscribed or not. A subscriber only receives the values that were emitted while it was subscribed.
 
-== Broadcasts
+In your user interfaces, you typically do not need to worry about unsubscribing from cold streams, as they are often short lived. However, if you subscribe to a hot stream, it is important that you remember to unsubscribe when no longer needed.
 
-=== Flow
+=== Subscribing in Flow [badge-flow]#Flow#
 
-=== Hilla
+In Flow, you can use both `Flux` and `Mono`. You subscribe to both by calling the `subscribe()` method. The method takes a <<callbacks#,callback>> that is called for each emitted value. You should implement the callback as a private method, and then wrap it inside `UI.accessLater()` when you subscribe.
 
+For example, if you use a `Mono<String>` to receive the output of a background job, you could do this:
+
+[source,java]
+----
+private void onJobCompleted(String result) {
+    Notification.show("Job completed: " + result);
+}
+
+private void startJob() {
+    var ui = UI.getCurrent();
+    service.startBackgroundJob().subscribe(ui.accessLater(this::onJobCompleted, null));
+}
+----
+
+In this example, you are dealing with a cold stream and so, you do not need to explicitly unsubscribe from it.
+
+If you use a `Flux<ChatMessage>` to receive chat messages, you could do this:
+
+[source,java]
+----
+private void onMessageReceived(ChatMessage message) {
+    // Add the message to a message list
+}
+
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var subscription = service.messages()
+        .subscribe(attachEvent.getUI().accessLater(this::onMessageReceived, null));        
+    addDetachListener(detachEvent -> subscription.dispose());
+}
+----
+
+In this example, you are dealing with a hot stream. Therefore, you subscribe to it when your component is attached, and unsubscribe when it is detached.
+
+=== Subscribing in React [badge-hilla]#Hilla# 
+
+In Hilla, you can only use a `Flux`, even if you are only emitting a single value. You subscribe to it by calling the generated TypeScript endpoint method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
+
+For example, if you use a `Flux<String>` to receive the single output of a background job, you could do this:
+
+[source,typescript]
+----
+const onJobCompleted = (result: string) => {
+    // Update the UI state
+}
+
+const startJob = () => {
+    MyEndpoint.startBackgroundJob().onNext(onJobCompleted)
+}
+----
+
+In this example, you are dealing with a cold stream and so, you do not need to explicitly unsubscribe from it.
+
+If you use a `Flux<ChatMessage>` to receive chat messages, you could do this:
+
+[source,typescript]
+----
+const onMessageReceived = (message: ChatMessage) => {
+    // Update the UI state
+}
+
+useEffect(() => {
+    const subscription = MyEndpoint.messages().onNext(onMessageReceived)
+    return subscription.cancel
+}, [])
+----
+
+In this example, you are dealing with a hot stream. Therefore, you subscribe to it inside a React effect. As a cleanup function, you return the `cancel` method of the subscription object. This ensures that the subscription is cancelled whenever your component is removed from the DOM.
+
+== Handling Errors
+
+== Buffering
+
+You should not push updates to the browser more than 2--4 times per second. If your `Flux` is emitting events faster than that, you should buffer them and update the user interface in batches.
+
+Buffering a `Flux` is easy, as it has built-in support for it:
+
+[source,java]
+----
+private Flux<Event> eventStream() {
+    ...
+}
+
+public Flux<List<Event>> bufferedEventStream() {
+    return eventStream().buffer(Duration.ofMillis(250));
+}
+----
+
+In this example, the buffered stream buffers events for 250 milliseconds before it emits them in batches. Because of this, the user interface is receiving a `List<Event>` instead of an `Event`.
+
+If you are using Flow, you can do the buffering in your user interface, before you subscribe to the stream:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var subscription = myService.eventStream()
+        .buffer(Duration.ofMillis(250))
+        .subscribe(attachEvent.getUI().accessLater((eventList) -> {
+            // Update your UI here
+        }, null));        
+    addDetachListener(detachEvent -> subscription.dispose());
+}
+----
+
+If you are using Hilla, you have to do the buffering inside the reactive endpoint:
+
+[source,java]
+----
+@BrowserCallable
+public class EventEndpoint {
+
+    private Flux<Event> eventStream() {
+        ...
+    }
+
+    @AnonymousAllowed
+    public Flux<@Nonnull List<@Nonnull Event>> bufferedEventStream() {
+        return eventStream().buffer(Duration.ofMillis(250));
+    }
+}
+----
+
+== Disconnects [badge-hilla]#Hilla#
