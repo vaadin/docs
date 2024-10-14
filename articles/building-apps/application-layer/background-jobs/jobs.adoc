@@ -6,13 +6,17 @@ order: 10
 
 = Implementing Jobs
 
-When you implement a background job, you should consider decoupling its implementation from how it is triggered, and where it is executed. This makes it possible to trigger the job in multiple ways.
+When implementing a background job, it's important to decouple its logic from how and where it is triggered. This ensures flexibility in triggering the job from different sources.
 
 For instance, you may want to run the job every time the application starts up. In this case, you may want to run it in the main thread, blocking the initialization of the rest of the application until the job is finished. You may also want to run the job in a background thread every day at midnight, or whenever a certain application event is published.
 
+Here is a visual example of a job with three different triggers:
+
 image::images/job-and-triggers.png[A job with three triggers]
 
-In code, a job is a Spring bean, annotated with the `@Component` or `@Service` annotation. It contains one or more methods, that when called, execute the job in the calling thread, like this:
+In code, a job is a Spring bean, annotated with the `@Component` or `@Service` annotation. It contains one or more methods, that when called, execute the job in the calling thread. 
+
+Here is an example of a Spring bean that implements a single background job:
 
 [source,java]
 ----
@@ -27,11 +31,13 @@ public class MyBackgroundJob {
 }
 ----
 
-If the job is <<triggers#,triggered>> from within the same package, the class should be package private. Otherwise, it has to be public.
+If the job is <<triggers#,triggered>> from within the same package, the class can be package-private. If triggered externally, it must be public.
 
 == Transactions
 
-If the job works on the database, it should manage its own transactions. Because a job is a Spring bean, you can use either declarative, or programmatic transaction management. Here is the earlier example, with declarative transactions:
+If the job works on the database, it should manage its own transactions. Because a job is a Spring bean, you can use either declarative, or programmatic transaction management. 
+
+Here is an example of a background job that uses declarative transaction management to ensure the job runs inside a new transaction:
 
 [source,java]
 ----
@@ -49,17 +55,17 @@ public class MyBackgroundJob {
 }
 ----
 
-This guarantees that the job runs inside a new transaction, regardless of how it is triggered.
-
 == Security
 
-Unlike <<../application-services#,application services>>, background jobs should _not_ use method security. The reason is that Spring Security uses the `SecurityContext` to access information about the current user. This context is typically thread local, which means it is not available in a background thread. Therefore, whenever the job is executed by a background thread, Spring would deny access.
+Unlike <<../application-services#,application services>>, background jobs should _not_ rely on method-level security. The reason is that Spring Security uses the `SecurityContext` to access information about the current user. This context is typically thread local, which means it is not available in a background thread. Therefore, whenever the job is executed by a background thread, Spring would deny access.
 
 If the background job needs information about the current user, this information should be passed to it by the <<triggers#,trigger>>, as an immutable method parameter.
 
 == Batch Jobs
 
-If you are writing a batch job that processes multiple inputs, you should consider implementing two versions of it: one that processes all applicable inputs, and another that processes a given set of inputs. For example, a batch job that generates invoices for shipped orders could look like this:
+Consider implementing two versions of your batch job: one for processing all applicable inputs and another for handling a specific set of inputs. This approach provides flexibility when you need to process individual cases or recover from errors.
+
+For example, a batch job that generates invoices for shipped orders could look like this:
 
 [source,java]
 ----

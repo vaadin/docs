@@ -6,20 +6,26 @@ order: 20
 
 = Triggering Jobs
 
-A trigger is an object that starts a job. It decides which thread the job should execute in, executes it, and handles any exceptions that occurred.
+A trigger is an object responsible for starting a job, determining the thread in which to execute it, and handling any exceptions that occur during execution.
+
+Jobs can be triggered in various ways, such as on application startup, at regular intervals (e.g., weekly, daily at midnight, or every five minutes), or in response to specific application events or user actions. The same job can have multiple triggers.
+
+Below is a visual example of a job with three different triggers:
 
 image::images/job-and-triggers.png[A job with three triggers]
 
-Business applications have many different triggers. You may want to trigger some jobs on application startup. Other jobs may run once a week, every day at midnight, or every five minutes. Some jobs may run in response to application events, and others in response to user input. You might even have some jobs that can be triggered through a REST API, or through Java Management Extensions (JMX). You can even create multiple triggers for the same job.
+Spring has support for plugging in an `AsyncUncaughtExceptionHandler` that gets called whenever an `@Async` method throws an exception. However, this moves the error handling outside of the method where the error occurred. To increase code readability, you should handle the error explicitly in every trigger.
+
+Some triggers, like event listeners and schedulers, are not intended to be invoked by other objects. You should make them package-private to limit their visibility.
 
 [NOTE]
 On this page, all the trigger examples are delegating to a separate <<jobs#,job object>>. However, if your job is simple, and you know it only needs one trigger, you can implement the job itself inside the trigger.
 
 == User Triggered Jobs
 
-For user triggered jobs, an <<../application-services#,application service>> acts as the trigger. You can create a dedicated service class for this, or add a method to a suitable, existing application service. Like all other application service methods, it should be protected using method security.
+For user triggered jobs, an <<../application-services#,application service>> acts as the trigger. You can create a dedicated service class for this, or add a method to a suitable, existing application service. Like all other application service methods, it should be protected using method-level security to ensure only authorized users can trigger the job.
 
-Here is an example of an application service that executes a job in a background thread when called:
+The following example demonstrates how to trigger a background job from an application service using `@Async` and security annotations:
 
 [source,java]
 ----
@@ -36,34 +42,30 @@ public class MyApplicationService {
     @Async // <2>
     public void startJob(MyJobParameters params) {
         try {
-            job.executeJob(params); // <3>
+            job.executeJob(params);
         } catch (Exception ex) {
-            log.error("Error executing background job", ex); // <4>
+            log.error("Error executing background job", ex);
         }
     }
 }
 ----
 <1> Spring ensures the current user has permission to start the job.
 <2> Spring executes the method using its task executor thread pool.
-<3> The application service delegates to the job, and passes data from the client.
-<4> The application service logs any exceptions that may occur.
 
 This example uses the `@Async` annotation, but you can also execute the job <<../background-jobs#task-execution,programmatically>>.
 
-Sometimes, the background job needs to interact with the user interface. You may want to update a progress bar, do something with the results, or show an error message. To do that, you have to use server push, and design your service method in a particular way. You can find more information about this on the <<interaction#,UI Interaction>> documentation page.
+If the job needs to provide real-time updates to the user interface (e.g., showing a progress bar or error messages), you have to use server push. For more details, see the <<interaction#,User Interface Interaction>> documentation page.
 
 == Event Triggered Jobs
 
 For event triggered jobs, you should create an event listener that receives events from Spring's event publisher. By default, the event publisher calls each listener in the same thread that published the event. You should therefore hand over the job to the `TaskExecutor`.
 
-Since the listener is not intended to be called by other objects, you should make it package private.
-
-Here is an example of a listener that executes a job in a background thread whenever a `MyEvent` is published:
+Here is an example of a listener that listens for `MyEvent` to be published. When the event occurs, it triggers the job in a background thread:
 
 [source,java]
 ----
-@Component
-class PerformBackgroundJobOnMyEventTrigger { // <1>
+@Service
+class PerformBackgroundJobOnMyEventTrigger {
     private static final Logger log = LoggerFactory.getLogger(PerformBackgroundJobOnMyEventTrigger.class);
     private final MyBackgroundJob job;
     
@@ -71,22 +73,19 @@ class PerformBackgroundJobOnMyEventTrigger { // <1>
         this.job = job;
     }
 
-    @EventListener // <2>
-    @Async // <3>
+    @EventListener // <1>
+    @Async // <2>
     public void onMyEvent(MyEvent event) {
         try {
-            job.executeJob(event.someDataOfInterestToTheJob()); // <4>
+            job.executeJob(event.someDataOfInterestToTheJob());
         } catch (Exception ex) {
-            log.error("Error executing background job", ex); // <5>
+            log.error("Error executing background job", ex);
         }        
     }
 }
 ----
-<1> Trigger is package private.
-<2> Spring calls the trigger when the `MyEvent` is published.
-<3> Spring executes the method using its task executor thread pool.
-<4> The trigger delegates to the job, and passes data from the event.
-<5> The trigger logs any exceptions that may occur.
+<1> Spring calls the trigger when the `MyEvent` is published.
+<2> Spring executes the method using its task executor thread pool.
 
 This example uses the `@Async` annotation, but you can also execute the job <<../background-jobs#task-execution,programmatically>>.
 
@@ -94,16 +93,14 @@ This example uses the `@Async` annotation, but you can also execute the job <<..
 
 For scheduled jobs, you should create a scheduler that uses Spring's scheduling mechanism to trigger the job. 
 
-Spring uses a separate thread pool for scheduled tasks. You should not use this thread pool to execute the jobs. Instead, your schedulers should hand over the jobs to the `TaskExecutor`. 
-
-Since the scheduler is not intended to be called by other objects, you should make it package private.
+Spring uses a separate thread pool for scheduled tasks. It is important not to use the scheduling thread pool for executing jobs directly. Instead, schedule tasks using Spring’s `TaskScheduler` and then delegate the actual job execution to the `TaskExecutor`.
 
 Here is an example of a scheduler that schedules a job to execute every five minutes in a background thread:
 
 [source,java]
 ----
-@Component
-class MyBackgroundJobScheduler { // <1>
+@Service
+class MyBackgroundJobScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(MyBackgroundJobScheduler.class);
     private final MyBackgroundJob job;
@@ -112,22 +109,19 @@ class MyBackgroundJobScheduler { // <1>
         this.job = job;
     }
 
-    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES) // <2>
-    @Async // <3>
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES) // <1>
+    @Async // <2>
     public void executeJob() {
         try {
-            job.executeJob(); // <4>
+            job.executeJob();
         } catch (Exception ex) {
-            log.error("Error executing scheduled job", ex); // <5>
+            log.error("Error executing scheduled job", ex);
         }
     }
 }
 ----
-<1> Scheduler is package private.
-<2> Spring calls the trigger every 5 minutes.
-<3> Spring executes the method using its task executor thread pool.
-<4> The scheduler delegates to the job.
-<5> The scheduler logs any exceptions that may occur.
+<1> Spring calls the trigger every 5 minutes.
+<2> Spring executes the method using its task executor thread pool.
 
 This example uses the `@Scheduled` and `@Async` annotations, but you can also execute the job using the task scheduler and task executor <<../background-jobs#task-scheduling,programmatically>>.
 
@@ -137,38 +131,32 @@ Programmatic schedulers are more verbose, but they are easier to debug. Therefor
 
 For startup jobs, you should create a startup trigger that executes the job when the application starts. 
 
-Since the trigger is not intended to be called by other objects, you should make it package private.
-
-If you want the initialization of the application to block until the job is finished, you should start the job inside the constructor of your trigger. Furthermore, you should execute the job in the calling thread, which in this case is Spring's main thread. If an error occurs during a job like this, you probably want the application to exit. Therefore, you can leave any exceptions unhandled.
+If you need to block the application initialization until the job is completed, you can execute it in the main thread. For non-blocking execution, consider using a listener for the `ApplicationReadyEvent` to trigger the job once the application is fully initialized.
 
 Here is an example of a trigger that blocks initialization until the job is finished:
 
 [source,java]
 ----
-@Component
-class MyStartupTrigger { // <1>
+@Service
+class MyStartupTrigger {
 
     MyStartupTrigger(MyBackgroundJob job) {
-        job.executeJob(); // <2>
+        job.executeJob();
     }
 }
 ----
-<1> Trigger is package private.
-<2> The trigger delegates to the job, and executes in the calling thread.
 
 [IMPORTANT]
 Whenever you implement a startup trigger like this, you have to remember that the application is still being initialized. That means that not all services may be available for your job to use.
 
-If you want to trigger a job after the application has started, you should start the job in response to the `ApplicationReadyEvent` event. This event is published by Spring Boot when the application has started up and is ready to serve requests. Here is an example of a trigger that executes a job in a background thread after the application has started up:
-
-// TODO Is CommandLineRunner a simpler approach?
+Here is an example of a trigger that executes a job in a background thread after the application has started up:
 
 [source,java]
 ----
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
-@Component
-class MyStartupTrigger { // <1>
+@Service
+class MyStartupTrigger {
 
     private static final Logger log = LoggerFactory.getLogger(MyStartupTrigger.class);
     private final MyBackgroundJob job;
@@ -177,22 +165,19 @@ class MyStartupTrigger { // <1>
         this.job = job;
     }
 
-    @EventListener // <2>
-    @Async // <3>
+    @EventListener // <1>
+    @Async // <2>
     public void onApplicationReady(ApplicationReadyEvent event) {
         try {
-            job.executeJob(); // <4>
-        } catch (Exception ex) { // <5>
+            job.executeJob();
+        } catch (Exception ex) {
             log.error("Error executing job on startup", ex);
         }
     }
 }
 ----
-<1> Trigger is package private.
-<2> Spring calls the trigger when the `ApplicationReadyEvent` is published.
-<3> Spring executes the method using its task executor thread pool.
-<4> The trigger delegates to the job.
-<5> The trigger logs any exceptions that may occur.
+<1> Spring calls the trigger when the `ApplicationReadyEvent` is published.
+<2> Spring executes the method using its task executor thread pool.
 
 This example uses the `@Async` annotation, but you can also execute the job <<../background-jobs#task-execution,programmatically>>.
 
