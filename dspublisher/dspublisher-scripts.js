@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = !process.argv.includes('--next') ? '2.2.0-rc.9' : '3.0.0-alpha.1';
+const DSP_VERSION = !process.argv.includes('--next') ? '2.2.0-rc.9' : '3.0.0-alpha.2';
 
 async function checkPreConditions() {
   try {
