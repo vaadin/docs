@@ -10,7 +10,9 @@ const datasetCache: Record<string, any> = {};
 
 async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
   if (!datasetCache[fileName]) {
-    datasetCache[fileName] = (await import(`../../../src/main/resources/data/${fileName}`)).default;
+    datasetCache[fileName] = (
+      await import(`../../../src/main/resources/data/${fileName}.json`)
+    ).default;
   }
 
   // Create deep clones to avoid sharing the same item instances between examples
@@ -18,10 +20,9 @@ async function getDataset<T>(fileName: string, count?: number): Promise<T[]> {
 }
 
 export const getCountries = async (count?: number): Promise<Country[]> =>
-  getDataset<Country>('countries.json', count);
+  getDataset<Country>('countries', count);
 
-export const getCards = async (count?: number): Promise<Card[]> =>
-  getDataset<Card>('cards.json', count);
+export const getCards = async (count?: number): Promise<Card[]> => getDataset<Card>('cards', count);
 
 let peopleImages: string[];
 
@@ -40,7 +41,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
   if (!peopleImages) {
     peopleImages = (await import('../../../src/main/resources/data/peopleImages.json')).default;
   }
-  const allPeople = await getDataset<Person>('people.json');
+  const allPeople = await getDataset<Person>('people');
 
   let people = [...allPeople];
 
@@ -65,7 +66,7 @@ export async function getPeople(options?: PeopleOptions): Promise<PeopleResults>
 }
 
 export const getUserPermissions = async (): Promise<readonly UserPermissions[]> =>
-  getDataset<UserPermissions>('permissions.json');
+  getDataset<UserPermissions>('permissions');
 
 export enum ReportStatus {
   COMPLETED = 'Completed',
@@ -79,11 +80,9 @@ export type Report = Omit<RawReport, 'status'> &
     status: ReportStatus;
   }>;
 
-export const getReports = async (): Promise<readonly Report[]> =>
-  getDataset<Report>('reports.json');
+export const getReports = async (): Promise<readonly Report[]> => getDataset<Report>('reports');
 
 export const getServiceHealth = async (): Promise<ServiceHealth[]> =>
-  getDataset<ServiceHealth>('serviceHealth.json');
+  getDataset<ServiceHealth>('serviceHealth');
 
-export const getViewEvents = async (): Promise<ViewEvent[]> =>
-  getDataset<ViewEvent>('viewEvents.json');
+export const getViewEvents = async (): Promise<ViewEvent[]> => getDataset<ViewEvent>('viewEvents');
