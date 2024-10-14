@@ -6,22 +6,22 @@ order: 11
 
 = Background Jobs
 
-Many business applications need to perform in background threads. These tasks could be long-running tasks triggered by the user, or scheduled jobs that run automatically at a specific time of day, or at specific intervals.
+Many business applications need to perform in background threads. These tasks might be long-running operations triggered by the user, or scheduled jobs that run automatically at specific times or intervals.
 
 Working with more than one thread increases the risk of bugs. Furthermore, there are many different ways of implementing background jobs. To reduce the risk, you should learn one way, and then apply it consistently in all your Vaadin applications.
 
 == Threads
 
-Whenever you work with background threads in a Vaadin application, you should never create new `Thread` objects directly. First, new threads are expensive to start. Second, the number of concurrent threads in a Java application is limited. An exact number is impossible to give, but typically it is measured in thousands.
+Whenever you work with background threads in a Vaadin application, you should never create new `Thread` objects directly. First, new threads are expensive to start. Second, the number of concurrent threads in a Java application is limited. While the exact limit depends on various factors, Java applications typically support thousands of threads.
 
-Instead, you should use thread pools, or virtual threads.
+Instead of creating threads manually, you should use either a thread pool, or virtual threads.
 
 A thread pool consists of a queue, and a pool of running threads. The threads pick tasks from the queue and execute them. When the thread pool receives a new job, it adds it to the queue.
 The queue has an upper size limit. If the queue is full, the thread pool rejects the job, and throws an exception.
 
 Virtual threads were added in Java 21. Whereas ordinary threads are managed by the operating system, virtual threads are managed by the Java virtual machine. They are cheaper to start and run, which means you can have a much higher number of concurrent virtual threads than ordinary threads. 
 
-See the https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html[Java Documentation] for more information about virtual threads.
+For more information on virtual threads, see the https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html[Java Documentation].
 
 == Task Execution
 
@@ -33,7 +33,9 @@ If you want to use virtual threads, you can enable them by setting the `spring.t
 
 You can interact with the `TaskExecutor` either directly, or declaratively through annotations.
 
-When interacting with it directly, you inject an instance of `TaskExecutor` into your code, and submit work to it. Here is an example of a class that uses the `TaskExecutor`:
+When interacting with it directly, you inject an instance of `TaskExecutor` into your code, and submit work to it. 
+
+Here is an example of a class that uses the `TaskExecutor`:
 
 [source,java]
 ----
@@ -59,7 +61,9 @@ public class MyWorker {
 [IMPORTANT]
 When you inject the `TaskExecutor`, you have to name the parameter `taskExecutor`. The application context may contain more than one bean that implements the `TaskExecutor` interface. If the parameter name does not match the name of the bean, Spring does not know which instance to inject.
 
-If you want to use annotations, you have to enable them before you can use them. Do this by adding the `@EnableAsync` annotation to your main application class, or any other `@Configuration` class:
+If you want to use annotations, you have to enable them before you can use them. Do this by adding the `@EnableAsync` annotation to your main application class, or any other `@Configuration` class. 
+
+Here is an example that adds the annotation to the main application class:
 
 [source,java]
 ----
@@ -75,7 +79,9 @@ public class Application{
 }
 ----
 
-You can now use the `@Async` annotation to tell Spring to execute your code in a background thread:
+You can now use the `@Async` annotation to tell Spring to execute your code in a background thread. 
+
+Here is a version of the earlier `MyWorker` example that uses `@Async` instead of the `TaskExecutor`:
 
 [source,java]
 ----
@@ -91,15 +97,17 @@ public class MyWorker {
 }
 ----
 
-See the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation] for more information about task execution.
+For more information about task execution, see the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation].
 
 === Caveats
 
 Using annotations makes the code more concise. However, they come with some caveats you need to be aware of.
 
-First, if you forget to add `@EnableAsync` to your application, and you call an `@Async` method, it executes in the calling thread, not in a background thread.
+It is important to remember that if you forget to add `@EnableAsync` to your application, your `@Async` methods run synchronously in the calling thread instead of in a background thread.
 
-Second, you cannot call an `@Async` method from within the bean itself. This is because Spring by default uses proxies to process `@Async` annotations, and local method calls bypass the proxy. In the following example, `performTask()` is executed in a background thread, and `performAnotherTask()` in the calling thread:
+Also, you cannot call an `@Async` method from within the bean itself. This is because Spring by default uses proxies to process `@Async` annotations, and local method calls bypass the proxy. 
+
+In the following example, `performTask()` is executed in a background thread, and `performAnotherTask()` in the calling thread:
 
 [source,java]
 ----
@@ -117,7 +125,7 @@ public class MyWorker {
 }
 ----
 
-If you interact with `TaskExecutor` directly, you avoid this problem:
+If you interact with `TaskExecutor` directly, you avoid this problem. In the following example, both `performTask()` and `performAnotherTask()` execute in a background thread:
 
 [source,java]
 ----
@@ -142,11 +150,11 @@ public class MyWorker {
 }
 ----
 
-In this case, both `performTask()` and `performAnotherTask()` execute in a background thread.
-
 == Task Scheduling
 
-Spring also has built in support for scheduling tasks through a `TaskScheduler`. You can interact with it either directly, or through annotations. In both cases, you have to enable it by adding the `@EnableScheduling` annotation to your main application class, or any other `@Configuration` class:
+Spring also has built in support for scheduling tasks through a `TaskScheduler`. You can interact with it either directly, or through annotations. In both cases, you have to enable it by adding the `@EnableScheduling` annotation to your main application class, or any other `@Configuration` class.
+
+Here is an example that adds the annotation to the main application class:
 
 [source,java]
 ----
@@ -162,7 +170,9 @@ public class Application{
 }
 ----
 
-When interacting with the `TaskScheduler` directly, you inject it into your code, and schedule wok with it. Here is an example class that uses the `TaskScheduler`:
+When interacting with the `TaskScheduler` directly, you inject it into your code, and schedule work with it.
+
+Here is an example that uses the `TaskScheduler` to execute the `performTask()` method every five minutes:
 
 [source,java]
 ----
@@ -190,8 +200,6 @@ class MyScheduler implements ApplicationListener<ApplicationReadyEvent> {
 }
 ----
 
-This example starts to call `performTask()` every 5 minutes after the application has started up.
-
 You can achieve the same using the `@Scheduled` annotation, like this:
 
 [source,java]
@@ -208,7 +216,7 @@ class MyScheduler {
 }
 ----
 
-See the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation] for more information about task scheduling.
+For more information about task scheduling, see the https://docs.spring.io/spring-framework/reference/integration/scheduling.html[Spring Documentation].
 
 === Caveats
 
