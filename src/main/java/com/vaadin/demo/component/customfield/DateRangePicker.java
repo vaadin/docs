@@ -25,6 +25,11 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
         end.setPlaceholder("End date");
         end.setAriaLabel("End date");
 
+        // Enable manual validation on both date pickers to
+        // be able to override their invalid state
+        start.setManualValidation(true);
+        end.setManualValidation(true);
+
         add(start, new Text(" – "), end);
     }
 
@@ -37,6 +42,15 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
     protected void setPresentationValue(LocalDateRange dateRange) {
         start.setValue(dateRange.getStartDate());
         end.setValue(dateRange.getEndDate());
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        // Propagate invalid state to both date pickers so
+        // that they show a red background
+        start.setInvalid(invalid);
+        end.setInvalid(invalid);
     }
 }
 // end::snippet[]

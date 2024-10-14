@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.combobox;
 
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.ComboBox.ComboBoxI18n;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -15,6 +16,8 @@ public class ComboBoxValidation extends HorizontalLayout {
         ComboBox<String> field = new ComboBox<>();
         field.setRequiredIndicatorVisible(true);
         field.setAllowedCharPattern("[A-Z]");
+        field.setI18n(new ComboBoxI18n()
+                .setRequiredErrorMessage("Field is required"));
         // end::snippet[]
         field.setLabel("Country code");
         field.setHelperText("2-letter uppercase ISO country code");
