@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import '@vaadin/icon';
 import '@vaadin/horizontal-layout';
-import codeBranch from '../../../../src/main/resources/icons/code-branch.svg';
+import codeBranch from '../../../../src/main/resources/icons/code-branch.svg?url';
 
 @customElement('icons-color')
 export class Example extends LitElement {
