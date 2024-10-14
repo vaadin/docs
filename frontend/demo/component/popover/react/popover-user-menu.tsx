@@ -50,52 +50,24 @@ function Example() {
         accessibleName="User menu"
         theme='no-padding'
       >
-        <HorizontalLayout
-          style={{
-            background: 'var(--lumo-contrast-5pct)',
-            padding: 'var(--lumo-space-s)',
-            paddingInlineEnd: 'var(--lumo-space-l)',
-            margin: '2px',
-            alignItems: 'center',
-            gap: 'var(--lumo-space-s)'
-          }}
-        >
+        <HorizontalLayout className="userMenuHeader">
           <Avatar
             tabIndex={-1}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
-            style={{ alignSelf: 'center' }}
             theme='large'
           />
-          <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-s)' }}>
+          <VerticalLayout>
             <div style={{ fontWeight: 'bold'}}>
               {firstName} {lastName}
             </div>
-            <div style={{ fontSize: 'var(--lumo-font-size-s)', color: 'var(--lumo-secondary-text-color)'}}>{nickName}</div>
+            <div className="userMenuNickname">{nickName}</div>
           </VerticalLayout>
         </HorizontalLayout>
-        <VerticalLayout style={{ paddingBottom: 'var(--lumo-space-xs)', alignItems: 'stretch', '--lumo-primary-text-color': 'var(--lumo-body-text-color)' }}>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
-          >
-            User profile
-          </a>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
-          >
-            Preferences
-          </a>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs) var(--lumo-space-m)'}}
-          >
-            Sign out
-          </a>
+        <VerticalLayout className="userMenuLinks">
+          <a href="#" role="menuitem">User profile</a>
+          <a href="#" role="menuitem">Preferences</a>
+          <a href="#" role="menuitem">Sign out</a>
         </VerticalLayout>
       </Popover>
       {/* end::snippet[] */}

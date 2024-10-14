@@ -67,35 +67,22 @@ export class Example extends LitElement {
     const nickName = `@${firstName}${lastName}`.toLowerCase();
 
     return html`
-      <vaadin-horizontal-layout
-        style="background: var(--lumo-contrast-5pct);
-              padding: var(--lumo-space-s);
-              padding-inline-end: var(--lumo-space-l);
-              margin: 2px;
-              align-items: center;
-              gap: var(--lumo-space-s)"
-      >
+      <vaadin-horizontal-layout class="userMenuHeader">
         <vaadin-avatar
           tabindex="-1"
           .img="${pictureUrl}"
           .name="${`${firstName} ${lastName}`}"
           theme="large"
         ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-s)">
+        <vaadin-vertical-layout>
           <div style="font-weight: bold;">${firstName} ${lastName}</div>
-          <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">${nickName}</div>
+          <div class="userMenuNickname">${nickName}</div>
         </vaadin-vertical-layout>
       </vaadin-horizontal-layout>
-      <vaadin-vertical-layout style="align-items: stretch; padding-bottom: var(--lumo-space-xs); --lumo-primary-text-color: var(--lumo-body-text-color);">
-        <a href="#" role="menuitem" style="padding: var(--lumo-space-xs) var(--lumo-space-m);">
-          User profile
-        </a>
-        <a href="#" role="menuitem" style="padding: var(--lumo-space-xs) var(--lumo-space-m);">
-          Preferences
-        </a>
-        <a href="#" role="menuitem" style="padding: var(--lumo-space-xs) var(--lumo-space-m);">
-          Sign out
-        </a>
+      <vaadin-vertical-layout class="userMenuLinks">
+        <a href="#" role="menuitem">User profile</a>
+        <a href="#" role="menuitem">Preferences</a>
+        <a href="#" role="menuitem">Sign out</a>
       </vaadin-vertical-layout>
     `;
   }
