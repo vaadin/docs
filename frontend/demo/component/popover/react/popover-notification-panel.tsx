@@ -89,13 +89,13 @@ function Example() {
         <TabSheet theme="small no-padding" className="notifications">
           <TabSheetTab label="Unread">
             {unreadNotifications.value.length ? (
-              <MessageList items={unreadNotifications.value}></MessageList>
+              <MessageList items={unreadNotifications.value} />
             ) : (
               <div className="no-notifications-msg">No new notifications</div>
             )}
           </TabSheetTab>
           <TabSheetTab label="All">
-            <MessageList items={allNotifications.value}></MessageList>
+            <MessageList items={allNotifications.value} />
           </TabSheetTab>
         </TabSheet>
       </Popover>
