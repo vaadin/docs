@@ -1,13 +1,13 @@
 ---
 title: Pushing
-description: How to push updates to your Flow user interface.
+description: How to push updates to your Vaadin Flow user interface.
 order: 1
 section-nav: badge-flow
 ---
 
 = Pushing UI Updates [badge-flow]#Flow#
 
-Whenever you are using server push in Flow, you are triggering it from another thread than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption or deadlocks. Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent conflicts. You use it like this:
+Whenever you are using server push in Vaadin Flow, you are triggering it from another thread than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption, race conditions or deadlocks. Such errors are by nature hard to discover and fix, since they often occur randomly, under heavy load. Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent race conditions. You use it like this:
 
 [source,java]
 ----
@@ -46,7 +46,7 @@ Before you can call `access()`, you need to get the `UI` instance. You typically
 
 `Component.getUI()` is not thread-safe, which means you should only call it while the user session is locked. Therefore, you cannot use it to call `access()`.
 
-`UI.getCurrent()` only returns a UI whenever the session is locked. Therefore, you cannot use it to call `access()`, either.
+`UI.getCurrent()` only returns a non-`null` value when the current thread owns the session lock. When called from a background thread, it returns `null`. Therefore, you cannot use it to call `access()`, either.
 
 Whenever you are planning to use server push, you have to get a hold of the `UI` instance _while the user session is locked_. This typically happens right before you start your background thread, for example:
 
