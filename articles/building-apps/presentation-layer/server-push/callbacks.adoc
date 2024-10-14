@@ -7,11 +7,11 @@ section-nav: badge-flow
 
 = Callbacks [badge-flow]#Flow#
 
-If you are building the user interface with Flow, you can use <<{articles}/building-apps/application-layer/background-jobs/interaction/callbacks#,callbacks>> to allow a background thread to update the user interface.
+If you are building the user interface with Vaadin Flow, you can use <<{articles}/building-apps/application-layer/background-jobs/interaction/callbacks#,callbacks>> to allow a background thread to update the user interface.
 
-Whenever you implement a callback, you have remember that the callback is called by the background thread. This means that any updates to the user interface must happen inside a call to `UI.access()`. However, since you are using `Runnable` and `Consumer` callbacks, you can use `UI.accessLater()`.
+Whenever you implement a callback, you have remember that the callback is called by the background thread. This means that any updates to the user interface must happen inside a call to `UI.access()`.
 
-For every callback, you should create a private method in your user interface that you can pass as a method reference to `UI.accessLater()`. For example, a method for handling successful completion could look like this:
+For every callback, you should create a private method in your user interface. The method is going to be called inside `UI.access()` so you can safely update the user interface inside it. For example, a method for handling successful completion could look like this:
 
 [source,java]
 ----
@@ -38,11 +38,12 @@ With these methods in place, the method that starts the background job could loo
 private void startJob() {
     var ui = UI.getCurrent();
     service.startBackgroundJob(
-        ui.accessLater(this::onJobCompleted, null),
+        ui.accessLater(this::onJobCompleted, null), // <1>
         ui.accessLater(progressBar::setValue, null),
         ui.accessLater(this::onJobFailed, null)
     );
 }
 ----
+<1> The `UI.accessLater()` method is explained on the <<updates#access-later,Pushing UI Updates>> documentation page.
 
 You would then call the `startJob()` method when a user clicks a button, for instance.
