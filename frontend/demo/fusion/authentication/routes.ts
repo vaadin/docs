@@ -1,4 +1,4 @@
-import type { Route, Router } from '@vaadin/router';
+import type { Commands, Route } from '@vaadin/router';
 import { isUserInRole } from './auth';
 
 // Enable declaring additional data on the routes
@@ -27,7 +27,7 @@ export const routes: ViewRoute[] = [
     component: 'protected-view',
     title: 'Protected',
     rolesAllowed: ['ADMIN'],
-    action: async (context, commands: Router.Commands) => {
+    action: async (context, commands: Commands) => {
       const route = context.route as ViewRoute;
       if (!isAuthorizedViewRoute(route)) {
         return commands.prevent();
