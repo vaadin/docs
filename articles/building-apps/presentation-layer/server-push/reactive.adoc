@@ -32,7 +32,8 @@ private void onJobCompleted(String result) {
 
 private void startJob() {
     var ui = UI.getCurrent();
-    service.startBackgroundJob().subscribe(ui.accessLater(this::onJobCompleted, null));
+    service.startBackgroundJob()
+        .subscribe(ui.accessLater(this::onJobCompleted, null));
 }
 ----
 
@@ -50,7 +51,10 @@ private void onMessageReceived(ChatMessage message) {
 protected void onAttach(AttachEvent attachEvent) {
     var subscription = service.messages()
         .subscribe(attachEvent.getUI().accessLater(this::onMessageReceived, null));        
-    addDetachListener(detachEvent -> subscription.dispose());
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        subscription.dispose();
+    });
 }
 ----
 
@@ -58,7 +62,29 @@ In this example, you are dealing with a hot stream. Therefore, you subscribe to 
 
 === Hilla
 
-In Hilla, you can only use a `Flux`, even if you are only emitting a single value. You subscribe to it by calling the generated TypeScript endpoint method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
+In Hilla, you can only use a `Flux`, even if you are only emitting a single value. However, you can easily convert a `Mono` to a `Flux` by calling the `asFlux()` method. 
+
+This is an example of a reactive endpoint that delegates to a worker to start a background job. The worker returns a `Mono<String>`, which the endpoint converts to a `Flux<String>`:
+
+[source,java]
+----
+@BrowserCallable
+public class MyBackgroundJobEndpoint {
+
+    private final MyWorker worker;
+
+    MyBackgroundJobEndpoint(MyWorker worker) {
+        this.worker = worker;
+    }
+
+    @AnonymousAllowed
+    public Flux<String> startBackgroundJob() {
+        return worker.startBackgroundJob().asFlux();
+    }
+}
+----
+
+You subscribe to a `Flux` by calling the generated TypeScript endpoint method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
 
 For example, if you use a `Flux<String>` to receive the single output of a background job, you could do this:
 
@@ -85,7 +111,7 @@ const onMessageReceived = (message: ChatMessage) => {
 
 useEffect(() => {
     const subscription = MyEndpoint.messages().onNext(onMessageReceived)
-    return subscription.cancel
+    return () => subscription.cancel()
 }, [])
 ----
 
@@ -172,7 +198,10 @@ protected void onAttach(AttachEvent attachEvent) {
         .subscribe(attachEvent.getUI().accessLater((eventList) -> {
             // Update your UI here
         }, null));        
-    addDetachListener(detachEvent -> subscription.dispose());
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        subscription.dispose();
+    });
 }
 ----
 
@@ -218,7 +247,7 @@ useEffect(() => {
     const subscription = MyEndpoint.messages()
         .onNext(onMessageReceived)
         .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE)
-    return subscription.cancel
+    return () => subscription.cancel()
 }, [])
 ----
 

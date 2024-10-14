@@ -16,7 +16,7 @@ ui.access(() -> {
 });
 ----
 
-By default, Flow uses automatic pushing. This means that any pending changes are pushed to the browser automatically after `UI.access()` finishes. You can also configure Flow to use manual pushing. This gives you more control over when changes are pushed to the browser. For example, you can push multiple times inside a single call to `UI.access()`.
+By default, Flow uses automatic pushing. This means that any pending changes are pushed to the browser automatically after the command passed to `UI.access()` finishes. You can also configure Flow to use manual pushing. This gives you more control over when changes are pushed to the browser. For example, you can push multiple times inside a single call to `UI.access()`.
 
 To enable manual pushing, you have to make an addition to the `@Push` annotation, like this:
 
@@ -48,15 +48,19 @@ Before you can call `access()`, you need to get the `UI` instance. You typically
 
 `UI.getCurrent()` only returns a non-`null` value when the current thread owns the session lock. When called from a background thread, it returns `null`. Therefore, you cannot use it to call `access()`, either.
 
-Whenever you are planning to use server push, you have to get a hold of the `UI` instance _while the user session is locked_. This typically happens right before you start your background thread, for example:
+Whenever you are planning to use server push, you have to get a hold of the `UI` instance _while the user session is locked_. This typically happens right before you start your background thread.
+
+Here is an example of a button click listener that starts a background thread:
 
 [source,java]
 ----
-var ui = UI.getCurrent(); // <1>
-taskExecutor.execute(() -> {
-    // Do your work here
-    ui.access(() -> { // <2>
-        // Update your UI here
+button.addClickListener(clickEvent -> {
+    var ui = UI.getCurrent(); // <1>
+    taskExecutor.execute(() -> { // <2>
+        // Do your work here
+        ui.access(() -> { 
+            // Update your UI here
+        });
     });
 });
 ----
@@ -109,7 +113,7 @@ var subscription = myEventBus.subscribe(UI.getCurrent().accessLater((message) ->
 
 == Avoiding Memory Leaks
 
-When you are using server push to update the user interface when an event has occurred, you typically subscribe to some broadcaster or event bus. When you do this, you have to remember to always unsubscribe when the UI is detached. Otherwise, you end up with a memory leak that prevents your UI from being garbage collected. 
+When you are using server push to update the user interface when an event has occurred, you typically subscribe a listener to some broadcaster or event bus. When you do this, you have to remember to always unsubscribe when the UI is detached. Otherwise, you end up with a memory leak that prevents your UI from being garbage collected. This is because the listener holds a reference to the `UI` instance.
 
 It is recommended to always subscribe when your view is attached to a UI, and unsubscribe when it is detached. You can do this by overriding the `Component.onAttach()` method, like this:
 
@@ -120,16 +124,20 @@ protected void onAttach(AttachEvent attachEvent) { // <1>
     var subscription = myEventBus.subscribe(attachEvent.getUI().accessLater((message) -> { // <2>
         // Update your UI here when a message has arrived
     }, null));        
-    addDetachListener(detachEvent -> subscription.unsubscribe()); // <3>
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener(); // <3>
+        subscription.unsubscribe(); // <4>
+    }); 
 }
 ----
 <1> Subscribe when the view is attached to a UI.
 <2> Get the `UI` from the `AttachEvent`.
-<3> Unsubscribe when the view is detached from the UI.
+<3> Remove the detach listener itself, to prevent a memory leak in case the component is attached multiple times.
+<4> Unsubscribe when the view is detached from the UI.
 
 == Avoiding Floods
 
-Another risk you have to manage when updating the user interface in response to events is flooding the user interface with updates. As a rule of thumb, you should not push more than 2--4 times per second. Pushing more often than that can cause performance issues. Also, there is a limit to how many updates the human eye is able to detect per second.
+Another risk you have to manage when updating the user interface in response to events is flooding the user interface with updates. As a rule of thumb, you should not push more than 2--4 times per second. Pushing more often than that can cause performance issues. Also, there is a limit to how many updates the human brain is able to register per second.
 
 If you know the events are coming in at a pace no faster than 2--4 events per second, you can push on every event. However, if they are more frequent, you have to start buffering events and update the user interface in batches. This is quite easy to do if you are using a `Flux` from https://projectreactor.io/[Reactor]. See the <<reactive#,Reactive Streams>> documentation page for more information about this.
 

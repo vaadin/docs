@@ -11,79 +11,86 @@ You often use server push to update the user interface from background jobs. Thi
 
 If you have used Swing before, you might be tempted to use a `Timer`, or start a new `Thread` manually. In Flow, this is not a good idea. The reason is that Flow applications are multi-user applications, with potentially thousands of concurrent users. If each user creates its own `Timer`, or starts its own `Thread`, you may run out of threads. If that happens, the application crashes.
 
-Instead, you should use a shared `ExecutorService` or `ScheduledExecutorService`, or virtual threads.
+Instead, you should use Spring's `TaskExecutor`, `TaskScheduler`, or virtual threads.
 
-== Executor Service
+== Task Executor
 
-Although Spring has a `TaskExecutor`, you should create your own executor service for your user interface. Create a separate `@Configuration` class, like this:
+Setting up Spring's `TaskExecutor` and `TaskScheduler` is covered in the <<{articles}/building-apps/application-layer/background-jobs#,Background Jobs>> documentation page. You can use them to start tasks directly from the user interface as well. However, before you do, you should make sure your task is actually UI-related and not a background job.
 
-[source,java]
-----
-@Configuration
-class UIThreadConfiguration {
+To use the `TaskExecutor` or `TaskScheduler`, you inject them into your view, and then call them when needed. 
 
-    @Bean(destroyMethod = "shutdown")
-    public ScheduledExecutorService uiExecutor() {
-        return Executors.newSingleThreadScheduledExecutor();
-    }
-}
-----
-
-This example uses a single thread. If you need more threads, you can use `Executors.newScheduledThreadPool()`.
-
-Next, you inject the executor into your view, like this:
+Here is an example of a view that gets the `TaskExecutor` as a constructor parameter:
 
 [source,java]
 ----
 @Route
 public class MyView extends VerticalLayout {
 
-    private final ScheduledExecutorService uiExecutor;
+    private final TaskExecutor taskExecutor;
 
-    public MyView(ScheduledExecutorService uiExecutor) {
-        this.uiExecutor = uiExecutor;
+    public MyView(TaskExecutor taskExecutor) {
+        this.taskExecutor = taskExecutor;
         ...
     }
 }
 ----
 
-Now, whenever you need to run a UI operation in a background thread, you can do this:
+Here is an example of a button click listener that starts a UI operation in a background thread:
 
 [source,java]
 ----
-uiExecutor.submit(UI.getCurrent().accessLater(() -> {
-    // Perform the UI operation here.
-}, null));
+button.addClickListener(clickEvent -> {
+    taskExecutor.execute(UI.getCurrent().accessLater(() -> {
+        // Perform the UI operation here.
+    }, null));
+});
 ----
 
 Because of the call to `UI.accessLater()`, the user interface is automatically updated through a server push when the task finishes.
 
-You can also use the executor to schedule tasks. In this case, you have to schedule the task when the component is attached, and cancel it when it is detached, like this:
+[CAUTION]
+Do not use the `@Async` annotation in your Flow views. It turns them into proxies that do not work with Vaadin.
+
+== Task Scheduler
+
+You can use the `TaskScheduler` to schedule tasks. In this case, you have to schedule the task when the component is attached, and cancel it when it is detached.
+
+The following example schedules a task to be executed every second. The task sets the text of `currentTimeLabel` to the current date and time of the server. When the component is detached, the task is cancelled:
 
 [source,java]
 ----
 @Override
 protected void onAttach(AttachEvent attachEvent) {
-    var task = uiExecutor.scheduleAtFixedRate(
+    var task = taskScheduler.scheduleAtFixedRate(
         attachEvent.getUI().accessLater(() -> {
             currentTimeLabel.setText(Instant.now().toString());
-        }, null), 0, 1, TimeUnit.SECONDS
+        }, null), Duration.ofSeconds(1)
     );
-    addDetachListener(detachEvent -> task.cancel(true));
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        task.cancel(true);
+    });
 }
 ----
 
-This example schedules a task to be executed every second. The task sets the text of `currentTimeLabel` to the current date and time of the server. When the component is detached, the task is cancelled.
+The tasks that you execute in the task scheduler should be fast. If you need to schedule long-running tasks, you should hand them over to `TaskExecutor` for execution.
+
+[CAUTION]
+Do not use the `@Scheduled` annotation in your Flow views. It turns them into proxies that do not work with Vaadin.
 
 == Virtual Threads
 
-If you use a Java version that supports virtual threads, you do not need to worry about setting up a thread pool. You can start up a new virtual thread whenever you need one, like this:
+If you use a Java version that supports virtual threads, you do not need to worry about setting up a thread pool. You can start up a new virtual thread whenever you need one. 
+
+Here is an example of a button click listener that starts a new virtual thread:
 
 [source,java]
 ----
-Thread.ofVirtual().start(UI.getCurrent().accessLater(() -> {
-    // Perform the UI operation here.
-}, null));
+button.addClickListener(clickEvent -> {
+    Thread.ofVirtual().start(UI.getCurrent().accessLater(() -> {
+        // Perform the UI operation here.
+    }, null));
+});
 ----
 
-For scheduled tasks, you should still use a `ScheduledExecutorService`.
+For scheduled tasks, you should still use the `TaskScheduler`. For more information, see the <<{articles}/building-apps/application-layer/background-jobs#,Background Jobs>> documentation page.
