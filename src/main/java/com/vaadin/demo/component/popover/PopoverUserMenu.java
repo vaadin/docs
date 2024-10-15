@@ -12,6 +12,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -47,6 +48,7 @@ public class PopoverUserMenu extends HorizontalLayout {
         popover.setOverlayRole("menu");
         popover.setAriaLabel("User menu");
         popover.setTarget(button);
+        popover.setPosition(PopoverPosition.BOTTOM_END);
         popover.addThemeVariants(PopoverVariant.LUMO_NO_PADDING);
         // end::snippet[]
 
