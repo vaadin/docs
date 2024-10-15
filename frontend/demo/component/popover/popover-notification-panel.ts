@@ -103,16 +103,12 @@ export class Example extends LitElement {
         <div tab="unread-tab">
           ${this.unreadNotifications.length
             ? html`
-                <vaadin-message-list
-                  .items="${this.unreadNotifications}"
-                ></vaadin-message-list>
+                <vaadin-message-list .items="${this.unreadNotifications}"></vaadin-message-list>
               `
             : html`<div class="no-notifications-msg">No unread notifications</div>`}
         </div>
         <div tab="all-tab">
-          <vaadin-message-list
-            .items="${this.allNotifications}"
-          ></vaadin-message-list>
+          <vaadin-message-list .items="${this.allNotifications}"></vaadin-message-list>
         </div>
       </vaadin-tabsheet>
     `;

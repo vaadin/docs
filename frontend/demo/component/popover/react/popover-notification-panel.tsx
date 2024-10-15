@@ -71,7 +71,10 @@ function Example() {
         accessibleNameRef="notifications-heading"
       >
         <HorizontalLayout
-          style={{ alignItems: 'baseline', padding: 'var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)' }}
+          style={{
+            alignItems: 'baseline',
+            padding: 'var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)',
+          }}
         >
           <h4 style={{ margin: 0 }} id="notifications-heading">
             Notifications

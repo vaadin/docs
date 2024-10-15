@@ -69,16 +69,16 @@ function Example() {
           ))}
         </CheckboxGroup>
         <HorizontalLayout style={{ justifyContent: 'space-between' }}>
-          <Button 
-            theme='small'
+          <Button
+            theme="small"
             onClick={() => {
               columns.value = columns.value.map((column) => ({ ...column, visible: true }));
             }}
           >
             Show all
           </Button>
-          <Button 
-            theme='small'
+          <Button
+            theme="small"
             onClick={() => {
               columns.value = columns.value.map((column, idx) => ({
                 ...column,

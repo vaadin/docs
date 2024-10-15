@@ -48,26 +48,27 @@ function Example() {
         overlayRole="menu"
         modal
         accessibleName="User menu"
-        theme='no-padding'
+        theme="no-padding"
       >
         <HorizontalLayout className="userMenuHeader">
-          <Avatar
-            tabIndex={-1}
-            img={pictureUrl}
-            name={`${firstName} ${lastName}`}
-            theme='large'
-          />
+          <Avatar tabIndex={-1} img={pictureUrl} name={`${firstName} ${lastName}`} theme="large" />
           <VerticalLayout>
-            <div style={{ fontWeight: 'bold'}}>
+            <div style={{ fontWeight: 'bold' }}>
               {firstName} {lastName}
             </div>
             <div className="userMenuNickname">{nickName}</div>
           </VerticalLayout>
         </HorizontalLayout>
         <VerticalLayout className="userMenuLinks">
-          <a href="#" role="menuitem">User profile</a>
-          <a href="#" role="menuitem">Preferences</a>
-          <a href="#" role="menuitem">Sign out</a>
+          <a href="#" role="menuitem">
+            User profile
+          </a>
+          <a href="#" role="menuitem">
+            Preferences
+          </a>
+          <a href="#" role="menuitem">
+            Sign out
+          </a>
         </VerticalLayout>
       </Popover>
       {/* end::snippet[] */}
