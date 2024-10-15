@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import type { UserConfig } from 'vite';
@@ -7,16 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
-const generatedPath = resolve(__dirname, 'vite.generated.ts');
 
-// Read and modify vite.generated.ts to include __dirname if not present
-const viteGenerated = fs.readFileSync(generatedPath, 'utf-8');
-if (!viteGenerated.includes('const __dirname')) {
-  const dirnameConst = `import { fileURLToPath } from 'node:url';
-     const __dirname = path.dirname(fileURLToPath(import.meta.url));`;
-  fs.writeFileSync(generatedPath, `${dirnameConst}\n${viteGenerated}`);
-}
-
+// vite.generated.ts accesses __dirname without declaring it.
+// Workaround the error by setting it on the global object.
+globalThis.__dirname = __dirname;
 const { vaadinConfig } = await import('./vite.generated');
 
 const vaadin = vaadinConfig({
