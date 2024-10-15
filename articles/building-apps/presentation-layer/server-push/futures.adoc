@@ -7,9 +7,14 @@ section-nav: badge-flow
 
 = Futures [badge-flow]#Flow#
 
-If you are building the user interface with Vaadin Flow, a background thread can use the standard Java <<{articles}/building-apps/application-layer/background-jobs/interaction/futures#,`CompletableFuture`>> to inform the user interface of results and errors. 
+[NOTE]
+The examples on this page only work with push enabled. For information about how to do that, see the <<.#enabling-push-flow,Server Push>> documentation page.
 
-In fact, you are using <<callbacks#,callbacks>> in this approach as well, but instead of calling them directly from your background thread, you are registering them with `CompletableFuture`. For example, a method for handling successful completion could look like this:
+Some background jobs may use `CompletableFuture` to inform the user interface of results and errors. This is covered in the <<{articles}/building-apps/application-layer/background-jobs/interaction/futures#,UI Interaction - Futures>> documentation page. 
+
+If you are building the user interface with Vaadin Flow, you can use <<callbacks#,callbacks>> and register them with the `CompletableFuture` to update your user interface.
+
+For example, a method for handling successful completion could look like this:
 
 [source,java]
 ----
@@ -33,19 +38,17 @@ Note, that the error handler must accept a `Throwable` and not an `Exception` wh
 
 If a `CompletableFuture` completes successfully, you can instruct it to perform a specific operation by calling the `thenAccept()` method on it. This method takes a `Consumer` as its input. When the `CompletableFuture` completes, it calls this consumer with the result.
 
-You use it to update your user interface like this:
+Here is an example of a button click listener that starts a background job, and updates the user interface when it has completed successfully:
 
 [source,java]
 ----
-private void startJob() {
+button.addClickListener(clickEvent -> {
     var ui = UI.getCurrent();
     service.startBackgroundJob()
         .thenAccept(ui.accessLater(this::onJobCompleted, null)); // <1>
-}
+});
 ----
 <1> The `UI.accessLater()` method is explained on the <<updates#access-later,Pushing UI Updates>> documentation page.
-
-However, this version does not yet handle any exceptions.
 
 == Exceptional Completion
 
@@ -65,16 +68,14 @@ public static <T> Function<T, Void> consumerToFunction(Consumer<T> consumer) {
 }
 ----
 
-With this helper function in place, the code for starting the job with error handling now becomes:
+Here is an example of a button click listener that starts a background job, and uses the helper function to update the user interface if an error occurs:
 
 [source,java]
 ----
-private void startJob() {
+button.addClickListener(clickEvent -> {
     var ui = UI.getCurrent();
     service.startBackgroundJob()
         .thenAccept(ui.accessLater(this::onJobCompleted, null))
         .exceptionally(consumerToFunction(ui.accessLater(this::onJobFailed, null)))
-}
+});
 ----
-
-You would then call the `startJob()` method when a user clicks a button, for instance.

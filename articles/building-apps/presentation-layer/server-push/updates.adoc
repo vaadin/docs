@@ -7,7 +7,12 @@ section-nav: badge-flow
 
 = Pushing UI Updates [badge-flow]#Flow#
 
-Whenever you are using server push in Vaadin Flow, you are triggering it from another thread than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption, race conditions or deadlocks. Such errors are by nature hard to discover and fix, since they often occur randomly, under heavy load. Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent race conditions. You use it like this:
+[NOTE]
+The examples on this page only work with push enabled. For information about how to do that, see the <<.#enabling-push-flow,Server Push>> documentation page.
+
+Whenever you are using server push in Vaadin Flow, you are triggering it from another thread than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption, race conditions or deadlocks. Such errors are by nature hard to discover and fix, since they often occur randomly, under heavy load. 
+
+Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent race conditions. You use it like this:
 
 [source,java]
 ----
@@ -69,7 +74,9 @@ button.addClickListener(clickEvent -> {
 
 == Access Later
 
-You often use server push in various types of event listeners and <<callbacks#,callbacks>>. A background job might inform you that it has finished processing, like this:
+You often use server push in various types of event listeners and <<callbacks#,callbacks>>. A background job might inform you that it has finished processing.
+
+In the following example, the user interface is updated in a callback after a background job has finished:
 
 [source,java]
 ----
@@ -79,7 +86,9 @@ myService.startBackgroundJob(() -> ui.access(() -> {
 }));
 ----
 
-Or an event bus might inform you that a new message has arrived, like this:
+Another common use case is an event bus informing you that a new message has arrived.
+
+In the following example, the user interface subscribes to an even bus, and updates the user interface whenever a new message arrives:
 
 [source,java]
 ----
@@ -91,7 +100,9 @@ var subscription = myEventBus.subscribe((message) -> ui.access(() -> {
 
 In cases like these, you should consider using `UI.accessLater()` instead of `UI.access()`.
 
-`UI.accessLater()` exists in two versions: one that wraps a `SerializableRunnable`, and another that wraps a `SerializableConsumer`. It stores the `UI` instance, and runs the wrapped delegate inside a call to `UI.access()`. It also takes a second parameter, which is a _detach handler_. The detach handler is a `Runnable` that runs if the `UI` has been detached when `UI.access()` is called. The detach handler can be `null` if no special actions are needed.
+`UI.accessLater()` exists in two versions: one that wraps a `SerializableRunnable`, and another that wraps a `SerializableConsumer`. It stores the `UI` instance, and runs the wrapped delegate inside a call to `UI.access()`.
+
+It also takes a second parameter, which is a _detach handler_. The detach handler is a `Runnable` that runs if the `UI` has been detached when `UI.access()` is called. The detach handler can be `null` if no special actions are needed.
 
 Rewritten with `accessLater()`, the thread completion example becomes:
 
@@ -121,7 +132,8 @@ It is recommended to always subscribe when your view is attached to a UI, and un
 ----
 @Override
 protected void onAttach(AttachEvent attachEvent) { // <1>
-    var subscription = myEventBus.subscribe(attachEvent.getUI().accessLater((message) -> { // <2>
+    var ui = attachEvent.getUI(); // <2>
+    var subscription = myEventBus.subscribe(ui.accessLater((message) -> { 
         // Update your UI here when a message has arrived
     }, null));        
     addDetachListener(detachEvent -> {
@@ -145,7 +157,9 @@ The buffering duration depends on the size of the UI update, and the network lat
 
 == Avoiding Unnecessary Pushes
 
-The `UI.access()` method updates the user interface asynchronously. The update operation is not executed right away, but added to a queue and executed at some point in the future. If this is combined with regular event-driven updates in the HTTP request thread, you may end up in a situation where the user interface is updated out-of-order. Look at this example:
+The `UI.access()` method updates the user interface asynchronously. The update operation is not executed right away, but added to a queue and executed at some point in the future. If this is combined with regular event-driven updates in the HTTP request thread, you may end up in a situation where the user interface is updated out-of-order. 
+
+Look at this example:
 
 [source,java]
 ----

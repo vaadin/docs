@@ -6,7 +6,7 @@ order: 40
 
 = Reactive Streams
 
-If you are building the user interface with either Vaadin Flow or Hilla, you can use <<{articles}/building-apps/application-layer/background-jobs/interaction/reactive#,reactive streams>> to allow a background thread to update the user interface. 
+If you are building the user interface with either Vaadin Flow or Hilla, you can use reactive streams to allow a background job to update the user interface. This is covered in the <<{articles}/building-apps/application-layer/background-jobs/interaction/reactive#,UI Interaction - Reactive Streams>> documentation page.
 
 == Subscribing
 
@@ -20,26 +20,29 @@ In your user interfaces, you typically do not need to worry about unsubscribing 
 
 In Flow, you can use both `Flux` and `Mono`. You subscribe to both by calling the `subscribe()` method. The method takes a <<callbacks#,callback>> that is called for each emitted value. You should implement the callback as a private method, and then wrap it inside `UI.accessLater()` when you subscribe.
 
-The `UI.accessLater()` method is explained on the <<updates#access-later,Pushing UI Updates>> documentation page.
-
-For example, if you use a `Mono<String>` to receive the output of a background job, you could do this:
+For example, a method for handling successful completion could look like this:
 
 [source,java]
 ----
 private void onJobCompleted(String result) {
     Notification.show("Job completed: " + result);
 }
+----
 
-private void startJob() {
+The `UI.accessLater()` method is explained in the <<updates#access-later,Pushing UI Updates>> documentation page.
+
+In the following example, a background job returns a `Mono<String>`. The stream is cold, so you do not need to explicitly unsubscribe from it, as this happens automatically once the `Mono` has completed. The job is started by a button click listener.
+
+[source,java]
+----
+button.addClickListener(clickEvent -> {
     var ui = UI.getCurrent();
     service.startBackgroundJob()
         .subscribe(ui.accessLater(this::onJobCompleted, null));
-}
+});
 ----
 
-In this example, you are dealing with a cold stream and so, you do not need to explicitly unsubscribe from it.
-
-If you use a `Flux<ChatMessage>` to receive chat messages, you could do this:
+In the following example, a `Flux<ChatMessage>` is used to receive chat messages. The stream is hot, so you have to subscribe to it when the component is attached, and unbuscribe when it is detached:
 
 [source,java]
 ----
@@ -49,8 +52,9 @@ private void onMessageReceived(ChatMessage message) {
 
 @Override
 protected void onAttach(AttachEvent attachEvent) {
-    var subscription = service.messages()
-        .subscribe(attachEvent.getUI().accessLater(this::onMessageReceived, null));        
+    var ui = attachEvent.getUI();
+    var subscription = chatService.messages()
+        .subscribe(ui.accessLater(this::onMessageReceived, null));        
     addDetachListener(detachEvent -> {
         detachEvent.unregisterListener();
         subscription.dispose();
@@ -58,22 +62,20 @@ protected void onAttach(AttachEvent attachEvent) {
 }
 ----
 
-In this example, you are dealing with a hot stream. Therefore, you subscribe to it when your component is attached, and unsubscribe when it is detached.
-
 === Hilla
 
 In Hilla, you can only use a `Flux`, even if you are only emitting a single value. However, you can easily convert a `Mono` to a `Flux` by calling the `asFlux()` method. 
 
-This is an example of a reactive endpoint that delegates to a worker to start a background job. The worker returns a `Mono<String>`, which the endpoint converts to a `Flux<String>`:
+This is an example of a reactive service that delegates to a worker to start a background job. The worker returns a `Mono<String>`, which the service converts to a `Flux<String>`:
 
 [source,java]
 ----
 @BrowserCallable
-public class MyBackgroundJobEndpoint {
+public class MyBackgroundJobService {
 
     private final MyWorker worker;
 
-    MyBackgroundJobEndpoint(MyWorker worker) {
+    MyBackgroundJobService(MyWorker worker) {
         this.worker = worker;
     }
 
@@ -84,9 +86,9 @@ public class MyBackgroundJobEndpoint {
 }
 ----
 
-You subscribe to a `Flux` by calling the generated TypeScript endpoint method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
+You subscribe to a `Flux` by calling the generated TypeScript service method. You then use the returned `Subscription<T>` object to register a function that gets called whenever the `Flux` emits a value.
 
-For example, if you use a `Flux<String>` to receive the single output of a background job, you could do this:
+The following client-side example uses the `Flux<String>` from the earlier example to receive a single output from a server-side background job. The stream is cold, so you do not need to explicitly unsubscribe from it:
 
 [source,typescript]
 ----
@@ -95,13 +97,11 @@ const onJobCompleted = (result: string) => {
 }
 
 const startJob = () => {
-    MyEndpoint.startBackgroundJob().onNext(onJobCompleted)
+    MyBackgroundJobService.startBackgroundJob().onNext(onJobCompleted)
 }
 ----
 
-In this example, you are dealing with a cold stream and so, you do not need to explicitly unsubscribe from it.
-
-If you use a `Flux<ChatMessage>` to receive chat messages, you could do this:
+The following client-side examples uses a `Flux<ChatMessage>` to receive chat messages. The stream is hot, so you have to subscribe to it inside a React effect. In the cleanup function, you call the `cancel` method of the subscription object. This ensures that the subscription is cancelled whenever your component is removed from the DOM:
 
 [source,typescript]
 ----
@@ -110,12 +110,10 @@ const onMessageReceived = (message: ChatMessage) => {
 }
 
 useEffect(() => {
-    const subscription = MyEndpoint.messages().onNext(onMessageReceived)
+    const subscription = ChatService.messages().onNext(onMessageReceived)
     return () => subscription.cancel()
 }, [])
 ----
-
-In this example, you are dealing with a hot stream. Therefore, you subscribe to it inside a React effect. As a cleanup function, you return the `cancel` method of the subscription object. This ensures that the subscription is cancelled whenever your component is removed from the DOM.
 
 == Handling Errors
 
@@ -123,26 +121,27 @@ In a reactive stream, an error is a terminal event. This means that the subscrip
 
 === Flow
 
-In Flow, you can use the `doOnError()` method to attach a <<callbacks#,callback>> that gets called if an error occurs.
+In Flow, you can use the `doOnError()` method to attach a <<callbacks#,callback>> that gets called if an error occurs. As for successful completion, you should declare a private method and wrap it inside `UI.accessLater()` .
 
-If you add error handling to the earlier background job example, you end up with something like this:
+For example, a method for handling errors could look like this:
 
 [source,java]
 ----
-private void onJobCompleted(String result) {
-    Notification.show("Job completed: " + result);
-}
-
 private void onJobFailed(Throwable error) {
     Notification.show("Job failed: " + error.getMessage());
 }
+----
 
-private void startJob() {
+In the following example, a button click listener starts a new background job, and uses the callback method to handle any errors that may occur:
+
+[source,java]
+----
+button.addClickListener(clickEvent -> {
     var ui = UI.getCurrent();
     service.startBackgroundJob()
-           .doOnError(ui.accessLater(this::onJobFailed, null))
-           .subscribe(ui.accessLater(this::onJobCompleted, null));
-}
+        .doOnError(ui.accessLater(this::onJobFailed, null))
+        .subscribe(ui.accessLater(this::onJobCompleted, null));
+});
 ----
 
 === Hilla
@@ -170,9 +169,9 @@ Note, that the error callback function does not get any information about the er
 
 == Buffering
 
-You should not push updates to the browser more than 2--4 times per second. If your `Flux` is emitting events faster than that, you should buffer them and update the user interface in batches.
+You should not push updates to the browser more than 2--4 times per second. If your `Flux` is emitting events faster than that, you should buffer them and update the user interface in batches. Buffering a `Flux` is easy, as it has built-in support for it through the `buffer()` method. 
 
-Buffering a `Flux` is easy, as it has built-in support for it:
+In the following example, the buffered stream buffers events for 250 milliseconds before it emits them in batches. Because of this, the user interface is receiving a `List<Event>` instead of an `Event`:
 
 [source,java]
 ----
@@ -185,9 +184,10 @@ public Flux<List<Event>> bufferedEventStream() {
 }
 ----
 
-In this example, the buffered stream buffers events for 250 milliseconds before it emits them in batches. Because of this, the user interface is receiving a `List<Event>` instead of an `Event`.
 
-If you are using Flow, you can do the buffering in your user interface, before you subscribe to the stream:
+If you are using Flow, you can do the buffering in your user interface, before you subscribe to the stream.
+
+In the following example, the a user interface component subscribes to the buffered stream when it is attached, and unsubscribes when it is detached:
 
 [source,java]
 ----
@@ -205,12 +205,14 @@ protected void onAttach(AttachEvent attachEvent) {
 }
 ----
 
-If you are using Hilla, you have to do the buffering inside the reactive endpoint:
+If you are using Hilla, you have to do the buffering inside the reactive service. 
+
+The following example shows a browser callable service that buffers the stream before it is returned. Because of this, the generated TypeScript service method emits arrays of `Event` objects:
 
 [source,java]
 ----
 @BrowserCallable
-public class EventEndpoint {
+public class EventService {
 
     private Flux<Event> eventStream() {
         ...
@@ -223,11 +225,10 @@ public class EventEndpoint {
 }
 ----
 
-After this, the generated TypeScript endpoint method emits arrays of `Event` objects.
 
 == Lost Subscriptions [badge-hilla]#Hilla#
 
-In Hilla, you have to be prepared to handle the case where a subscription is lost without being cancelled. For instance, the user may close their laptop lid, or get temporarily disconnected from the network. Hilla automatically re-establishes the connection, but the subscription may no longer be valid. When this happen, Hilla calls the `onSubscriptionLost` callback function if one has been registered with the `Subscription<T>` object.
+In Hilla, you have to be prepared to handle the case where a subscription is lost without being cancelled. For instance, the user may close their laptop lid, or get temporarily disconnected from the network. Hilla automatically re-establishes the connection, but the subscription may no longer be valid. When this happens, Hilla calls the `onSubscriptionLost` callback function if one has been registered with the `Subscription<T>` object.
 
 This function can return two values:
 
@@ -235,7 +236,9 @@ This function can return two values:
 
 `RESUBSCRIBE`:: Re-subscribe by calling the same server method again.
 
-If you add automatic re-subscription to the earlier chat example, you end up with something like this:
+If no callback has been specified, `REMOVE` is the default action.
+
+In the following example, a React component subscribes to a reactive service inside an effect. It automatically resubscribes to the same service if it loses the subscription:
 
 [source,typescript]
 ----
@@ -244,11 +247,10 @@ const onMessageReceived = (message: ChatMessage) => {
 }
 
 useEffect(() => {
-    const subscription = MyEndpoint.messages()
+    const subscription = ChatService.messages()
         .onNext(onMessageReceived)
         .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE)
     return () => subscription.cancel()
 }, [])
 ----
 
-If no callback has been specified, `REMOVE` is the default action.
