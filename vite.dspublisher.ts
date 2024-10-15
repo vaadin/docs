@@ -11,9 +11,9 @@ const generatedPath = resolve(__dirname, 'vite.generated.ts');
 
 // Read and modify vite.generated.ts to include __dirname if not present
 const viteGenerated = fs.readFileSync(generatedPath, 'utf-8');
-const dirnameConst = `import { fileURLToPath } from 'node:url';
-     const __dirname = path.dirname(fileURLToPath(import.meta.url));`;
 if (!viteGenerated.includes('const __dirname')) {
+  const dirnameConst = `import { fileURLToPath } from 'node:url';
+     const __dirname = path.dirname(fileURLToPath(import.meta.url));`;
   fs.writeFileSync(generatedPath, `${dirnameConst}\n${viteGenerated}`);
 }
 
@@ -27,9 +27,12 @@ const vaadin = vaadinConfig({
 // Get the theme plugin from vaadinConfig
 const themePlugin = vaadin.plugins?.find((plugin: any) => plugin.name === 'vaadin:theme');
 
+const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
+
 const config: UserConfig = {
   resolve: {
     alias: {
+      'Frontend/generated/endpoints': endpointMocks,
       ...vaadin.resolve?.alias,
       'all-flow-imports-or-empty':
         process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true' ? allFlowImportsPath : 'lit',
@@ -41,9 +44,6 @@ const config: UserConfig = {
     /* dev-mode proxy config */
     proxy: {
       '/vaadin': {
-        target: 'http://localhost:8080',
-      },
-      '/connect': {
         target: 'http://localhost:8080',
       },
     },
