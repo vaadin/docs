@@ -35,7 +35,8 @@ import com.vaadin.hilla.signal.ValueSignal;
 @AnonymousAllowed
 @BrowserCallable
 public class VoteService {
-    private final ValueSignal<Boolean> started = new ValueSignal<>(false, Boolean.class); <1>
+    private final ValueSignal<Boolean> started =
+                    new ValueSignal<>(false, Boolean.class); <1>
 
     public ValueSignal<Boolean> startedSignal() {
         return started; <2>
@@ -88,11 +89,175 @@ export default function VoteView() {
 
 The available Full-stack Signal types are:
 
-- `ValueSignal`: A signal that holds a single value of an arbitrary type.
-- `NumberSignal`: A signal that holds a number value.
-- `ListSignal`: A signal that holds a list of values of an arbitrary type.
+=== ValueSignal
+
+The `ValueSignal<T>` is a full-stack signal that holds a single value of an arbitrary type. The type should necessarily be a JSON-serializable type that is supported by the Hilla framework. In the server-side code, the type should be imported from the `com.vaadin.hilla.signals` package:
+[source,java]
+.SomeService.java
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+
+import com.vaadin.hilla.signals.ValueSignal;
+
+@AnonymousAllowed
+@BrowserCallable
+public class SomeService {
+    private final ValueSignal<Boolean> sharedBoolean =
+                    new ValueSignal<>(true, Boolean.class);
+    private final ValueSignal<Integer> sharedInteger =
+                    new ValueSignal<>(42, Integer.class);
+    private final ValueSignal<String> sharedInteger =
+                    new ValueSignal<>("Hello World", String.class);
+
+    public ValueSignal<Boolean> sharedBoolean() {
+        return sharedBoolean;
+    }
+
+    public ValueSignal<Integer> sharedInteger() {
+        return sharedInteger;
+    }
+
+    public ValueSignal<String> sharedString() {
+        return sharedString;
+    }
+}
+----
+
+And it is not limited to the primitive types, so you can also use custom types as long as they are JSON-serializable, for example:
+
+[source,java]
+.PersonService.java
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+import com.vaadin.hilla.Nonnull;
+import com.vaadin.hilla.signals.ValueSignal;
+
+@AnonymousAllowed
+@BrowserCallable
+public class PersonService {
+    record Person(String name, int age) {} <1>
+
+    private final Person initialValue = new Person("John Doe", 42); <2>
+
+    private final ValueSignal<Person> sharedPerson =
+                    new ValueSignal<>(initialValue, Person.class); <3>
+
+    @Nonnull
+    public ValueSignal<@Nonnull Person> sharedPerson() { <4>
+        return sharedPerson;
+    }
+}
+----
+<1> A record type that represents a JSON-serializable type, in this case a person with a name and age.
+<2> The initial value of the signal. This initial value remains the same until an update is submitted to the signal.
+<3> The signal instance that holds the shared state of the person.
+<4> The service method that returns the signal instance. The `@Nonnull` annotations are used to indicate that both the returned signal and its value are never null. If the signal instance or its value can be null, you can remove the `@Nonnull` annotations.
+
+Though, the above example shows the usage of a record, you can also use classes with mutable properties and there are no technical limitations on the way, as the wrapped value of the signal is always replaced with a new instance whenever an update is applied to the signals. However, as a universal rule, the usage of immutable types is always preferred while dealing with share values, as it helps to reduce the confusions and potential bugs that might arise from the shared mutable state.
+
+Having a `@BrowserCallable` annotated service with a method that returns a `ValueSignal` instance similar to the above example, enables the client-side code to subscribe to it simply by calling the service method:
+
+[source,tsx]
+.person.tsx
+----
+import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
+import { Button } from "@vaadin/react-components/Button.js";
+
+import { ValueSignal } from "@vaadin/hilla-react-signals";
+import { PersonService } from "Frontend/generated/endpoints.js";
+import type Person from "Frontend/generated/com/example/application/services/PersonService/Person.js";
+
+const sharedPerson: ValueSignal<Person> =
+          PersonService.sharedPerson({ defaultValue: { name: '', age: 0 } }); <1>
+
+export default function PersonView() {
+  return (
+    <VerticalLayout theme="padding">
+      <span>Name: {sharedPerson.value.name}</span> <2>
+      <span>Age: {sharedPerson.value.age}</span>
+      <Button onClick={() =>
+          sharedPerson.value = { <3>
+            name: sharedPerson.value.name,
+            age: sharedPerson.value.age + 1
+          }}>Increase age</Button>
+    </VerticalLayout>
+  );
+}
+----
+<1> Subscribing to the `sharedPerson` signal and setting the default value to an empty person. This client-side default value is used when rendering the component before the first update from the server-side signal is received.
+<2> Rendering the name of the person. The value of the signal is of type `Person` with a `name` property.
+<3> Increasing the age of the person by creating a new `Person` object containing the increased age and assigning this new object as the signal's value. This will automatically trigger an update to the server-side signal, and all other clients that are subscribed to the signal will receive the updated value.
+
+[NOTE]
+Given the nature of the signals, only changing the value of the signal will cause the signal's subscribers to be notified. Changing the internal properties of the value object will not trigger an update.
+
+==== Setting the Value
+All signals have a `value` property that can be used to both set and read the value of the signal. However, when it comes to setting a shared value among multiple clients concurrently, it can lead to overwriting each other's changes. Thus, `ValueSignal` provides extra methods to set the value in different situations:
+
+- `set(value: T): void`: Sets the given value as the signals value. It is the same as assigning to the `value` property directly. Note that the value change event that is propagated to the server as the result of this operation is not taking the last seen value into account and will overwrite the shared value on the server unconditionally (AKA: "Last Write Wins").
+- `replace(expected: T, newValue: T): void`: Replaces the value with a new one only if the current value is equal to the expected value. This means that a state change request is sent to the server asking it _"compare and set"_. At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
+- `update(updater: (current: T) => T): OperationSubscription`: Tries to update the value by applying the callback function to the current value. When the new value is calculated, a "compare and set" operation is sent to the server, and in case of a concurrent change the update is rejected, the callback is run again with an updated current value. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`. Note that there is no guarantee that `cancel()` will be effective always, since a succeeding operation might already be on its way to the server.
+
+
+=== NumberSignal
+A signal that holds a number value.
+
+=== [since:com.vaadin:vaadin@V24.5.1]#ListSignal#
+A signal that holds a list of values of an arbitrary type.
 
 All the server-side Full-stack Signal types are available in the `com.vaadin.hilla.signal` package.
+
+== Service Method Parameters
+
+When creating the service methods that return Full-stack Signals, you can accept parameters as well, similar to any other endpoints. This opens up a wide range of possibilities for dynamically returning different signals instances. The following example demonstrates how to create a service method that returns different signal instances based on the passed in argument:
+
+[source,java]
+.VoteService.java
+----
+package com.example.application;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+
+import com.vaadin.hilla.signal.ValueSignal;
+import com.vaadin.hilla.signals.NumberSignal;
+
+@AnonymousAllowed
+@BrowserCallable
+public class VoteService {
+    private static final List<String> VOTE_OPTIONS = List.of("option1", "option2", "option3");
+
+    private final Map<String, NumberSignal> voteOptions = new HashMap<>();
+
+    public VoteService() {
+        VOTE_OPTIONS.forEach(option -> voteOptions.put(option, new NumberSignal()));
+    }
+
+    public List<String> voteOptions() {
+        return VOTE_OPTIONS;
+    }
+
+    public NumberSignal voteOptionSignal(String option) { <1>
+        return voteOptions.get(option.toLowerCase());
+    }
+}
+----
+
+<1> The service method returns the associated `NumberSignal` instance based on the passed in argument.
+
+The above example demonstrates a simple voting service that returns different `NumberSignal` instances based on the name of the voting option. The client-side code can first ask for the available options, and then subscribe to each individual signal instance to send updates and to receive real-time updates when the voting happens.
+
+[NOTE]
+It is vitally important to make sure that the behaviour of the service method returning a signal instance should be deterministic, meaning that the same input parameters should always produce the same output. This is important to ensure that the state is consistently shared across all the clients.
 
 == How Security Works with Full-stack Signals?
 Placeholder for the content.
