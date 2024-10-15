@@ -1,11 +1,11 @@
 import type { UploadFile, UploadResponseEvent } from '@vaadin/upload';
 
 /*
- * Mock XMLHttpRequest (see http://www.w3.org/TR/XMLHttpRequest)
+ * Mock XMLHttpRequest (see https://www.w3.org/TR/XMLHttpRequest)
  *
  * Written by Philipp von Weitershausen <philipp@weitershausen.de>
  * Released under the MIT license.
- * http://www.opensource.org/licenses/mit-license.php
+ * https://www.opensource.org/licenses/mit-license.php
  *
  * For test interaction it exposes the following attributes:
  *
@@ -254,7 +254,7 @@ export class MockHttpRequest {
   responseText: string | null = '';
   responseXML = undefined; // TODO
 
-  // See http://www.w3.org/TR/progress-events/
+  // See https://www.w3.org/TR/progress-events/
 
   onload() {} // Instances should override this.
 
@@ -414,7 +414,7 @@ export class MockHttpRequest {
 
   // Parse RFC 3986 compliant URIs.
   // Based on parseUri by Steven Levithan <stevenlevithan.com>
-  // See http://blog.stevenlevithan.com/archives/parseuri
+  // See https://blog.stevenlevithan.com/archives/parseuri
   parseUri(str: string) {
     const pattern =
       /^(?:([^:/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:/?#]*)(?::(\d*))?))?((((?:[^?#/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
