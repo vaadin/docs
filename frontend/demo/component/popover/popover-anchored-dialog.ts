@@ -47,7 +47,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout style="align-items: baseline">
-        <strong style="flex: 1;">Employees</strong>
+        <h3 style="flex: 1;">Employees</h3>
         <vaadin-button id="toggle-columns" theme="icon" aria-label="Show / hide columns">
           <vaadin-icon icon="vaadin:grid-h"></vaadin-icon>
         </vaadin-button>
@@ -82,7 +82,7 @@ export class Example extends LitElement {
       .map((column) => column.key);
 
     return html`
-      <h4 style="margin: 0">Configure columns</h4>
+      <div style="font-weight: 600; padding: var(--lumo-space-xs);">Configure columns</div>
       <vaadin-checkbox-group theme="vertical" .value="${visibleColumns}">
         ${this.gridColumns.map(
           (column) => html`
@@ -94,9 +94,9 @@ export class Example extends LitElement {
           `
         )}
       </vaadin-checkbox-group>
-      <vaadin-horizontal-layout theme="spacing-xs">
-        <vaadin-button @click="${this.showAllColumns}">Show all</vaadin-button>
-        <vaadin-button @click="${this.resetColumns}">Reset</vaadin-button>
+      <vaadin-horizontal-layout style="justify-content: space-between;">
+        <vaadin-button theme="small" @click="${this.showAllColumns}">Show all</vaadin-button>
+        <vaadin-button theme="small" @click="${this.resetColumns}">Reset</vaadin-button>
       </vaadin-horizontal-layout>
     `;
   }
