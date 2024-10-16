@@ -1,5 +1,5 @@
 ---
-title: Reactive Streams
+title: Producing Reactive Streams
 description: How to use reactive streams to interact with the user interface.
 order: 30
 ---
@@ -9,14 +9,14 @@ order: 30
 
 = Producing Reactive Streams
 
-When using Flow or Hilla to build your user interface, you can use `Flux` or `Mono` from https://projectreactor.io/[Reactor] to allow your background jobs to interact with them. Reactor has an extensive API, which means you can do a lot of things with it. This also means that it has a steeper learning curve than using callbacks or `CompletableFuture`. 
+When using Flow or Hilla to build your user interface, you can use `Flux` or `Mono` from https://projectreactor.io/[Reactor] to allow your background jobs to interact with them. Reactor has an extensive API, which means you can do many things with it. This also means that it can be more difficult to learn than using callbacks or `CompletableFuture`. 
 
-If you are new to reactive programming, you should read Reactor's https://projectreactor.io/docs/core/release/reference/#intro-reactive[Introduction to Reactive Programming] before continuing.
+If you're new to reactive programming, you should read Reactor's https://projectreactor.io/docs/core/release/reference/#intro-reactive[Introduction to Reactive Programming] before continuing.
 
 
 == Returning a Result
 
-When you're using Reactor, you cannot use the `@Async` annotation. Instead, you have to manually instruct your `Mono` or `Flux` to execute using the Spring `TaskExecutor`. Otherwise, your job executes in the thread that subscribes to the `Mono` or `Flux`.
+When you're using Reactor, you can't use the `@Async` annotation. Instead, you have to instruct your `Mono` or `Flux` to execute using the Spring `TaskExecutor`. Otherwise, your job executes in the thread that subscribes to the `Mono` or `Flux`.
 
 For example, a background job that returns a string or an exception could be implemented like this:
 
@@ -38,7 +38,7 @@ Hilla only supports `Flux`, so if your job is returning a `Mono`, you have to co
 
 == Reporting Progress
 
-If your background job only needs to report its progress without actually returning a result, you can return a `Flux<Double>`. Your job should then emit progress updates, and complete the stream when done. However, you often also want to return a result. Since Hilla only supports returning a single `Flux`, you have to use the same stream for emitting both progress updates and the end result. The code may be a bit messy, but it works.
+If your background job only needs to report its progress without actually returning a result, you can return a `Flux<Double>`. Your job should then emit progress updates, and complete the stream when done. However, you may often want also to return a result. Since Hilla only supports returning a single `Flux`, you have to use the same stream for emitting both progress updates and the end result. The code may be a bit messy, but it works.
 
 You first need to create a data type that can contain both progress updates and the result. For a job that returns a string, it could look like this:
 
@@ -60,10 +60,10 @@ public record BackgroundJobOutput(
 }
 ----
 
-The two factory methods `progressUpdate()` and `finished()` make the code look better when it is time to create instances of `BackgroundJobOutput`.
+The two built-in methods, `progressUpdate()` and `finished()` make the code look better when it's time to create instances of `BackgroundJobOutput`.
 
 [NOTE]
-If you have worked with sealed classes, you may be tempted to create a sealed interface called `BackgroundJobOutput`, and then create two records that implement that interface: one for progress updates, and another for the result. However, Hilla does not support this at the moment.
+If you've worked with sealed classes, you may be tempted to create a sealed interface called `BackgroundJobOutput`, and then create two records that implement that interface: one for progress updates; and another for the result. However, Hilla doesn't support this at the moment.
 
 Next, you have to implement the background job like this:
 
@@ -91,16 +91,16 @@ public Flux<BackgroundJobOutput> startBackgroundJob() {
     );
 }
 ----
-<1> Create a sink that you can emit progress updates to.
+<1> Create a sink to which you can emit progress updates.
 <2> Create a `Mono` that emits the result of the background job.
 <3> Map both streams to `BackgroundJobOutput` and merge them.
 
-When your user interface subscribes to this `Flux`, it needs to check the state of the returned `BackgroundJobOutput` objects. If `progressUpdate` contains a value, it should update the progress indicator. If `result` contains a value, the operation is finished.
+When your user interface subscribes to this `Flux`, it needs to check the state of the returned `BackgroundJobOutput` objects. If `progressUpdate` contains a value, it should update the progress indicator. If `result` contains a value, though, the operation is finished.
 
 
 == Cancelling
 
-You can cancel a subscription to a `Flux` or `Mono` at any time. However, as with `CompletableFuture`, cancelling the subscription does not stop the background job itself. To fix this, you need to tell the background job when it has been cancelled, so that it can stop itself. Continuing on the earlier example, adding support for cancelling could look like this:
+You can cancel a subscription to a `Flux` or `Mono` at any time. However, as with `CompletableFuture`, cancelling the subscription doesn't stop the background job itself. To fix this, you need to tell the background job when it has been cancelled, so that it can stop. Continuing on the earlier example, adding support for cancelling could look like this:
 
 [source,java]
 ----
