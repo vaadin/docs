@@ -6,7 +6,7 @@ order: 130
 
 = [since:com.vaadin:vaadin@V24.5]#Full-stack Signals#
 
-When building a modern web application, you often need to synchronize the state between the server and clients. For example, you might want to notify all connected clients in a chat application when a new message is posted, visualize the interactions of multiple users editing the same record in a form, or when the status of an order in an e-commerce application changes. This is even more tricky when you this updates to be propagated to the clients in real-time. This is where full-stack signals come into play.
+When building a modern web application, you often need to synchronize the state between the server and clients. For example, you might want to notify all connected clients in a chat application when a new message is posted, visualize multiple users interacting while editing the same record in a form, or update clients when the status of an order changes in an e-commerce application. This becomes even trickier when you need these updates to be propagated to clients in real time. This is where full-stack signals come into play.
 
 A full-stack signal can be seen as a special data type that holds the shared state, and enables the clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are automatically propagated to all other clients that are subscribed to the signal.
 
@@ -72,7 +72,7 @@ const votingStarted = VoteService.startedSignal({ defaultValue: false }); // <1>
 export default function VoteView() {
   return (
     <>
-      <span>Is voting in progress: {votingStarted.value ? 'Yes' : 'No'}</span> {/* <2> */}
+      <span>Is voting in progress: {votingStarted.value ? 'Yes' : 'No' /* <2> */}</span>
       <Button
         onClick={() => (votingStarted.value = !votingStarted.value) /* <3> */}
         theme={votingStarted.value ? 'error' : ''}
@@ -84,14 +84,14 @@ export default function VoteView() {
 }
 ----
 
-<1> Subscribe to the `started` signal and set the default value to `false`.
+<1> Subscribe to the `started` signal and set the default value to `false`. This client-side default value is used when rendering the component before the first update from the server-side signal is received, and it has no effect on the value of server-side signal.
 <2> Render the current state of the signal by accessing its `value` property.
 <3> Toggle (change) the state by setting the `value` property of the signal.
 
 [[available-full-stack-signal-types]]
 == Available Full-stack Signal Types
 
-The full-stack signals are designed to be used in various scenarios, and based on the requirement different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. As this is currently under active development, more signal types are added at each new release, but, at the moment, the available ones are:
+The full-stack signals are designed to be used in various scenarios, and based on the requirement, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. As this is currently under active development, more signal types are added with each new release; however, at the moment, the available ones are:
 
 [[value-signal]]
 === ValueSignal
@@ -185,7 +185,7 @@ const sharedPerson: ValueSignal<Person> =
 export default function PersonView() {
   return (
     <VerticalLayout theme="padding">
-      <span>Name: {sharedPerson.value.name}</span> {/* <2> */}
+      <span>Name: {sharedPerson.value.name /* <2> */}</span>
       <span>Age: {sharedPerson.value.age}</span>
       <Button onClick={() =>
          sharedPerson.value = { // <3>
@@ -196,7 +196,7 @@ export default function PersonView() {
   );
 }
 ----
-<1> Subscribing to the `sharedPerson` signal and setting the default value to an empty person. This client-side default value is used when rendering the component before the first update from the server-side signal is received.
+<1> Subscribing to the `sharedPerson` signal and setting the default value to an empty person.
 <2> Rendering the name of the person. The value of the signal is of type `Person` with a `name` property.
 <3> Increasing the age of the person by creating a new `Person` object containing the increased age and assigning this new object as the signal's value. This will automatically trigger an update to the server-side signal, and all other clients that are subscribed to the signal will receive the updated value.
 
@@ -207,11 +207,14 @@ Given the nature of the signals, only changing the value of the signal will caus
 All signals have a `value` property that can be used to both set and read the value of the signal. However, when it comes to setting a shared value among multiple clients concurrently, it can lead to overwriting each other's changes. Thus, [classname]`ValueSignal` provides extra methods to set the value in different situations:
 
 - `set(value: T): void`: Sets the given value as the signals value. It is the same as assigning to the `value` property directly. Note that the value change event that is propagated to the server as the result of this operation is not taking the last seen value into account and will overwrite the shared value on the server unconditionally (AKA: "Last Write Wins").
-- `replace(expected: T, newValue: T): void`: Replaces the value with a new one only if the current value is equal to the expected value. This means that a state change request is sent to the server asking it to _"compare and set"_. At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
-- `update(updater: (current: T) => T): OperationSubscription`: Tries to update the value by applying the callback function to the current value. When the new value is calculated, a "compare and set" operation is sent to the server, and in case of a concurrent change the update is rejected, the callback is run again with an updated current value. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`.
+- `replace(expected: T, newValue: T): void`: Replaces the value with a new one atomically only if the current value is equal to the expected value. This means that a state change request is sent to the server asking it to _"compare and set"_. At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
+- `update(updater: (current: T) => T): OperationSubscription`: Tries to update the value by applying the callback function to the current value on the client side. When the new value is calculated, a "compare and set" operation is sent to the server, and in case of a concurrent change, the update is rejected, and the callback is run again with an updated current value on the client side. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`. This operation is atomic at the time of the server-side processing, meaning that the server will only accept the update if the value is still the same as when the operation was initiated.
 
 [NOTE]
 There is no guarantee that `cancel()` will be effective always, since a succeeding operation might already be on its way to the server.
+
+[NOTE]
+The operations such as `replace` and `update` that are performing a _compare and set_ on the server using the [methodname]`equals` method of the value type to compare the values. Thus, it is important to make sure that the value type has a proper implementation of the [methodname]`equals` method.
 
 [[number-signal]]
 === NumberSignal
@@ -253,10 +256,10 @@ const counter = CounterService.counter(); // <1>
 export default function() {
   return (
     <VerticalLayout>
-      <span>Counter: {counter}</span> {/* <2> */}
-      <Button onClick={() => counter.incrementBy(5)}>Increase by 5</Button> {/* <3> */}
-      <Button onClick={() => counter.incrementBy(-3)}>Decrease by 3</Button> {/* <4> */}
-      <Button onClick={() => counter.value = 0}>Reset</Button> {/* <5> */}
+      <span>Counter: {counter /* <2> */}</span>
+      <Button onClick={() => counter.incrementBy(5) /* <3> */}>Increase by 5</Button>
+      <Button onClick={() => counter.incrementBy(-3) /* <4> */}>Decrease by 3</Button>
+      <Button onClick={() => counter.value = 0 /* <5> */}>Reset</Button>
     </VerticalLayout>
   );
 }
@@ -267,9 +270,9 @@ export default function() {
 <4> Decrease the value of the signal using the atomic [methodname]`incrementBy` operation and providing a negative value.
 <5> Reset the value of the signal to `0` by assigning a new value to the signal.
 
-Note that the `incrementBy` operation is atomic, meaning that it is guaranteed to succeed without any concurrent changes. If there are concurrent changes, the operation is retried until it can be applied successfully. This ensures that `n` increments or decrements are always applied correctly, even if there are multiple clients trying to update the value concurrently.
+Note that the `incrementBy` operation is _incrementally atomic_, meaning that it is guaranteed to succeed by reading the current value and applying the increment on the value atomically, and each operation will make their change on top of the previously accepted operation. This ensures that `n` increments or decrements are always applied correctly, even if there are multiple clients trying to update the value concurrently.
 
-As [classname]`NumberSignal` is a [classname]`ValueSignal` only with additional atomic operations, it inherits all the methods such as `replace` and `update`, so if there is no need for supporting atomic operations, the inherited methods can be used for wider range of operations.
+Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all the methods such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
 
 [[method-parameters]]
 == Service Method Parameters
