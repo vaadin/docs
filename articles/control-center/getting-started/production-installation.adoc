@@ -1,0 +1,70 @@
+---
+title: Production Installation
+description: Learn how to install Control Center in a production environment.
+order: 20
+---
+
+
+= Production Installation
+
+This guide explains how to install Control Center in a production environment, specifically how to install the required dependencies and Control Center itself without utilizing cluster-wide admin permissions.
+
+
+== NGINX Ingress Controller
+
+NGINX is an ingress controller that manages external access to services in your cluster. You can install it by running the following command:
+
+.Terminal
+[source,bash]
+----
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.3/deploy/static/provider/cloud/deploy.yaml
+----
+
+
+== Cert-Manager
+
+Cert-Manager is a Kubernetes add-on that automates the management of TLS certificates. You can install it by running the following command:
+
+.Terminal
+[source,bash]
+----
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml
+----
+
+
+== CloudNativePG
+
+CloudNativePG is a PostgreSQL database that Control Center uses to store application data. You can install it by running the following command:
+
+.Terminal
+[source,bash]
+----
+kubectl apply --server-side -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.24.0.yaml
+----
+
+
+== Keycloak
+
+Keycloak is an open-source identity and access management solution that Control Center uses for authentication. You can install it by running the following commands:
+
+.Terminal
+[source,bash]
+----
+kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/25.0.6/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/25.0.6/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+kubectl -n control-center apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/25.0.6/kubernetes/kubernetes.yml
+----
+
+
+== Control Center
+
+Now that the dependencies are installed, you can proceed to install Control Center. To do this without cluster-wide admin privileges, run the following Helm command:
+
+.Terminal
+[source,bash]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+    -n control-center --create-namespace \
+    --set service.type=LoadBalancer --set service.port=8000 \
+    --wait
+----
