@@ -8,7 +8,7 @@ order: 130
 
 When building a modern web application, you often need to synchronize the state between the server and clients. For example, you might want to notify all connected clients in a chat application when a new message is posted, visualize the interactions of multiple users editing the same record in a form, or when the status of an order in an e-commerce application changes. This is even more tricky when you this updates to be propagated to the clients in real-time. This is where full-stack signals come into play.
 
-A full-stack signal can be seen as a special data-type that holds the shared state, and enables the clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are automatically propagated to all other clients that are subscribed to the signal.
+A full-stack signal can be seen as a special data type that holds the shared state, and enables the clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are automatically propagated to all other clients that are subscribed to the signal.
 
 In this guide, you will learn how to create and use full-stack signals in your Vaadin applications.
 
@@ -16,12 +16,12 @@ In this guide, you will learn how to create and use full-stack signals in your V
 Full-stack signals are still under active development and is not yet suitable for production use. Thus, to use them in your Vaadin projects, you need to explicitly enable the experimental feature in Copilot, or by manually adding `com.vaadin.experimental.fullstackSignals=true` to the [filename]`src/main/resources/vaadin-featureflags.properties` file.
 
 [NOTE]
-At the moment, the implementation of full-stack signals are only available for Vaadin Hilla applications that use the **React** library for rendering the user interfaces.
+At the moment, the implementation of full-stack signals is only available for Vaadin Hilla applications that use the **React** library to render the user interfaces.
 
 [[server-side-signal-instance]]
 == Server-side Full-stack Signal Instance
 
-The purpose of a full-stack signal is to share and synchronize the state between the server and clients in real-time. In Vaadin Hilla applications, you can do that by creating an instance of one of the available full-stack signal types and returning it normally from your [classname]`@BrowserCallable` annotated services. In the following example an instance of a [classname]`ValueSignal` is created and returned from a server-side endpoint:
+The purpose of a full-stack signal is to share and synchronize the state between the server and clients in real time. In Vaadin Hilla applications, you can do that by creating an instance of one of the available full-stack signal types and returning it from your [classname]`@BrowserCallable` annotated services. In the following example an instance of a [classname]`ValueSignal` is created and returned from a server-side endpoint:
 
 [source,java]
 .VoteService.java
@@ -37,10 +37,10 @@ import com.vaadin.hilla.signal.ValueSignal;
 @BrowserCallable
 public class VoteService {
     private final ValueSignal<Boolean> started =
-                    new ValueSignal<>(false, Boolean.class); <1>
+                    new ValueSignal<>(false, Boolean.class); // <1>
 
     public ValueSignal<Boolean> startedSignal() {
-        return started; <2>
+        return started; // <2>
     }
 }
 ----
@@ -64,18 +64,20 @@ For a client to receive real-time updates when the state of a full-stack signal 
 [source,tsx]
 .vote.tsx
 ----
-import { VoteService } from "Frontend/generated/endpoints.js";
+import { VoteService } from 'Frontend/generated/endpoints.js';
 import { Button } from '@vaadin/react-components/Button.js';
 
-const votingStarted = VoteService.startedSignal({ defaultValue: false }); <1>
+const votingStarted = VoteService.startedSignal({ defaultValue: false }); // <1>
 
 export default function VoteView() {
   return (
     <>
-      <span>Is voting in progress: {votingStarted.value ? 'Yes' : 'No'}</span> <2>
-      <Button onClick={() => votingStarted.value = !votingStarted.value} <3>
-              theme={votingStarted.value ? 'error' : ''}
-              >{votingStarted.value ? 'Stop' : 'Start'} Voting
+      <span>Is voting in progress: {votingStarted.value ? 'Yes' : 'No'}</span> {/* <2> */}
+      <Button
+        onClick={() => (votingStarted.value = !votingStarted.value) /* <3> */}
+        theme={votingStarted.value ? 'error' : ''}
+      >
+        {votingStarted.value ? 'Stop' : 'Start'} Voting
       </Button>
     </>
   );
@@ -84,12 +86,12 @@ export default function VoteView() {
 
 <1> Subscribe to the `started` signal and set the default value to `false`.
 <2> Render the current state of the signal by accessing its `value` property.
-<3> Toggling (changing) the state by setting the `value` property of the signal.
+<3> Toggle (change) the state by setting the `value` property of the signal.
 
 [[available-full-stack-signal-types]]
 == Available Full-stack Signal Types
 
-The full-stack signals are designed to be used in various scenarios, and based on the requirement different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. As this is currently under active development, more signal types are released with every new release, but at the moment, the available ones are:
+The full-stack signals are designed to be used in various scenarios, and based on the requirement different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. As this is currently under active development, more signal types are added at each new release, but, at the moment, the available ones are:
 
 [[value-signal]]
 === ValueSignal
@@ -146,15 +148,15 @@ import com.vaadin.hilla.signals.ValueSignal;
 @AnonymousAllowed
 @BrowserCallable
 public class PersonService {
-    record Person(String name, int age) {} <1>
+    record Person(String name, int age) {} // <1>
 
-    private final Person initialValue = new Person("John Doe", 42); <2>
+    private final Person initialValue = new Person("John Doe", 42); // <2>
 
     private final ValueSignal<Person> sharedPerson =
-                    new ValueSignal<>(initialValue, Person.class); <3>
+                    new ValueSignal<>(initialValue, Person.class); // <3>
 
     @Nonnull
-    public ValueSignal<@Nonnull Person> sharedPerson() { <4>
+    public ValueSignal<@Nonnull Person> sharedPerson() { // <4>
         return sharedPerson;
     }
 }
@@ -171,23 +173,22 @@ Having a [classname]`@BrowserCallable` annotated service with a method that retu
 [source,tsx]
 .person.tsx
 ----
-import { VerticalLayout } from "@vaadin/react-components/VerticalLayout";
-import { Button } from "@vaadin/react-components/Button.js";
+import { Button, VerticalLayout } from '@vaadin/react-components';
 
-import { ValueSignal } from "@vaadin/hilla-react-signals";
-import { PersonService } from "Frontend/generated/endpoints.js";
-import type Person from "Frontend/generated/com/example/application/services/PersonService/Person.js";
+import { ValueSignal } from '@vaadin/hilla-react-signals';
+import { PersonService } from 'Frontend/generated/endpoints.js';
+import type Person from 'Frontend/generated/com/example/application/services/PersonService/Person.js';
 
 const sharedPerson: ValueSignal<Person> =
-          PersonService.sharedPerson({ defaultValue: { name: '', age: 0 } }); <1>
+          PersonService.sharedPerson({ defaultValue: { name: '', age: 0 } }); // <1>
 
 export default function PersonView() {
   return (
     <VerticalLayout theme="padding">
-      <span>Name: {sharedPerson.value.name}</span> <2>
+      <span>Name: {sharedPerson.value.name}</span> {/* <2> */}
       <span>Age: {sharedPerson.value.age}</span>
       <Button onClick={() =>
-          sharedPerson.value = { <3>
+         sharedPerson.value = { // <3>
             name: sharedPerson.value.name,
             age: sharedPerson.value.age + 1
           }}>Increase age</Button>
@@ -206,7 +207,7 @@ Given the nature of the signals, only changing the value of the signal will caus
 All signals have a `value` property that can be used to both set and read the value of the signal. However, when it comes to setting a shared value among multiple clients concurrently, it can lead to overwriting each other's changes. Thus, [classname]`ValueSignal` provides extra methods to set the value in different situations:
 
 - `set(value: T): void`: Sets the given value as the signals value. It is the same as assigning to the `value` property directly. Note that the value change event that is propagated to the server as the result of this operation is not taking the last seen value into account and will overwrite the shared value on the server unconditionally (AKA: "Last Write Wins").
-- `replace(expected: T, newValue: T): void`: Replaces the value with a new one only if the current value is equal to the expected value. This means that a state change request is sent to the server asking it _"compare and set"_. At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
+- `replace(expected: T, newValue: T): void`: Replaces the value with a new one only if the current value is equal to the expected value. This means that a state change request is sent to the server asking it to _"compare and set"_. At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
 - `update(updater: (current: T) => T): OperationSubscription`: Tries to update the value by applying the callback function to the current value. When the new value is calculated, a "compare and set" operation is sent to the server, and in case of a concurrent change the update is rejected, the callback is run again with an updated current value. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`.
 
 [NOTE]
@@ -229,9 +230,9 @@ import com.vaadin.hilla.signals.NumberSignal;
 @AnonymousAllowed
 @BrowserCallable
 public class CounterService {
-    private final NumberSignal counter = new NumberSignal(1.0); <1>
+    private final NumberSignal counter = new NumberSignal(1.0); // <1>
 
-    public NumberSignal counter() { <2>
+    public NumberSignal counter() { // <2>
         return counter;
     }
 }
@@ -244,19 +245,18 @@ The above example demonstrates a simple counter service that uses a [classname]`
 [source,tsx]
 .counter.tsx
 ----
-import { Button } from '@vaadin/react-components/Button.js';
-import { VerticalLayout } from "@vaadin/react-components/VerticalLayout.js";
-import { CounterService } from "Frontend/generated/endpoints.js";
+import { Button, VerticalLayout } from '@vaadin/react-components';
+import { CounterService } from 'Frontend/generated/endpoints.js';
 
-const counter = CounterService.counter(); <1>
+const counter = CounterService.counter(); // <1>
 
 export default function() {
   return (
     <VerticalLayout>
-      <span>Counter: {counter}</span> <2>
-      <Button onClick={() => counter.incrementBy(5)}>Increase by 5</Button> <3>
-      <Button onClick={() => counter.incrementBy(-3)}>Decrease by 3</Button> <4>
-      <Button onClick={() => counter.value = 0}>Reset</Button> <5>
+      <span>Counter: {counter}</span> {/* <2> */}
+      <Button onClick={() => counter.incrementBy(5)}>Increase by 5</Button> {/* <3> */}
+      <Button onClick={() => counter.incrementBy(-3)}>Decrease by 3</Button> {/* <4> */}
+      <Button onClick={() => counter.value = 0}>Reset</Button> {/* <5> */}
     </VerticalLayout>
   );
 }
@@ -307,7 +307,7 @@ public class VoteService {
         return VOTE_OPTIONS;
     }
 
-    public NumberSignal voteOptionSignal(String option) { <1>
+    public NumberSignal voteOptionSignal(String option) { // <1>
         return voteOptions.get(option.toLowerCase());
     }
 }
