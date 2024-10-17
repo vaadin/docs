@@ -1,0 +1,202 @@
+---
+title: Pushing
+description: How to push updates to a Vaadin Flow user interface.
+order: 1
+section-nav: badge-flow
+---
+
+
+= Pushing UI Updates [badge-flow]#Flow#
+
+Whenever you're using server push in Vaadin Flow, you're triggering it from a thread other than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update performed from another thread could conflict with a regular event-driven update and cause either data corruption, race conditions or deadlocks. 
+
+Such errors are by nature hard to discover and fix, since they often occur randomly and under a heavy load. Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent race conditions. You would use it like this:
+
+[source,java]
+----
+ui.access(() -> {
+    // Update your UI here
+});
+----
+
+[NOTE]
+The examples on this page only work with push enabled. For information about how to do that, see the <<.#enabling-push-flow,Server Push>> documentation page.
+
+By default, Flow uses automatic pushing. This means that any pending changes are pushed to the browser after the command passed to `UI.access()` finishes. You can also configure Flow to use manual pushing. This would give you more control over when changes are pushed to the browser. For example, you can push multiple times inside a single call to `UI.access()`.
+
+To enable manual pushing, you have to make an addition to the `@Push` annotation, like this:
+
+[source,java]
+----
+@Push(PushMode.MANUAL)
+public class Application implements AppShellConfigurator {
+    ...
+}
+----
+
+Afterwards, you'll have to call the `UI.push()` method whenever you want to push your changes to the browser, like this:
+
+[source,java]
+----
+ui.access(() -> {
+    // Update your UI here
+    ui.push();
+});
+----
+
+
+== Getting the UI Instance
+
+// This assumes that the UI has been explained earlier, and what attach and detach means.
+
+Before you can call `access()`, you need to get the `UI` instance. You'd typically use `Component.getUI()` or `UI.getCurrent()` for this. However, both are problematic when it comes to server push.
+
+`Component.getUI()` is not thread-safe, which means you should only call it while the user session is locked. Therefore, you can't use it to call `access()`.
+
+`UI.getCurrent()` only returns a non-`null` value when the current thread owns the session lock. When called from a background thread, it returns `null`. Therefore, you can't use it either to call `access()`.
+
+Whenever you're planning to use server push, you have to get a hold of the `UI` instance while the user session is locked. This typically happens right before you start your background thread.
+
+Below is an example of a button click listener that starts a background thread:
+
+[source,java]
+----
+button.addClickListener(clickEvent -> {
+    var ui = UI.getCurrent(); // <1>
+    taskExecutor.execute(() -> { // <2>
+        // Do your work here
+        ui.access(() -> { 
+            // Update your UI here
+        });
+    });
+});
+----
+<1> This is executed in an HTTP request thread. The user session is locked and `UI.getCurrent()` returns the current `UI`-instance.
+<2> This is executed in the background thread. `UI.getCurrent()` returns `null`, but the `UI` instance is stored in a local variable.
+
+
+== Access Later
+
+You probably often use server push in various types of event listeners and <<callbacks#,callbacks>>. A background job might inform you that it has finished processing.
+
+In the following example, the user interface is updated in a callback after a background job has finished:
+
+[source,java]
+----
+var ui = UI.getCurrent();
+myService.startBackgroundJob(() -> ui.access(() -> {
+    // Update your UI here when the job is finished
+}));
+----
+
+Another common use case is an event bus informing you of a new message.
+
+In the following example, the user interface subscribes to an event bus, and updates the user interface whenever a new message arrives:
+
+[source,java]
+----
+var ui = UI.getCurrent();
+var subscription = myEventBus.subscribe((message) -> ui.access(() -> {
+    // Update your UI here when a message has arrived
+}));
+----
+
+In cases like these, you should consider using `UI.accessLater()`, instead of `UI.access()`.
+
+`UI.accessLater()` exists in two versions: one that wraps a `SerializableRunnable`; and another that wraps a `SerializableConsumer`. It stores the `UI` instance, and runs the wrapped delegate inside a call to `UI.access()`.
+
+It also takes a second parameter, which is a _detach handler_. The detach handler is a `Runnable` that runs if the `UI` has been detached when `UI.access()` is called. The detach handler can be `null` if no special actions are needed.
+
+Rewritten with `accessLater()`, the thread completion example becomes this:
+
+[source,java]
+----
+myService.startBackgroundJob(UI.getCurrent().accessLater(() -> {
+    // Update your UI here when the job is finished.
+}, null));
+----
+
+Likewise, the event listener becomes this:
+
+[source,java]
+----
+var subscription = myEventBus.subscribe(UI.getCurrent().accessLater((message) -> {
+    // Update your UI here when a message has arrived
+}, null));
+----
+
+
+== Avoiding Memory Leaks
+
+When you're using server push to update the user interface when an event has occurred, you would typically subscribe a listener to some broadcaster or event bus. When you do this, be sure to unsubscribe when the UI is detached. Otherwise, you'll have a memory leak that prevents your UI from being garbage collected. This is because the listener holds a reference to the `UI` instance.
+
+Always subscribe when your view is attached to a UI, and unsubscribe when it's detached. You can do this by overriding the `Component.onAttach()` method, like so:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) { // <1>
+    var ui = attachEvent.getUI(); // <2>
+    var subscription = myEventBus.subscribe(ui.accessLater((message) -> { 
+        // Update your UI here when a message has arrived
+    }, null));        
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener(); // <3>
+        subscription.unsubscribe(); // <4>
+    }); 
+}
+----
+<1> Subscribe when the view is attached to a UI.
+<2> Get the `UI` from the `AttachEvent`.
+<3> Remove the detach listener itself, to prevent a memory leak in case the component is attached multiple times.
+<4> Unsubscribe when the view is detached from the UI.
+
+
+== Avoiding Floods
+
+Another risk you have to manage when updating the user interface in response to events is flooding the user interface with updates. As a rule of thumb, you should not push more than two to four times per second. Pushing more often than that can cause performance issues. Plus, there is a limit to how many updates the human brain is able to register per second.
+
+When you know events are coming no faster than two to four events per second, you can push on every event. However, if they're more frequent, you have to buffer events and update the user interface in batches. This is quite easy to do if you're using a `Flux` from https://projectreactor.io/[Reactor]. See the <<reactive#,Consuming Reactive Streams>> documentation page for more information about this.
+
+The buffering duration depends on the size of the UI update, and the network latency. In some applications, you may need to use a longer buffer duration. In others, a shorter one might work. You should try various durations to see what's best for your application.
+
+
+== Avoiding Unnecessary Pushes
+
+The `UI.access()` method updates the user interface, asynchronously. The update operation is not executed immediately, but added to a queue and executed at some time later. If this is combined with regular event-driven updates in the HTTP request thread, you may have a situation in which the user interface is updated out-of-order. 
+
+To understand better, look at this example:
+
+[source,java]
+----
+var button = new Button("Test Me", event -> {
+    UI.getCurrent().access(() -> {
+        add(new Div("This <div> is added from within a call to UI.access()"));
+    });
+    add(new Div("This <div> is added from an event listener"));
+});
+add(button);
+----
+
+If you were to click the button, the user interface would look like this:
+
+[source]
+----
+This <div> is added from an event listener
+This <div> is added from within a call to UI.access()
+----
+
+In this particular case, the call to `UI.access()` would not have been needed. Sometimes, you can deduce this by looking at the code. However, there are situations in which this isn't obvious. You may have code that's executed sometimes by the HTTP request thread, and other times by another thread. For this situation, you can check whether the current thread has locked the user session, like this:
+
+[source,java]
+----
+if (ui.getSession().hasLock()) {
+    // Update the UI without calling UI.access()
+} else {
+    ui.access(() -> {
+        // Update the UI inside UI.access()
+    });
+}
+----
+
+// TODO Consider showing an example of a UIRunner that takes a Runnable or Consumer, performs the check, and calls it directly or inside UI.access().
