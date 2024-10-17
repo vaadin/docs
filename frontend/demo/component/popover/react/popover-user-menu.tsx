@@ -35,7 +35,7 @@ function Example() {
         >
           <Avatar
             tabIndex={-1}
-            style={{ display: 'block' }}
+            style={{ display: 'block', cursor: 'pointer' }}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
           />
@@ -48,48 +48,25 @@ function Example() {
         overlayRole="menu"
         modal
         accessibleName="User menu"
+        theme="no-padding"
       >
-        <HorizontalLayout
-          theme="spacing"
-          style={{
-            background: 'var(--lumo-contrast-5pct)',
-            padding: 'var(--lumo-space-s)',
-            margin: 'calc(var(--lumo-space-s) * -1)',
-          }}
-        >
-          <Avatar
-            tabIndex={-1}
-            img={pictureUrl}
-            name={`${firstName} ${lastName}`}
-            style={{ alignSelf: 'center' }}
-          />
-          <VerticalLayout style={{ marginTop: 'var(--lumo-space-s)' }}>
-            <div style={{ fontWeight: 'bold', lineHeight: 1 }}>
+        <HorizontalLayout className="userMenuHeader">
+          <Avatar tabIndex={-1} img={pictureUrl} name={`${firstName} ${lastName}`} theme="large" />
+          <VerticalLayout>
+            <div style={{ fontWeight: 'bold' }}>
               {firstName} {lastName}
             </div>
-            <div>{nickName}</div>
+            <div className="userMenuNickname">{nickName}</div>
           </VerticalLayout>
         </HorizontalLayout>
-        <VerticalLayout style={{ marginTop: 'var(--lumo-space-s)', alignItems: 'stretch' }}>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
-          >
+        <VerticalLayout className="userMenuLinks">
+          <a href="#" role="menuitem">
             User profile
           </a>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
-          >
+          <a href="#" role="menuitem">
             Preferences
           </a>
-          <a
-            href="#"
-            role="menuitem"
-            style={{ padding: 'var(--lumo-space-xs)', textDecoration: 'none' }}
-          >
+          <a href="#" role="menuitem">
             Sign out
           </a>
         </VerticalLayout>
