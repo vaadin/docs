@@ -4,6 +4,7 @@ description: A full-stack signal is a special type that is designed to share and
 order: 130
 ---
 
+
 = [since:com.vaadin:vaadin@V24.5]#Full Stack Signals#
 
 When building a modern web application, you often need to synchronize the state between the server and clients. For example, you might want to notify all connected clients in a chat application when a new message is posted, visualize multiple users interacting while editing the same record in a form, or update clients when the status of an order changes in an e-commerce application. This becomes even trickier when you need these updates to be propagated to clients in real time. This is where full-stack signals come into play.
@@ -18,14 +19,14 @@ Full-stack signals are still under active development and is not yet suitable fo
 [NOTE]
 At the moment, the implementation of full-stack signals is only available for Vaadin Hilla applications that use the **React** library to render the user interfaces.
 
+
 [[server-side-signal-instance]]
 == Server-Side Full-Stack Signal Instance
 
 The purpose of a full-stack signal is to share and synchronize the state between the server and clients in real time. In Vaadin Hilla applications, you can do that by creating an instance of one of the available full-stack signal types and returning it from your [classname]`@BrowserCallable` annotated services. In the following example an instance of a [classname]`ValueSignal` is created and returned from a server-side endpoint:
 
-// vale:off(Vale.Terms)
 [source,java]
-.VoteService.java
+.`VoteService.java`
 ----
 package com.example.application;
 
@@ -45,7 +46,6 @@ public class VoteService {
     }
 }
 ----
-// vale:on
 
 <1> Create an instance of a [classname]`ValueSignal` with an initial value of false.
 <2> Return the instance of the [classname]`ValueSignal` from the [methodname]`startedSignal` method.
@@ -57,6 +57,7 @@ The above example demonstrates a simple polling service that uses a [classname]`
 
 [NOTE]
 For a complete list of available full-stack signal types, see <<available-full-stack-signal-types>>.
+
 
 [[client-subscription]]
 == Subscription to a Full-stack Signal
@@ -90,19 +91,22 @@ export default function VoteView() {
 <2> Render the current state of the signal by accessing its `value` property.
 <3> Toggle (change) the state by setting the `value` property of the signal.
 
+
 [[available-full-stack-signal-types]]
 == Available Full-stack Signal Types
 
-The full-stack signals are designed to be used in various scenarios, and based on the requirement, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. As this is currently under active development, more signal types are added with each new release; however, at the moment, the available ones are:
+The full-stack signals are designed to be used in various scenarios, and based on the requirement, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package, and their client-side counterparts are available in `@vaadin/hilla-react-signals`. 
+
+As this is currently under active development, more signal types are added with each new release: `ValueSignal`; and `NumberSignal`. These are described in the following sections.
+
 
 [[value-signal]]
 === ValueSignal
 
 The `ValueSignal<T>` is a full-stack signal that holds a single value of an arbitrary type. The type should necessarily be a JSON-serializable type that is supported by the Hilla framework. The following example demonstrates how to create and use a [classname]`ValueSignal` in a server-side service:
 
-// vale:off(Vale.Terms)
 [source,java]
-.SomeService.java
+.`SomeService.java`
 ----
 package com.example.application;
 
@@ -136,13 +140,11 @@ public class SomeService {
     }
 }
 ----
-// vale:on
 
 The above example demonstrates a simple service that uses three different [classname]`ValueSignal` instances to share a boolean, an integer, and a string value. Note that the possibilities are not limited to the primitive types, and any custom types can be used as long as they are JSON-serializable, for example:
 
-// vale:off(Vale.Terms)
 [source,java]
-.PersonService.java
+.`PersonService.java`
 ----
 package com.example.application;
 
@@ -167,7 +169,6 @@ public class PersonService {
     }
 }
 ----
-// vale:on
 
 <1> A record type that represents a JSON-serializable type, in this case a person with a name and age.
 <2> The initial value of the signal. This initial value remains the same until an update is submitted to the signal.
@@ -179,7 +180,7 @@ Though, the above example shows the usage of a record, you can also use classes 
 Having a [classname]`@BrowserCallable` annotated service with a method that returns a [classname]`ValueSignal` instance similar to the above example, enables the client-side code to subscribe to it by calling the service method:
 
 [source,tsx]
-.person.tsx
+.`person.tsx`
 ----
 import { Button, VerticalLayout } from '@vaadin/react-components';
 
@@ -211,7 +212,9 @@ export default function PersonView() {
 [NOTE]
 Given the nature of the signals, only changing the value of the signal causes the signal's subscribers to be notified. Changing the internal properties of the value object does not trigger an update.
 
+
 ==== Setting the Value
+
 All signals have a `value` property that can be used to both set and read the value of the signal. However, when it comes to setting a shared value among multiple clients concurrently, it can lead to overwriting each other's changes. Thus, [classname]`ValueSignal` provides extra methods to set the value in different situations:
 
 - `set(value: T): void`: Sets the given value as the signals value. It is the same as assigning to the `value` property directly. Note that the value change event that is propagated to the server as the result of this operation does not take the last seen value into account and overwrites the shared value on the server unconditionally (also known as: "Last Write Wins").
@@ -224,8 +227,10 @@ A call to `cancel()` is not guaranteed to always be effective, as a succeeding o
 [NOTE]
 The operations such as `replace` and `update` that are performing a _compare and set_ on the server using the [methodname]`equals` method of the value type to compare the values. Thus, it is important to make sure that the value type has a proper implementation of the [methodname]`equals` method.
 
+
 [[number-signal]]
 === NumberSignal
+
 The [classname]`NumberSignal` is a full-stack signal that holds a numeric value. This numeric value is of type [classname]`Double` in Java, and of type `number` in the client-side code. The [classname]`NumberSignal` can be considered a special case of the [classname]`ValueSignal` that is optimized for numeric values by introducing a built-in support for atomic increment and decrement operations. The following example demonstrates how to create and use a [classname]`NumberSignal` in a service class:
 
 [source,java]
@@ -282,14 +287,14 @@ The `incrementBy` operation is _incrementally atomic_, meaning it guarantees suc
 
 Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all the methods such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
 
+
 [[method-parameters]]
 == Service Method Parameters
 
 When creating the service methods that return full-stack signals, you can accept parameters as well, similar to any other endpoints. This opens up a wide range of possibilities for dynamically returning different signals instances. The following example demonstrates how to create a service method that returns different signal instances based on the passed in argument:
 
-// vale:off(Vale.Terms)
 [source,java]
-.VoteService.java
+.`VoteService.java`
 ----
 package com.example.application;
 
@@ -324,7 +329,6 @@ public class VoteService {
     }
 }
 ----
-// vale:on
 
 <1> The service method returns the associated [classname]`NumberSignal` instance based on the passed in argument.
 
@@ -333,11 +337,18 @@ The above example demonstrates a simple voting service that returns different [c
 [NOTE]
 It is vitally important to make sure that the behaviour of the service method returning a signal instance should be deterministic, meaning that the same input parameters should always produce the same output. This is important to ensure that the state is consistently shared across all the clients.
 
+
 [[security]]
-== How Security Works with Full-Stack Signals?
+== Security with Full-Stack Signals
+
+Security with full-Stack signals has a few nuances of which you need to be aware. They're covered below.
+
 
 === Controlling Endpoint Access
+
 Full-stack signals are exposed by the services that are annotated with [classname]`@BrowserCallable` (or [classname]`@Endpoint` as a synonym). This means the services that expose the signals are secured by the same security rules as any other service using the [classname]`@AnonymousAllowed`, [classname]`@PermitAll`, [classname]`@RolesAllowed`, or [classname]`@DenyAll` on the class or the individual methods. For more information on how to secure the services, see the <<./security/intro#, security guide>>.
 
+
 === Fine-Grained Signal Access Control
+
 Endpoint access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require more fine-grained control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with some specific role have the possibility to update the value of that signal. This fine-grained control is not yet implemented, but it is planned to be added in the future releases.
