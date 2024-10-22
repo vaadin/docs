@@ -29,14 +29,17 @@ public class NotificationPosition extends Div {
     // tag::createButton[]
     private Button createButton(Notification.Position position) {
         Button button = new Button(position.getClientName());
-        button.addClickListener(event -> show(position));
+        button.addClickListener(event -> {
+            Notification notification = show(position);
+            add(notification); // hidden-source-line
+        });
         return button;
     }
     // end::createButton[]
 
     // tag::show[]
-    private void show(Notification.Position position) {
-        Notification.show(position.getClientName(), 5000, position);
+    private Notification show(Notification.Position position) {
+        return Notification.show(position.getClientName(), 5000, position);
     }
     // end::show[]
 

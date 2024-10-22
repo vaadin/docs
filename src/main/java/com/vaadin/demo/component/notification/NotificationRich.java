@@ -31,6 +31,8 @@ public class NotificationRich extends HorizontalLayout {
             btn.setEnabled(false);
 
             Notification notification = notificationSupplier.get();
+            btn.getParent().get().getElement() // hidden-source-line
+                    .appendChild(notification.getElement()); // hidden-source-line
             notification.setPosition(Notification.Position.MIDDLE);
             notification.setDuration(5000);
             notification.open();

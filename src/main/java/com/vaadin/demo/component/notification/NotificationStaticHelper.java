@@ -17,6 +17,7 @@ public class NotificationStaticHelper extends Div {
             Notification notification = Notification
                     .show("Financial report generated");
             notification.setPosition(Notification.Position.MIDDLE);
+            add(notification); // hidden-source-line
             // end::snippet[]
         });
 
