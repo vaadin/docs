@@ -101,7 +101,7 @@ export default function VoteView() {
 
 The full-stack signals are designed to be used in various scenarios. Based on the requirements, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package. Their client-side counterparts are available in `@vaadin/hilla-react-signals`. 
 
-As this is currently under active development, more signal types are added with each new release. Currently available ones are: [classname]`ValueSignal` and [classname]`NumberSignal`. These are described in the following sections.
+As this is currently under active development, more signal types are added with each new release. The currently available ones are: [classname]`ValueSignal`, [classname]`NumberSignal`, and [classname]`ListSignal`. These are described in the following sections.
 
 [[value-signal]]
 === ValueSignal
@@ -290,7 +290,7 @@ The [methodname]`incrementBy` operation is _incrementally atomic_, meaning it gu
 Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all methods, such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
 
 [[list-signal]]
-=== [since:com.vaadin:vaadin@V24.5]#ListSignal#
+=== [since:com.vaadin:vaadin@V24.6]#ListSignal#
 
 The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. The type should necessarily be a JSON-serializable one that is supported by the Hilla framework.
 
@@ -310,17 +310,21 @@ import com.vaadin.hilla.signals.ListSignal;
 public class TodoService {
     record TodoItem(String text, boolean done) {}
 
-    private final ListSignal<Message> chatChannel =
-                        new ListSignal<>(Message.class);
+    private final ListSignal<TodoItem> todoItems =
+                        new ListSignal<>(TodoItem.class); // <1>
 
     @Nonnull
-    public ListSignal<@Nonnull TodoItem> todoItems() {
+    public ListSignal<@Nonnull TodoItem> todoItems() { // <2>
         return todoItems;
     }
 }
 ----
+<1> Create an instance of a [classname]`ListSignal`. The initial state of a [classname]`ListSignal` is an empty list.
+<2> Return the instance of the [classname]`ListSignal` from the [methodname]`todoItems` method.
 
-and on the client-side code:
+On the client-side code, subscribing to the shared list signal instance is done in a similar way as with the [classname]`ValueSignal`.
+
+The following example demonstrates how to create a to-do list view that enables concurrent users to add tasks to a shared list:
 
 [source,tsx]
 .todo.tsx
@@ -368,19 +372,19 @@ export default function TodoView(){
 <3> The `map` function is used to render the list of tasks.
 <4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`ListSignal`.
 
-The above example demonstrates a simple to-do list view that enables concurrent users to add tasks to a shared list. The `todoItems` signal holds the list of tasks, and the client-side code subscribes to this signal to receive real-time updates when the list changes.
-
-The client-side API of the [classname]`ListSignal` provides methods to insert and remove items. In the following section, these APIs are described in detail.
+Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. As the result, when a client add a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
 
 [[list-signal-api]]
 ==== ListSignal API
 
-As this is currently under active development, more methods and functionalities are added with each new release. The currently available methods are: [methodname]`inserLast` and [methodname]`remove`. These are described in the following sections.
+The client-side APIs of the [classname]`ListSignal` provides methods to insert and remove items. The [classname]`ListSignal` is a sequential organization of [classname]`ValueSignal` entries. Therefor, its APIs are about how the entries are added to or removed from the list, and how the concurrent operations regarding the structure of the entries is handled.
 
-`insertLast(value: T): Operation`:: Inserts a new value at the end of the list...
-`remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list...
+As this is currently under active development, more methods and functionalities are added with each new release. The currently available ones are: [methodname]`inserLast` and [methodname]`remove`. These are described in the following sections.
 
-The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list:
+`insertLast(value: T): Operation`:: Inserts a new value at the end of the list.
+`remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list.
+
+The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list (no changes needed on the server-side):
 
 [source,tsx]
 .todo.tsx
@@ -484,7 +488,7 @@ export default function TodoView(){
 }
 ----
 
-As demonstarted in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself, meaning each value can be updated individually, and the changes to that specific entry are automatically propagated to all other clients that are subscribed to that entry of the [classname]`ListSignal`. This enables the React rendering process to only render the updated entry, instead of re-rendering the whole list.
+As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself, meaning each value can be updated individually using the available APIs of the `ValueSignal`, and the changes to each individual entry are automatically propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to only render the updated entry, instead of re-rendering the whole list.
 
 [[method-parameters]]
 == Service Method Parameters
