@@ -101,8 +101,7 @@ export default function VoteView() {
 
 The full-stack signals are designed to be used in various scenarios. Based on the requirements, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package. Their client-side counterparts are available in `@vaadin/hilla-react-signals`. 
 
-As this is currently under active development, more signal types are added with each new release. Currently available ones are: `ValueSignal` and `NumberSignal`. These are described in the following sections.
-
+As this is currently under active development, more signal types are added with each new release. The currently available ones are: [classname]`ValueSignal`, [classname]`NumberSignal`, and [classname]`ListSignal`. These are described in the following sections.
 
 [[value-signal]]
 === ValueSignal
@@ -286,10 +285,211 @@ export default function() {
 <4> Decrease the value of the signal using the atomic [methodname]`incrementBy` operation and providing a negative value.
 <5> Reset the value of the signal to `0` by assigning a new value to it.
 
-The `incrementBy` operation is _incrementally atomic_, meaning it guarantees success by reading the current value and applying the increment on the value, atomically. Each operation builds on the previously accepted one, ensuring that `n` increments or decrements are always applied correctly -- even if there are multiple clients trying to update the value, concurrently.
+The [methodname]`incrementBy` operation is _incrementally atomic_, meaning it guarantees success by reading the current value and applying the increment on the value, atomically. Each operation builds on the previously accepted one, ensuring that `n` increments or decrements are always applied correctly -- even if there are multiple clients trying to update the value, concurrently.
 
 Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all methods, such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
 
+[[list-signal]]
+[role="since:com.vaadin:vaadin@V24.6"]
+=== ListSignal
+
+The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. The type should necessarily be a JSON-serializable one that is supported by the Hilla framework.
+
+The following example demonstrates how to create and use a [classname]`ListSignal` in a server-side service:
+
+[source,java]
+.`TodoService.java`
+----
+package com.example.application;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+import com.vaadin.hilla.signals.ListSignal;
+
+@AnonymousAllowed
+@BrowserCallable
+public class TodoService {
+    record TodoItem(String text, boolean done) {}
+
+    private final ListSignal<TodoItem> todoItems =
+                        new ListSignal<>(TodoItem.class); // <1>
+
+    @Nonnull
+    public ListSignal<@Nonnull TodoItem> todoItems() { // <2>
+        return todoItems;
+    }
+}
+----
+<1> Create an instance of a [classname]`ListSignal`. The initial state of a [classname]`ListSignal` is an empty list.
+<2> Return the instance of the [classname]`ListSignal` from the [methodname]`todoItems` method.
+
+On the client-side code, subscribing to the shared list signal instance is done in a similar way as with the [classname]`ValueSignal`.
+
+The following example demonstrates how to create a to-do list view that enables concurrent users to add tasks to a shared list:
+
+[source,tsx]
+.todo.tsx
+----
+import { TodoService } from "Frontend/generated/endpoints.js";
+import {
+  Button,
+  TextField,
+  HorizontalLayout,
+  VerticalLayout
+} from "@vaadin/react-components";
+import { effect, useSignal } from "@vaadin/hilla-react-signals";
+
+const todoItems = TodoService.todoItems(); // <1>
+
+export default function TodoView(){
+  const newTodoValue = useSignal<string>('');
+  return (
+    <>
+      <VerticalLayout theme="padding">
+        <span style={{padding: '10px'}}><h2>Tasks</h2></span>
+        {todoItems.value.length === 0 // <2>
+          ? <span style={{padding: '10px'}}>No tasks yet...</span>
+          : todoItems.value.map((item, index) => // <3>
+              <li key={index}>{item.value.text}</li>
+            )
+        }
+        <HorizontalLayout theme='padding spacing'>
+          <TextField placeholder="What's on your mind?"
+                     value={newTodoValue.value}
+                     onValueChanged={(e) => newTodoValue.value = e.detail.value}/>
+          <Button onClick={() => {
+            todoItems.insertLast({text: newTodoValue.value, done: false}); // <4>
+            newTodoValue.value = '';
+          }}>Add task</Button>
+        </HorizontalLayout>
+      </VerticalLayout>
+    </>
+  );
+}
+----
+
+<1> Subscribe to the `todoItems` list signal.
+<2> The `value` property of the [classname]`ListSignal` holds the list of tasks. The length of the list is checked to display a message when there are no tasks.
+<3> The `map` function is used to render the list of tasks.
+<4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`ListSignal`.
+
+Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. As the result, when a client add a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
+
+[[list-signal-api]]
+==== ListSignal API
+
+The client-side API of the [classname]`ListSignal` provides methods to insert and remove items. The [classname]`ListSignal` is a sequence of [classname]`ValueSignal` entries. Therefore, its API are about how the entries are added to or removed from the list, and how the concurrent operations regarding the structure of the entries is handled.
+
+As this is currently under active development, more methods and functionalities are added with each new release. The currently available ones are: [methodname]`inserLast` and [methodname]`remove`. These are described in the following sections.
+
+`insertLast(value: T): Operation`:: Inserts a new value at the end of the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
+`remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
+
+The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list (no changes needed on the server-side):
+
+[source,tsx]
+.todo.tsx
+----
+import { TodoService } from "Frontend/generated/endpoints.js";
+import {
+  Button,
+  Checkbox,
+  Icon,
+  TextField,
+  TextArea,
+  HorizontalLayout,
+  VerticalLayout
+} from "@vaadin/react-components";
+import { effect, useSignal, type ValueSignal} from "@vaadin/hilla-react-signals";
+
+const todoItems = TodoService.todoItems();
+
+function TodoComponent({todoItem, onRemove}: {
+  todoItem: ValueSignal<{text: string, done: boolean}>,
+  onRemove: (signal: ValueSignal<{text: string, done: boolean}>) => void,
+}) {
+  const editing = useSignal(false);
+  const todoText = useSignal('');
+  return (
+    <HorizontalLayout theme='spacing'
+                      style={{ alignItems: 'BASELINE', paddingLeft: '10px' }} >
+      {editing.value
+        ? <TextArea value={todoText.value}
+                     onValueChanged={(e) => todoText.value = e.detail.value}/>
+        : <Checkbox label={todoItem.value.text}
+                checked={todoItem.value.done}
+                onCheckedChanged={(e) => {
+                  todoItem.value = {
+                    text: todoItem.value.text,
+                    done: e.detail.value
+                  };
+                }}/>
+      }
+      <Button theme="icon"
+              hidden={editing.value}
+              onClick={() => {
+                editing.value = true;
+                todoText.value = todoItem.value.text;
+              }}>
+        <Icon icon="vaadin:pencil" />
+      </Button>
+      <Button theme="icon error"
+              hidden={editing.value}
+              onClick={() => onRemove(todoItem)}>
+        <Icon icon="vaadin:trash" />
+      </Button>
+      <Button theme="icon"
+              hidden={!editing.value}
+              onClick={() => {
+                todoItem.value = {
+                  text: todoText.value,
+                  done: todoItem.value.done
+                };
+                editing.value = false;
+              }}>
+        <Icon icon="vaadin:check" />
+      </Button>
+      <Button theme="icon error"
+              hidden={!editing.value}
+              onClick={() => {
+                todoText.value = '';
+                editing.value = false;
+              }}>
+        <Icon icon="vaadin:close-small" />
+      </Button>
+    </HorizontalLayout>
+  );
+}
+
+export default function TodoView(){
+  const newTodoValue = useSignal<string>('');
+  return (
+    <>
+      <VerticalLayout theme="padding">
+        <span style={{padding: '10px'}}><h2>Tasks</h2></span>
+        {todoItems.value.length === 0
+          ? <span style={{padding: '10px'}}>No tasks yet...</span>
+          : todoItems.value.map((item, index) =>
+            <TodoComponent todoItem={item}
+                           key={index}
+                           onRemove={() => todoItems.remove(item)}/>)
+        }
+        <HorizontalLayout theme='padding spacing'>
+          <TextField placeholder="What's on your mind?"
+                     value={newTodoValue.value}
+                     onValueChanged={(e) => newTodoValue.value = e.detail.value}/>
+          <Button onClick={() => {
+            todoItems.insertLast({text: newTodoValue.value, done: false});
+            newTodoValue.value = '';
+          }}>Add task</Button>
+        </HorizontalLayout>
+      </VerticalLayout>
+    </>
+  );
+}
+----
+
+As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself, meaning each value can be updated individually using the available API of the `ValueSignal`, and the changes to each individual entry are automatically propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to only render the updated entry, instead of re-rendering the whole list.
 
 [[method-parameters]]
 == Service Method Parameters
