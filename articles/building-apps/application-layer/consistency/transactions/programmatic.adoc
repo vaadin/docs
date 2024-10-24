@@ -4,6 +4,137 @@ description: How to manage transactions programmatically in Vaadin applications.
 order: 20
 ---
 
+
 = Programmatic Transactions
 
-TODO Write me
+Spring supports managing transactions programmatically through `TransactionTemplate` and `PlatformTransactionManager`. The following example demonstrates how you do this. You inject an instance of `PlatformTransactionManager` into your service, create a new `TransactionTemplate`, and use it to execute code inside transactions:
+
+[source,java]
+----
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
+
+@Service
+public class MyApplicationService {
+
+    private final TransactionTemplate transactionTemplate;
+
+    MyApplicationService(PlatformTransactionManager transactionManager) {
+        transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(
+            TransactionDefinition.PROPAGATION_REQUIRES_NEW); // <1>
+    }
+    
+    public void myMethod() {
+        transactionTemplate.executeWithoutResult(tx -> { // <2>
+            ...
+        });
+    }
+
+    public String myOtherMethod() {
+        return transactionTemplate.execute(tx -> { // <3>
+            ...
+            return "foo";
+        });
+    }
+}
+----
+<1> The propagation behavior is used for all transactions executed using this `TransactionTemplate`. If you need different propagation behaviors, you need different templates.
+<2> Use `executeWithoutResult` for `void` methods.
+<3> Use `execute` for methods that return a value.
+
+Programmatic transaction management is more verbose than declarative transaction management, but gives you better control over it. Instead of relying on a proxy and a method interceptor, the method controls its transactions itself. This removes the limitations of declarative transaction management.
+
+In the following example, `myFirstMethod()` executes inside its own transaction, regardless of whether it is called by a client directly, or by `mySecondMethod()`.
+
+[source,java]
+----
+@Service
+public class MyApplicationService {
+
+    private final TransactionTemplate txRequired;
+    private final TransactionTemplate txRequiresNew;
+
+    MyApplicationService(PlatformTransactionManager transactionManager) {
+        txRequired = new TransactionTemplate(transactionManager);
+        txRequiresNew = new TransactionTemplate(transactionManager);
+        txRequiresNew.setPropagationBehavior(
+            TransactionDefinition.PROPAGATION_REQUIRES_NEW); // <1>
+    }
+
+    public void myFirstMethod() {
+        txRequiresNew.executeWithoutResult(tx -> {
+            ...
+        });
+    }
+
+    public void mySecondMethod() {
+        txRequired.executeWithoutResult(tx -> {
+            ...
+            myFirstMethod();
+        });
+    }
+}
+----
+
+On the <<declarative#caveats,Declarative Transactions>> documentation page, there is a similar example that behaves differently.
+
+For more information about programmatic transaction management, see the https://docs.spring.io/spring-framework/reference/data-access/transaction/programmatic.html[Spring Documentation].
+
+
+== Committing
+
+You do not have to do anything special to commit a transaction. Spring automatically commits the transaction after the callback returns, unless it has been marked for rollback.
+
+
+== Rolling Back
+
+You can rollback the transaction in two ways. You can either throw an unchecked exception, or use the `setRollbackOnly()` method on the `TransactionStatus` object that is passed to the callback. In the following example, both methods rollback the transaction:
+
+[source,java]
+----
+@Service
+public class MyApplicationService {
+    ...
+        
+    public void myMethod() {
+        transactionTemplate.executeWithoutResult(tx -> {
+            throw new RuntimeException("This causes a rollback");
+        });
+    }
+
+    public void myOtherMethod() {
+        transactionTemplate.executeWithoutResult(tx -> {
+            tx.setRollbackOnly(); // This also causes a rollback
+        });
+    }
+}
+----
+
+Unlike declarative transactions, you cannot throw checked exceptions when using programmatic transactions.
+
+
+== Isolation Level
+
+You can set the transaction isolation level on the `TransactionTemplate`. By default, it uses the database implementation's own default transaction level. The following example configures the `TransactionTemplate` to use the _read uncommitted_ isolation level:
+
+[source,java]
+----
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
+
+@Service
+public class MyApplicationService {
+
+    private final TransactionTemplate transactionTemplate;
+
+    MyApplicationService(PlatformTransactionManager transactionManager) {
+        transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setIsolationLevel(
+            TransactionDefinition.ISOLATION_READ_UNCOMMITTED);
+    }
+    ...
+}
+----
