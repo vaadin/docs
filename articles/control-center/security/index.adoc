@@ -9,10 +9,37 @@ order: 20
 Control Center is a powerful tool that simplifies the management of Vaadin applications on Kubernetes clusters. However, it's essential to consider security when deploying and using Control Center. This page outlines best practices to ensure your applications and data are secure.
 
 
-== Cluster-Wide Admin Privileges
+== Cluster-Wide Administrator Privileges
 
-During installation, Control Center requires cluster-wide admin privileges to manage resources across namespaces. This is necessary for Control Center to deploy and manage applications, services, and other resources in your cluster.
+During installation, Control Center requires cluster-wide administrator privileges to manage resources across namespaces. This is necessary for Control Center to deploy and manage applications, services, and other resources in your cluster.
 
 However, granting these privileges can pose a security risk. To mitigate this risk, you can install Control Center's dependencies manually. This way, you can limit the permissions granted to Control Center and reduce the potential impact of a security breach.
 
+The instructions for installing Control Center without cluster-wide administrator privileges are in the section <<../getting-started/production-installation#,Production Installation>>.
 
+
+== Config Map and Secrets Access Policy
+
+Control Center uses config maps and secrets to store configuration data and sensitive information, such as database credentials and API keys. It's crucial to secure these resources to prevent unauthorized access. Applications deployed by Control Center also use config maps and to store deployment-specific data.
+
+If you choose to install Control Center without cluster-wide administrator privileges (as is recommended), it is granted permissions that allow access to all config maps and secrets within the dedicated namespace created during installation, however it does not have access to resources outside of this namespace.
+
+On the other hand, if Control Center is installed with cluster-wide administrator privileges, it has access to all config maps and secrets in the cluster. This can pose a security risk, as Control Center could potentially access sensitive information from other namespaces.
+
+Applications deployed by Control Center only have access to the config maps created for them by Control Center. They do not have access to other config maps or secrets in the same namespace or in the cluster. This means you can be sure that applications deployed by Control Center cannot access sensitive information from other applications or services.
+
+
+== Resources Created When Deploying an Application
+
+When you deploy an application using Control Center, it creates various resources in the Control Center namespace, such as deployments, services, and config maps. These resources are created based on the configuration provided during the deployment process. Control Center has full permissions to create and manage these resources, but only those within its dedicated namespace.
+
+
+== Behavior of the Control Center Starter
+
+Adding the Control Center starter dependency to your application allows it to be managed by Control Center. It also introduces the following security considerations:
+
+- Three actuator endpoints are exposed by default:
+. `/actuator/health/liveness` - Used by Kubernetes to check if the application is running.
+. `/actuator/health/readiness` - Used by Kubernetes to check if the application is ready to receive traffic.
+. `/actuator/vaadin` - Used by Control Center to determine application information, such as the Vaadin version used and activated features.
+- If the <<../identity-management#,Identity Management>> feature is enabled, the application is configured to use Keycloak for authentication and authorization. The users, groups and roles are managed by Control Center, which is backed by a Keycloak instance.
