@@ -6,7 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import companyLogo from '../../../../src/main/resources/images/company-logo.png';
+import companyLogo from '../../../../src/main/resources/images/company-logo.png?url';
 
 @customElement('avatar-image')
 export class Example extends LitElement {
