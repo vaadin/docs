@@ -32,7 +32,7 @@ function Example() {
         Perform Action
       </Button>
 
-      <ProgressBar value={progress.value}></ProgressBar>
+      <ProgressBar value={progress.value} />
     </HorizontalLayout>
   );
   // end::snippet[]

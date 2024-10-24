@@ -65,7 +65,7 @@ function Example() {
                   visible: idx === index ? event.target.checked : column.visible,
                 }));
               }}
-            ></Checkbox>
+            />
           ))}
         </CheckboxGroup>
         <HorizontalLayout style={{ justifyContent: 'space-between' }}>
