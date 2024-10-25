@@ -4,11 +4,9 @@ description: How to implement repositories with jOOQ.
 order: 30
 ---
 
-// TODO Edit based on Simon's feedback
-
-// TODO Explain how to do optimistic locking and pessimistic locking
-
 :jooq-version: 3.19
+:jooq-codegen-maven-plugin-version: 0.0.4
+
 
 = jOOQ Repositories
 
@@ -33,11 +31,11 @@ To use Testcontainers, you have to have https://www.docker.com/[Docker] installe
 
 First, you declare the version of the plugin in your POM-file, like this:
 
-[source,xml]
+[source,xml,subs="+attributes"]
 ----
 <properties>
     ...
-    <testcontainers-jooq-codegen-maven-plugin.version>0.0.4</testcontainers-jooq-codegen-maven-plugin.version> <!--1-->
+    <testcontainers-jooq-codegen-maven-plugin.version>{jooq-codegen-maven-plugin-version}</testcontainers-jooq-codegen-maven-plugin.version> <!--1-->
 </properties>
 ----
 <1> You can check for the latest version on the https://mvnrepository.com/artifact/org.testcontainers/testcontainers-jooq-codegen-maven-plugin[MVN Repository].
@@ -74,15 +72,10 @@ Next, you configure the plugin itself, like this:
                     <type>POSTGRES</type>
                     <containerImage>postgres:16-alpine</containerImage>
                 </database>
-                <flyway> <!--5-->
-                    <locations> 
-                        filesystem:${pom.basedir}/src/main/resources/db/migration
-                    </locations>
-                </flyway>
+                <flyway/> <!--5-->
                 <jooq> <!--6-->
                     <generator>
                         <database> 
-                            <includes>.*</includes>
                             <excludes>flyway_schema_history</excludes> <!--7-->
                             <inputSchema>public</inputSchema>
                         </database>
@@ -120,6 +113,7 @@ This starter automatically configures jOOQ to use the primary data source of you
 
 If you are using a <<{articles}/building-apps/project-structure/multi-module#,multi-module project>>, you need to configure the plugin in the module that contains the Flyway migrations. Add the dependency to the module that contains your repositories.
 
+
 == Entities
 
 jOOQ deals with database tables, and so has no concept of entities. This means that you get to decide how you implement your entities. The entire Java toolbox is at your disposal: you can use records, sealed classes, mutable Java beans, `final` fields, initializing constructors, and so on. When using jOOQ, it is impossible to recommend a single Vaadin Way of designing entities, because it depends on so many things. 
@@ -132,6 +126,7 @@ However, as your entities grow, this becomes both boring and error prone. You mi
 
 If you are going to build your repositories with jOOQ, you should familiarize yourself with https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/pojos/[POJO:s] and https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/recordmapper/[RecordMapper]. This allows you to design your entities so that they are easier to use with jOOQ.
 
+
 === Generated Plain Old Java Objects
 
 If you are only interested in working directly with the database tables, you don't have to write separate entities. Instead, you can configure the jOOQ code generator to generate POJO:s for you. That means that every table and view in your database gets a POJO with the corresponding fields. 
@@ -140,9 +135,11 @@ You can generate mutable POJO:s, immutable POJO:s, Java records, interfaces, and
 
 See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-pojos/[jOOQ documentation] for more information.
 
+
 == Domain Primitives
 
 If you have <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>> in your entities, you can handle them in different ways, depending on how you choose to map your database records to your entities.
+
 
 === Converters
 
@@ -172,6 +169,7 @@ public class EmailAddressConverter extends AbstractConverter<String, EmailAddres
 
 Converters can be applied in two ways: ad-hoc, and as fixed types.
 
+
 ==== Ad-Hoc Converters
 
 When you only need to apply the converter for a single query, you can do it directly in code. For example, in this query, the `email` string column is converted to an `EmailAddress` domain primitive in the result:
@@ -187,6 +185,7 @@ var result = create
 ----
 
 You can also use ad-hoc converters on nested collections, and when storing data in the database. See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/fetching/ad-hoc-converter/[jOOQ documentation] for more information.
+
 
 ==== Forced Types
 
@@ -231,9 +230,11 @@ var result = create
 
 The reason for this is that the `CUSTOMER.EMAIL.contains(..)` method accepts not a string, but an `EmailAddress`. And `EmailAddress` is a domain primitive that can only contain complete email addresses, not parts of them. By casting the column back to a VARCHAR, you can work with ordinary strings.
 
+
 === Embeddable Types
 
 If you are using multi-value domain primitives, you can configure jOOQ to generate embeddable types for certain column groups. This is such a complex feature that it won't be covered here. See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-embeddable-types/[jOOQ documentation] for more information.
+
 
 === Manual Mapping
 
@@ -275,6 +276,7 @@ public void update(Offer offer) {
 }
 ----
 
+
 == Repositories
 
 jOOQ has no repository interface for you to extend. Instead, you get to design your own from scratch. To keep things simple, you should design _persistence oriented_ repositories, like this:
@@ -311,47 +313,46 @@ public abstract class AbstractRepository<ID, E> {
 
 How you implement the different methods depends on how your database is structured, and what kind of entity classes you use. You may be tempted to generalize as much functionality as possible into the base class. If you do this, you should make sure that the functionality is, in fact, generic, such as audit logging. Otherwise, you risk painting yourself into a corner in the future. For example, if you assume that an entity is always mapped to one table, you run into problems when you need to map an entity to multiple tables.
 
+
 === Storing Entities
 
 Before you start implementing your store method, you need to make some decisions. First, you need to decide how to deduce whether to insert or update the entity. Second, you need to decide how the entity receives its ID. The easiest solution is to use identity columns in the database for your primary keys. That way, an entity without an ID must be inserted, and an entity with an ID updated.
 
-You also need to decide whether you are going to use optimistic locking or not. If you choose to use optimistic locking, you can either implement it yourself, or use jOOQ's built-in support for it.
-
-To use built-in optimistic locking, you have to make sure all tables, that should use optimistic locking, have a column for the version number. This column should have the same name in all tables. For example, you could call this column `opt_lock_ver`.
-
-Next, you have to configure the jOOQ code generator to use this column for optimistic locking. Make the following change to your POM-file:
-
-[source,xml]
-----
-<jooq>
-    <generator>
-        <database>
-            ...
-            <recordVersionFields>opt_lock_ver</recordVersionFields>
-        </database>
-    </generator>
-</jooq>
-----
-
-Optimistic locking is turned off by default. To use it, you have to enable it in your repositories. If you use an abstract base class, you can do it there, like this:
+The following example does this by creating separate `INSERT` and `UPDATE` statements depending on whether the ID is `null` or not:
 
 [source,java]
 ----
-public abstract class AbstractRepository<ID, E> {
-    protected final DSLContext create;
-
-    protected AbstractRepository(DSLContext create) {
-        this.create = create
-            .configuration()
-            .deriveSettings(settings -> settings.withExecuteWithOptimisticLocking(true))
-            .dsl();
+@Override
+public Product save(Product entity) {
+    if (entity.productId() == null) {
+        var productId = create
+            .insertInto(PRODUCT)
+            .set(PRODUCT.DESCRIPTION, entity.description())
+            .set(PRODUCT.QUANTITY_UNIT, entity.quantityUnit())
+            ...
+            .returningResult(PRODUCT.PRODUCT_ID) // <1>
+            .fetchOne(PRODUCT.PRODUCT_ID);
+        return new Product(
+            productId,
+            entity.description(), 
+            entity.quantityUnit(),
+            ...
+        );
+    } else {
+        create
+            .update(PRODUCT)
+            .set(PRODUCT.DESCRIPTION, entity.description())
+            .set(PRODUCT.QUANTITY_UNIT, entity.quantityUnit())
+            ...
+            .where(PRODUCT.PRODUCT_ID.eq(entity.productId()))
+            .execute();
+        return entity;
     }
-
-    ...
 }
 ----
+<1> This instructs jOOQ to return the generated product ID, so that it can be included in the returned `Product` entity.
 
-To use built-in optimistic locking, you have to use `org.jooq.UpdatableRecord` instead of creating your `INSERT` and `UPDATE` statements yourself. This is an API that makes it easy to implement CRUD. You can use it like this:
+jOOQ also has another API for modifying data that has been designed for CRUD operations: the `org.jooq.UpdatableRecord`. The earlier example, rewritten to use `UpdatableRecord`, could look like this:
 
 [source,java]
 ----
@@ -362,7 +363,13 @@ public Product save(Product entity) {
     record.setQuantityUnit(entity.quantityUnit());
     ...
     record.store(); // <1>
-    return new Product(record.getProductId(), record.getOptLockVersion(), record.getDescription(), record.getQuantityUnit(), ...);
+
+    return new Product(
+        record.getProductId(), 
+        record.getDescription(), 
+        record.getQuantityUnit(), 
+        ...
+    );
 }
 
 private ProductRecord getRecordFor(Product entity) {
@@ -370,22 +377,22 @@ private ProductRecord getRecordFor(Product entity) {
     if (productId == null) {
         return create.newRecord(PRODUCT);
     } else {
-        var record = create.fetchOne(PRODUCT, PRODUCT.PRODUCT_ID.eq(entity.productId()));
+        var record = create.fetchOne(PRODUCT, 
+            PRODUCT.PRODUCT_ID.eq(entity.productId()));
         if (record == null) {
             throw new DataChangedException("Product does not exist");
         }
-        record.setOptLockVersion(entity.version());
         return record;
     }
 }
 ----
 <1> The `store` method knows whether to issue an `INSERT` or `UPDATE`, depending on whether the record was created using `newRecord` or `fetchOne`.
 
-See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information.
+See the https://www.jooq.org/doc/{jooq-version}/manual/sql-execution/crud-with-updatablerecords/[jOOQ documentation] for more information about working with `UpdatableRecord`.
 
 === Deleting Entities
 
-The easiest way of deleting an entity is to write a `DELETE...FROM` query, like this:
+The easiest way of deleting an entity is to write a `DELETE..FROM` query, like this:
 
 [source,java]
 ----
@@ -400,6 +407,7 @@ If your entity is mapped to multiple tables, you delete them all, one at a time,
 
 [source,java]
 ----
+@Transactional
 public void delete(OrderId orderId) {
     create.deleteFrom(ORDER_ITEM)
         .where(ORDER_ITEM.ORDER_ID.eq(orderId))
@@ -411,6 +419,106 @@ public void delete(OrderId orderId) {
 ----
 
 Remember the order so that you don't break any foreign key constraints. Also remember to run the delete method inside a single transaction.
+
+
+=== Generated Data Access Objects
+
+If you are only going to interact with a single table at a time, there is a shortcut you can take. Instead of writing your own repositories, you can configure jOOQ to generate Data Access Objects (DAO) for you. For every table in your database, jOOQ generates a POJO and a DAO. You can then use these to insert, update, delete, and fetch data. See the https://www.jooq.org/doc/{jooq-version}/manual/code-generation/codegen-daos/[jOOQ documentation] for more information.
+
+
+== Optimistic and Pessimistic Locking
+
+jOOQ supports both <<{articles}/building-apps/application-layer/consistency/optimistic-locking#,optimistic locking>> and <<{articles}/building-apps/application-layer/consistency/pessimistic-locking#,pessimistic locking>>.
+
+
+=== Optimistic Locking
+
+When you need to use optimistic locking, you can either implement it yourself, or use jOOQ's built-in support for it.
+
+To use built-in optimistic locking, you have to make sure all tables, that should use optimistic locking, have a column for the version number. This column should have the same name in all tables. For example, you could call this column `_version_`.
+
+Next, you have to configure the jOOQ code generator to use this column for optimistic locking. Make the following change to your POM-file:
+
+[source,xml]
+----
+<jooq>
+    <generator>
+        <database>
+            ...
+            <recordVersionFields>version</recordVersionFields>
+        </database>
+    </generator>
+</jooq>
+----
+
+Optimistic locking is turned off by default. To turn it on, create a `@Configuration` class that customizes jOOQ's default configuration, like this:
+
+[source,java]
+----
+import org.jooq.impl.DefaultConfiguration;
+import org.springframework.boot.autoconfigure.jooq.DefaultConfigurationCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+class JooqConfig {
+
+    @Bean
+    public DefaultConfigurationCustomizer jooqConfigurationCustomizer() {
+        return (DefaultConfiguration c) -> c.settings()
+            .withExecuteWithOptimisticLocking(true);
+    }
+}
+----
+
+[IMPORTANT]
+Do not name your configuration class `JooqConfiguration`, as this conflicts with an existing Spring Boot configuration class.
+
+To use built-in optimistic locking, you have to use `org.jooq.UpdatableRecord` instead of creating your `INSERT` and `UPDATE` statements yourself. If you use the `getRecordFor()` pattern from the earlier Storing Entities example, you have to remember to change the version of the existing record to the one from the entity, like this:
+
+[source,java]
+----
+private ProductRecord getRecordFor(Product entity) {
+    var productId = entity.productId();
+    if (productId == null) {
+        return create.newRecord(PRODUCT);
+    } else {
+        var record = create.fetchOne(PRODUCT, 
+            PRODUCT.PRODUCT_ID.eq(entity.productId()));
+        if (record == null) {
+            throw new DataChangedException("Product does not exist");
+        }
+// tag::snippet[]
+        record.setVersion(entity.version());
+// end::snippet[]
+        return record;
+    }
+}
+----
+
+If you don't do this, the record contains the current version number. Because jOOQ compares the version to the current version number, the update would always succeed.
+
+jOOQ also uses optimistic locking when you delete records using the `UpdatableRecord.delete()` method.
+
+
+=== Pessimistic Locking
+
+When you need to use pessimistic locking, you have to execute a `SELECT..FOR UPDATE` query. For example, the following method locks a bank account for writing until the transaction completes:
+
+[source,java]
+----
+private AccountRecord fetchAndLockAccount(AccountId accountId) {
+    return create.selectFrom(ACCOUNT)
+                 .where(ACCOUNT.ACCOUNT_ID.eq(accountId))
+// tag::snippet[]
+                 .forUpdate()
+// end::snippet[]
+                 .fetchOne();
+}
+----
+
+See the https://www.jooq.org/doc/{jooq-version}/manual/sql-building/sql-statements/select-statement/for-update-clause[jOOQ documentation] for more information about using `SELECT..FOR UPDATE`.
+
 
 == Query Methods
 
@@ -464,6 +572,7 @@ public List<Product> findByDescriptionContaining(String searchTerm, Pageable pag
     return query.limit(pageable.getOffset(), pageable.getPageSize()).fetch(Records.mapping(Product::new));
 }
 ----
+
 
 == Query Specifications
 
@@ -545,13 +654,14 @@ public final class ProductSpecifications {
 
 Although `Condition` is still a part of the specification API, it is not meant for public use. As long as clients don't call the `toCondition()` method, they can use and combine specifications without depending directly on the jOOQ API.
 
-== Query Objects
 
-Query objects in jOOQ are implemented in the same way as repositories. In other words, you get to decide what they look like.
+== Query Classes
+
+Query classes in jOOQ are implemented in the same way as repositories. In other words, you get to decide what they look like.
 
 However, to keep things simple, you should use Java records for the result, and have their fields match the fields selected in your query. That way, you can use `Records.mapping` to convert the result into your Java record in a type safe way. 
 
-Here is an example of a query object that returns only the product ID and the product name:
+Here is an example of a query that returns only the product ID and the product name:
 
 [source,java]
 ----
@@ -564,7 +674,8 @@ public class ProductListItemQuery {
         this.create = create;
     }
 
-    public List<ProductListItem> findAll() { // Pagination and sorting omitted for clarity
+    public List<ProductListItem> findAll() { 
+        // Pagination and sorting omitted for clarity
         return create.select(PRODUCT.PRODUCT_ID, PRODUCT.NAME)
                 .from(PRODUCT)
                 .fetch(Records.mapping(ListItem::new));        
@@ -574,4 +685,4 @@ public class ProductListItemQuery {
 }
 ----
 
-In you query objects, you should of course also pay attention to sorting and pagination.
+In your queries, you should of course also pay attention to sorting and pagination.
