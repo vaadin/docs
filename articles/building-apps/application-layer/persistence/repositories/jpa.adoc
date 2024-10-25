@@ -4,9 +4,6 @@ description: How to implement repositories with JPA and Spring Data.
 order: 20
 ---
 
-// TODO Edit based on Simon's feedback
-// TODO Explain how to do optimistic locking and pessimistic locking
-
 :hibernate-version: 6.6
 
 
@@ -60,15 +57,18 @@ You should also add the JDBC-driver of the database you are using.
 
 == Entities
 
-JPA imposes some restrictions on your entities. The classes themselves cannot be `final`, nor can they contain any `final` fields. Also, they are required to have a default constructor, but this can be package private or protected.
+JPA imposes some restrictions on your entities. The classes themselves cannot be `final`, nor can they contain any `final` fields. Also, they are required to have a default, parameter-less constructor, but this can be package private or protected.
 
 JPA deduces the names of database tables and columns from the class and field names. However, to make it easier to write <<../flyway#,Flyway migrations>>, you should consider explicitly declaring the names using annotations:
 
-- Add an explicit `@Table` annotation to the entity class.
-- For fields, add `@Column` annotations.
-- For joins, use `@JoinColumn` and `@JoinTable`.
+- Add `@Table` annotations to the entity classes.
+- Add `@Column` annotations to the columns.
+- Add `@JoinColumn` and `@JoinTable` to the associations.
 
-Spring Data checks the `@Id` value to decide whether an entity is new or persistent. If the ID is `null`, the entity is considered new. Otherwise, it is considered persistent. You should follow this convention. However, if you need to assign the ID before the entity is persisted, you have to implement the `Persistable` interface.
+Spring Data checks the `@Id` field to decide whether an entity is new or persistent. If the ID is `null`, the entity is considered new. Otherwise, it is considered persistent. You should follow this convention.
+
+[NOTE]
+If you need to assign the ID before the entity is persisted, you have to implement the Spring Data `Persistable` interface.
 
 Spring Data provides an `AbstractPersistable` base class, but you shouldn't use it. Instead, declare the `@Id` field directly in every entity class, or make your own base class. This gives you better control over how your entity ID:s are generated.
 
@@ -229,7 +229,55 @@ Attribute converters are a good alternative for single-value domain primitives t
 
 === @Embeddable
 
-You can use multi-value domain primitives directly in your fields by making them `@Embeddable`.
+You can use multi-value domain primitives directly in your fields by making them `@Embeddable`. If you have implemented your domain primitive using Java records, they work out-of-the-box as of Hibernate version 6.2. 
+
+For example, you could model a `MonetaryAmount` domain primitive like this:
+
+[source,java]
+----
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
+@Embeddable
+public record MonetaryAmount(
+    @Enumerated(EnumType.STRING) CurrencyUnit currency,
+    BigDecimal value
+) {
+
+    public MonetaryAmount(CurrencyUnit currency, BigDecimal value) {
+        this.currency = requireNonNull(currency);
+        this.value = requireNonNull(value);
+    }
+}
+----
+
+You could then use it in an entity like this:
+
+[source,java]
+----
+@Entity
+@Table(name = "product")
+public class Product {
+    ...
+
+// tag::snippet[]
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "currency", 
+                               column = @Column(name = "unit_price_currency")),
+            @AttributeOverride(name = "value",
+                               column =  @Column(name = "unit_price"))
+    })
+    private MonetaryAmount unitPrice;
+// end::snippet[]
+}
+----
+
+Using Java records as embeddable classes is a Hibernate specific feature. The JPA specification requires embeddable classes to be non-final, and provide a parameter-less constructor. These requirements still apply to embeddable classes that are not records.
+
+Because domain primitives should be immutable and always valid, using `@Embeddable` is not a good option for domain primitives that are not modeled as records.
+
 
 
 == Repositories
@@ -274,18 +322,17 @@ To avoid strange side effects, you should not make any changes to entities insid
 For more information about managing transactions in Vaadin applications, see the <<{articles}/building-apps/application-layer/consistency/transactions#,Transactions>> documentation page.
 
 
-== Locking
+== Optimistic and Pessimistic Locking
+
+Hibernate supports both <<{articles}/building-apps/application-layer/consistency/optimistic-locking#,optimistic locking>> and <<{articles}/building-apps/application-layer/consistency/pessimistic-locking#,pessimistic locking>>.
 
 To avoid accidental overwrites of data, it is recommended to use optimistic locking on all entities, like this:
 
 [source,java]
 ----
-import org.springframework.data.domain.Persistable;
-...
-
 @Entity
 @Table(name = "customer")
-public class Customer implements Persistable<Long> {
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -294,22 +341,36 @@ public class Customer implements Persistable<Long> {
 
 // tag::snippet[]
     @Version
-    @Column(name = "opt_lock_version")
-    private Long optLockVersion;
+    @Column(name = "_version")
+    private Long version;
 // end::snippet[]
 
     ...
 }
 ----
 
-See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] for more information.
+When you need to use pessimistic locking, you can add the `@Lock` annotation to query methods. For example, the following method locks a bank account for writing for the duration of the transaction:
+
+[source,java]
+----
+public interface AccountRepository extends JpaRepository<Account, Long> {
+
+// tag::snippet[]
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.id = :accountId")
+    Account lockAccountForWriting(Long accountId);
+// end::snippet[]
+}
+----
+
+See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] and the https://docs.spring.io/spring-data/jpa/reference/jpa/locking.html[Spring Data JPA documentation] for more information.
 
 
 == Query Methods
 
 Spring Data has support for different kinds of query methods in the repository interfaces. Queries can be derived from the name of the query method, or by defining them manually in Jakarta Persistence Query Language (JPQL), or even in SQL. For details about how to do this, see the https://docs.spring.io/spring-data/jpa/reference/repositories/query-methods-details.html[Spring Data JPA documentation].
 
-If you are not going to use lazy loading in your Vaadin user interface, you should always put an upper limit on the size of the query result. For example, if you are using a query derived from the method name, you can add an upper limit like this:
+If you are not going to use pagination in your Vaadin user interface, you should always put an upper limit on the size of the query result. For example, if you are using a query derived from the method name, you can add an upper limit like this:
 
 [source,java]
 ----
@@ -337,9 +398,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
 This allows you to specify both the limit and the sorting at runtime.
 
-=== Lazy Loading
+=== Pagination
 
-If you are going to use lazy loading in your Vaadin user interface, you should use slicing or pagination.
+The Vaadin <<{articles}/components/grid#,Grid>> component supports lazy loading of data. To use this, you have to paginate your query methods.
+
+[IMPORTANT]
+Hibernate also has a lazy loading feature, but it has nothing to do with the lazy loading feature of Vaadin Grid.
 
 If you only need the entities and not the total number of entities, return a `Slice`, like this:
 
@@ -369,7 +433,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 }
 ----
 
-If you are using a lazy loaded <<{articles}/components/grid#,Grid>> to show your entities, the user experience is better if it has access to the total number of entities. If this is important to you, use pagination. If you are okay with the scrollbar jumping around a little as the grid estimates the total number of entities, use slicing.
+The user experience is better if the Vaadin Grid has access to the total number of entities. If this is important to you, use pagination. If you are okay with the scrollbar jumping around a little as the grid estimates the total number of entities, use slicing.
 
 
 == Query Specifications
@@ -456,11 +520,11 @@ For more information about query specifications, see the https://docs.spring.io/
 
 == Query Classes
 
-Spring Data query objects are interfaces that extend the Spring Data `Repository` interface. This is the base interface of all the other repository interfaces, and it contains no methods at all.
+Spring Data query classes are not classes, but interfaces that extend the Spring Data `Repository` interface. This is the base interface of all the other repository interfaces, and it contains no methods at all.
 
-You write query methods for your query objects in the same way you would write query methods for your repositories. You can use projections, pagination, custom queries, and so on. However, specification queries do not work.
+You write query methods for your query classes in the same way you would write query methods for your repositories. You can use projections, pagination, custom queries, and so on. However, specification queries do not work.
 
-If you use projections, pay attention to the query method names. For example, a method named `findAll` always returns entities, regardless of which return type you have declared. To create a query object that returns all entities, projected onto some other type, you have to do something like this:
+If you use projections, pay attention to the query method names. For example, a method named `findAll` always returns entities, regardless of which return type you have declared. To create a query that returns all entities, projected onto some other type, you have to do something like this:
 
 [source,java]
 ----
@@ -477,4 +541,4 @@ public interface ProductListItemQuery extends Repository<Product, Long> {
 }
 ----
 
-For more advanced queries, you should consider building your query objects with <<jooq#,jOOQ>>. Since both jOOQ and JPA use the same data source, nothing prevents you from combining both technologies. In fact, using JPA to store and retrieve complete entities, and jOOQ for everything else has turned out to be a good combination in real-world Vaadin projects.
+For more advanced queries, you should consider building your query classes with <<jooq#,jOOQ>>. Since both jOOQ and JPA use the same data source, nothing prevents you from combining both technologies. In fact, using JPA to store and retrieve complete entities, and jOOQ for everything else has turned out to be a good combination in real-world Vaadin projects.
