@@ -152,20 +152,14 @@ binder.writeBeanAsDraft(person);
 binder.writeBeanAsDraft(person, true);
 ----
 
-
 == Tracking Binding Status
 
-[classname]`Binder` tracks which bindings have been updated by the user and which are in an invalid state. When the `readBean` method is invoked, the initial value of each field is stored. 
+[classname]`Binder` tracks which bindings have been updated by the user and which are in an invalid state. It fires an event when there are bindings status changes. You can use this event to enable and disable the form buttons, depending on the current status of the form.
 
-By default, any change to a binding's value marks that binding as changed, even if the initial value is restored for said binding. However, if [methodname]`setChangeDetectionEnabled(true)` is called, the initial value of the binding is compared to the new value. The `hasChanges()` method returns true only if the new value doesn't match the initial value. Otherwise, the binding is not marked as changed, thereby ensuring that `changedBindings` only includes entries where the current value differs from the initial value. When this feature is enabled, [classname]`Binder` will use [methodname]`equals` to check the equality of values. This can be overridden with a custom equality predicate for each binding via [methodname]`withEqualityPredicate(SerializableBiPredicate<TARGET, TARGET> equalityPredicate)`.
-
-When there are status changes, the [classname]`Binder` fires a `StatusChangeEvent`. You can use this event to enable and disable the form buttons, depending on the current status of the [classname]`Binder`.
-
-The following example enables the [guibutton]*Save* and [guibutton]*Reset* buttons when changes are detected:
+This example is enabling the [guibutton]*Save* and [guibutton]*Reset* buttons when changes are detected:
 
 [source,java]
 ----
-binder.setChangeDetectionEnabled(true);
 binder.addStatusChangeListener(event -> {
     boolean isValid = event.getBinder().isValid();
     boolean hasChanges = event.getBinder().hasChanges();
@@ -175,6 +169,42 @@ binder.addStatusChangeListener(event -> {
 });
 ----
 
+== Tracking Binding Value Changes
+
+[classname]`Binder` can also track which bindings have changes comparing to the initial values of the fields, that is set and stored when the `readBean` is invoked.
+
+By default, any change to a binding's value marks that binding as changed, even if the initial value is restored for said binding.
+
+However, if [methodname]`setChangeDetectionEnabled(true)` is called, the initial value of the binding is compared to the new value.
+The `hasChanges()` method returns `true` only if the new value doesn't match the initial value.
+Otherwise, the binding is not marked as changed, thereby ensuring that `changedBindings` only includes entries where the current value differs from the initial value.
+When this feature is enabled, [classname]`Binder` will use [methodname]`equals` to check the equality of values.
+This can be overridden with a custom equality predicate for each binding via [methodname]`withEqualityPredicate(SerializableBiPredicate<TARGET, TARGET> equalityPredicate)`.
+
+When there are status changes, the [classname]`Binder` fires a `StatusChangeEvent`. You can use this event to enable and disable the form buttons, depending on the current status of the [classname]`Binder`.
+
+The following example enables the [guibutton]*Submit* button when changes of initial values are detected:
+
+[source,java]
+----
+binder.setChangeDetectionEnabled(true);
+binder.addValueChangeListener(event ->
+    submitButton.setEnabled(binder.hasChanges());
+);
+Person person = new Person("John", "Doe");
+binder.readBean(person);
+----
+
+To set the values the Binder compares the changes with, the `readBean` method should be invoked again:
+
+[source,java]
+----
+submitButton.addClickListener(event -> {
+    binder.writeBeanIfValid(person);    // stores the bean
+    binder.readBean(person);            // updates initial values
+    event.getSource().setEnabled(false);
+});
+----
 
 == Using Java Records with Binder
 
