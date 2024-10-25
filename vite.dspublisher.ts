@@ -10,6 +10,7 @@ const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated
 const frontendFolder = resolve(__dirname, 'frontend');
 const jarResourcesFolder = resolve(__dirname, 'frontend/generated/jar-resources');
 const themeFolder = resolve(__dirname, 'frontend/themes/docs');
+const applyThemePath = resolve(__dirname, 'frontend/generated/theme.js');
 
 const config: UserConfig = {
   resolve: {
@@ -18,6 +19,7 @@ const config: UserConfig = {
         process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true' ? allFlowImportsPath : 'lit',
       Frontend: frontendFolder,
       '@vaadin/flow-frontend': jarResourcesFolder,
+      '/generated/theme': applyThemePath,
       'themes/docs': themeFolder,
     },
   },
