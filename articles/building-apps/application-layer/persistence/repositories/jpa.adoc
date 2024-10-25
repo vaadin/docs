@@ -19,6 +19,7 @@ The recommended way to implement JPA repositories is with https://spring.io/proj
 [NOTE]
 This page describes how to build repositories with JPA in Vaadin applications. It assumes you have read the <<index#,Repositories>> documentation page. It also assumes you are already familiar with both JPA and Spring Data. If you have not used them before, you should at least read the https://spring.io/guides/gs/accessing-data-jpa[Accessing Data with JPA] guide, and have a quick look at the https://docs.spring.io/spring-data/jpa/reference/index.html[Spring Data JPA documentation] before continuing.
 
+
 == Project Setup
 
 To enable Spring Data JPA, you need to add the `spring-boot-starter-data-jpa` dependency to your Maven project. Add this to your POM-file:
@@ -56,62 +57,37 @@ If you are using a <<{articles}/building-apps/project-structure/multi-module#,mu
 
 You should also add the JDBC-driver of the database you are using.
 
+
 == Entities
 
 JPA imposes some restrictions on your entities. The classes themselves cannot be `final`, nor can they contain any `final` fields. Also, they are required to have a default constructor, but this can be package private or protected.
 
-You should add an explicit `@Table` annotation to the entity class, with an explicit table name.
+JPA deduces the names of database tables and columns from the class and field names. However, to make it easier to write <<../flyway#,Flyway migrations>>, you should consider explicitly declaring the names using annotations:
 
-For fields, add explicit `@Column` annotations, with explicit column names.
+- Add an explicit `@Table` annotation to the entity class.
+- For fields, add `@Column` annotations.
+- For joins, use `@JoinColumn` and `@JoinTable`.
 
-For joins, use `@JoinColumn` and `@JoinTable`, with explicit table and column names.
+Spring Data checks the `@Id` value to decide whether an entity is new or persistent. If the ID is `null`, the entity is considered new. Otherwise, it is considered persistent. You should follow this convention. However, if you need to assign the ID before the entity is persisted, you have to implement the `Persistable` interface.
 
-All this makes it easier to write <<../flyway#,Flyway migrations>> later.
+Spring Data provides an `AbstractPersistable` base class, but you shouldn't use it. Instead, declare the `@Id` field directly in every entity class, or make your own base class. This gives you better control over how your entity ID:s are generated.
 
-To make it easier for Spring Data to decide whether an entity is new or persistent, you should implement the Spring Data `Persistable` interface, like this:
+Override `equals` and `hashCode` so that an entity is either equal to itself, or to another entity of the same type with the same ID. If Hibernate generates the ID for you, you should consider that the ID can be `null`:
 
 [source,java]
 ----
-import org.springframework.data.domain.Persistable;
-...
+import jakarta.persistence.*;
+import org.springframework.data.util.ProxyUtils;
 
 @Entity
 @Table(name = "customer")
-public class Customer implements Persistable<Long> {
+public class Customer  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_id")
     private Long id;
 
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    @Override
-    public boolean isNew() {
-        return id == null;
-    }
-}
-----
-
-Spring Data also provides an `AbstractPersistable` base class, but you shouldn't use it. Instead, declare the `@Id` field directly in every entity class, or make your own base class. This gives you better control over how your entity ID:s are generated.
-
-Override `equals` and `hashCode` so that an entity is either equal to itself, or to another entity of the same type with the same ID. If Hibernate generates the ID for you, you should consider that the ID can be `null`:
-
-[source,java]
-----
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.util.ProxyUtils;
-...
-
-@Entity
-@Table(name = "customer")
-public class Customer implements Persistable<Long> {
-    ...
-
-// tag::snippet[]
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -124,43 +100,16 @@ public class Customer implements Persistable<Long> {
     public int hashCode() {
         return Objects.hashCode(id);
     }
-// end::snippet[]
 }
 ----
 
 Hibernate can return proxied versions of the entities. Because of this, you cannot directly compare the classes inside `equals`, as a proxied entity would not have the same class as a non-proxied one. To fix this, you can use the `ProxyUtils.getUserClass` utility method provided by Spring (`AbstractPersistable` does this as well).
 
-To avoid accidental overwrites of data, it is recommended to use optimistic locking on all entities, like this:
-
-[source,java]
-----
-import org.springframework.data.domain.Persistable;
-...
-
-@Entity
-@Table(name = "customer")
-public class Customer implements Persistable<Long> {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "customer_id")
-    private Long id;
-
-// tag::snippet[]
-    @Version
-    @Column(name = "opt_lock_version")
-    private Long optLockVersion;
-// end::snippet[]
-
-    ...
-}
-----
-
-See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] for more information.
 
 == Domain Primitives
 
-If you have <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>> in your entities, you can handle them in two ways. Both ways have their own advantages and disadvantages.
+If you have <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>> in your entities, you can handle them in different ways.
+
 
 === Accessor Methods
 
@@ -216,6 +165,7 @@ public class Offer implements Persistable<Long> {
 ----
 
 Although the accessor methods require some extra code, this approach makes it easier to write query specifications. Whenever you are doing wildcard queries, range queries, or use aggregate functions, it is much easier to work with the unwrapped types than with custom types.
+
 
 === Attribute Converters
 
@@ -276,6 +226,12 @@ Furthermore, attribute converters don't work with primary keys. If you are worki
 
 Attribute converters are a good alternative for single-value domain primitives that are not used as identifiers, and only need to be queried by equality. In all other cases, accessor methods is a better choice.
 
+
+=== @Embeddable
+
+You can use multi-value domain primitives directly in your fields by making them `@Embeddable`.
+
+
 == Repositories
 
 When using Spring Data JPA, your repository interfaces should extend the Spring Data `JpaRepository` interface directly. For example, a repository for a `Customer` entity looks like this:
@@ -316,6 +272,38 @@ Calling the `save` method works regardless of whether the entity is managed or d
 To avoid strange side effects, you should not make any changes to entities inside a transaction if you don't intend to save them. The only way you should cancel or revert changes is by rolling back the transaction.
 
 For more information about managing transactions in Vaadin applications, see the <<{articles}/building-apps/application-layer/consistency/transactions#,Transactions>> documentation page.
+
+
+== Locking
+
+To avoid accidental overwrites of data, it is recommended to use optimistic locking on all entities, like this:
+
+[source,java]
+----
+import org.springframework.data.domain.Persistable;
+...
+
+@Entity
+@Table(name = "customer")
+public class Customer implements Persistable<Long> {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "customer_id")
+    private Long id;
+
+// tag::snippet[]
+    @Version
+    @Column(name = "opt_lock_version")
+    private Long optLockVersion;
+// end::snippet[]
+
+    ...
+}
+----
+
+See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] for more information.
+
 
 == Query Methods
 
@@ -382,6 +370,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 ----
 
 If you are using a lazy loaded <<{articles}/components/grid#,Grid>> to show your entities, the user experience is better if it has access to the total number of entities. If this is important to you, use pagination. If you are okay with the scrollbar jumping around a little as the grid estimates the total number of entities, use slicing.
+
 
 == Query Specifications
 
@@ -464,7 +453,8 @@ You have to use interface projections with specification queries. If you want to
 
 For more information about query specifications, see the https://docs.spring.io/spring-data/jpa/reference/jpa/specifications.html[Spring Data JPA documentation].
 
-== Query Objects
+
+== Query Classes
 
 Spring Data query objects are interfaces that extend the Spring Data `Repository` interface. This is the base interface of all the other repository interfaces, and it contains no methods at all.
 

@@ -4,12 +4,11 @@ description: How to use repositories to store and fetch data.
 order: 10
 ---
 
-// TODO Edit based on Simon's feedback
-
 
 = Repositories
 
 The _repository_ was originally introduced as one of the building blocks of tactical Domain-Driven Design, but has since then become common in all business applications, mainly thanks to https://spring.io/projects/spring-data[Spring Data]. A repository is a persistent container of entities that attempts to abstract away the underlying data storage mechanism. At its minimum, it provides methods for basic CRUD operations: Creating, Retrieving, Updating, and Deleting entities.
+
 
 == Collection Oriented
 
@@ -56,6 +55,7 @@ repository.remove(CustomerId.of("XRxY2r9P"));
 ----
 
 Collection oriented repositories can be quite difficult to implement. The repository implementation would have to know when an entity has been changed, so that it can write it to the underlying storage. Handling transactions and errors would also be non-trivial. This is a telling example of the underlying storage mechanism leaking into the repository abstraction.
+
 
 == Persistence Oriented
 
@@ -110,6 +110,7 @@ Persistence oriented repositories are easier to implement than collection orient
 
 *Unless you have a good reason for choosing collection-based repositories, you should use persistence oriented repositories in your Vaadin applications.*
 
+
 == Query Methods
 
 Although retrieving an entity by its ID is an important operation, it is not enough in most business applications. You need to be able to retrieve more than one entity at the same time, based on different criteria. If the dataset is big, you need to be able to split it into smaller pages and load them one at a time.
@@ -160,7 +161,8 @@ The challenge with this approach is that it is difficult, but not impossible, to
 
 You can find examples of how to implement specification queries on the <<jpa#,JPA>> and <<jooq#,jOOQ>> documentation pages.
 
-== Query Objects
+
+== Query Classes
 
 Query specifications are useful when you are interested in fetching whole entities. However, you often need to write queries that only include a small part of the entity. For example, if you are building a customer list view that only shows the customers' names and email addresses, there is no point in fetching the complete Customer-entity. The repository now looks like this:
 
@@ -182,7 +184,7 @@ public interface CustomerRepository extends Repository<CustomerId, Customer> {
 
 Again, if you only have a handful of these queries, you can add them to the repository interface. However, if you have many different views, and every view needs its own query, the repository interface again risks becoming unstructured and difficult to maintain.
 
-To address this issue, you should move all query methods that don't return entities to their own _query objects_. After moving the query method from the example above to its own query object, you end up with something like this:
+To address this issue, you should move all query methods that don't return entities to their own query classes. After moving the query method from the example above to its own class, you end up with something like this:
 
 [source,java]
 ----
@@ -195,15 +197,12 @@ public interface CustomerListQuery {
 }
 ----
 
-Query objects read from the same data source as the repositories. You can create as many query objects as you need without cluttering your repositories.
+Queries read from the same data source as the repositories. You can create as many query classes as you need without cluttering your repositories.
 
-The query objects do not have to be tied to a particular entity. Summary views, for example, often need complex queries that join data from different types of entities together. Putting queries like that in repositories can be difficult. Either you can't find a single repository that feels like a good candidate, or you have multiple candidates to choose from. Creating a separate query object solves this problem.
-
-[NOTE]
-If you know the Command Query Responsibility Segregation (CQRS) architectural pattern, the idea of query objects may sound familiar. However, there is a big difference: Whereas CQRS uses different data models for writing and reading, query objects and repositories operate on the same data model, using the same data source.
+The queries do not have to be tied to a particular entity. Summary views, for example, often need complex queries that join data from different types of entities together. Putting queries like that in repositories can be difficult. Either you can't find a single repository that feels like a good candidate, or you have multiple candidates to choose from. Creating a separate query class solves this problem.
 
 // TODO Add link to using CQRS in Vaadin app, when that page has been written sometime in the future.
 
-== Building
+== Implementations
 
 section_outline::[]
