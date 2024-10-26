@@ -9,33 +9,33 @@ order: 10
 
 Database transactions ensure Atomicity, Consistency, Isolation, and Durability (ACID) of database write operations.
 
-Atomicity means that the transaction is treated as a single unit. Either all updates succeed, or none of them do. Even if only a single update fails, the transaction is rolled back, and all the other updates are undone.
+Atomicity means that the transaction is treated as a single unit. Either all updates succeed, or none of them. Even if only a single update fails, the transaction is rolled back, and all the other updates are undone.
 
 Consistency means that the database is in a valid state after each committed transaction. All integrity constraints, like unique keys, foreign keys, and check constraints, are met after each transaction.
 
-Isolation means that transactions are isolated from each other so that they do not interfere. The end result should be the same regardless of whether two transactions execute in parallel, or one after the other. This is also useful for queries that only read data from the database, without making any changes to it.
+Isolation means that transactions are isolated from each other so that they don't interfere. The end result should be the same regardless of whether two transactions execute in parallel -- or one after the other. This is also useful for queries that only read data from the database, without making any changes to it.
 
 Durability means that once a transaction is committed, the changes are permanent. They should even survive a system crash. In practice, this means writing the changes to a durable storage medium, such as a hard drive.
 
 [NOTE]
-Although transactions are not specific to relational databases, they are discussed form the point of view of a relational database on this page.
+Although transactions are not specific to relational databases, they are discussed from the point of view of a relational database on this page.
 
 
 == Transaction Isolation
 
-Databases typically use locks to achieve isolation. A _read lock_, or _shared_ lock, allows multiple transactions to read the same data concurrently. It prevents any transaction from modifying it while others are reading.
+Databases typically use locks to achieve isolation. A _read lock_, or _shared_ lock, allows multiple transactions to read the same data, concurrently. It prevents any transaction from modifying it while others are reading.
 
 A _write lock_, or _exclusive_ lock, is used when a transaction needs to modify data. It prevents other transactions from reading or writing the data until the lock is released.
 
 Depending on the implementation and configuration of the database, and the needs of a transaction, locks can be applied at different levels of granularity. For example, a database may be able to lock individual cells, rows, pages, tables, or even entire databases.
 
-These locks have an impact on performance. Because of this, there are different levels of isolation. They allow you to relax the isolation requirement in favor of improved performance. To understand what these levels mean, you first need to understand some phenomena that can happen when you are reading and writing data at the same time.
+These locks have an impact on performance. Because of this, there are different levels of isolation. They allow you to relax the isolation requirement in favor of improved performance. To understand what these levels mean, you first need to understand some phenomena that can happen when you're reading and writing data at the same time.
 
-Dirty Reads:: A dirty read happens when transaction A reads changes made by transaction B, before transaction B has been committed. If transaction B is then rolled back, transaction A has read data that does not exist. This happens when there are no locks at all.
+Dirty Reads:: A dirty read happens when a transaction reads changes made by another, before that second transaction has been committed. The problem is that should the second transaction be rolled back, the first one has read data that no longer exists. This can happen when there are no locks at all.
 
-Non-repeatable Reads:: A non-repeatable read happens when transaction A reads the same data twice, but gets different results because transaction B has updated or deleted the data between the reads. This can happen if transaction A only holds the read lock while it is reading the data instead of keeping it for its entire duration.
+Non-repeatable Reads:: A non-repeatable read happens when a transaction reads the same data twice, but gets different results because a second transaction has updated or deleted the data between the reads. This can happen if the first transaction only holds the read lock while it is reading the data instead of keeping it for its entire duration.
 
-Phantom Reads:: A phantom read is a special kind of non-repeatable read. It happens when transaction A performs a query that should have included data from transaction B. However, at the time of the query, transaction B had not yet written that data yet. If transaction A was to run the same query later, the data would show up. This can happen if transaction A holds the read lock for its entire duration, but only locks the rows it has read instead of locking the entire table.
+Phantom Reads:: A phantom read is a special kind of non-repeatable read. It happens when a transaction performs a query that should have included data from another a second transaction. However, at the time of the query, the second transaction had not yet written that data yet. If the first transaction was to run the same query later, the data would appear. This can happen if the first transaction holds the read lock for its entire duration, but only locks the rows it has read instead of locking the entire table.
 
 The ANSI/ISO SQL standard defines four isolation levels: read uncommitted, read committed, repeatable reads, and serializable.
 
@@ -45,13 +45,13 @@ Read Committed:: This is the second-lowest isolation level. It prevents dirty re
 
 Repeatable Reads:: This is the second-highest isolation level. It prevents dirty reads and non-repeatable reads, but allows phantom reads.
 
-Serializable:: This is the highest, but also the most expensive isolation level. Transactions on this level behave as if they were executed sequentially. It prevents dirty reads, non-repetable reads, and phantom reads.
+Serializable:: This is the highest, but also the most expensive isolation level. Transactions on this level behave as if they were executed sequentially. It prevents dirty reads, non-repeatable reads, and phantom reads.
 
 Database implementations may also define their own isolation levels, and choose to implement the standard isolation levels in different ways. For instance, a specific database may prevent certain bad behaviors on a lower isolation level, even though they would be possible in theory.
 
-Furthermore, their default isolation levels may be different. For instance, PostgreSQL, Microsoft SQL Server, H2, and Oracle use _read committed_ as the default isolation level, whereas MariaDB and MySQL use _repeatable reads_.
+Furthermore, their default isolation levels may be different. The database systems PostgreSQL, Microsoft SQL Server, H2, and Oracle use _read committed_ as the default isolation level, whereas MariaDB and MySQL use _repeatable reads_.
 
-Check the documentation of your database if you are not familiar with how it handles transaction isolation.
+Check the documentation for your database if you're not familiar with how it handles transaction isolation.
 
 
 == Deadlocks
@@ -75,6 +75,7 @@ Whenever you work with locks, there is always a risk of deadlocks. A deadlock oc
 >|_Waiting for transaction A to release lock X_
 
 |===
+
 
 One way of avoiding deadlocks is to acquire and release locks in the same order. This is demonstrated in the following example:
 
@@ -111,30 +112,31 @@ One way of avoiding deadlocks is to acquire and release locks in the same order.
 
 |===
 
-It is not always clear why transaction deadlocks occur. In some databases, even read-only queries can cause deadlocks. You may be able to fix some deadlocks by changing the isolation level of your transaction, but this may have other negative consequences on the data consistency.
 
-If you cannot avoid deadlocks, you have to be prepared to deal with them. Most databases are able to detect when a deadlock occurs. When this happens, they pick a victim transaction and roll it back, allowing the other transaction to proceed. Your application then has to execute the victim transaction again. You should check your database documentation how it handles deadlocks.
+It's not always clear why transaction deadlocks occur. In some databases, even read-only queries can cause deadlocks. You may be able to fix some deadlocks by changing the isolation level of your transaction, but this may have other negative consequences on the data consistency.
+
+If you can't avoid deadlocks, you have to be prepared to deal with them. Most databases are able to detect when a deadlock occurs. When this happens, they pick a victim transaction and roll it back, allowing the other transaction to proceed. Your application then has to execute the victim transaction again. You should check your database documentation how it handles deadlocks.
 
 A deadlock exception is a form of pessimistic locking exception. For more information about handling those, see the <<../pessimistic-locking#resolving-conflicts,Pessimistic Locking>> documentation page.
 
 
 == Transaction Propagation
 
-Transaction propagation controls how Spring manages transactions across multiple methods in your application. A method can run inside a _transactional context_. If one such method calls another method that also runs inside a transactional context, the propagation decides how the called method should behave. It could, for instance, join the existing transaction, start a new one, or fail.
+Transaction propagation controls how Spring manages transactions across multiple methods in an application. A method can run inside a _transactional context_. If one such method calls another method that also runs inside a transactional context, the propagation decides how the called method should behave. It could, for instance, join the existing transaction, start a new one, or fail.
 
 Spring supports the following propagation levels:
 
-`REQIRED`:: If there is an active transaction, Spring executes the method inside it. Otherwise, Spring creates a new transaction. This is the default propagation level.
+`REQUIRED`:: If there is an active transaction, Spring executes the method inside it. Otherwise, Spring creates a new transaction. This is the default propagation level.
 
 `REQUIRES_NEW`:: If there is an active transaction, Spring suspends it and creates a new one. Once the new transaction has completed, Spring resumes the earlier one. This is the recommended propagation level for <<{articles}/building-apps/application-layer/application-services#,application services>>.
 
-`MANDATORY`:: If there is an active transaction, Spring executes the method inside it. Otherwise, Spring throws an exception and does not execute the method. This is the recommended level for <<{articles}/building-apps/application-layer/persistence/repositories#,repositories>>.
+`MANDATORY`:: If there is an active transaction, Spring executes the method inside it. Otherwise, Spring throws an exception and doesn't execute the method. This is the recommended level for <<{articles}/building-apps/application-layer/persistence/repositories#,repositories>>.
 
 `SUPPORTS`:: If there is an active transaction, Spring executes the method inside it. Otherwise, the method is executed without a transaction.
 
 `NOT_SUPPORTED`:: If there is an active transaction, Spring suspends it. The method is then executed without a transaction. Once the method has completed, Spring resumes the earlier one.
 
-`NEVER`:: If there is an active transaction, Spring throws an exception and does not execute the method.
+`NEVER`:: If there is an active transaction, Spring throws an exception and doesn't execute the method.
 
 Spring also has a `NESTED` propagation level, but it has some limitations. For more information, see the https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html[Spring Documentation].
 
