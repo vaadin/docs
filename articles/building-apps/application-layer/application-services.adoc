@@ -9,11 +9,11 @@ order: 10
 
 The application layer API consists of _application services_. In a simple Vaadin application, the application services reside inside a single <<{articles}/building-apps/architecture/components#,system component>>, as illustrated on the following diagram:
 
-image::images/application-services.png[The presentation layer calls three application services]
+image::images/application-services.png[Presentation Layer Calls Three Application Services]
 
 In code, the services are Spring Beans, and the components Java packages.
 
-Services should have _high cohesion_. This means that all the methods in your service should relate to the same thing. For example, all methods in this `PaymentService` are directly related to the business activity of handling payments:
+Services should have _high cohesion_. This means that all of the methods in your service should relate to the same thing. For example, all methods in this `PaymentService` are directly related to the business activity of handling payments:
 
 [source,java]
 ----
@@ -24,26 +24,22 @@ public interface PaymentService {
 }
 ----
 
-Application services need not be related to business activities to be highly cohesive. They could also be related to a specific view in the user interface, or even a specific user interface component.
+Application services need not be related to business activities to be highly cohesive. They could also be related to a specific view in the user interface, or even a specific user interface component. For example, if you're using <<{articles}/components/charts#,Vaadin Charts>>, it's easier if the data returned by your service is converted directly into <<{articles}/components/charts/data#,chart data>>. 
 
-For example, if you are using <<{articles}/components/charts#,Vaadin Charts>>, it is easier if the data returned by your service can be directly converted into <<{articles}/components/charts/data#,chart data>>. If you are building a payment summary view, you might be tempted to add such a method to the `PaymentService`.
+When building a payment summary view, you might be tempted to add such a method to the `PaymentService`. However, adding this method to the `PaymentService` would actually lower the cohesion of the service. Although it retrieves information about payments, its primary driver is the needs of the summary view, not the business activity of handling payments.
 
-However, adding this method to the `PaymentService` would actually lower the cohesion of the service. Although it retrieves information about payments, its primary driver is the needs of the summary view, not the business activity of handling payments.
-
-Another way of reasoning about the cohesion of services is that any single service should only have a single reason to change. With the payment service containing methods both for handling payments, and for showing the summary, it now has two reasons to change.
-
-In a situation like this, you should create a new `PaymentSummaryService`, and implement the method there. You now have two services with only a single reason to change. In other words, they are highly cohesive.
+Another way of thinking about the cohesion of services is that any single service should only have a single reason to change. With the payment service containing methods both for handling payments, and for showing the summary, it now has two reasons to change. In a situation like this, you should create a new `PaymentSummaryService`, and implement the method there. You now have two services with only one reason to change. In other words, they're highly cohesive.
 
 // TODO I want to write something about service methods being atomic and stand-alone, and that a service method should never call another, but I don't know how to formulate it. Maybe under its own section.
 
 
-== Interfaces or Classes?
+== Interfaces or Classes
 
 In the early days of Spring, services consisted of both an interface, and an implementation class. The reason for this is that Spring uses proxies to handle various cross-cutting concerns. At that time, you could only create proxies of Java interfaces, not classes. Furthermore, when writing tests, you could only mock interfaces, not classes.
 
-Nowadays, this limitation is gone. As long as your service classes are not `final`, and do not contain any `final` methods, Spring can make proxies of them. You can also mock them during tests.
+Nowadays, those limitations are gone. As long as your service classes are not `final`, and don't contain any `final` methods, Spring can make proxies of them. You can also mock them during tests.
 
-Because of this, creating interfaces for application services is a matter of personal taste. If you like to create interfaces, you can continue to do so. In that case, you should make the implementation class package protected, like this:
+Creating interfaces for application services is now a matter of personal taste. If you like to create interfaces, you can continue to do so. In that case, you should make the implementation class package protected, like this:
 
 [source,java]
 ----
@@ -63,17 +59,17 @@ public class PaymentService {
 }
 ----
 
-The advantage with this approach is that you have one Java file less to maintain. Both approaches are suitable for Vaadin.
+The advantage of this approach is that you have one less Java file to maintain. Both approaches, though, are suitable for Vaadin.
 
 
 == Input & Output
 
-Application services often need to communicate with <<{articles}/building-apps/application-layer/persistence/repositories#,repositories>> to fetch and store data. They also need to pass this data to the presentation layer. For this, there are two options: pass the entities directly, or pass Data Transfer Objects (DTO:s). Both have their own pros and cons.
+Application services often need to communicate with <<{articles}/building-apps/application-layer/persistence/repositories#,repositories>> to fetch and store data. They also need to pass this data to the presentation layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTOs). Both have advantages and disadvantages.
 
 
 === Entities
 
-When the application service passes the entities directly to the presentation layer, the entities become a part of the application layer API. Many service methods delegate to the corresponding repository methods, for example like this:
+When the application service passes the entities directly to the presentation layer, they become part of the application layer API. Many service methods delegate to the corresponding repository methods. Here's an example of this:
 
 [source,java]
 ----
@@ -97,32 +93,30 @@ public class CustomerCrudService {
 ----
 
 [CAUTION]
-When most of your service methods delegate to a repository, it may feel tempting to skip the service and have the presentation layer communicate with the repository directly. However, this is not a good idea because of the cross-cutting concerns that the application service should handle. This is explained later on this page.
+When most of your service methods delegate to a repository, it may be tempting to skip the service and have the presentation layer communicate directly with the repository. However, this isn't a good idea because of the cross-cutting concerns that the application service has to handle. This is explained later on this page.
 
-Using entities in your application service is a good idea when your user interface and entities match each other closely. For example, you could have a form whose fields, or a grid whose columns, match the fields of the entity.
+Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
 
-It is also a good idea when your entities are _anemic_, which means that they only contain data and little to no business logic.
+Your entities should be _anemic_, which means that they only contain data and little to no business logic.
 
-In both of these cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it both to the user interface, and the entity.
+In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
 
 
 === Data Transfer Objects
 
-Sometimes, it is not a good idea for the application services to return the entities themselves.
-
-For instance, the domain model may contain business logic that must be called within some context that is not available in the presentation layer. It might require access to other services, or run inside a transaction.
+Sometimes, application services shouldn't return the entities themselves. For instance, the domain model may contain business logic that must be called within some context that isn't available in the presentation layer. It might require access to other services, or run inside a transaction.
 
 In other cases, the user interface may need only a subset of the data stored inside a single entity, or a combination of data from multiple entities. Fetching and returning the full entities would be a waste of resources.
 
-You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains more or less the same.
+You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains about the same.
 
-In this case, the application services should accept DTO:s as input, and return DTO:s as output. The entities should no longer be part of the application layer API.
+In this case, the application services should accept DTOs as input, and return DTOs as output. The entities should no longer be part of the application layer API.
 
-This adds another responsibility to the application service: mapping between entities and DTO:s.
+This adds another responsibility to the application service: mapping between entities and DTOs.
 
-If you are using <<{articles}/building-apps/application-layer/persistence/repositories#query-objects,query objects>>, you can do the mapping in them by returning their DTO:s directly. In this case, the query object DTO:s become part of the application layer API.
+When using <<{articles}/building-apps/application-layer/persistence/repositories#query-objects,query objects>>, you can do the mapping in them by returning their DTOs, directly. The query object DTOs become part of the application layer API.
 
-For storing data, your services typically have to copy data from the DTO to the entity. For example, like this:
+For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
 
 [source,java]
 ----
@@ -153,28 +147,28 @@ public class CustomerCrudService {
 }
 ----
 
-When using DTO:s, you have more code to maintain. Also, some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
+When using DTOs, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
 
 
 === Domain Payload Objects
 
-If you are using <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>>, you can, and should, use them in your DTO:s as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They are used in the exact same way as DTO:s.
+When using <<{articles}/building-apps/application-layer/domain-primitives#,domain primitives>>, you should use them in your DTOs, as well. In this case, the DTOs are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTOs.
 
 
 === Validation
 
-All input should be validated by the application services before they do anything else with it. This is important both for security, integrity, and consistency. Even if you use input validation in your user interface, you should _still_ validate the data in the application services.
+All input should be validated by the application services before they do anything else with it. This is important for security, integrity, and consistency. Even if you use input validation in your user interface, you should still validate the data in the application services.
 
 You can validate the input in different ways. For more information, see the <<{articles}/building-apps/application-layer/consistency/validation#,Validation>> documentation page.
 
 
 == Cross-Cutting Concerns
 
-Application services act as the main entry point into the application from the user interface. Because of this, they have some extra responsibilities in addition to handling the business activities. The most important ones are security, transaction management, and observability.
+Application services act as the main entry point into the application from the user interface. Because of this, they have some responsibilities in addition to handling the business activities. The most important ones are security, transaction management, and observability.
 
-image::images/cross-cutting-concerns.png[A call from the presentation layer goes through three boundaries]
+image::images/cross-cutting-concerns.png[Call from Presentation Layer goes through Three Boundaries]
 
-You can implement cross-cutting concerns in two ways. You can use Aspect Oriented Programming (AOP), which is what Spring uses for its cross-cutting concerns. For instance, this is how you would run the `save` method inside a transaction using AOP:
+You can implement cross-cutting concerns in two ways. The first way would be to use Aspect Oriented Programming (AOP), which is what Spring uses for its cross-cutting concerns. For instance, this is how you would run the `save` method inside a transaction using AOP:
 
 [source,java]
 ----
@@ -190,7 +184,7 @@ public class CustomerCrudService {
 
 During application startup, Spring detects the `@Transactional` annotation and turns the service into a proxy. When a client calls the `save` method, the calls gets routed through a _method interceptor_. The interceptor starts the transaction, calls the actual method, and then commits the transaction when the method returns.
 
-You can also implement the cross-cutting concerns inside every service method. For instance, this is how you would run the `save` method inside a transaction explicitly:
+The second way to implement cross-cutting concerns is inside every service method. For instance, this is how you would run the `save` method inside a transaction, explicitly:
 
 [source,java]
 ----
@@ -207,17 +201,16 @@ public class CustomerCrudService {
 }
 ----
 
-If you use AOP, you should write integration tests that also test the cross-cutting concerns. If there is a problem with your application context, and your aspect ends up not being applied, you may not notice it until it is too late.
+If you use AOP, you should write integration tests that also test the cross-cutting concerns. If there is a problem with your application context, and your aspect isn't being applied, you may not notice it until it's too late.
 
 See the https://docs.spring.io/spring-framework/reference/core/aop.html[Spring Documentation] for more information about AOP.
 
-[NOTE]
-Each cross-cutting concern deserves a documentation page of its own. This section will be updated as new pages are written.
+// TODO Each cross-cutting concern deserves a documentation page of its own. This section should be updated as new pages are written.
 
 
 === Security
 
-All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your user interface views are protected. Even methods that do not require authentication should be explicitly declared to permit anonymous users.
+All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your user interface views are protected. Even methods that don't require authentication, should be declared explicitly to permit anonymous users.
 
 To protect application services, you have to enable _method security_. To do that, you need to add the `@EnableMethodSecurity` annotation to your security class. After that, you can use annotations to secure your application services. Spring Boot recommends the use of the `@PreAuthorize` annotation.
 
@@ -228,14 +221,16 @@ See the https://docs.spring.io/spring-security/reference/servlet/authorization/m
 
 === Transactions
 
-All application service methods that touch the database should always run inside their own transactions. You should use the `REQUIRES_NEW` transaction propagation.
+All application service methods that interact with the database should always run inside their own transactions. You should use the `REQUIRES_NEW` transaction propagation.
 
 See the <<consistency/transactions#,Transactions>> documentation page for more information about transaction management.
 
 
 === Observability
 
-If you want to observe what your application services are doing from the outside, you can use https://micrometer.io/[Micrometer Observation].
+To observe what your application services are doing from the outside, you can use https://micrometer.io/[Micrometer Observation].
+
+// TODO Maybe the expand text here to include what you might observe -- why they want to do that.
 
 See the https://docs.spring.io/spring-boot/reference/actuator/observability.html[Spring Boot Documentation] for more information about observability.
 
@@ -244,7 +239,7 @@ See the https://docs.spring.io/spring-boot/reference/actuator/observability.html
 
 == Vaadin Integration
 
-For Flow user interfaces, you inject the application services directly into your views, like this:
+Application services can be integrated in both Vaadin Flow and Vaadin Hilla applications. For Flow user interfaces, you would inject the application services directly into your views, like this:
 
 [source,java]
 ----
@@ -260,7 +255,7 @@ public class PaymentView extends VerticalLayout {
 }
 ----
 
-For Hilla, you should make the application services _browser callable_. You do this by adding the `@BrowserCallable` annotation to your service, like this:
+For Hilla, you should make the application services _browser callable_. You'd do this by adding the `@BrowserCallable` annotation to your service, like this:
 
 [source,java]
 ----
@@ -276,19 +271,19 @@ See the <<{articles}/hilla/guides/endpoints#,Hilla endpoints documentation page>
 
 == Scaling
 
-As the application grows, it makes sense to split the application services component into smaller parts. It is recommended to split the services according to which _bounded context_ they belong to.
+As your application grows, it makes sense to split the application services component into smaller parts. Split the services according to which _bounded context_ they belong.
 
-A bounded context is a term from domain-driven design. It is a clear boundary within a system where a specific domain model is defined and consistent. It ensures that within this context, terms and concepts have precise meanings that are not confused or conflicted with other contexts in the system. This separation helps to manage complexity by allowing different parts of the system to evolve independently.
+A bounded context is a term from domain-driven design. It's a clear, consistent boundary within a system where a specific domain model is defined. It ensures that within this context, terms and concepts have precise meanings that won't be confused or conflict with other contexts in the system. This separation helps to manage complexity by allowing different parts of the system to evolve independently.
 
 // TODO Consider adding a separate page about bounded contexts only.
 
-For example, on this diagram, the presentation layer interacts with three different bounded contexts through their service components: Quotation Management, Order Management, and Customer Relations Management:
+For example, in this diagram, the presentation layer interacts with three different bounded contexts through their service components: Quotation Management; Order Management; and Customer Relations Management:
 
-image::images/domain-application-services.png[The presentation calls three different application service components]
+image::images/domain-application-services.png[Presentation calls Three Application Service Components]
 
-Bounded contexts are often associated with <<{articles}/building-apps/architecture/microservices#,microservices>>. However, you can also use them when you're building <<{articles}/building-apps/architecture/monoliths#,modular monoliths>>. This is the recommended approach in Vaadin applications.
+Bounded contexts are often associated with <<{articles}/building-apps/architecture/microservices#,microservices>>. However, you can also use them when you're building <<{articles}/building-apps/architecture/monoliths#,modular monoliths>>. This is recommended in Vaadin applications.
 
-In <<{articles}/building-apps/project-structure/single-module#,single-module projects>>, you should place the bounded contexts into their own packages. The three contexts from the example above would correspond to the following Java packages:
+In <<{articles}/building-apps/project-structure/single-module#,single-module projects>>, you should place the bounded contexts in their own packages. The three contexts from the example above would correspond to the following Java packages:
 
 - `com.example.application.qm.services` (Quotation Management)
 - `com.example.application.om.services` (Order Management)
