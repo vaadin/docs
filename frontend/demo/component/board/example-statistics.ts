@@ -104,10 +104,12 @@ export class ExampleStatistics extends LitElement {
       <div class="table">
         <table>
           <thead>
-            <th></th>
-            <th>City</th>
-            <th>Input</th>
-            <th>Output</th>
+            <tr>
+              <th></th>
+              <th>City</th>
+              <th>Input</th>
+              <th>Output</th>
+            </tr>
           </thead>
           <tbody>
             ${repeat(
