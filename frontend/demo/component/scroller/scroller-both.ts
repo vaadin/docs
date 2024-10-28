@@ -3,7 +3,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@vaadin/scroller';
-import img from '../../../../src/main/resources/images/reindeer.jpg';
+import img from '../../../../src/main/resources/images/reindeer.jpg?url';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('scroller-both')
