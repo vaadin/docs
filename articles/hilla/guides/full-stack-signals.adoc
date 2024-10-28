@@ -101,7 +101,8 @@ export default function VoteView() {
 
 The full-stack signals are designed to be used in various scenarios. Based on the requirements, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package. Their client-side counterparts are available in `@vaadin/hilla-react-signals`. 
 
-As this is currently under active development, more signal types are added with each new release. The currently available ones are: [classname]`ValueSignal`, [classname]`NumberSignal`, and [classname]`ListSignal`. These are described in the following sections.
+As this is currently under active development, more signal types are added with each new release. The currently available ones are [classname]`ValueSignal`, [classname]`NumberSignal`, and [classname]`ListSignal`. These are described in the following sections.
+
 
 [[value-signal]]
 === ValueSignal
@@ -289,11 +290,12 @@ The [methodname]`incrementBy` operation is _incrementally atomic_, meaning it gu
 
 Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all methods, such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
 
+
 [[list-signal]]
 [role="since:com.vaadin:vaadin@V24.6"]
 === ListSignal
 
-The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. The type should necessarily be a JSON-serializable one that is supported by the Hilla framework.
+The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework.
 
 The following example demonstrates how to create and use a [classname]`ListSignal` in a server-side service:
 
@@ -373,19 +375,20 @@ export default function TodoView(){
 <3> The `map` function is used to render the list of tasks.
 <4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`ListSignal`.
 
-Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. As the result, when a client add a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
+Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. As a result, when a client adds a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
+
 
 [[list-signal-api]]
 ==== ListSignal API
 
-The client-side API of the [classname]`ListSignal` provides methods to insert and remove items. The [classname]`ListSignal` is a sequence of [classname]`ValueSignal` entries. Therefore, its API are about how the entries are added to or removed from the list, and how the concurrent operations regarding the structure of the entries is handled.
+The client-side API of the [classname]`ListSignal` provides methods to insert and remove items. The [classname]`ListSignal` is a sequence of [classname]`ValueSignal` entries. Therefore, its API are about how the entries are added to the list or removed, and how the concurrent operations regarding the structure of the entries is handled.
 
-As this is currently under active development, more methods and functionalities are added with each new release. The currently available ones are: [methodname]`inserLast` and [methodname]`remove`. These are described in the following sections.
+As this is currently under active development, more methods and functionalities are added with each new release. The currently available ones are [methodname]`inserLast` and [methodname]`remove`. These are described below:
 
 `insertLast(value: T): Operation`:: Inserts a new value at the end of the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 `remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 
-The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list (no changes needed on the server-side):
+The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list, with no changes needed on the server-side:
 
 [source,tsx]
 .todo.tsx
@@ -489,7 +492,8 @@ export default function TodoView(){
 }
 ----
 
-As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself, meaning each value can be updated individually using the available API of the `ValueSignal`, and the changes to each individual entry are automatically propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to only render the updated entry, instead of re-rendering the whole list.
+As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself. Each value can be updated individually using the available API of the `ValueSignal`. The changes to each individual entry are automatically propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to render only the updated entry, instead of re-rendering the whole list.
+
 
 [[method-parameters]]
 == Service Method Parameters
@@ -540,7 +544,7 @@ public class VoteService {
 The above example demonstrates a simple voting service that returns different [classname]`NumberSignal` instances based on the name of the voting option. The client-side code can first ask for the available options, and then subscribe to each individual signal instance to send updates and to receive real-time updates when voting happens.
 
 [IMPORTANT]
-It's vitally important to make sure that the behaviour of the service method returning a signal instance should be deterministic, meaning that the same input parameters should always produce the same output. This is necessary to ensure that the state is consistently shared across all of the clients.
+It's vitally important to make sure that the behaviour of the service method returning a signal instance is deterministic. The same input parameters should always produce the same output. This is necessary to ensure that the state is consistently shared across all of the clients.
 
 
 [[security]]
@@ -551,9 +555,11 @@ Security with full-Stack signals has a few nuances of which you should be aware.
 
 === Controlling Browser-Callable Service Access
 
-Full-stack signals are exposed by the services that are annotated with [classname]`@BrowserCallable` -- or the synonym, [classname]`@Endpoint`. This means the services that expose the signals are secured by the same security rules as any other service using the [classname]`@AnonymousAllowed`, [classname]`@PermitAll`, [classname]`@RolesAllowed`, or [classname]`@DenyAll` on the class or the individual methods. For more information on how to secure the services, see the <<./security/intro#, security documentation>>.
+Full-stack signals are exposed by the services that are annotated with [classname]`@BrowserCallable` -- or the synonym, [classname]`@Endpoint`. This means the services that expose the signals are secured by the same security rules as any other service using the [classname]`@AnonymousAllowed`, [classname]`@PermitAll`, [classname]`@RolesAllowed`, or [classname]`@DenyAll` on the class or the individual methods. 
+
+For more information on how to secure the services, see the <<./security/intro#, security documentation>>.
 
 
 === Fine-Grained Signal Access Control
 
-Browser-callable access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require finer control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role that allows them to update the value of that signal. This level of control is not yet implemented, but it's expected to be added in future releases.
+Browser-callable access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require finer control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role to update the value of that signal. This level of control is not yet implemented, but it's expected to be added in future releases.
