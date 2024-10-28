@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
-import img from '../../../../../src/main/resources/images/vaadin-logo-dark.png';
+import img from '../../../../../src/main/resources/images/vaadin-logo-dark.png?url';
 
 function Example() {
   return (
