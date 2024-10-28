@@ -5,7 +5,7 @@ import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar, HorizontalLayout } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import companyLogo from '../../../../../src/main/resources/images/company-logo.png';
+import companyLogo from '../../../../../src/main/resources/images/company-logo.png?url';
 
 function Example() {
   useSignals(); // hidden-source-line
