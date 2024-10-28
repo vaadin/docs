@@ -50,7 +50,7 @@ When you use the [methodname]`setBean()` method, the business object instance up
 
 You can use the [methodname]`readBean()` method to read manually values from a business object instance into the UI components.
 
-This example is using the `readBean` method:
+This example uses the `readBean` method:
 
 [source,java]
 ----
@@ -81,7 +81,7 @@ if (status.hasErrors()) {
 }
 ----
 
-Writing the field values to a business object fails if any of the bound fields contain an invalid value. You can handle invalid values in many different ways. The following are some examples:
+Writing the field values to a business object fails if any of the bound fields contain an invalid value. You can handle invalid values in many ways. The following are some examples:
 
 .Handling a Checked Exception
 [source,java]
@@ -141,31 +141,26 @@ For bean-level validators, the bean must be updated before the validator runs. I
 
 == Writing as a Draft
 
-In addition to other means of writing field values to a business object, there's also a way to write the bean as a draft. This means that it's not required for all field validations to pass, and bean-level validation isn't run at all.
+In addition to other means of writing field values to a business object, there's also a way to write the bean as a draft. This means that it's not required for all field validations to pass: bean-level validation isn't run at all.
 
 [source,java]
 ----
-// This will write all values which pass conversion and field-level validation to person bean.
-binder.writeBeanAsDraft(person);
-
-// This will write all values which pass conversion to person bean, ignoring field-level validation.
-binder.writeBeanAsDraft(person, true);
+binder.writeBeanAsDraft(person); // <1>
+binder.writeBeanAsDraft(person, true); // <2>
 ----
+
+<1> This will write all values which pass conversion and field-level validation to person bean.
+<2> This will write all values which pass conversion to person bean, ignoring field-level validation.
 
 
 == Tracking Binding Status
 
-[classname]`Binder` tracks which bindings have been updated by the user and which are in an invalid state. When the `readBean` method is invoked, the initial value of each field is stored.
+[classname]`Binder` tracks which bindings have been updated by the user and which are in an invalid state. It fires an event when there are binding status changes. You can use this event to enable and disable the form buttons, depending on the current status of the form.
 
-By default, any change to a binding's value marks that binding as changed, even if the initial value is restored for said binding. However, if [methodname]`setChangeDetectionEnabled(true)` is called, the initial value of the binding is compared to the new value. The `hasChanges()` method returns true only if the new value doesn't match the initial value. Otherwise, the binding is not marked as changed, thereby ensuring that `changedBindings` only includes entries where the current value differs from the initial value. When this feature is enabled, [classname]`Binder` will use [methodname]`equals` to check the equality of values. This can be overridden with a custom equality predicate for each binding via [methodname]`withEqualityPredicate(SerializableBiPredicate<TARGET, TARGET> equalityPredicate)`.
-
-When there are status changes, the [classname]`Binder` fires a `StatusChangeEvent`. You can use this event to enable and disable the form buttons, depending on the current status of the [classname]`Binder`.
-
-The following example enables the [guibutton]*Save* and [guibutton]*Reset* buttons when changes are detected:
+This example enables the [guibutton]*Save* and [guibutton]*Reset* buttons when changes are detected:
 
 [source,java]
 ----
-binder.setChangeDetectionEnabled(true);
 binder.addStatusChangeListener(event -> {
     boolean isValid = event.getBinder().isValid();
     boolean hasChanges = event.getBinder().hasChanges();
@@ -176,9 +171,45 @@ binder.addStatusChangeListener(event -> {
 ----
 
 
+== Tracking Binding Value Changes
+
+[classname]`Binder` can also track which bindings have changes by comparing them to the initial values of the fields, values that are set and stored when the `readBean` is invoked.
+
+By default, any change to a binding's value marks that binding as changed, even if the initial value is restored for the binding. However, if [methodname]`setChangeDetectionEnabled(true)` is called, the initial value of the binding is compared to the new value.
+
+The `hasChanges()` method returns `true` only if the new value doesn't match the initial value. Otherwise, the binding is not marked as changed. This ensures that `changedBindings` only includes entries where the current value differs from the initial value.
+
+When this feature is enabled, [classname]`Binder` will use [methodname]`equals` to check the equality of values. This can be overridden with a custom equality predicate for each binding via [methodname]`withEqualityPredicate(SerializableBiPredicate<TARGET, TARGET> equalityPredicate)`.
+
+When there are status changes, the [classname]`Binder` fires a `StatusChangeEvent`. You can use this event to enable and disable the form buttons, depending on the current status of the [classname]`Binder`.
+
+The following example enables the [guibutton]*Submit* button when changes of initial values are detected:
+
+[source,java]
+----
+binder.setChangeDetectionEnabled(true);
+binder.addValueChangeListener(event ->
+    submitButton.setEnabled(binder.hasChanges());
+);
+Person person = new Person("John", "Doe");
+binder.readBean(person);
+----
+
+To set the values with which the Binder compares the changes, the `readBean` method should be invoked again:
+
+[source,java]
+----
+submitButton.addClickListener(event -> {
+    binder.writeBeanIfValid(person);    // stores the bean
+    binder.readBean(person);            // updates initial values
+    event.getSource().setEnabled(false);
+});
+----
+
+
 == Using Java Records with Binder
 
-Instead of using Java Beans, it's possible to use the [classname]`Binder` with Java Records. Since Java Records are immutable, only manual reading and writing can be used when the datatype is a record. This means that methods relying on bean datatypes such as `writeBeanAsDraft`, `writeBean`, and `setBean` throw an exception when called for a Binder with a record datatype. Additionally, since records can only be read via `readRecord`, the `refreshFields` method clears all of the Binder fields.
+Instead of using Java Beans, it's possible to use the [classname]`Binder` with Java Records. Since Java Records are immutable, only manual reading and writing can be used when the datatype is a record. This means that methods relying on bean datatypes -- such as `writeBeanAsDraft`, `writeBean`, and `setBean` -- throw an exception when called for a Binder with a record datatype. Additionally, since records can only be read via `readBean`, the `refreshFields` method clears all of the Binder fields.
 
 For reading a record, the `readRecord` method should be used as shown in the example below.
 
