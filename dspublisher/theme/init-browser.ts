@@ -1,16 +1,14 @@
-// Use this custom element to modify the dspublisher header content
-// Use an empty file to not show a header
-export default class Example extends HTMLElement {
+class Header extends HTMLElement {
   __initialized = false;
 
   private haasImportScript() {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.onload = () => (window as any).haas.loader.initMenu();
     script.defer = true;
     script.src =
-      window.location.hostname == 'preview.vaadin.com'
-        ? 'https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js'
-        : 'https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js';
+      window.location.hostname == "preview.vaadin.com"
+        ? "https://preview.vaadin.com/vaadincom/haas-service/v2/haas-loader.js"
+        : "https://vaadin.com/vaadincom/haas-service/v2/haas-loader.js";
     return script;
   }
   connectedCallback() {
@@ -41,3 +39,5 @@ export default class Example extends HTMLElement {
     }
   }
 }
+
+customElements.define("dspublisher-header", Header);
