@@ -1,25 +1,25 @@
 ---
 title: Getting Started
-description: How to use Control Center.
+description: The basics of how to use Control Center.
 order: 10
 ---
 
 
 = Getting Started
 
-Control Center simplifies the management of Vaadin applications on Kubernetes clusters. This page explains how deploy Control Center and get it running smoothly.
+Control Center simplifies the management of Vaadin applications on Kubernetes clusters. This page explains how to deploy Control Center and get it running smoothly.
 
 
 == Prerequisites
 
-Before you begin, make sure you have a Kubernetes cluster. This can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop] or https://minikube.sigs.k8s.io/[minikube], depending on your project needs.
+Before you begin, make sure you have a Kubernetes cluster. This can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop] or https://minikube.sigs.k8s.io/[minikube]. Which you might use depends on your project needs.
 
-Also, you'll need to install https://helm.sh/[Helm]. It's a Kubernetes package manager that simplifies application deployment and management. Ensure it's configured to interact with your cluster.
+Also, you'll need to install https://helm.sh/[Helm]. It's a Kubernetes package manager that simplifies application deployment and management. Make sure it's configured to interact with your cluster.
 
 
 == Deploying Control Center
 
-To deploy Control Center to your Kubernetes cluster, run the following Helm command:
+To deploy Control Center to a Kubernetes cluster, run one of the following Helm commands:
 
 ++++
 <style>
@@ -40,6 +40,11 @@ To deploy Control Center to your Kubernetes cluster, run the following Helm comm
 </style>
 ++++
 
+
+=== Development Environment
+
+For use in a development environment, you might install Control Center like so:
+
 .Terminal
 [.linenums,source,bash]
 ----
@@ -56,14 +61,77 @@ helm install control-center oci://docker.io/vaadin/control-center \
 <4> Configures service settings for a load balancer on port `8000`. Change the port if necessary for your environment.
 <5> This says for Helm to wait until Control Center is fully deployed.
 
-Granting administrative privileges enables automatic installation of required dependencies. If you choose not to grant these privileges, though, you'll need to install necessary resources, manually.
+[NOTE]
+Granting administrator privileges enables automatic installation of required dependencies. If you choose not to grant these privileges, though, you'll need to manually install the necessary resources. See the <<manual-installation#,Manual Installation>> section for details on how to do this.
+
+
+=== Production Environment
+
+For use in a production environment, you could install Control Center like this:
+
+.Terminal
+[.linenums,source,bash]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+    -n control-center --create-namespace \
+    -f values-ingress.yaml \
+    --wait
+----
+
+<1> This installs Control Center.
+<2> This creates a dedicated namespace to isolate Control Center from other applications.
+<3> Configures a custom ingress configuration (see below)
+<4> This instructs Helm to wait until Control Center is fully deployed.
+
+[IMPORTANT]
+Since this does not grant administrator privileges, you'll need to manually install the required dependencies. See the <<manual-installation#,Manual Installation>> section for details on how to do this.
+
+This is an example of a custom ingress configuration:
+
+[.example]
+--
+.values-ingress.yaml
+[source,yaml,subs="+quotes,verbatim"]
+----
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: "control-center.example.com"
+      paths:
+        - path: "/"
+          pathType: Prefix
+  tls:
+    - hosts:
+        - "control-center.example.com"
+      secretName: "control-center-tls"
+----
+--
+
+This ingress configuration assumes that you have already a certificate in your production environment. To create the `control-center-tls` secret for the certificate you should run this command:
+
+.Terminal
+[source,bash]
+----
+kubectl -n control-center create secret tls control-center-tls --cert=cert.pem --key=key.pem
+----
+
+If you don't have a certificate yet, or you're not deploying to a production environment, you can create one with a tool like https://mkcert.org/[mkcert], using the following command:
+
+.Terminal
+[source,bash]
+----
+mkcert control-center.example.com
+----
+
+This command creates the [filename]`cert.pem` and [filename]`key.pem` files.
 
 
 == Accessing Control Center
 
-Once deployed, access Control Center through your web browser. For a local cluster, navigate to `http://localhost:8000`. For a cloud cluster, use the external IP or domain assigned by your cloud provider.
+Once deployed, you can access Control Center through the web browser. For a local cluster, navigate to `http://localhost:8000`. For a cloud cluster, use the external IP or domain assigned by your cloud provider.
 
-You'll see the *Startup Configuration Wizard*. It'll help you configure authentication and essential settings using https://openid.net/connect/[OpenID Connect].
+You'll see the *Startup Configuration Wizard*. It'll help you to configure authentication and essential settings using https://openid.net/connect/[OpenID Connect].
 
 
 === Retrieve Passkey
@@ -73,37 +141,37 @@ The wizard requires a passkey to proceed. Run the following command to retrieve 
 .Terminal
 [source,bash]
 ----
-kubectl -n control-center get secret control-center-passkey -o go-template='"{{ .data.passkey | base64decode }}"'
+kubectl -n control-center get secret control-center-passkey -o go-template="{{ .data.passkey | base64decode | println }}"
 ----
 
+[.device]
 image::images/welcome-step.png[Welcome Step]
 
 
 === Configure Keycloak Hostname
 
-Keycloak is the identity provider used by Control Center. You'll therefore need to configure the hostname for it.
+Keycloak is the identity provider used by Control Center. Therefore, you'll need to configure the hostname for it. It needs a hostname that is accessible both from within the Kubernetes cluster and from a web browser running outside the cluster. The hostname allows your applications and users to authenticate securely via Keycloak.
 
-Keycloak needs a hostname that is accessible both from within the Kubernetes cluster and from your web browser running outside the cluster. This hostname allows your applications and users to authenticate securely via Keycloak.
+This is necessary for both secure authentication and browser accessibility. Applications in the cluster need to access Keycloak to authenticate users, securely. At the same time, since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
 
-This is necessary for secure authentication and for browser accessibility. Applications in the cluster need to access Keycloak to authenticate users, securely. At the same time, since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
-
-Therefore, the hostname must resolve to an IP address reachable by both the cluster and external clients (e.g., your browser). Proper DNS configuration ensures secure and reliable communication.
+Therefore, the hostname must resolve to an IP address reachable by both the cluster and external clients (e.g., the browser). Proper DNS configuration ensures secure and reliable communication.
 
 
 ==== Cloud Environments
 
 In cloud deployments, first create a DNS Record. Point it to your cluster's public IP address provided by your cloud provider. For example, if your domain is `mydomain.com`, you might create `keycloak.mydomain.com` pointing to the cluster's external IP.
 
-You can find the external IP address in your cloud provider's dashboard. Make sure that your network security settings allow traffic to this IP on the necessary ports.
+You should find the external IP address in your cloud provider's dashboard. Make sure that your network security settings allow traffic to this IP on the necessary ports.
 
 
 ==== Local Development & Testing
 
-For local clusters, modify the [filename]`hosts` file. Add an entry to your operating system's [filename]`hosts` file to map the hostname to your local machine's IP address. Which file will depend on your operating system (see below).
+For local clusters, modify the [filename]`hosts` file. Add an entry to your operating system's [filename]`hosts` file to map the hostname to your local machine's IP address. The specific file to change and its location, though, depends on your operating system (see below).
+
 
 ===== Linux & macOS
 
-When using a Unix based system like Linux or macOS, you'll need to open the [filename]`hosts` file with administrative privileges like so:
+When using a Unix based system like Linux or macOS, you'll need to open the [filename]`hosts` file in the `/etc` directory, with administrative privileges like so:
 
 .Terminal
 [source,bash]
@@ -118,9 +186,10 @@ There you'll have to add the following line at the end of the file:
 127.0.0.1   keycloak.local
 ----
 
+
 ====  Windows
 
-If you're using a Windows system, you'll instead need to start Notepad as an administrator. Open with it the [filename]`hosts` file located at `C:\Windows\System32\drivers\etc\hosts`. Be careful when modifying system files, while logged in as administrator, to avoid unintended issues.
+If you're using a Windows system, you'll instead need to start Notepad as an administrator. With it, open the [filename]`hosts` file, which is usually located at `C:\Windows\System32\drivers\etc\hosts`. Be careful when modifying system files while logged in as administrator, to avoid problems.
 
 Add the following line to the end of that file:
 
@@ -131,8 +200,9 @@ Add the following line to the end of that file:
 
 By adding this entry, `keycloak.local` resolves to `127.0.0.1`, allowing your browser and applications to access Keycloak running on your local machine.
 
-Consistently use the same hostname (i.e., `keycloak.local` in this example) throughout your development environment to prevent configuration mismatches.
+Use the same hostname -- `keycloak.local` in this example -- throughout your development environment to prevent configuration mismatches.
 
+[.device]
 image::images/hostname-step.png[Configure Hostnames]
 
 
@@ -140,32 +210,35 @@ image::images/hostname-step.png[Configure Hostnames]
 
 Next you'll need to create an administrator account with full access to Control Center's features. Provide a name, email address, and password for the account.
 
+[.device]
 image::images/user-step.png[Configure Administrator Account]
 
 
 === Finalize Installation
 
-Complete the setup by installing all necessary resources. This step configures Keycloak and ensures all dependencies are set up properly.
+Complete the setup by installing all necessary resources. This step configures Keycloak and ensures all dependencies are configured properly.
 
+[.device]
 image::images/install-step.png[Finalizing Setup]
 
 
 === Log into Control Center
 
-After the installation is completed, click the [guibutton]*Go to Dashboard* button. You'll be redirected to the Control Center login page.
+After the installation has been completed, click the [guibutton]*Go to Dashboard* button. You'll be redirected to the Control Center login page.
 
+[.device]
 image::images/login-view.png[Login to Control Center]
 
-Once there, enter the credentials for the administrator account you created. Then click [guibutton]*Sign In* to access Control Center. If you encounter any login issues, check that cookies and JavaScript are enabled in your browser.
+Once there, enter the credentials for the administrator account you created. Then click [guibutton]*Sign In* to access Control Center. If you encounter any login problems, check that cookies and JavaScript are enabled in your browser.
 
 
 === Accessing Dashboard
 
 Upon successful authentication, you'll be taken to the Control Center dashboard.
 
+[.device]
 image::images/dashboard-view.png[Control Center Dashboard]
 
-At this point, the dashboard should notify you that no applications are available.
-This is because none are deployed yet.
+At this point, the dashboard should notify you that no applications are available. This is because none are deployed yet.
 
-To start deploying your Vaadin applications and take full advantage of Control Center's features, proceed to <<../application-deployment#,Application Deployment>>.
+To start deploying your Vaadin applications and take full advantage of Control Center's features, proceed to the <<../application-deployment#,Application Deployment>> documentation page.

@@ -87,7 +87,7 @@ public class PopoverNotificationPanel extends Div {
         heading.getStyle().set("margin", "0");
 
         Button markRead = new Button("Mark all read", (e) -> {
-            unreadContent.remove(unreadList);
+            unreadContent.removeAll();
             unreadContent.add(new Div("No new notifications"){{
                 this.addClassName("no-notifications-msg");
             }});
