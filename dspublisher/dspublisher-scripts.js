@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = !process.argv.includes('--next') ? '2.2.0-rc.9' : '3.0.0-alpha.1';
+const DSP_VERSION = '3.0.0-alpha.5';
 
 async function checkPreConditions() {
   try {
@@ -167,23 +167,18 @@ const SCRIPTS = {
         phases: [
           {
             text: `Initializing${firstLaunchMessage}`,
-            readySignal: 'success building schema',
+            readySignal: 'Application running at',
             weight: 30,
           },
           {
-            text: `Creating pages${firstLaunchMessage}`,
-            readySignal: 'success createPages',
-            weight: 15,
-          },
-          {
-            text: 'Building development bundle',
-            readySignal: ['You can now view', 'watching for file changes'],
+            text: 'Starting up DSP',
+            readySignal: ['watching for file changes'],
             doneText: 'Ready at http://localhost:8000. Stop the server with Ctrl+C',
-            weight: 95,
+            weight: 5,
             lastPhase: true,
           },
         ],
-        ignoredLogSignals: ['ERR_REQUIRE_ESM'],
+        ignoredLogSignals: ['New version of Astro available'],
       },
     ].filter((p) => !!p),
   },
@@ -219,22 +214,32 @@ const SCRIPTS = {
         shell: `npx -y @vaadin/dspublisher@${DSP_VERSION} --build`,
         phases: [
           {
-            text: 'Building static pages',
-            readySignal: 'success createPages',
-            weight: 35,
+            text: 'Initializing build',
+            readySignal: 'Getting diagnostics',
+            weight: 40,
           },
           {
             text: 'Building production JavaScript and CSS bundles',
-            readySignal: 'success Building production JavaScript and CSS bundles',
-            weight: 180,
+            readySignal: 'generating static routes',
+            weight: 30,
           },
           {
-            text: 'Generating image thumbnails',
-            readySignal: 'Done building',
+            text: 'Building static pages',
+            readySignal: 'generating optimized images',
             weight: 60,
           },
+          {
+            text: 'Optimizing images',
+            readySignal: 'sitemap-index.xml',
+            weight: 70,
+          },
+          {
+            text: 'Building sitemap and search index',
+            readySignal: 'Finished in',
+            weight: 10,
+          },
         ],
-        ignoredLogSignals: ['ERR_REQUIRE_ESM'],
+        ignoredLogSignals: ['Could not find a declaration file for module'],
       },
       {
         func: () => {

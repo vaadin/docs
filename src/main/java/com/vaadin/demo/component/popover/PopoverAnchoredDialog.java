@@ -17,7 +17,7 @@ import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -26,6 +26,7 @@ import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 
 @Route("popover-anchored-dialog")
 public class PopoverAnchoredDialog extends Div {
@@ -47,8 +48,7 @@ public class PopoverAnchoredDialog extends Div {
 
         grid.setItems(DataService.getPeople());
 
-        Span title = new Span("Employees");
-        title.getStyle().set("font-weight", "bold");
+        H3 title = new H3("Employees");
 
         Button button = new Button(VaadinIcon.GRID_H.create());
         button.addThemeVariants(ButtonVariant.LUMO_ICON);
@@ -65,8 +65,9 @@ public class PopoverAnchoredDialog extends Div {
         popover.setPosition(PopoverPosition.BOTTOM_END);
         popover.setTarget(button);
 
-        H4 heading = new H4("Configure columns");
-        heading.getStyle().set("margin", "0");
+        Div heading = new Div("Configure columns");
+        heading.getStyle().set("font-weight", "600");
+        heading.getStyle().set("padding", "var(--lumo-space-xs)");
 
         List<String> columns = List.of("firstName", "lastName", "email",
                 "phone", "birthday", "profession");
@@ -92,14 +93,16 @@ public class PopoverAnchoredDialog extends Div {
         Button showAll = new Button("Show all", (e) -> {
             group.setValue(new HashSet<String>(columns));
         });
+        showAll.addThemeVariants(ButtonVariant.LUMO_SMALL);
 
         Button reset = new Button("Reset", (e) -> {
             group.setValue(defaultColumns);
         });
+        reset.addThemeVariants(ButtonVariant.LUMO_SMALL);
 
         HorizontalLayout footer = new HorizontalLayout(showAll, reset);
         footer.setSpacing(false);
-        footer.getThemeList().add("spacing-xs");
+        footer.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
         popover.add(heading, group, footer);
         // end::snippet[]

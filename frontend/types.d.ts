@@ -1,14 +1,14 @@
-declare module '*.png' {
+declare module '*.png?url' {
   const value: string;
   export = value;
 }
 
-declare module '*.jpg' {
+declare module '*.jpg?url' {
   const value: string;
   export = value;
 }
 
-declare module '*.svg' {
+declare module '*.svg?url' {
   const value: string;
   export = value;
 }

@@ -46,10 +46,8 @@ public class PopoverNotificationPanel extends Div {
         List<Person> people = DataService.getPeople(5);
 
         MessageList unreadList = new MessageList();
-        unreadList.addClassName("notifications");
 
         MessageList allList = new MessageList();
-        allList.addClassName("notifications");
 
         MessageListItem message1 = new MessageListItem(
                 "Could you send me the latest TPS report from the ACME project?",
@@ -75,7 +73,8 @@ public class PopoverNotificationPanel extends Div {
         allList.setItems(Arrays.asList(message1, message2, message3, message4));
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.addThemeVariants(TabSheetVariant.LUMO_NO_PADDING);
+        tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL, TabSheetVariant.LUMO_NO_PADDING);
+        tabSheet.addClassName("notifications");
 
         Div unreadContent = new Div();
         unreadContent.add(unreadList);
@@ -88,16 +87,19 @@ public class PopoverNotificationPanel extends Div {
         heading.getStyle().set("margin", "0");
 
         Button markRead = new Button("Mark all read", (e) -> {
-            unreadContent.remove(unreadList);
-            unreadContent.add(new Div("No new notifications"));
+            unreadContent.removeAll();
+            unreadContent.add(new Div("No new notifications"){{
+                this.addClassName("no-notifications-msg");
+            }});
         });
-        markRead.getStyle().set("margin-inline-start", "auto");
+        markRead.getStyle().set("margin", "0 0 0 auto");
+        markRead.addThemeVariants(ButtonVariant.LUMO_SMALL);
 
         HorizontalLayout layout = new HorizontalLayout(heading, markRead);
         layout.setSpacing(false);
-        layout.setAlignItems(FlexComponent.Alignment.BASELINE);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.getStyle().set("padding",
-                "var(--lumo-space-s) var(--lumo-space-s) 0");
+                "var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)");
 
         popover.add(layout, tabSheet);
 

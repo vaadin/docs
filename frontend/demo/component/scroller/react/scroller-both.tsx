@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Scroller } from '@vaadin/react-components/Scroller.js';
-import img from '../../../../../src/main/resources/images/reindeer.jpg';
+import img from '../../../../../src/main/resources/images/reindeer.jpg?url';
 
 function Example() {
   return (

@@ -34,10 +34,12 @@ function ExampleStatistics() {
       <div className="table">
         <table>
           <thead>
-            <th></th>
-            <th>City</th>
-            <th>Input</th>
-            <th>Output</th>
+            <tr>
+              <th></th>
+              <th>City</th>
+              <th>Input</th>
+              <th>Output</th>
+            </tr>
           </thead>
           <tbody>
             {serviceHealth.value.map(({ id, city, input, output }) => (
