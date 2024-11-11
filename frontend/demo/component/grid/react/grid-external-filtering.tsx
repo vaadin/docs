@@ -57,7 +57,7 @@ function Example() {
           );
         }}
       >
-        <Icon slot="prefix" icon="vaadin:search"></Icon>
+        <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
 
       <Grid items={filteredItems.value}>
