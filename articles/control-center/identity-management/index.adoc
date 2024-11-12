@@ -5,15 +5,16 @@ order: 30
 ---
 
 
-= Managing Users, Groups, & Roles
+= Identity Management
 
-Control Center provides powerful tools to manage users, groups, and roles for Vaadin applications deployed in a Kubernetes cluster. These features are essential for controlling access to various parts of an application and ensuring secure authentication and authorization for users.
+Control Center provides powerful tools to manage users, groups, roles and identity providers for Vaadin applications deployed in a Kubernetes cluster. These features are essential for controlling access to various parts of an application and ensuring secure authentication and authorization for users.
 
 With Control Center, you can do several things that allow you to centralize user management, enforce security policies, and control access across different parts of your Vaadin application:
 
 - *Manage Users*: Create and manage users, enable or disable them, request password changes, or enable Multi-Factor Authentication (MFA).
 - *Create & Assign Groups*: Organize users into groups, assign specific roles to the groups, and streamline permissions management.
 - *Manage Roles*: Define roles that can be used to control access to specific views or functionality in your application.
+- *Manage Identity Providers*: Create identity providers, like social providers, to manage the authentication and authorization of the users.
 
 Before starting, make sure you've already deployed an application as described in <<../application-deployment#,Application Deployment>>.
 
@@ -79,6 +80,63 @@ Fill in the fields to create a new group:
 - *Members*: Add users to this group by selecting them from the list.
 
 Once the group is created, the assigned users inherit the permissions associated with the roles assigned to the group.
+
+
+== Creating Identity Providers
+
+The identity provider creates a relationship with an external identity provider to use the provider’s identities to access Control Center or the deployed applications. The identity provider can be a social provider or a custom provider. The supported social providers are: *GitHub*, *Google*, *LinkedIn*, *Microsoft*, *X* (formerly *Twitter*). A custom provider can be any of the providers that implements the *OpenID Connect 1.0* protocol (e.g. *Okta*).
+
+When creating an identity provider you need to choose from the provider list the type of the provider you want to create. After, in case of social providers, you need to specify the `Alias`, `Display Name`, `Client ID` and the `Client Secret`. If you already have a client in your external identity provider, you just need to use its ID and secret. If not, then you can follow the link under the provider list which takes you to the provider's page where you can create a new client. When everything is filled out you can copy the `Login Redirect URI` and/or the `Logout Redirect URI` and use it in your external provider's client to let the client know where to redirect the user back after a successful authentication or logout. At the end, you just need to click on the [guibutton]*Create* button. For example, creating a *Google* identity provider looks like this:
+
+[.device]
+image::images/provider-create.png[Identity Provider Create Form]
+
+After you created an identity provider you can find it in the *Identity Providers* list. You can select one and check its details, update some of the fields, or delete it:
+
+[.device]
+image::images/provider-detail.png[Identity Provider Detail Form]
+
+When you want to create a custom *OpenID Connect 1.0* provider, you need to also specify the `Discovery Endpoint` beside the other ones. The discovery endpoint helps during the provider creation to get some metadata from the external provider and to use that to set up the provider. The discovery endpoint has a specific format, it always ends with the `.well-known/openid-configuration` path. (e.g. https://1234-admin.okta.com/.well-known/openid-configuration). Usually, you can find the discovery endpoint in client details after you create it on the external provider. For example, creating the *Okta* provider looks like this:
+
+[.device]
+image::images/provider-oidc-create.png[Custom Identity Provider Create Form]
+
+After you created the providers you can see them on the login form. If you want to remove any of the providers, you can disable or delete the provider in the provider settings. This login form show the previously created identity providers:
+
+[.device]
+image::images/provider-login.png[Identity Provider Login Form]
+
+When you click on one of the providers, it redirects you to the external provider's login page where you need to specify your external user's username and password:
+
+[.device]
+image::images/okta-login.png[Custom Identity Provider Login]
+
+After a successful authentication, if a user with the same email already exists in Control Center, you can link that user with one or more identities from identity providers, or create a new user based on the identity information from them:
+
+[.device]
+image::images/link-user-profile.png[Link User Profile Form]
+
+If you click on the [guibutton]*Review Profile* button, you can edit the identity information before linking it to a user in Control Center:
+
+[.device]
+image::images/review-user-profile.png[Review User Profile Form]
+
+After successfully linking a user and an external identity, you just need to confirm this linking by logging in with your user:
+
+[.device]
+image::images/confirm-user-profile.png[Confirm User Profile Form]
+
+The authentication flow behind these steps is the following:
+
+1. The unauthenticated user requests a protected view in an application.
+2. The application redirects the user to Control Center to authenticate.
+3. Control Center displays the login page with a list of configured identity providers.
+4. The user selects one of the identity providers by clicking its button.
+5. Control Center issues an authentication request to the target identity provider requesting authentication and redirects the user to the identity provider’s login page.
+6. The user provides credentials or consents to authenticate with the identity provider.
+7. Upon successful authentication by the identity provider, the user redirects back to Control Center with an authentication response.
+8. Control Center checks if the response from the identity provider is valid. If valid, Control Center imports and creates a user if the user does not already exist. If the user already exists, Control Center may ask the user to link the identity returned from the identity provider with the existing user. This behavior is account linking.
+9. When the user authenticates, Control Center permits access to the protected view.
 
 
 == Login and Logout Controls
