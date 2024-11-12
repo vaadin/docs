@@ -12,14 +12,17 @@ Control Center simplifies the management of Vaadin applications on Kubernetes cl
 
 == Prerequisites
 
-Before you begin, make sure you have a Kubernetes cluster. This can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop] or https://minikube.sigs.k8s.io/[minikube]. Which you might use depends on your project needs.
+Before you begin, make sure you have a Kubernetes cluster running and available. It can be a cloud-based service like https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE)], https://aws.amazon.com/eks[Amazon EKS], or https://azure.microsoft.com/en-us/products/kubernetes-service[Azure AKS]. Alternatively, you can use a local cluster with tools like https://www.docker.com/products/docker-desktop[Docker Desktop], which has an embedded Kubernetes (see <<docker-desktop#,Kubernetes on Docker Desktop>>), or https://minikube.sigs.k8s.io/[minikube]. Deciding which to use depends on your project needs.
 
-Also, you'll need to install https://helm.sh/[Helm]. It's a Kubernetes package manager that simplifies application deployment and management. Make sure it's configured to interact with your cluster.
+[IMPORTANT]
+If you're using minikube, you'll need to ensure that the https://minikube.sigs.k8s.io/docs/handbook/accessing/#loadbalancer-access[minikube tunnel] is running before deploying Control Center.
+
+You'll also need to install https://helm.sh/[Helm]. It's a Kubernetes package manager that simplifies application deployment and management. Make sure it's configured to interact with your cluster.
 
 
 == Deploying Control Center
 
-To deploy Control Center to a Kubernetes cluster, run one of the following Helm commands:
+To deploy Control Center to a Kubernetes cluster, the process depends on whether you're using it in a development or production environment. The following sections explain how to deploy Control Center in each case.
 
 ++++
 <style>
@@ -43,48 +46,46 @@ To deploy Control Center to a Kubernetes cluster, run one of the following Helm 
 
 === Development Environment
 
+Granting administrator privileges enables automatic installation of required dependencies. If you choose not to grant these privileges, though, you'll need to install the required resources before installing Control Center. See the <<dependency-installation.adoc#,Installation of Dependencies>> section for details on how to do this.
+
 For use in a development environment, you might install Control Center like so:
 
 .Terminal
 [.linenums,source,bash]
 ----
-helm install control-center oci://docker.io/vaadin/control-center \
-    -n control-center --create-namespace \
-    --set serviceAccount.clusterAdmin=true \
-    --set service.type=LoadBalancer --set service.port=8000 \
-    --wait
+helm install control-center oci://docker.io/vaadin/control-center \ // <1>
+    -n control-center --create-namespace \ // <2>
+    --set serviceAccount.clusterAdmin=true \ // <3>
+    --set service.type=LoadBalancer --set service.port=8000 \ // <4>
+    --wait // <5>
 ----
 
 <1> This installs Control Center.
 <2> This creates a dedicated namespace to isolate Control Center from other applications.
 <3> Grants administrative privileges that allow Control Center to manage cluster resources.
 <4> Configures service settings for a load balancer on port `8000`. Change the port if necessary for your environment.
-<5> This says for Helm to wait until Control Center is fully deployed.
-
-[NOTE]
-Granting administrator privileges enables automatic installation of required dependencies. If you choose not to grant these privileges, though, you'll need to manually install the necessary resources. See the <<manual-installation#,Manual Installation>> section for details on how to do this.
+<5> This instructs Helm to wait until Control Center is fully deployed.
 
 
 === Production Environment
 
-For use in a production environment, you could install Control Center like this:
+For use in a production environment, you'll need to install manually the required dependencies. See the <<dependency-installation.adoc#,Installation of Dependencies>> section for details on how to do this.
+
+Once you've installed the dependencies, you can install Control Center like this:
 
 .Terminal
 [.linenums,source,bash]
 ----
-helm install control-center oci://docker.io/vaadin/control-center \
-    -n control-center --create-namespace \
-    -f values-ingress.yaml \
-    --wait
+helm install control-center oci://docker.io/vaadin/control-center \ // <1>
+    -n control-center --create-namespace \ // <2>
+    -f values-ingress.yaml \ // <3>
+    --wait // <4>
 ----
 
 <1> This installs Control Center.
 <2> This creates a dedicated namespace to isolate Control Center from other applications.
-<3> Configures a custom ingress configuration (see below)
+<3> Configures a custom ingress configuration (see below).
 <4> This instructs Helm to wait until Control Center is fully deployed.
-
-[IMPORTANT]
-Since this does not grant administrator privileges, you'll need to manually install the required dependencies. See the <<manual-installation#,Manual Installation>> section for details on how to do this.
 
 This is an example of a custom ingress configuration:
 
@@ -116,7 +117,7 @@ This ingress configuration assumes that you have already a certificate in your p
 kubectl -n control-center create secret tls control-center-tls --cert=cert.pem --key=key.pem
 ----
 
-If you don't have a certificate yet, or you're not deploying to a production environment, you can create one with a tool like https://mkcert.org/[mkcert], using the following command:
+If you don't have a certificate, or you're not deploying to a production environment, you can create one with a tool like https://mkcert.org/[`mkcert`], using the following:
 
 .Terminal
 [source,bash]
@@ -124,7 +125,7 @@ If you don't have a certificate yet, or you're not deploying to a production env
 mkcert control-center.example.com
 ----
 
-This command creates the [filename]`cert.pem` and [filename]`key.pem` files.
+This creates the [filename]`cert.pem` and [filename]`key.pem` files.
 
 
 == Accessing Control Center
@@ -150,16 +151,16 @@ image::images/welcome-step.png[Welcome Step]
 
 === Configure Keycloak Hostname
 
-Keycloak is the identity provider used by Control Center. Therefore, you'll need to configure the hostname for it. It needs a hostname that is accessible both from within the Kubernetes cluster and from a web browser running outside the cluster. The hostname allows your applications and users to authenticate securely via Keycloak.
+Keycloak is the identity provider used by Control Center. Therefore, you'll need to configure the hostname for it. It needs a hostname that is accessible from within the Kubernetes cluster and from a web browser running outside the cluster. 
 
-This is necessary for both secure authentication and browser accessibility. Applications in the cluster need to access Keycloak to authenticate users, securely. At the same time, since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
+The hostname allows your applications and users to authenticate securely via Keycloak. This is necessary for both secure authentication and browser accessibility. Applications in the cluster need to access Keycloak to authenticate users, securely. At the same time, since authentication often involves redirects to Keycloak's login page, your browser must be able to reach Keycloak using a resolvable hostname.
 
 Therefore, the hostname must resolve to an IP address reachable by both the cluster and external clients (e.g., the browser). Proper DNS configuration ensures secure and reliable communication.
 
 
 ==== Cloud Environments
 
-In cloud deployments, first create a DNS Record. Point it to your cluster's public IP address provided by your cloud provider. For example, if your domain is `mydomain.com`, you might create `keycloak.mydomain.com` pointing to the cluster's external IP.
+For cloud deployments, first create a DNS record. Point it to your cluster's public IP address provided by your cloud provider. For example, if your domain is `mydomain.com`, you might create `keycloak.mydomain.com` pointing to the cluster's external IP.
 
 You should find the external IP address in your cloud provider's dashboard. Make sure that your network security settings allow traffic to this IP on the necessary ports.
 
@@ -208,7 +209,7 @@ image::images/hostname-step.png[Configure Hostnames]
 
 === Create Administrator Account
 
-Next you'll need to create an administrator account with full access to Control Center's features. Provide a name, email address, and password for the account.
+Next you'll need to create an administrator account with full access to Control Center's features. Provide a name, an email address, and a password for the account.
 
 [.device]
 image::images/user-step.png[Configure Administrator Account]
@@ -234,7 +235,7 @@ Once there, enter the credentials for the administrator account you created. The
 
 === Accessing Dashboard
 
-Upon successful authentication, you'll be taken to the Control Center dashboard.
+Upon successful authentication, you'll be taken to the Control Center dashboard, as shown in the screenshot here.
 
 [.device]
 image::images/dashboard-view.png[Control Center Dashboard]
