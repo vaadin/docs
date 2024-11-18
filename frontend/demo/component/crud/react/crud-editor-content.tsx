@@ -14,23 +14,22 @@ function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
   const professions = useSignal<string[]>([]);
-  const responsiveSteps = useSignal<FormLayoutResponsiveStep[]>([]);
+  const responsiveSteps: FormLayoutResponsiveStep[] = [
+    { minWidth: 0, columns: 1 },
+    { minWidth: '30em', columns: 2 },
+  ];
 
   useEffect(() => {
     getPeople().then(({ people }) => {
       items.value = people;
       professions.value = [...new Set(people.map((i) => i.profession))];
-      responsiveSteps.value = [
-        { minWidth: 0, columns: 1 },
-        { minWidth: '30em', columns: 2 },
-      ];
     });
   }, []);
 
   return (
     // tag::snippet[]
     <Crud include="firstName, lastName, email, profession" items={items.value}>
-      <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps.value}>
+      <FormLayout slot="form" style={{ maxWidth: '480px' }} responsiveSteps={responsiveSteps}>
         <TextField label="First name" {...crudPath('firstName')} required />
         <TextField label="Last name" {...crudPath('lastName')} required />
         <EmailField label="Email" {...crudPath('email')} required data-colspan="2" />
