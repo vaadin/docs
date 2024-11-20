@@ -562,20 +562,54 @@ Full-stack signals are exposed by the services that are annotated with [classnam
 
 For more information on how to secure the services, see the <<./security/intro#, security documentation>>.
 
-
+[[fine-grained-access-control]]
 === Fine-Grained Signal Access Control
 
 Browser-callable access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require finer control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role to update the value of that signal. This level of control is realized through adding operation validators to the signals.
 
+[[operation-validators]]
 ==== [since:com.vaadin:vaadin@V24.6]#Operation Validators#
 
-An example of a fine-grained access control is:
+An example of a fine-grained access control rules is:
 
 - To allow anonymous users to have read-only access to a technical-support chat.
 - To allow logged-in users only to post in the chat and remove their own messages.
 - To allow support users to post messages, remove their own messages, and to edit their own messages.
 
 The above example shows that sometimes the business logic and access-control logic are very entangled, as sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+
+The following example demonstrates how to add an operation validator to a signal instance:
+
+[source,java]
+.`NumberService.java`
+----
+NumberSignal voteSignal = new NumberSignal(0.0) // <1>
+    .withOperationValidator(operation -> { // <2>
+        if (operation instanceof ValueOperation<Double> valueOp) { // <3>
+            if (Math.abs(valueOp.value()) != 1.0) { // <4>
+                return ValidationResult.reject("Only upvote or downvote by 1 is allowed");
+            }
+        }
+        return ValidationResult.allow(); // <5>
+    });
+----
+<1> Create an instance of a [classname]`NumberSignal` with an initial value of `0.0`.
+<2> Define an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (no validators).
+<3> Check the operation type and the value of the operation.
+<4> Reject the operation if the value is not `1.0` or `-1.0`.
+<5> Allow the operation otherwise.
+
+In the above example, the operation argument of the lambda is an instance of [classname]`SignalOperation`. The operation can be of the following types:
+
+`ValueOperation<T>`:: Represents an operation that contains a value of type `T`.
+`IncrementOpertaion`:: Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
+`SetValueOperation<T>`:: Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ReplaceValueOperation<T>`:: Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListInsertOperation<T>`:: Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListRemoveOperation<T>`:: Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
+
+All of the above operations are implementations of [classname]`SignalOperation` interface.
+
 
 [NOTE]
 As the same validator is called for all operations submitted to the signal, the validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be simply cast to a subset of operations that a signal supports.
