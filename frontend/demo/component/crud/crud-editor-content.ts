@@ -27,16 +27,15 @@ export class Example extends LitElement {
   private professions: string[] = [];
 
   @state()
-  private responsiveSteps: FormLayoutResponsiveStep[] = [];
+  private responsiveSteps: FormLayoutResponsiveStep[] = [
+    { minWidth: 0, columns: 1 },
+    { minWidth: '30em', columns: 2 },
+  ];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
     this.professions = [...new Set(people.map((i) => i.profession))];
-    this.responsiveSteps = [
-      { minWidth: 0, columns: 1 },
-      { minWidth: '30em', columns: 2 },
-    ];
   }
 
   protected override render() {
