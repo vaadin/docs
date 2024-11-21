@@ -568,7 +568,8 @@ For more information on how to secure the services, see the <<./security/intro#,
 Browser-callable access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require finer control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role to update the value of that signal. This level of control is realized through adding operation validators to the signals.
 
 [[operation-validators]]
-==== [since:com.vaadin:vaadin@V24.6]#Operation Validators#
+[role="since:com.vaadin:vaadin@V24.6"]
+==== Operation Validators
 
 An example of a fine-grained access control rules is:
 
@@ -576,12 +577,12 @@ An example of a fine-grained access control rules is:
 - To allow logged-in users only to post in the chat and remove their own messages.
 - To allow support users to post messages, remove their own messages, and to edit their own messages.
 
-The above example shows that sometimes the business logic and access-control logic are very entangled, as sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+The above example shows that the business logic and access-control logic are very entangled, and sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
 
 The following example demonstrates how to add an operation validator to a signal instance:
 
 [source,java]
-.`NumberService.java`
+.`VoteService.java`
 ----
 NumberSignal voteSignal = new NumberSignal(0.0) // <1>
     .withOperationValidator(operation -> { // <2>
@@ -593,24 +594,88 @@ NumberSignal voteSignal = new NumberSignal(0.0) // <1>
         return ValidationResult.allow(); // <5>
     });
 ----
-<1> Create an instance of a [classname]`NumberSignal` with an initial value of `0.0`.
-<2> Define an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (no validators).
-<3> Check the operation type and the value of the operation.
-<4> Reject the operation if the value is not `1.0` or `-1.0`.
-<5> Allow the operation otherwise.
+<1> Creates an instance of a [classname]`NumberSignal` with an initial value of `0.0`.
+<2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (no validators).
+<3> Checks the operation type and the value of the operation.
+<4> Rejects the operation if the value is not `1.0` or `-1.0`.
+<5> Allows the operation otherwise.
 
-In the above example, the operation argument of the lambda is an instance of [classname]`SignalOperation`. The operation can be of the following types:
+In the above example, the `operation` parameter is an instance of [classname]`SignalOperation`. At runtime, the operation can be of the following types:
 
 `ValueOperation<T>`:: Represents an operation that contains a value of type `T`.
-`IncrementOpertaion`:: Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
-`SetValueOperation<T>`:: Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ReplaceValueOperation<T>`:: Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ListInsertOperation<T>`:: Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ListRemoveOperation<T>`:: Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
+`IncrementOpertaion`:: Specific to `NumberSignal`. Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
+`SetValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ReplaceValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListInsertOperation<T>`:: Specific to `ListSignal`. Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListRemoveOperation<T>`:: Specific to `ListSignal`. Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
 
 All of the above operations are implementations of [classname]`SignalOperation` interface.
 
 
 [NOTE]
-As the same validator is called for all operations submitted to the signal, the validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be simply cast to a subset of operations that a signal supports.
+When a validator is defined for a signal instance, it is called for all operations submitted to that signal, so the validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be cast to one of operations that a signal supports with checking.
 
+Another important aspect that should be considered when calling the [methodname]`withOperationValidator` method is that with each call, **a new signal instance is created** with the operation validator attached. The original signal instance remains unchanged. Therefore, the signal instance with the operation validator should be stored and returned from the service method that creates the signal instance.
+
+The following example demonstrates this:
+
+[source,java]
+.`VoteService.java`
+----
+@BrowserCallable
+@AnonymousAllowed
+public class TodoService {
+
+    public record TodoItem(String text, boolean done) {}
+
+    private final ListSignal<TodoItem> notValidatedTodoItems = // <1>
+                                            new ListSignal<>(TodoItem.class);
+
+    private final ListSignal<TodoItem> validatedTodoItems = // <2>
+         notValidatedTodoItems.withOperationValidator(operation -> {
+            if (operation instanceof ListInsertOperation<TodoItem> insertOp) {
+                return insertOp.value().text().length() <= 50 ?
+                        ValidationResult.allow() :
+                        ValidationResult.reject("No Long todo items!");
+            }
+            return ValidationResult.allow();
+        });
+
+    private final ListSignal<TodoItem> userTodoItems = // <3>
+        validatedTodoItems.withOperationValidator(operation -> {
+            if (operation instanceof ListRemoveOperation<TodoItem> removeOp) {
+                return ValidationResult.reject("No Removal for users!");
+            }
+            return ValidationResult.allow();
+        });
+
+    private final ListSignal<TodoItem> guestTodoItems = // <4>
+                    notValidatedTodoItems.asReadOnly();
+
+    public ListSignal<TodoItem> todoItems() { // <5>
+        return switch (currentUserRole()) {
+            case ADMIN -> validatedTodoItems;
+            case USER -> userTodoItems;
+            case GUEST -> guestTodoItems;
+        };
+    }
+
+    private enum Role {
+        ADMIN, USER, GUEST
+    }
+    private Role currentUserRole() {
+        // Implementation of the method that returns the current user's role
+        // is skipped for brevity.
+    }
+}
+----
+<1> Create a list signal instance without an operation validator.
+<2> Create a list signal instance with an operation validator that allows only todo items with a text length of 50 characters or fewer. The original signal instance remains unchanged. The new signal instance is stored in the `validatedTodoItems` field.
+<3> Create a list signal instance with an operation validator that rejects all removal operations. The other two signal instance remains unchanged. The new signal instance is stored in the `userTodoItems` field.
+<4> Create a read-only list signal instance from the original list signal instance. The other signal instances remain unchanged. The new signal instance is stored in the `guestTodoItems` field.
+<5> Return the appropriate signal instance based on the current user's role.
+
+[IMPORTANT]
+Defining the operation validators for the signal instances in the service methods is highly discouraged, as it leads to the creation of new signal instances with each call. This can lead to memory leaks and unexpected behaviour. Instead, define the signal instances with the operation validators in the service class as fields, and return the appropriate signal instance based on the current user's role in the service method.
+
+Though it is not demonstrated in the above example, a mixture of method security and operation validators can be used to achieve the desired behavior. For example, you can use method security to allow only certain roles to access the service method, and then use operation validators to allow only certain roles to update the signal instances.
