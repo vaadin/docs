@@ -577,24 +577,44 @@ An example of a fine-grained access control rules is:
 - To allow logged-in users only to post in the chat and remove their own messages.
 - To allow support users to post messages, remove their own messages, and to edit their own messages.
 
-The above example shows that the business logic and access-control logic are very entangled, and sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+The above scenario shows that the business logic and access-control logic are very entangled, and sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+
+Here is the definition of the [classname]`OperationValidator` functional interface:
+
+[source,java]
+----
+@FunctionalInterface
+public interface OperationValidator<T> {
+    ValidationResult validate(SignalOperation<T> operation);
+}
+----
+
+The [methodname]`validate` method takes a [classname]`SignalOperation` instance as a parameter and returns a [classname]`ValidationResult`. The [classname]`SignalOperation` is a common interface for all operations that can be applied to a signal. The [classname]`ValidationResult` is used to communicate the result of the validation, containing:
+
+- A `status` with two possible enumerated values: `ALLOWED` and `REJECTED`.
+- An optional `message` that can be used to provide a reason for the rejection.
+
+The [classname]`ValidationResult` class provides two convenient static methods to create instances of the class:
+
+`allow()`:: Creates an instance with the status set to `ALLOWED`.
+`reject(String message)`:: Creates an instance with the status set to `REJECTED` and a message.
 
 The following example demonstrates how to add an operation validator to a signal instance:
 
 [source,java]
 .`VoteService.java`
 ----
-NumberSignal voteSignal = new NumberSignal(0.0) // <1>
+NumberSignal voteSignal = new NumberSignal() // <1>
     .withOperationValidator(operation -> { // <2>
         if (operation instanceof ValueOperation<Double> valueOp) { // <3>
             if (Math.abs(valueOp.value()) != 1.0) { // <4>
-                return ValidationResult.reject("Only upvote or downvote by 1 is allowed");
+                return ValidationResult.reject("Only up / down vote by 1 is allowed");
             }
         }
         return ValidationResult.allow(); // <5>
     });
 ----
-<1> Creates an instance of a [classname]`NumberSignal` with an initial value of `0.0`.
+<1> Creates an instance of a [classname]`NumberSignal` that defaults to zero.
 <2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (no validators).
 <3> Checks the operation type and the value of the operation.
 <4> Rejects the operation if the value is not `1.0` or `-1.0`.
