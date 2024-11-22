@@ -10,18 +10,6 @@ description: How to setup, subscribe, and send Web Push notifications from a Vaa
 
 This page explains how to configure a Vaadin Flow application to utilize Web Push. This can enable Web Push for a completed Customer Relationship Management (CRM) application so that users can receive notifications -- even when they're not accessing the application.
 
-[WARNING]
-.Experimental Feature
-Web Push Notifications is an experimental feature. It may be removed, altered, or limited to commercial subscribers in future releases.
-
-To enable the Web Push Notifications experimental feature, add the following line to the [filename]`./src/main/resources/vaadin-featureflags.properties` file:
-
-[source,terminal]
-----
-com.vaadin.experimental.webPush=true
-----
-
-
 == Understanding Web Push
 
 Web push notifications can be used to deliver real-time updates, reminders, and other important messages.
@@ -113,7 +101,7 @@ Next, you'll have to create WebPushService for initializing WebPush and storing 
 [source, java]
 ----
 import jakarta.annotation.PostConstruct;
-import nl.martijndwars.webpush.Subscription;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -125,6 +113,7 @@ import java.util.Map;
 
 import com.vaadin.flow.server.webpush.WebPush;
 import com.vaadin.flow.server.webpush.WebPushMessage;
+import com.vaadin.flow.server.webpush.WebPushSubscription;
 
 @Service
 public class WebPushService {
@@ -136,7 +125,7 @@ public class WebPushService {
     @Value("${subject}")
     private String subject;
 
-    private final Map<String, Subscription> endpointToSubscription = new HashMap<>();
+    private final Map<String, WebPushSubscription> endpointToSubscription = new HashMap<>();
 
     WebPush webPush;
 
@@ -168,8 +157,8 @@ public class WebPushService {
         return LoggerFactory.getLogger(WebPushService.class);
     }
 
-    public void store(Subscription subscription) {
-        getLogger().info("Subscribed to {}", subscription.endpoint);
+    public void store(WebPushSubscription subscription) {
+        getLogger().info("Subscribed to {}", subscription.endpoint());
         /*
          * Note, in a real world app you'll want to persist these
          * in the backend. Also, you probably want to know which
@@ -177,13 +166,13 @@ public class WebPushService {
          * for different users. In this demo, we'll just use
          * endpoint URL as key to store subscriptions in memory.
          */
-        endpointToSubscription.put(subscription.endpoint, subscription);
+        endpointToSubscription.put(subscription.endpoint(), subscription);
     }
 
 
-    public void remove(Subscription subscription) {
-        getLogger().info("Unsubscribed {}", subscription.endpoint);
-        endpointToSubscription.remove(subscription.endpoint);
+    public void remove(WebPushSubscription subscription) {
+        getLogger().info("Unsubscribed {}", subscription.endpoint());
+        endpointToSubscription.remove(subscription.endpoint());
     }
 
     public boolean isEmpty() {
