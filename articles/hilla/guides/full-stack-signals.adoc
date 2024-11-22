@@ -562,22 +562,24 @@ Full-stack signals are exposed by the services that are annotated with [classnam
 
 For more information on how to secure the services, see the <<./security/intro#, security documentation>>.
 
+
 [[fine-grained-access-control]]
 === Fine-Grained Signal Access Control
 
-Browser-callable access control can be considered as basic security for signals, since it only allows limited control over the access to the signals. However, there are situations that require finer control over the signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role to update the value of that signal. This level of control is realized through adding operation validators to the signals.
+Browser-callable access control can be considered basic security for signals, since it only allows limited control over the access to signals. However, there are situations that require finer control over signals. For example, you might want to allow anyone to subscribe to a signal, but only certain logged-in users with a specific role to update the value of that signal. This level of control is realized through adding operation validators to the signals.
+
 
 [[operation-validators]]
 [role="since:com.vaadin:vaadin@V24.6"]
 ==== Operation Validators
 
-An example of a fine-grained access control rules is:
+Fine-grained access control rules can include a list such as this:
 
-- To allow anonymous users to have read-only access to a technical-support chat.
-- To allow logged-in users only to post in the chat and remove their own messages.
-- To allow support users to post messages, remove their own messages, and to edit their own messages.
+- To allow anonymous users to have read-only access to a technical-support chat;
+- To allow logged-in users only to post in the chat and remove their own messages; and
+- To allow support users to post messages, remove their messages, and to edit them.
 
-The above scenario shows that the business logic and access-control logic are very entangled, and sometimes, there is no clear distinction between them. That is why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+This scenario shows that business logic and access-control logic are very intertwined. Sometimes there is no clear distinction between them. That's why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
 
 Here is the definition of the [classname]`OperationValidator` functional interface:
 
@@ -591,7 +593,7 @@ public interface OperationValidator<T> {
 
 The [methodname]`validate` method takes a [classname]`SignalOperation` instance as a parameter and returns a [classname]`ValidationResult`. The [classname]`SignalOperation` is a common interface for all operations that can be applied to a signal. The [classname]`ValidationResult` is used to communicate the result of the validation, containing:
 
-- A `status` with two possible enumerated values: `ALLOWED` and `REJECTED`.
+- A `status` with two possible enumerated values (i.e., `ALLOWED` and `REJECTED`); and
 - An optional `message` that can be used to provide a reason for the rejection.
 
 The [classname]`ValidationResult` class provides two convenient static methods to create instances of the class:
@@ -615,7 +617,7 @@ NumberSignal voteSignal = new NumberSignal() // <1>
     });
 ----
 <1> Creates an instance of a [classname]`NumberSignal` that defaults to zero.
-<2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (no validators).
+<2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (i.e., no validators).
 <3> Checks the operation type and the value of the operation.
 <4> Rejects the operation if the value is not `1.0` or `-1.0`.
 <5> Allows the operation otherwise.
@@ -633,9 +635,9 @@ All of the above operations are implementations of [classname]`SignalOperation` 
 
 
 [NOTE]
-When a validator is defined for a signal instance, it is called for all operations submitted to that signal, so the validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be cast to one of operations that a signal supports with checking.
+When a validator is defined for a signal instance, it's called for all operations submitted to that signal. The validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be cast to one of operations that a signal supports with checking.
 
-Another important aspect that should be considered when calling the [methodname]`withOperationValidator` method is that with each call, **a new signal instance is created** with the operation validator attached. The original signal instance remains unchanged. Therefore, the signal instance with the operation validator should be stored and returned from the service method that creates the signal instance.
+Another important aspect that should be considered when calling the [methodname]`withOperationValidator` method is that with each call, a new signal instance is created with the operation validator attached. The original signal instance remains unchanged. Therefore, the signal instance with the operation validator should be stored and returned from the service method that creates the signal instance.
 
 The following example demonstrates this:
 
@@ -698,4 +700,4 @@ public class TodoService {
 [IMPORTANT]
 Defining the operation validators for the signal instances in the service methods is highly discouraged, as it leads to the creation of new signal instances with each call. This can lead to memory leaks and unexpected behaviour. Instead, define the signal instances with the operation validators in the service class as fields, and return the appropriate signal instance based on the current user's role in the service method.
 
-Though it is not demonstrated in the above example, a mixture of method security and operation validators can be used to achieve the desired behavior. For example, you can use method security to allow only certain roles to access the service method, and then use operation validators to allow only certain roles to update the signal instances.
+Though it's not demonstrated in the above example, a mixture of method security and operation validators can be used to achieve the desired behavior. For example, you can use method security to allow only certain roles to access the service method, and then use operation validators to allow only certain roles to update the signal instances.
