@@ -16,14 +16,16 @@ public class DatePickerFallbackParser extends VerticalLayout {
         datePicker.setFallbackParser((s) -> {
             LocalDate now = LocalDate.now();
             if (s.matches("\\+\\d+")) {
+                // Handle input such as "+1"
                 return Result
                         .ok(now.plusDays(Integer.parseInt(s.substring(1))));
-            } else if (s.matches("-\\d+")) {
+            }
+            if (s.matches("-\\d+")) {
+                // Handle input such as "-1"
                 return Result
                         .ok(now.minusDays(Integer.parseInt(s.substring(1))));
-            } else {
-                return Result.error("Invalid date format");
             }
+            return Result.error("Invalid date format");
         });
         // end::snippet[]
         datePicker.setHelperText("Format: +1, -2 for relative days");
