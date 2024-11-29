@@ -1,0 +1,48 @@
+---
+title: Server to Client Communication
+description: The more technical details of how the server to client communication works.
+order: 800
+---
+
+= Server to Client Communication
+
+Server to client communication contains the tokens `syncId` and `clientId` for communication tracking.
+This tracking is for keeping the order of messages and to verify that both sides are in the same known state.
+
+The `syncId` token marks the state of the server and is only replayed by the client.
+
+The `clientId` token is incremented for each message sent by the client, with the server incrementing to match the next id in the response.
+
+
+==== syncId
+
+The `syncId` holds the latest response id given by the server.
+
+It is generated as a strictly increasing id for each response to every request from the client.
+This id is replayed back to the server on each request from the client.
+This helps the server know the state of the client and to compare it against its own state.
+If there has been changes on the server since the received `syncId`, the serve can try adjusting the handling client actions.
+
+Initial value when no response has yet been received from the server is `UNDEFINED_SYNC_ID(-1)`.
+This value is seen between the bootstrap HTML loading and first UI render.
+
+Incrementation of the syncId is always by one after a new UIDL response is generated.
+The client then handles the received messages according to the syncId and latest handled syncId, so that the changes are handled in the correct order.
+
+
+==== clientId
+
+The `clientId` holds the latest request id given by the client.
+
+The client token is incremented on the client after sending the message, the server increments the value the response to match the next expected clientId (client updated after message sent).
+
+On the client:
+
+- Pending messages are removed from the queue as handled when clientId from server matches next expected value.
+- If id is less than the expected client waits as server has not yet seen all messages and the response probably will arrive later.
+- Other cases client will trust the server and update the id to server expectations.
+
+On the server:
+
+- In cases where the id is the previous with the same request payload the server will resend the latest response as it is probable the client didn't receive the message.
+- If client sent id doesn't match the server expected id a re-synchronization is initiated.
