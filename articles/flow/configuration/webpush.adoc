@@ -2,20 +2,13 @@
 title: Web Push
 order: 100
 page-title: Setting Up Web Push Notifications
-description: How to setup, subscribe and send Web Push notifications from a Vaadin Flow application.
+description: How to setup, subscribe, and send Web Push notifications from a Vaadin Flow application.
 ---
 
 
 = [since:com.vaadin:vaadin@V24.2]#Web Push Notifications#
 
-This part of this tutorial explains how to make a Vaadin Flow application utilize Web Push. This can enable Web Push for a completed Customer Relationship Management (CRM) application so that users can receive notifications -- even when they're not accessing the application.
-
-[WARNING]
-.Experimental Feature
-Web Push Notifications is an experimental feature. It may be removed, altered, or limited to commercial subscribers in future releases.
-
-To enable the Web Push Notifications experimental feature, add a new line containing `com.vaadin.experimental.webPush=true` to the [filename]`./src/main/resources/vaadin-featureflags.properties` file.
-
+This page explains how to configure a Vaadin Flow application to utilize Web Push. This can enable Web Push for a completed Customer Relationship Management (CRM) application so that users can receive notifications -- even when they're not accessing the application.
 
 == Understanding Web Push
 
@@ -26,14 +19,12 @@ When a user registers for web push notifications, their browser contacts a third
 
 == Set Up Web Push
 
-To set up a web push, you'll have to do a few things: generate proper keys; configure for needed dependencies; generate a service worker (i.e., PWA resources); and create the WebPushService. You'll also want to add the ability for others to register for the push service, and configure for sending notifications to those subscribers. These steps are covered in the sub-sections here.
+To set up a web push, you'll have to do a few things: generate proper keys; configure for needed dependencies; generate a service worker (i.e., PWA resources); and create the WebPushService. You should also add the ability for others to register for the push service, and configure for sending notifications to those subscribers. These steps are covered in the sub-sections here.
 
 
 === VAPID Keys
 
-The first step is to generate a public-private link:https://web.dev/push-notifications-web-push-protocol/[VAPID key] pair.
-
-This can be done by executing the following from the command-line:
+The first step is to generate a public-private link:https://web.dev/push-notifications-web-push-protocol/[VAPID key] pair. This can be done by executing the following from the command-line:
 
 [source,terminal]
 ----
@@ -62,7 +53,7 @@ After you generate a pair of keys, they can be added to the `application.propert
 For the examples here, the property names used are `public.key`, `private.key` and `subject`.
 
 [NOTE]
-The `subject` should be given as a `url` or `mailto:` since Apple web push server requires this.
+The `subject` should be given as a `url` or `mailto:`, since Apple web push server requires this.
 
 
 === Web Push Dependencies
@@ -80,6 +71,7 @@ For web push usage, the project needs to have the `Flow WebPush` dependency. Add
     </dependency>
 </dependencies>
 ----
+
 
 === Generate Service Worker
 
@@ -109,7 +101,7 @@ Next, you'll have to create WebPushService for initializing WebPush and storing 
 [source, java]
 ----
 import jakarta.annotation.PostConstruct;
-import nl.martijndwars.webpush.Subscription;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -121,6 +113,7 @@ import java.util.Map;
 
 import com.vaadin.flow.server.webpush.WebPush;
 import com.vaadin.flow.server.webpush.WebPushMessage;
+import com.vaadin.flow.server.webpush.WebPushSubscription;
 
 @Service
 public class WebPushService {
@@ -132,7 +125,7 @@ public class WebPushService {
     @Value("${subject}")
     private String subject;
 
-    private final Map<String, Subscription> endpointToSubscription = new HashMap<>();
+    private final Map<String, WebPushSubscription> endpointToSubscription = new HashMap<>();
 
     WebPush webPush;
 
@@ -164,8 +157,8 @@ public class WebPushService {
         return LoggerFactory.getLogger(WebPushService.class);
     }
 
-    public void store(Subscription subscription) {
-        getLogger().info("Subscribed to {}", subscription.endpoint);
+    public void store(WebPushSubscription subscription) {
+        getLogger().info("Subscribed to {}", subscription.endpoint());
         /*
          * Note, in a real world app you'll want to persist these
          * in the backend. Also, you probably want to know which
@@ -173,13 +166,13 @@ public class WebPushService {
          * for different users. In this demo, we'll just use
          * endpoint URL as key to store subscriptions in memory.
          */
-        endpointToSubscription.put(subscription.endpoint, subscription);
+        endpointToSubscription.put(subscription.endpoint(), subscription);
     }
 
 
-    public void remove(Subscription subscription) {
-        getLogger().info("Unsubscribed {}", subscription.endpoint);
-        endpointToSubscription.remove(subscription.endpoint);
+    public void remove(WebPushSubscription subscription) {
+        getLogger().info("Unsubscribed {}", subscription.endpoint());
+        endpointToSubscription.remove(subscription.endpoint());
     }
 
     public boolean isEmpty() {
@@ -197,7 +190,6 @@ The last step is to add the ability to register for the push service.
 Flow contains the `WebPushRegistration` class that can be used to handle registering and deregistering of web push on the client. The WebPushRegistration needs the VAPID public key on construction.
 
 The UI components for this can be two buttons: one for registering; and one for deregistering notifications.
-
 
 [source,java]
 ----
@@ -258,7 +250,6 @@ broadcast.addClickListener(e ->
 );
 ----
 
-
 For using `sendNotification`, the correct user subscription is needed. You can find source code for the examples on https://github.com/vaadin/base-starter-flow-webpush[GitHub].
 
 You can also find source code for a CRM example with database usage on https://github.com/vaadin/flow-crm-tutorial/tree/feature/webpush[crm-tutorial].
@@ -284,13 +275,80 @@ Mobile Web Push for iOS and iPadOS requires the following:
 
 For iOS and iPadOS, the registration needs to happen in the installed web application.
 
-Also, Safari needs the web push notification features enabled. To do this, go to _Settings_ &rarr; _Safari_ &rarr; _Advanced_ &rarr; _Experimental Features_. There you can enable `Notifications` and `Push API`.
+The Safari web browser needs the web push notification features enabled. To do this, go to menu:Settings[Safari > Advanced > Experimental Features]. There you can enable `Notifications` and `Push API`.
 ====
 
 .Mobile Notifications
 [NOTE]
-====
 Mobile devices require the site to be served through `https` with a TLS/SSL certificate or they won't accept the service worker.
-====
+
+
+=== Apply Custom Settings To Notifications
+
+A notification can display additional information, such as an icon, custom actions in a drop-down, or an arbitrary data object. The available options are documented on https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification[`mdn` web docs]. Notification options can be provided to a [classname]`WebPushMessage` as a Java class object or record, or as a Jackson's `ObjectNode` representing the options in JSON format.
+
+The following `WebPushAction` and `WebPushOptions` Java records hold custom options, such as actions, an icon, and a data object. Note that these records are not part of the Vaadin Web Push API and must be defined within the project, depending on the required options.
+
+[source,java]
+----
+public record WebPushAction(String action, String title) implements Serializable {
+}
+public record WebPushOptions(String body,
+                             List<WebPushAction> actions,
+                             Serializable data,
+                             String icon) implements Serializable {
+}
+----
+
+They can be used as follows to send a notification with options. The example here is a web push notification with an icon, a data object, and a custom action.
+
+[source,java]
+----
+WebPushAction webPushAction = new WebPushAction("dashboard", "Open Dashboard");
+WebPushOptions webPushOptions = new WebPushOptions(
+        body,
+        List.of(webPushAction),
+        "This is my data",
+        "https://example.com/my-icon.png"
+);
+webPush.sendNotification(subscription, new WebPushMessage(title, webPushOptions));
+----
+
+The custom "dashboard" action opens the Dashboard view with the `/dashboard` URL mapping. This requires extending the Service Worker with a custom listener for the `notificationclick` event in [filename]`sw.ts`. For more details on customizing [filename]`sw.ts`, see <<{articles}/flow/configuration/pwa#overriding-the-generated-service-worker, Overriding the Generated Service Worker>>.
+
+The example below shows a customised Service Worker with a custom action listener:
+
+[source,typescript]
+----
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const dashboardUrl = '/dashboard';
+
+  e.waitUntil(
+    (async () => {
+      if (e.action === 'dashboard') {
+        // Get an arbitrary data object attached to a notification
+        const data = e.notification.data || "no-data";
+        console.log('Notification data: ' + data);
+
+        // Use 'self as ServiceWorkerGlobalScope' to access clients
+        const clientList = await (self as ServiceWorkerGlobalScope).clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+        for (const client of clientList) {
+          if (client.url.includes(dashboardUrl) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+
+        return (self as ServiceWorkerGlobalScope).clients.openWindow(dashboardUrl);
+      } else {
+        return focusOrOpenWindow();  // Your default handling function
+      }
+    })()
+  );
+});
+----
+
+The listener above opens the Dashboard view or focuses on the already open browser when a user clicks the 'Open Dashboard' action in a notification's drop-down. If a user clicks on the notification area instead, it opens a default page with an empty URL mapping. Additionally, it demonstrates how to access custom data in a notification.
 
 [discussion-id]`AA0C567E-EEC6-4CEB-95FA-D9D96666D98F`
