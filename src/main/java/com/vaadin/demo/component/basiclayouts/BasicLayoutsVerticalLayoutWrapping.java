@@ -32,9 +32,10 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
 
         // tag::snippet[]
         VerticalLayout layout = new VerticalLayout();
+        layout.setWrap(true);
+        // end::snippet[]
         layout.setPadding(true);
         layout.setSpacing(true);
-        layout.setWrap(true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
         layout.setHeight("200px");
         layout.setWidthFull();
@@ -42,7 +43,6 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layout.add(new Button("Button 2"));
         layout.add(new Button("Button 3"));
         layout.add(new Button("Button 4"));
-        // end::snippet[]
 
         parent.add(layout);
         this.setClassName("basic-layouts-example");

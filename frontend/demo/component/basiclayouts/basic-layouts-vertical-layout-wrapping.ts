@@ -41,11 +41,13 @@ export class Example extends LitElement {
           theme="wrap spacing padding"
           style="align-items: stretch; height: 200px; width: 100%;"
         >
+          <!-- end::snippet[] -->
           <vaadin-button>Button 1</vaadin-button>
           <vaadin-button>Button 2</vaadin-button>
           <vaadin-button>Button 3</vaadin-button>
           <vaadin-button>Button 4</vaadin-button>
         </vaadin-vertical-layout>
+        <!-- tag::snippet[] -->
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;

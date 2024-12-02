@@ -26,10 +26,11 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
 
         // tag::snippet[]
         HorizontalLayout layout = new HorizontalLayout();
+        layout.setWrap(true);
+        // end::snippet[]
+        layout.setMargin(true);
         layout.setPadding(true);
         layout.setSpacing(true);
-        layout.setMargin(true);
-        layout.setWrap(true);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
         layout.setWidth("350px");
         layout.add(new Button("Button 1"));
@@ -37,7 +38,6 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         layout.add(new Button("Button 3"));
         layout.add(new Button("Button 4"));
         layout.add(new Button("Button 5"));
-        // end::snippet[]
 
         this.setClassName("basic-layouts-example");
         this.add(layout);

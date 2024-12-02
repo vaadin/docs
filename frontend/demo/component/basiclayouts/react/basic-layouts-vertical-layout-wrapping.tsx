@@ -24,10 +24,12 @@ function Example() {
           theme="wrap spacing padding"
           style={{ alignItems: 'stretch', height: '200px', width: '100%' }}
         >
+          {/* end::snippet[] */}
           <Button>Button 1</Button>
           <Button>Button 2</Button>
           <Button>Button 3</Button>
           <Button>Button 4</Button>
+          {/* tag::snippet[] */}
         </VerticalLayout>
         {/* end::snippet[] */}
       </HorizontalLayout>
