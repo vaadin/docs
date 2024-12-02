@@ -58,6 +58,25 @@ When customizing an <<{articles}/styling/application-theme#,Application Theme>> 
 
 This is the default mode.
 
+In case the project uses Sass files instead of CSS, for instance, the files are not by default taken into account in the bundle contents. To have the bundle include the `.scss` file content, the plugin contains the configuration property `frontendExtraFileExtensions` that takes a comma-separated string of extensions to allow for bundle frontend files.
+
+The default values `.js`, `.js.map`, `.ts`, `.ts.map`, `.tsx`, `.tsx.map`, `.css`, and `.css.map` can always be used and don't need to be mentioned.
+
+.SASS in a Project
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <!-- plugin goals and other configuration  -->
+    <configuration>
+        <frontendExtraFileExtensions>scss</frontendExtraFileExtensions>
+    </configuration>
+</plugin>
+----
+
+Extensions can also be set as a system property (i.e., `-Ddevmode.frontendExtraFileExtensions="scss"`). The property works for both the development mode bundle and production mode bundle.
+
 
 == Easier Debugging
 
@@ -136,6 +155,51 @@ Vaadin allows this to prevent the frontend development bundle from being re-buil
 <source-info group="System Property"></source-info>
 -Dvaadin.skip.dev.bundle=true
 ----
+
+
+[role="since:com.vaadin:vaadin@V24.6"]
+[#exclude-vaadin-components]
+== Optimize Bundle
+
+There may be situations in which Vaadin components aren't used, but only third-party components are utilized. In these cases, Vaadin's professional and core components can be excluded from `package.json` using the `vaadin.npm.excludeWebComponents` property, and removed from the project's dependencies. This has the benefit of faster project startup, a smaller frontend bundle, and less packages in `package.json`.
+
+Here's an example that excludes both professional and core components by adding exclusions to the `vaadin-core` dependency in the Maven project's [filename]`pom.xml`. Use the `vaadin-core` `artifactId`, not `vaadin`:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+	<groupId>com.vaadin</groupId>
+	<artifactId>vaadin-core</artifactId>
+	<exclusions>
+            <exclusion>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-core-components</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>com.vaadin</groupId>
+                <artifactId>copilot</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-icons-flow</artifactId>
+            </exclusion>
+	</exclusions>
+</dependency>
+----
+
+Also, `copilot` is excluded. This is recommended because Copilot depends on core components and won't work without them.
+
+Vaadin's Lumo and Material themes aren't excluded. `vaadin-icons-flow` is excluded in the example because it's otherwise included by Lumo theme dependency. To also exclude themes, add `vaadin-lumo-theme` and `vaadin-material-theme` exclusions and use <<../../../styling/advanced/disabling-default-theme.adoc#,NoTheme annotation>> to disable the default theme.
+
+Set `vaadin.npm.excludeWebComponents` <<../properties.adoc#,configuration property>> to `true` to exclude professional and core components, including `hilla-auto-crud`, from [filename]`package.json`. Material and Lumo themes are not excluded.
+
+Use `npmExcludeWebComponents` Vaadin Plugin property when building with Maven and Gradle.
+
+When the property is set to `true`, Vaadin's professional and core components aren't installed by npm. If a project has dependencies to uninstalled components, it'll return an error saying `Failed to find the following imports in the node_modules tree` with a list of missing resources. These remaining dependencies can be removed from the project's dependencies.
+
+The production bundle size may not change with this property as production bundle is already optimized by including only used components.
+
 
 == Topics
 
