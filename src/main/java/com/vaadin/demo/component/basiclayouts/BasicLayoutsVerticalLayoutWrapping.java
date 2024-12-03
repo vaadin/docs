@@ -20,8 +20,7 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
 
         Div wrapper = new Div();
         wrapper.setWidthFull();
-        Paragraph title = new Paragraph("Vertical layout without wrapping:");
-        wrapper.add(title);
+        wrapper.add(new Paragraph("Vertical layout without wrapping:"));
 
         VerticalLayout layoutWithoutWrap = new VerticalLayout();
         layoutWithoutWrap.setPadding(true);
@@ -36,9 +35,8 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         parent.add(wrapper);
 
         wrapper = new Div();
-        title = new Paragraph("Vertical layout with wrapping:");
-        wrapper.add(title);
         wrapper.setWidthFull();
+        wrapper.add(new Paragraph("Vertical layout with wrapping:"));
 
         // tag::snippet[]
         VerticalLayout layoutWithWrap = new VerticalLayout();
