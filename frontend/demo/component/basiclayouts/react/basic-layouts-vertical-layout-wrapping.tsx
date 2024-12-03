@@ -4,32 +4,30 @@ import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
   return (
-    <>
-      <HorizontalLayout theme="spacing margin" style={{ border: 0, justifyContent: 'stretch' }}>
-        <VerticalLayout
-          theme="spacing padding"
-          style={{ alignItems: 'stretch', height: '200px', width: '100%' }}
-        >
-          <Button>Button 1</Button>
-          <Button>Button 2</Button>
-          <Button>Button 3</Button>
-          <Button>Button 4</Button>
-        </VerticalLayout>
-        {/* tag::snippet[] */}
-        <VerticalLayout
-          theme="wrap spacing padding"
-          style={{ alignItems: 'stretch', height: '200px', width: '100%' }}
-        >
-          {/* end::snippet[] */}
-          <Button>Button 1</Button>
-          <Button>Button 2</Button>
-          <Button>Button 3</Button>
-          <Button>Button 4</Button>
-          {/* tag::snippet[] */}
-        </VerticalLayout>
+    <HorizontalLayout theme="spacing margin" style={{ border: 0 }}>
+      <VerticalLayout
+        theme="spacing padding"
+        style={{ alignItems: 'stretch', height: '200px', width: '100%' }}
+      >
+        <Button>Button 1</Button>
+        <Button>Button 2</Button>
+        <Button>Button 3</Button>
+        <Button>Button 4</Button>
+      </VerticalLayout>
+      {/* tag::snippet[] */}
+      <VerticalLayout
+        theme="wrap spacing padding"
+        style={{ alignItems: 'stretch', height: '200px', width: '100%' }}
+      >
         {/* end::snippet[] */}
-      </HorizontalLayout>
-    </>
+        <Button>Button 1</Button>
+        <Button>Button 2</Button>
+        <Button>Button 3</Button>
+        <Button>Button 4</Button>
+        {/* tag::snippet[] */}
+      </VerticalLayout>
+      {/* end::snippet[] */}
+    </HorizontalLayout>
   );
 }
 

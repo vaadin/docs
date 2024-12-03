@@ -22,10 +22,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout
-        theme="margin spacing"
-        style="align-items: stretch; border: 0; justify-content: stretch;"
-      >
+      <vaadin-horizontal-layout theme="margin spacing" style="border: 0;">
         <vaadin-vertical-layout
           theme="spacing padding"
           style="align-items: stretch; height: 200px; width: 100%;"

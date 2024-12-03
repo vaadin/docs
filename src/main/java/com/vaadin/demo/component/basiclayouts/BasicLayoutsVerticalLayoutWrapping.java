@@ -30,20 +30,20 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         parent.add(layoutNoWrap);
 
         // tag::snippet[]
-        VerticalLayout layout = new VerticalLayout();
-        layout.setWrap(true);
+        VerticalLayout layoutWithWrap = new VerticalLayout();
+        layoutWithWrap.setWrap(true);
         // end::snippet[]
-        layout.setPadding(true);
-        layout.setSpacing(true);
-        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layout.setHeight("200px");
-        layout.setWidthFull();
-        layout.add(new Button("Button 1"));
-        layout.add(new Button("Button 2"));
-        layout.add(new Button("Button 3"));
-        layout.add(new Button("Button 4"));
+        layoutWithWrap.setPadding(true);
+        layoutWithWrap.setSpacing(true);
+        layoutWithWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
+        layoutWithWrap.setHeight("200px");
+        layoutWithWrap.setWidthFull();
+        layoutWithWrap.add(new Button("Button 1"));
+        layoutWithWrap.add(new Button("Button 2"));
+        layoutWithWrap.add(new Button("Button 3"));
+        layoutWithWrap.add(new Button("Button 4"));
 
-        parent.add(layout);
+        parent.add(layoutWithWrap);
         this.setClassName("basic-layouts-example");
         this.add(parent);
     }

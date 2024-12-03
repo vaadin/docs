@@ -21,10 +21,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout
-        theme="spacing margin padding"
-        style="align-items: stretch; width: 350px;"
-      >
+      <vaadin-horizontal-layout theme="spacing margin padding" style="width: 350px;">
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>
         <vaadin-button>Button 3</vaadin-button>
@@ -33,10 +30,7 @@ export class Example extends LitElement {
       </vaadin-horizontal-layout>
 
       <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout
-        theme="wrap spacing margin padding"
-        style="align-items: stretch; width: 350px;"
-      >
+      <vaadin-horizontal-layout theme="wrap spacing margin padding" style="width: 350px;">
         <!-- end::snippet[] -->
         <vaadin-button>Button 1</vaadin-button>
         <vaadin-button>Button 2</vaadin-button>

@@ -3,7 +3,6 @@ package com.vaadin.demo.component.basiclayouts;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -15,7 +14,6 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         layoutNoWrap.setPadding(true);
         layoutNoWrap.setSpacing(true);
         layoutNoWrap.setMargin(true);
-        layoutNoWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutNoWrap.setWidth("350px");
         layoutNoWrap.add(new Button("Button 1"));
         layoutNoWrap.add(new Button("Button 2"));
@@ -25,22 +23,21 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         this.add(layoutNoWrap);
 
         // tag::snippet[]
-        HorizontalLayout layout = new HorizontalLayout();
-        layout.setWrap(true);
+        HorizontalLayout layoutWithWrap = new HorizontalLayout();
+        layoutWithWrap.setWrap(true);
         // end::snippet[]
-        layout.setMargin(true);
-        layout.setPadding(true);
-        layout.setSpacing(true);
-        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layout.setWidth("350px");
-        layout.add(new Button("Button 1"));
-        layout.add(new Button("Button 2"));
-        layout.add(new Button("Button 3"));
-        layout.add(new Button("Button 4"));
-        layout.add(new Button("Button 5"));
+        layoutWithWrap.setMargin(true);
+        layoutWithWrap.setPadding(true);
+        layoutWithWrap.setSpacing(true);
+        layoutWithWrap.setWidth("350px");
+        layoutWithWrap.add(new Button("Button 1"));
+        layoutWithWrap.add(new Button("Button 2"));
+        layoutWithWrap.add(new Button("Button 3"));
+        layoutWithWrap.add(new Button("Button 4"));
+        layoutWithWrap.add(new Button("Button 5"));
 
         this.setClassName("basic-layouts-example");
-        this.add(layout);
+        this.add(layoutWithWrap);
     }
 
     public static class Exporter // hidden-source-line
