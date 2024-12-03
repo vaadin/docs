@@ -2,6 +2,7 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -17,17 +18,27 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         parent.setMargin(true);
         parent.getElement().getStyle().setBorder("0");
 
-        VerticalLayout layoutNoWrap = new VerticalLayout();
-        layoutNoWrap.setPadding(true);
-        layoutNoWrap.setSpacing(true);
-        layoutNoWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layoutNoWrap.setHeight("200px");
-        layoutNoWrap.setWidthFull();
-        layoutNoWrap.add(new Button("Button 1"));
-        layoutNoWrap.add(new Button("Button 2"));
-        layoutNoWrap.add(new Button("Button 3"));
-        layoutNoWrap.add(new Button("Button 4"));
-        parent.add(layoutNoWrap);
+        Div wrapper = new Div();
+        wrapper.setWidthFull();
+        Paragraph title = new Paragraph("Vertical layout without wrapping:");
+        wrapper.add(title);
+
+        VerticalLayout layoutWithoutWrap = new VerticalLayout();
+        layoutWithoutWrap.setPadding(true);
+        layoutWithoutWrap.setSpacing(true);
+        layoutWithoutWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
+        layoutWithoutWrap.setHeight("200px");
+        layoutWithoutWrap.add(new Button("Button 1"));
+        layoutWithoutWrap.add(new Button("Button 2"));
+        layoutWithoutWrap.add(new Button("Button 3"));
+        layoutWithoutWrap.add(new Button("Button 4"));
+        wrapper.add(layoutWithoutWrap);
+        parent.add(wrapper);
+
+        wrapper = new Div();
+        title = new Paragraph("Vertical layout with wrapping:");
+        wrapper.add(title);
+        wrapper.setWidthFull();
 
         // tag::snippet[]
         VerticalLayout layoutWithWrap = new VerticalLayout();
@@ -37,13 +48,13 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layoutWithWrap.setSpacing(true);
         layoutWithWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutWithWrap.setHeight("200px");
-        layoutWithWrap.setWidthFull();
         layoutWithWrap.add(new Button("Button 1"));
         layoutWithWrap.add(new Button("Button 2"));
         layoutWithWrap.add(new Button("Button 3"));
         layoutWithWrap.add(new Button("Button 4"));
 
-        parent.add(layoutWithWrap);
+        wrapper.add(layoutWithWrap);
+        parent.add(wrapper);
         this.setClassName("basic-layouts-example");
         this.add(parent);
     }

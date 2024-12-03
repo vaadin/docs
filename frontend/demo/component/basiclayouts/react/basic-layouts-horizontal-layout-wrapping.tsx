@@ -5,6 +5,7 @@ import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 function Example() {
   return (
     <>
+      <p>Horizontal layout without wrapping:</p>
       <HorizontalLayout
         theme="spacing margin padding"
         style={{ alignItems: 'stretch', width: '350px' }}
@@ -15,6 +16,7 @@ function Example() {
         <Button>Button 4</Button>
         <Button>Button 5</Button>
       </HorizontalLayout>
+      <p>Horizontal layout with wrapping:</p>
       {/* tag::snippet[] */}
       <HorizontalLayout
         theme="wrap spacing margin padding"
