@@ -3,7 +3,7 @@ import '@vaadin/button';
 import '@vaadin/vertical-layout';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('basic-layouts-vertical-layout-wrapping')

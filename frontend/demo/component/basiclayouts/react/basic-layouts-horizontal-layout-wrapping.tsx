@@ -1,19 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
-import {
-  Button,
-  HorizontalLayout,
-  RadioButton,
-  RadioGroup,
-  type RadioGroupValueChangedEvent,
-} from '@vaadin/react-components';
+import { Button, HorizontalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
-  useSignals(); // hidden-source-line
-
   return (
     <>
       <HorizontalLayout

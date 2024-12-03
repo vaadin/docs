@@ -1,10 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/horizontal-layout';
-import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('basic-layouts-horizontal-layout-wrapping')

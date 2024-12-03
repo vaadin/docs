@@ -7,7 +7,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin.Minus.Horizontal;
 
 @Route("basic-layouts/vertical-layout-wrapping")
 public class BasicLayoutsVerticalLayoutWrapping extends Div {
