@@ -2,5 +2,6 @@
 // During the webpack build, the `Frontend/generated/endpoints` import is replaced with this module
 import EmployeeService from 'Frontend/demo/services/EmployeeService';
 import ProductService from 'Frontend/demo/services/ProductService';
+export * from 'Frontend/generated/endpoints.js';
 
 export { EmployeeService, ProductService };
