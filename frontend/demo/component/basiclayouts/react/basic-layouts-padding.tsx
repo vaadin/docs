@@ -1,40 +1,32 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { Button, RadioButton, RadioGroup, VerticalLayout } from '@vaadin/react-components';
-import type { RadioGroupValueChangedEvent } from '@vaadin/react-components/RadioGroup.js';
+import { Button, HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
-  useSignals(); // hidden-source-line
-  const theme = useSignal('padding');
-
   return (
-    <>
-      {/* tag::snippet[] */}
-      <VerticalLayout
-        theme={`${theme.value} spacing`}
-        className="height-4xl"
-        style={{ alignItems: 'stretch' }}
-      >
-        <Button>Button 1</Button>
-        <Button>Button 2</Button>
-        <Button>Button 3</Button>
-      </VerticalLayout>
-
-      <RadioGroup
-        label="Padding"
-        value={theme.value}
-        onValueChanged={(event: RadioGroupValueChangedEvent) => {
-          theme.value = event.detail.value;
-        }}
-      >
-        <RadioButton value="padding" label="Enabled" />
-        <RadioButton value="" label="Disabled" />
-      </RadioGroup>
-      {/* end::snippet[] */}
-    </>
+    <HorizontalLayout theme="spacing" style={{ border: '0' }}>
+      <div style={{ width: '100%' }}>
+        <p>Vertical layout without padding:</p>
+        <VerticalLayout theme="spacing" style={{ alignItems: 'stretch' }}>
+          <Button>Button 1</Button>
+          <Button>Button 2</Button>
+          <Button>Button 3</Button>
+        </VerticalLayout>
+      </div>
+      <div style={{ width: '100%' }}>
+        <p>Vertical layout with padding:</p>
+        {/* tag::snippet[] */}
+        <VerticalLayout theme="padding spacing" style={{ alignItems: 'stretch' }}>
+          {/* end::snippet[] */}
+          <Button>Button 1</Button>
+          <Button>Button 2</Button>
+          <Button>Button 3</Button>
+          {/* tag::snippet[] */}
+        </VerticalLayout>
+        {/* end::snippet[] */}
+      </div>
+    </HorizontalLayout>
   );
 }
 
