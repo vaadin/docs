@@ -8,6 +8,7 @@ function Example() {
     <DashboardLayout
       style={{
         '--vaadin-dashboard-col-min-width': '150px',
+        '--vaadin-dashboard-col-max-count': '3',
       }}
     >
       <DashboardSection sectionTitle="Monthly Funnel Stats">

@@ -18,7 +18,9 @@ export class Example extends LitElement {
   render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-dashboard-layout style="--vaadin-dashboard-col-min-width: 150px">
+      <vaadin-dashboard-layout
+        style="--vaadin-dashboard-col-min-width: 150px; --vaadin-dashboard-col-max-count: 3"
+      >
         <vaadin-dashboard-section section-title="Monthly Funnel Stats">
           <vaadin-dashboard-widget widget-title="Visitors">
             <div class="dashboard-widget-content"></div>

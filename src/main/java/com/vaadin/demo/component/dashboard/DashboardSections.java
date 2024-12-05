@@ -13,6 +13,7 @@ public class DashboardSections extends Div {
     public DashboardSections() {
         Dashboard dashboard = new Dashboard();
         dashboard.setMinimumColumnWidth("150px");
+        dashboard.setMaximumColumnCount(3);
 
         // tag::snippet[]
         DashboardSection statsSection = dashboard.addSection("Monthly Funnel Stats");

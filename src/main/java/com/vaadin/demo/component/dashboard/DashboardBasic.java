@@ -13,6 +13,7 @@ public class DashboardBasic extends Div {
         // tag::snippet[]
         Dashboard dashboard = new Dashboard();
         dashboard.setMinimumColumnWidth("150px");
+        dashboard.setMaximumColumnCount(3);
 
         DashboardWidget visitors = new DashboardWidget("Visitors");
         visitors.setContent(createWidgetContent());
