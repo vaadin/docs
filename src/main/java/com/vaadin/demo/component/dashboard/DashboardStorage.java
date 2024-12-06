@@ -5,16 +5,18 @@ import org.springframework.web.context.annotation.SessionScope;
 
 import java.util.List;
 
+// tag::snippet[]
 @SessionScope
 @Component
 public class DashboardStorage {
-    private List<DashboardEditable.WidgetConfig> config;
+    private List<WidgetConfig> config;
 
-    public List<DashboardEditable.WidgetConfig> load() {
+    public List<WidgetConfig> load() {
         return config;
     }
 
-    public void save(List<DashboardEditable.WidgetConfig> config) {
+    public void save(List<WidgetConfig> config) {
         this.config = config;
     }
 }
+// end::snippet[]

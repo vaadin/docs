@@ -18,41 +18,21 @@ public class DashboardEditable extends Div {
     private Dashboard dashboard;
 
     // tag::snippet[]
-    // This enum defines the types of widgets that can be displayed in our dashboard
-    public enum WidgetType {
-        VISITORS("Visitors"),
-        DOWNLOADS("Downloads"),
-        CONVERSIONS("Conversions"),
-        VISITORS_BY_COUNTRY("Visitors by country"),
-        BROWSER_DISTRIBUTION("Browser distribution"),
-        CAT_IMAGE("Cat image"),
-        VISITORS_BY_BROWSER("Visitors by browser");
-
-        private final String label;
-
-        WidgetType(String label) {
-            this.label = label;
-        }
-    }
-
-    // In order to save and load the dashboard configuration, we need a class for storing
-    // the configuration of individual widgets. In this example we'll use a record that
-    // holds the widget type, colspan, and rowspan.
-    public record WidgetConfig(WidgetType type, int colspan, int rowspan) {
-    }
+    // NOTE: This example uses the additional classes WidgetConfig and DashboardStorage,
+    // which you can find by switching to the respective file in the top of the example.
 
     // Since the default DashboardWidget class doesn't allow setting custom data,
     // we create a custom class that extends DashboardWidget, and add a
     // field for storing the widget type.
     public static class CustomWidget extends DashboardWidget {
-        private final WidgetType type;
+        private final WidgetConfig.WidgetType type;
 
-        public CustomWidget(WidgetType type, String title) {
+        public CustomWidget(WidgetConfig.WidgetType type, String title) {
             super(title);
             this.type = type;
         }
 
-        public WidgetType getType() {
+        public WidgetConfig.WidgetType getType() {
             return type;
         }
     }
@@ -60,13 +40,13 @@ public class DashboardEditable extends Div {
     // This is the default configuration for the dashboard. Note that the order of the
     // widgets in the list determines the order in which they are displayed in the dashboard.
     private final List<WidgetConfig> defaultConfig = List.of(
-            new WidgetConfig(WidgetType.VISITORS, 1, 1),
-            new WidgetConfig(WidgetType.DOWNLOADS, 1, 1),
-            new WidgetConfig(WidgetType.CONVERSIONS, 1, 1),
-            new WidgetConfig(WidgetType.VISITORS_BY_COUNTRY, 1, 2),
-            new WidgetConfig(WidgetType.BROWSER_DISTRIBUTION, 1, 1),
-            new WidgetConfig(WidgetType.CAT_IMAGE, 1, 1),
-            new WidgetConfig(WidgetType.VISITORS_BY_BROWSER, 2, 1)
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.DOWNLOADS, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.CONVERSIONS, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_COUNTRY, 1, 2),
+            new WidgetConfig(WidgetConfig.WidgetType.BROWSER_DISTRIBUTION, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.CAT_IMAGE, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_BROWSER, 2, 1)
     );
 
     public DashboardEditable(DashboardStorage dashboardStorage) {
@@ -79,15 +59,14 @@ public class DashboardEditable extends Div {
     private void createDashboard() {
         // Create dashboard and load initial configuration
         dashboard = new Dashboard();
+        loadConfiguration();
+
         dashboard.setMinimumColumnWidth("150px");
         dashboard.setMaximumColumnCount(3);
-        loadConfiguration();
         add(dashboard);
     }
 
     private void createToolbar() {
-        // Nothing special for the toolbar, we just create menu items that call the
-        // corresponding methods when clicked.
         MenuBar toolbar = new MenuBar();
         toolbar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
 
@@ -110,8 +89,8 @@ public class DashboardEditable extends Div {
         load.addClickListener(event -> loadConfiguration());
 
         MenuItem addWidget = toolbar.addItem("Add widget");
-        for (WidgetType widgetType : WidgetType.values()) {
-            addWidget.getSubMenu().addItem(widgetType.label, event -> addWidget(widgetType));
+        for (WidgetConfig.WidgetType widgetType : WidgetConfig.WidgetType.values()) {
+            addWidget.getSubMenu().addItem(widgetType.getLabel(), event -> addWidget(widgetType));
         }
 
         MenuItem restore = toolbar.addItem("Restore default");
@@ -160,10 +139,10 @@ public class DashboardEditable extends Div {
     private CustomWidget createWidget(WidgetConfig config) {
         // In this example all widget types have the same content, and the title is
         // stored in the enum, so we can use generic logic to create a widget
-        CustomWidget widget = new CustomWidget(config.type(), config.type().label);
+        CustomWidget widget = new CustomWidget(config.getType(), config.getType().getLabel());
         widget.setContent(createWidgetContent());
-        widget.setColspan(config.colspan);
-        widget.setRowspan(config.rowspan);
+        widget.setColspan(config.getColspan());
+        widget.setRowspan(config.getRowspan());
 
         // In practice, different widget types will have different content. In that case
         // you can use a switch statement to create the widget content based on the type.
@@ -178,11 +157,11 @@ public class DashboardEditable extends Div {
         return widget;
     }
 
-    private void addWidget(WidgetType widgetType) {
+    private void addWidget(WidgetConfig.WidgetType widgetType) {
         // For adding a new widget, we retrieve the default configuration for the widget type
         // and create a widget based on that configuration
         WidgetConfig defaultWidgetConfig = defaultConfig.stream()
-                .filter(widgetConfig -> widgetConfig.type == widgetType)
+                .filter(widgetConfig -> widgetConfig.getType() == widgetType)
                 .findFirst()
                 .orElseThrow();
         CustomWidget widget = createWidget(defaultWidgetConfig);

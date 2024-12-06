@@ -5,56 +5,39 @@ import { useSignal } from '@vaadin/hilla-react-signals';
 import { MenuBar, type MenuBarItem } from '@vaadin/react-components';
 import {
   Dashboard,
-  type DashboardItem,
   type DashboardReactRendererProps,
-  type DashboardSectionItem,
   DashboardWidget,
 } from '@vaadin/react-components-pro';
-import { dashboardStorage } from '../dashboard-storage';
+import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
+import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
+import { DashboardService } from 'Frontend/generated/endpoints';
 
 // tag::snippet[]
-// This enum defines the types of widgets that can be displayed in our dashboard
-enum WidgetType {
-  Visitors = 'visitors',
-  Downloads = 'downloads',
-  Conversions = 'conversions',
-  VisitorsByCountry = 'visitorsByCountry',
-  Browsers = 'browsers',
-  KittyKat = 'kittyKat',
-  VisitorsByBrowser = 'visitorsByBrowser',
-}
-
-// We need a type for representing widgets as data. This allows rendering
-// widgets based on this data and also supports saving and loading the
-// dashboard configuration. We can extend from the default DashboardItem
-// type, which already includes the colspan and rowspan properties. For
-// this example, we also add the type property.
-export interface WidgetConfig extends DashboardItem {
-  type: WidgetType;
-}
+// NOTE: This example uses the additional classes WidgetConfig and DashboardService,
+// which you can find by switching to the respective file in the top of the example.
 
 // This is the default configuration for the dashboard. Note that the order
 // of the widgets in the array determines the order in which they are
 // displayed in the dashboard.
 const defaultConfig: WidgetConfig[] = [
-  { type: WidgetType.Visitors, colspan: 1, rowspan: 1 },
-  { type: WidgetType.Downloads, colspan: 1, rowspan: 1 },
-  { type: WidgetType.Conversions, colspan: 1, rowspan: 1 },
-  { type: WidgetType.VisitorsByCountry, colspan: 1, rowspan: 2 },
-  { type: WidgetType.Browsers, colspan: 1, rowspan: 1 },
-  { type: WidgetType.KittyKat, colspan: 1, rowspan: 1 },
-  { type: WidgetType.VisitorsByBrowser, colspan: 2, rowspan: 1 },
+  { type: WidgetType.VISITORS, colspan: 1, rowspan: 1 },
+  { type: WidgetType.DOWNLOADS, colspan: 1, rowspan: 1 },
+  { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
+  { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
+  { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
+  { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
+  { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
 ];
 
 // Define a mapping from widget types to human-readable titles
 const widgetTitles: Record<WidgetType, string> = {
-  [WidgetType.Visitors]: 'Visitors',
-  [WidgetType.Downloads]: 'Downloads',
-  [WidgetType.Conversions]: 'Conversions',
-  [WidgetType.VisitorsByCountry]: 'Visitors by country',
-  [WidgetType.Browsers]: 'Browsers',
-  [WidgetType.KittyKat]: 'A kittykat!',
-  [WidgetType.VisitorsByBrowser]: 'Visitors by browser',
+  [WidgetType.VISITORS]: 'Visitors',
+  [WidgetType.DOWNLOADS]: 'Downloads',
+  [WidgetType.CONVERSIONS]: 'Conversions',
+  [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
+  [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
+  [WidgetType.CAT_IMAGE]: 'A kittykat!',
+  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
 };
 
 // Helper type to allow defining a custom action for a menu item
@@ -67,7 +50,7 @@ function Example() {
   // Stores the current dashboard configuration. The Dashboard component will
   // modify this array in place when editing, so there is no need to update it
   // using events.
-  const widgets = useSignal<Array<DashboardSectionItem<WidgetConfig> | WidgetConfig>>([]);
+  const widgets = useSignal<WidgetConfig[]>([]);
   const editable = useSignal<boolean>(false);
 
   function toggleEditing() {
@@ -76,17 +59,16 @@ function Example() {
 
   function save() {
     // To save the dashboard configuration, we can just take the current
-    // widget items array and pass it to some storage, for example through
-    // an endpoint call. In this example, we just save it to local storage.
-    dashboardStorage.save(widgets.value);
+    // widget items array and pass it to a server-side service for
+    // persisting it.
+    DashboardService.saveDashboard(widgets.value);
   }
 
-  function load() {
-    // To load the dashboard configuration, we can just read the configuration
-    // from some storage, for example through an endpoint call. In this example,
-    // we just load it from local storage. If there is no configuration saved,
-    // we use a copy of the default configuration.
-    let config = dashboardStorage.load();
+  async function load() {
+    // To load the dashboard configuration, we just load it from a server-side
+    // service. If there is no configuration saved, we use a copy of the default
+    // configuration.
+    let config = await DashboardService.loadDashboard();
     if (!config) {
       config = [...defaultConfig];
     }
@@ -94,8 +76,8 @@ function Example() {
   }
 
   function addWidget(type: WidgetType) {
-    // For adding a new widget, we retrieve the default configuration for the widget type
-    // and add a copy of that to the widgets array.
+    // For adding a new widget, we retrieve the default configuration for the
+    // widget type and add a copy of that to the widgets array.
     const defaultWidgetConfig = defaultConfig.find((widget) => widget.type === type);
     if (!defaultWidgetConfig) {
       return;
@@ -107,6 +89,11 @@ function Example() {
     // To restore defaults, we just set a copy of the default configuration
     widgets.value = [...defaultConfig];
   }
+
+  // Load the initial configuration of the dashboard
+  useEffect(() => {
+    load();
+  }, []);
 
   const menuItems: CustomMenuItem[] = [
     {
@@ -136,11 +123,6 @@ function Example() {
     },
   ];
 
-  useEffect(() => {
-    // Load the initial configuration of the dashboard
-    load();
-  }, []);
-
   return (
     <>
       <MenuBar
@@ -157,7 +139,7 @@ function Example() {
         }}
       >
         {
-          ({ item }: DashboardReactRendererProps<WidgetConfig>) => (
+          ({ item }) => (
             // This function is used to render the actual widgets into the dashboard.
             // It is called by Dashboard once for each config in the widgets array
             // and should return a React element. In this example all widget types
@@ -173,8 +155,9 @@ function Example() {
             </DashboardWidget>
           )
 
-          // In practice, different widget types will have different content. In that case
-          // you can use a switch statement to render the widget content based on the type.
+          // In practice, different widget types will have different content.
+          // In that case you can use a switch statement to render the widget
+          // content based on the type.
           //
           // switch (item.type) {
           //   case WidgetType.Visitors:
