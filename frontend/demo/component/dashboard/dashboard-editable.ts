@@ -159,18 +159,14 @@ export class Example extends LitElement {
   renderWidget(root: HTMLElement, _dashboard: Dashboard, { item }: { item: WidgetConfig }) {
     // This method is used to render the actual widgets into the dashboard.
     // It is called by vaadin-dashboard once for each config in the widgets
-    // array and should render content into the provided root element. In
-    // this example all widget types have the same content, so we can use
-    // generic logic to render a widget.
+    // array and should render content into the provided root element. Note
+    // that the colspan and rowspan from the widget config are
+    // automatically applied by vaadin-dashboard.
+    // In this example all widget types have the same content, so we can
+    // use generic logic to render a widget.
     render(
       html`
-        <vaadin-dashboard-widget
-          .widgetTitle="${widgetTitles[item.type]}"
-          style="
-          --vaadin-dashboard-item-colspan: ${item.colspan ?? 1};
-          --vaadin-dashboard-item-rowspan: ${item.rowspan ?? 1};
-          "
-        >
+        <vaadin-dashboard-widget .widgetTitle="${widgetTitles[item.type]}">
           <div class="dashboard-widget-content"></div>
         </vaadin-dashboard-widget>
       `,
@@ -186,13 +182,7 @@ export class Example extends LitElement {
     // switch (item.type) {
     //   case WidgetType.Visitors:
     //     widget = html`
-    //       <vaadin-dashboard-widget
-    //         .widgetTitle="Visitors"
-    //         style="
-    //         --vaadin-dashboard-item-colspan: ${item.colspan ?? 1};
-    //         --vaadin-dashboard-item-rowspan: ${item.rowspan ?? 1};
-    //         "
-    //       >
+    //       <vaadin-dashboard-widget .widgetTitle="Visitors">
     //         <visitors-widget-content></visitors-widget-content>
     //       </vaadin-dashboard-widget>
     //     `;

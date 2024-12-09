@@ -138,15 +138,11 @@ function Example() {
           ({ item }) => (
             // This function is used to render the actual widgets into the dashboard.
             // It is called by Dashboard once for each config in the widgets array
-            // and should return a React element. In this example all widget types
-            // have the same content, so we can use generic logic to render a widget.
-            <DashboardWidget
-              widgetTitle={widgetTitles[item.type]}
-              style={{
-                '--vaadin-dashboard-item-colspan': item.colspan?.toString() ?? '1',
-                '--vaadin-dashboard-item-rowspan': item.rowspan?.toString() ?? '1',
-              }}
-            >
+            // and should return a React element. Note that the colspan and rowspan
+            // from the widget config are automatically applied by Dashboard.
+            // In this example all widget types have the same content, so we can use
+            // generic logic to render a widget.
+            <DashboardWidget widgetTitle={widgetTitles[item.type]}>
               <div className="dashboard-widget-content" />
             </DashboardWidget>
           )
@@ -158,13 +154,7 @@ function Example() {
           // switch (item.type) {
           //   case WidgetType.Visitors:
           //     return (
-          //       <DashboardWidget
-          //         widgetTitle="Visitors"
-          //         style={{
-          //           '--vaadin-dashboard-item-colspan': item.colspan?.toString() ?? '1',
-          //           '--vaadin-dashboard-item-rowspan': item.rowspan?.toString() ?? '1',
-          //         }}
-          //       >
+          //       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
           //         <VisitorsWidgetContent />
           //       </DashboardWidget>
           //     );
