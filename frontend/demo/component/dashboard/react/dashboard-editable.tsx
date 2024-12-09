@@ -127,11 +127,21 @@ function Example() {
         onItemSelected={(e) => (e.detail.value as CustomMenuItem).action?.()}
       />
       <Dashboard
-        editable={editable.value}
-        items={widgets.value}
         style={{
           '--vaadin-dashboard-col-min-width': '150px',
           '--vaadin-dashboard-col-max-count': '3',
+        }}
+        editable={editable.value}
+        items={widgets.value}
+        onDashboardItemMoved={(e) => {
+          // Store updated widgets after user has modified them
+          widgets.value = e.detail.items as WidgetConfig[];
+        }}
+        onDashboardItemResized={(e) => {
+          widgets.value = e.detail.items as WidgetConfig[];
+        }}
+        onDashboardItemRemoved={(e) => {
+          widgets.value = e.detail.items as WidgetConfig[];
         }}
       >
         {

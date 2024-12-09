@@ -4,7 +4,12 @@ import '@vaadin/dashboard/vaadin-dashboard.js';
 import '@vaadin/dashboard/vaadin-dashboard-widget.js';
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { Dashboard } from '@vaadin/dashboard';
+import type {
+  Dashboard,
+  DashboardItemMovedEvent,
+  DashboardItemRemovedEvent,
+  DashboardItemResizedEvent,
+} from '@vaadin/dashboard';
 import type { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
@@ -46,9 +51,6 @@ type CustomMenuItem = MenuBarItem & {
 
 @customElement('dashboard-editable')
 export class Example extends LitElement {
-  // Stores the current dashboard configuration. The vaadin-dashboard component
-  // will modify this array in place when editing, so there is no need to
-  // update it using events.
   @state()
   widgets: WidgetConfig[] = [];
 
@@ -152,6 +154,16 @@ export class Example extends LitElement {
         .editable="${this.editable}"
         .items="${this.widgets}"
         .renderer="${this.renderWidget}"
+        @dashboard-item-moved="${(e: DashboardItemMovedEvent<WidgetConfig>) => {
+          // Store updated widgets after user has modified them
+          this.widgets = e.detail.items as WidgetConfig[];
+        }}"
+        @dashboard-item-resized="${(e: DashboardItemResizedEvent<WidgetConfig>) => {
+          this.widgets = e.detail.items as WidgetConfig[];
+        }}"
+        @dashboard-item-removed="${(e: DashboardItemRemovedEvent<WidgetConfig>) => {
+          this.widgets = e.detail.items as WidgetConfig[];
+        }}"
       ></vaadin-dashboard>
     `;
   }
