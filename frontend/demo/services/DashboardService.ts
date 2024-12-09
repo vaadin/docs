@@ -6,7 +6,7 @@ class DashboardService {
   // eslint-disable-next-line @typescript-eslint/require-await
   async loadDashboard(): Promise<WidgetConfig[]> {
     const config = localStorage.getItem(key);
-    return config ? JSON.parse(config) : [];
+    return config ? JSON.parse(config) : null;
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
