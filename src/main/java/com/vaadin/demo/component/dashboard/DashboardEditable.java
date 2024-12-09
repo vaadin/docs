@@ -19,7 +19,7 @@ public class DashboardEditable extends Div {
 
     // tag::snippet[]
     // NOTE: This example uses the additional classes WidgetConfig and DashboardStorage,
-    // which you can find by switching to the respective file in the top of the example.
+    // which you can find by switching to the respective file tab.
 
     // Since the default DashboardWidget class doesn't allow setting custom data,
     // we create a custom class that extends DashboardWidget, and add a

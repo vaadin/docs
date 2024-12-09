@@ -3,18 +3,14 @@ import React, { useEffect } from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { MenuBar, type MenuBarItem } from '@vaadin/react-components';
-import {
-  Dashboard,
-  type DashboardReactRendererProps,
-  DashboardWidget,
-} from '@vaadin/react-components-pro';
+import { Dashboard, DashboardWidget } from '@vaadin/react-components-pro';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
 
 // tag::snippet[]
 // NOTE: This example uses the additional classes WidgetConfig and DashboardService,
-// which you can find by switching to the respective file in the top of the example.
+// which you can find by switching to the respective file tab.
 
 // This is the default configuration for the dashboard. Note that the order
 // of the widgets in the array determines the order in which they are
