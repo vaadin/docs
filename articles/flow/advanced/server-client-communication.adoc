@@ -1,32 +1,32 @@
 ---
 title: Server to Client Communication
-description: The more technical details of how the server to client communication works.
+description: Technical details of how server to client communications work.
 order: 800
 ---
 
 
-= Sync UI State between Server & Client
+= Sync Server & Client UI States
 
-Server to client communication contains the synchronization tokens -- `syncId` (server-to-client) and `clientId` (client-to-server) -- for communication and UI state tracking. This tracking is for keeping the order of messages. It's also used to verify that both sides are in the same known state.
+Server to client communications contain the synchronization tokens -- `syncId` (server-to-client) and `clientId` (client-to-server) -- for communicating and UI state tracking. This tracking is meant for ordering messages. It's also used to verify that both sides are in the same known state.
 
-The `syncId` token marks the state of the server and is returned as received by the client. Whereas, the `clientId` token is incremented for each message sent by the client, with the server incrementing to match the next id in the response.
+The `syncId` token marks the state of the server and is returned as received by the client. Whereas, the `clientId` token is incremented for each message sent by the client, with the server incrementing to match the next id in the response. Both `syncId` and `clientId` are integers.
 
 
 ==== `syncId`
 
-The `syncId` holds the latest communication state id given by the server. It's generated as a strictly increasing id for each response to every request from the client.
+The `syncId` holds the latest communication state identifier given by the server. It's generated as a strictly increasing id for each response to every request from the client.
 
 This identifier is replayed to the server on each request from the client. It helps the server to know the state of the client and to compare it against its own state.
 
-The initial value when no response has yet been received from the server is `UNDEFINED_SYNC_ID(-1)`. This value is seen between the bootstrap HTML loading and the first UI render.
+The initial value when no response has been received from the server is `UNDEFINED_SYNC_ID(-1)`. This is the value after the bootstrap HTML loading and before the first UI is rendered.
 
-The `syncId` is always incremented by one after a new UIDL response is generated. The client then handles the received messages according to the `syncId` and the latest handled `syncId`, so that changes are handled in the correct order.
+The `syncId` is always incremented by 1 after a new UIDL response is generated. The client then handles the received messages according to the `syncId` and the latest handled `syncId`, so that changes are handled in the correct order.
 
 
 ==== `clientId`
 
-The `clientId` holds the latest communication state id given by the client. The client token is incremented on the client after sending the message. The server increments the value in the response to match the next expected `clientId` (client updated after message sent).
+The `clientId` holds the latest communication state identifier given by the client. The client token is incremented on the client after sending the message. The server increments the value in the response to match the next expected `clientId` (i.e., client updated after message sent).
 
-On the client pending messages are removed from the queue as handled when `clientId` from server matches next expected value. If the id is less than expected, the client waits, as the server has not yet seen all messages, and the response probably arrives later. Otherwise, the client trusts the server and updates the id to the server's expectations.
+On the client, pending messages are removed from the queue as handled when `clientId` from server matches the next expected value. If the id is less than expected, the client waits since the server has not yet seen all messages. The response should arrive later. Otherwise, the client trusts the server and updates the id to the server's expectations.
 
 On the server, in cases where the id is the previous one with the same request payload, the server re-sends the latest response since the client probably didn't receive the message. If the client-sent id doesn't match the server-expected id, a re-synchronization is initiated.
