@@ -1,36 +1,30 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { Button, HorizontalLayout, RadioButton, RadioGroup } from '@vaadin/react-components';
+import { Button, HorizontalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
-  useSignals(); // hidden-source-line
-  // tag::snippet[]
-  const theme = useSignal('spacing');
-
   return (
     <div>
-      <HorizontalLayout theme={`${theme.value} padding`} style={{ alignItems: 'stretch' }}>
+      <p>Horizontal layout without spacing:</p>
+      <HorizontalLayout theme="padding">
         <Button>Button 1</Button>
         <Button>Button 2</Button>
         <Button>Button 3</Button>
       </HorizontalLayout>
 
-      <RadioGroup
-        label="Spacing"
-        value={theme.value}
-        onValueChanged={(event) => {
-          theme.value = event.detail.value;
-        }}
-      >
-        <RadioButton value="spacing" label="Enabled" />
-        <RadioButton value="" label="Disabled" />
-      </RadioGroup>
+      <p>Horizontal layout with spacing:</p>
+      {/* tag::snippet[] */}
+      <HorizontalLayout theme="spacing padding">
+        {/* end::snippet[] */}
+        <Button>Button 1</Button>
+        <Button>Button 2</Button>
+        <Button>Button 3</Button>
+        {/* tag::snippet[] */}
+      </HorizontalLayout>
+      {/* end::snippet[] */}
     </div>
   );
-  // end::snippet[]
 }
 
 export default reactExample(Example, layoutExampleStyle); // hidden-source-line
