@@ -57,7 +57,8 @@ export class Example extends LitElement {
   // tag::snippet[]
   handleSelectedChange(e: DashboardItemSelectedChangedEvent<WidgetConfig>) {
     // This event is fired when the user starts or stops editing a widget
-    const title = widgetTitles[e.detail.item.type];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const title = widgetTitles[(e.detail.item as WidgetConfig).type];
     const selected = e.detail.value ? 'selected' : 'unselected';
 
     this.announcement = `Widget ${title} ${selected}`;
@@ -85,7 +86,8 @@ export class Example extends LitElement {
     // This event is fired when the user moves a widget
     const index = e.detail.items.findIndex((widget) => widget === e.detail.item) + 1;
     const total = e.detail.items.length;
-    const title = widgetTitles[e.detail.item.type];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const title = widgetTitles[(e.detail.item as WidgetConfig).type];
 
     this.announcement = `Moved widget ${title} to position ${index} of ${total}`;
   }
