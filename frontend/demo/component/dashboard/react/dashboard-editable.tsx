@@ -47,9 +47,6 @@ type CustomMenuItem = MenuBarItem & {
 
 function Example() {
   useSignals(); // hidden-source-line
-  // Stores the current dashboard configuration. The Dashboard component will
-  // modify this array in place when editing, so there is no need to update it
-  // using events.
   const widgets = useSignal<WidgetConfig[]>([]);
   const editable = useSignal<boolean>(false);
 
