@@ -392,6 +392,8 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
         } else {
           // Update the progress
           progressState.progress += phase.weight;
+          // Make sure progress doesn't exceed total weight
+          progressState.progress = Math.min(progressState.progress, totalWeight);
 
           const nextPhase = phases[phases.indexOf(phase) + 1];
           if (nextPhase) {
