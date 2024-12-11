@@ -1,9 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react'; // hidden-source-line
+import React, { useCallback, useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { MenuBar, type MenuBarItem } from '@vaadin/react-components';
-import { Dashboard, DashboardWidget } from '@vaadin/react-components-pro';
+import {
+  Dashboard,
+  type DashboardReactRendererProps,
+  DashboardWidget,
+} from '@vaadin/react-components-pro';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
@@ -86,6 +90,36 @@ function Example() {
     widgets.value = [...defaultConfig];
   }
 
+  // Render function should be memoized to avoid unnecessary re-renders
+  const renderWidget = useCallback(({ item }: DashboardReactRendererProps<WidgetConfig>) => {
+    // This function is used to render the actual widgets into the dashboard.
+    // It is called by Dashboard once for each config in the widgets array
+    // and should return a React element. Note that the colspan and rowspan
+    // from the widget config are automatically applied by Dashboard.
+    // In this example all widget types have the same content, so we can use
+    // generic logic to render a widget.
+    const widget = (
+      <DashboardWidget widgetTitle={widgetTitles[item.type]}>
+        <div className="dashboard-widget-content" />
+      </DashboardWidget>
+    );
+
+    // In practice, different widget types will have different content.
+    // In that case you can use a switch statement to render the widget
+    // content based on the type.
+    //
+    // switch (item.type) {
+    //   case WidgetType.Visitors:
+    //     return (
+    //       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
+    //         <VisitorsWidgetContent />
+    //       </DashboardWidget>
+    //     );
+    //   ...
+    // }
+    return widget;
+  }, []);
+
   // Load the initial configuration of the dashboard
   useEffect(() => {
     load();
@@ -144,33 +178,7 @@ function Example() {
           widgets.value = e.detail.items as WidgetConfig[];
         }}
       >
-        {
-          ({ item }) => (
-            // This function is used to render the actual widgets into the dashboard.
-            // It is called by Dashboard once for each config in the widgets array
-            // and should return a React element. Note that the colspan and rowspan
-            // from the widget config are automatically applied by Dashboard.
-            // In this example all widget types have the same content, so we can use
-            // generic logic to render a widget.
-            <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-              <div className="dashboard-widget-content" />
-            </DashboardWidget>
-          )
-
-          // In practice, different widget types will have different content.
-          // In that case you can use a switch statement to render the widget
-          // content based on the type.
-          //
-          // switch (item.type) {
-          //   case WidgetType.Visitors:
-          //     return (
-          //       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-          //         <VisitorsWidgetContent />
-          //       </DashboardWidget>
-          //     );
-          //   ...
-          // }
-        }
+        {renderWidget}
       </Dashboard>
     </>
   );
