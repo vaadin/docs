@@ -611,19 +611,21 @@ The following example demonstrates how to add an operation validator to a signal
 ----
 NumberSignal voteSignal = new NumberSignal() // <1>
     .withOperationValidator(operation -> { // <2>
-        if (operation instanceof ValueOperation<Double> valueOp) { // <3>
-            if (Math.abs(valueOp.value()) != 1.0) { // <4>
-                return ValidationResult.reject("Only up / down vote by 1 is allowed");
+        if (operation instanceof IncrementOperation increment) { // <3>
+            if (Math.abs(increment.value()) == 1.0) {
+                return ValidationResult.allow(); // <4>
             }
+            return ValidationResult.reject("Only up / down vote by 1 is allowed"); // <5>
         }
-        return ValidationResult.allow(); // <5>
+        return ValidationResult.reject("Invalid Operation"); // <6>
     });
 ----
 <1> Creates an instance of a [classname]`NumberSignal` that defaults to zero.
 <2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (i.e., no validators).
-<3> Checks the operation type and the value of the operation.
-<4> Rejects the operation if the value is not `1.0` or `-1.0`.
-<5> Allows the operation otherwise.
+<3> Checks the operation type to be only an `IncrementOperation`.
+<4> Allow the operation only if the value is incremented/decremented by `1.0`.
+<5> Rejects the operation if the value is not `1.0` or `-1.0`.
+<6> Rejects all other operations, in this case the could be `SetValueOperation` and `ReplaceValueOperation`.
 
 In the above example, the `operation` parameter is an instance of [classname]`SignalOperation`. At runtime, the operation can be one of the following types:
 
@@ -654,28 +656,36 @@ public class TodoService {
     public record TodoItem(String text, boolean done) {}
 
     private final ListSignal<TodoItem> notValidatedTodoItems = // <1>
-                                            new ListSignal<>(TodoItem.class);
+            new ListSignal<>(TodoItem.class);
 
     private final ListSignal<TodoItem> validatedTodoItems = // <2>
-         notValidatedTodoItems.withOperationValidator(operation -> {
-            if (operation instanceof ListInsertOperation<TodoItem> insertOp) {
-                return insertOp.value().text().length() <= 50 ?
-                        ValidationResult.allow() :
-                        ValidationResult.reject("No Long todo items!");
-            }
-            return ValidationResult.allow();
+        notValidatedTodoItems.withOperationValidator(operation ->
+        switch (operation) {
+            case ListInsertOperation<TodoItem> insertOp ->
+                                validateTodoText(insertOp.value());
+            case SetValueOperation<TodoItem> setOp ->
+                                validateTodoText(setOp.value());
+            case ReplaceValueOperation<TodoItem> replaceOp ->
+                                validateTodoText(replaceOp.value());
+            default -> ValidationResult.reject("Invalid Operation");
         });
 
     private final ListSignal<TodoItem> userTodoItems = // <3>
         validatedTodoItems.withOperationValidator(operation -> {
-            if (operation instanceof ListRemoveOperation<TodoItem> removeOp) {
+            if (operation instanceof ListRemoveOperation<TodoItem>) {
                 return ValidationResult.reject("No Removal for users!");
             }
             return ValidationResult.allow();
         });
 
     private final ListSignal<TodoItem> guestTodoItems = // <4>
-                    notValidatedTodoItems.asReadOnly();
+            notValidatedTodoItems.asReadonly();
+
+    private ValidationResult validateTodoText(TodoItem todoItem) {
+        return todoItem.text != null && todoItem.text.length() > 50 ?
+                ValidationResult.reject("Todo text is too long") :
+                ValidationResult.allow();
+    }
 
     public ListSignal<TodoItem> todoItems() { // <5>
         return switch (currentUserRole()) {
