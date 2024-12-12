@@ -177,53 +177,68 @@ class TocFooter extends LitElement {
 
             .toc-footer--content {
               line-height: 1.5;
+              font-size: var(--docs-font-size-2xs);
+              color: var(--docs-secondary-text-color);
             }
 
             .toc-footer--heading {
               font-weight: 600;
+              color: var(--docs-heading-text-color) !important;
             }
            
             .toc-footer > a::after {
               content: none !important;
             }
+            
+            /* Hide the footer on mobile when the TOC is closed */
+            @media screen and (max-width: 65rem) {
+              .toctoggle:not([open]) + .toc > dspublisher-toc-footer {
+                  display: none;
+              }
 
-            .toc-footer .toc-footer--hide-link {
-              color: var(--docs-secondary-text-color) !important;
-              font-size: 0.75rem;
+              .toc-footer {
+                width: auto;
+                display: flex;
+                flex-direction: row-reverse;
+                align-items: flex-start;
+                gap: 1rem; 
+                justify-content: flex-end;
+              }
+
+              .toc-footer--img {
+                flex-shrink: 0; 
+                width: 4rem; 
+              }
+
+              .toc-footer--img img {
+                margin-top: 0;
+                width: 100%;
+                height: auto;
+                border-radius: 0.25rem;
+              }
+
+              .toc-footer--content {
+                flex: 1;
+                padding-top: 0.25rem; 
+              }
             }
           </style>
 
           <div class="toc-footer">
             <a href="https://vaadin.com/learn/training" class="toc-footer--link">
 
+              <div class="toc-footer--heading">Video tutorial</div>
               <div class="toc-footer--content">
-                <div class="toc-footer--heading">Learn by watching</div>
-                Watch the free Vaadin training videos.
+                Learn Vaadin fundamentals through short video tutorials.
               </div>
 
               <div class="toc-footer--img">
                 <img src=${tocBanner.src} alt="Learn by watching"
               </div>
             </a>
-            <p>
-              <a href="#" @click=${this.hideBanner} class="toc-footer--hide-link">Hide this banner</a>
-            </p>
           </div>
           `;
   }
-
-  firstUpdated() {
-    if (localStorage.getItem('hideTocFooter') === 'true') {
-      this.style.display = 'none';
-    }
-  }
-
-  private hideBanner(event: Event) {
-    event.preventDefault();
-    localStorage.setItem('hideTocFooter', 'true');
-    this.style.display = 'none';
-  }
-
 }
 
 customElements.define('dspublisher-toc-footer', TocFooter);
