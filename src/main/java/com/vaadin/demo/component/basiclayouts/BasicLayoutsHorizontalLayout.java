@@ -11,19 +11,19 @@ public class BasicLayoutsHorizontalLayout extends Div {
         // tag::snippet[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
-        
+
         Div item1 = new Div("Item 1");
         item1.setClassName("example-item");
-        
+
         Div item2 = new Div("Item 2");
         item2.setClassName("example-item");
-        
+
         Div item3 = new Div("Item 3");
         item3.setClassName("example-item");
-        
+
         layout.add(item1, item2, item3);
         // end::snippet[]
-        
+
         this.setClassName("basic-layouts-example");
         this.add(layout);
     }

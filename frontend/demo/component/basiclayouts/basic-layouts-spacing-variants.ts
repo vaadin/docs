@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vertical-layout';
 import '@vaadin/radio-group';
+import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
