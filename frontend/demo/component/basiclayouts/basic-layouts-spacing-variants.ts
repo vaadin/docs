@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
-import '@vaadin/radio-group';
 import '@vaadin/vertical-layout';
+import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
@@ -32,9 +31,9 @@ export class Example extends LitElement {
         class="height-4xl"
         style="align-items: stretch"
       >
-        <vaadin-button>Button 1</vaadin-button>
-        <vaadin-button>Button 2</vaadin-button>
-        <vaadin-button>Button 3</vaadin-button>
+        <div class="layout-item">Item 1</div>
+        <div class="layout-item">Item 2</div>
+        <div class="layout-item">Item 3</div>
       </vaadin-vertical-layout>
       <vaadin-radio-group
         label="Spacing variant"

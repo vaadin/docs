@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -23,9 +22,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing padding" style="align-items: start">
-        <vaadin-button style="align-self: end" theme="primary">Button 1</vaadin-button>
-        <vaadin-button style="align-self: center"> Button 2</vaadin-button>
-        <vaadin-button>Button 3</vaadin-button>
+        <div class="layout-item" style="align-self: end">Item 1</div>
+        <div class="layout-item" style="align-self: center">Item 2</div>
+        <div class="layout-item">Item 3</div>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
     `;
