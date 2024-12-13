@@ -2,7 +2,6 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -13,9 +12,15 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
     public BasicLayoutsHorizontalLayoutPadding() {
         add(new Paragraph("Horizontal layout without padding:"));
         HorizontalLayout layoutWithoutPadding = new HorizontalLayout();
-        layoutWithoutPadding.add(new Button("Button 1"));
-        layoutWithoutPadding.add(new Button("Button 2"));
-        layoutWithoutPadding.add(new Button("Button 3"));
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("layout-item");
+        Div item2 = new Div("Item 2");
+        item2.setClassName("layout-item");
+        Div item3 = new Div("Item 3");
+        item3.setClassName("layout-item");
+
+        layoutWithoutPadding.add(item1, item2, item3);
         this.add(layoutWithoutPadding);
 
         add(new Paragraph("Horizontal layout with padding:"));
@@ -23,9 +28,15 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
         HorizontalLayout layoutWithPadding = new HorizontalLayout();
         layoutWithPadding.setPadding(true);
         // end::snippet[]
-        layoutWithPadding.add(new Button("Button 1"));
-        layoutWithPadding.add(new Button("Button 2"));
-        layoutWithPadding.add(new Button("Button 3"));
+
+        Div paddingItem1 = new Div("Item 1");
+        paddingItem1.setClassName("layout-item");
+        Div paddingItem2 = new Div("Item 2");
+        paddingItem2.setClassName("layout-item");
+        Div paddingItem3 = new Div("Item 3");
+        paddingItem3.setClassName("layout-item");
+
+        layoutWithPadding.add(paddingItem1, paddingItem2, paddingItem3);
         this.add(layoutWithPadding);
 
         this.setClassName("basic-layouts-example");
