@@ -2,7 +2,6 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -15,9 +14,15 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
         HorizontalLayout layoutWithoutMargin = new HorizontalLayout();
         layoutWithoutMargin.setPadding(true);
         layoutWithoutMargin.setWidth("auto");
-        layoutWithoutMargin.add(new Button("Button 1"));
-        layoutWithoutMargin.add(new Button("Button 2"));
-        layoutWithoutMargin.add(new Button("Button 3"));
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("example-item");
+        Div item2 = new Div("Item 2");
+        item2.setClassName("example-item");
+        Div item3 = new Div("Item 3");
+        item3.setClassName("example-item");
+
+        layoutWithoutMargin.add(item1, item2, item3);
 
         Div container2 = new Div();
         container2.setClassName("container");
@@ -31,9 +36,15 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
         // end::snippet[]
         layoutWithMargin.setPadding(true);
         layoutWithMargin.setWidth("auto");
-        layoutWithMargin.add(new Button("Button 1"));
-        layoutWithMargin.add(new Button("Button 2"));
-        layoutWithMargin.add(new Button("Button 3"));
+
+        Div marginItem1 = new Div("Item 1");
+        marginItem1.setClassName("example-item");
+        Div marginItem2 = new Div("Item 2");
+        marginItem2.setClassName("example-item");
+        Div marginItem3 = new Div("Item 3");
+        marginItem3.setClassName("example-item");
+
+        layoutWithMargin.add(marginItem1, marginItem2, marginItem3);
 
         Div container1 = new Div();
         container1.setClassName("container");

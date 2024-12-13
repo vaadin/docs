@@ -2,8 +2,6 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -14,16 +12,22 @@ public class BasicLayoutsVerticalLayoutIndividualAlignment extends Div {
 
     public BasicLayoutsVerticalLayoutIndividualAlignment() {
         // tag::layout[]
-        Button button1 = new Button("Button 1");
-        Button button2 = new Button("Button 2");
-        button1.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         VerticalLayout layout = new VerticalLayout();
-        layout.add(button1);
-        layout.setAlignSelf(Alignment.END, button1);
-        layout.add(button2);
-        layout.setAlignSelf(Alignment.CENTER, button2);
         layout.setAlignItems(FlexComponent.Alignment.START);
-        layout.add(new Button("Button 3"));
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("example-item");
+        layout.add(item1);
+        layout.setAlignSelf(Alignment.END, item1);
+
+        Div item2 = new Div("Item 2");
+        item2.setClassName("example-item");
+        layout.add(item2);
+        layout.setAlignSelf(Alignment.CENTER, item2);
+
+        Div item3 = new Div("Item 3");
+        item3.setClassName("example-item");
+        layout.add(item3);
         // end::layout[]
 
         this.setClassName("basic-layouts-example");

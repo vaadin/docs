@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { Button, HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
+import { HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
@@ -10,9 +10,9 @@ function Example() {
         <p>Vertical layout without margin:</p>
         <div className="container">
           <VerticalLayout theme="spacing padding" style={{ alignItems: 'stretch' }}>
-            <Button>Button 1</Button>
-            <Button>Button 2</Button>
-            <Button>Button 3</Button>
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
           </VerticalLayout>
         </div>
       </div>
@@ -22,9 +22,9 @@ function Example() {
           {/* tag::snippet[] */}
           <VerticalLayout theme="margin spacing padding" style={{ alignItems: 'stretch' }}>
             {/* end::snippet[] */}
-            <Button>Button 1</Button>
-            <Button>Button 2</Button>
-            <Button>Button 3</Button>
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
             {/* tag::snippet[] */}
           </VerticalLayout>
           {/* end::snippet[] */}
