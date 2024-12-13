@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { TextArea } from '@vaadin/react-components';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
+import { HorizontalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
@@ -12,9 +11,9 @@ function Example() {
       className="height-4xl"
       style={{ alignItems: 'center' }}
     >
-      <TextArea label="Text area 1" />
-      <TextArea label="Text area 2" />
-      <TextArea label="Text area 3" />
+      <div className="layout-item">Item 1</div>
+      <div className="layout-item">Item 2</div>
+      <div className="layout-item">Item 3</div>
     </HorizontalLayout>
     // end::snippet[]
   );

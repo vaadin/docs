@@ -1,6 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout, TextArea } from '@vaadin/react-components';
+import { HorizontalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
@@ -9,11 +9,11 @@ function Example() {
     <HorizontalLayout
       theme="spacing padding"
       className="height-4xl"
-      style={{ alignItems: 'stretch', ...layoutExampleStyle }}
+      style={{ alignItems: 'stretch' }}
     >
-      <TextArea label="Text area 1" style={{ alignSelf: 'start' }} />
-      <TextArea label="Text area 2" />
-      <TextArea label="Text area 3" style={{ alignSelf: 'end' }} />
+      <div className="layout-item" style={{ alignSelf: 'start' }}>Item 1</div>
+      <div className="layout-item">Item 2</div>
+      <div className="layout-item" style={{ alignSelf: 'end' }}>Item 3</div>
     </HorizontalLayout>
     // end::snippet[]
   );
