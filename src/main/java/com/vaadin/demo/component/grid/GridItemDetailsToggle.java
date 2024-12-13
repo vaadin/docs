@@ -57,7 +57,7 @@ public class GridItemDetailsToggle extends Div {
                       : html`<vaadin-icon icon="lumo:angle-right"></vaadin-icon>`}
                 </vaadin-button>
                 """)
-                .withProperty("detailsVisible",grid::isDetailsVisible)
+                .withProperty("detailsVisible", grid::isDetailsVisible)
                 .withFunction("handleClick",
                         person -> grid.setDetailsVisible(person,
                                 !grid.isDetailsVisible(person)));

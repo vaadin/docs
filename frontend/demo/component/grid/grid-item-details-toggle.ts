@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/form-layout';
 import '@vaadin/button';
+import '@vaadin/form-layout';
 import '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/text-field';
