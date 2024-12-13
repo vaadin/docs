@@ -14,11 +14,11 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
         HorizontalLayout layoutWithoutPadding = new HorizontalLayout();
 
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
 
         layoutWithoutPadding.add(item1, item2, item3);
         this.add(layoutWithoutPadding);
@@ -30,11 +30,11 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
         // end::snippet[]
 
         Div paddingItem1 = new Div("Item 1");
-        paddingItem1.setClassName("layout-item");
+        paddingItem1.setClassName("example-item");
         Div paddingItem2 = new Div("Item 2");
-        paddingItem2.setClassName("layout-item");
+        paddingItem2.setClassName("example-item");
         Div paddingItem3 = new Div("Item 3");
-        paddingItem3.setClassName("layout-item");
+        paddingItem3.setClassName("example-item");
 
         layoutWithPadding.add(paddingItem1, paddingItem2, paddingItem3);
         this.add(layoutWithPadding);

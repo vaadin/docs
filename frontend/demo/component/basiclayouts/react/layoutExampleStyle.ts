@@ -22,7 +22,7 @@ const layoutExampleStyles = css`
     border-radius: var(--lumo-border-radius-l);
   }
 
-  .layout-item {
+  .example-item {
     background: var(--lumo-primary-color);
     color: var(--lumo-primary-contrast-color);
     border-radius: var(--lumo-border-radius-m);

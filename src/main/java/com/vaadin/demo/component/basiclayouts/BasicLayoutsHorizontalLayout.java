@@ -13,13 +13,13 @@ public class BasicLayoutsHorizontalLayout extends Div {
         layout.setPadding(true);
         
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
         
         layout.add(item1, item2, item3);
         // end::snippet[]

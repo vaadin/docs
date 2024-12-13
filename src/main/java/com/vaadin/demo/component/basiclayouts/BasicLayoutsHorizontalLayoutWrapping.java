@@ -18,15 +18,15 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         layoutWithoutWrap.setWidth("350px");
 
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
         Div item4 = new Div("Item 4");
-        item4.setClassName("layout-item");
+        item4.setClassName("example-item");
         Div item5 = new Div("Item 5");
-        item5.setClassName("layout-item");
+        item5.setClassName("example-item");
 
         layoutWithoutWrap.add(item1, item2, item3, item4, item5);
         this.add(layoutWithoutWrap);
@@ -42,15 +42,15 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         layoutWithWrap.setWidth("350px");
 
         Div wrapItem1 = new Div("Item 1");
-        wrapItem1.setClassName("layout-item");
+        wrapItem1.setClassName("example-item");
         Div wrapItem2 = new Div("Item 2");
-        wrapItem2.setClassName("layout-item");
+        wrapItem2.setClassName("example-item");
         Div wrapItem3 = new Div("Item 3");
-        wrapItem3.setClassName("layout-item");
+        wrapItem3.setClassName("example-item");
         Div wrapItem4 = new Div("Item 4");
-        wrapItem4.setClassName("layout-item");
+        wrapItem4.setClassName("example-item");
         Div wrapItem5 = new Div("Item 5");
-        wrapItem5.setClassName("layout-item");
+        wrapItem5.setClassName("example-item");
 
         layoutWithWrap.add(wrapItem1, wrapItem2, wrapItem3, wrapItem4, wrapItem5);
 

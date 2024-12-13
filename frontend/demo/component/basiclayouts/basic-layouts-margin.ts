@@ -26,9 +26,9 @@ export class Example extends LitElement {
           <p>Vertical layout without margin:</p>
           <div class="container">
             <vaadin-vertical-layout theme="spacing padding" style="align-items: stretch">
-              <div class="layout-item">Item 1</div>
-              <div class="layout-item">Item 2</div>
-              <div class="layout-item">Item 3</div>
+              <div class="example-item">Item 1</div>
+              <div class="example-item">Item 2</div>
+              <div class="example-item">Item 3</div>
             </vaadin-vertical-layout>
           </div>
         </div>
@@ -38,9 +38,9 @@ export class Example extends LitElement {
             <!-- tag::snippet[] -->
             <vaadin-vertical-layout theme="margin spacing padding" style="align-items: stretch">
               <!-- end::snippet[] -->
-              <div class="layout-item">Item 1</div>
-              <div class="layout-item">Item 2</div>
-              <div class="layout-item">Item 3</div>
+              <div class="example-item">Item 1</div>
+              <div class="example-item">Item 2</div>
+              <div class="example-item">Item 3</div>
               <!-- tag::snippet[] -->
             </vaadin-vertical-layout>
             <!-- end::snippet[] -->

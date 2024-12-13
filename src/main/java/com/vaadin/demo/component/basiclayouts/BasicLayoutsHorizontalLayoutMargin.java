@@ -16,11 +16,11 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
         layoutWithoutMargin.setWidth("auto");
 
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
 
         layoutWithoutMargin.add(item1, item2, item3);
 
@@ -38,11 +38,11 @@ public class BasicLayoutsHorizontalLayoutMargin extends Div {
         layoutWithMargin.setWidth("auto");
 
         Div marginItem1 = new Div("Item 1");
-        marginItem1.setClassName("layout-item");
+        marginItem1.setClassName("example-item");
         Div marginItem2 = new Div("Item 2");
-        marginItem2.setClassName("layout-item");
+        marginItem2.setClassName("example-item");
         Div marginItem3 = new Div("Item 3");
-        marginItem3.setClassName("layout-item");
+        marginItem3.setClassName("example-item");
 
         layoutWithMargin.add(marginItem1, marginItem2, marginItem3);
 

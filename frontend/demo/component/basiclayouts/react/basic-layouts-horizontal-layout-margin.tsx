@@ -9,9 +9,9 @@ function Example() {
       <p>Horizontal layout without margin:</p>
       <div className="container">
         <HorizontalLayout theme="spacing padding">
-          <div className="layout-item">Item 1</div>
-          <div className="layout-item">Item 2</div>
-          <div className="layout-item">Item 3</div>
+          <div className="example-item">Item 1</div>
+          <div className="example-item">Item 2</div>
+          <div className="example-item">Item 3</div>
         </HorizontalLayout>
       </div>
 
@@ -20,9 +20,9 @@ function Example() {
         {/* tag::snippet[] */}
         <HorizontalLayout theme="margin spacing padding">
           {/* end::snippet[] */}
-          <div className="layout-item">Item 1</div>
-          <div className="layout-item">Item 2</div>
-          <div className="layout-item">Item 3</div>
+          <div className="example-item">Item 1</div>
+          <div className="example-item">Item 2</div>
+          <div className="example-item">Item 3</div>
           {/* tag::snippet[] */}
         </HorizontalLayout>
         {/* end::snippet[] */}

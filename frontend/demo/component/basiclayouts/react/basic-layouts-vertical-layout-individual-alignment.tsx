@@ -7,13 +7,13 @@ function Example() {
   return (
     // tag::snippet[]
     <VerticalLayout theme="spacing padding" style={{ alignItems: 'start' }}>
-      <div className="layout-item" style={{ alignSelf: 'end' }}>
+      <div className="example-item" style={{ alignSelf: 'end' }}>
         Item 1
       </div>
-      <div className="layout-item" style={{ alignSelf: 'center' }}>
+      <div className="example-item" style={{ alignSelf: 'center' }}>
         Item 2
       </div>
-      <div className="layout-item">Item 3</div>
+      <div className="example-item">Item 3</div>
     </VerticalLayout>
     // end::snippet[]
   );

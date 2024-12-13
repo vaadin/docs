@@ -8,18 +8,18 @@ function Example() {
     <div>
       <p>Horizontal layout without spacing:</p>
       <HorizontalLayout theme="padding">
-        <div className="layout-item">Item 1</div>
-        <div className="layout-item">Item 2</div>
-        <div className="layout-item">Item 3</div>
+        <div className="example-item">Item 1</div>
+        <div className="example-item">Item 2</div>
+        <div className="example-item">Item 3</div>
       </HorizontalLayout>
 
       <p>Horizontal layout with spacing:</p>
       {/* tag::snippet[] */}
       <HorizontalLayout theme="spacing padding">
         {/* end::snippet[] */}
-        <div className="layout-item">Item 1</div>
-        <div className="layout-item">Item 2</div>
-        <div className="layout-item">Item 3</div>
+        <div className="example-item">Item 1</div>
+        <div className="example-item">Item 2</div>
+        <div className="example-item">Item 3</div>
         {/* tag::snippet[] */}
       </HorizontalLayout>
       {/* end::snippet[] */}

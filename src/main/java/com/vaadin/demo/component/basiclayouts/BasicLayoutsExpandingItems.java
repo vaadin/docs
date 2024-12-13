@@ -11,7 +11,7 @@ public class BasicLayoutsExpandingItems extends Div {
     public BasicLayoutsExpandingItems() {
         // tag::snippet[]
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         HorizontalLayout layout = new HorizontalLayout();
         layout.setFlexGrow(1, item1);
         // end::snippet[]
@@ -19,11 +19,11 @@ public class BasicLayoutsExpandingItems extends Div {
         layout.add(item1);
         
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         layout.add(item2);
         
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
         layout.add(item3);
         
         this.add(layout);

@@ -10,9 +10,9 @@ function Example() {
         <p>Vertical layout without margin:</p>
         <div className="container">
           <VerticalLayout theme="spacing padding" style={{ alignItems: 'stretch' }}>
-            <div className="layout-item">Item 1</div>
-            <div className="layout-item">Item 2</div>
-            <div className="layout-item">Item 3</div>
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
           </VerticalLayout>
         </div>
       </div>
@@ -22,9 +22,9 @@ function Example() {
           {/* tag::snippet[] */}
           <VerticalLayout theme="margin spacing padding" style={{ alignItems: 'stretch' }}>
             {/* end::snippet[] */}
-            <div className="layout-item">Item 1</div>
-            <div className="layout-item">Item 2</div>
-            <div className="layout-item">Item 3</div>
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
             {/* tag::snippet[] */}
           </VerticalLayout>
           {/* end::snippet[] */}

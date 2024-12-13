@@ -10,11 +10,11 @@ function Example() {
         theme="spacing margin padding"
         style={{ alignItems: 'stretch', width: '350px' }}
       >
-        <div className="layout-item">Item 1</div>
-        <div className="layout-item">Item 2</div>
-        <div className="layout-item">Item 3</div>
-        <div className="layout-item">Item 4</div>
-        <div className="layout-item">Item 5</div>
+        <div className="example-item">Item 1</div>
+        <div className="example-item">Item 2</div>
+        <div className="example-item">Item 3</div>
+        <div className="example-item">Item 4</div>
+        <div className="example-item">Item 5</div>
       </HorizontalLayout>
       <p>Horizontal layout with wrapping:</p>
       {/* tag::snippet[] */}
@@ -23,11 +23,11 @@ function Example() {
         style={{ alignItems: 'stretch', width: '350px' }}
       >
         {/* end::snippet[] */}
-        <div className="layout-item">Item 1</div>
-        <div className="layout-item">Item 2</div>
-        <div className="layout-item">Item 3</div>
-        <div className="layout-item">Item 4</div>
-        <div className="layout-item">Item 5</div>
+        <div className="example-item">Item 1</div>
+        <div className="example-item">Item 2</div>
+        <div className="example-item">Item 3</div>
+        <div className="example-item">Item 4</div>
+        <div className="example-item">Item 5</div>
         {/* tag::snippet[] */}
       </HorizontalLayout>
       {/* end::snippet[] */}

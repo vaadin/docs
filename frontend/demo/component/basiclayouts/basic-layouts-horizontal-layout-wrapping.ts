@@ -22,22 +22,22 @@ export class Example extends LitElement {
     return html`
       <p>Horizontal layout without wrapping:</p>
       <vaadin-horizontal-layout theme="spacing margin padding" style="width: 350px;">
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
-        <div class="layout-item">Item 4</div>
-        <div class="layout-item">Item 5</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
+        <div class="example-item">Item 4</div>
+        <div class="example-item">Item 5</div>
       </vaadin-horizontal-layout>
 
       <p>Horizontal layout with wrapping:</p>
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="wrap spacing margin padding" style="width: 350px;">
         <!-- end::snippet[] -->
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
-        <div class="layout-item">Item 4</div>
-        <div class="layout-item">Item 5</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
+        <div class="example-item">Item 4</div>
+        <div class="example-item">Item 5</div>
         <!-- tag::snippet[] -->
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

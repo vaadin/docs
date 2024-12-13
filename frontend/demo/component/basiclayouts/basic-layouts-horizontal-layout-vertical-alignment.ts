@@ -26,9 +26,9 @@ export class Example extends LitElement {
         class="height-4xl"
         style="align-items: center"
       >
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;

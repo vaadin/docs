@@ -22,9 +22,9 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing padding" style="justify-content: center">
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;

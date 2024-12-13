@@ -22,18 +22,18 @@ export class Example extends LitElement {
     return html`
       <p>Horizontal layout without spacing:</p>
       <vaadin-horizontal-layout theme="padding">
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
 
       <p>Horizontal layout with spacing:</p>
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout theme="spacing padding">
         <!-- end::snippet[] -->
-        <div class="layout-item">Item 1</div>
-        <div class="layout-item">Item 2</div>
-        <div class="layout-item">Item 3</div>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
         <!-- tag::snippet[] -->
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->

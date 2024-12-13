@@ -23,9 +23,9 @@ export class Example extends LitElement {
       <p>Horizontal layout without margin:</p>
       <div class="container">
         <vaadin-horizontal-layout theme="spacing padding">
-          <div class="layout-item">Item 1</div>
-          <div class="layout-item">Item 2</div>
-          <div class="layout-item">Item 3</div>
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
         </vaadin-horizontal-layout>
       </div>
 
@@ -34,9 +34,9 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-horizontal-layout theme="margin spacing padding">
           <!-- end::snippet[] -->
-          <div class="layout-item">Item 1</div>
-          <div class="layout-item">Item 2</div>
-          <div class="layout-item">Item 3</div>
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
           <!-- tag::snippet[] -->
         </vaadin-horizontal-layout>
         <!-- end::snippet[] -->

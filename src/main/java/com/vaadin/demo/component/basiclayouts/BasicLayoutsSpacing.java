@@ -29,11 +29,11 @@ public class BasicLayoutsSpacing extends Div {
         layoutWithoutSpacing.setAlignItems(FlexComponent.Alignment.STRETCH);
 
         Div item1 = new Div("Item 1");
-        item1.setClassName("layout-item");
+        item1.setClassName("example-item");
         Div item2 = new Div("Item 2");
-        item2.setClassName("layout-item");
+        item2.setClassName("example-item");
         Div item3 = new Div("Item 3");
-        item3.setClassName("layout-item");
+        item3.setClassName("example-item");
 
         layoutWithoutSpacing.add(item1, item2, item3);
         wrapper.add(layoutWithoutSpacing);
@@ -47,11 +47,11 @@ public class BasicLayoutsSpacing extends Div {
         layoutWithSpacing.setAlignItems(FlexComponent.Alignment.STRETCH);
 
         Div spacingItem1 = new Div("Item 1");
-        spacingItem1.setClassName("layout-item");
+        spacingItem1.setClassName("example-item");
         Div spacingItem2 = new Div("Item 2");
-        spacingItem2.setClassName("layout-item");
+        spacingItem2.setClassName("example-item");
         Div spacingItem3 = new Div("Item 3");
-        spacingItem3.setClassName("layout-item");
+        spacingItem3.setClassName("example-item");
 
         layoutWithSpacing.add(spacingItem1, spacingItem2, spacingItem3);
         wrapper.add(layoutWithSpacing);
