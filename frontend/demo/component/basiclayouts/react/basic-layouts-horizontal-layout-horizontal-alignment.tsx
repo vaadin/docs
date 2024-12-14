@@ -1,19 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button, HorizontalLayout } from '@vaadin/react-components';
+import { HorizontalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
   return (
     // tag::snippet[]
-    <HorizontalLayout
-      theme="spacing padding"
-      className="height-4xl"
-      style={{ justifyContent: 'center' }}
-    >
-      <Button>Button 1</Button>
-      <Button>Button 2</Button>
-      <Button>Button 3</Button>
+    <HorizontalLayout theme="spacing padding" style={{ justifyContent: 'center' }}>
+      <div className="example-item">Item 1</div>
+      <div className="example-item">Item 2</div>
+      <div className="example-item">Item 3</div>
     </HorizontalLayout>
     // end::snippet[]
   );
