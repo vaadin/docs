@@ -1,11 +1,13 @@
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -23,6 +25,24 @@ function Example() {
         displayName: `${person.firstName} ${person.lastName}`,
       }));
     });
+  }, []);
+
+  const toggleDetailsRenderer = useCallback(({ item: person }: { item: Person }) => {
+    const isExpanded = detailsOpenedItems.value.includes(person);
+    return (
+      <Button
+        theme="tertiary icon"
+        aria-label="Toggle details"
+        aria-expanded={isExpanded}
+        onClick={() => {
+          detailsOpenedItems.value = isExpanded
+            ? detailsOpenedItems.value.filter((p) => p !== person)
+            : [...detailsOpenedItems.value, person];
+        }}
+      >
+        <Icon icon={isExpanded ? 'lumo:angle-down' : 'lumo:angle-right'} />
+      </Button>
+    );
   }, []);
 
   return (
@@ -46,23 +66,11 @@ function Example() {
         </FormLayout>
       )}
     >
+      <GridColumn width="80px" flexGrow={0} frozen>
+        {toggleDetailsRenderer}
+      </GridColumn>
       <GridColumn path="displayName" header="Name" />
       <GridColumn path="profession" />
-      <GridColumn>
-        {({ item: person }) => (
-          <Button
-            theme="tertiary"
-            onClick={() => {
-              const isOpened = detailsOpenedItems.value.includes(person);
-              detailsOpenedItems.value = isOpened
-                ? detailsOpenedItems.value.filter((p) => p !== person)
-                : [...detailsOpenedItems.value, person];
-            }}
-          >
-            Toggle details
-          </Button>
-        )}
-      </GridColumn>
     </Grid>
   );
   // end::snippet[]
