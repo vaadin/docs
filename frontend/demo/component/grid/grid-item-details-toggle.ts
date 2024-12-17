@@ -87,25 +87,25 @@ export class Example extends LitElement {
           width="80px"
           flex-grow="0"
           frozen
-          ${columnBodyRenderer<Person>((person) => {
-            const isExpanded = this.detailsOpenedItems.includes(person);
-            return html`
+          ${columnBodyRenderer<Person>(
+            (person, { detailsOpened }) => html`
               <vaadin-button
                 theme="tertiary icon"
                 aria-label="Toggle details"
-                aria-expanded="${isExpanded ? 'true' : 'false'}"
+                aria-expanded="${detailsOpened ? 'true' : 'false'}"
                 @click="${() => {
-                  this.detailsOpenedItems = isExpanded
+                  this.detailsOpenedItems = detailsOpened
                     ? this.detailsOpenedItems.filter((p) => p !== person)
                     : [...this.detailsOpenedItems, person];
                 }}"
               >
-                ${isExpanded
-                  ? html` <vaadin-icon icon="lumo:angle-down"></vaadin-icon>`
-                  : html` <vaadin-icon icon="lumo:angle-right"></vaadin-icon>`}
+                <vaadin-icon
+                  .icon="${detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                ></vaadin-icon>
               </vaadin-button>
-            `;
-          }, [])}
+            `,
+            []
+          )}
         ></vaadin-grid-column>
         <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>

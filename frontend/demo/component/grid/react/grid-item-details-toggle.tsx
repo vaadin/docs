@@ -40,7 +40,7 @@ function Example() {
             : [...detailsOpenedItems.value, person];
         }}
       >
-        {isExpanded ? <Icon icon="lumo:angle-down" /> : <Icon icon="lumo:angle-right" />}
+        <Icon icon={isExpanded ? 'lumo:angle-down' : 'lumo:angle-right'} />
       </Button>
     );
   }, []);

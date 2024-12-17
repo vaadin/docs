@@ -49,15 +49,14 @@ public class GridItemDetailsToggle extends Div {
                 <vaadin-button
                   theme="tertiary icon"
                   aria-label="Toggle details"
-                  aria-expanded="${item.detailsVisible ? 'true' : 'false'}"
+                  aria-expanded="${model.detailsOpened ? 'true' : 'false'}"
                   @click="${handleClick}"
                 >
-                    ${item.detailsVisible
-                      ? html`<vaadin-icon icon="lumo:angle-down"></vaadin-icon>`
-                      : html`<vaadin-icon icon="lumo:angle-right"></vaadin-icon>`}
+                  <vaadin-icon
+                    .icon="${model.detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                  ></vaadin-icon>
                 </vaadin-button>
                 """)
-                .withProperty("detailsVisible", grid::isDetailsVisible)
                 .withFunction("handleClick",
                         person -> grid.setDetailsVisible(person,
                                 !grid.isDetailsVisible(person)));
