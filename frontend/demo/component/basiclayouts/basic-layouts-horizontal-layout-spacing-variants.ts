@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
@@ -28,9 +27,9 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-horizontal-layout theme="${this.themeVariant} padding" style="align-items: stretch">
-        <vaadin-button>Button 1</vaadin-button>
-        <vaadin-button>Button 2</vaadin-button>
-        <vaadin-button>Button 3</vaadin-button>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
       <vaadin-radio-group
         label="Spacing variant"

@@ -13,6 +13,9 @@ import '@vaadin/vaadin-lumo-styles/style.js';
 import '@vaadin/vaadin-material-styles/color';
 import '@vaadin/vaadin-material-styles/typography';
 
+// Import banner image
+import tocBanner from './images/toc-banner.webp';
+
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
 }
@@ -151,3 +154,91 @@ class Footer extends LitElement {
 }
 
 customElements.define('dspublisher-article-footer', Footer);
+
+class TocFooter extends LitElement {
+  createRenderRoot() {
+    return this;
+  }
+
+  render() {
+    return html`
+          <style>
+            .toc-footer {
+              margin-top: 2rem;
+              width: 11.25rem;
+            }
+
+            .toc-footer--img img {
+              margin-top: 1rem; 
+              width: 100%;
+              height: auto;
+              border-radius: 0.25rem;
+            }
+
+            .toc-footer--content {
+              line-height: 1.5;
+              font-size: var(--docs-font-size-2xs);
+              color: var(--docs-secondary-text-color);
+            }
+
+            .toc-footer--heading {
+              font-weight: 600;
+              color: var(--docs-heading-text-color) !important;
+            }
+           
+            .toc-footer > a::after {
+              content: none !important;
+            }
+            
+            /* Hide the footer on mobile when the TOC is closed */
+            @media screen and (max-width: 65rem) {
+              .toctoggle:not([open]) + .toc > dspublisher-toc-footer {
+                  display: none;
+              }
+
+              .toc-footer {
+                width: auto;
+                display: flex;
+                flex-direction: row-reverse;
+                align-items: flex-start;
+                gap: 1rem; 
+                justify-content: flex-end;
+              }
+
+              .toc-footer--img {
+                flex-shrink: 0; 
+                width: 4rem; 
+              }
+
+              .toc-footer--img img {
+                margin-top: 0;
+                width: 100%;
+                height: auto;
+                border-radius: 0.25rem;
+              }
+
+              .toc-footer--content {
+                flex: 1;
+                padding-top: 0.25rem; 
+              }
+            }
+          </style>
+
+          <div class="toc-footer">
+            <a href="https://vaadin.com/learn/training" class="toc-footer--link">
+
+              <div class="toc-footer--heading">Video tutorial</div>
+              <div class="toc-footer--content">
+                Learn Vaadin fundamentals through short video tutorials.
+              </div>
+
+              <div class="toc-footer--img">
+                <img src=${tocBanner.src} alt="Learn by watching"
+              </div>
+            </a>
+          </div>
+          `;
+  }
+}
+
+customElements.define('dspublisher-toc-footer', TocFooter);

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '3.0.0-alpha.6';
+const DSP_VERSION = '3.0.0-alpha.7';
 
 async function checkPreConditions() {
   try {
@@ -392,6 +392,8 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
         } else {
           // Update the progress
           progressState.progress += phase.weight;
+          // Make sure progress doesn't exceed total weight
+          progressState.progress = Math.min(progressState.progress, totalWeight);
 
           const nextPhase = phases[phases.indexOf(phase) + 1];
           if (nextPhase) {

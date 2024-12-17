@@ -2,37 +2,47 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
 @Route("basic-layouts/horizontal-layout-spacing")
 public class BasicLayoutsHorizontalLayoutSpacing extends Div {
 
-    private static final String ENABLED_OPTION = "Enabled";
-    private static final String DISABLED_OPTION = "Disabled";
-
     public BasicLayoutsHorizontalLayoutSpacing() {
+        add(new Paragraph("Horizontal layout without spacing:"));
         // tag::snippet[]
-        HorizontalLayout layout = new HorizontalLayout();
-        layout.setPadding(true);
-        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layout.add(new Button("Button 1"));
-        layout.add(new Button("Button 2"));
-        layout.add(new Button("Button 3"));
-
-        RadioButtonGroup<String> radioButtonGroup = new RadioButtonGroup<>();
-        radioButtonGroup.setLabel("Spacing");
-        radioButtonGroup.setItems(ENABLED_OPTION, DISABLED_OPTION);
-        radioButtonGroup.setValue(ENABLED_OPTION);
-        radioButtonGroup.addValueChangeListener(
-                e -> layout.setSpacing(ENABLED_OPTION.equals(e.getValue())));
+        // HorizontalLayout has spacing enabled by default, use setSpacing to disable it
+        HorizontalLayout layoutWithoutSpacing = new HorizontalLayout();
+        layoutWithoutSpacing.setSpacing(false);
         // end::snippet[]
+        layoutWithoutSpacing.setPadding(true);
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("example-item");
+        Div item2 = new Div("Item 2");
+        item2.setClassName("example-item");
+        Div item3 = new Div("Item 3");
+        item3.setClassName("example-item");
+
+        layoutWithoutSpacing.add(item1, item2, item3);
+        add(layoutWithoutSpacing);
+
+        add(new Paragraph("Horizontal layout with spacing:"));
+        HorizontalLayout layoutWithSpacing = new HorizontalLayout();
+        layoutWithSpacing.setPadding(true);
+
+        Div spacingItem1 = new Div("Item 1");
+        spacingItem1.setClassName("example-item");
+        Div spacingItem2 = new Div("Item 2");
+        spacingItem2.setClassName("example-item");
+        Div spacingItem3 = new Div("Item 3");
+        spacingItem3.setClassName("example-item");
+
+        layoutWithSpacing.add(spacingItem1, spacingItem2, spacingItem3);
+        add(layoutWithSpacing);
 
         this.setClassName("basic-layouts-example");
-        this.add(layout, radioButtonGroup);
     }
 
     public static class Exporter // hidden-source-line
