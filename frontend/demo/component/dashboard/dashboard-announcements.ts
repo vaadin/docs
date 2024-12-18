@@ -84,12 +84,11 @@ export class Example extends LitElement {
 
   handleMove(e: DashboardItemMovedEvent<WidgetConfig>) {
     // This event is fired when the user moves a widget
-    const index = e.detail.items.findIndex((widget) => widget === e.detail.item) + 1;
+    const position = e.detail.items.findIndex((widget) => widget === e.detail.item) + 1;
     const total = e.detail.items.length;
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
-
-    this.announcement = `Moved widget ${title} to position ${index} of ${total}`;
+    this.announcement = `Moved widget ${title} to position ${position} of ${total}`;
   }
 
   handleResize(e: DashboardItemResizedEvent<WidgetConfig>) {

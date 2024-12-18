@@ -86,11 +86,11 @@ public class DashboardAnnouncements extends Div {
 
         // This event is fired when the user moves a widget
         dashboard.addItemMovedListener(event -> {
-            int index = event.getItems().indexOf(event.getItem()) + 1;
+            int position = event.getItems().indexOf(event.getItem()) + 1;
             int total = event.getItems().size();
             String title = ((DashboardWidget)event.getItem()).getTitle();
 
-            liveRegion.setText("Moved widget " + title + " to position " + index + " of " + total);
+            liveRegion.setText("Moved widget " + title + " to position " + position + " of " + total);
         });
 
         // This event is fired when the user resizes a widget
