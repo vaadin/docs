@@ -1,3 +1,4 @@
+import '@vaadin/dashboard/vaadin-dashboard.js'; // hidden-source-line
 import '@vaadin/dashboard/vaadin-dashboard-layout.js';
 import { html, LitElement } from 'lit';
 import type { DashboardI18n } from '@vaadin/dashboard';

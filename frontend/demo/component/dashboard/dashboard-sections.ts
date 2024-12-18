@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/dashboard/vaadin-dashboard.js'; // hidden-source-line
 import '@vaadin/dashboard/vaadin-dashboard-layout.js';
 import '@vaadin/dashboard/vaadin-dashboard-section.js';
 import '@vaadin/dashboard/vaadin-dashboard-widget.js';
