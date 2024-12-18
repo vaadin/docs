@@ -61,7 +61,7 @@ public class DashboardAnnouncements extends Div {
         // This event is fired when the user starts or stops editing a widget
         dashboard.addItemSelectedChangedListener(event -> {
             String title = ((DashboardWidget)event.getItem()).getTitle();
-            String selected = event.isSelected() ? "selected" : "unselected";
+            String selected = event.isSelected() ? "selected" : "deselected";
 
             liveRegion.setText("Widget " + title + " " + selected);
         });

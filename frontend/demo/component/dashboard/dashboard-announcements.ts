@@ -59,7 +59,7 @@ export class Example extends LitElement {
     // This event is fired when the user starts or stops editing a widget
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
-    const selected = e.detail.value ? 'selected' : 'unselected';
+    const selected = e.detail.value ? 'selected' : 'deselected';
 
     this.announcement = `Widget ${title} ${selected}`;
   }
@@ -110,7 +110,7 @@ export class Example extends LitElement {
   render() {
     return html`
       <p>Live announcement:</p>
-      <!-- 
+      <!--
       Live region for screen reader announcements. Changing its text content will result
       in a new announcement. This element is only visible for demonstration purposes. In
       your application you should visually hide it using CSS, for example by using the

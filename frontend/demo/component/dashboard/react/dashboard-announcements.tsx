@@ -53,7 +53,7 @@ function Example() {
     // This event is fired when the user starts or stops editing a widget
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
-    const selected = e.detail.value ? 'selected' : 'unselected';
+    const selected = e.detail.value ? 'selected' : 'deselected';
 
     announcement.value = `Widget ${title} ${selected}`;
   }
