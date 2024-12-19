@@ -2,11 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { Grid } from '@vaadin/grid';
 
 // tag::snippet[]
 @customElement('grid-range-selection')
@@ -18,21 +17,20 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-grid')
-  private grid!: Grid<Person>;
-
   @state()
   private items: Person[] = [];
 
+  private startItem?: Person;
+
   @state()
-  private startItem!: Person;
+  private selectedItems: Person[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
     this.items = people;
   }
 
-  onItemToggle(event: GridItemToggleEvent<Person>) {
+  private onItemToggle(event: GridItemToggleEvent<Person>) {
     const { item, selected, shiftKey } = event.detail;
 
     // If the anchor point isn't set, set it to the current item
@@ -41,7 +39,7 @@ export class Example extends LitElement {
     if (shiftKey) {
       // Calculcate the range of items between the anchor point and
       // the current item
-      const startIndex = this.items.indexOf(this.startItem);
+      const startIndex = this.items.indexOf(this.startItem!);
       const endIndex = this.items.indexOf(item);
       const rangeItems = this.items.slice(
         Math.min(startIndex, endIndex),
@@ -50,7 +48,7 @@ export class Example extends LitElement {
 
       // Update the selection state of the items within the range
       // based on the state of the current item
-      const selectedItems = new Set(this.grid.selectedItems);
+      const selectedItems = new Set(this.selectedItems);
       rangeItems.forEach((rangeItem) => {
         if (selected) {
           selectedItems.add(rangeItem);
@@ -58,7 +56,7 @@ export class Example extends LitElement {
           selectedItems.delete(rangeItem);
         }
       });
-      this.grid.selectedItems = [...selectedItems];
+      this.selectedItems = [...selectedItems];
     }
 
     // Update the anchor point to the current item
@@ -67,7 +65,11 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-grid .items="${this.items}" @item-toggle="${this.onItemToggle}">
+      <vaadin-grid
+        .items="${this.items}"
+        .selectedItems="${this.selectedItems}"
+        @item-toggle="${this.onItemToggle}"
+      >
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
         <vaadin-grid-column path="lastName"></vaadin-grid-column>

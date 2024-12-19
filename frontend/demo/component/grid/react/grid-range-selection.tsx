@@ -11,8 +11,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
-  const selectedItems = useSignal<Person[]>([]);
   const startItem = useRef<Person>();
+  const selectedItems = useSignal<Person[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -55,7 +55,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <Grid items={items.value} onItemToggle={handleItemToggle}>
+    <Grid items={items.value} selectedItems={selectedItems.value} onItemToggle={handleItemToggle}>
       <GridSelectionColumn />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
