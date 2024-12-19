@@ -33,29 +33,31 @@ public class GridRangeSelection extends Div {
                 .addClientItemToggleListener(event -> {
                     Person item = event.getItem();
 
+                    // If the anchor point isn't set, set it to the current item
                     startItem = startItem != null ? startItem : item;
+
                     if (event.isShiftKey()) {
+                        // Calculcate the range of items between the anchor point and
+                        // the current item
                         int startIndex = grid.getListDataView().getItemIndex(startItem).get();
                         int endIndex = grid.getListDataView().getItemIndex(endItem).get();
                         Set<Person> rangeItems = grid.getListDataView().getItems().skip(Math.min(startIndex, endIndex)).limit(Math.abs(startIndex - endIndex) + 1).collect(Collectors.toSet());
+
+                        // Update the selection state of the items within the range
+                        // based on the state of the current item
                         if (event.isSelected()) {
                             grid.asMultiSelect().select(rangeItems);
                         } else {
                             grid.asMultiSelect().deselect(rangeItems);
                         }
                     }
+
+                    // Update the anchor point to the current item
                     startItem = item;
                 });
         // end::snippet[]
-
         add(grid);
     }
-
-    // tag::snippet2[]
-    private <T> Set<T> fetchItemsRange(Grid<T> grid, T startItem, T endItem) {
-
-    }
-    // end::snippet2[]
 
     public static class Exporter // hidden-source-line
             extends DemoExporter<GridRangeSelection> { // hidden-source-line
