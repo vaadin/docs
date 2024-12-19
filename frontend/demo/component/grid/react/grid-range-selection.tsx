@@ -38,15 +38,15 @@ function Example() {
 
       // Update the selection state of the items within the range
       // based on the state of the current item
-      const selectedItemsCopy = new Set(selectedItems.value);
+      const newSelectedItems = new Set(selectedItems.value);
       rangeItems.forEach((rangeItem) => {
         if (selected) {
-          selectedItemsCopy.add(rangeItem);
+          newSelectedItems.add(rangeItem);
         } else {
-          selectedItemsCopy.delete(rangeItem);
+          newSelectedItems.delete(rangeItem);
         }
       });
-      selectedItems.value = [...selectedItemsCopy];
+      selectedItems.value = [...newSelectedItems];
     }
 
     // Update the anchor point to the current item
