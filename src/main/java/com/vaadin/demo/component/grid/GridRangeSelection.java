@@ -19,6 +19,7 @@ public class GridRangeSelection extends Div {
     private Person startItem;
 
     public GridRangeSelection() {
+        // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
@@ -27,7 +28,6 @@ public class GridRangeSelection extends Div {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        // tag::snippet[]
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         ((GridMultiSelectionModel<Person>) grid.getSelectionModel())
                 .addClientItemToggleListener(event -> {
@@ -39,9 +39,10 @@ public class GridRangeSelection extends Div {
                     if (event.isShiftKey()) {
                         // Calculcate the range of items between the anchor point and
                         // the current item
-                        int startIndex = grid.getListDataView().getItemIndex(startItem).get();
-                        int endIndex = grid.getListDataView().getItemIndex(endItem).get();
-                        Set<Person> rangeItems = grid.getListDataView().getItems().skip(Math.min(startIndex, endIndex)).limit(Math.abs(startIndex - endIndex) + 1).collect(Collectors.toSet());
+                        GridListDataView<Person> dataView = grid.getListDataView();
+                        int startIndex = dataView.getItemIndex(startItem).get();
+                        int endIndex = dataView.getItemIndex(endItem).get();
+                        Set<Person> rangeItems = dataView.getItems().skip(Math.min(startIndex, endIndex)).limit(Math.abs(startIndex - endIndex) + 1).collect(Collectors.toSet());
 
                         // Update the selection state of the items within the range
                         // based on the state of the current item
@@ -56,6 +57,7 @@ public class GridRangeSelection extends Div {
                     startItem = item;
                 });
         // end::snippet[]
+
         add(grid);
     }
 
