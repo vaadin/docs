@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router';
 import { AppLayout } from '@vaadin/react-components/AppLayout.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { DrawerToggle } from '@vaadin/react-components/DrawerToggle.js';
