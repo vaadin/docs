@@ -1,0 +1,68 @@
+package com.vaadin.demo.component.grid;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.domain.DataService;
+
+@Route("grid-range-selection")
+public class GridRangeSelection extends Div {
+
+    private Person startItem;
+
+    public GridRangeSelection() {
+        Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.addColumn(Person::getFirstName).setHeader("First name");
+        grid.addColumn(Person::getLastName).setHeader("Last name");
+        grid.addColumn(Person::getEmail).setHeader("Email");
+
+        List<Person> people = DataService.getPeople();
+        grid.setItems(people);
+
+        // tag::snippet[]
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+        ((GridMultiSelectionModel<Person>) grid.getSelectionModel())
+                .addClientItemToggleListener(event -> {
+                    Person item = event.getItem();
+
+                    startItem = startItem != null ? startItem : item;
+                    if (event.isShiftKey()) {
+                        Set<Person> range = fetchItemsRange(grid, startItem,
+                                item);
+                        if (event.isSelected()) {
+                            grid.asMultiSelect().select(range);
+                        } else {
+                            grid.asMultiSelect().deselect(range);
+                        }
+                    }
+                    startItem = item;
+                });
+        // end::snippet[]
+
+        add(grid);
+    }
+
+    // tag::snippet2[]
+    private <T> Set<T> fetchItemsRange(Grid<T> grid, T startItem, T endItem) {
+        GridListDataView<T> dataView = grid.getListDataView();
+        int startIndex = dataView.getItemIndex(startItem).get();
+        int endIndex = dataView.getItemIndex(endItem).get();
+
+        return dataView.getItems().skip(Math.min(startIndex, endIndex))
+                .limit(Math.abs(startIndex - endIndex) + 1)
+                .collect(Collectors.toSet());
+    }
+    // end::snippet2[]
+
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GridRangeSelection> { // hidden-source-line
+    } // hidden-source-line
+}
