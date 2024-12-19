@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/horizontal-layout';
-import '@vaadin/text-area';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -21,17 +20,17 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-    <!-- tag::snippet[] -->
+      <!-- tag::snippet[] -->
       <vaadin-horizontal-layout
         theme="spacing padding"
-        class="height-4xl" // hidden-source-line
+        class="height-4xl"
         style="align-items: center"
       >
-        <vaadin-text-area label="Text area 1"></vaadin-text-area>
-        <vaadin-text-area label="Text area 2"></vaadin-text-area>
-        <vaadin-text-area label="Text area 3"></vaadin-text-area>
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
-    <!-- end::snippet[] -->
+      <!-- end::snippet[] -->
     `;
   }
 }

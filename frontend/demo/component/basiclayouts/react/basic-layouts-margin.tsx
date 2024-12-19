@@ -1,37 +1,36 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { Button, RadioButton, RadioGroup, VerticalLayout } from '@vaadin/react-components';
+import { HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
-  useSignals(); // hidden-source-line
-  const theme = useSignal('margin');
-
   return (
-    <>
-      {/* tag::snippet[] */}
-      <div className="container">
-        <VerticalLayout theme={`${theme.value} spacing padding`} style={{ alignItems: 'stretch' }}>
-          <Button>Button 1</Button>
-          <Button>Button 2</Button>
-          <Button>Button 3</Button>
-        </VerticalLayout>
+    <HorizontalLayout theme="spacing" style={{ border: '0' }}>
+      <div style={{ width: '100%' }}>
+        <p>Vertical layout without margin:</p>
+        <div className="container">
+          <VerticalLayout theme="spacing padding" style={{ alignItems: 'stretch' }}>
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
+          </VerticalLayout>
+        </div>
       </div>
-
-      <RadioGroup
-        label="Margin"
-        value={theme.value}
-        onValueChanged={(event) => {
-          theme.value = event.detail.value;
-        }}
-      >
-        <RadioButton value="margin" label="Enabled" />
-        <RadioButton value="" label="Disabled" />
-      </RadioGroup>
-      {/* end::snippet[] */}
-    </>
+      <div style={{ width: '100%' }}>
+        <p>Vertical layout with margin:</p>
+        <div className="container">
+          {/* tag::snippet[] */}
+          <VerticalLayout theme="margin spacing padding" style={{ alignItems: 'stretch' }}>
+            {/* end::snippet[] */}
+            <div className="example-item">Item 1</div>
+            <div className="example-item">Item 2</div>
+            <div className="example-item">Item 3</div>
+            {/* tag::snippet[] */}
+          </VerticalLayout>
+          {/* end::snippet[] */}
+        </div>
+      </div>
+    </HorizontalLayout>
   );
 }
 

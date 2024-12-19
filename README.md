@@ -2,7 +2,7 @@
 
 Official documentation and code examples for Vaadin.
 
-This repository does not generate the [vaadin.com/docs](https://vaadin.com/docs) or [hilla.dev/docs](https://hilla.dev/docs) websites. It only contains the content for them. The builds are done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
+This repository does not generate the [vaadin.com/docs](https://vaadin.com/docs) website. It only contains the content for them. The builds are done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
 
 ## Contents
 

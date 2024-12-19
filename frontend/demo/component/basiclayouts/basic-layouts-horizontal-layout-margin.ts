@@ -1,10 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
 import '@vaadin/horizontal-layout';
-import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('basic-layouts-horizontal-layout-margin')
@@ -21,33 +18,29 @@ export class Example extends LitElement {
     return root;
   }
 
-  // tag::snippet[]
-  @state()
-  private theme = 'margin';
-
   protected override render() {
     return html`
+      <p>Horizontal layout without margin:</p>
       <div class="container">
-        <vaadin-horizontal-layout
-          theme="${this.theme} spacing padding"
-          style="align-items: stretch"
-        >
-          <vaadin-button>Button 1</vaadin-button>
-          <vaadin-button>Button 2</vaadin-button>
-          <vaadin-button>Button 3</vaadin-button>
+        <vaadin-horizontal-layout theme="spacing padding">
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
         </vaadin-horizontal-layout>
       </div>
-      <vaadin-radio-group
-        label="Margin"
-        .value="${this.theme}"
-        @value-changed="${(event: RadioGroupValueChangedEvent) => {
-          this.theme = event.detail.value;
-        }}"
-      >
-        <vaadin-radio-button value="margin" label="Enabled"></vaadin-radio-button>
-        <vaadin-radio-button value="" label="Disabled"></vaadin-radio-button>
-      </vaadin-radio-group>
+
+      <p>Horizontal layout with margin:</p>
+      <div class="container">
+        <!-- tag::snippet[] -->
+        <vaadin-horizontal-layout theme="margin spacing padding">
+          <!-- end::snippet[] -->
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+          <!-- tag::snippet[] -->
+        </vaadin-horizontal-layout>
+        <!-- end::snippet[] -->
+      </div>
     `;
   }
-  // end::snippet[]
 }

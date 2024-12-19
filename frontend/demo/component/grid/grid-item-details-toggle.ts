@@ -1,7 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/button';
 import '@vaadin/form-layout';
 import '@vaadin/grid';
+import '@vaadin/icon';
 import '@vaadin/text-field';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { columnBodyRenderer, gridRowDetailsRenderer } from '@vaadin/grid/lit.js';
@@ -80,28 +83,35 @@ export class Example extends LitElement {
           []
         )}
       >
-        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
-        <vaadin-grid-column path="profession"></vaadin-grid-column>
         <vaadin-grid-column
+          width="80px"
+          flex-grow="0"
+          frozen
           ${columnBodyRenderer<Person>(
-            (person) => html`
+            (person, { detailsOpened }) => html`
               <vaadin-button
-                theme="tertiary"
+                theme="tertiary icon"
+                aria-label="Toggle details"
+                aria-expanded="${detailsOpened ? 'true' : 'false'}"
                 @click="${() => {
-                  const isOpened = this.detailsOpenedItems.includes(person);
-                  this.detailsOpenedItems = isOpened
+                  this.detailsOpenedItems = detailsOpened
                     ? this.detailsOpenedItems.filter((p) => p !== person)
                     : [...this.detailsOpenedItems, person];
                 }}"
               >
-                Toggle details
+                <vaadin-icon
+                  .icon="${detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                ></vaadin-icon>
               </vaadin-button>
             `,
             []
           )}
         ></vaadin-grid-column>
+        <vaadin-grid-column path="displayName" header="Name"></vaadin-grid-column>
+        <vaadin-grid-column path="profession"></vaadin-grid-column>
       </vaadin-grid>
     `;
   }
 }
+
 // end::snippet[]
