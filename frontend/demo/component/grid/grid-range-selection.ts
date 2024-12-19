@@ -48,15 +48,15 @@ export class Example extends LitElement {
 
       // Update the selection state of the items within the range
       // based on the state of the current item
-      const selectedItems = new Set(this.selectedItems);
+      const newSelectedItems = new Set(this.selectedItems);
       rangeItems.forEach((rangeItem) => {
         if (selected) {
-          selectedItems.add(rangeItem);
+          newSelectedItems.add(rangeItem);
         } else {
-          selectedItems.delete(rangeItem);
+          newSelectedItems.delete(rangeItem);
         }
       });
-      this.selectedItems = [...selectedItems];
+      this.selectedItems = [...newSelectedItems];
     }
 
     // Update the anchor point to the current item
