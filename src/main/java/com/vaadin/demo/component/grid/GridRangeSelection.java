@@ -35,12 +35,13 @@ public class GridRangeSelection extends Div {
 
                     startItem = startItem != null ? startItem : item;
                     if (event.isShiftKey()) {
-                        Set<Person> range = fetchItemsRange(grid, startItem,
-                                item);
+                        int startIndex = grid.getListDataView().getItemIndex(startItem).get();
+                        int endIndex = grid.getListDataView().getItemIndex(endItem).get();
+                        Set<Person> rangeItems = grid.getListDataView().getItems().skip(Math.min(startIndex, endIndex)).limit(Math.abs(startIndex - endIndex) + 1).collect(Collectors.toSet());
                         if (event.isSelected()) {
-                            grid.asMultiSelect().select(range);
+                            grid.asMultiSelect().select(rangeItems);
                         } else {
-                            grid.asMultiSelect().deselect(range);
+                            grid.asMultiSelect().deselect(rangeItems);
                         }
                     }
                     startItem = item;
@@ -52,13 +53,7 @@ public class GridRangeSelection extends Div {
 
     // tag::snippet2[]
     private <T> Set<T> fetchItemsRange(Grid<T> grid, T startItem, T endItem) {
-        GridListDataView<T> dataView = grid.getListDataView();
-        int startIndex = dataView.getItemIndex(startItem).get();
-        int endIndex = dataView.getItemIndex(endItem).get();
 
-        return dataView.getItems().skip(Math.min(startIndex, endIndex))
-                .limit(Math.abs(startIndex - endIndex) + 1)
-                .collect(Collectors.toSet());
     }
     // end::snippet2[]
 
