@@ -40,12 +40,10 @@ export class Example extends LitElement {
     if (shiftKey) {
       // Calculcate the range of items between the anchor point and
       // the current item
-      const rangeStart = this.items.indexOf(this.rangeStartItem);
-      const rangeEnd = this.items.indexOf(item);
-      const rangeItems = this.items.slice(
-        Math.min(rangeStart, rangeEnd),
-        Math.max(rangeStart, rangeEnd) + 1
-      );
+      const [rangeStart, rangeEnd] = [this.rangeStartItem, item]
+        .map((i) => this.items.indexOf(i))
+        .sort((a, b) => a - b);
+      const rangeItems = this.items.slice(rangeStart, rangeEnd + 1);
 
       // Update the selection state of items within the range
       // based on the state of the current item

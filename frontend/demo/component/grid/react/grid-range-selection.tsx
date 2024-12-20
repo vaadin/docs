@@ -29,12 +29,10 @@ function Example() {
     if (shiftKey) {
       // Calculcate the range of items between the anchor point and
       // the current item
-      const rangeStart = items.value.indexOf(rangeStartItem.current!);
-      const rangeEnd = items.value.indexOf(item);
-      const rangeItems = items.value.slice(
-        Math.min(rangeStart, rangeEnd),
-        Math.max(rangeStart, rangeEnd) + 1
-      );
+      const [rangeStart, rangeEnd] = [rangeStartItem.current, item]
+        .map((i) => items.value.indexOf(i))
+        .sort((a, b) => a - b);
+      const rangeItems = items.value.slice(rangeStart, rangeEnd + 1);
 
       // Update the selection state of items within the range
       // based on the state of the current item
