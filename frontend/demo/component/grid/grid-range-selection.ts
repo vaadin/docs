@@ -3,10 +3,10 @@ import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import type { GridItemToggleEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import type { GridItemToggleEvent } from '@vaadin/grid';
 
 // tag::snippet[]
 @customElement('grid-range-selection')
@@ -31,7 +31,7 @@ export class Example extends LitElement {
     this.items = people;
   }
 
-  private onItemToggle(event: GridItemToggleEvent<Person>) {
+  handleItemToggle(event: GridItemToggleEvent<Person>) {
     const { item, selected, shiftKey } = event.detail;
 
     // If the anchor point isn't set, set it to the current item
@@ -40,7 +40,7 @@ export class Example extends LitElement {
     if (shiftKey) {
       // Calculcate the range of items between the anchor point and
       // the current item
-      const rangeStart = this.items.indexOf(this.rangeStartItem!);
+      const rangeStart = this.items.indexOf(this.rangeStartItem);
       const rangeEnd = this.items.indexOf(item);
       const rangeItems = this.items.slice(
         Math.min(rangeStart, rangeEnd),
@@ -69,7 +69,7 @@ export class Example extends LitElement {
       <vaadin-grid
         .items="${this.items}"
         .selectedItems="${this.selectedItems}"
-        @item-toggle="${this.onItemToggle}"
+        @item-toggle="${this.handleItemToggle}"
       >
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
         <vaadin-grid-column path="firstName"></vaadin-grid-column>
