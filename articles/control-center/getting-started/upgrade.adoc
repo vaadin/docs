@@ -1,0 +1,61 @@
+---
+title: Upgrading from 1.0 to 1.1
+page-title: Upgrading from 1.0 to 1.1
+description: Learn how to upgrade Control Center 1.0 to 1.1
+meta-description: Learn how to get upgrade Vaadin Control Center version 1.0 to 1.1.
+order: 110
+---
+
+= Upgrading from 1.0 to 1.1
+
+To successfully upgrade Control Center from 1.0.X version to 1.1.X, you must perform three actions:
+
+- Add a configuration property to the Control Center configmap.
+- Create a secret that holds the email and password for the Control Center user that was created in the installation wizard.
+- Set the docker image of the Control Center deployment to a 1.1 version.
+
+NOTE: All of the example commands below assume that Control Center was installed in namespace named `control-center`.
+
+== Add a New Necessary Configuration Property
+
+Control Center 1.1.0 uses a configuration property that did not exist in 1.0.
+If this property is missing, your deployment will not work after upgrading to 1.1.
+Edit the configmap for control center, adding the following under the `data` segment:
+
+[source,yaml]
+----
+# data:
+  vaadin.control-center.keycloak.admin-secret: control-center-keycloak-initial-admin
+----
+
+To edit the Control Center configmap, run:
+
+[source,bash]
+----
+kubectl -n control-center edit configmap control-center
+----
+
+== Create a Secret for Control Center User Credentials
+
+There must also exist a secret which holds the email and password of the main Control Center user.
+These values must be the same that were input during the installation process of the 1.0 version, in the installation wizard.
+Assuming the email was `user@example.com` and the password was `examplepassword123`, run:
+
+[source,bash]
+----
+kubectl -n control-center create secret generic control-center-user \
+--from-literal=email=user@example.com \
+--from-literal=password=examplepassword123
+----
+
+== Upgrading Docker Image
+
+The last step is when you actually upgrade your deployed Control Center application to use an updated image.
+Assuming that your Control Center deployment is named `control-center`, upgrade its docker image by running:
+
+[source,bash]
+----
+kubectl -n control-center set image deployment/control-center app=vaadin/control-center-app:1.1.0
+----
+
+After all these steps are completed, you should now have a working deployment of Control Center 1.1.0 in your cluster.
