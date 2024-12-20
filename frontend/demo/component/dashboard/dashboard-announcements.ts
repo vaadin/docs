@@ -89,6 +89,9 @@ export class Example extends LitElement {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
     this.announcement = `Moved widget ${title} to position ${position} of ${total}`;
+
+    // Store updated widgets after user has modified them
+    this.widgets = e.detail.items as WidgetConfig[];
   }
 
   handleResize(e: DashboardItemResizedEvent<WidgetConfig>) {
@@ -98,6 +101,9 @@ export class Example extends LitElement {
     const title = widgetTitles[e.detail.item.type];
 
     this.announcement = `Resized widget ${title} to ${colspan} columns, ${rowspan} rows`;
+
+    // Store updated widgets after user has modified them
+    this.widgets = e.detail.items as WidgetConfig[];
   }
 
   handleRemove(e: DashboardItemRemovedEvent<WidgetConfig>) {
@@ -105,6 +111,9 @@ export class Example extends LitElement {
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
 
     this.announcement = `Removed widget ${title}`;
+
+    // Store updated widgets after user has modified them
+    this.widgets = e.detail.items as WidgetConfig[];
   }
 
   render() {
