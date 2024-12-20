@@ -6,6 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+import { GridItemToggleEvent } from '@vaadin/grid';
 
 // tag::snippet[]
 @customElement('grid-range-selection')
@@ -20,10 +21,10 @@ export class Example extends LitElement {
   @state()
   private items: Person[] = [];
 
-  private startItem?: Person;
-
   @state()
   private selectedItems: Person[] = [];
+
+  private rangeStartItem?: Person;
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -34,19 +35,19 @@ export class Example extends LitElement {
     const { item, selected, shiftKey } = event.detail;
 
     // If the anchor point isn't set, set it to the current item
-    this.startItem ??= item;
+    this.rangeStartItem ??= item;
 
     if (shiftKey) {
       // Calculcate the range of items between the anchor point and
       // the current item
-      const startIndex = this.items.indexOf(this.startItem!);
-      const endIndex = this.items.indexOf(item);
+      const rangeStart = this.items.indexOf(this.rangeStartItem!);
+      const rangeEnd = this.items.indexOf(item);
       const rangeItems = this.items.slice(
-        Math.min(startIndex, endIndex),
-        Math.max(startIndex, endIndex) + 1
+        Math.min(rangeStart, rangeEnd),
+        Math.max(rangeStart, rangeEnd) + 1
       );
 
-      // Update the selection state of the items within the range
+      // Update the selection state of items within the range
       // based on the state of the current item
       const newSelectedItems = new Set(this.selectedItems);
       rangeItems.forEach((rangeItem) => {
@@ -60,7 +61,7 @@ export class Example extends LitElement {
     }
 
     // Update the anchor point to the current item
-    this.startItem = item;
+    this.rangeStartItem = item;
   }
 
   protected override render() {

@@ -16,11 +16,12 @@ import com.vaadin.demo.domain.DataService;
 @Route("grid-range-selection")
 public class GridRangeSelection extends Div {
 
-    private Person startItem;
+    private Person rangeStartItem;
 
     public GridRangeSelection() {
         // tag::snippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(Person::getFirstName).setHeader("First name");
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
@@ -28,23 +29,29 @@ public class GridRangeSelection extends Div {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        grid.setSelectionMode(Grid.SelectionMode.MULTI);
         ((GridMultiSelectionModel<Person>) grid.getSelectionModel())
                 .addClientItemToggleListener(event -> {
                     Person item = event.getItem();
 
                     // If the anchor point isn't set, set it to the current item
-                    startItem = startItem != null ? startItem : item;
+                    if (rangeStartItem == null) {
+                        rangeStartItem = item;
+                    }
 
                     if (event.isShiftKey()) {
-                        // Calculcate the range of items between the anchor point and
-                        // the current item
-                        GridListDataView<Person> dataView = grid.getListDataView();
-                        int startIndex = dataView.getItemIndex(startItem).get();
-                        int endIndex = dataView.getItemIndex(endItem).get();
-                        Set<Person> rangeItems = dataView.getItems().skip(Math.min(startIndex, endIndex)).limit(Math.abs(startIndex - endIndex) + 1).collect(Collectors.toSet());
+                        // Calculcate the range of items between the anchor
+                        // point and the current item
+                        GridListDataView<Person> dataView = grid
+                                .getListDataView();
+                        int rangeStart = dataView.getItemIndex(rangeStartItem)
+                                .get();
+                        int rangeEnd = dataView.getItemIndex(item).get();
+                        Set<Person> rangeItems = dataView.getItems()
+                                .skip(Math.min(rangeStart, rangeEnd))
+                                .limit(Math.abs(rangeStart - rangeEnd) + 1)
+                                .collect(Collectors.toSet());
 
-                        // Update the selection state of the items within the range
+                        // Update the selection state of items within the range
                         // based on the state of the current item
                         if (event.isSelected()) {
                             grid.asMultiSelect().select(rangeItems);
@@ -54,7 +61,7 @@ public class GridRangeSelection extends Div {
                     }
 
                     // Update the anchor point to the current item
-                    startItem = item;
+                    rangeStartItem = item;
                 });
         // end::snippet[]
 
