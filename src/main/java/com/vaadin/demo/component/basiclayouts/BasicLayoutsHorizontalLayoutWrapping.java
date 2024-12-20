@@ -52,7 +52,8 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
         Div wrapItem5 = new Div("Item 5");
         wrapItem5.setClassName("example-item");
 
-        layoutWithWrap.add(wrapItem1, wrapItem2, wrapItem3, wrapItem4, wrapItem5);
+        layoutWithWrap.add(wrapItem1, wrapItem2, wrapItem3, wrapItem4,
+                wrapItem5);
 
         this.setClassName("basic-layouts-example");
         this.add(layoutWithWrap);

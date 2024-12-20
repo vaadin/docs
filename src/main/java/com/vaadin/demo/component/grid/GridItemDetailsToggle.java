@@ -22,9 +22,10 @@ public class GridItemDetailsToggle extends Div {
     public GridItemDetailsToggle() {
         // tag::snippet1[]
         Grid<Person> grid = new Grid<>(Person.class, false);
+        grid.addColumn(createToggleDetailsRenderer(grid)).setWidth("80px")
+                .setFlexGrow(0).setFrozen(true);
         grid.addColumn(Person::getFullName).setHeader("Name");
         grid.addColumn(Person::getProfession).setHeader("Profession");
-        grid.addColumn(createToggleDetailsRenderer(grid));
 
         grid.setDetailsVisibleOnClick(false);
         grid.setItemDetailsRenderer(createPersonDetailsRenderer());
@@ -41,8 +42,22 @@ public class GridItemDetailsToggle extends Div {
     // tag::snippet2[]
     private static Renderer<Person> createToggleDetailsRenderer(
             Grid<Person> grid) {
-        return LitRenderer.<Person> of(
-                "<vaadin-button theme=\"tertiary\" @click=\"${handleClick}\">Toggle details</vaadin-button>")
+
+        // @formatter:off hidden-source-line
+        return LitRenderer
+                .<Person> of("""
+                    <vaadin-button
+                        theme="tertiary icon"
+                        aria-label="Toggle details"
+                        aria-expanded="${model.detailsOpened ? 'true' : 'false'}"
+                        @click="${handleClick}"
+                    >
+                        <vaadin-icon
+                        .icon="${model.detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                        ></vaadin-icon>
+                    </vaadin-button>
+                """)
+                // @formatter:on hidden-source-line
                 .withFunction("handleClick",
                         person -> grid.setDetailsVisible(person,
                                 !grid.isDetailsVisible(person)));

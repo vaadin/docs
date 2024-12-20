@@ -5,7 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-//tag::snippet[]
+// tag::snippet[]
 @Entity
 public class Supplier {
     @Id
