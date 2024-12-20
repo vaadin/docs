@@ -18,7 +18,6 @@ import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -26,12 +25,12 @@ import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 
 @Route("popover-anchored-dialog")
 public class PopoverAnchoredDialog extends Div {
 
     public PopoverAnchoredDialog() {
+        // tag::gridsnippet[]
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.addColumn(Person::getFirstName).setKey("firstName")
                 .setHeader("First name");
@@ -45,6 +44,7 @@ public class PopoverAnchoredDialog extends Div {
                 .setKey("birthday").setHeader("Birthday");
         grid.addColumn(Person::getProfession).setKey("profession")
                 .setHeader("Profession");
+        // end::gridsnippet[]
 
         grid.setItems(DataService.getPeople());
 
@@ -71,7 +71,8 @@ public class PopoverAnchoredDialog extends Div {
 
         List<String> columns = List.of("firstName", "lastName", "email",
                 "phone", "birthday", "profession");
-
+        // tag::gridsnippet[]
+        
         CheckboxGroup<String> group = new CheckboxGroup<>();
         group.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         group.setItems(columns);
@@ -85,6 +86,7 @@ public class PopoverAnchoredDialog extends Div {
                 grid.getColumnByKey(key).setVisible(e.getValue().contains(key));
             });
         });
+        // end::gridsnippet[]
 
         Set<String> defaultColumns = Set.of("firstName", "lastName", "email",
                 "profession");

@@ -92,11 +92,13 @@ function Example() {
       </Popover>
       {/* end::snippet[] */}
 
+      {/* tag::gridsnippet[] */}
       <Grid items={items.value}>
         {columns.value.map((item) => (
           <GridColumn path={item.key} hidden={!item.visible} key={item.key} />
         ))}
       </Grid>
+      {/* end::gridsnippet[] */}
     </>
   );
 }
