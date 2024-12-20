@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductAdvancedDtoListService

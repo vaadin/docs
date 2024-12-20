@@ -22,7 +22,8 @@ public class BasicLayoutsPadding extends Div {
         parent.add(wrapper);
 
         // tag::snippet[]
-        // VerticalLayout has padding enabled by default, use setPadding to disable it
+        // VerticalLayout has padding enabled by default, use setPadding to
+        // disable it
         VerticalLayout layoutWithoutPadding = new VerticalLayout();
         layoutWithoutPadding.setPadding(false);
         // end::snippet[]

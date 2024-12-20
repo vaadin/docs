@@ -23,7 +23,7 @@ public class DateTimePickerCustomValidation extends Div {
                 .setHelperText("Open Mondays-Fridays, 8:00-12:00, 13:00-16:00");
         dateTimePicker.setStep(Duration.ofMinutes(30));
         dateTimePicker.setI18n(new DateTimePickerI18n()
-            .setBadInputErrorMessage("Invalid date or time format"));
+                .setBadInputErrorMessage("Invalid date or time format"));
         add(dateTimePicker);
 
         String errorMessage = "The selected day of week or time is not available";

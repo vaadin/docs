@@ -22,10 +22,10 @@ public class DateTimePickerValidation extends Div {
         dateTimePicker.setMax(LocalDateTime.now().plusDays(60));
 
         dateTimePicker.setI18n(new DateTimePickerI18n()
-            .setRequiredErrorMessage("Field is required")
-            .setBadInputErrorMessage("Invalid date or time format")
-            .setMinErrorMessage("Too early, choose another date and time")
-            .setMaxErrorMessage("Too late, choose another date and time"));
+                .setRequiredErrorMessage("Field is required")
+                .setBadInputErrorMessage("Invalid date or time format")
+                .setMinErrorMessage("Too early, choose another date and time")
+                .setMaxErrorMessage("Too late, choose another date and time"));
 
         add(dateTimePicker);
         // end::snippet[]

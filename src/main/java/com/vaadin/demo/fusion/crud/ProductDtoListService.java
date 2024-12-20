@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductDtoListService implements ListService<ProductDto> {
