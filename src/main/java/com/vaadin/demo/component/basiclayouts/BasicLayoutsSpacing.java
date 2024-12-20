@@ -22,7 +22,8 @@ public class BasicLayoutsSpacing extends Div {
         parent.add(wrapper);
 
         // tag::snippet[]
-        // VerticalLayout has spacing enabled by default, use setSpacing to disable it
+        // VerticalLayout has spacing enabled by default, use setSpacing to
+        // disable it
         VerticalLayout layoutWithoutSpacing = new VerticalLayout();
         layoutWithoutSpacing.setSpacing(false);
         // end::snippet[]

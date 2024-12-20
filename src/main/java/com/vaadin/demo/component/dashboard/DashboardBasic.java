@@ -27,7 +27,8 @@ public class DashboardBasic extends Div {
         conversions.setContent(createWidgetContent());
         dashboard.add(conversions);
 
-        DashboardWidget visitorsByCountry = new DashboardWidget("Visitors by country");
+        DashboardWidget visitorsByCountry = new DashboardWidget(
+                "Visitors by country");
         visitorsByCountry.setContent(createWidgetContent());
         visitorsByCountry.setRowspan(2);
         dashboard.add(visitorsByCountry);
@@ -40,7 +41,8 @@ public class DashboardBasic extends Div {
         catImage.setContent(createWidgetContent());
         dashboard.add(catImage);
 
-        DashboardWidget visitorsByBrowser = new DashboardWidget("Visitors by browser");
+        DashboardWidget visitorsByBrowser = new DashboardWidget(
+                "Visitors by browser");
         visitorsByBrowser.setContent(createWidgetContent());
         visitorsByBrowser.setColspan(2);
         dashboard.add(visitorsByBrowser);

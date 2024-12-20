@@ -12,7 +12,8 @@ public class BasicLayoutsHorizontalLayoutSpacing extends Div {
     public BasicLayoutsHorizontalLayoutSpacing() {
         add(new Paragraph("Horizontal layout without spacing:"));
         // tag::snippet[]
-        // HorizontalLayout has spacing enabled by default, use setSpacing to disable it
+        // HorizontalLayout has spacing enabled by default, use setSpacing to
+        // disable it
         HorizontalLayout layoutWithoutSpacing = new HorizontalLayout();
         layoutWithoutSpacing.setSpacing(false);
         // end::snippet[]

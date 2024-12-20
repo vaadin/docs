@@ -26,7 +26,7 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layoutWithoutWrap.setSpacing(true);
         layoutWithoutWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutWithoutWrap.setHeight("200px");
-        
+
         Div item1 = new Div("Item 1");
         item1.setClassName("example-item");
         Div item2 = new Div("Item 2");
@@ -35,7 +35,7 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         item3.setClassName("example-item");
         Div item4 = new Div("Item 4");
         item4.setClassName("example-item");
-        
+
         layoutWithoutWrap.add(item1, item2, item3, item4);
         wrapper.add(layoutWithoutWrap);
         parent.add(wrapper);
@@ -52,7 +52,7 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layoutWithWrap.setSpacing(true);
         layoutWithWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutWithWrap.setHeight("200px");
-        
+
         Div wrapItem1 = new Div("Item 1");
         wrapItem1.setClassName("example-item");
         Div wrapItem2 = new Div("Item 2");
@@ -61,7 +61,7 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         wrapItem3.setClassName("example-item");
         Div wrapItem4 = new Div("Item 4");
         wrapItem4.setClassName("example-item");
-        
+
         layoutWithWrap.add(wrapItem1, wrapItem2, wrapItem3, wrapItem4);
         wrapper.add(layoutWithWrap);
         parent.add(wrapper);
