@@ -16,7 +16,8 @@ public class DashboardSections extends Div {
         dashboard.setMaximumColumnCount(3);
 
         // tag::snippet[]
-        DashboardSection statsSection = dashboard.addSection("Monthly Funnel Stats");
+        DashboardSection statsSection = dashboard
+                .addSection("Monthly Funnel Stats");
 
         DashboardWidget visitors = new DashboardWidget("Visitors");
         visitors.setContent(createWidgetContent());
@@ -31,8 +32,10 @@ public class DashboardSections extends Div {
         statsSection.add(conversions);
         // end::snippet[]
 
-        DashboardSection detailsSection = dashboard.addSection("Visitor Details");
-        DashboardWidget visitorsByCountry = new DashboardWidget("Visitors by country");
+        DashboardSection detailsSection = dashboard
+                .addSection("Visitor Details");
+        DashboardWidget visitorsByCountry = new DashboardWidget(
+                "Visitors by country");
         visitorsByCountry.setContent(createWidgetContent());
         visitorsByCountry.setRowspan(2);
         detailsSection.add(visitorsByCountry);
@@ -45,7 +48,8 @@ public class DashboardSections extends Div {
         catImage.setContent(createWidgetContent());
         detailsSection.add(catImage);
 
-        DashboardWidget visitorsByBrowser = new DashboardWidget("Visitors by browser");
+        DashboardWidget visitorsByBrowser = new DashboardWidget(
+                "Visitors by browser");
         visitorsByBrowser.setContent(createWidgetContent());
         visitorsByBrowser.setColspan(2);
         detailsSection.add(visitorsByBrowser);

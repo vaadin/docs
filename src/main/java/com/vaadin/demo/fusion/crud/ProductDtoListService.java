@@ -13,17 +13,14 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductDtoListService implements ListService<ProductDto> {
     private final ProductRepository productRepository;
-    private final JpaFilterConverter jpaFilterConverter;
 
-    public ProductDtoListService(ProductRepository productRepository,
-            JpaFilterConverter jpaFilterConverter) {
+    public ProductDtoListService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-        this.jpaFilterConverter = jpaFilterConverter;
     }
 
     @Override
@@ -33,7 +30,7 @@ public class ProductDtoListService implements ListService<ProductDto> {
         // Use the Hilla JpaFilterConverter to create a JPA specification from
         // the filter
         Specification<Product> spec = filter != null
-                ? jpaFilterConverter.toSpec(filter, Product.class)
+                ? JpaFilterConverter.toSpec(filter, Product.class)
                 : Specification.anyOf();
         // Query the JPA repository
         Page<Product> products = productRepository.findAll(spec, pageable);

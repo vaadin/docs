@@ -5,7 +5,7 @@ import com.vaadin.hilla.BrowserCallable;
 import com.vaadin.hilla.Nullable;
 import com.vaadin.hilla.crud.FormService;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductDtoFormService implements FormService<ProductDto, Long> {

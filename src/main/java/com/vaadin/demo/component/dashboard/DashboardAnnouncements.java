@@ -30,7 +30,8 @@ public class DashboardAnnouncements extends Div {
         conversions.setContent(createWidgetContent());
         dashboard.add(conversions);
 
-        DashboardWidget visitorsByCountry = new DashboardWidget("Visitors by country");
+        DashboardWidget visitorsByCountry = new DashboardWidget(
+                "Visitors by country");
         visitorsByCountry.setContent(createWidgetContent());
         visitorsByCountry.setRowspan(2);
         dashboard.add(visitorsByCountry);
@@ -43,16 +44,18 @@ public class DashboardAnnouncements extends Div {
         catImage.setContent(createWidgetContent());
         dashboard.add(catImage);
 
-        DashboardWidget visitorsByBrowser = new DashboardWidget("Visitors by browser");
+        DashboardWidget visitorsByBrowser = new DashboardWidget(
+                "Visitors by browser");
         visitorsByBrowser.setContent(createWidgetContent());
         visitorsByBrowser.setColspan(2);
         dashboard.add(visitorsByBrowser);
 
         // tag::snippet[]
-        // Live region for screen reader announcements. Changing its text content will result
-        // in a new announcement. This element is only visible for demonstration purposes. In
-        // your application you should visually hide it using CSS, for example by using the
-        // sr-only Lumo utility class:
+        // Live region for screen reader announcements. Changing its text
+        // content will result in a new announcement. This element is only
+        // visible for demonstration purposes. In your application you should
+        // visually hide it using CSS, for example by using the sr-only Lumo
+        // utility class:
         // liveRegion.addClassName(LumoUtility.Accessibility.SCREEN_READER_ONLY)
         Div liveRegion = new Div();
         liveRegion.getElement().setAttribute("aria-live", "polite");
@@ -60,7 +63,7 @@ public class DashboardAnnouncements extends Div {
 
         // This event is fired when the user starts or stops editing a widget
         dashboard.addItemSelectedChangedListener(event -> {
-            String title = ((DashboardWidget)event.getItem()).getTitle();
+            String title = ((DashboardWidget) event.getItem()).getTitle();
             String selected = event.isSelected() ? "selected" : "deselected";
 
             liveRegion.setText("Widget " + title + " " + selected);
@@ -88,9 +91,10 @@ public class DashboardAnnouncements extends Div {
         dashboard.addItemMovedListener(event -> {
             int position = event.getItems().indexOf(event.getItem()) + 1;
             int total = event.getItems().size();
-            String title = ((DashboardWidget)event.getItem()).getTitle();
+            String title = ((DashboardWidget) event.getItem()).getTitle();
 
-            liveRegion.setText("Moved widget " + title + " to position " + position + " of " + total);
+            liveRegion.setText("Moved widget " + title + " to position "
+                    + position + " of " + total);
         });
 
         // This event is fired when the user resizes a widget
@@ -99,12 +103,13 @@ public class DashboardAnnouncements extends Div {
             int rowspan = event.getItem().getRowspan();
             String title = event.getItem().getTitle();
 
-            liveRegion.setText("Resized widget " + title + " to " + colspan + " columns, " + rowspan + " rows");
+            liveRegion.setText("Resized widget " + title + " to " + colspan
+                    + " columns, " + rowspan + " rows");
         });
 
         // This event is fired when the user removes a widget
         dashboard.addItemRemovedListener(event -> {
-            String title = ((DashboardWidget)event.getItem()).getTitle();
+            String title = ((DashboardWidget) event.getItem()).getTitle();
 
             liveRegion.setText("Removed widget " + title);
         });
