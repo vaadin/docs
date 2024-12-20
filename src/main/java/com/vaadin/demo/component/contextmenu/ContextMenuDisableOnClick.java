@@ -34,7 +34,7 @@ public class ContextMenuDisableOnClick extends Div {
         });
     }
 
-    public static class Exporter
+    public static class Exporter // hidden-source-line
             extends DemoExporter<ContextMenuDisableOnClick> { // hidden-source-line
     } // hidden-source-line
 }
