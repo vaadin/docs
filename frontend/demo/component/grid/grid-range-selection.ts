@@ -6,7 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
-import { GridItemToggleEvent } from '@vaadin/grid';
+import type { GridItemToggleEvent } from '@vaadin/grid';
 
 // tag::snippet[]
 @customElement('grid-range-selection')
