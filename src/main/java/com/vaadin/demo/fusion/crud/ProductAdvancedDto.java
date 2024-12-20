@@ -26,5 +26,5 @@ public record ProductAdvancedDto(Long productId,
         );
     }
 }
-//end::snippet[]
+// end::snippet[]
 // @formatter:on hidden-source-line
