@@ -1,17 +1,19 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button, VerticalLayout } from '@vaadin/react-components';
+import { VerticalLayout } from '@vaadin/react-components';
 import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
   return (
     // tag::snippet[]
     <VerticalLayout theme="spacing padding" style={{ alignItems: 'start' }}>
-      <Button style={{ alignSelf: 'end' }} theme="primary">
-        Button 1
-      </Button>
-      <Button style={{ alignSelf: 'center' }}>Button 2</Button>
-      <Button>Button 3</Button>
+      <div className="example-item" style={{ alignSelf: 'end' }}>
+        Item 1
+      </div>
+      <div className="example-item" style={{ alignSelf: 'center' }}>
+        Item 2
+      </div>
+      <div className="example-item">Item 3</div>
     </VerticalLayout>
     // end::snippet[]
   );

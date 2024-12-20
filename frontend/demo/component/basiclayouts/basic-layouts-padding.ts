@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
@@ -26,9 +25,9 @@ export class Example extends LitElement {
         <div style="width: 100%">
           <p>Vertical layout without padding:</p>
           <vaadin-vertical-layout theme="spacing" style="align-items: stretch">
-            <vaadin-button>Button 1</vaadin-button>
-            <vaadin-button>Button 2</vaadin-button>
-            <vaadin-button>Button 3</vaadin-button>
+            <div class="example-item">Item 1</div>
+            <div class="example-item">Item 2</div>
+            <div class="example-item">Item 3</div>
           </vaadin-vertical-layout>
         </div>
         <div style="width: 100%">
@@ -36,9 +35,9 @@ export class Example extends LitElement {
           <!-- tag::snippet[] -->
           <vaadin-vertical-layout theme="padding spacing" style="align-items: stretch">
             <!-- end::snippet[] -->
-            <vaadin-button>Button 1</vaadin-button>
-            <vaadin-button>Button 2</vaadin-button>
-            <vaadin-button>Button 3</vaadin-button>
+            <div class="example-item">Item 1</div>
+            <div class="example-item">Item 2</div>
+            <div class="example-item">Item 3</div>
             <!-- tag::snippet[] -->
           </vaadin-vertical-layout>
           <!-- end::snippet[] -->

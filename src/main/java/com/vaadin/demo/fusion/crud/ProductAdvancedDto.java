@@ -1,6 +1,7 @@
 package com.vaadin.demo.fusion.crud;
 
-//tag::snippet[]
+// @formatter:off hidden-source-line
+// tag::snippet[]
 public record ProductAdvancedDto(Long productId,
                                  String productName,
                                  String productCategory,
@@ -10,7 +11,9 @@ public record ProductAdvancedDto(Long productId,
     public static ProductAdvancedDto fromEntity(Product product) {
         // Compute a custom property that includes the supplier name and city
         String supplierInfo = product.getSupplier() != null
-                ? String.format("%s (%s)", product.getSupplier().getSupplierName(), product.getSupplier().getHeadquarterCity())
+                ? String.format("%s (%s)",
+                        product.getSupplier().getSupplierName(),
+                        product.getSupplier().getHeadquarterCity())
                 : "";
 
         return new ProductAdvancedDto(
@@ -23,4 +26,5 @@ public record ProductAdvancedDto(Long productId,
         );
     }
 }
-//end::snippet[]
+// end::snippet[]
+// @formatter:on hidden-source-line

@@ -62,6 +62,7 @@ export class Example extends LitElement {
       ></vaadin-popover>
       <!-- end::snippet[] -->
 
+      <!-- tag::gridsnippet[] -->
       <vaadin-grid .items="${this.items}">
         ${this.gridColumns.map(
           (column) => html`
@@ -72,6 +73,7 @@ export class Example extends LitElement {
           `
         )}
       </vaadin-grid>
+      <!-- end::gridsnippet[] -->
     `;
   }
 

@@ -2,7 +2,6 @@ package com.vaadin.demo.component.basiclayouts;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -23,14 +22,21 @@ public class BasicLayoutsSpacing extends Div {
         parent.add(wrapper);
 
         // tag::snippet[]
-        // VerticalLayout has spacing enabled by default, use setSpacing to disable it
+        // VerticalLayout has spacing enabled by default, use setSpacing to
+        // disable it
         VerticalLayout layoutWithoutSpacing = new VerticalLayout();
         layoutWithoutSpacing.setSpacing(false);
         // end::snippet[]
         layoutWithoutSpacing.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layoutWithoutSpacing.add(new Button("Button 1"));
-        layoutWithoutSpacing.add(new Button("Button 2"));
-        layoutWithoutSpacing.add(new Button("Button 3"));
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("example-item");
+        Div item2 = new Div("Item 2");
+        item2.setClassName("example-item");
+        Div item3 = new Div("Item 3");
+        item3.setClassName("example-item");
+
+        layoutWithoutSpacing.add(item1, item2, item3);
         wrapper.add(layoutWithoutSpacing);
 
         wrapper = new Div();
@@ -40,9 +46,15 @@ public class BasicLayoutsSpacing extends Div {
 
         VerticalLayout layoutWithSpacing = new VerticalLayout();
         layoutWithSpacing.setAlignItems(FlexComponent.Alignment.STRETCH);
-        layoutWithSpacing.add(new Button("Button 1"));
-        layoutWithSpacing.add(new Button("Button 2"));
-        layoutWithSpacing.add(new Button("Button 3"));
+
+        Div spacingItem1 = new Div("Item 1");
+        spacingItem1.setClassName("example-item");
+        Div spacingItem2 = new Div("Item 2");
+        spacingItem2.setClassName("example-item");
+        Div spacingItem3 = new Div("Item 3");
+        spacingItem3.setClassName("example-item");
+
+        layoutWithSpacing.add(spacingItem1, spacingItem2, spacingItem3);
         wrapper.add(layoutWithSpacing);
 
         setClassName("basic-layouts-example");
