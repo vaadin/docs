@@ -154,9 +154,8 @@ public class DashboardEditable extends Div {
         widget.setRowspan(config.getRowspan());
 
         // In practice, different widget types will have different content. In
-        // that case
-        // you can use a switch statement to create the widget content based on
-        // the type.
+        // that case you can use a switch statement to create the widget content
+        // based on the type.
         //
         // @formatter:off hidden-source-line
         // switch (config.type()) {
