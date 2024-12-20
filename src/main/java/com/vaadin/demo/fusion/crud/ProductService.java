@@ -4,7 +4,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 import com.vaadin.hilla.crud.ListRepositoryService;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductService

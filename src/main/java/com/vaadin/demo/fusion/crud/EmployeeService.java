@@ -1,6 +1,6 @@
 package com.vaadin.demo.fusion.crud;
 
-//tag::snippet[]
+// tag::snippet[]
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 import com.vaadin.hilla.crud.CrudRepositoryService;

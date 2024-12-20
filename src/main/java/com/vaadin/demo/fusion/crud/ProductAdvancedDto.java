@@ -1,7 +1,7 @@
 package com.vaadin.demo.fusion.crud;
 
 // @formatter:off hidden-source-line
-//tag::snippet[]
+// tag::snippet[]
 public record ProductAdvancedDto(Long productId,
                                  String productName,
                                  String productCategory,
