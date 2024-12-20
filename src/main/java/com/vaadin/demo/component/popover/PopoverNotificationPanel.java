@@ -73,7 +73,8 @@ public class PopoverNotificationPanel extends Div {
         allList.setItems(Arrays.asList(message1, message2, message3, message4));
 
         TabSheet tabSheet = new TabSheet();
-        tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL, TabSheetVariant.LUMO_NO_PADDING);
+        tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
+                TabSheetVariant.LUMO_NO_PADDING);
         tabSheet.addClassName("notifications");
 
         Div unreadContent = new Div();
@@ -88,9 +89,11 @@ public class PopoverNotificationPanel extends Div {
 
         Button markRead = new Button("Mark all read", (e) -> {
             unreadContent.removeAll();
-            unreadContent.add(new Div("No new notifications"){{
-                this.addClassName("no-notifications-msg");
-            }});
+            unreadContent.add(new Div("No new notifications") {
+                {
+                    this.addClassName("no-notifications-msg");
+                }
+            });
         });
         markRead.getStyle().set("margin", "0 0 0 auto");
         markRead.addThemeVariants(ButtonVariant.LUMO_SMALL);

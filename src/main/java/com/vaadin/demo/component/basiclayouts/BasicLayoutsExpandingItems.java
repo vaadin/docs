@@ -17,15 +17,15 @@ public class BasicLayoutsExpandingItems extends Div {
         // end::snippet[]
         layout.setPadding(true);
         layout.add(item1);
-        
+
         Div item2 = new Div("Item 2");
         item2.setClassName("example-item");
         layout.add(item2);
-        
+
         Div item3 = new Div("Item 3");
         item3.setClassName("example-item");
         layout.add(item3);
-        
+
         this.add(layout);
         this.setClassName("basic-layouts-example");
     }

@@ -8,7 +8,7 @@ import jakarta.persistence.OneToOne;
 
 import java.time.LocalDate;
 
-//tag::snippet[]
+// tag::snippet[]
 @Entity
 public class Product {
     @Id

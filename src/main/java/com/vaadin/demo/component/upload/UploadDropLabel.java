@@ -38,7 +38,6 @@ public class UploadDropLabel extends Div {
         return new Span(cloudHint, policyLink);
     }
 
-    public static class Exporter extends // hidden-source-line
-            DemoExporter<UploadDropLabel> { // hidden-source-line
+    public static class Exporter extends DemoExporter<UploadDropLabel> { // hidden-source-line
     } // hidden-source-line
 }
