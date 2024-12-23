@@ -12,7 +12,8 @@ public class ContextMenuDisableOnClick extends Div {
 
     public ContextMenuDisableOnClick() {
         Paragraph paragraph = new Paragraph();
-        paragraph.setText("Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.");
+        paragraph.setText(
+                "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.");
         add(paragraph);
 
         ContextMenu menu = new ContextMenu(paragraph);
@@ -33,6 +34,7 @@ public class ContextMenuDisableOnClick extends Div {
         });
     }
 
-    public static class Exporter extends DemoExporter<ContextMenuDisableOnClick> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<ContextMenuDisableOnClick> { // hidden-source-line
     } // hidden-source-line
 }

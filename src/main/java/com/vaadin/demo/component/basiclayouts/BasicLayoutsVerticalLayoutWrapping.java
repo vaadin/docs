@@ -3,7 +3,6 @@ package com.vaadin.demo.component.basiclayouts;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -27,10 +26,17 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layoutWithoutWrap.setSpacing(true);
         layoutWithoutWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutWithoutWrap.setHeight("200px");
-        layoutWithoutWrap.add(new Button("Button 1"));
-        layoutWithoutWrap.add(new Button("Button 2"));
-        layoutWithoutWrap.add(new Button("Button 3"));
-        layoutWithoutWrap.add(new Button("Button 4"));
+
+        Div item1 = new Div("Item 1");
+        item1.setClassName("example-item");
+        Div item2 = new Div("Item 2");
+        item2.setClassName("example-item");
+        Div item3 = new Div("Item 3");
+        item3.setClassName("example-item");
+        Div item4 = new Div("Item 4");
+        item4.setClassName("example-item");
+
+        layoutWithoutWrap.add(item1, item2, item3, item4);
         wrapper.add(layoutWithoutWrap);
         parent.add(wrapper);
 
@@ -46,11 +52,17 @@ public class BasicLayoutsVerticalLayoutWrapping extends Div {
         layoutWithWrap.setSpacing(true);
         layoutWithWrap.setAlignItems(FlexComponent.Alignment.STRETCH);
         layoutWithWrap.setHeight("200px");
-        layoutWithWrap.add(new Button("Button 1"));
-        layoutWithWrap.add(new Button("Button 2"));
-        layoutWithWrap.add(new Button("Button 3"));
-        layoutWithWrap.add(new Button("Button 4"));
 
+        Div wrapItem1 = new Div("Item 1");
+        wrapItem1.setClassName("example-item");
+        Div wrapItem2 = new Div("Item 2");
+        wrapItem2.setClassName("example-item");
+        Div wrapItem3 = new Div("Item 3");
+        wrapItem3.setClassName("example-item");
+        Div wrapItem4 = new Div("Item 4");
+        wrapItem4.setClassName("example-item");
+
+        layoutWithWrap.add(wrapItem1, wrapItem2, wrapItem3, wrapItem4);
         wrapper.add(layoutWithWrap);
         parent.add(wrapper);
         this.setClassName("basic-layouts-example");

@@ -11,18 +11,15 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-//tag::snippet[]
+// tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
 public class ProductAdvancedDtoListService
         implements ListService<ProductAdvancedDto> {
     private final ProductRepository productRepository;
-    private final JpaFilterConverter jpaFilterConverter;
 
-    public ProductAdvancedDtoListService(ProductRepository productRepository,
-            JpaFilterConverter jpaFilterConverter) {
+    public ProductAdvancedDtoListService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-        this.jpaFilterConverter = jpaFilterConverter;
     }
 
     @Override
@@ -36,7 +33,7 @@ public class ProductAdvancedDtoListService
                 .withMapping("supplierId", "supplier.id")
                 .withMapping("supplierInfo", "supplier.supplierName");
         // Create JPA specification from Hilla filter
-        var specification = jpaFilterConverter.toSpec(transformer.apply(filter),
+        var specification = JpaFilterConverter.toSpec(transformer.apply(filter),
                 Product.class);
         // Fetch data from JPA repository
         return productRepository

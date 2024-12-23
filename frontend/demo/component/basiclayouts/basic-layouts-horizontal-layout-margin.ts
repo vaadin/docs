@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/button';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -24,9 +23,9 @@ export class Example extends LitElement {
       <p>Horizontal layout without margin:</p>
       <div class="container">
         <vaadin-horizontal-layout theme="spacing padding">
-          <vaadin-button>Button 1</vaadin-button>
-          <vaadin-button>Button 2</vaadin-button>
-          <vaadin-button>Button 3</vaadin-button>
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
         </vaadin-horizontal-layout>
       </div>
 
@@ -35,9 +34,9 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <vaadin-horizontal-layout theme="margin spacing padding">
           <!-- end::snippet[] -->
-          <vaadin-button>Button 1</vaadin-button>
-          <vaadin-button>Button 2</vaadin-button>
-          <vaadin-button>Button 3</vaadin-button>
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
           <!-- tag::snippet[] -->
         </vaadin-horizontal-layout>
         <!-- end::snippet[] -->

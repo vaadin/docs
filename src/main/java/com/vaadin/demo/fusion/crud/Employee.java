@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-//tag::snippet[]
+// tag::snippet[]
 @Entity
 public class Employee {
 
