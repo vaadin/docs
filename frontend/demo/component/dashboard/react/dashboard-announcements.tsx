@@ -84,6 +84,9 @@ function Example() {
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
 
     announcement.value = `Moved widget ${title} to position ${position} of ${total}`;
+
+    // Store updated widgets after user has modified them
+    widgets.value = e.detail.items as WidgetConfig[];
   }
 
   function handleResize(e: DashboardItemResizedEvent<WidgetConfig>) {
@@ -93,6 +96,9 @@ function Example() {
     const title = widgetTitles[e.detail.item.type];
 
     announcement.value = `Resized widget ${title} to ${colspan} columns, ${rowspan} rows`;
+
+    // Store updated widgets after user has modified them
+    widgets.value = e.detail.items as WidgetConfig[];
   }
 
   function handleRemove(e: DashboardItemRemovedEvent<WidgetConfig>) {
@@ -100,6 +106,9 @@ function Example() {
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
 
     announcement.value = `Removed widget ${title}`;
+
+    // Store updated widgets after user has modified them
+    widgets.value = e.detail.items as WidgetConfig[];
   }
 
   return (
