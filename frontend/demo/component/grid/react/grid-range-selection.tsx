@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { Grid, GridItemToggleEvent } from '@vaadin/react-components/Grid.js';
+import { Grid, type GridItemToggleEvent } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -10,6 +10,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function Example() {
   useSignals(); // hidden-source-line
+  // tag::snippet[]
   const items = useSignal<Person[]>([]);
   const selectedItems = useSignal<Person[]>([]);
   const rangeStartItem = useRef<Person>();
@@ -52,15 +53,14 @@ function Example() {
   };
 
   return (
-    // tag::snippet[]
     <Grid items={items.value} selectedItems={selectedItems.value} onItemToggle={handleItemToggle}>
       <GridSelectionColumn />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="email" />
     </Grid>
-    // end::snippet[]
   );
+  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line
