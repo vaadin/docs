@@ -15,7 +15,6 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('details-summary')
 export class Example extends LitElement {
   protected override createRenderRoot() {
@@ -39,6 +38,7 @@ export class Example extends LitElement {
   }
 
   protected override render() {
+    // tag::snippet[]
     return html`
       <vaadin-details opened>
         <vaadin-details-summary slot="summary">
@@ -77,6 +77,6 @@ export class Example extends LitElement {
         </vaadin-form-layout>
       </vaadin-details>
     `;
+    // end::snippet[]
   }
 }
-// end::snippet[]
