@@ -1,8 +1,8 @@
 ---
 title: Full-Stack Signals
-page-title: How to create full-stack signals in your Vaadin application
+page-title: Creating Full-Stack Signals in Vaadin Applications
 description: A full-stack signal is designed to share and synchronize states between the server and clients in real time.
-meta-description: Learn how to create and use full-stack signals in your Vaadin applications.
+meta-description: How to create and use full-stack signals in Vaadin applications.
 order: 130
 ---
 
@@ -11,7 +11,7 @@ order: 130
 
 When building a modern web application, you may often need to synchronize the state between the server and clients. You might want to notify all connected clients in a chat application when a new message is posted, or maybe visualize multiple users interacting while editing the same record in a form, or perhaps update clients when the status of an order changes in an e-commerce application. It becomes trickier when you need these updates to be propagated to clients in real time. Fortunately, full-stack signals can help.
 
-A full-stack signal can be seen as a special data type that holds the shared state. It enables clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are automatically propagated to all other clients which are subscribed to the signal.
+A full-stack signal can be seen as a special data type that holds the shared state. It enables clients to subscribe to it for receiving real-time updates when the state changes. The state can be updated by any client, and the changes are propagated to all other clients which are subscribed to the signal.
 
 This documentation page describes how to create and use full-stack signals in Vaadin applications.
 
@@ -150,7 +150,7 @@ public class SomeService {
 }
 ----
 
-The above example demonstrates a simple service that uses three [classname]`ValueSignal` instances to share a boolean, an integer, and a string value. The possibilities aren't limited, though, to primitive types. Any custom type can be used as long as it's JSON-serializable. Here's an example using a custom type:
+The above example demonstrates a simple service that uses three [classname]`ValueSignal` instances to share a boolean, an integer, and a string value. The possibilities, though, aren't limited to primitive types. Any custom type can be used as long as it's JSON-serializable. Here's an example using a custom type:
 
 [source,java]
 .`PersonService.java`
@@ -225,11 +225,11 @@ Given the nature of the signals, only changing the value of the signal causes th
 
 All signals have a `value` property that can be used to both set and read the value of the signal. However, setting concurrently a shared value among multiple clients can cause them to overwrite each other's changes. Thus, [classname]`ValueSignal` provides extra methods to set the value in different situations:
 
-`set(value: T): void`:: This sets the given value as the signal's value. It's the same as assigning the `value` property, directly. The value change event that is propagated to the server as the result of this operation doesn't take the last seen value into account. Instead, it overwrites the shared value on the server unconditionally -- a policy known as, "Last Write Wins".
+`set(value: T): void`:: This sets the signal's value with what's given. It's the same as assigning the `value` property, directly. The value change event that is propagated to the server as the result of this operation doesn't take the last seen value into account. Instead, it overwrites the shared value on the server unconditionally -- a policy known as, _Last Write Wins_.
 `replace(expected: T, newValue: T): void`:: This atomically replaces the value with a new one only if the current value is equal to the expected one. This means that a state change request is sent to the server asking it to "compare and set". At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
 `update(updater: (current: T) => T): OperationSubscription`:: This tries to update the value by applying the callback function to the current value on the client side. When the new value is calculated, a "compare and set" operation is sent to the server. In case of a concurrent change, the update is rejected, and the callback is run again with an updated current value on the client side. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`. This operation is atomic at the time of the server-side processing, meaning that the server only accepts the update if the value is still the same as when the operation was initiated.
 
-A call to `cancel()` is not guaranteed always to be effective, as a succeeding operation might already be on its way to the server.
+Incidentally, a call to `cancel()` may not always be effective, as a succeeding operation might already be on its way to the server.
 
 Operations such as `replace` and `update` perform a "compare and set" on the server using the [methodname]`equals` method of the value type to compare the values. Thus, it's important to make sure the value type has a proper implementation of the [methodname]`equals` method.
 
@@ -237,7 +237,7 @@ Operations such as `replace` and `update` perform a "compare and set" on the ser
 [[number-signal]]
 === NumberSignal
 
-The [classname]`NumberSignal` is a full-stack signal that holds a numeric value. This value is the [classname]`Double` type in Java, and a `number` type in client-side code. The [classname]`NumberSignal` can be considered a special case of the [classname]`ValueSignal` that is optimized for numeric values by introducing built-in support for atomic increment and decrement operations. 
+The [classname]`NumberSignal` is a full-stack signal that holds a numeric value. This value is the [classname]`Double` type in Java, and a `number` type in client-side code. The [classname]`NumberSignal` can be considered a special case of the [classname]`ValueSignal` that is optimized for numeric values by introducing built-in support for atomic increment and decrement operations.
 
 The following example demonstrates how to create and use a [classname]`NumberSignal` in a service class:
 
@@ -300,7 +300,7 @@ Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additiona
 [role="since:com.vaadin:vaadin@V24.6"]
 === ListSignal
 
-The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework.
+The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework. Every item in a [classname]`ListSignal` is a [classname]`ValueSignal`, meaning that any changes to the item's value is propagated to the server and other clients.
 
 The following example demonstrates how to create and use a [classname]`ListSignal` in a server-side service:
 
@@ -380,7 +380,7 @@ export default function TodoView(){
 <3> The `map` function is used to render the list of tasks.
 <4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`ListSignal`.
 
-Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. As a result, when a client adds a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
+Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. When a client adds a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
 
 
 [[list-signal-api]]
@@ -392,6 +392,9 @@ As this is currently under active development, more methods and functionalities 
 
 `insertLast(value: T): Operation`:: Inserts a new value at the end of the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 `remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
+
+[NOTE]
+Since each item in a `ListSignal` is a `ValueSignal`, should a change occur to the value of an item, use the `ValueSignal` API -- such as `set`, `replace`, or `update` -- on the targeted item. `ListSignal` API is only about the organization of items in the list.
 
 The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list, with no changes needed on the server-side:
 
@@ -497,7 +500,7 @@ export default function TodoView(){
 }
 ----
 
-As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself. Each value can be updated individually using the available API of the `ValueSignal`. The changes to each individual entry are automatically propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to render only the updated entry, instead of re-rendering the whole list.
+As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself. Each value can be updated individually using the available API of the `ValueSignal`. The changes to each individual entry are propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to render only the updated entry, instead of re-rendering the whole list.
 
 
 [[method-parameters]]
@@ -555,7 +558,7 @@ It's vitally important to make sure that the behaviour of the service method ret
 [[security]]
 == Security with Full-Stack Signals
 
-Security with full-Stack signals has a few nuances of which you should be aware. They're covered below.
+Security with full-Stack signals can be enabled in two separate levels. They're covered below.
 
 
 === Controlling Browser-Callable Service Access
@@ -578,10 +581,10 @@ Browser-callable access control can be considered basic security for signals, si
 Fine-grained access control rules can include a list such as this:
 
 - Allow anonymous users to have read-only access to a technical-support chat;
-- Allow logged-in users only to post in the chat and remove their own messages; and
+- Allow only logged-in users to post in the chat and remove their own messages; and
 - Allow support users to post messages, as well as edit or remove their messages.
 
-This scenario shows that business logic and access-control logic are very intertwined. Sometimes, though, there is no clear distinction between them. That's why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of the [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
+This scenario shows that business logic and access-control logic are very intertwined. Sometimes, though, there isn't a clear distinction between them. That's why in the full-stack signals library these fine-grained controls are implemented by adding an operation validator to the signal instances via calling [methodname]`withOperationValidator` and providing an implementation of the [classname]`OperationValidator` functional interface. The operation validator logic is called whenever an operation is submitted to be applied to the signal. The operation is only applied if the operation validator allows it.
 
 Here is the definition of the [classname]`OperationValidator` functional interface:
 
@@ -596,12 +599,12 @@ public interface OperationValidator<T> {
 The [methodname]`validate` method takes a [classname]`SignalOperation` instance as a parameter and returns a [classname]`ValidationResult`. The [classname]`SignalOperation` is a common interface for all operations that can be applied to a signal. The [classname]`ValidationResult` is used to communicate the result of the validation, containing:
 
 - A `status` with two possible enumerated values, `ALLOWED` and `REJECTED`; and
-- An optional `message` that can be used to provide a reason for the rejection.
+- A `message` that can be used to provide a reason for the rejection. Considering the nature of operation validators as a security point cut, this message is only logged on the server side (i.e., at `WARN` level), and it's not propagated to the client to prevent any possible misuse.
 
 The [classname]`ValidationResult` class provides two convenient static methods to create instances of the class:
 
-`allow()`:: Creates an instance with the status set to `ALLOWED`.
-`reject(String message)`:: Creates an instance with the status set to `REJECTED` and a message.
+- `allow()`, which creates an instance with the status set to `ALLOWED`; and
+- `reject(String message)`, which creates an instance with the status set to `REJECTED` and a message.
 
 The following example demonstrates how to add an operation validator to a signal instance:
 
@@ -610,34 +613,35 @@ The following example demonstrates how to add an operation validator to a signal
 ----
 NumberSignal voteSignal = new NumberSignal() // <1>
     .withOperationValidator(operation -> { // <2>
-        if (operation instanceof ValueOperation<Double> valueOp) { // <3>
-            if (Math.abs(valueOp.value()) != 1.0) { // <4>
-                return ValidationResult.reject("Only up / down vote by 1 is allowed");
+        if (operation instanceof IncrementOperation increment) { // <3>
+            if (Math.abs(increment.value()) == 1.0) {
+                return ValidationResult.allow(); // <4>
             }
+            return ValidationResult.reject("Only up / down vote by 1 is allowed"); // <5>
         }
-        return ValidationResult.allow(); // <5>
+        return ValidationResult.reject("Invalid Operation"); // <6>
     });
 ----
 <1> Creates an instance of a [classname]`NumberSignal` that defaults to zero.
 <2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (i.e., no validators).
-<3> Checks the operation type and the value of the operation.
-<4> Rejects the operation if the value is not `1.0` or `-1.0`.
-<5> Allows the operation otherwise.
+<3> Checks the operation type to be only an `IncrementOperation`.
+<4> Allows the operation only if the value is incremented or decremented by `1.0`.
+<5> Rejects the operation if the value is not `1.0` or `-1.0`.
+<6> Rejects all other operations, which could be `SetValueOperation` and `ReplaceValueOperation`.
 
 In the above example, the `operation` parameter is an instance of [classname]`SignalOperation`. At runtime, the operation can be one of the following types:
 
 `ValueOperation<T>`:: Represents an operation that contains a value of type `T`.
 `IncrementOpertaion`:: Specific to `NumberSignal`. Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
-`SetValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ReplaceValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`SetValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Also, applies to changes happening to the items in a `ListSignal`. Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ReplaceValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Also, applies to the changes happening to the items in a `ListSignal`. Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
 `ListInsertOperation<T>`:: Specific to `ListSignal`. Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
 `ListRemoveOperation<T>`:: Specific to `ListSignal`. Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
 
 All of the above operations are implementations of [classname]`SignalOperation` interface.
 
-
 [NOTE]
-When a validator is defined for a signal instance, it's called for all operations submitted to that signal. The validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be cast to one of operations that a signal supports with checking.
+When a validator is defined for a signal instance, it's called for all operations submitted to that signal. The validator should be able to handle all operations that the signal supports. In practice, this means that the [classname]`SignalOperation` parameter of the [methodname]`OperationValidator#validate` method should be checked for the operation type, and cannot be cast to one of the operations that a signal supports without checking.
 
 Another important aspect that should be considered when calling the [methodname]`withOperationValidator` method is that with each call, a new signal instance is created with the operation validator attached. The original signal instance remains unchanged. Therefore, the signal instance with the operation validator should be stored and returned from the service method that creates the signal instance.
 
@@ -653,28 +657,36 @@ public class TodoService {
     public record TodoItem(String text, boolean done) {}
 
     private final ListSignal<TodoItem> notValidatedTodoItems = // <1>
-                                            new ListSignal<>(TodoItem.class);
+            new ListSignal<>(TodoItem.class);
 
     private final ListSignal<TodoItem> validatedTodoItems = // <2>
-         notValidatedTodoItems.withOperationValidator(operation -> {
-            if (operation instanceof ListInsertOperation<TodoItem> insertOp) {
-                return insertOp.value().text().length() <= 50 ?
-                        ValidationResult.allow() :
-                        ValidationResult.reject("No Long todo items!");
-            }
-            return ValidationResult.allow();
+        notValidatedTodoItems.withOperationValidator(operation ->
+        switch (operation) {
+            case ListInsertOperation<TodoItem> insertOp ->
+                                validateTodoText(insertOp.value());
+            case SetValueOperation<TodoItem> setOp ->
+                                validateTodoText(setOp.value());
+            case ReplaceValueOperation<TodoItem> replaceOp ->
+                                validateTodoText(replaceOp.value());
+            default -> ValidationResult.reject("Invalid Operation");
         });
 
     private final ListSignal<TodoItem> userTodoItems = // <3>
         validatedTodoItems.withOperationValidator(operation -> {
-            if (operation instanceof ListRemoveOperation<TodoItem> removeOp) {
+            if (operation instanceof ListRemoveOperation<TodoItem>) {
                 return ValidationResult.reject("No Removal for users!");
             }
             return ValidationResult.allow();
         });
 
     private final ListSignal<TodoItem> guestTodoItems = // <4>
-                    notValidatedTodoItems.asReadOnly();
+            notValidatedTodoItems.asReadonly();
+
+    private ValidationResult validateTodoText(TodoItem todoItem) {
+        return todoItem.text != null && todoItem.text.length() > 50 ?
+                ValidationResult.reject("Todo text is too long") :
+                ValidationResult.allow();
+    }
 
     public ListSignal<TodoItem> todoItems() { // <5>
         return switch (currentUserRole()) {
