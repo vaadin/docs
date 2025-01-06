@@ -30,3 +30,43 @@ The `clientId` holds the latest communication state identifier given by the clie
 On the client, pending messages are removed from the queue as handled when `clientId` from server matches the next expected value. If the id is less than expected, the client waits since the server has not yet seen all messages. The response should arrive later. Otherwise, the client trusts the server and updates the id to the server's expectations.
 
 On the server, in cases where the id is the previous one with the same request payload, the server re-sends the latest response since the client probably didn't receive the message. If the client-sent id doesn't match the server-expected id, a re-synchronization is initiated.
+
+
+= UI State Re-Synchronization
+
+Re-synchronization occurs when the client detects that its state is no longer in sync with the server. This can happen due to unexpected network interruptions, or inconsistencies between the client-side UI and server-side state caused by misconfigured reverse proxies or session replication setups.
+
+Several factors can lead to message loss or unexpected message identifiers:
+
+- *Incorrect load balancer or reverse proxy configuration:* Using setups without sticky sessions may result in receiving messages from the server which were meant for a different session or UI.
+- *Firewall or Virtual Private Network (VPN) interference:* Deep packet inspection can block certain packets.
+
+These factors might also generate a delay in arrival of the messages. Virus scanners are particularly problematic and may cause issues when `WebSocket_XHR` is used. Increasing the `maxMessageSuspendTimeout` parameter value could help mitigate message arrival delays.
+
+Other potential causes include:
+
+- *Faulty router hardware:* This could be due to routers using outdated firmware versions.
+- *Unstable Wi-Fi or cellular connections*: Fluctuating network conditions can disrupt communication.
+- *Server-side issues:* Request-handling hiccups may lead to inconsistencies, possibly due to server performance degradation.
+
+
+== Re-Synchronization Initiation & Mechanism
+
+Re-synchronization is initiated by the client when it can't find a message with the expected `syncId` among the pending messages from the server within a given timeout. The default is 5 seconds, which is configurable using the `maxMessageSuspendTimeout` parameter. Below is the process followed to re-synchronize:
+
+*Client Initiation:*
+
+- The client clears the queue of pending messages from the server.
+- It terminates the current request and sends a re-synchronization request to the server.
+
+*Server Handling:*
+
+- Upon receiving the re-synchronization request, the server invokes the detached listeners of UI components and re-attaches all components to the state tree.
+- The server then sends a response that includes the current UI state needed to rebuild the client-side state tree.
+
+*Client Update:*
+
+- The client receives the updated UI state from the server.
+- It clears all old pending messages, updates the last known `syncId` to the newly received value, and rebuilds the DOM tree from scratch based on the server's current state.
+
+This process ensures UI consistency, even in the presence of errors or unexpected behavior. The application remains robust against transient network problems or client-side interruptions. Additionally, the user experience is preserved without requiring a full page reload, as Vaadin rebuilds the UI without reloading the entire bundle from the server.
