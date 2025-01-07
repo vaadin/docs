@@ -26,11 +26,7 @@ function Example() {
       <ListBox>
         {people.value.map((person) => (
           // Use the label attribute to display full name of the person as selected value label
-          <Item
-            value={String(person.id)}
-            key={person.id}
-            {...{ label: formatPersonFullName(person) }}
-          >
+          <Item value={String(person.id)} key={person.id} label={formatPersonFullName(person)}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <img
                 src={person.pictureUrl}

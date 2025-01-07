@@ -4,7 +4,6 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-// tag::snippet[]
 @customElement('details-reverse')
 export class Example extends LitElement {
   protected override createRenderRoot() {
@@ -15,6 +14,7 @@ export class Example extends LitElement {
   }
 
   protected override render() {
+    // tag::snippet[]
     return html`
       <vaadin-details summary="Members (8)" opened theme="reverse">
         <ul>
@@ -29,6 +29,6 @@ export class Example extends LitElement {
         </ul>
       </vaadin-details>
     `;
+    // end::snippet[]
   }
 }
-// end::snippet[]
