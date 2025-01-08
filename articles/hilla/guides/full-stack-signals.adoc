@@ -159,7 +159,7 @@ package com.example.application;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
-import com.vaadin.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 import com.vaadin.hilla.signals.ValueSignal;
 
 @AnonymousAllowed
@@ -172,8 +172,8 @@ public class PersonService {
     private final ValueSignal<Person> sharedPerson =
                     new ValueSignal<>(initialValue, Person.class); // <3>
 
-    @Nonnull
-    public ValueSignal<@Nonnull Person> sharedPerson() { // <4>
+    @NonNull
+    public ValueSignal<@NonNull Person> sharedPerson() { // <4>
         return sharedPerson;
     }
 }
@@ -233,6 +233,34 @@ Incidentally, a call to `cancel()` may not always be effective, as a succeeding 
 
 Operations such as `replace` and `update` perform a "compare and set" on the server using the [methodname]`equals` method of the value type to compare the values. Thus, it's important to make sure the value type has a proper implementation of the [methodname]`equals` method.
 
+==== Using Operation Results
+
+The `Operation` and `OperationSubscription` objects returned by the `set`, `replace`, and `update` methods have a `result` property that is a `Promise`. This promise is resolved when the operation is completed and confirmed by the server. The promise can also be rejected if the operation fails, for example, due to a validation error. The promise can be used to chain further operations, as well.
+
+The following example demonstrates how to use the `result` property of an operation:
+
+[source,tsx]
+.`person.tsx`
+----
+const sharedPerson: ValueSignal<Person> =
+          PersonService.sharedPerson({ defaultValue: { name: '', age: 0 } });
+
+export default function PersonView() {
+  return (
+    <VerticalLayout theme="padding">
+      <Button onClick={() => {
+        sharedPerson.replace({
+                name: sharedPerson.value.name,
+                age: sharedPerson.value.age + 1
+            }).result // <1>
+          .then(() => console.log('Successfully increased the age.'))
+          .catch(() => console.error('Server rejected the operation.'));
+      }}>Increase age</Button>
+    </VerticalLayout>
+  );
+}
+----
+<1> The `result` property of the `replace` operation is a `Promise` that can be used to chain further operations. In this case, the promise is used to log a message when the operation is successfully completed, or to log an error message when the operation is rejected by the server.
 
 [[number-signal]]
 === NumberSignal
