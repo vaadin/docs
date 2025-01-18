@@ -1,0 +1,559 @@
+---
+title: Gantt
+page-title: How to create Gantt charts with Vaadin Charts
+description: Vaadin Charts support for the creation of Gantt charts.
+meta-description: Discover how to design and customize Gantt charts in Vaadin applications.
+order: 9
+version: since:com.vaadin:vaadin@V24.7
+---
+
+[[charts.gantt]]
+= Gantt
+
+A Gantt chart is a type of bar chart that represents a project schedule. It displays the start and finish dates of the various elements of a project. Gantt charts are used for planning and scheduling projects, and they help in visualizing the project timeline, task dependencies, and progress.
+
+=== Typical Use Case
+
+A typical use case for a Gantt chart is in project management. For example, a project manager can use a Gantt chart to:
+
+* Plan the project timeline by listing all tasks and their start and end dates.
+* Identify task dependencies to understand which tasks need to be completed before others can start.
+* Track the progress of tasks to ensure the project is on schedule.
+* Allocate resources by assigning tasks to team members and ensuring workload is balanced.
+
+Gantt charts are particularly useful for complex projects with multiple tasks and dependencies, such as software development, construction projects, and event planning.
+
+=== Adding Gantt chart to the code [[gantt_intro]]
+
+You can add Gantt chart to your application using the following steps:
+
+* Specify the chart type by using [parameter]`ChartType.GANTT`
+* Create [class]`GanttSeries` with [class]`GanttSeriesItems` that represents the tasks
+* Add the series  to the chart
+
+You can optionally configure the chart using options in [class]`PlotOptionsGantt` configuration object.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttIntroductionDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Gantt data series
+
+The [class]`GanttSeries` class is used to represent tasks in a Gantt chart. Each task is represented by a [class]`GanttSeriesItem`, which includes properties such as the task name, start time, end time, completion status or dependencies on other tasks.
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.GANTT);
+
+final Configuration configuration = chart.getConfiguration();
+
+PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
+configuration.setPlotOptions(plotOptionsGantt);
+
+GanttSeries series = new GanttSeries();
+
+series.add(new GanttSeriesItem("Start prototype",
+Instant.parse("2014-10-18T00:00:00Z"),
+Instant.parse("2014-10-25T00:00:00Z")));
+
+series.add(new GanttSeriesItem("Test prototype",
+Instant.parse("2014-10-27T00:00:00Z"),
+Instant.parse("2014-10-29T00:00:00Z")));
+
+series.add(new GanttSeriesItem("Develop",
+Instant.parse("2014-10-20T00:00:00Z"),
+Instant.parse("2014-10-25T00:00:00Z")));
+
+series.add(new GanttSeriesItem("Run acceptance tests",
+Instant.parse("2014-10-23T00:00:00Z"),
+Instant.parse("2014-10-26T00:00:00Z")));
+
+configuration.addSeries(series);
+----
+
+== Chart configuration
+
+=== Horizontal axis configuration
+
+The default settings for Gantt renders a dual date-time horizontal axis on the top of the chart. The [parameter]`tickInterval` for the bottom horizontal axis is automatically determined, by the distribution of the series data points and available screen size. Respectively, the top axis is then assigned a higher date time interval. E.g. days-week, weeks-months, months-years. This logic is helpful when displaying Gantt charts on different devices. Highcharts Gantt automatically adapts and finds the right distribution of axis ticks based upon the screen size available.
+
+If the minimum and maximum width of the chart is set, there is more control over the number of ticks displayed in the Gantt chart. This would allow for further customization of the labels and [parameter]`tickInterval` properties on the axis.
+
+See the following example code for a more detailed demonstration of how the horizontal axis can be configured:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttHorizontalAxisConfiguration.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+=== Vertical axis configuration
+
+If not specified otherwise, the Gantt chart will automatically determine the vertical axis rows based on the unique names of the tasks in the data series, as specified by [methodname]`setName(String)` method in [class]`GanttSeriesItem` class. This means that each unique task name will correspond to a separate row in the chart.
+
+For example of such configuration see Gantt chart example in chapter <<gantt_intro>>
+
+==== Group tasks vertically
+
+For grouping tasks in a Gantt chart on horizontal tracks, use a vertical category axis. This type of Gantt chart is often used to visualize resource allocation or availability schedules.
+
+The chart rows (tracks) can be configured by specifying categories in the [class]`YAxis` configuration. Each [class]`GanttSeriesItem` then references the appropriate category using the [methodname]`setY(Number)` method, where [parameter]`y` is the ordinal number of the category.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttVerticalCategoriesGrouping.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+==== Grouping tasks in a hierarchy
+
+You can split bigger tasks up into subtasks or group resources together if they belong to the same parent task. Use the [methodname]`GanttSeriesItem#setParent(String)` method of the data point (i.e. the sub-task) which value points to the [methodname]`GanttSeriesItem#getId()` value of the parent task. The duration of the parent task will then span all sub-tasks.
+
+For a detailed example of such a configuration, see the section <<complete_task_deps_example>>
+
+==== Configure row height
+
+You can affect the height of the rows in a Gantt chart in multiple ways:
+
+*Set the overall height of the chart*
+
+By setting the height of the chart, you can indirectly control the height of the rows. A taller chart will result in taller rows, while a shorter chart will result in shorter rows.
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.GANTT);
+chart.getConfiguration().getChart().setHeight("700px");
+----
+
+*Using YAxis.setStaticScale*
+
+The [methodname]`YAxis.setStaticScale()` method allows you to set a fixed height for each row in the Gantt chart. This method takes a double value representing the height of each row in pixels. For example, setting the static scale to 24 results in each Y axis category taking up 24 pixels, and the height of the chart adjusts. Adding or removing categories will make the chart resize.
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.GANTT);
+final Configuration configuration = chart.getConfiguration();
+YAxis yAxis = configuration.getyAxis();
+yAxis.setStaticScale(24);
+----
+
+*Configuring data point in PlotOptionsGantt*
+
+You can also affect the height of the rows by using the [methodname]`PlotOptionsGantt#setPointWidth()` method. This configuration sets the width of the task bar. In Gantt charts, making the bar wider will indirectly affect the overall row height.
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.GANTT);
+final Configuration configuration = chart.getConfiguration();
+PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
+plotOptionsGantt.setPointWidth(30);
+configuration.setPlotOptions(plotOptionsGantt);
+----
+
+== Task custom labels
+
+The [methodname]`PlotOptionsGantt#setDataLabels()` method allows you to display one or more labels for each task in the Gantt chart. These labels can provide additional information about the tasks, such as assignee, start date, end date, and custom data.
+
+For each label, you can configure alignment relative to the task, format, color, border and many other style options (see [class]`DataLabels` class for all the options). The [class]`DataLabels` class allows you to format labels to display either a simple value or HTML code. This flexibility enables you to customize the appearance and content of the labels in your chart.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttCustomLabelsDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+=== Tooltips
+
+In addition to task labels, you can also activate tooltips, that would be displayed over each task in the char when hovering over the task. You can customize the appearance of the tooltip as well as its content using the [class]`Tooltip` class, passed to the chart configuration:
+
+[source,java]
+----
+Configuration configuration = chart.getConfiguration();
+Tooltip tooltip = new Tooltip(true);
+tooltip.setOutside(true);
+tooltip.setShadow(true);
+tooltip.setUseHTML(true);
+tooltip.setPointFormat("<span><b>{point.name}</b></span>");
+configuration.setTooltip(tooltip);
+----
+
+== Custom data in the tasks
+
+The [class]`GanttSeries` and [class]`GanttSeriesItem` classes allow you to assign custom data to each item using the [methodname]`GanttSeriesItem#setCustom()` method. This custom data can be used to render labels and tooltips, or access the data in callbacks, such as when a task is clicked.
+
+The custom data assigned to a [class]`GanttSeriesItem` must be a subclass of [class]`AbstractConfigurationObject` to ensure that it can be serialized to JSON. This is necessary for the data to be properly transmitted and rendered in the Gantt chart.
+
+You can access the custom data when formatting labels under [parameter]`{point.custom.*}` object. For example, when you stored an object having an assignee property via the [methodname]`GanttSeriesItem#setCustom()` method, you can access this data in the label formatter this way:
+
+[source,java]
+----
+var assigneeLabel = new DataLabels(true);
+assigneeLabel.setFormat("{point.custom.assignee}");
+----
+
+To access the custom data in the click event listeners, use the following code:
+
+[source,java]
+----
+// Configure click callback
+chart.addPointClickListener(event -> {
+    var ganttSeries = ((GanttSeries) event.getSeries());
+    var customData = (TaskCustomData) ganttSeries
+                        .get(event.getItemIndex())
+                        .getCustom();
+    System.out.println("Task assigned to " + customData.assignee);
+});
+----
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttCustomDataDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Task progress indication
+
+The [parameter]`completed` property of a [class]`GanttSeriesItem` is used to indicate the progress of a task in a Gantt chart. This property can be set to a value between 0 and 1, representing the percentage of the task that has been completed. For example, to indicate that the task is 45% completed, configure the [class]`GanttSeriesItem` by calling [methodname]`setCompleted(0.45)`.
+
+[source,java]
+----
+GanttSeriesItem task = new GanttSeriesItem();
+task.setCompleted(0.5); // 50% completed
+----
+
+Optionally, you can use [methodname]`GanttSeriesItem#setCompleted(Completed)` method for a more fine-grained customization of the progress, such as specifying the color of the progress indicator.
+
+[source,java]
+----
+GanttSeriesItem task = new GanttSeriesItem();
+Completed completed = new Completed();
+completed.setAmount(0.5); // 50% completed
+completed.setFill(SolidColor.GREEN); // Custom color for the progress indicator
+task.setCompleted(completed);
+----
+
+The following example shows the complete example of Gantt chart with progress indication:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttProgressIndicatorDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Task dependencies
+
+The [parameter]`dependency` property of a [class]`GanttSeriesItem` allows you to define dependencies between tasks in a Gantt chart. By specifying dependencies, you can indicate that a task cannot start until another task is completed.
+
+*Typical scenarios*
+
+* *Sequential Tasks*: When one task must be completed before another can start, such as completing a prototype before testing it.
+* *Milestones*: Defining key milestones that depend on the completion of multiple preceding tasks.
+* *Parallel Tasks*: Managing tasks that can run in parallel but have dependencies on other tasks.
+
+=== Configuring dependencies between points
+
+To specify dependencies between tasks in a Gantt chart, you must set a unique ID for each [class]`GanttSeriesItem`. This ID is used to reference the task when defining dependencies.
+
+[source,java]
+----
+GanttSeriesItem task1 = new GanttSeriesItem(...);
+task1.setId("task1");
+
+GanttSeriesItem task2 = new GanttSeriesItem(...);
+task2.setId("task2");
+
+// Task 2 depends on completion of Task 1
+task2.addDependency(task1.getId());
+----
+
+In this example, [parameter]`task2` is dependent on the completion of [parameter]`task1`, ensuring that [parameter]`task2` cannot start until [parameter]`task1` is finished. This dependency is visually represented in the Gantt chart, providing a clear indication of the task sequence:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttSmallTaskDependenciesDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+=== Connector styles
+
+A connector is a line that visually represents the dependency between two tasks in a Gantt chart. It consists of a line, a start marker and an end marker. You can configure the style of the line, it’s color and width. Start and end markers define how the line is started and ended: by default the markers are configured in a way, that the connectors look like an arrow, but this can be changed by the [class]`Marker` configuration.
+
+Gantt task dependencies can be visually configured at different levels in a Gantt chart. This allows for flexible and detailed customization of how dependencies are displayed.
+
+*Chart Level Configuration*
+
+At the chart level, you can configure connectors using the [class]`ChartConnectors` class. This configuration applies to all dependencies within the chart.
+
+[source,java]
+----
+ChartConnectors connectors = new ChartConnectors();
+// Set the dash style for all connectors in the chart
+connectors.setDashStyle(DashStyle.SHORTDASH);
+configuration.setConnectors(connectors);
+----
+
+*Series Level Configuration*
+
+At the series level, you can configure connectors using the [class]`SeriesConnectors` class. This allows you to apply specific styles to all dependencies within a particular series.
+
+[source,java]
+----
+PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
+SeriesConnectors seriesConnectors = new SeriesConnectors();
+// Set the dash style for all connectors in the series
+seriesConnectors.setDashStyle(DashStyle.DOT);
+plotOptionsGantt.setConnectors(seriesConnectors);
+series.setPlotOptions(plotOptionsGantt);
+----
+
+*Dependency Level Configuration*
+
+At the dependency level, you can configure connectors using the [class]`GanttSeriesItemDependency` class. This provides the most granular level of customization, allowing you to specify styles for individual dependencies.
+
+[source,java]
+----
+GanttSeriesItemDependency dependency = new GanttSeriesItemDependency("task1");
+// Set the dash style for this specific dependency
+dependency.setDashStyle(DashStyle.SOLID);
+item.addDependency(dependency);
+----
+
+=== The complete task dependencies example [[complete_task_deps_example]]
+
+The following example shows the full example of specific dependencies between tasks, as well as adding multiple series to a single Gantt chart:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttProcessManagementDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Indication of the current date
+
+The [parameter]`currentDateIndicator` property of the [class]`XAxis` class allows you to display the current date on a Gantt chart. This is useful for highlighting the current date within the timeline of the chart, providing a visual reference point for the current progress of tasks.
+
+You can either just enable the current date indicator using [methodname]`xAxis.setCurrentDateIndicator(true)` or further customize the indicator appearance by using [methodname]`xAxis.setCurrentDateIndicator(PlotLine)` method.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttCurrentDateIndicationDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+Even in a Gantt chart, you can display the timeline with a navigator and time-range selector to allow users to easily navigate through the project timeline. Activate the feature by enabling [class]`Scrollbar`, [class]`RangeSelector` and [class]`Navigator`:
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.GANTT);
+final Configuration configuration = chart.getConfiguration();
+configuration.getScrollbar().setEnabled(true);
+configuration.getRangeSelector().setEnabled(true);
+configuration.getNavigator().setEnabled(true);
+----
+
+You can configure the [class]`Navigator` and [class]`RangeSelector` classes in the same way as in the https://vaadin.com/docs/latest/components/charts/timeline[Timeline] feature. Use [class]`PlotOptionsGantt` and [class]`YAxis` configuration to further customize the Navigator appearance, like in the example below:
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttWithNavigationDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Left axis as a grid
+
+In a Gantt chart, it is common to display a table on the left side of the chart to display task information, like task name, assignee, and duration. The tasks will be lined up and mapped to the table after setting the [methodname]`GanttSeriesItem.setY(Number)` value for each data point (task).
+
+=== Grid column configuration
+
+The [class]`AxisGrid` class allows you to configure the grid of a Gantt chart, enabling you to display additional columns of information alongside the task names. This can be useful for providing more context and details about each task.
+
+[source,java]
+----
+AxisGrid grid = new AxisGrid();
+grid.setEnabled(true);
+grid.setColumns(List.of(
+    createProjectColumn(),
+    createAssigneeColumn(),
+    createEstDaysColumn(),
+    createStartDateColumn(),
+    createEndDateColumn()
+));
+chart.configuration().getyAxis().setGrid(grid);
+----
+
+In this example, the [class]`AxisGrid` is enabled and configured with multiple columns, each created by a helper method. These columns display various details such as project name, assignee, estimated days, start date, and end date.
+
+The following is an example of a helper method for the Project name column. The other helper methods look very similar (for details see the complete chart example below).
+
+[source,java]
+----
+private XAxis createProjectColumn() {
+    XAxis column = new XAxis();
+    column.setTitle("Project");
+    Labels label = new Labels();
+    label.setFormat("{point.name}");
+    column.setLabels(label);
+    return column;
+}
+----
+
+In the example above you can see that the grid cell value will be computed from [parameter]`{point.name}` value of the task. You can also use more complicated formatters, even performing a computation in them and returning a HTML code, instead of a simple value:
+
+[source,java]
+----
+private XAxis createEstDaysColumn() {
+    XAxis column = new XAxis();
+    column.setTitle("Est. Days");
+    final Labels label = new Labels();
+    label.setUseHTML(true);
+    label.setFormatter(
+            "function () { var point = this.point,days = (1000 * 60 * 60 * 24)," +
+            "    number = (point.x2 - point.x) / days; " +
+            "    return '<div style=\"width: 50px; text-align: center\">' + Math.round(number * 100) / 100 + '</div>';" +
+            "}");
+    column.setLabels(label);
+    return column;
+}
+----
+
+=== The complete grid example
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttYAxisAsGridDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+== Drag & Drop support
+
+You can add drag and drop support to the chart using the [parameter]`dragDrop` property in the [class]`PlotOptionsGantt` class. This feature allows you to move points around or modify them directly within the chart. You can specify which axes are draggable and set constraints on the dragging behavior using properties in the [class]`DragDrop` class.
+
+You can also attach the drag and drop listeners to the chart to handle events related to dragging.
+
+[[table.dragdrop.listeners]]
+.Available Drag&Drop listeners
+[options="header"]
+|===============
+|Handler method|Comment
+|[methodname]`Chart#addPointDragStartListener`|triggered when a drag operation starts on a point.
+|[methodname]`Chart#addPointDragListener`|triggered continuously while a point is being dragged.
+|[methodname]`Chart#addPointDropListener`|triggered when a point is dropped after a drag operation.
+|===============
+
+Every listener has an event parameter that contains data about the dragged object, such as the point ID, the start date of the point, the end date of the point, and data about the series.
+
+[.example]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/charts/charttypes/chart-type-libraries.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/charts/charttypes/gantt/GanttDragAndDropDemo.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
