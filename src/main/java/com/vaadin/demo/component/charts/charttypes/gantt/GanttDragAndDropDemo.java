@@ -8,6 +8,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -39,13 +40,19 @@ public class GanttDragAndDropDemo extends Div {
         yAxis.setMin(0);
         yAxis.setMax(2);
 
+        // tag::snippet[]
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
-        plotOptionsGantt.setAnimation(false); // Do not animate dependency
-                                              // connectors
-        configureDragAndDrop(plotOptionsGantt);
+        plotOptionsGantt.setAnimation(false); // Do not animate dependency connectors
+        final DragDrop dragDrop = plotOptionsGantt.getDragDrop();
+        dragDrop.setDraggableX(true);
+        dragDrop.setDraggableY(true);
+        dragDrop.setDragMinY(0);
+        dragDrop.setDragMaxY(2);
+        dragDrop.setDragPrecisionX(1000 * 60 * 60 * 8); // Snap to eight hours
 
         plotOptionsGantt.setAllowPointSelect(true);
         configuration.setPlotOptions(plotOptionsGantt);
+        // end::snippet[]
 
         final GanttSeries series = createSeries();
         configureDataLabels(series);
@@ -81,15 +88,6 @@ public class GanttDragAndDropDemo extends Div {
         dataLabels.add(pointNameDataLabel);
         plotOptions.setDataLabels(dataLabels);
         series.setPlotOptions(plotOptions);
-    }
-
-    private void configureDragAndDrop(PlotOptionsGantt plotOptions) {
-        final DragDrop dragDrop = plotOptions.getDragDrop();
-        dragDrop.setDraggableX(true);
-        dragDrop.setDraggableY(true);
-        dragDrop.setDragMinY(0);
-        dragDrop.setDragMaxY(2);
-        dragDrop.setDragPrecisionX(1000 * 60 * 60 * 8); // Snap to eight hours
     }
 
     private GanttSeries createSeries() {
@@ -141,4 +139,7 @@ public class GanttDragAndDropDemo extends Div {
         series.add(sales1);
         return series;
     }
+
+    public static class Exporter extends DemoExporter<GanttDragAndDropDemo> { // hidden-source-line
+    } // hidden-source-line
 }

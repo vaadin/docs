@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.Style;
@@ -52,6 +53,7 @@ public class GanttHorizontalAxisConfiguration extends Div {
         add(chart);
     }
 
+    // tag::snippet[]
     private void configureYearsMonthsWeeksOnXAxis(Configuration configuration) {
         configureWeeksAxis(configuration);
         configureMonthsAxis(configuration);
@@ -77,6 +79,7 @@ public class GanttHorizontalAxisConfiguration extends Div {
         axis.setGrid(new AxisGrid());
         axis.getGrid().setCellHeight(20);
     }
+    // end::snippet[]
 
     private void configureMonthsAxis(Configuration configuration) {
         XAxis axis = new XAxis();
@@ -131,4 +134,6 @@ public class GanttHorizontalAxisConfiguration extends Div {
         return TODAY.plus(months * 30L, ChronoUnit.DAYS);
     }
 
+    public static class Exporter extends DemoExporter<GanttHorizontalAxisConfiguration> { // hidden-source-line
+    } // hidden-source-line
 }

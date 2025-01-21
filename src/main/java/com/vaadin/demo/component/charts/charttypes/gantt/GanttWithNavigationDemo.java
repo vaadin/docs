@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.SolidColor;
@@ -36,12 +37,20 @@ public class GanttWithNavigationDemo extends Div {
         YAxis yAxis = configuration.getyAxis();
         yAxis.setUniqueNames(true);
 
-        configureNavigator(configuration);
+        // tag::snippet[]
+        final Navigator navigator = configuration.getNavigator();
+        navigator.setEnabled(true);
+        final YAxis navigatorYAxis = navigator.getYAxis();
+        navigatorYAxis.setMin(0);
+        navigatorYAxis.setMax(3);
+        navigatorYAxis.setReversed(true);
+        navigatorYAxis.setCategories();
 
         configuration.getScrollbar().setEnabled(true);
 
         configuration.getRangeSelector().setEnabled(true);
         configuration.getRangeSelector().setSelected(0);
+        // end::snippet[]
 
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
         configuration.setPlotOptions(plotOptionsGantt);
@@ -77,13 +86,6 @@ public class GanttWithNavigationDemo extends Div {
         return series;
     }
 
-    private void configureNavigator(Configuration configuration) {
-        final Navigator navigator = configuration.getNavigator();
-        navigator.setEnabled(true);
-        final YAxis navigatorYAxis = navigator.getYAxis();
-        navigatorYAxis.setMin(0);
-        navigatorYAxis.setMax(3);
-        navigatorYAxis.setReversed(true);
-        navigatorYAxis.setCategories();
-    }
+    public static class Exporter extends DemoExporter<GanttWithNavigationDemo> { // hidden-source-line
+    } // hidden-source-line
 }

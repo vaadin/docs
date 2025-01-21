@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -41,7 +42,7 @@ public class GanttCustomDataDemo extends Div {
 
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
         configuration.setPlotOptions(plotOptionsGantt);
-
+        // tag::snippet[]
         // Create series with custom data
         GanttSeries series = new GanttSeries();
         GanttSeriesItem item;
@@ -54,6 +55,7 @@ public class GanttCustomDataDemo extends Div {
         item.setCustom(new TaskCustomData("Eleanor Price"));
 
         series.add(item);
+        // end::snippet[]
 
         // Configure Labels
         PlotOptionsGantt seriesPlotOptions = new PlotOptionsGantt();
@@ -99,4 +101,7 @@ public class GanttCustomDataDemo extends Div {
             this.assignee = assignee;
         }
     }
+
+    public static class Exporter extends DemoExporter<GanttCustomDataDemo> { // hidden-source-line
+    } // hidden-source-line
 }

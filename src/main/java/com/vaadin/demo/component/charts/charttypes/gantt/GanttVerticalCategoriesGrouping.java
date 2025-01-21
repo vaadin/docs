@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -36,6 +37,7 @@ public class GanttVerticalCategoriesGrouping extends Div {
         configuration.getxAxis().setCurrentDateIndicator(true);
         configuration.setPlotOptions(new PlotOptionsGantt());
 
+        // tag::snippet[]
         var rentalData = getRentalData();
 
         YAxis yAxis = configuration.getyAxis();
@@ -54,6 +56,7 @@ public class GanttVerticalCategoriesGrouping extends Div {
             }
             configuration.addSeries(series);
         }
+        // end::snippet[]
 
         add(chart);
     }
@@ -128,4 +131,6 @@ public class GanttVerticalCategoriesGrouping extends Div {
         }
     }
 
+    public static class Exporter extends DemoExporter<GanttVerticalCategoriesGrouping> { // hidden-source-line
+    } // hidden-source-line
 }

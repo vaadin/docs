@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -30,12 +31,14 @@ public class GanttCurrentDateIndicationDemo extends Div {
             .truncatedTo(ChronoUnit.DAYS);
 
     public GanttCurrentDateIndicationDemo() {
+        // tag::snippet[]
         Chart chart = new Chart(ChartType.GANTT);
 
         final Configuration configuration = chart.getConfiguration();
 
         final XAxis xAxis = configuration.getxAxis();
         xAxis.setCurrentDateIndicator(true);
+        // end::snippet[]
 
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
         configuration.setPlotOptions(plotOptionsGantt);
@@ -61,4 +64,7 @@ public class GanttCurrentDateIndicationDemo extends Div {
     private Instant todayPlus(int days) {
         return TODAY.plus(days, ChronoUnit.DAYS);
     }
+
+    public static class Exporter extends DemoExporter<GanttCurrentDateIndicationDemo> { // hidden-source-line
+    } // hidden-source-line
 }

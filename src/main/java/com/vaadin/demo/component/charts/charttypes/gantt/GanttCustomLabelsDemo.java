@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -47,6 +48,7 @@ public class GanttCustomLabelsDemo extends Div {
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
         configuration.setPlotOptions(plotOptionsGantt);
 
+        // tag::snippet[]
         final GanttSeries projectDevelopmentSeries = createProjectDevelopmentSeries();
         PlotOptionsGantt seriesPlotOptions = new PlotOptionsGantt();
         var dataLabels = new ArrayList<DataLabels>();
@@ -72,6 +74,7 @@ public class GanttCustomLabelsDemo extends Div {
 
         seriesPlotOptions.setDataLabels(dataLabels);
         projectDevelopmentSeries.setPlotOptions(seriesPlotOptions);
+        // end::snippet[]
         configuration.addSeries(projectDevelopmentSeries);
 
         add(chart);
@@ -127,4 +130,6 @@ public class GanttCustomLabelsDemo extends Div {
         }
     }
 
+    public static class Exporter extends DemoExporter<GanttCustomLabelsDemo> { // hidden-source-line
+    } // hidden-source-line
 }

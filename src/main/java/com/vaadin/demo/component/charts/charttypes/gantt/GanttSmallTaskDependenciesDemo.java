@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -38,6 +39,7 @@ public class GanttSmallTaskDependenciesDemo extends Div {
         xAxis.setMinPadding(0.1);
         xAxis.setMaxPadding(0.1);
 
+        // tag::snippet[]
         GanttSeries series = new GanttSeries();
 
         GanttSeriesItem task1 = new GanttSeriesItem("task1", todayPlus(1),
@@ -52,6 +54,7 @@ public class GanttSmallTaskDependenciesDemo extends Div {
 
         series.addAll(task1, task2);
         configuration.addSeries(series);
+        // end::snippet[]
 
         add(chart);
     }
@@ -59,4 +62,7 @@ public class GanttSmallTaskDependenciesDemo extends Div {
     private Instant todayPlus(int days) {
         return TODAY.plus(days, ChronoUnit.DAYS);
     }
+
+    public static class Exporter extends DemoExporter<GanttSmallTaskDependenciesDemo> { // hidden-source-line
+    } // hidden-source-line
 }

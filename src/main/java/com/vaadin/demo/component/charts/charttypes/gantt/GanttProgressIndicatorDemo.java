@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.SolidColor;
@@ -26,8 +27,6 @@ import java.time.temporal.ChronoUnit;
 
 @Route("chart-gantt-progress-indication")
 public class GanttProgressIndicatorDemo extends Div {
-    private static final Instant TODAY = Instant.now()
-            .truncatedTo(ChronoUnit.DAYS);
 
     public GanttProgressIndicatorDemo() {
         Chart chart = new Chart(ChartType.GANTT);
@@ -43,6 +42,7 @@ public class GanttProgressIndicatorDemo extends Div {
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
         configuration.setPlotOptions(plotOptionsGantt);
 
+        // tag::snippet[]
         GanttSeries series = new GanttSeries();
         series.setName("Project 1");
         final GanttSeriesItem startPrototype = new GanttSeriesItem(
@@ -66,7 +66,11 @@ public class GanttProgressIndicatorDemo extends Div {
                 Instant.parse("2014-10-26T00:00:00Z")));
 
         configuration.addSeries(series);
+        // end::snippet[]
 
         add(chart);
     }
+
+    public static class Exporter extends DemoExporter<GanttProgressIndicatorDemo> { // hidden-source-line
+    } // hidden-source-line
 }

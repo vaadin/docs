@@ -19,7 +19,6 @@ export class Example extends LitElement {
       <vaadin-chart
         type="gantt"
         title="Gantt Chart"
-        mode="gantt"
         additional-options='{
                   "xAxis": {
                       "min": 1416182400000,
@@ -40,29 +39,29 @@ export class Example extends LitElement {
             "y":0,
             "start": 1416268800000,
             "end": 1416873600000,
-            "assignee":"Torstein",
+            "assignee":"John",
             "completed": 0.25
         }, {
             "y":1,
             "start": 1417046400000,
             "end": 1417219200000,
-            "assignee":"JonArild"
+            "assignee":"William"
         }, {
             "y":2,
             "start": 1416441600000,
             "end": 1416873600000,
-            "assignee":"Oystein",
+            "assignee":"Jane",
             "completed": 0.4
         }, {
             "y":2,
             "start": 1417046400000,
             "end": 1417219200000,
-             "assignee":"Oystein"
+             "assignee":"Jane"
         }, {
             "y":3,
             "start": 1416700800000,
             "end": 1416960000000,
-            "assignee":"Torstein",
+            "assignee":"John",
             "completed": 0.25
         }]'
           additional-options='{

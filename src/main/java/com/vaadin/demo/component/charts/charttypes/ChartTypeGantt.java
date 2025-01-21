@@ -19,13 +19,8 @@ public class ChartTypeGantt extends Div {
     public ChartTypeGantt() {
         // tag::snippet[]
 
-        add(new Span("Replace this text after next version of Vaadin Charts is released."));
-
-        /*
-
         // Create a Gantt chart
         Chart chart = new Chart(ChartType.GANTT);
-        chart.setMode(ChartMode.GANTT);
 
         // Modify the default configuration
         final Configuration configuration = chart.getConfiguration();
@@ -64,9 +59,6 @@ public class ChartTypeGantt extends Div {
         // end::snippet[]
 
         add(new VerticalLayout(chart));
-
-
-         */
     }
 
     public static class Exporter extends DemoExporter<ChartTypeGantt> { // hidden-source-line

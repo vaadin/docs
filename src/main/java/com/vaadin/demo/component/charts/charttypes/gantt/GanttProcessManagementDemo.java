@@ -8,6 +8,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.SolidColor;
@@ -23,6 +24,7 @@ public class GanttProcessManagementDemo extends Div {
             .truncatedTo(ChronoUnit.DAYS);
 
     public GanttProcessManagementDemo() {
+        // tag::snippet[]
         Chart chart = new Chart(ChartType.GANTT);
 
         final Configuration configuration = chart.getConfiguration();
@@ -48,6 +50,7 @@ public class GanttProcessManagementDemo extends Div {
 
         configuration.addSeries(createOfficesSeries());
         configuration.addSeries(createNewProductLaunchSeries());
+
 
         chart.addPointClickListener(event -> {
             var name = ((GanttSeries) event.getSeries())
@@ -200,4 +203,6 @@ public class GanttProcessManagementDemo extends Div {
         }
     }
 
+    public static class Exporter extends DemoExporter<GanttProcessManagementDemo> { // hidden-source-line
+    } // hidden-source-line
 }

@@ -15,6 +15,7 @@
  */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.html.Div;
@@ -22,10 +23,11 @@ import com.vaadin.flow.router.Route;
 
 import java.time.Instant;
 
-@Route("chart-gantt-introduction")
-public class GanttIntroductionDemo extends Div {
+@Route("chart-gantt-basic")
+public class GanttBasicDemo extends Div {
 
-    public GanttIntroductionDemo() {
+    public GanttBasicDemo() {
+        // tag::snippet[]
         Chart chart = new Chart(ChartType.GANTT);
 
         final Configuration configuration = chart.getConfiguration();
@@ -57,8 +59,11 @@ public class GanttIntroductionDemo extends Div {
                 Instant.parse("2014-10-26T00:00:00Z")));
 
         configuration.addSeries(series);
+        // end::snippet[]
 
         add(chart);
     }
 
+    public static class Exporter extends DemoExporter<GanttBasicDemo> { // hidden-source-line
+    } // hidden-source-line
 }
