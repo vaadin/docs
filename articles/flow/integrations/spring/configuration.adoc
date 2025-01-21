@@ -1,6 +1,6 @@
 ---
 title: Configuration
-page-title: Spring configuration for Vaadin applications
+page-title: Spring Configuration for Vaadin Applications
 description: Configuring Spring properties in a Vaadin application.
 meta-description: Configure Spring applications with Vaadin for seamless integration.
 order: 60
@@ -162,7 +162,55 @@ vaadin.url-mapping=/my_mapping/*
 
 By default, URL mapping is `/*`.
 
-An additional servlet (e.g., `/my_mapping/*`) is required to handle the frontend resources for non-root servlets. The servlet can be defined in your application class. See https://raw.githubusercontent.com/vaadin/flow-and-components-documentation/master/tutorial-servlet-spring-boot/src/main/java/org/vaadin/tutorial/spring/Application.java[`Application` class] for an example.
+
+=== Vaadin URL Mapping
+
+When using a custom servlet URL mapping in a Vaadin application, special care must be taken to reference static resources (e.g., images) in Vaadin views. For example, if the application provides images in `src/main/resources/META-INF/resources/images` or in `src/main/resources/static/images`, these images are served from the root of the web application context (e.g., `http://localhost:8080/images/logo.png`). If your Vaadin views involve a custom mapping (e.g., `http://localhost:8080/my_mapping/`), you need to ensure that the correct path is provided for the images. 
+
+To reference an image from the application root, you can use a relative path, such as `new Image("../images/logo.png", "Company Logo")`. However, this approach is not ideal when the same application can be deployed with different URL mappings, or without any custom mapping, as it may lead to inconsistencies.
+
+A solution could be to use a helper method to compute a path relative to the context root:
+
+[source,java]
+----
+public static String resolveStaticResource(String path) {
+  return UI.getCurrent().getInternals().getContextRootRelativePath()
+    + path.replaceFirst("^/", "");
+}
+
+public class MyView extends Div {
+  public MyView() {
+    add(new Image(resolveStaticResource("images/logo.png")));
+  }
+}
+----
+
+Another option is to register a Servlet Filter that intercepts static resource referenced by the Vaadin UI and forwards the request to the correct path.
+
+[source,java]
+----
+@Bean
+@ConditionalOnProperty(name = "vaadin.url-mapping")
+FilterRegistrationBean<?> publicImagesAliasFilter(@Value("${vaadin.url-mapping}") String urlMapping) {
+  String baseMapping = urlMapping.replaceFirst("/\\*$", "");
+  FilterRegistrationBean<OncePerRequestFilter> registrationBean = new FilterRegistrationBean<>(
+    new OncePerRequestFilter() {
+      @Override
+      protected void doFilterInternal(HttpServletRequest request,
+                                      HttpServletResponse response,
+                                      FilterChain filterChain)
+                        throws ServletException, IOException {
+        // Remove Vaadin URL mapping from the path and forward the request
+        String path = request.getRequestURI().substring(baseMapping.length());
+        request.getRequestDispatcher(path)
+          forward(request, response);
+      }
+    });
+  registrationBean.addUrlPatterns(baseMapping + "/images/*");
+  registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+  return registrationBean;
+}
+----
 
 
 == Configure Spring MVC Applications
