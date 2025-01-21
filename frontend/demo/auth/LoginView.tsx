@@ -20,6 +20,9 @@ export default function LoginView() {
       opened
       error={hasError.value}
       noForgotPassword
+      onErrorChanged={(event) => {
+        hasError.value = event.detail.value;
+      }}
       onLogin={async ({ detail: { username, password } }) => {
         const { error } = await login(username, password);
         hasError.value = Boolean(error);
