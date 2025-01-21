@@ -55,7 +55,6 @@ public class VoteService {
 <1> Create an instance of a [classname]`ValueSignal` with an initial value of false.
 <2> Return the instance of the [classname]`ValueSignal` from the [methodname]`startedSignal` method.
 
-
 [CAUTION]
 The server-side instance of a full-stack signal is meant to be created once and shared across all clients. Therefore, create the instance as a field in a service class, and return it from the methods. This way, all clients are able to subscribe to the same signal instance and receive real-time updates when the state changes.
 
@@ -159,7 +158,7 @@ package com.example.application;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
-import com.vaadin.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 import com.vaadin.hilla.signals.ValueSignal;
 
 @AnonymousAllowed
@@ -172,8 +171,8 @@ public class PersonService {
     private final ValueSignal<Person> sharedPerson =
                     new ValueSignal<>(initialValue, Person.class); // <3>
 
-    @Nonnull
-    public ValueSignal<@Nonnull Person> sharedPerson() { // <4>
+    @NonNull
+    public ValueSignal<@NonNull Person> sharedPerson() { // <4>
         return sharedPerson;
     }
 }
@@ -223,15 +222,45 @@ Given the nature of the signals, only changing the value of the signal causes th
 
 ==== Setting the Value
 
-All signals have a `value` property that can be used to both set and read the value of the signal. However, setting concurrently a shared value among multiple clients can cause them to overwrite each other's changes. Thus, [classname]`ValueSignal` provides extra methods to set the value in different situations:
+All signals have a `value` property that can be used both to set and read the value of the signal. However, setting concurrently a shared value among multiple clients can cause them to overwrite each other's changes. [classname]`ValueSignal` provides extra methods to set the value in different situations:
 
-`set(value: T): void`:: This sets the signal's value with what's given. It's the same as assigning the `value` property, directly. The value change event that is propagated to the server as the result of this operation doesn't take the last seen value into account. Instead, it overwrites the shared value on the server unconditionally -- a policy known as, _Last Write Wins_.
-`replace(expected: T, newValue: T): void`:: This atomically replaces the value with a new one only if the current value is equal to the expected one. This means that a state change request is sent to the server asking it to "compare and set". At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server.
-`update(updater: (current: T) => T): OperationSubscription`:: This tries to update the value by applying the callback function to the current value on the client side. When the new value is calculated, a "compare and set" operation is sent to the server. In case of a concurrent change, the update is rejected, and the callback is run again with an updated current value on the client side. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`. This operation is atomic at the time of the server-side processing, meaning that the server only accepts the update if the value is still the same as when the operation was initiated.
+`set(value: T): Operation`:: This sets the signal's value with what's given. It's the same as assigning the `value` property, directly. The value change event that is propagated to the server as the result of this operation doesn't take the last seen value into account. Instead, it overwrites the shared value on the server unconditionally -- a policy known as, _Last Write Wins_. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
+`replace(expected: T, newValue: T): Operation`:: This atomically replaces the value with a new one only if the current value is equal to the expected one. This means that a state change request is sent to the server asking it to "compare and set". At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
+`update(updater: (current: T) => T): OperationSubscription`:: This tries to update the value by applying the callback function to the current value on the client side. When the new value is calculated, a "compare and set" operation is sent to the server. In case of a concurrent change, the update is rejected, and the callback is run again with an updated current value on the client side. This is repeated until the result can be applied without concurrent changes, or the operation is canceled by calling the `cancel()` function of the returned `OperationSubscription`. This operation is atomic at the time of the server-side processing, meaning that the server only accepts the update if the value is still the same as when the operation was initiated. The returned `OperationSubscription` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 
-Incidentally, a call to `cancel()` may not always be effective, as a succeeding operation might already be on its way to the server.
+A call to `cancel()` may not always be effective, as a succeeding operation might already be on its way to the server.
 
 Operations such as `replace` and `update` perform a "compare and set" on the server using the [methodname]`equals` method of the value type to compare the values. Thus, it's important to make sure the value type has a proper implementation of the [methodname]`equals` method.
+
+
+==== Using Operation Results
+
+The `Operation` and `OperationSubscription` objects returned by the `set`, `replace`, and `update` methods have a `result` property that is a `Promise`. This promise is resolved when the operation is completed and confirmed by the server. The promise can also be rejected if the operation fails, for example, due to a validation error. The promise can be used to chain further operations, as well.
+
+The following example demonstrates how to use the `result` property of an operation:
+
+[source,tsx]
+.`person.tsx`
+----
+const sharedPerson: ValueSignal<Person> =
+          PersonService.sharedPerson({ defaultValue: { name: '', age: 0 } });
+
+export default function PersonView() {
+  return (
+    <VerticalLayout theme="padding">
+      <Button onClick={() => {
+        sharedPerson.replace({
+                name: sharedPerson.value.name,
+                age: sharedPerson.value.age + 1
+            }).result // <1>
+          .then(() => console.log('Successfully increased the age.'))
+          .catch(() => console.error('Server rejected the operation.'));
+      }}>Increase age</Button>
+    </VerticalLayout>
+  );
+}
+----
+<1> The `result` property of the `replace` operation is a `Promise` that can be used to chain further operations. In this case, the promise is used to log a message when the operation is completed successfully, or to log an error message when the operation is rejected by the server.
 
 
 [[number-signal]]
