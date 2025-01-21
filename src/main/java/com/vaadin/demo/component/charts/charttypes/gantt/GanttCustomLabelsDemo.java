@@ -87,23 +87,23 @@ public class GanttCustomLabelsDemo extends Div {
         GanttSeriesItem item;
 
         item = new GanttSeriesItem(0, todayPlus(1), todayPlus(3));
-        item.setCustom(new TaskCustomData("JonArild"));
+        item.setCustom(new TaskCustomData("John"));
         series.add(item);
 
         item = new GanttSeriesItem(1, todayPlus(2), todayPlus(5));
-        item.setCustom(new TaskCustomData("Oystein"));
+        item.setCustom(new TaskCustomData("William"));
         series.add(item);
 
         item = new GanttSeriesItem(2, todayPlus(5), todayPlus(7));
-        item.setCustom(new TaskCustomData("Torstein"));
+        item.setCustom(new TaskCustomData("Jane"));
         series.add(item);
 
         item = new GanttSeriesItem(1, todayPlus(8), todayPlus(16));
-        item.setCustom(new TaskCustomData("JonArild"));
+        item.setCustom(new TaskCustomData("John"));
         series.add(item);
 
         item = new GanttSeriesItem(2, todayPlus(10), todayPlus(23));
-        item.setCustom(new TaskCustomData("Torstein"));
+        item.setCustom(new TaskCustomData("Jane"));
         series.add(item);
 
         return series;
