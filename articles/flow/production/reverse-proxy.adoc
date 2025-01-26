@@ -1,39 +1,38 @@
 ---
 title: Reverse Proxies
-page-title: How to configure reverse proxy for Vaadin apps
-description: Deploy your Vaadin application behind a reverse proxy.
-meta-description: Learn how to cconfigure a reverse proxy in front of a Vaadin applications.
+page-title: How to configure reverse proxy for Vaadin applications.
+description: Deploying your Vaadin application behind a reverse proxy.
+meta-description: Learn how to configure a reverse proxy in front of a Vaadin applications.
 order: 56
 ---
 
 
 = Deploying Vaadin Applications Behind Reverse Proxies
 
-== Overview
-
 This guide explains how to configure Vaadin applications to work seamlessly behind reverse proxies. Reverse proxies act as intermediaries between clients and servers, forwarding client requests to the server and returning the server's responses. They are commonly used for load balancing, SSL termination, and security enforcement. This guide covers common deployment scenarios, configuration for reverse proxies, and special considerations for Vaadin's push functionality, session handling, and load balancing.
 
-Various configuration scenarios will be implemented using https://httpd.apache.org/[Apache HTTPD] (2.4.47+) and https://nginx.org/en/[nginx]. The provided configurations are a working starting point that can be improved with specific customization for the production environment.
+Various configuration scenarios are implemented using https://httpd.apache.org/[Apache HTTPD] (2.4.47+) and https://nginx.org/en/[`nginx`]. The provided configurations are a working starting point that can be improved with specific customization for the production environment.
 
-=== Apache HTTPD
 
-Proxying with Apache HTTPD is additionally expanded into two categories: HTTP and AJP backend protocols.
-Apache HTTPD should be configured to load https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html[mod_rewrite], https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[mod_proxy], and optionally https://httpd.apache.org/docs/2.4/mod/mod_proxy_ajp.html[mod_proxy_ajp]
+== Apache HTTPD
+
+Proxying with Apache HTTPD is additionally expanded into two categories: HTTP and AJP backend protocols. Apache HTTPD should be configured to load https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html[`mod_rewrite`], https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[`mod_proxy`], and optionally https://httpd.apache.org/docs/2.4/mod/mod_proxy_ajp.html[`mod_proxy_ajp`]
 
 [source]
-====
+----
 LoadModule rewrite_module modules/mod_rewrite.so
 LoadModule proxy_module modules/mod_proxy.so
 
 # Optional, for AJP backend protocol
 # LoadModule proxy_ajp_module modules/mod_proxy_ajp.so
-====
+----
 
-Example snippets are limited to the proxing configuration. In the simplest cases all relevant configurations are put into a `<Location>` directive. However, setups that require `mod_rewrite` should be direclyt used inside server config or virtual host definition.
+Example snippets are limited to the proxy configuration. In the simplest cases all relevant configurations are put into a `<Location>` directive. However, setups that require `mod_rewrite` should be directly used inside server config or virtual host definition.
 
-Also note that only `Location`, `Content-Location` and `URI` headers in the HTTP response will be rewritten. Apache HTTPD will not rewrite other response headers, nor will it by default rewrite URL references inside HTML pages. This means that if the proxied content contains absolute URL references, they will bypass the proxy. To rewrite HTML content to match the proxy, you must load and enable https://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html[mod_proxy_html].
+Also, only `Location`, `Content-Location` and `URI` headers in the HTTP response will be rewritten. Apache HTTPD won't rewrite other response headers, nor does it by default rewrite URL references inside HTML pages. This means that if the proxied content contains absolute URL references, they'll bypass the proxy. To rewrite HTML content to match the proxy, you must load and enable https://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html[mod_proxy_html].
 
-==== AJP Protocol
+
+=== AJP Protocol
 
 The Apache JServ Protocol (AJP) is a binary protocol commonly used to connect web servers and application servers. It can be an efficient alternative to HTTP(S) in certain scenarios, such as when reducing overhead is important or when working with legacy systems.
 
@@ -67,38 +66,39 @@ public class TomcatConfig implements WebServerFactoryCustomizer<TomcatServletWeb
 
 For different setups, consult the documentation of the Servlet container.
 
+
 == Deployment Scenarios
 
 The next sections provide configuration examples covering the following deployment scenarios:
 
 [cols="2,1,1"]
 |===
-|Scenario|Public URL|Internal Vaadin App URL
+|Scenario|Public URL|Internal Vaadin Application URL
 
-| 1. Web Server and Vaadin app on root context
+| Web Server and Vaadin application on root context.
 | http(s)://proxy/
 | http://vaadin-app:8080
 
-| 2. Web Server and Vaadin app on a sub context
+| Web Server and Vaadin app on a sub context.
 | http(s)://proxy/app
 | http://vaadin-app:8080/app
 
-| 3. Web Server on root context and Vaadin app on sub context
+| Web Server on root context and Vaadin application on sub context.
 | http(s)://proxy/
 | http://vaadin-app:8080/app
 
-| 4. Web Server on sub context and Vaadin app on root context
+| Web Server on sub context and Vaadin application on root context.
 | http(s)://proxy/app
 | http://vaadin-app:8080/
 
 |===
 
-All the scenarios assumes the Vaadin application is built for production and PUSH communication over websocket is enabled.
+All the scenarios assume the Vaadin application is built for production and PUSH communication over websocket is enabled.
 
-=== 1. Web Server and Vaadin app on root context
+
+=== Web Server & Vaadin on Root Context
 
 This is the most straightforward scenario, where a backend application served on the root context is published as-is on the internet, meaning that the a browser requests to `http(s)://proxy/` will be forwarded to `http://vaadin-app:8080`.
-
 
 [.example]
 --
@@ -224,10 +224,10 @@ server {
 ----
 --
 
-=== 2. Web Server and Vaadin app on a sub context
 
-Similar to the previous scenario, but the Vaadin application is reachable on the same sub path on both the reverse proxy and the backend server.
-In this case `http(s)://proxy/app/` will be forwarded to `http://vaadin-app:8080/app/`.
+=== Web Server & Vaadin on Sub-Context
+
+Similar to the previous scenario, but the Vaadin application is reachable on the same sub path on both the reverse proxy and the backend server. In this case `http(s)://proxy/app/` will be forwarded to `http://vaadin-app:8080/app/`.
 
 [.example]
 --
@@ -356,7 +356,8 @@ server {
 ----
 --
 
-=== 3. Web Server on root context and Vaadin app on sub context
+
+=== Web Server on Root Context & Vaadin on Sub-Context
 
 In this scenario the backend application is published on a sub context, but the proxy is reachable on the root context, so a request to `http(s)://proxy/` is forwarded to `http://vaadin-app/app/`. It is worth to note that since paths do not match, the reverse proxy must also take care of rewriting cookie paths.
 
@@ -498,10 +499,9 @@ server {
 --
 
 
-=== 4. Web Server on sub context and Vaadin app on root context
+=== Web Server on Sub-Context & Vaadin on Root Context
 
-This is the opposite of the above scenario. The proxy server exposes the application on a sub context but it forwards the request to the backed server root path, for example `http(s)://proxy/app/` to `http://vaadin-app:8080/`.
-As in the previous case, the proxy server must rewrite the cookie path.
+This is the opposite of the above scenario. The proxy server exposes the application on a sub context but it forwards the request to the backed server root path, for example `http(s)://proxy/app/` to `http://vaadin-app:8080/`. As in the previous case, the proxy server must rewrite the cookie path.
 
 [.example]
 --
@@ -645,15 +645,14 @@ server {
 
 == Proxying Multiple Backend Vaadin Application
 
-All the proposed configurations can be applied also when the reverse proxy exposes multiple backend Vaadin applications.
-In a similar setup, it is important that all backend application defines different cookie names, otherwise they the proxy will overwrite the same cookie with different values, preventing the Vaadin applications to work correctly.
+All the proposed configurations can be applied also when the reverse proxy exposes multiple backend Vaadin applications. In a similar setup, it is important that all backend application defines different cookie names, otherwise they the proxy will overwrite the same cookie with different values, preventing the Vaadin applications to work correctly.
 
 In a Spring Boot application, the cookie name can be set with the `server.servlet.session.cookie.name` property. Another possibility is to programmatically set the name in a Servlet listener by getting the `SessionCookieConfig` instance from the `ServletContext` and use the `setName(String)` method to change cookie name.
 
+
 == Websocket Connection Timeout
 
-By default, the websocket connection will be closed if the proxied server does not transmit any data within 60 seconds. Vaadin PUSH is configured to periodically send heartbeat messages over WebSocket every 60 seconds, so the connection should not be closed.
-If the default is not working correctly, the timeout can be increased in both Apache HTTPD and nginx by applying the appropriate configuration.
+By default, the websocket connection will be closed if the proxied server does not transmit any data within 60 seconds. Vaadin PUSH is configured to periodically send heartbeat messages over WebSocket every 60 seconds, so the connection should not be closed. If the default is not working correctly, the timeout can be increased in both Apache HTTPD and nginx by applying the appropriate configuration.
 
 [.example]
 --
