@@ -1,8 +1,8 @@
 ---
 title: Router Layouts pass:[&] Nested Router Targets
-page-title: How to use layouts in Vaadin routing
+page-title: Using Layouts in Vaadin Routing
 description: Explains router layouts and nested router targets.
-meta-description: Implement routing layouts in Vaadin to structure and organize your application user interface.
+meta-description: Implement routing layouts in Vaadin to structure and organize an application user interface.
 order: 40
 ---
 
@@ -11,25 +11,30 @@ order: 40
 
 All parent layouts of a navigation target component have to implement the [interfacename]`RouterLayout` interface. You can define a parent layout by adding the [annotationname]`@Layout` annotation to the class, or by using the optional element `layout` from the `@Route` annotation.
 
+[interfacename]`RouterLayout` interface appends and removes child route content during navigation. For more in depth information, see <<#Router Layout,Router Layout>>.
+
 
 [role="since:com.vaadin:vaadin@V24.5"]
 === Automatic Layout Using `@Layout`
 
-The value for the [annotationName]`@Layout` annotation path has to be unique for the project. Otherwise, the resolver won't be able to determine which layout component should be used. Having multiple [annotationName]`@Layout` annotations with the same path throws an exception.
+The [annotationName]`@Layout` can be added to any [className]`Component` that implements [interfacename]`RouterLayout`.
 
 The example below renders all routes inside [classname]`MainLayout`:
 
 [source,java]
 ----
 @Layout
-public class MainLayout extends Div
-        implements RouterLayout {
+public class MainLayout extends AppLayout {
 }
 ----
 
-If the application is using access protection, the view access is checked for the Layout, as well as the view. To make the layout accessible, add [annotationname]`@AnonymousAllowed` -- or some other access annotation -- on the `MainLayout` so that the request is not denied.
+See <<{articles}/components/app-layout/#,`AppLayout`>> for more information on usage.
 
-[annotationname]`@Route` and [annotationname]`@RouteAlias` each contain an annotation attribute called, `autoLayout`. Setting that attribute to false will stop automatic layout; it will ignore any [annotationname]`@Layout` matching the route. Giving a class for the `layout` method in [annotationname]`@Route` also disables automatic layout and uses the one given.
+The value for the [annotationName]`@Layout` annotation path has to be unique for the project. Otherwise, the resolver won't be able to determine which layout component should be used. Having multiple [annotationName]`@Layout` annotations with the same path throws an exception.
+
+If an application is using access protection, the view access is checked for the Layout, as well as the view. To make the layout accessible, add [annotationname]`@AnonymousAllowed` -- or some other access annotation -- on the `MainLayout` so that the request is not denied.
+
+[annotationname]`@Route` and [annotationname]`@RouteAlias` each contain an annotation attribute called, `autoLayout`. Setting that attribute to false stops automatic layout; it ignores any [annotationname]`@Layout` matching the route. Giving a class for the `layout` method in [annotationname]`@Route` also disables automatic layout and causes the one given to be used.
 
 .Ignore Automatic Layout
 [source,java]
@@ -87,19 +92,18 @@ See <<page-titles#,Updating Page Title on Navigation>> for more information on t
 
 Use the `@ParentLayout` annotation to define a parent layout for components in the routing hierarchy. Where necessary, a parent can have its own parent layout.
 
-In the example below, `MainLayout` is used for everything, which `MenuBar` is reused for views:
+In the example below, `MainLayout` is used for everything, and `SubMenu` is reused for views:
 
 [source,java]
 ----
-public class MainLayout extends Div
-        implements RouterLayout {
+public class MainLayout extends AppLayout {
 }
 
 @Layout
 @ParentLayout(MainLayout.class)
-public class MenuBar extends Div
+public class SubMenu extends Div
         implements RouterLayout {
-    public MenuBar() {
+    public SubMenu() {
         addMenuElement(TutorialView.class, "Tutorial");
         addMenuElement(IconsView.class, "Icons");
     }
@@ -119,7 +123,7 @@ public class IconsView extends Div {
 }
 ----
 
-`MainLayout` encapsulates `MenuBar`, which in turn encapsulates `TutorialView` or `IconsView` -- depending on where the user has navigated.
+`MainLayout` encapsulates `SubMenu`, which in turn encapsulates `TutorialView` or `IconsView` -- depending on where the user has navigated.
 
 
 == ParentLayout Route Control
@@ -180,5 +184,103 @@ public class Tutorials extends Div {
 The bound route is `framework/tutorial`, although the full chain is `some/framework/tutorial`.
 
 If a parent layout defines a `@RoutePrefix`, the "default" child could have its route defined as `@Route("")` and be mapped to the parent layout route. For example, `Tutorials` with route `""` would be mapped as `framework/`.
+
+
+=== Router Layout
+
+A class implementing the [interfacename]`RouterLayout` interface causes Vaadin to append and remove content on navigation to a route with the layout in the parent stack.
+
+By default, the content is appended to the [interfacename]`RouterLayout` component. Anything added on navigation is positioned last.
+
+.Layout Order Sample
+[source,java]
+----
+public class ParentLayout extends Div implements RouterLayout {
+    public ParentLayout() {
+        add(new Span("Parent content"));
+    }
+}
+
+@Route(value = "route", layout = ParentLayout.class)
+public class MyRoute extends Div {
+    public MyRoute() {
+        add(new Span("View content"));
+    }
+}
+----
+
+.Sample Output
+[source,text]
+----
+Parent content
+View content
+----
+
+Adding elements after navigation in the parent puts the content after the view content.
+
+.Layout Order Sample
+[source,java]
+----
+public class ParentLayout extends Div implements RouterLayout {
+    public ParentLayout() {
+        add(new Span("Parent content"));
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        add(new Span("On attach"));
+    }
+}
+
+@Route(value = "route", layout = ParentLayout.class)
+public class MyRoute extends Div {
+    public MyRoute() {
+        add(new Span("View content"));
+    }
+}
+----
+
+.Sample Output
+[source,text]
+----
+Parent content
+View content
+On attach
+----
+
+To customize content position, the method [methodname]`showRouterLayoutContent(HasElement content)` can be overridden. Even with [methodname]`showRouterLayoutContent` overridden, the content is removed from the component on navigation if not part of the new route.
+
+.Custom Content Sample
+[source,java]
+----
+public class ParentLayout extends Div implements RouterLayout {
+    private Div childHolder = new Div();
+
+    public ParentLayout() {
+        add(childHolder, new Span("Parent content"));
+    }
+
+    @Override
+    public void showRouterLayoutContent(HasElement content) {
+        if(content != null) {
+            childHolder.getElement().appendChild(content.getElement());
+        }
+    }
+}
+
+@Route(value = "route", layout = ParentLayout.class)
+public class MyRoute extends Div {
+    public MyRoute() {
+        add(new Span("View content"));
+    }
+}
+----
+
+.Sample Output
+[source,text]
+----
+View content
+Parent content
+----
 
 [discussion-id]`7A96749F-CD19-4422-A2A2-B4ACD719C9FA`
