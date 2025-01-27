@@ -16,20 +16,34 @@ Various configuration scenarios are implemented using https://httpd.apache.org/[
 
 == Apache HTTPD
 
-Proxying with Apache HTTPD is additionally expanded into two categories: HTTP and AJP backend protocols. Apache HTTPD should be configured to load https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html[`mod_rewrite`], https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[`mod_proxy`], and optionally https://httpd.apache.org/docs/2.4/mod/mod_proxy_ajp.html[`mod_proxy_ajp`]
+Proxying with Apache HTTPD is additionally expanded into two categories: HTTP and AJP backend protocols. Apache HTTPD should be configured to load https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html[`mod_rewrite`], https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[`mod_proxy`], and one or more proxy modules, such as https://httpd.apache.org/docs/2.4/mod/mod_proxy_http.html[`mod_proxy_http`], https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html[`mod_proxy_wstunnel`] or https://httpd.apache.org/docs/2.4/mod/mod_proxy_ajp.html[`mod_proxy_ajp`].
 
 [source]
 ----
 LoadModule rewrite_module modules/mod_rewrite.so
 LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
 
 # Optional, for AJP backend protocol
 # LoadModule proxy_ajp_module modules/mod_proxy_ajp.so
 ----
 
 Example snippets are limited to the proxy configuration. In the simplest cases all relevant configurations are put into a `<Location>` directive. However, setups that require `mod_rewrite` should be directly used inside server config or virtual host definition.
+The proxying directives used in the examples are the following:
 
-Also, only `Location`, `Content-Location` and `URI` headers in the HTTP response is rewritten. Apache HTTPD won't rewrite other response headers, nor does it by default rewrite URL references inside HTML pages. This means that if the proxied content contains absolute URL references, they'll bypass the proxy. To rewrite HTML content to match the proxy, you must load and enable https://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html[`mod_proxy_html`].
+* `ProxyPass`: maps remote servers into the local server URL-space.
+* `ProxyPassReverse`: adjusts the URL in HTTP response headers sent from a reverse proxied server.
+* `ProxyPassReverseCookiePath`: adjusts the Path string in `Set-Cookie` headers from a reverse-proxied server.
+
+`ProxyPass` directive can take a list of parameters in form of `key=value` pairs to tune the connection to the backend server.
+For simpliciy, the examples will not set any option, but with complex network setup, it might be useful to configure some of them:
+
+* `keepalive=On`: should be used when you have a firewall between your Apache HTTPD and the backend server, which tends to drop inactive connections.
+* `disablereuse=On`: force `mod_proxy` to immediately close a connection to the backend after being used, and thus, disable its persistent connection and pool for that backend. This helps in various situations where a firewall between Apache HTTPD and the backend server (regardless of protocol) tends to silently drop connections.
+* `retry=0`: prevents Apache waiting for a while before sending request again to the backend server in case the worker is an error state.
+
+Also, note that only `Location`, `Content-Location` and `URI` headers in the HTTP response is rewritten by `ProxyPassReverse`. Apache HTTPD won't rewrite other response headers, nor does it by default rewrite URL references inside HTML pages. This means that if the proxied content contains absolute URL references, they'll bypass the proxy. To rewrite HTML content to match the proxy, you must load and enable https://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html[`mod_proxy_html`].
 
 
 === AJP Protocol
@@ -66,6 +80,25 @@ public class TomcatConfig implements WebServerFactoryCustomizer<TomcatServletWeb
 
 For different setups, consult the documentation of the Servlet container.
 
+== nginx
+
+The nginx examples are mostly based on the online https://nginx.org/en/docs/http/websocket.html[websocket proxying guide].
+A `map` directive is used to handle the connection upgrade, to set the value of the `Connection` header field in a request to the proxied server depending on the presence of the `Upgrade` field in the client request header.
+
+[source]
+----
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+----
+
+Other used directive are:
+
+* `proxy_pass`: maps remote servers into the local server URL-space.
+* `proxy_set_header`: redefines or appends fields to the request header passed to the proxied server.
+* `proxy_cookie_path`: adjusts the Path string in `Set-Cookie` headers from a reverse-proxied server.
+
 
 == Deployment Scenarios
 
@@ -94,6 +127,7 @@ The next sections provide configuration examples covering the following deployme
 |===
 
 All the scenarios assume the Vaadin application is built for production and `PUSH` communication over WebSocket is enabled.
+Please note that it is usually better to deploy the application on the backend server at the same path as the proxy rather than to take this approach, to avoid potential issues with URLs sent back to the client as HTTP headers or in the response body.
 
 
 === Web Server & Vaadin on Root Context
@@ -120,7 +154,6 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/?(.*) "ws://vaadin-app:8080/$1" [P,L]
 
 ProxyPass         "/"      ajp://vaadin-app:8009/
-ProxyPassReverse  "/"      ajp://vaadin-app:8009/
 ----
 
 .`nginx`
@@ -177,7 +210,6 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 ----
 <Location />
     ProxyPass               ajp://vaadin-app:8009/
-    ProxyPassReverse        ajp://vaadin-app:8009/
 </Location>
 
 <Location /VAADIN/push>
@@ -249,7 +281,6 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/app/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
 
 ProxyPass         "/app/"      ajp://vaadin-app:8009/app/
-ProxyPassReverse  "/app/"      ajp://vaadin-app:8009/app/
 ----
 
 .`nginx`
@@ -306,7 +337,6 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 ----
 <Location /app/>
     ProxyPass               ajp://vaadin-app:8009/app/
-    ProxyPassReverse        ajp://vaadin-app:8009/app/
 </Location>
 
 <Location /app/VAADIN/push>
@@ -383,7 +413,7 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
 
 ProxyPass         "/"      ajp://vaadin-app:8009/app/
-ProxyPassReverse  "/"      ajp://vaadin-app:8009/app/
+ProxyPassReverse  "/"      "/app/"
 ProxyPassReverseCookiePath "/app" "/"
 ----
 
@@ -444,7 +474,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 ----
 <location / >
     ProxyPass         ajp://vaadin-app:8009/app/
-    ProxyPassReverse  ajp://vaadin-app:8009/app/
+    ProxyPassReverse  "/app/"
     ProxyPassReverseCookiePath "/app" "/"
 </Location>
 
@@ -510,7 +540,7 @@ This is the opposite of the above scenario. The proxy server exposes the applica
 ----
 <Location /app/>
     ProxyPass         "http://vaadin-app:8080/" upgrade=websocket
-    ProxyPassReverse  "http://vaadin-app:8080/"
+    ProxyPassReverse  "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 ----
@@ -524,8 +554,8 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/app/(.*) "ws://vaadin-app:8080/$1" [P,L]
 
 <Location /app/ >
-    ProxyPass         "/app/"      ajp://vaadin-app:8009/
-    ProxyPassReverse  "/app/"      ajp://vaadin-app:8009/
+    ProxyPass         ajp://vaadin-app:8009/
+    ProxyPassReverse  "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 ----
@@ -568,7 +598,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 ----
 <Location /app/>
     ProxyPass                  "http://vaadin-app:8080/"
-    ProxyPassReverse           "http://vaadin-app:8080/"
+    ProxyPassReverse           "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 
@@ -585,8 +615,8 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 [source]
 ----
 <Location /app/ >
-    ProxyPass         "/app/"      ajp://vaadin-app:8009/
-    ProxyPassReverse  "/app/"      ajp://vaadin-app:8009/
+    ProxyPass         ajp://vaadin-app:8009/
+    ProxyPassReverse  "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 
