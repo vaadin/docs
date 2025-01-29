@@ -18,9 +18,9 @@ Additionally, reverse proxies provide a unified interface for serving multiple a
 Security is another key advantage, as the reverse proxy can filter incoming requests, prevent direct exposure of the application server to the internet, and enforce access controls.
 This layer of abstraction not only simplifies scaling and maintenance but also enhances the reliability and robustness of your Java-based web applications.
 
-This guide covers common deployment scenarios, configuration for reverse proxies, and special considerations for Vaadin's push functionality, session handling, and load balancing.
+This guide covers common deployment scenarios, configuration for reverse proxies, and special considerations for Vaadin's PUSH functionality, session handling, and load balancing.
 
-Various configuration scenarios are implemented using https://httpd.apache.org/[Apache HTTPD] (2.4.47+) and https://nginx.org/en/[`nginx`]. The provided configurations are a working starting point that can be improved with specific customization for the production environment.
+Various configuration scenarios are implemented using https://httpd.apache.org/[`Apache HTTPD`] (2.4.47+) and https://nginx.org/en/[`nginx`]. The provided configurations are a working starting point that can be improved with specific customization for the production environment.
 
 
 == Apache HTTPD
@@ -135,6 +135,21 @@ Other used directive are:
 * `proxy_redirect`: adjusts the URL in HTTP response headers sent from a reverse proxied server.
 * `proxy_cookie_path`: adjusts the Path string in `Set-Cookie` headers from a reverse-proxied server.
 
+== WebSockets in a Vaadin Application
+
+WebSockets provide a persistent, full-duplex communication channel between a client and a server, unlike traditional HTTP requests, which follow a request-response model.
+In the context of a Vaadin application, WebSockets are **optional** but enhance user experience by enabling **server-initiated updates** (<<{articles}/flow/advanced/server-push#,PUSH>>), allowing real-time UI updates without requiring clients to repeatedly poll the server.
+WebSockets work by performing a protocol upgrade from HTTP to the WebSocket protocol (`ws://` or `wss://`) using the `Upgrade` and `Connection` headers.
+
+In Apache HTTPD websocket proxying is usually achieved by adding the `upgrade=websocket` option to the `ProxyPass` directive.
+However, AJP does not support WebSockets because it is designed for traditional request-response communication and does not handle persistent bidirectional connections.
+To support WebSockets behind a reverse proxy, Apache must route WebSocket traffic ensuring proper handling of the upgrade process and maintaining the connection between the client and the backend Vaadin server, meaning that a specific configuration is required.
+
+Similarly, also nginx needs to be configured to handle the protocol upgrade.
+
+In the proposed example, the WebSockets configuration blocks are marked with `Websockets only (begin)` and `Websockets only (end)` comments.
+If WebSockets support is not required by the application, the related configuration can be skipped. For Apache HTTPD `ProxyPass` directive just remove the `upgrade` option.
+
 
 == Deployment Scenarios
 
@@ -188,10 +203,12 @@ This is the most straightforward scenario, where a backend application served on
 .Apache HTTPD - AJP
 [source]
 ----
+# -- Websockets only (begin)
 RewriteEngine on
 RewriteCond %{HTTP:Upgrade} websocket [NC]
 RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/?(.*) "ws://vaadin-app:8080/$1" [P,L]
+# -- Websockets only (end)
 
 ProxyPass   "/"  ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
 ----
@@ -199,10 +216,12 @@ ProxyPass   "/"  ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -214,8 +233,11 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
 
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
@@ -237,6 +259,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPassReverse        http://vaadin-app:8080/
 </Location>
 
+# -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/VAADIN/push
 </Location>
@@ -244,6 +267,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 <Location /HILLA/push>
     ProxyPass               ws://vaadin-app:8080/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
@@ -253,6 +277,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPass               ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
 </Location>
 
+# -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/VAADIN/push
 </Location>
@@ -260,15 +285,18 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 <Location /HILLA/push>
     ProxyPass               ws://vaadin-app:8080/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -284,6 +312,8 @@ server {
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
     }
+
+    # -- Websockets only (begin)
     location ~* "(/VAADIN|HILLA)/push" {
         proxy_set_header        Host $host;
         proxy_set_header        X-Real-IP $remote_addr;
@@ -294,6 +324,7 @@ server {
 
         proxy_pass http://vaadin-app:8080;
     }
+    # -- Websockets only (end)
 }
 ----
 --
@@ -317,10 +348,12 @@ Similar to the previous scenario, but the Vaadin application is reachable on the
 .Apache HTTPD - AJP
 [source]
 ----
+# -- Websockets only (begin)
 RewriteEngine on
 RewriteCond %{HTTP:Upgrade} websocket [NC]
 RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/app/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
+# -- Websockets only (end)
 
 ProxyPass   "/app/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
 ----
@@ -328,10 +361,12 @@ ProxyPass   "/app/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECR
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -343,8 +378,11 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
 
         proxy_pass http://vaadin-app:8080/app/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
@@ -366,6 +404,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPassReverse        http://vaadin-app:8080/app/
 </Location>
 
+# -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
 </Location>
@@ -373,6 +412,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 <Location /app/HILLA/push>
     ProxyPass               ws://vaadin-app:8080/app/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
@@ -382,6 +422,7 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPass               ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
 </Location>
 
+# -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
 </Location>
@@ -389,15 +430,18 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
 <Location /app/HILLA/push>
     ProxyPass               ws://vaadin-app:8080/app/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -413,6 +457,8 @@ server {
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
     }
+
+    # -- Websockets only (begin)
     location ~* ^/(VAADIN|HILLA)/push$ {
 
         rewrite ^/(.*) /app/$1 break;
@@ -426,6 +472,7 @@ server {
 
         proxy_pass http://vaadin-app:8080;
     }
+    # -- Websockets only (end)
 }
 ----
 --
@@ -451,10 +498,12 @@ In this scenario the backend application is published on a sub context, but the 
 .Apache HTTPD - AJP
 [source]
 ----
+# -- Websockets only (begin)
 RewriteEngine on
 RewriteCond %{HTTP:Upgrade} websocket [NC]
 RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
+# -- Websockets only (end)
 
 ProxyPass         "/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
 ProxyPassReverse  "/"      "/app/"
@@ -464,10 +513,12 @@ ProxyPassReverseCookiePath "/app" "/"
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -479,8 +530,11 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
 
         proxy_pass http://vaadin-app:8080/app/;
         proxy_redirect $scheme://$host/app/ $scheme://$http_host/;
@@ -504,6 +558,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPassReverseCookiePath "/app" "/"
 </Location>
 
+# -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass "ws://vaadin-app:8080/app/VAADIN/push"
 </Location>
@@ -511,7 +566,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 <Location /HILLA/push>
     ProxyPass "ws://vaadin-app:8080/app/HILLA/push"
 </Location>
-
+# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
@@ -523,6 +578,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPassReverseCookiePath "/app" "/"
 </Location>
 
+# -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
 </Location>
@@ -530,15 +586,18 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 <Location /HILLA/push>
     ProxyPass               ws://vaadin-app:8080/app/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -556,6 +615,7 @@ server {
         proxy_cookie_path /app /;
     }
 
+    # -- Websockets only (begin)
     location ~* ^/(VAADIN|HILLA)/push$ {
 
         rewrite ^/(.*) /app/$1 break;
@@ -569,6 +629,7 @@ server {
 
         proxy_pass http://vaadin-app:8080;
     }
+    # -- Websockets only (end)
 }
 ----
 --
@@ -593,10 +654,12 @@ This is the opposite of the above scenario. The proxy server exposes the applica
 .Apache HTTPD - AJP
 [source]
 ----
+# -- Websockets only (begin)
 RewriteEngine on
 RewriteCond %{HTTP:Upgrade} websocket [NC]
 RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/app/(.*) "ws://vaadin-app:8080/$1" [P,L]
+# -- Websockets only (end)
 
 <Location /app/ >
     ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
@@ -608,10 +671,12 @@ RewriteRule ^/app/(.*) "ws://vaadin-app:8080/$1" [P,L]
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -623,8 +688,11 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
 
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
@@ -647,6 +715,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 
+# -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass "ws://vaadin-app:8080/VAADIN/push"
 </Location>
@@ -654,6 +723,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 <Location /app/HILLA/push>
     ProxyPass "ws://vaadin-app:8080/HILLA/push"
 </Location>
+# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
@@ -665,6 +735,7 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
 
+# -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/VAADIN/push
 </Location>
@@ -672,15 +743,18 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
 <Location /app/HILLA/push>
     ProxyPass               ws://vaadin-app:8080/HILLA/push
 </Location>
+# -- Websockets only (end)
 ----
 
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
 
 server {
 
@@ -692,14 +766,13 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
-        proxy_set_header        Upgrade $http_upgrade;
-        proxy_set_header        Connection $connection_upgrade;
 
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
         proxy_cookie_path /app /;
     }
 
+    # -- Websockets only (begin)
     location ~* ^/app/(VAADIN|HILLA)/push$ {
 
         rewrite ^/app/(.*)      /$1 break;
@@ -713,6 +786,7 @@ server {
 
         proxy_pass http://vaadin-app:8080;
     }
+    # -- Websockets only (end)
 }
 ----
 --
@@ -774,6 +848,7 @@ The main drawback of the `ip_hash` approach is that it doesn't work well for cli
     ProxySet lbmethod=byrequests
 </Proxy>
 
+# -- Websockets only (begin)
 <Proxy "balancer://application-websocket-balancer/">
     BalancerMember "ws://vaadin-app-1:8080" route=1
     BalancerMember "ws://vaadin-app-2:8080" route=2
@@ -781,16 +856,17 @@ The main drawback of the `ip_hash` approach is that it doesn't work well for cli
     ProxySet lbmethod=byrequests
 </Proxy>
 
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "balancer://application-websocket-balancer/$1" [P,L]
+# -- Websockets only (end)
+
 # Adding a cookie for session affinity instead of backend JSESSIONID because:
 # - additional configuration required on the backend server to add the route id
 #   in the cookie value (e.g. jvmRoute for Tomcat)
 # - The backend cookie might not be set on the very first request, causing unexpected behaviors
 Header add Set-Cookie "ROUTEID=.%{BALANCER_WORKER_ROUTE}e; path=/; HttpOnly" env=BALANCER_ROUTE_CHANGED
-
-RewriteEngine on
-RewriteCond %{HTTP:Upgrade} websocket [NC]
-RewriteCond %{HTTP:Connection} upgrade [NC]
-RewriteRule ^/?(.*) "balancer://application-websocket-balancer/$1" [P,L]
 
 ProxyPass         / "balancer://application-balancer/"
 ProxyPassReverse  / "balancer://application-balancer/"
@@ -799,10 +875,13 @@ ProxyPassReverse  / "balancer://application-balancer/"
 .`nginx`
 [source]
 ----
+# -- Websockets only (begin)
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
 }
+# -- Websockets only (end)
+
 upstream application_balancer {
     server vaadin-app-1:8080;
     server vaadin-app-2:8080;
@@ -819,8 +898,11 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
 
         proxy_pass http://application_balancer/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
