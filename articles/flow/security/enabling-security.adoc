@@ -517,4 +517,72 @@ For more information about navigation access control consult the <<{articles}/fl
 
 Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views. Doing so might cause unwanted access configurations, and would be an unnecessary complication in the authorization of views.
 
+== Spring Impersonation With Vaadin
+
+A common use-case for secured applications is that a user has an issue and that the admin/super users can log in as the user to see the issue and help.
+It can be helpful for use cases such as customer support analysis where the analyst can access the system as the real user.
+
+As the insecure (security breach) solution would be asking for the customer's password or getting it from the database should not be used, Spring Security has the impersonation feature that can be used instead.
+By using this the system knows who has really logged in and it can be used to track the impersonators action if there's an audit log in place.
+
+To add the impersonation for a Vaadin application create the [classname]`SwitchUserFilter` bean as follows:
+
+[source,java]
+----
+  @Bean
+  @DependsOn("VaadinSecurityContextHolderStrategy")
+  public SwitchUserFilter switchUserFilter() {
+    SwitchUserFilter filter = new SwitchUserFilter();
+    filter.setUserDetailsService(userDetailsService());
+    filter.setSwitchUserMatcher(antMatcher(HttpMethod.GET, "/impersonate"));
+    filter.setExitUserMatcher(antMatcher(HttpMethod.GET, "/impersonate/exit"));
+    filter.setTargetUrl("/");
+    return filter;
+  }
+----
+
+[NOTE]
+The bean should depend on `VaadinSecurityContextHolderStrategy` bean.
+If the [classname]`SwitchUserFilter` is initialized first the wrong security holder is used and the feature does not work.
+
+To secure the impersonation endpoints add to the [classname]`VaadinWebSecurity` implementation [methodname]`configure(HttpSecurity http)` the matchers:
+
+[source,java]
+----
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    // Authorize impersonation for admin/impersonated admin
+    http.authorizeHttpRequests(auth -> auth.requestMatchers(new AntPathRequestMatcher("/impersonate")).hasAnyRole("ADMIN", "PREVIOUS_ADMINISTRATOR"));
+    http.authorizeHttpRequests(auth -> auth.requestMatchers(new AntPathRequestMatcher("/impersonate/exit")).hasRole("PREVIOUS_ADMINISTRATOR"));
+
+    // Set default security policy that permits Vaadin internal requests and
+    // denies all other
+    super.configure(http);
+    // Other configurations
+  }
+----
+
+This allows users with the `ADMIN` role (or impersonating admin) to call the impersonate endpoint.
+
+To impersonate a user, a call to the `impersonate` url needs to be done.
+
+[source,java]
+----
+Button impersonate = new Button("Impersonate user", e ->
+  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate?username=user"))
+);
+----
+
+This would have the admin impersonate the `user` account without the need to have knowledge of the password.
+
+To exit impersonation just call the exit url:
+
+[source,java]
+----
+Button exitImpersonation = new Button("Exit impersonation", e ->
+  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate/exit"))
+);
+----
+
+
 [discussion-id]`4C8D835D-4E6E-4D81-BEA1-A865FEB17BAD`
