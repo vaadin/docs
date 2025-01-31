@@ -1,14 +1,18 @@
 ---
-title: Endpoint Generator
-page-title: How to use the endpoint generator in Hilla | Vaadin
-description: The endpoint generator produces TypeScript files based on the information from an OpenAPI document that's generated from Java (or other JVM language) files.
+title: TypeScript Generator
+page-title: How to use the TypeScript generator in Hilla | Vaadin
+description: The TypeScript generator produces TypeScript files that map to Java services annotated with [annotationname]`@BrowserCallable` or [annotationname]`@Endpoint`.
 meta-description: Discover how to generate endpoints for Hilla applications efficiently.
 ---
 // tag::content[]
 
-= Endpoint Generator
+= TypeScript Generator
 :toclevels: 2
 
+The TypeScript generator produces TypeScript files that map to Java services annotated with [annotationname]`@BrowserCallable` or [annotationname]`@Endpoint`.
+Those files retain the properties and types of the Java classes to provide type safety in the frontend.
+
+Those annotated services are commonly named *endpoints*, although there is a single REST endpoint in Hilla, which in turn calls the browser-callable services. The term "endpoints" is used in this context to refer to those annotated Java services.
 
 == Features
 
@@ -18,9 +22,9 @@ The generator has the following noteworthy features:
 
 - *Designed to be flexible*: all parts of the generator are pluggable, which allows you to alter the default behavior or add a new one.
 
-.Enable the Java compiler "parameters" option
-[IMPORTANT]
-You need to use the `javac -parameters` option to enable support for multi-module projects and all JVM languages. See <<configuration#java-compiler-options,Configuration>> for details.
+[NOTE]
+Spring Boot enables a Java compiler option to retain parameter names in class files. If generated classes are missing parameter names, you might need to enable this option in your project.
+Use the `javac -parameters` option to enable support for multi-module projects and all JVM languages. See <<configuration#java-compiler-options,Configuration>> for details.
 
 
 == Generator Architecture
@@ -103,80 +107,6 @@ For more information about type mapping between Java and TypeScript, see <<type-
 
 
 
-=== Adding a Custom Generator Plugin
-
-Generator plugins can be configured and extended.
-This example defines a custom [classname]`NonNull` annotation and uses it instead of the default one.
-
-The configuration parameters are specific to the plugin.
-In this case, the simplest way is to `<disable>` the default configuration of the [classname]`NonnullPlugin` and `<use>` a detailed custom configuration, like in this example:
-
-[source,xml]
-----
-<configuration>
-    <parser>
-        <plugins>
-            <use>
-                <plugin>
-                    <name>com.vaadin.hilla.parser.plugins.nonnull.NonnullPlugin</name>
-                    <configuration implementation="com.vaadin.hilla.parser.plugins.nonnull.NonnullPluginConfig">
-                        <use>
-                            <annotation>
-                                <name>com.example.application.annotations.NeverNull</name>
-                                <makesNullable>false</makesNullable>
-                                <score>50</score>
-                            </annotation>
-                        </use>
-                    </configuration>
-                </plugin>
-            </use>
-            <disable>
-                <plugin>
-                    <name>com.vaadin.hilla.parser.plugins.nonnull.NonnullPlugin</name>
-                </plugin>
-            </disable>
-        </plugins>
-    </parser>
-</configuration>
-----
-
-You need to create the custom annotation and update the endpoint to use it:
-
-.`NeverNull.java`
-[source,java]
-----
-package com.example.application.annotations;
-
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE_USE })
-public @interface NeverNull {
-}
-----
-
-.`MyEndpoint.java`
-[source,java]
-----
-@Endpoint
-public class MyEndpoint {
-
-  @NeverNull
-  public String sayHello(@NeverNull String name) {
-      if (name.isEmpty()) {
-          return "Hello stranger";
-      } else {
-          return "Hello " + name;
-      }
-  }
-}
-----
-
-The plugin configuration is modelled on the configuration classes defined for each plugin. For example, see the https://github.com/vaadin/hilla/blob/main/packages/java/parser-jvm-plugin-nonnull/src/main/java/com/vaadin/hilla/parser/plugins/nonnull/NonnullPluginConfig.java[Nonnull plugin configuration].
-
-
-
-
-
 
 [[appendix]]
 == Appendix: How a TypeScript class is generated from the OpenAPI specification
@@ -186,7 +116,6 @@ The plugin configuration is modelled on the configuration classes defined for ea
 The generator collects all the `tags` fields of all operations in the OpenAPI document.
 Each tag generates a corresponding TypeScript file.
 The tag name is used for TypeScript module/class name, as well as the file name.
-The TsDoc of the class is fetched from the `description` field of the https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#tagObject[tag object] that has the same name as the class.
 
 === Methods
 
@@ -216,8 +145,7 @@ To get the result as <<user-endpoint-ts>>, the request body content should be:
         "type": "object",
         "properties": {
           "id": {
-            "type": "number",
-            "description": "User id to be checked"
+            "type": "number"
           }
         }
       }
@@ -225,8 +153,6 @@ To get the result as <<user-endpoint-ts>>, the request body content should be:
   }
 }
 ----
-
-The type and description of each property are used for the TsDoc that describes the parameter in more detail.
 
 [NOTE]
 ====
@@ -236,9 +162,8 @@ This means that a method that doesn't have the `application/json` content type i
 
 ==== Method Return Type
 
-The return type and its description are taken from the `200` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object].
+The return type is taken from the `200` https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responseObject[response object].
 As with the request body object, the generator is only interested in the `application/json` content type.
-The schema type indicates the return type and the description describes the result.
 Here is an example of a https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#responsesObject[response object]:
 
 [[response-object]]
@@ -265,17 +190,11 @@ Currently, the generator only recognizes `200` response objects.
 Other response objects are ignored.
 ====
 
-==== Method TsDoc
-
-The TsDoc of the generated method is stored as the `description` value of the `POST` operation in the path item.
-A valid _POST` operation combined with <<request-body>> and <<response-object>> would look like this:
-
 .Post Operation
 [source,json]
 ----
 {
   "tags": ["UserEndpoint"], // <1>
-  "description": "Check if a user is admin or not.",
   "requestBody": {
     "content": {
       "application/json": {
@@ -283,8 +202,7 @@ A valid _POST` operation combined with <<request-body>> and <<response-object>> 
           "type": "object",
           "properties": {
             "id": {
-              "type": "number",
-              "description": "User id to be checked"
+              "type": "number"
             }
           }
         }
@@ -293,7 +211,6 @@ A valid _POST` operation combined with <<request-body>> and <<response-object>> 
   },
   "responses": {
     "200": {
-      "description": "Return true if the given user is an admin, otherwise false.",
       "content": {
         "application/json": {
           "schema": {
@@ -327,18 +244,15 @@ Here is an example OpenAPI document that could generate previous [filename]`User
     "version" : "1.0.0"
   },
   "servers" : [ {
-    "url" : "https://myhost.com/myendpoint",
-    "description" : "Hilla backend server"
+    "url" : "https://myhost.com/myendpoint"
   } ],
   "tags" : [ {
-    "name" : "UserEndpoint",
-    "description" : "User endpoint class."
+    "name" : "UserEndpoint"
   } ],
   "paths" : {
     "/UserEndpoint/isAdmin" : {
       "post": {
         "tags": ["UserEndpoint"],
-        "description": "Check if a user is admin or not.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -347,8 +261,7 @@ Here is an example OpenAPI document that could generate previous [filename]`User
                 "required": [ "id" ],
                 "properties": {
                   "id": {
-                    "type": "number",
-                    "description": "User id to be checked"
+                    "type": "number"
                   }
                 }
               }
@@ -357,7 +270,6 @@ Here is an example OpenAPI document that could generate previous [filename]`User
         },
         "responses": {
           "200": {
-            "description": "Return true if the given user is an admin, otherwise false.",
             "content": {
               "application/json": {
                 "schema": {
