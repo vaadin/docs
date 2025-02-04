@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/avatar';
 import '@vaadin/card';
 import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/icons.js';

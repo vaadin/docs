@@ -1,5 +1,4 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/avatar';
 import '@vaadin/card';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';

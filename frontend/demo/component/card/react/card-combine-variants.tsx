@@ -1,8 +1,8 @@
+import '@vaadin/vaadin-lumo-styles/icons.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { Card } from '@vaadin/react-components/Card.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
-import '@vaadin/vaadin-lumo-styles/icons.js';
+// @ts-expect-error hidden-source-line
 import img from '../../../../../src/main/resources/images/lapland.avif?url';
 
 function Example() {

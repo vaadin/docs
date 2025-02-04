@@ -1,8 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
 import '@vaadin/card';
-import '@vaadin/icon';
-import '@vaadin/vaadin-lumo-styles/icons.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
