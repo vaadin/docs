@@ -16,12 +16,95 @@ TODO
 
 == Programmatic Navigation
 
-TODO
+You can trigger a navigation in Java by calling any of the [methodname]`UI.navigate()` methods. You typically do this in response to user actions, such as inside button click listeners, but this is not a requirement. You could also trigger navigation from a background thread using server push, for instance.
+// TODO Add links to background thread and server push
 
+In the following example, the router attempts to navigate to the home view when the user clicks the button:
+
+[source,java]
+----
+var button = new Button("Home");
+button.addClickListener(event -> 
+    UI.getCurrent().navigate(MainView.class)
+);
+----
+
+If the view is accepting a single route parameter, you can pass the parameter value to [methodname]`UI.navigate()`. 
+
+In the following example, [classname]`CustomerDetailsView` implements the [interfacename]`HasUrlParameter<T>` interface and takes a single string parameter - the customer's ID. When the user clicks the button, the router attempts to navigate to the customer details view, passing the string `"cu1234"` as the route parameter value:
+
+[source,java]
+----
+var button = new Button("Customer Details");
+button.addClickListener(event -> 
+    UI.getCurrent().navigate(CustomerDetailsView.class, "cu1234")
+);
+----
+
+For more information about route parameters, see the <<../pass-data/route-parameters#,Route Parameters>> guide.
+
+If the view is accepting multiple route parameters, you need to construct an instance of [classname]`RouteParameters` and pass it to [methodname]`UI.navigate()`. You can construct it in different ways; see its https://vaadin.com/api/platform/current/com/vaadin/flow/router/RouteParameters.html[API documentation] for details.
+// TODO Should the API link be versioned?
+
+In the following example, the router attempts to navigate to the customer details view when the user clicks the button. The router passes on two route parameters; `customerId` with the value of `"cu1234"`, and `mode` with the value of `"edit"`:
+
+[source,java]
+----
+var button = new Button("Edit Customer");
+button.addClickListener(event -> 
+    UI.getCurrent().navigate(CustomerDetailsView.class, 
+        new RouteParameters(Map.of("customerId", "cu1234", "mode", "edit"))
+    )
+);
+----
+
+For more information about multiple route parameters, see the <<../pass-data/route-templates#,Route Templates>> guide.
+
+
+=== Calling Methods on the View
+
+The recommended way of <<../pass-data#,passing data>> to a view is through route parameters. In that case, the data is part of the view's URL. This means that the view can be bookmarked, sent as a link to a coworker, or reloaded and still work as expected.
+
+That said, it is also possible to call methods on the new view after successful navigation. Every [methodname]`UI.navigate()` method returns an `Optional`. If the navigation was successful, the optional contains the new view instance, which you can call methods on.
+
+// TODO When would I ever want to do this for real??
+
+In practice, this may be useful in cases where you are implementing a workflow and need to pass complex data between steps. In the following example, the router attempts to navigate to the customer details view when the user clicks the button. If the operation is not blocked because of conditional routing, the `setCustomerId` method is called on the new view:
+
+[source,java]
+----
+var wizardState = getCurrentState();
+var button = new Button("Next Step");
+button.addClickListener(event ->
+    UI.getCurrent().navigate(EnterCustomerDetailsView.class)
+        .ifPresent(view -> view.setWizardState(wizardState));
+);
+----
+
+However, this also means that if the user
 
 == Route Links
 
-TODO
+
+[source,java]
+----
+var link = new RouterLink("Home", MainView.class);
+myLayout.add(link);
+----
+
+
+[source,java]
+----
+var link = new RouterLink("Customer Details", CustomerDetailsView.class, "cu1234");
+myLayout.add(link);
+----
+
+[source,java]
+----
+var link = new RouterLink("Edit Customer", CustomerDetailsView.class, 
+    new RouteParameters(Map.of("customerId", "cu1234", "mode", "edit")));
+myLayout.add(link);
+----
 
 
 == Make an API
