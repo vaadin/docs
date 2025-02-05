@@ -8,7 +8,7 @@ function Example() {
     <Card>
       <div slot="title">Lapland</div>
       <div slot="subtitle">The Exotic North</div>
-      <span slot="header-suffix" theme="badge success">
+      <span slot="header-suffix" {...{ theme: 'badge success' }}>
         Arctic
       </span>
       <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
