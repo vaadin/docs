@@ -4,7 +4,6 @@ import React from 'react'; // hidden-source-line
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Card } from '@vaadin/react-components/Card.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-// @ts-expect-error hidden-source-line
 import img from '../../../../../src/main/resources/images/lapland.avif?url';
 
 function Example() {

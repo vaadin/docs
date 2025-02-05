@@ -4,7 +4,6 @@ import '@vaadin/card';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-// @ts-expect-error hidden-source-line
 import img from '../../../../src/main/resources/images/lapland.avif?url';
 
 @customElement('card-combine-variants')
