@@ -9,7 +9,10 @@ import '@vaadin/vaadin-lumo-styles/icons.js';
 import '@vaadin/select';
 import '@vaadin/scroller';
 import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, query } from 'lit/decorators.js';
+import type { Card } from '@vaadin/card';
+import type { CheckboxGroup } from '@vaadin/checkbox-group';
+import type { Select } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('card-features')
@@ -20,6 +23,30 @@ export class Example extends LitElement {
     applyTheme(root);
     return root;
   }
+
+  @query('.playground')
+  protected playground!: Card;
+
+  @query('#media')
+  protected mediaSelect!: Select;
+
+  @query('#content')
+  protected contentSelect!: Select;
+
+  @query('.theme-variant')
+  protected themeVariant!: CheckboxGroup;
+
+  @query('.slot-options')
+  protected slotCheckboxGroup!: CheckboxGroup;
+
+  @query('#slot-options')
+  protected slotOptions!: HTMLTemplateElement;
+
+  @query('#media-options')
+  protected mediaOptions!: HTMLTemplateElement;
+
+  @query('#content-options')
+  protected contentOptions!: HTMLTemplateElement;
 
   static styles = css`
     :host {
@@ -352,16 +379,22 @@ export class Example extends LitElement {
   }
 
   protected override firstUpdated() {
-    const playground = this.shadowRoot.querySelector('.playground');
-    const mediaSelect = this.shadowRoot.querySelector('#media');
-    const contentSelect = this.shadowRoot.querySelector('#content');
-    const slotCheckboxGroup = this.shadowRoot.querySelector('.slot-options');
-    // const resizeOptions = this.shadowRoot.querySelector('.playground-resize');
-    const themeVariant = this.shadowRoot.querySelector('.theme-variant');
+    const {
+      playground,
+      contentOptions,
+      contentSelect,
+      mediaOptions,
+      mediaSelect,
+      slotCheckboxGroup,
+      slotOptions,
+      themeVariant,
+    } = this;
 
-    const slotElements = this.shadowRoot.querySelector('#slot-options').content.children;
-    const mediaElements = this.shadowRoot.querySelector('#media-options').content.children;
-    const contentElements = this.shadowRoot.querySelector('#content-options').content.children;
+    // const resizeOptions = this.shadowRoot.querySelector('.playground-resize');
+
+    const slotElements = slotOptions.content.children;
+    const mediaElements = mediaOptions.content.children;
+    const contentElements = contentOptions.content.children;
 
     const slotItems = {
       media: mediaElements[0].cloneNode(true),
@@ -386,7 +419,7 @@ export class Example extends LitElement {
       if (existing) {
         playground.removeChild(existing);
       }
-      const newMedia = mediaElements[e.detail.value].cloneNode(true);
+      const newMedia = mediaElements[Number(e.detail.value)].cloneNode(true);
       playground.prepend(newMedia);
       slotItems.media = newMedia;
     });
@@ -402,7 +435,7 @@ export class Example extends LitElement {
       if (existing) {
         playground.removeChild(existing);
       }
-      const newContent = contentElements[e.detail.value].cloneNode(true);
+      const newContent = contentElements[Number(e.detail.value)].cloneNode(true);
       playground.append(newContent);
       slotItems.content = newContent;
     });
