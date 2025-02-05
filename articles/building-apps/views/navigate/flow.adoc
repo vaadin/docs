@@ -7,19 +7,58 @@ tab-title: Flow
 order: 5
 ---
 
-// Include route parameters, query parameters and route template examples here, and refer to the other guides for how to receive these parameters.
+// TODO Review with AI
 
 = Navigation in Flow
 
-TODO
+In Flow, you can navigate to another view in two ways: by creating a link that the user can click, or programmatically using an API. In this guide, you'll learn how to do both. You'll also learn how to improve the readability of your code by encapsulating some of the navigation logic into your own API. At the end, there is a mini-tutorial that you can follow to try out what you've learned in a real Vaadin application.
+
+
+== Router Links
+
+[classname]`RouterLink` is a component that creates a clickable link for navigation. In HTML, it corresponds to an anchor (`<a>`) element. Links are preferable to programmatic navigation because they improve accessibility. They also allow users to open links in new browser tabs.
+
+The following example creates a link to the [classname]`MainView`:
+
+[source,java]
+----
+var link = new RouterLink("Home", MainView.class);
+myLayout.add(link);
+----
+
+If the view is accepting a single route parameter, you can pass the parameter value to the [classname]`RouterLink` constructor.
+
+In the following example, [classname]`CustomerDetailsView` implements the [interfacename]`HasUrlParameter<T>` interface and takes a single string parameter - the customer's ID. The link navigates to the details of the customer with ID `"cu1234"`:
+
+[source,java]
+----
+var link = new RouterLink("Customer Details", CustomerDetailsView.class, "cu1234");
+myLayout.add(link);
+----
+
+For more information about route parameters, see the <<../pass-data/route-parameters#,Route Parameters>> guide.
+
+If the view is accepting multiple route parameters, you need to construct an instance of [classname]`RouteParameters` and pass it to the [classname]`RouterLink` constructor. You can construct it in different ways; see its https://vaadin.com/api/platform/current/com/vaadin/flow/router/RouteParameters.html[API documentation] for details.
+// TODO Should the API link be versioned?
+
+The following example creates a link to the customer details view with two route parameters; `customerId` with the value of `"cu1234"`, and `mode` with the value of `"edit"`:
+
+[source,java]
+----
+var link = new RouterLink("Edit Customer", CustomerDetailsView.class, 
+    new RouteParameters(Map.of("customerId", "cu1234", "mode", "edit")));
+myLayout.add(link);
+----
+
+For more information about multiple route parameters, see the <<../pass-data/route-templates#,Route Templates>> guide.
 
 
 == Programmatic Navigation
 
-You can trigger a navigation in Java by calling any of the [methodname]`UI.navigate()` methods. You typically do this in response to user actions, such as inside button click listeners, but this is not a requirement. You could also trigger navigation from a background thread using server push, for instance.
+Using links is not the only way to navigate from a view to another. You can trigger a navigation in Java by calling any of the [methodname]`UI.navigate()` methods. You typically do this in response to user actions, such as inside button click listeners, but this is not a requirement. You could also trigger navigation from a background thread using server push, for instance.
 // TODO Add links to background thread and server push
 
-In the following example, the router attempts to navigate to the home view when the user clicks the button:
+The API of [methodname]`UI.navigate()` is similar to that of [classname]`RouterLink`. In the following example, the router attempts to navigate to the home view when the user clicks the button:
 
 [source,java]
 ----
@@ -29,9 +68,7 @@ button.addClickListener(event ->
 );
 ----
 
-If the view is accepting a single route parameter, you can pass the parameter value to [methodname]`UI.navigate()`. 
-
-In the following example, [classname]`CustomerDetailsView` implements the [interfacename]`HasUrlParameter<T>` interface and takes a single string parameter - the customer's ID. When the user clicks the button, the router attempts to navigate to the customer details view, passing the string `"cu1234"` as the route parameter value:
+If the view is accepting a single route parameter, you can pass the parameter value to [methodname]`UI.navigate()`, like this:
 
 [source,java]
 ----
@@ -41,12 +78,7 @@ button.addClickListener(event ->
 );
 ----
 
-For more information about route parameters, see the <<../pass-data/route-parameters#,Route Parameters>> guide.
-
-If the view is accepting multiple route parameters, you need to construct an instance of [classname]`RouteParameters` and pass it to [methodname]`UI.navigate()`. You can construct it in different ways; see its https://vaadin.com/api/platform/current/com/vaadin/flow/router/RouteParameters.html[API documentation] for details.
-// TODO Should the API link be versioned?
-
-In the following example, the router attempts to navigate to the customer details view when the user clicks the button. The router passes on two route parameters; `customerId` with the value of `"cu1234"`, and `mode` with the value of `"edit"`:
+If the view is accepting multiple route parameters, you need to construct an instance of [classname]`RouteParameters` and pass it to [methodname]`UI.navigate()`, like this:
 
 [source,java]
 ----
@@ -58,60 +90,211 @@ button.addClickListener(event ->
 );
 ----
 
-For more information about multiple route parameters, see the <<../pass-data/route-templates#,Route Templates>> guide.
 
+== Your Own API
 
-=== Calling Methods on the View
+Instead of scattering [methodname]`UI.navigate()` calls throughout your codebase, it's a good practice to encapsulate navigation logic within dedicated methods. This makes the code more readable, maintainable, and easier to refactor.
 
-The recommended way of <<../pass-data#,passing data>> to a view is through route parameters. In that case, the data is part of the view's URL. This means that the view can be bookmarked, sent as a link to a coworker, or reloaded and still work as expected.
-
-That said, it is also possible to call methods on the new view after successful navigation. Every [methodname]`UI.navigate()` method returns an `Optional`. If the navigation was successful, the optional contains the new view instance, which you can call methods on.
-
-// TODO When would I ever want to do this for real??
-
-In practice, this may be useful in cases where you are implementing a workflow and need to pass complex data between steps. In the following example, the router attempts to navigate to the customer details view when the user clicks the button. If the operation is not blocked because of conditional routing, the `setCustomerId` method is called on the new view:
+In the following example, the [classname]`CustomerDetailsView` has a static method for navigating to the details of the customer with the given ID:
 
 [source,java]
 ----
-var wizardState = getCurrentState();
-var button = new Button("Next Step");
-button.addClickListener(event ->
-    UI.getCurrent().navigate(EnterCustomerDetailsView.class)
-        .ifPresent(view -> view.setWizardState(wizardState));
+@Route("customer")
+public class CustomerDetailsView extends Main implements HasUrlParameter<String> {
+
+    public static void showCustomerDetails(String customerId) {
+        UI.getCurrent().navigate(CustomerDetailsView.class, customerId);
+    }
+
+    ...
+}
+----
+
+When you want to navigate to the view, you call the method, like this:
+
+[source,java]
+----
+var button = new Button("Customer Details");
+button.addClickListener(event -> 
+    CustomerDetailsView.showCustomerDetails("cu1234")
 );
 ----
 
-However, this also means that if the user
+If you use multiple route parameters, or custom parameter types, this approach becomes even more useful.
 
-== Route Links
-
-
-[source,java]
-----
-var link = new RouterLink("Home", MainView.class);
-myLayout.add(link);
-----
-
+In the following example, the [classname]`CustomerDetailsView` accepts two route parameters; a value object [classname]`CustomerId` and an enum [classname]`Mode`:
 
 [source,java]
 ----
-var link = new RouterLink("Customer Details", CustomerDetailsView.class, "cu1234");
-myLayout.add(link);
+@Route("customer/:customerId/:mode?(edit|view)") // <1>
+public class CustomerDetailsView extends Main implements HasUrlParameter<String> {
+
+    public enum Mode {
+        edit, view
+    }
+
+    private static RouteParameters createRouteParameters(
+            CustomerId customerId, Mode mode) {
+        return new RouteParameters(
+            Map.of(
+                "customerId", customerId.toString(), 
+                "mode", mode.toString()
+            )
+        );
+    }
+
+    public static RouterLink createEditLinkTo(String text, CustomerId customerId) {
+        return new RouterLink(text, CustomerDetailsView.class,
+            createRouteParameters(customerId, Mode.edit));
+    }
+
+    public static void editCustomerDetails(CustomerId customerId) {
+        UI.getCurrent().navigate(CustomerDetailsView.class, 
+            createRouteParameters(customerId, Mode.edit));
+    }
+
+    ...
+}
 ----
+<1> This is a route template with two route parameters.
+
+With an API like this, you can create a new router link like this:
 
 [source,java]
 ----
-var link = new RouterLink("Edit Customer", CustomerDetailsView.class, 
-    new RouteParameters(Map.of("customerId", "cu1234", "mode", "edit")));
-myLayout.add(link);
+CustomerId customerId = ...;
+myLayout.add(CustomerDetailsView.createEditLinkTo("Edit Customer", customerId));
+----
+
+If you want to programmatically navigate to the view, you can do it like this:
+
+[source,java]
+----
+CustomerId customerId = ...;
+var button = new Button("Edit Customer");
+button.addClickListener(event -> 
+    CustomerDetailsView.editCustomerDetails(customerId)
+);
 ----
 
 
-== Make an API
+== React Views
 
-TODO
+So far, all the examples have covered navigating from one Flow view to another. However, you can also navigate from a Flow view to a React view. Unlike Flow views, which use Java class references for navigation, React views require string-based routes because they don't have a corresponding Java class.
+
+You can use anchor elements for navigation, or trigger programmatic navigation using [methodname]`UI.navigate()`.
+
+In Flow, you create anchors like this:
+
+[source,java]
+----
+var link = new Anchor("path/to/react/view", "Link to React View");
+myLayout.add(link);
+----
+
+[NOTE]
+Vaadin sets the https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base[base URL] of the application to the path of the root view. All relative links are resolved against this URL. This means that you don't have to worry about the context path when you create `Anchor` objects.
+
+You can also programmatically navigate to React views, like this:
+
+[source,java]
+----
+var button = new Button("Go to React view");
+button.addClickListener(event -> UI.getCurrent().navigate("path/to/react/view"));
+----
 
 
 == Try It
 
-TODO
+In this mini-tutorial, you'll navigate from one view to another using both links and programmatic navigation. You won't use route parameters, as they are covered in their own guides.
+
+Generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+
+[NOTE]
+If you did the mini-tutorial on <<../add-view/flow#try-it,adding views>>, you can proceed with the same project.
+
+Start by opening [classname]`GreetingView` and changing its route to `say/hello/to/vaadin`, like this:
+
+.GreetingView.java
+[source,java]
+----
+// tag::snippet[]
+@Route("say/hello/to/vaadin")
+// end::snippet[]
+@PageTitle("Greetings from Flow")
+@Menu(order = 0, icon = "vaadin:handshake", title = "Greetings (Flow)")
+public class GreetingView extends Main {
+    //...
+}
+----
+
+You'll now create a view that shows various ways of navigating to the greeting view. In the [packagename]`com.example.application.greeting.ui.view` package, create a new class called `LinksView`, like this:
+
+.LinksView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Route;
+
+@Route("links")
+public class LinksView extends Main {
+    public LinksView() {        
+    }
+}
+----
+
+Now, add a [classname]`RouterLink` to your new view, like this:
+
+.LinksView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Route;
+// tag::snippet[]
+import com.vaadin.flow.router.RouterLink;
+// end::snippet[]
+
+@Route("links")
+public class LinksView extends Main {
+
+    public LinksView() {
+// tag::snippet[]
+        add(new RouterLink("Greetings", GreetingView.class));
+// end::snippet[]
+    }
+}
+----
+
+Open your browser at: http://localhost:8080/links 
+
+Hover on the "Greetings" link. You should see that it refers to `\http://localhost:8080/say/hello/to/vaadin`.
+
+Click the link to navigate to the greetings view. Then use the browser's back button to navigate back to the links view.
+
+Next, add a [classname]`Button` to the links view, like this:
+
+.LinksView.java
+[source,java]
+----
+// tag::snippet[]
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+// end::snippet[]
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+
+@Route("links")
+public class LinksView extends Main {
+
+    public LinksView() {
+        add(new RouterLink("Greetings", GreetingView.class));
+        // tag::snippet[]
+        add(new Button("Greetings",
+                event -> UI.getCurrent().navigate(GreetingView.class)));
+        // end::snippet[]
+    }
+}
+----
+
+Go back to the browser. The new [guibutton]*Greetings* button should have appeared automatically thanks to hotswap. Click the button. You should again end up on the greetings view.
