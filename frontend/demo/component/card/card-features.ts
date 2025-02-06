@@ -358,7 +358,7 @@ export class Example extends LitElement {
               <vaadin-checkbox label="Footer" value="footer"></vaadin-checkbox>
             </vaadin-checkbox-group>
 
-            <vaadin-checkbox-group class="theme-variant" label="Theme Variants" theme="vertical">
+            <vaadin-checkbox-group class="theme-variant" label="Style Variants" theme="vertical">
               <vaadin-checkbox label="Outlined" value="outlined"></vaadin-checkbox>
               <vaadin-checkbox label="Elevated" value="elevated"></vaadin-checkbox>
               <vaadin-checkbox label="Horizontal" value="horizontal"></vaadin-checkbox>
