@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/card';
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -26,4 +26,10 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
     `;
   }
+
+  static styles = css`
+    vaadin-card {
+      max-width: 300px;
+    }
+  `;
 }

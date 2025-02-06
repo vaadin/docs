@@ -5,14 +5,24 @@ import { Card } from '@vaadin/react-components/Card.js';
 
 function Example() {
   return (
-    // tag::snippet[]
-    <Card>
-      <Avatar slot="header-prefix" name="Lapland" />
-      <div slot="title">Lapland</div>
-      <div slot="subtitle">The Exotic North</div>
-      <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
-    </Card>
-    // end::snippet[]
+    <>
+      {/* tag::snippet[] */}
+      <Card>
+        {/* tag::[] */}
+        <Avatar slot="header-prefix" name="Lapland" />
+        {/* end::[] */}
+        <div slot="title">Lapland</div>
+        <div slot="subtitle">The Exotic North</div>
+        <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
+      </Card>
+      {/* end::snippet[] */}
+
+      <style>{`
+        vaadin-card {
+          max-width: 300px;
+        }
+      `}</style>
+    </>
   );
 }
 

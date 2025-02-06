@@ -7,23 +7,35 @@ import img from '../../../../../src/main/resources/images/lapland.avif?url';
 
 function Example() {
   return (
-    // tag::snippet[]
-    <>
+    <div className="card-grid">
+      {/* tag::snippet[] */}
+      {/* tag::[] */}
       <Card theme="cover-media">
+        {/* end::[] */}
         <img slot="media" width="200" src={img} alt="" />
         <div slot="title">Lapland</div>
         <div slot="subtitle">The Exotic North</div>
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
       </Card>
 
+      {/* tag::[] */}
       <Card theme="cover-media">
+        {/* end::[] */}
         <Icon slot="media" icon="lumo:photo" className="bg-primary-10 text-primary" />
         <div slot="title">Lapland</div>
         <div slot="subtitle">The Exotic North</div>
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
       </Card>
-    </>
-    // end::snippet[]
+      {/* end::snippet[] */}
+
+      <style>{`
+        .card-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1em;
+        }
+      `}</style>
+    </div>
   );
 }
 
