@@ -10,9 +10,14 @@ order: 5
 
 = Route Parameters in Flow
 
-To pass a route parameter to a Flow view, you should implement the [interfacename]`HasUrlParameter<T>` interface. This interface takes a type argument that can be `Long`, `Integer`, `String`, or `Boolean`. It declares a method [methodname]`setParameter()` that is called to pass the route parameter to the view. 
+In this guide, you’ll learn how to create a view that accepts a single route parameter. You'll also explore the differences between optional and wildcard route parameters. Finally, a mini-tutorial will help you apply these concepts in a real Vaadin application.
 
-For example, you'd create a [classname]`CustomerView` that takes the customer ID as a parameter like this:
+
+== Setting a Route Parameter
+
+To pass a route parameter to a Flow view, implement the [interfacename]`HasUrlParameter<T>` interface. This interface requires a type argument, which can be `Long`, `Integer`, `String`, or `Boolean`. It defines the [methodname]`setParameter()` method, which receives the route parameter when the view is navigated to.
+
+For example, to create a [classname]`CustomerView` that takes a customer ID as a parameter, use the following code:
 
 [source,java]
 ----
@@ -26,14 +31,14 @@ public class CustomerView extends Main implements HasUrlParameter<String> {
 }
 ----
 
-If you now navigated to `/customers/cu12345`, the router would call [methodname]`setParameter()` with `"cu12345"` as the parameter value.
+Now, if you navigate to `/customers/cu12345`, the router calls [methodname]`setParameter()` with `"cu12345"` as the parameter value.
 
 
 == Optional Parameters
 
-Route parameters are required by default. Continuing on the example above, if you tried to navigate to `/customers`, the router would return a `404 Not Found` error. 
+By default, route parameters are required. In the example above, if you try to navigate to `/customers`, the router returns a `404 Not Found` error. 
 
-To make a URL parameter optional, use the [annotationname]`@OptionalParameter` annotation, like this:
+To make a route parameter optional, add the [annotationname]`@OptionalParameter` annotation:
 
 [source,java]
 ----
@@ -41,8 +46,10 @@ To make a URL parameter optional, use the [annotationname]`@OptionalParameter` a
 public class CustomerView extends Main implements HasUrlParameter<String> {
 
     @Override
+// tag::snippet[]
     public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
-        if (parameter == null) { // <1>
+// end::snippet[]
+        if (parameter == null) {
             showCustomerList();
         } else {
             showCustomerWithId(parameter);
@@ -59,14 +66,14 @@ public class CustomerView extends Main implements HasUrlParameter<String> {
 }
 ----
 
-If you now navigated to `/customers`, the router would call [methodname]`setParameter()` with `null` as the parameter value.
+Now, if you now navigate to `/customers`, the router calls [methodname]`setParameter()` with `null` as the parameter value.
 
 
 == Wildcard Parameters
 
-A route parameter is by default limited to a single URL segment. For example, if you have a `customers` route that takes a string parameter, and you try to navigate to `/customers/cu1234/edit`, the router would return a `404 Not Found` error. 
+By default, a route parameter captures only a single URL segment. For example, if your `customers` route expects a string parameter, navigating to `/customers/cu1234/edit` would result in a `404 Not Found` error. 
 
-If you want to capture more than one URL segment in a route parameter, you need to mark it as a wildcard parameter. You do this by annotating the parameter with [annotationname]`@WildcardParameter`, like this:
+To capture multiple URL segments as a single parameter, use the [annotationname]`@WildcardParameter` annotation:
 
 [source,java]
 ----
@@ -74,11 +81,13 @@ If you want to capture more than one URL segment in a route parameter, you need 
 public class CustomerView extends Main implements HasUrlParameter<String> {
 
     @Override
+// tag::snippet[]
     public void setParameter(BeforeEvent event, @WildcardParameter String parameter) {
-        if (parameter.isEmpty()) { // <1>
+// end::snippet[]
+        if (parameter.isEmpty()) {
             showCustomerList();
         } else {
-            // Extract the segments from the parameter
+            // Extract the and process the segments from the parameter
         }
     }
 
@@ -88,13 +97,153 @@ public class CustomerView extends Main implements HasUrlParameter<String> {
 }
 ----
 
-If you now navigated to `/customers/cu1234/edit`, the router would call [methodname]`setParameter()` with `"cu1234/edit"` as the parameter value.
+Now, navigating to `/customers/cu1234/edit` passes `"cu1234/edit"` as the parameter value.
 
-Empty wildcard parameters are handled differently than empty optional parameters. Whereas an empty optional parameter is `null`, an empty wildcard parameter is an empty string. Thus, if you navigated to `/customers`, the router would call `setParameter()` with `""` as the parameter value.
+[NOTE]
+An empty wildcard parameter is an empty string (`""`), while an empty optional parameter is `null`. So, navigating to `/customers` calls [methodname]`setParameter()` with `""` instead of `null`.
 
-If you are thinking about using wildcard parameters because you need multiple route parameters, <<../route-templates#,Route Templates>> may be better suited for you.
+If you’re considering wildcard parameters because you need multiple route parameters, <<../route-templates#,Route Templates>> may be a better solution.
 
 
 == Try It
 
-// TODO Make a mini-tutorial here
+In this mini-tutorial, you'll create a view that implements [interfacename]`HasUrlParameter` and experiment with [annotationname]`@OptionalParameter` and [annotationname]`@WildcardParameter`.
+
+
+=== Set Up the Project
+
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+
+
+=== Create the View
+
+In the [packagename]`com.example.application.greeting.ui.view` package, create a new class called `ParameterView`:
+
+.ParameterView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+
+@Route("parameter")
+public class ParameterView extends Main implements HasUrlParameter<String> {
+    
+    @Override
+    public void setParameter(BeforeEvent event, String parameter) {
+        setText("Parameter: " + parameter);
+    }
+}
+----
+
+Open your browser and go to: http://localhost:8080/parameter/hello
+
+You should see:
+
+[source]
+----
+Parameter: hello
+----
+
+
+=== Make the Parameter Optional
+
+Now navigate to: http://localhost:8080/parameter
+
+You should see a `Could not navigate to 'parameter'` error.
+
+To fix this, modify the class by adding [annotationname]`@OptionalParameter`:
+
+.ParameterView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+// tag::snippet[]
+import com.vaadin.flow.router.OptionalParameter;
+// end::snippet[]
+import com.vaadin.flow.router.Route;
+
+@Route("parameter")
+public class ParameterView extends Main implements HasUrlParameter<String> {
+
+    @Override
+// tag::snippet[]
+    public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
+// end::snippet[]
+        setText("Parameter: " + parameter);
+    }
+}
+----
+
+Refresh the browser at: http://localhost:8080/parameter
+
+Now you should see:
+
+[source]
+----
+Parameter: null
+----
+
+
+=== Capture Multiple Segments with a Wildcard
+
+Try navigating to: http://localhost:8080/parameter/hello/world
+
+You'll get a `Could not navigate to 'parameter/hello/world'` error.
+
+Now, replace [annotationname]`@OptionalParameter` with [annotationname]`@WildcardParameter`:
+
+.ParameterView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+// tag::snippet[]
+import com.vaadin.flow.router.WildcardParameter;
+// end::snippet[]
+
+@Route("parameter")
+public class ParameterView extends Main implements HasUrlParameter<String> {
+
+    @Override
+// tag::snippet[]
+    public void setParameter(BeforeEvent event, @WildcardParameter String parameter) {
+// end::snippet[]
+        setText("Parameter: " + parameter);
+    }
+}
+----
+
+Refresh the page, and now you'll see:
+
+[source]
+----
+Parameter: hello/world
+----
+
+If you navigate to: http://localhost:8080/parameter
+
+You'll see:
+
+[source]
+----
+Parameter:
+----
+
+Since it's a wildcard parameter, it is treated as an empty string instead of `null`.
+
+
+=== Final thoughts
+
+Now you've successfully implemented route parameters in Flow. You learned how to:
+
+* Pass a single route parameter to a view.
+* Make parameters optional.
+* Use wildcard parameters to capture multiple URL segments.
+
+You're now ready to use route parameters in real Vaadin applications. Try customizing the [classname]`ParameterView` class to do something more than printing the parameter value!
