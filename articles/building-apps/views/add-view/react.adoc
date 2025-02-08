@@ -49,6 +49,7 @@ export default function HomeView() {
 
 Then, the route for the above component is `/`, and if the application is running from the root context, users can access this view by navigating to `\https://example.com/`.
 
+
 == View Naming
 
 React only recognizes an exported function as a component, if the function name starts with an uppercase letter. For example, the following component is recognized as a valid React component:
@@ -101,3 +102,162 @@ export default function MainView() {
 ----
 
 
+== Directory Structure
+
+As mentioned earlier, the File-based Router uses the file system structure to determine the route for a view. Therefore, organizing views into directories is a good practice to keep the views organized and to have a clear structure for the routes.
+
+Simple views that consists of only one file, can be placed directly under the `views` directory. For example, "About", "Contact Us", and the "Home" view do not need a complex composition of components, nor should have a long route, so it is a good practice to place them directly under the `views` directory:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            ├── @index.tsx
+            ├── about.tsx
+            └── contact-us.tsx
+----
+
+This way, the routes for these views are `/`, `/about`, and `/contact-us`, respectively.
+
+However, for more complex views that consist of other components, or if they should accept route parameters, it is recommended to place all the files related to that view under a directory, named by the functionality they provide. For example, views related to customers can be grouped under a `customers` directory, and views related to products can be grouped under a `products` directory. The following is an example of a directory structure for a view files that handle the customer related functionalities:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            └── customers
+                ├── {id} <1>
+                │   ├── edit.tsx <2>
+                │   └── index.tsx <3>
+                ├── @index.tsx <4>
+                └── new.tsx <5>
+----
+1. The `{id}` directory is a placeholder for the route parameter. You will learn more about route parameters in the <<../navigate#,Navigate to a View>> guide.
+2. The `edit.tsx` file is responsible for editing a specified customer details. The route for this view is `/customers/:id/edit`.
+3. The `@index.tsx` file is responsible for displaying the details of a specified customer. The route for this view is `/customers/:id`.
+4. The `index.tsx` file is responsible for displaying the list of customers. The route for this view is `/customers`.
+5. The `new.tsx` file is responsible for adding a new customer. The route for this view is `/customers/new`.
+
+As this guide is focused on basics of creating views in Hilla, further details about all the conventions of the File-based Router is covered in the <<{articles}/hilla/guides/routing, Routing>> guide.
+
+
+== Defining Explicit Routes
+
+So far you have learned how to create views and the routes automatically resolved based on the file system structure and the file name. However, if you want to have a custom route for a view, you can export a `ViewConfig` object named as `config` from the view file. The path specified for the `route` overrides the automatically resolved path according to File-based Router's conventions. For example, the following view has a custom route `/custom-route`:
+
+[source,tsx]
+.hello.tsx
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export const config: ViewConfig = {
+  route: "/custom-route",
+};
+
+export default function HelloView() {
+    return <h1>Hello, World!</h1>;
+}
+----
+
+Now, the users can access this view by navigating to `\https://example.com/custom-route`.
+
+[NOTE]
+It is recommended not to use explicit routes unless it is absolutely necessary. The File-based Router is designed to automatically resolve the routes based on the file system structure and the file name, which helps to keep the routes consistent and predictable.
+
+
+== Try It
+
+In this mini-tutorial, you'll explore both automatically resolved routes and explicit routes. You'll also create a new, simple view and specify multiple routes for it.
+
+
+=== Create a New View
+
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a React UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it.
+
+
+=== Modify the Todo View
+
+You'll start by changing the path of the `TodoView` to `todo`. The `TodoView` is stored in the file [filename]`@index.tsx` that is located directly under the `views` directory. To change its route to `/todo`, there multiple options available:
+
+* Option 1: Create a new directory named `todo` and move the file into it. In this case the directory structure would look like this:
+
+[source]
+----
+views
+├── todo
+│   └── @index.tsx
+├── @layout.tsx
+└── _ErrorHandler.ts
+----
+
+* Option 2: Rename the file to `todo.tsx`. In this case the directory structure would look like this:
+
+[source]
+----
+views
+├── @layout.tsx
+├── _ErrorHandler.ts
+└── todo.tsx
+----
+
+* Option 3: Without changing the filename or the directory structure, you can export the `config` object from the file and set the `route` property to `/todo`. The file would look like this:
+
+[source]
+.@index.tsx
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export const config: ViewConfig = {
+  route: "/todo", // <1>
+};
+
+export default function TodoView() {
+    // ...
+}
+----
+<1> The `route` property is set to `/todo` explicitly.
+
+
+=== Create a Main View
+
+Next, you'll create a new main view. In the `views` directory, create a new file called `main.tsx`:
+
+[source,tsx]
+.main.tsx
+----
+export default function MainView() {
+    return <h1>Main View</h1>;
+}
+----
+
+The path for this view is automatically resolved to `/main`, and users can access this view by navigating to `\https://example.com/main`.
+
+
+=== Add a Route Alias
+
+Now, add another view file that exports a component that returns the `MainView` component. In the `views` directory, create a new file named `home.tsx`:
+
+[source,tsx]
+.home.tsx
+----
+export default function HomeView() {
+    return MainView();
+}
+----
+
+The path for this view is automatically resolved to `/home`, and users can access this view by navigating to `\https://example.com/home`. This way, the same view is accessible via `/main` and `/home`.
+
+
+=== Final Thoughts
+
+Now you've explored how to define and organize React views in a Vaadin application. You've learned how to:
+
+* Use both automatically resolved and explicit routes to structure your application's navigation.
+* Create a main view and apply best practices for naming and organizing views.
+* Define multiple routes for a single view, making navigation more flexible.
+
+Next, see the <<../navigate#,Navigate to a View>> guide to learn how to navigate from one view to another.
