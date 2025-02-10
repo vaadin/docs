@@ -1,0 +1,224 @@
+---
+title: Route Templates
+page-title: How to use route templates in Flow | Vaadin
+description: TODO Write a description
+meta-description: TODO Write a meta description
+order: 5
+---
+
+
+= Route Templates in Flow
+
+TODO 
+
+
+== Specifying Multiple Route Parameters
+
+To specify multiple route parameters, you use a _route template_ instead of a static path when declaring a `@Route`. In a route template, one or more of the URL segments is a route template parameter. Route template parameters must follow the following syntax:
+
+`:parameter_name[modifier][(regex)]`
+
+You'll learn what this syntax means in this and the following sections.
+
+The following example demonstrates a view with two route parameters: `customerId` and `action`:
+
+[source,java]
+----
+@Route("customer/:customerId/:action")
+public class CustomerView extends Main {
+    ...
+}
+----
+
+Now, if you navigate to `/customer/cu12345/edit`, the router renders the [classname]`CustomerView` with the following route parameter values:
+
+* `customerId` -> `"cu12345"`
+* `action` -> `"edit"`
+
+
+== Accessing Parameter Values
+
+To access the route parameter values, your view must implement the [interfacename]`BeforeEnterObserver` interface. This interface defines the [methodname]`beforeEnter()` method, which is called by the router before navigating to the view. Inside the method, you can access the route parameters:
+
+[source,java]
+----
+@Route("customer/:customerId/:action") // <1>
+public class CustomerView extends Main implements BeforeEnterObserver { // <1>
+
+    private static final String PARAM_CUSTOMER_ID = "customerId"; // <2>
+    private static final String PARAM_ACTION = "action";
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        var customerId = event.getRouteParameters().get(PARAM_CUSTOMER_ID).get();
+        var action = event.getRouteParameters().get(PARAM_ACTION).get();
+        // Process the parameters
+    }
+    ...
+}
+----
+<1> The [interfacename]`BeforeEnterObserver` interface 
+<2> Declaring the parameter names in constants at the top of the class, close to the [annotationname]`@Route` annotation, makes the code easier to read.
+
+The [classname]`RouteParameters` class defines methods for accessing parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`. 
+
+In the example above, both `customerId` and `tab` are required, so you can assume that those parameter values are never empty. If you try to navigate to `/customer` or `/customer/cu12345`, the router returns a `404 Not Found` error.
+
+
+== Optional Parameters
+
+By default, all route parameters are required. To make a route parameter optional, use the `?` modifier:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("customer/:customerId/:action?") // <1>
+// end::snippet[]
+public class CustomerView extends Main implements BeforeEnterObserver {
+
+    private static final String PARAM_CUSTOMER_ID = "customerId";
+    private static final String PARAM_ACTION = "action";
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        var customerId = event.getRouteParameters().get(PARAM_CUSTOMER_ID).get();
+// tag::snippet[]
+        var action = event.getRouteParameters().get(PARAM_ACTION).orElse(null); // <2>
+// end::snippet[]
+        // Process the parameters
+    }
+    ...
+}
+----
+<1> The `action` parameter is now optional.
+<2> The parameter value can now be empty.
+
+Now, if you navigate to `/customer/cu12345`, the `action` parameter is empty. You get to choose how to deal with empty parameters. For instance, you could fallback to a default value, or forward the user to another view altogether.
+// TODO Link to conditional routing guide
+
+Optional parameters use greedy matching from left to right. For instance, consider an application with the route `customer/:customerId?/:action?`:
+
+* `/customer` ->  Calls the `customer` route with no parameters at all.
+* `/customer/cu12345` -> Calls the `customer` route with `"cu12345"` as the value of `customerId`.
+* `/customer/cu12345/edit` -> Calls the `customer` route with `"cu12345"` as the value of `customerId`, and `"edit"` as the value of `action`.
+
+
+== Wildcard Parameters
+
+By default, a route parameter captures only a single URL segment. However, the last segment in the route template can be declared a wildcard parameter. This means that the parameter captures all the segments in its place, including no segments at all (i.e. a wildcard parameter is always optional). 
+
+To denote a route parameter a wildcard, use the `*` modifier:
+
+[source,java]
+----
+@Route("api/:path*")
+public class ApiViewer extends Main implements BeforeEnterObserver {
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        var path = event.getRouteParameters().get("path").orElse("");
+        // Process the path
+    }
+}
+----
+
+Now, if you navigate to `api/com/vaadin/flow/`, the `path` parameter has the value `"com/vaadin/flow"`.
+
+You can also access the URL segments captured by a wildcard parameter individually:
+
+[source,java]
+----
+@Route("api/:path*")
+public class ApiViewer extends Main implements BeforeEnterObserver {
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+// tag::snippet[]
+        List<String> segments = event.getRouteParameters().getWildcard("path");
+// end::snippet[]
+        // Process the segments
+    }
+}
+----
+
+Now, if you navigate to the same URL, the `segments` variable contains the list `["com", "vaadin", "flow"]`.
+
+[NOTE]
+If a route parameter is missing, `getWildcard()` returns an empty list.
+
+
+== Constraining Parameter Values with Regular Expressions
+
+In all the examples discussed, the parameters accept any value. However, a specific value is often expected for a parameter and the view should be shown only when that specific value is present in the URL. You can do this by defining a regular expression for the parameter. This reduces the need for validation and sanitation of parameter values in the [methodname]`beforeEnter()` method.
+
+[NOTE]
+The syntax of the regular expressions is checked at application startup. If there is an error, the application fails to start.
+
+In the following example, the `customerId` parameter is constrained to an integer between 1 and 9 digits, and the `action` parameter can be either `"view"`, `"edit"`, or empty:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("customer/:customerId([0-9]{1,9})/:action?(view|edit)")
+// end::snippet[]
+public class CustomerView extends Main {
+    ...
+}
+----
+
+Now, If you try to navigate to a URL that does not meet these constrains, you'll get a `404 Not Found` error.
+
+When you specify constraints on wildcard parameters, the regular expression is applied to every segment that would be captured by the parameter. If any of the segments fails to match the expresion, the whole template fails to match the URL, and you'll get a `404 Not Found` error.
+
+
+== Try It
+
+In this mini-tutorial, you'll create a view that uses a route template. You'll then change the route template and see how the view behaves.
+
+
+=== Set Up the Project
+
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+
+
+=== Create the View
+
+In the [packagename]`com.example.application.todo.ui.view` package, create a new class called `TemplateView`:
+
+.TemplateView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
+
+@Route("template")
+public class TemplateView extends Main implements BeforeEnterObserver {
+
+    private static final String PARAM1 = "param1";
+    private static final String PARAM2 = "param2";
+    private static final String PARAM3 = "param3";
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        var param1 = event.getRouteParameters().get(PARAM1).orElse("N/A");
+        var param2 = event.getRouteParameters().get(PARAM2).orElse("N/A");
+        var param3 = event.getRouteParameters().get(PARAM3).orElse("N/A");
+        setText("param1: \"" + param1 + "\", param2: \"" + param2 
+            + "\", param3: \"" + param3 + "\"");
+    }
+}
+----
+
+// TODO continue here
+
+=== Define Required Parameters
+
+=== Make a Parameter Optional
+
+=== Mark a Parameter as Wildcard
+
+=== Add Regular Expressions
+
+=== Final Thoughts
