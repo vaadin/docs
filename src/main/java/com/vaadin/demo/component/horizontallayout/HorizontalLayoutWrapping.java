@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -6,10 +6,10 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/horizontal-layout-wrapping")
-public class BasicLayoutsHorizontalLayoutWrapping extends Div {
+@Route("horizontal-layout-wrapping")
+public class HorizontalLayoutWrapping extends Div {
 
-    public BasicLayoutsHorizontalLayoutWrapping() {
+    public HorizontalLayoutWrapping() {
         add(new Paragraph("Horizontal layout without wrapping:"));
         HorizontalLayout layoutWithoutWrap = new HorizontalLayout();
         layoutWithoutWrap.setPadding(true);
@@ -60,6 +60,6 @@ public class BasicLayoutsHorizontalLayoutWrapping extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsHorizontalLayoutWrapping> { // hidden-source-line
+            extends DemoExporter<HorizontalLayoutWrapping> { // hidden-source-line
     } // hidden-source-line
 }

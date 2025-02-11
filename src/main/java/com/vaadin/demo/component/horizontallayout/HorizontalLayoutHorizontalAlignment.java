@@ -1,16 +1,19 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/horizontal-layout")
-public class BasicLayoutsHorizontalLayout extends Div {
-    public BasicLayoutsHorizontalLayout() {
-        // tag::snippet[]
+@Route("horizontal-layout-horizontal-alignment")
+public class HorizontalLayoutHorizontalAlignment extends Div {
+
+    public HorizontalLayoutHorizontalAlignment() {
+        // tag::layout[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
+        layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
 
         Div item1 = new Div("Item 1");
         item1.setClassName("example-item");
@@ -22,13 +25,14 @@ public class BasicLayoutsHorizontalLayout extends Div {
         item3.setClassName("example-item");
 
         layout.add(item1, item2, item3);
-        // end::snippet[]
+        // end::layout[]
 
         this.setClassName("basic-layouts-example");
+
         this.add(layout);
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<BasicLayoutsHorizontalLayout> { // hidden-source-line
+            DemoExporter<HorizontalLayoutHorizontalAlignment> { // hidden-source-line
     } // hidden-source-line
 }

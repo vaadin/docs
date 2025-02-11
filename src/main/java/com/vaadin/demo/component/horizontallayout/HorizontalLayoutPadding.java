@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -6,10 +6,10 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/horizontal-layout-padding")
-public class BasicLayoutsHorizontalLayoutPadding extends Div {
+@Route("horizontal-layout-padding")
+public class HorizontalLayoutPadding extends Div {
 
-    public BasicLayoutsHorizontalLayoutPadding() {
+    public HorizontalLayoutPadding() {
         add(new Paragraph("Horizontal layout without padding:"));
         HorizontalLayout layoutWithoutPadding = new HorizontalLayout();
 
@@ -43,6 +43,6 @@ public class BasicLayoutsHorizontalLayoutPadding extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsHorizontalLayoutPadding> { // hidden-source-line
+            extends DemoExporter<HorizontalLayoutPadding> { // hidden-source-line
     } // hidden-source-line
 }

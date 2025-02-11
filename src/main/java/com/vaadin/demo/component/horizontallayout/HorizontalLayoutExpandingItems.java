@@ -1,14 +1,14 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/expanding-items")
-public class BasicLayoutsExpandingItems extends Div {
+@Route("horizontal-layout-expanding-items")
+public class HorizontalLayoutExpandingItems extends Div {
 
-    public BasicLayoutsExpandingItems() {
+    public HorizontalLayoutExpandingItems() {
         // tag::snippet[]
         Div item1 = new Div("Item 1");
         item1.setClassName("example-item");
@@ -31,6 +31,6 @@ public class BasicLayoutsExpandingItems extends Div {
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<BasicLayoutsExpandingItems> { // hidden-source-line
+            DemoExporter<HorizontalLayoutExpandingItems> { // hidden-source-line
     } // hidden-source-line
 }

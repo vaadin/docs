@@ -6,7 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('basic-layouts-horizontal-layout-spacing-variants')
+@customElement('horizontal-layout-spacing-variants')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();

@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('basic-layouts-horizontal-layout-vertical-alignment')
+@customElement('horizontal-layout-spacing')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();
@@ -20,15 +20,21 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout
-        theme="spacing padding"
-        class="height-4xl"
-        style="align-items: center"
-      >
+      <p>Horizontal layout without spacing:</p>
+      <vaadin-horizontal-layout theme="padding">
         <div class="example-item">Item 1</div>
         <div class="example-item">Item 2</div>
         <div class="example-item">Item 3</div>
+      </vaadin-horizontal-layout>
+
+      <p>Horizontal layout with spacing:</p>
+      <!-- tag::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing padding">
+        <!-- end::snippet[] -->
+        <div class="example-item">Item 1</div>
+        <div class="example-item">Item 2</div>
+        <div class="example-item">Item 3</div>
+        <!-- tag::snippet[] -->
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;

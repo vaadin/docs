@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -6,10 +6,10 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/horizontal-layout-spacing")
-public class BasicLayoutsHorizontalLayoutSpacing extends Div {
+@Route("horizontal-layout-spacing")
+public class HorizontalLayoutSpacing extends Div {
 
-    public BasicLayoutsHorizontalLayoutSpacing() {
+    public HorizontalLayoutSpacing() {
         add(new Paragraph("Horizontal layout without spacing:"));
         // tag::snippet[]
         // HorizontalLayout has spacing enabled by default, use setSpacing to
@@ -47,6 +47,6 @@ public class BasicLayoutsHorizontalLayoutSpacing extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsHorizontalLayoutSpacing> { // hidden-source-line
+            extends DemoExporter<HorizontalLayoutSpacing> { // hidden-source-line
     } // hidden-source-line
 }

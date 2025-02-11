@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.horizontallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -6,10 +6,10 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/horizontal-layout-individual-alignment")
-public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
+@Route("horizontal-layout-individual-alignment")
+public class HorizontalLayoutIndividualAlignment extends Div {
 
-    public BasicLayoutsHorizontalLayoutIndividualAlignment() {
+    public HorizontalLayoutIndividualAlignment() {
         // tag::layout[]
         HorizontalLayout layout = new HorizontalLayout();
         layout.setPadding(true);
@@ -37,6 +37,6 @@ public class BasicLayoutsHorizontalLayoutIndividualAlignment extends Div {
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<BasicLayoutsHorizontalLayoutIndividualAlignment> { // hidden-source-line
+            DemoExporter<HorizontalLayoutIndividualAlignment> { // hidden-source-line
     } // hidden-source-line
 }

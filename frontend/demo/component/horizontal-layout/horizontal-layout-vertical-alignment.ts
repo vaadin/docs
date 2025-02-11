@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('basic-layouts-horizontal-layout-individual-alignment')
+@customElement('horizontal-layout-vertical-alignment')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();
@@ -24,11 +24,11 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout
         theme="spacing padding"
         class="height-4xl"
-        style="align-items: stretch"
+        style="align-items: center"
       >
-        <div class="example-item" style="align-self: start">Item 1</div>
+        <div class="example-item">Item 1</div>
         <div class="example-item">Item 2</div>
-        <div class="example-item" style="align-self: end">Item 3</div>
+        <div class="example-item">Item 3</div>
       </vaadin-horizontal-layout>
       <!-- end::snippet[] -->
     `;
