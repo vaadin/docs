@@ -5,7 +5,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('basic-layouts-margin')
+@customElement('vertical-layout-margin')
 export class Example extends LitElement {
   connectedCallback() {
     super.connectedCallback();

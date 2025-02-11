@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.verticallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -8,10 +8,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/spacing")
-public class BasicLayoutsSpacing extends Div {
+@Route("vertical-layout-spacing")
+public class VerticalLayoutSpacing extends Div {
 
-    public BasicLayoutsSpacing() {
+    public VerticalLayoutSpacing() {
         HorizontalLayout parent = new HorizontalLayout();
         parent.getStyle().setBorder("0");
         add(parent);
@@ -61,6 +61,6 @@ public class BasicLayoutsSpacing extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsSpacing> { // hidden-source-line
+            extends DemoExporter<VerticalLayoutSpacing> { // hidden-source-line
     } // hidden-source-line
 }

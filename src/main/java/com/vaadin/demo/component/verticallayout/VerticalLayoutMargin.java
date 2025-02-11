@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.basiclayouts;
+package com.vaadin.demo.component.verticallayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
@@ -8,10 +8,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("basic-layouts/margin")
-public class BasicLayoutsMargin extends Div {
+@Route("vertical-layout-margin")
+public class VerticalLayoutMargin extends Div {
 
-    public BasicLayoutsMargin() {
+    public VerticalLayoutMargin() {
         HorizontalLayout parent = new HorizontalLayout();
         parent.getStyle().setBorder("0");
         add(parent);
@@ -71,6 +71,6 @@ public class BasicLayoutsMargin extends Div {
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<BasicLayoutsMargin> { // hidden-source-line
+            extends DemoExporter<VerticalLayoutMargin> { // hidden-source-line
     } // hidden-source-line
 }
