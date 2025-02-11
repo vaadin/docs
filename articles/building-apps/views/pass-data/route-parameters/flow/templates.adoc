@@ -9,16 +9,19 @@ order: 5
 
 = Route Templates in Flow
 
-TODO 
+In this guide, you'll learn how to create a view that accepts multiple route parameters using route templates. You'll also learn how to use modifiers and regular expressions to tweak the behavior of the route parameters. Finally, a mini-tutorial will help you apply these concepts in a real Vaadin application. 
+
+[TIP]
+Using a single <<../flow#,route parameter>> is easier than using a route template. If you can get the job done using the [interfacename]`HasUrlParameter<T>` interface, use that instead.
 
 
 == Specifying Multiple Route Parameters
 
-To specify multiple route parameters, you use a _route template_ instead of a static path when declaring a `@Route`. In a route template, one or more of the URL segments is a route template parameter. Route template parameters must follow the following syntax:
+To specify multiple route parameters, you use a _route template_ instead of a static path when declaring a `@Route`. In a route template, one or more of the URL segments is a route parameter. Route parameters must follow the following syntax:
 
 `:parameter_name[modifier][(regex)]`
 
-You'll learn what this syntax means in this and the following sections.
+The following sections explain this syntax in detail.
 
 The following example demonstrates a view with two route parameters: `customerId` and `action`:
 
@@ -36,7 +39,7 @@ Now, if you navigate to `/customer/cu12345/edit`, the router renders the [classn
 * `action` -> `"edit"`
 
 
-== Accessing Parameter Values
+== Accessing Route Parameter Values
 
 To access the route parameter values, your view must implement the [interfacename]`BeforeEnterObserver` interface. This interface defines the [methodname]`beforeEnter()` method, which is called by the router before navigating to the view. Inside the method, you can access the route parameters:
 
@@ -58,14 +61,14 @@ public class CustomerView extends Main implements BeforeEnterObserver { // <1>
 }
 ----
 <1> The [interfacename]`BeforeEnterObserver` interface 
-<2> Declaring the parameter names in constants at the top of the class, close to the [annotationname]`@Route` annotation, makes the code easier to read.
+<2> To improve readability and maintainability, declare route parameter names as constants near the [annotationname]`@Route` annotation.
 
-The [classname]`RouteParameters` class defines methods for accessing parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`. 
+The [classname]`RouteParameters` class defines methods for accessing route parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`. 
 
-In the example above, both `customerId` and `tab` are required, so you can assume that those parameter values are never empty. If you try to navigate to `/customer` or `/customer/cu12345`, the router returns a `404 Not Found` error.
+In the example above, both `customerId` and `tab` are required, so you can assume that those route parameter values are never empty. If you try to navigate to `/customer` or `/customer/cu12345`, the router returns a `404 Not Found` error.
 
 
-== Optional Parameters
+== Optional Route Parameters
 
 By default, all route parameters are required. To make a route parameter optional, use the `?` modifier:
 
@@ -90,22 +93,22 @@ public class CustomerView extends Main implements BeforeEnterObserver {
     ...
 }
 ----
-<1> The `action` parameter is now optional.
-<2> The parameter value can now be empty.
+<1> The `action` route parameter is now optional.
+<2> The route parameter value can now be empty.
 
-Now, if you navigate to `/customer/cu12345`, the `action` parameter is empty. You get to choose how to deal with empty parameters. For instance, you could fallback to a default value, or forward the user to another view altogether.
+Now, if you navigate to `/customer/cu12345`, the `action` route parameter is empty. You can handle empty parameters by providing a default value, redirecting users, or displaying an error message.
 // TODO Link to conditional routing guide
 
-Optional parameters use greedy matching from left to right. For instance, consider an application with the route `customer/:customerId?/:action?`:
+When using multiple optional route parameters, values are assigned from left to right. If a parameter is missing, the next available value shifts left to fill its place. For instance, consider an application with the route `customer/:customerId?/:action?`:
 
-* `/customer` ->  Calls the `customer` route with no parameters at all.
+* `/customer` ->  Calls the `customer` route with no route parameters at all.
 * `/customer/cu12345` -> Calls the `customer` route with `"cu12345"` as the value of `customerId`.
 * `/customer/cu12345/edit` -> Calls the `customer` route with `"cu12345"` as the value of `customerId`, and `"edit"` as the value of `action`.
 
 
-== Wildcard Parameters
+== Wildcard Route Parameters
 
-By default, a route parameter captures only a single URL segment. However, the last segment in the route template can be declared a wildcard parameter. This means that the parameter captures all the segments in its place, including no segments at all (i.e. a wildcard parameter is always optional). 
+By default, a route parameter captures only a single URL segment. However, the last segment in the route template can be declared a wildcard route parameter. This means that the route parameter captures all the segments in its place. A wildcard route parameter is always optional.
 
 To denote a route parameter a wildcard, use the `*` modifier:
 
@@ -122,9 +125,9 @@ public class ApiViewer extends Main implements BeforeEnterObserver {
 }
 ----
 
-Now, if you navigate to `api/com/vaadin/flow/`, the `path` parameter has the value `"com/vaadin/flow"`.
+Now, if you navigate to `api/com/vaadin/flow/`, the `path` route parameter has the value `"com/vaadin/flow"`.
 
-You can also access the URL segments captured by a wildcard parameter individually:
+You can also access the URL segments captured by a wildcard route parameter individually:
 
 [source,java]
 ----
@@ -147,14 +150,14 @@ Now, if you navigate to the same URL, the `segments` variable contains the list 
 If a route parameter is missing, `getWildcard()` returns an empty list.
 
 
-== Constraining Parameter Values with Regular Expressions
+== Constraining Route Parameter Values with Regular Expressions
 
-In all the examples discussed, the parameters accept any value. However, a specific value is often expected for a parameter and the view should be shown only when that specific value is present in the URL. You can do this by defining a regular expression for the parameter. This reduces the need for validation and sanitation of parameter values in the [methodname]`beforeEnter()` method.
+In all the examples discussed, the route parameters accept any value. However, a specific value is often expected for a route parameter and the view should be shown only when that specific value is present in the URL. You can do this by defining a regular expression for the route parameter. This reduces the need for validation and sanitation of route parameter values in the [methodname]`beforeEnter()` method.
 
 [NOTE]
 The syntax of the regular expressions is checked at application startup. If there is an error, the application fails to start.
 
-In the following example, the `customerId` parameter is constrained to an integer between 1 and 9 digits, and the `action` parameter can be either `"view"`, `"edit"`, or empty:
+In the following example, the `customerId` route parameter is constrained to an integer between 1 and 9 digits, and the `action` route parameter can be either `"view"`, `"edit"`, or empty:
 
 [source,java]
 ----
@@ -166,9 +169,9 @@ public class CustomerView extends Main {
 }
 ----
 
-Now, If you try to navigate to a URL that does not meet these constrains, you'll get a `404 Not Found` error.
+If you navigate to a URL that doesn't meet these constraints, you'll receive a `404 Not Found` error.
 
-When you specify constraints on wildcard parameters, the regular expression is applied to every segment that would be captured by the parameter. If any of the segments fails to match the expresion, the whole template fails to match the URL, and you'll get a `404 Not Found` error.
+When you specify constraints on wildcard route parameters, the regular expression is applied to every segment that would be captured by the route parameter. If any of the segments fails to match the expression, the whole route template fails to match the URL, and you'll get a `404 Not Found` error.
 
 
 == Try It
@@ -211,20 +214,147 @@ public class TemplateView extends Main implements BeforeEnterObserver {
 }
 ----
 
-// TODO continue here
+Open your browser and go to: http://localhost:8080/template
+
+You should see:
+
+[source]
+----
+param1: "N/A", param2: "N/A", param3: "N/A"
+----
 
 
-=== Define Required Parameters
+=== Define Required Route Parameters
+
+Next, introduce the three route parameters, like this:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("template/:param1/:param2/:param3")
+// end::snippet[]
+public class TemplateView extends Main implements BeforeEnterObserver {
+    ...
+}
+----
+
+Now, go back to your browser. Because the route parameters are required and you haven't provided any values, you should see a `Could not navigate to 'template'` error message. 
+
+To give values for the route parameters, navigate to this URL:
+
+http://localhost:8080/template/say/hello/vaadin
+
+You should see:
+
+[source]
+----
+param1: "say", param2: "hello", param3: "vaadin"
+----
 
 
-=== Make a Parameter Optional
+=== Make Route Parameters Optional
+
+You're now going to make the first two route parameters optional. Add the `?` modifier to them:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("template/:param1?/:param2?/:param3")
+// end::snippet[]
+public class TemplateView extends Main implements BeforeEnterObserver {
+    ...
+}
+----
+
+Go back to your browser. You should still see all three route parameter values. However, watch what happens if you go to:
+
+http://localhost:8080/template/say
+
+Since the first two parameters are optional, the last parameter takes the first available value. You should see:
+
+[source]
+----
+param1: "N/A", param2: "N/A", param3: "say"
+----
+
+Now add a second route parameter value by navigating to:
+
+http://localhost:8080/template/say/hello
+
+You should see:
+
+[source]
+----
+param1: "say", param2: "N/A", param3: "hello"
+----
 
 
-=== Mark a Parameter as Wildcard
+=== Mark a Route Parameter as Wildcard
+
+You're now going to make the last route parameter a wildcard. Add the `*` modifier to it:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("template/:param1?/:param2?/:param3*")
+// end::snippet[]
+public class TemplateView extends Main implements BeforeEnterObserver {
+    ...
+}
+----
+
+Go back to the browser. If you reload the page, you should now see the following:
+
+[source]
+----
+param1: "say", param2: "hello", param3: "N/A"
+----
+
+The `"hello"` string has moved from `param3` to `param2`. The reason for this is that wildcard route parameters are also optional. Next, navigate to the following URL:
+
+http://localhost:8080/template/say/hello/to/vaadin
+
+The last route parameter now holds two segments instead of one. You should see:
+
+[source]
+----
+param1: "say", param2: "hello", param3: "to/vaadin"
+----
 
 
 === Add Regular Expressions
 
+You're now going to add some regular expressions to constrain the route parameters. You'll force `param1` to consist of digits only, and all the segments of `param3` to be one of `hello`, `to`, and `vaadin`:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("template/:param1?([0-9]*)/:param2?/:param3*(hello|to|vaadin)")
+// end::snippet[]
+public class TemplateView extends Main implements BeforeEnterObserver {
+    ...
+}
+----
+
+Go back to the browser. You should now see a `Could not navigate to 'template/say/hello/to/vaadin`. This is because the first route parameter value is not a number. To fix this, navigate to:
+
+http://localhost:8080/template/123/say/hello/to/vaadin
+
+You should see:
+
+[source]
+----
+param1: "123", param2: "say", param3: "hello/to/vaadin"
+----
+
 
 === Final Thoughts
 
+You've now successfully implemented route templates in Flow. You learned how to:
+
+* Specify multiple route parameters in a view.
+* Make route parameters optional.
+* Use a wildcard route parameter to capture multiple URL segments.
+* Use regular expressions to constrain the values of route parameters.
+
+You're now ready to use route parameters in real Vaadin applications. Try specifying your own route template, and make a <<../../../navigate/flow#your-own-api,custom API>> for navigating to it! Include at least one numeric route parameter, and use [methodname]`RouteParameters.getInteger()` to retrieve it.
