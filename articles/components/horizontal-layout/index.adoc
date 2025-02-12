@@ -389,5 +389,69 @@ endif::[]
 
 When multiple components expand, they do so relative to each other. For example, having two items with expand ratios of 2 and 1 results in the first item taking up twice as much of the available space as the second item.
 
+== Troubleshooting Layouts
+
+=== Avoid Using Full Width Children
+
+Configuring layout children to use the full width, for example when using `HasSize.setWidthFull` or setting the `width` CSS style to `100%`, is problematic due to how the underlying CSS Flexbox model used by Horizontal Layout works. A width of `100%` means "Use the full width of the layout container" and not "Take up the remaining space after reserving space for all other children". This can result in the following issues:
+
+* Other layout children that have an explicit width, for example `200px`, may end up being smaller than that. Children are allowed to shrink by default, and the layout tries to reserve as much space as possible for the child that uses the full width.
+* The child that uses the full width may end up overflowing its container. A child is not allowed to shrink below the size of its contents by default, so if the contents of the child are larger than the remaining space in the container it results in overflow. This is the case even if the child itself would have its `overflow` CSS style properly set to show scrollbars.
+
+If you want to make a child use up the remaining width, use the following styles instead:
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-horizontal-layout>
+  <!-- Fixed size child, not allowed to shrink -->
+  <div style="width: 200px; flex: 0 0 auto;"></div>
+  <!-- Child taking up the remaining space by allowing it to grow and shrink -->
+  <!-- Also reduce minimum width to be able to shrink below the size of its contents -->
+  <div style="flex: 1; min-width: 0;"></div>
+</vaadin-horizontal-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+// Fixed size child, not allowed to shrink
+child1.getStyle()
+        .setWidth("200px")
+        .setFlexGrow("0 0 auto");
+
+// Child taking up the remaining space by allowing it to grow and shrink
+// Also reduce minimum width to be able to shrink below the size of its contents
+child2.getStyle()
+        .setFlexGrow("1")
+        .setMinWidth("0");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<HorizontalLayout>
+  { /* Fixed size child, not allowed to shrink */ }
+  <div style={{ width: '200px', flex: '0 0 auto' }} />
+  { /* Child taking up the remaining space by allowing it to grow and shrink */ }
+  { /* Also reduce minimum width to be able to shrink below the size of its contents */ }
+  <div style={{ flex: '1', minWidth: '0' }} />
+</HorizontalLayout>
+----
+endif::[]
+
+--
+
+.[since:com.vaadin:vaadin@V24.7]#Layout Improvements for Flow's HasSize API#
+[NOTE]
+Specifically for the Flow `HasSize.setWidthFull` and `HasSize.setSizeFull` APIs, the respective `flex` and `min-width` styles are applied automatically when adding the component as a child of Horizontal Layout. Currently, this behavior is opt-in, and you must enable the `layoutComponentImprovements` feature flag to use it. See <<{articles}/flow/configuration/feature-flags#,Feature Flags>> for more information.
+
 
 [discussion-id]`61c42eee-d39a-11ed-afa1-0242ac120002`
