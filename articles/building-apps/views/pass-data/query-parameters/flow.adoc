@@ -1,8 +1,249 @@
 ---
-title: Query Parameters in Flow 
+title: Flow
 page-title: How to use query parameters in Flow | Vaadin
 description: TODO Write a description
 meta-description: TODO Write a meta description
-tab-title: Flow
 order: 5
 ---
+
+
+= Query Parameters in Flow
+
+In this guide, you'll learn to access and set query parameters from a Flow view. A mini-tutorial at the end will help you apply these concepts in a real Vaadin application.
+
+
+== Accessing Query Parameter Values
+
+You access query parameters in a similar way to accessing <<../route-parameters/flow/templates#accessing-route-parameter-values,multiple route parameters>>. Your view must implement the [interfacename]`BeforeEnterObserver` interface, which defines the [methodname]`beforeEnter()` method. Inside this method, you can access the query parameters:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort"; // <1>
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        event.getQueryParameters().getSingleParameter(QUERY_PARAM_SORT)
+            .ifPresent(sort -> {
+                // Process the sort parameter
+            });
+        event.getQueryParameters().getSingleParameter(QUERY_PARAM_FILTER)
+            .ifPresent(filter -> {
+                // Process the filter parameter
+            });
+    }
+    ...
+}
+----
+<1> To improve readability and maintainability, declare query parameter names as constants.
+
+Now, if you navigate to `/orders?sort=date&filter=shipped`, the query parameter values are the following:
+
+* `sort` -> `"date"`
+* `filter` -> `"shipped"`
+
+The [classname]`QueryParameters` class defines methods for accessing query parameter values. Familiarise yourself with its API if you are going to use query parameters in your application.
+
+[NOTE]
+You can also get the query parameters from [methodname]`UI.getCurrent().getActiveViewLocation().getQueryParameters()`.
+
+Query parameters are always strings and always optional. You have to consider that they can be either empty or contain illegal data. You can handle empty or invalid parameters by providing a default value, redirecting users, or displaying an error message.
+
+
+== Setting Query Parameters
+
+The [classname]`QueryParameters` class is immutable. The only way to change query parameters programmatically is to create a new [classname]`QueryParameters` object and pass it to one of the [methodname]`UI.navigate()` methods. In other words you set the query parameters when you navigate to a view.
+
+In the following example, the [classname]`OrdersView` has a <<../../navigate/flow#your-own-api,custom API>> for navigating to it while also setting the `filter` query parameter:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort";
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+// tag::snippet[]
+    public static void showOrders(@Nullable String filter) {
+        var queryParameters = filter == null ? QueryParameters.empty() 
+            : QueryParameters.of(QUERY_PARAM_FILTER, filter);
+        UI.getCurrent().navigate(OrdersView.class, queryParameters);
+    }
+// end::snippet[]
+    ...
+}
+----
+
+[IMPORTANT]
+You can't set query parameters to `null`. To clear a query parameter, exclude it from the [classname]`QueryParameters` object.
+
+=== Setting Own Query Parameters
+
+Query parameters are often set by the view itself, for instance when the user fills in a search field, or changes the sort order of a grid. This means the view has to navigate to itself to update the query parameters. However, when navigating from a view to itself, the same view instance is reused. In practice, the browser's URL is updated and the [methodname]`beforeEnter()` method called again.
+
+In the following example, the [classname]`OrdersView` has a text field for the filter string. Whenever the value of this field is changed, the `filter` query parameter is updated, while leaving the other query parameters unchanged:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort";
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+// tag::snippet[]
+    public OrdersView() {
+        var filterField = new TextField();
+        add(filterField);
+
+        filterField.addValueChangeListener(event -> {
+            var queryParameters = UI.getCurrent().getActiveViewLocation()
+                .getQueryParameters()
+                .merging(QUERY_PARAM_FILTER, event.getValue());
+            UI.getCurrent().navigate(OrdersView.class, queryParameters);
+        });
+    }
+// end::snippet[]
+    ...
+}
+----
+
+Now, if the original URL was `/orders?sort=date&filter=shipped`, and you entered "foobar" into the text field, the URL would change to `/orders?sort=date&filter=foobar`.
+
+
+== Try It
+
+TODO
+
+=== Set Up the Project
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+
+
+=== Create the View
+
+Create a new package [packagename]`com.example.application.tutorial.ui.view`. Then, in this package create a new class called [classname]`QueryParameterView`:
+
+.QueryParameterView.java
+[source,java]
+----
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
+
+@Route
+public class QueryParameterView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAMETER_TEXT = "text";
+    private static final String QUERY_PARAMETER_CHECK = "check";
+
+    private final TextField textField;
+    private final Checkbox checkbox;
+
+    public QueryParameterView() {
+        textField = new TextField();
+        checkbox = new Checkbox();
+        add(textField, checkbox);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+    }
+}
+----
+
+Open your browser and go to: http://localhost:8080/queryparameter
+
+You should see an empty text field and an empty checkbox.
+
+
+=== Access Query Parameters
+
+You'll now add support for populating the text field and checkbox with values from query parameters. Change the [methodname]`beforeEnter()` method as follows:
+
+[source,java]
+----
+@Override
+public void beforeEnter(BeforeEnterEvent event) {
+    var queryParameters = event.getLocation().getQueryParameters();
+    queryParameters.getSingleParameter(QUERY_PARAMETER_TEXT)
+        .ifPresent(textField::setValue);
+    queryParameters.getSingleParameter(QUERY_PARAMETER_CHECK)
+        .map(Boolean::parseBoolean).ifPresent(checkbox::setValue);
+}
+----
+
+Now navigate to: http://localhost:8080/queryparameter?text=hello+world&check=true
+
+The text field should now contain `hello world` and the checkbox should be checked.
+
+
+=== Set Text Query Parameter
+
+Next, you'll add support for updating the `text` query parameter whenever a user changes the value of the text field. Add the following code to the constructor:
+
+[source,java]
+----
+public QueryParameterView() {
+    textField = new TextField();
+// tag::snippet[]
+    textField.setValueChangeMode(ValueChangeMode.LAZY); // <1>
+    textField.addValueChangeListener(event -> {
+        var queryParameters = UI.getCurrent().getActiveViewLocation()
+            .getQueryParameters().merging(QUERY_PARAMETER_TEXT, event.getValue());
+        UI.getCurrent().navigate(QueryParameterView.class, queryParameters);
+    });
+// end::snippet[]
+    checkbox = new Checkbox();
+    add(textField, checkbox);
+}
+----
+<1> This configures the text field to fire a value change event 400 ms after the user has stopped typing.
+
+Switch to your browser and change the value of the text field to something else. The URL is updated automatically.
+
+
+=== Set Check Query Parameter
+
+Now, you'll do the same with the checkbox. Add the following code to the constructor:
+
+[source,java]
+----
+public QueryParameterView() {
+    textField = new TextField();
+    textField.setValueChangeMode(ValueChangeMode.LAZY); // <1>
+    textField.addValueChangeListener(event -> {
+        var queryParameters = UI.getCurrent().getActiveViewLocation()
+            .getQueryParameters()
+            .merging(QUERY_PARAMETER_TEXT, event.getValue());
+        UI.getCurrent().navigate(QueryParameterView.class, queryParameters);
+    });
+    checkbox = new Checkbox();
+// tag::snippet[]
+    checkbox.addValueChangeListener(event -> {
+        var queryParameters = UI.getCurrent().getActiveViewLocation()
+            .getQueryParameters()
+            .merging(QUERY_PARAMETER_CHECK, event.getValue().toString());
+        UI.getCurrent().navigate(QueryParameterView.class, queryParameters);
+    });
+// end::snippet[]
+    add(textField, checkbox);
+}
+----
+
+Switch to your browser and toggle the checkbox a few times. The URL is updated automatically and the `text` query parameter remains unchanged.
+
+=== Final Thoughts
+
+You've now successfully implemented query parameters in Flow. You learned how to:
+
+* Access query parameter values.
+* Set query parameter values.
+
+You're now ready to use query parameters in real Vaadin applications. Try changing the code so that you can use `1` and `0` instead of `true` and `false` for the `check` parameter. Also try adding a validation step for the `text` query parameter so that only letters, digits and whitespace are allowed.
