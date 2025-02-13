@@ -1,11 +1,35 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import type { ComboBoxFilterChangedEvent } from '@vaadin/react-components/ComboBox.js';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+
+// tag::snippet[]
+function renderPerson({ item: person }: { item: Person }) {
+  return (
+    <div style={{ display: 'flex' }}>
+      <img
+        style={{ height: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
+        src={person.pictureUrl}
+        alt={`Portrait of ${person.firstName} ${person.lastName}`}
+      />
+      <div>
+        {person.firstName} {person.lastName}
+        <div
+          style={{
+            fontSize: 'var(--lumo-font-size-s)',
+            color: 'var(--lumo-secondary-text-color)',
+          }}
+        >
+          {person.profession}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -31,36 +55,16 @@ function Example() {
   };
 
   return (
-    // tag::snippet[]
     <ComboBox
       label="Choose doctor"
       itemLabelPath="displayName"
       filteredItems={filteredItems.value}
       style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
       onFilterChanged={filterChanged}
-      renderer={({ item: person }) => (
-        <div style={{ display: 'flex' }}>
-          <img
-            style={{ height: 'var(--lumo-size-m)', marginRight: 'var(--lumo-space-s)' }}
-            src={person.pictureUrl}
-            alt={`Portrait of ${person.firstName} ${person.lastName}`}
-          />
-          <div>
-            {person.firstName} {person.lastName}
-            <div
-              style={{
-                fontSize: 'var(--lumo-font-size-s)',
-                color: 'var(--lumo-secondary-text-color)',
-              }}
-            >
-              {person.profession}
-            </div>
-          </div>
-        </div>
-      )}
+      renderer={renderPerson}
     />
-    // end::snippet[]
   );
 }
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line
