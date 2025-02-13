@@ -1,0 +1,301 @@
+== Troubleshooting
+
+=== Component is Smaller than its Specified Size
+
+In some situations, a component with a specific, fixed size is rendered smaller than that size (and its size may vary depending on the size of the UI).
+
+This is usually caused by the component being placed in the same Horizontal or Vertical Layout as another component with 100% (or “full”) size along the same axis.
+
+The reason for this behavior is a combination of two aspects of Horizontal Layout and Vertical Layout:
+
+* 100% width or height actually means the full width or height of the layout, rather than whatever space is available after any fixed-size items.
+* By default, children of these layouts are allowed to shrink below their specified size. While this allows full-size items to shrink below 100% to make room for other items, it also makes fixed-size items shrink a bit.
+
+There are three main ways to solve this issue:
+
+==== Prevent the fixed-size element from shrinking
+
+By setting the flex-shrink value of the fixed size component to 0, it is prevented from shrinking below that size.
+
+ifdef::horizontal-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-horizontal-layout>
+  <div style="width: 200px; flex-shrink: 0;"></div>
+  <div style="width: 100%;"></div>
+</vaadin-horizontal-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+
+HorizontalLayout layout = new HorizontalLayout(fixedSizeComponent, fullSizeComponent);
+fixedSizeComponent.setWidth("200px");
+fullSizeComponent.setWidthFull();
+
+layout.setFlexShrink(fixedSizeComponent, 0);
+// or
+fixedSizeComponent.getStyle().setFlexShrink("0");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<HorizontalLayout>
+  <div style={{ width: '200px', flexShrink: 0 }}></div>
+  <div style={{ width: '100%' }}></div>
+</HorizontalLayout>
+----
+endif::[]
+--
+endif::[]
+
+
+ifdef::vertical-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-vertical-layout>
+  <div style="height: 200px; flex-shrink: 0;"></div>
+  <div style="height: 100%;"></div>
+</vaadin-vertical-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+
+VerticalLayout layout = new VerticalLayout(fixedSizeComponent, fullSizeComponent);
+fixedSizeComponent.setHeight("200px");
+fullSizeComponent.setHeightFull();
+
+layout.setFlexShrink(fixedSizeComponent, 0);
+// or
+fixedSizeComponent.getStyle().setFlexShrink("0");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<VerticalLayout>
+  <div style={{ height: '200px', flexShrink: 0 }}></div>
+  <div style={{ height: '100%' }}></div>
+</VerticalLayout>
+----
+endif::[]
+--
+endif::[]
+
+==== Use Flex-Grow Instead of 100% Size
+
+Instead of setting a 100% (or “full”) size, you can make a component take all available space by setting its flex-grow value to 1.
+
+ifdef::horizontal-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-horizontal-layout>
+  <div style="width: 200px;"></div>
+  <div style="flex-grow: 1;"></div>
+</vaadin-horizontal-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+
+HorizontalLayout layout = new HorizontalLayout(fixedSizeComponent, fullSizeComponent);
+fixedSizeComponent.setWidth("200px");
+
+layout.setFlexGrow(fullSizeComponent, 1);
+// or
+fullSizeComponent.getStyle().setFlexGrow("1");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<HorizontalLayout>
+  <div style={{ width: '200px' }}></div>
+  <div style={{ flexGrow: 1 }}></div>
+</HorizontalLayout>
+----
+endif::[]
+--
+endif::[]
+
+ifdef::vertical-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-vertical-layout>
+  <div style="height: 200px;"></div>
+  <div style="flex-grow: 1;"></div>
+</vaadin-vertical-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+
+VerticalLayout layout = new VerticalLayout(fixedSizeComponent, fullSizeComponent);
+fixedSizeComponent.setHeight("200px");
+
+layout.setFlexGrow(fullSizeComponent, 1);
+// or
+fullSizeComponent.getStyle().setFlexGrow("1");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<VerticalLayout>
+  <div style={{ height: '200px' }}></div>
+  <div style={{ flexGrow: 1 }}></div>
+</VerticalLayout>
+----
+endif::[]
+--
+endif::[]
+
+[role="since:com.vaadin:vaadin@V24.7"]
+==== Enable Layout Improvements (Flow only, experimental)
+
+By enabling the `layoutComponentImprovements` <<{articles}/flow/configuration/feature-flags#,feature flag>>, the Flow APIs `setWidthFull`, `setHeightFull` and `setSizeFull` are rewired to automatically apply `flex:1` to the component. This prevents fixed-size components from shrinking and makes the full-size component take up the remaining space in the layout.
+
+
+=== Component Overflows its Specified Size
+
+This is most commonly noticed on scroll containers like <<../scroller#,Scroller>> and <<../tabs#,TabSheet>>, or elements that have been scroll-enabled through CSS, but it can occur in other situations as well. The problem often causes extra undesired scrollbars to appear.
+
+This is caused by the default minimum size of a layout item to be equal to the size of its contents.
+
+There are three main ways to solve this issue:
+
+==== Set an Appropriate Minimum Size
+
+Set the minimum size to 0 or any other specific size.
+
+ifdef::horizontal-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<div style="min-width: 0"></div>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+overFlowingComponent.setMinWidth("0");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<div style={{ minWidth: '0' }}></div>
+----
+endif::[]
+--
+endif::[]
+
+ifdef::vertical-layout[]
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<div style="min-height: 0"></div>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+overFlowingComponent.setMinHeight("0");
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<div style={{ minHeight: '0' }}></div>
+----
+endif::[]
+--
+endif::[]
+
+==== Prevent Overflow
+
+You can prevent the component from overflowing by setting the CSS overflow property to hidden. Be aware that this will also clip outlines and box-shadows, such as those used for focus rings.
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<div style="overflow: hidden"></div>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+overFlowingComponent.getStyle().setOverflow(Overflow.HIDDEN);
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<div style={{ overflow: 'hidden' }}></div>
+----
+endif::[]
+--
+
+[role="since:com.vaadin:vaadin@V24.7"]
+==== Enable Layout Improvements (Flow only, experimental)
+
+By enabling the `layoutComponentImprovements` <<{articles}/flow/configuration/feature-flags#,feature flag>>, the Flow APIs `setWidthFull`, `setHeightFull` and `setSizeFull` are rewired to also set the minimum size of nested Horizontal and Vertical Layouts to 0, allowing them to shrink below the size of their contents.
