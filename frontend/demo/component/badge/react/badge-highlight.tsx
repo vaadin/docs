@@ -3,14 +3,44 @@ import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Grid, GridColumn } from '@vaadin/react-components';
-import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
-import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
+import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/DataService';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: 'short',
   day: 'numeric',
 });
+
+// tag::snippet[]
+function renderDueDate({ item: report }: { item: Report }) {
+  return <span>{dateFormatter.format(new Date(report.due))}</span>;
+}
+
+function renderStatus({ item: report }: { item: Report }) {
+  let title: string;
+  let theme: string;
+
+  switch (report.status) {
+    case ReportStatus.COMPLETED:
+      title = 'Completed';
+      theme = 'success';
+      break;
+    case ReportStatus.IN_PROGRESS:
+      title = 'In progress';
+      theme = '';
+      break;
+    case ReportStatus.CANCELLED:
+      title = 'Cancelled';
+      theme = 'error';
+      break;
+    default:
+      title = 'On hold';
+      theme = 'contrast';
+      break;
+  }
+
+  return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
+}
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -22,46 +52,14 @@ function Example() {
   }, []);
 
   return (
-    // tag::snippet[]
     <Grid items={items.value}>
       <GridColumn path="report" header="Report" />
-
-      <GridColumn header="Due date">
-        {({ item: report }) => <span>{dateFormatter.format(new Date(report.due))}</span>}
-      </GridColumn>
-
+      <GridColumn header="Due date" renderer={renderDueDate}></GridColumn>
       <GridColumn path="assignee" header="Assignee" />
-
-      <GridColumn header="Status">
-        {({ item: report }) => {
-          let title: string;
-          let theme: string;
-
-          switch (report.status) {
-            case ReportStatus.COMPLETED:
-              title = 'Completed';
-              theme = 'success';
-              break;
-            case ReportStatus.IN_PROGRESS:
-              title = 'In progress';
-              theme = '';
-              break;
-            case ReportStatus.CANCELLED:
-              title = 'Cancelled';
-              theme = 'error';
-              break;
-            default:
-              title = 'On hold';
-              theme = 'contrast';
-              break;
-          }
-
-          return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
-        }}
-      </GridColumn>
+      <GridColumn header="Status" renderer={renderStatus}></GridColumn>
     </Grid>
-    // end::snippet[]
   );
 }
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

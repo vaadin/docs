@@ -18,7 +18,7 @@ function Example() {
   }, []);
 
   // tag::snippet[]
-  const renderBoolean = ({
+  const renderBadge = ({
     item,
     original: column,
   }: {
@@ -53,15 +53,9 @@ function Example() {
   return (
     <Grid items={items.value}>
       <GridColumn path="name" header="Name" />
-      <GridColumn id="view" header="View">
-        {renderBoolean}
-      </GridColumn>
-      <GridColumn id="comment" header="Comment">
-        {renderBoolean}
-      </GridColumn>
-      <GridColumn id="edit" header="Edit">
-        {renderBoolean}
-      </GridColumn>
+      <GridColumn id="view" header="View" renderer={renderBadge}></GridColumn>
+      <GridColumn id="comment" header="Comment" renderer={renderBadge}></GridColumn>
+      <GridColumn id="edit" header="Edit" renderer={renderBadge}></GridColumn>
     </Grid>
   );
   // end::snippet[]
