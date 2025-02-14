@@ -1,0 +1,256 @@
+---
+title: Flow
+page-title: How to add a Flow view to a Vaadin application
+description: TODO Write a description
+meta-description: TODO Write meta-description
+order: 5
+---
+
+// TODO We need a deep dive about this, as there are so many options. This guide covers only the most common use cases.
+
+= Router Layouts in Flow
+
+== Router Layouts in Flow
+
+Router layouts in Flow are user interface components that implement the [interfacename]`RouterLayout` interface. The interface declares two methods:
+
+* [methodname]`showRouterLayoutContent(HasElement)` -- shows the given view in the router layout.
+* [methodname]`removeRouterLayoutContent(HasElement)` -- removes the given view in the router layout.
+
+When you navigate to a view, the router first determines which layout to use -- if any. If you're navigating from one view to another inside the same router layout, the *existing router layout instance is reused*. Otherwise, a new instance is created. The router then calls [methodname]`showRouterLayoutContent()`, passing in the new view instance.
+
+
+== Automatic Layouts
+
+You can define an automatic layout by adding the [annotationname]`@Layout` annotation to a router layout. As the name suggest, an automatic layout is applied to views by default unless explicitly disabled.
+
+The following example applies [classname]`MainLayout` to *all views*:
+
+[source,java]
+----
+// tag::snippet[]
+@Layout
+// end::snippet[]
+public class MainLayout extends AppLayout { // <1>
+    ...
+}
+----
+<1> `AppLayout` is a built-in router layout. See its <<{articles}/components/app-layout#,documentation page>> for more details.
+
+
+=== Opting Out
+
+Sometimes, you may want to exclude specific views from the automatic layout. For example, displaying a login view within an application layout might not be appropriate.
+
+To *prevent a view from using the automatic layout*, set the `autoLayout` attribute of the [annotationname]`@Route` annotation to `false`:
+
+[source,java]
+----
+@Route(value = "login", autoLayout = false)
+public class LoginView extends Main {
+    ...
+}
+----
+
+[NOTE]
+[annotationname]`@RouteAlias` also has the `autoLayout` attribute. You can disable or enable the automatic layout for a single view depending on the route used to access it.
+
+
+=== Scoping to a Path
+
+You can restrict an automatic layout to views with routes that start with a specific path.
+
+The following example applies [classname]`AdminLayout` *only to views with routes starting with `/admin`*:
+
+[source,java]
+----
+// tag::snippet[]
+@Layout("/admin")
+// end::snippet[]
+public class AdminLayout extends AppLayout {
+    ...
+}
+----
+
+If a route matches multiple layouts, the layout with the longest matching path takes precedence. For example, given a main layout scoped to `/` (default) and an admin layout scoped to `/admin`, the layouts apply as follows:
+
+* `/` -> rendered inside the main layout.
+* `/customers` -> rendered inside the main layout.
+* `/admin/users` -> rendered inside the admin layout
+* `/admin/groups` -> rendered inside the admin layout.
+
+[IMPORTANT]
+Defining multiple layouts with the exact same path will result in an exception.
+
+
+== Explicit Layouts
+
+You can declare a view to use *a specific router layout* using the `layout` attribute of the [annotationname]`@Route` annotation:
+
+[source,java]
+----
+// tag::snippet[]
+@Route(layout = MyLayout.class)
+// end::snippet[]
+public class DefinedLayoutView extends Main {
+    ...
+}
+----
+
+Declaring a layout explicitly also disables the automatic layout for the view.
+
+[NOTE]
+[annotationname]`@RouteAlias` also has the `layout` attribute. You can render the same view in different layouts depending on the route used to access it.
+
+
+== Nested Layouts
+
+Automatic layouts don't apply to other layouts. In other words, a router layout is rendered directly into the browser tab by default. To *render a router layout inside another router layout*, use the [annotationname]`@ParentLayout` annotation:
+
+[source,java]
+----
+// tag::snippet[]
+@ParentLayout(MainLayout.class)
+// end::snippet[]
+public class NestedLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+
+== Path Prefixes
+
+By default, router layouts do not affect the routes of the views that they are applied to. You can change this with the [annotationname]`@RoutePrefix` annotation, which adds a prefix to all its routes.
+
+In the following example, `MyView` receives the `some` prefix from its router layout, resulting in `some/path` being its actual path:
+
+[source,java]
+----
+@Route(value = "path", layout = MyLayout.class)
+public class MyView extends Main {
+    ...
+}
+
+// tag::snippet[]
+@RoutePrefix("some")
+// end::snippet[]
+public class MyLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+
+=== Opting Out
+
+A view can opt out from a route prefix by setting the `absolute` attribute of [annotationname]`@Route` to `true`.
+
+In the following example, the path of `MyView` is `path`, ignoring the prefix coming from `MyLayout`:
+
+[source,java]
+----
+// tag::snippet[]
+@Route(value = "path", layout = MyLayout.class, absolute = true)
+// end::snippet[]
+public class MyView extends Main {
+    ...
+}
+
+@RoutePrefix("some")
+public class MyLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+[NOTE]
+[annotationname]`@RouteAlias` also has the `absolute` attribute.
+
+Nested router layouts can also opt out from route prefixes.
+
+In the following example, the path of `MyView` is in fact `nested/path`, as opposed to `some/nested/path`:
+
+[source,java]
+----
+@Route(value = "path", layout = MyNestedLayout.class)
+public class MyView extends Main {
+    ...
+}
+
+// tag::snippet[]
+@RoutePrefix(value = "nested", absolute = true)
+// end::snippet[]
+@ParentLayout(MyLayout.class)
+public class MyNestedLayout extends Div implements RouterLayout {
+    ...
+}
+
+@RoutePrefix("some")
+public class MyLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+
+== Try It
+
+TODO
+
+=== Set Up the Project
+
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+
+
+=== Explore the Main Layout
+
+The skeleton already contains a main layout. Instead of implementing one from scratch, you're going to have a look at it. Open [classname]`com.example.application.base.ui.view.MainLayout` in your IDE.
+
+The main layout is based on <<{articles}/components/app-layout#,AppLayout>>:
+
+.MainLayout.java
+[source,java]
+----
+@Layout
+public final class MainLayout extends AppLayout {
+
+    public MainLayout() {
+        setPrimarySection(Section.DRAWER);
+        addToDrawer(createHeader(), new Scroller(createSideNav()), createUserMenu());
+    }
+    ...
+}
+----
+
+It has a drawer on the left side with the following elements: an application header, a navigation menu, and a user menu.
+
+==== The Header
+
+The header is created by the [methodname]`createHeader()` method. It contains the application's name and logo:
+
+[source,java]
+----
+private Div createHeader() {
+    // TODO Replace with real application logo and name
+    var appLogo = VaadinIcon.CUBES.create();
+    appLogo.addClassNames(TextColor.PRIMARY, IconSize.LARGE);
+
+    var appName = new Span("Walking Skeleton");
+    appName.addClassNames(FontWeight.SEMIBOLD, FontSize.LARGE);
+
+    var header = new Div(appLogo, appName);
+    header.addClassNames(Display.FLEX, Padding.MEDIUM, Gap.MEDIUM, AlignItems.CENTER);
+    return header;
+}
+----
+
+Now, change the name and the logo. Use an icon from <<{articles}/components/icons/default-icons#,the default icons>>.
+
+
+==== The Navigation Menu
+
+TODO continue here...
+
+==== The User Menu
+
+
+=== Create a Nested Layout
+
+=== Create Example Views
