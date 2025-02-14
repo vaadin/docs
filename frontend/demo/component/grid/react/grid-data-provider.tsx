@@ -56,7 +56,8 @@ async function fetchPeople(params: {
 
   // Pagination
   const count = result.length;
-  result = result.slice(page * pageSize, pageSize);
+  const startIndex = page * pageSize;
+  result = result.slice(startIndex, startIndex + pageSize);
 
   return { people: result, count };
 }
