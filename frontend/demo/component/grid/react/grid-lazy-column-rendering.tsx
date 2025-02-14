@@ -36,11 +36,7 @@ function Example() {
 
       {[...Array(100).keys()].map((index) => (
         // Generate 100 columns
-        <GridColumn
-          data-index={index}
-          header={`Col ${index}`}
-          renderer={createColumnRenderer(index)}
-        />
+        <GridColumn key={index} header={`Col ${index}`} renderer={createColumnRenderer(index)} />
       ))}
     </Grid>
     // end::snippet[]
