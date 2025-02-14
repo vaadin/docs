@@ -45,7 +45,7 @@ function Example() {
         footer-part-name="rating-footer"
         renderer={ratingRenderer}
         footer={<span>Avg rating: 5.32</span>}
-      ></GridColumn>
+      />
     </Grid>
   );
 }

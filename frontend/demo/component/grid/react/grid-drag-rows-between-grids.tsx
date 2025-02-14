@@ -92,7 +92,7 @@ function Example() {
           }
         }}
       >
-        <GridColumn header="Full name" renderer={fullNameRenderer}></GridColumn>
+        <GridColumn header="Full name" renderer={fullNameRenderer} />
 
         <GridColumn path="profession" />
       </Grid>

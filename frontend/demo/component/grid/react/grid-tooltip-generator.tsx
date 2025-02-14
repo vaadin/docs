@@ -60,7 +60,7 @@ function Example() {
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="birthday" />
-      <GridColumn path="status" renderer={statusRenderer}></GridColumn>
+      <GridColumn path="status" renderer={statusRenderer} />
       <Tooltip slot="tooltip" generator={tooltipGenerator} />
     </Grid>
   );

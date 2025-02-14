@@ -43,8 +43,8 @@ function Example() {
     // tag::snippet[]
     <Grid items={items.value}>
       <GridColumn path="displayName" header="Name" />
-      <GridColumn path="due" header="Due"></GridColumn>
-      <GridColumn path="amount" header="Amount" textAlign="end"></GridColumn>
+      <GridColumn path="due" header="Due" />
+      <GridColumn path="amount" header="Amount" textAlign="end" />
     </Grid>
     // end::snippet[]
   );

@@ -33,7 +33,7 @@ function Example() {
   return (
     <Grid items={items.value}>
       {/* tag::snippet1[] */}
-      <GridColumn frozen header="Name" autoWidth flexGrow={0} renderer={nameRenderer}></GridColumn>
+      <GridColumn frozen header="Name" autoWidth flexGrow={0} renderer={nameRenderer} />
       {/* end::snippet1[] */}
 
       <GridColumn path="email" autoWidth />

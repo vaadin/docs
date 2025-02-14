@@ -64,7 +64,7 @@ function Example() {
           <GridColumn header="Name" path="displayName" autoWidth />
           <GridColumn path="email" />
           <GridColumn path="address.phone" />
-          <GridColumn header="Manage" renderer={removePersonRenderer}></GridColumn>
+          <GridColumn header="Manage" renderer={removePersonRenderer} />
         </Grid>
         {/* end::snippet[] */}
       </>

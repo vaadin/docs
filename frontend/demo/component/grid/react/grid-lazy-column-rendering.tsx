@@ -40,7 +40,7 @@ function Example() {
           data-index={index}
           header={`Col ${index}`}
           renderer={createColumnRenderer(index)}
-        ></GridColumn>
+        />
       ))}
     </Grid>
     // end::snippet[]

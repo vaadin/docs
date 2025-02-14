@@ -40,7 +40,7 @@ function Example() {
         flexGrow={0}
         width="230px"
         renderer={nameRenderer}
-      ></GridFilterColumn>
+      />
 
       <GridFilterColumn path="email" />
       <GridFilterColumn path="profession" />

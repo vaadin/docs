@@ -57,7 +57,7 @@ function Example() {
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="profession" />
-      <GridColumn header="Customer rating (0-10)" renderer={ratingRenderer}></GridColumn>
+      <GridColumn header="Customer rating (0-10)" renderer={ratingRenderer} />
     </Grid>
   );
 }

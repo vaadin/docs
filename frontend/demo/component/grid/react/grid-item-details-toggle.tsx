@@ -65,7 +65,7 @@ function Example() {
       detailsOpenedItems={detailsOpenedItems.value}
       rowDetailsRenderer={detailsRenderer}
     >
-      <GridColumn width="80px" flexGrow={0} frozen renderer={toggleDetailsRenderer}></GridColumn>
+      <GridColumn width="80px" flexGrow={0} frozen renderer={toggleDetailsRenderer} />
       <GridColumn path="displayName" header="Name" />
       <GridColumn path="profession" />
     </Grid>

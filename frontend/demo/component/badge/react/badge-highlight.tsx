@@ -54,12 +54,13 @@ function Example() {
   return (
     <Grid items={items.value}>
       <GridColumn path="report" header="Report" />
-      <GridColumn header="Due date" renderer={renderDueDate}></GridColumn>
+      <GridColumn header="Due date" renderer={renderDueDate} />
       <GridColumn path="assignee" header="Assignee" />
-      <GridColumn header="Status" renderer={renderStatus}></GridColumn>
+      <GridColumn header="Status" renderer={renderStatus} />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

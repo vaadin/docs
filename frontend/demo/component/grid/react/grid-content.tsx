@@ -49,11 +49,11 @@ function Example() {
     <Grid items={items.value}>
       <GridSelectionColumn />
 
-      <GridColumn header="Employee" flexGrow={0} autoWidth renderer={employeeRenderer}></GridColumn>
+      <GridColumn header="Employee" flexGrow={0} autoWidth renderer={employeeRenderer} />
 
       <GridColumn path="profession" autoWidth />
 
-      <GridColumn header="Status" autoWidth renderer={statusRenderer}></GridColumn>
+      <GridColumn header="Status" autoWidth renderer={statusRenderer} />
     </Grid>
   );
 }

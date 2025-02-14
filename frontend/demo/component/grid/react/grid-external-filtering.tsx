@@ -61,7 +61,7 @@ function Example() {
       </TextField>
 
       <Grid items={filteredItems.value}>
-        <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer}></GridColumn>
+        <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
 
         <GridColumn path="email" />
         <GridColumn path="profession" />

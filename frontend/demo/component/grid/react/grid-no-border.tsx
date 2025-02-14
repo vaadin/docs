@@ -25,7 +25,7 @@ function Example() {
   return (
     // tag::snippet[]
     <Grid items={items.value} theme="no-border">
-      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer}></GridColumn>
+      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer} />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="email" />

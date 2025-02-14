@@ -37,6 +37,10 @@ function MembershipHeader() {
   );
 }
 
+function subscriberRenderer({ item }: { item: Person }) {
+  return <span>{item.subscriber ? 'Yes' : 'No'}</span>;
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -54,9 +58,11 @@ function Example() {
     <Grid items={items.value}>
       <GridColumn path="displayName" header="Name" footer={<span>200 total members</span>} />
 
-      <GridColumn header={<SubscriberHeader />} footer={<span>102 subscribers</span>}>
-        {({ item }) => <span>{item.subscriber ? 'Yes' : 'No'}</span>}
-      </GridColumn>
+      <GridColumn
+        header={<SubscriberHeader />}
+        footer={<span>102 subscribers</span>}
+        renderer={subscriberRenderer}
+      />
 
       <GridColumn
         path="membership"

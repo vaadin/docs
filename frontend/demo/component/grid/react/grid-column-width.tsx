@@ -31,12 +31,7 @@ function Example() {
         <GridColumn path="firstName" width="7rem" flexGrow={0} />
         <GridColumn path="profession" autoWidth flexGrow={0} />
         <GridColumn path="email" />
-        <GridColumn
-          width="6rem"
-          flexGrow={0}
-          header="Has Sub"
-          renderer={subscriberRenderer}
-        ></GridColumn>
+        <GridColumn width="6rem" flexGrow={0} header="Has Sub" renderer={subscriberRenderer} />
       </Grid>
       <div></div>
     </SplitLayout>

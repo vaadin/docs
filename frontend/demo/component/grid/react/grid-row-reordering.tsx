@@ -60,7 +60,7 @@ function Example() {
       onGridDragend={handleDragEnd}
       onGridDrop={handleDrop}
     >
-      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer}></GridColumn>
+      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer} />
 
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />

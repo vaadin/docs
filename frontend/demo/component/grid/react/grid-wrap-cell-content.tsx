@@ -33,10 +33,10 @@ function Example() {
   return (
     // tag::snippet[]
     <Grid items={items.value} theme="wrap-cell-content">
-      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer}></GridColumn>
+      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer} />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
-      <GridColumn header="Address" renderer={addressRenderer}></GridColumn>
+      <GridColumn header="Address" renderer={addressRenderer} />
     </Grid>
     // end::snippet[]
   );
