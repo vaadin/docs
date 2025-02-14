@@ -31,7 +31,7 @@ function Example(): JSX.Element {
         onOpenedChanged={({ detail }) => {
           dialogOpened.value = detail.value;
         }}
-        footerRenderer={() => (
+        footer={
           <Button
             theme="primary"
             onClick={() => {
@@ -40,7 +40,7 @@ function Example(): JSX.Element {
           >
             Filter
           </Button>
-        )}
+        }
       >
         <Grid items={people.value} style={{ width: '500px', maxWidth: '100%' }}>
           <GridSelectionColumn />
