@@ -15,7 +15,17 @@ class GridPersonService {
   async list(pageable: Pageable, searchTerm: string): Promise<PersonWithFullName[]> {
     await this.initMockService();
 
-    const filter: OrFilter = {
+    return this.mockService!.list(pageable, this.createFilter(searchTerm));
+  }
+
+  async count(searchTerm: string): Promise<number> {
+    await this.initMockService();
+
+    return this.mockService!.count(this.createFilter(searchTerm));
+  }
+
+  private createFilter(searchTerm: string): OrFilter {
+    return {
       '@type': 'or',
       children: [
         {
@@ -32,8 +42,6 @@ class GridPersonService {
         },
       ],
     };
-
-    return this.mockService!.list(pageable, filter);
   }
 
   private async initMockService() {

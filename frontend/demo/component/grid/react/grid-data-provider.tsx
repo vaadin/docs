@@ -20,6 +20,7 @@ function Example() {
   // Spring Data pageable and the search term
   const { dataProvider, refresh } = useDataProvider({
     list: async (pageable) => GridPersonService.list(pageable, searchTerm.value),
+    count: () => GridPersonService.count(searchTerm.value),
   });
 
   // Refresh the data provider when the search term changes

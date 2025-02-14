@@ -5,13 +5,9 @@ import java.util.Date;
 import javax.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
-@Entity
 public class Person {
 
     @Nonnull
@@ -26,7 +22,6 @@ public class Person {
     @Nonnull
     private Date birthday;
 
-    @Id
     @Nonnull
     private Integer id;
 
@@ -43,7 +38,6 @@ public class Person {
     private String profession;
 
     @Nonnull
-    @Transient
     private Address address;
 
     private Integer managerId;
