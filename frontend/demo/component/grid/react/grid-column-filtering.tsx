@@ -34,9 +34,13 @@ function Example() {
 
   return (
     <Grid items={items.value}>
-      <GridFilterColumn header="Name" path="displayName" flexGrow={0} width="230px">
-        {nameRenderer}
-      </GridFilterColumn>
+      <GridFilterColumn
+        header="Name"
+        path="displayName"
+        flexGrow={0}
+        width="230px"
+        renderer={nameRenderer}
+      ></GridFilterColumn>
 
       <GridFilterColumn path="email" />
       <GridFilterColumn path="profession" />

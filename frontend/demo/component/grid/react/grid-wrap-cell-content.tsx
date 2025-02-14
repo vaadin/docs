@@ -8,6 +8,18 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+function avatarRenderer({ item }: { item: Person }) {
+  return <Avatar img={item.pictureUrl} name={`${item.firstName} ${item.lastName}`} />;
+}
+
+function addressRenderer({ item: { address } }: { item: Person }) {
+  return (
+    <span>
+      {address.street} {address.city} {address.zip} {address.state}
+    </span>
+  );
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -21,20 +33,10 @@ function Example() {
   return (
     // tag::snippet[]
     <Grid items={items.value} theme="wrap-cell-content">
-      <GridColumn header="Image" flexGrow={0} autoWidth>
-        {({ item: person }) => (
-          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
-        )}
-      </GridColumn>
+      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer}></GridColumn>
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
-      <GridColumn header="Address">
-        {({ item: { address } }) => (
-          <span>
-            {address.street} {address.city} {address.zip} {address.state}
-          </span>
-        )}
-      </GridColumn>
+      <GridColumn header="Address" renderer={addressRenderer}></GridColumn>
     </Grid>
     // end::snippet[]
   );

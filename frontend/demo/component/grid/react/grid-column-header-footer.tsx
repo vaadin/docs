@@ -11,7 +11,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-function subscriberHeaderRenderer() {
+function SubscriberHeader() {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }}>
       <span>Subscriber</span>
@@ -24,7 +24,7 @@ function subscriberHeaderRenderer() {
   );
 }
 
-function membershipHeaderRenderer() {
+function MembershipHeader() {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }}>
       <span>Membership</span>
@@ -52,27 +52,21 @@ function Example() {
 
   return (
     <Grid items={items.value}>
-      <GridColumn
-        path="displayName"
-        header="Name"
-        footerRenderer={() => <span>200 total members</span>}
-      />
+      <GridColumn path="displayName" header="Name" footer={<span>200 total members</span>} />
 
-      <GridColumn
-        headerRenderer={subscriberHeaderRenderer}
-        footerRenderer={() => <span>102 subscribers</span>}
-      >
+      <GridColumn header={<SubscriberHeader />} footer={<span>102 subscribers</span>}>
         {({ item }) => <span>{item.subscriber ? 'Yes' : 'No'}</span>}
       </GridColumn>
 
       <GridColumn
         path="membership"
-        headerRenderer={membershipHeaderRenderer}
-        footerRenderer={() => <span>103 regular, 71 premium , 66 VIP</span>}
+        header={<MembershipHeader />}
+        footer={<span>103 regular, 71 premium , 66 VIP</span>}
       />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

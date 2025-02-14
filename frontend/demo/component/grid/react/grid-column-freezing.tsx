@@ -8,6 +8,18 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+function nameRenderer({ item: person }: { item: Person }) {
+  return (
+    <>
+      {person.firstName} {person.lastName}
+    </>
+  );
+}
+
+function editRenderer() {
+  return <Button theme="tertiary-inline">Edit</Button>;
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -21,13 +33,7 @@ function Example() {
   return (
     <Grid items={items.value}>
       {/* tag::snippet1[] */}
-      <GridColumn frozen header="Name" autoWidth flexGrow={0}>
-        {({ item: person }) => (
-          <>
-            {person.firstName} {person.lastName}
-          </>
-        )}
-      </GridColumn>
+      <GridColumn frozen header="Name" autoWidth flexGrow={0} renderer={nameRenderer}></GridColumn>
       {/* end::snippet1[] */}
 
       <GridColumn path="email" autoWidth />
@@ -37,9 +43,7 @@ function Example() {
 
       {/* tag::snippet2[] */}
 
-      <GridColumn frozenToEnd autoWidth flexGrow={0}>
-        {() => <Button theme="tertiary-inline">Edit</Button>}
-      </GridColumn>
+      <GridColumn frozenToEnd autoWidth flexGrow={0} renderer={editRenderer}></GridColumn>
       {/* end::snippet2[] */}
     </Grid>
   );

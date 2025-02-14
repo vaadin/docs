@@ -60,9 +60,7 @@ function Example() {
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="birthday" />
-      <GridColumn path="status" footerRenderer={() => null} headerRenderer={() => null}>
-        {statusRenderer}
-      </GridColumn>
+      <GridColumn path="status" renderer={statusRenderer}></GridColumn>
       <Tooltip slot="tooltip" generator={tooltipGenerator} />
     </Grid>
   );

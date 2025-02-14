@@ -21,6 +21,10 @@ const gridStyle = {
   alignSelf: 'unset',
 };
 
+function fullNameRenderer({ item: person }: { item: Person }) {
+  return `${person.firstName} ${person.lastName}`;
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const draggedItem = useSignal<Person | undefined>(undefined);
@@ -64,9 +68,7 @@ function Example() {
           }
         }}
       >
-        <GridColumn header="Full name">
-          {({ item: person }) => <>{`${person.firstName} ${person.lastName}`}</>}
-        </GridColumn>
+        <GridColumn header="Full name" renderer={fullNameRenderer}></GridColumn>
 
         <GridColumn path="profession" />
       </Grid>
@@ -90,9 +92,7 @@ function Example() {
           }
         }}
       >
-        <GridColumn header="Full name">
-          {({ item: person }) => <>{`${person.firstName} ${person.lastName}`}</>}
-        </GridColumn>
+        <GridColumn header="Full name" renderer={fullNameRenderer}></GridColumn>
 
         <GridColumn path="profession" />
       </Grid>

@@ -12,6 +12,10 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+function avatarRenderer({ item }: { item: Person }) {
+  return <Avatar img={item.pictureUrl} name={`${item.firstName} ${item.lastName}`} />;
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -56,11 +60,7 @@ function Example() {
       onGridDragend={handleDragEnd}
       onGridDrop={handleDrop}
     >
-      <GridColumn header="Image" flexGrow={0} autoWidth>
-        {({ item: person }) => (
-          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
-        )}
-      </GridColumn>
+      <GridColumn header="Image" flexGrow={0} autoWidth renderer={avatarRenderer}></GridColumn>
 
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />

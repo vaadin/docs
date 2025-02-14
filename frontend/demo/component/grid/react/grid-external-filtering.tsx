@@ -16,7 +16,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 type PersonEnhanced = Person & { displayName: string };
 
 // tag::snippet[]
-function nameRenderer(person: PersonEnhanced) {
+function nameRenderer({ item: person }: { item: PersonEnhanced }) {
   return (
     <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
       <Avatar img={person.pictureUrl} name={person.displayName} />
@@ -61,9 +61,7 @@ function Example() {
       </TextField>
 
       <Grid items={filteredItems.value}>
-        <GridColumn header="Name" flexGrow={0} width="230px">
-          {({ item }) => nameRenderer(item)}
-        </GridColumn>
+        <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer}></GridColumn>
 
         <GridColumn path="email" />
         <GridColumn path="profession" />

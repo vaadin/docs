@@ -7,16 +7,16 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-function columnRenderer(column: HTMLElement, index: number) {
-  return (
+function createColumnRenderer(columnIndex: number) {
+  return ({ model }: { model: { index: number } }) => (
     <>
-      {column.dataset.index} - {index}
+      {columnIndex} - {model.index}
     </>
   );
 }
 
-function indexColumnRenderer(index: number) {
-  return <>Row {index}</>;
+function indexColumnRenderer({ model }: { model: { index: number } }) {
+  return <>Row {model.index}</>;
 }
 
 function Example() {
@@ -30,16 +30,20 @@ function Example() {
   }, []);
 
   return (
+    // tag::snippet[]
     <Grid items={items.value} columnRendering="lazy">
-      <GridColumn frozen>{({ model }) => indexColumnRenderer(model.index)}</GridColumn>
+      <GridColumn frozen renderer={indexColumnRenderer}></GridColumn>
 
       {[...Array(100).keys()].map((index) => (
         // Generate 100 columns
-        <GridColumn data-index={index} header={`Col ${index}`}>
-          {({ original, model }) => columnRenderer(original, model.index)}
-        </GridColumn>
+        <GridColumn
+          data-index={index}
+          header={`Col ${index}`}
+          renderer={createColumnRenderer(index)}
+        ></GridColumn>
       ))}
     </Grid>
+    // end::snippet[]
   );
 }
 
