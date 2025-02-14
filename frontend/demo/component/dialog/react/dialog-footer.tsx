@@ -35,7 +35,7 @@ function Example() {
         onOpenedChanged={(event) => {
           dialogOpened.value = event.detail.value;
         }}
-        footerRenderer={() => (
+        footer={
           <>
             <Button theme="primary error" onClick={close} style={{ marginRight: 'auto' }}>
               Delete
@@ -44,7 +44,7 @@ function Example() {
               Cancel
             </Button>
           </>
-        )}
+        }
       >
         Are you sure you want to delete this user permanently?
       </Dialog>
