@@ -46,11 +46,11 @@ function Example() {
         onOpenedChanged={(event) => {
           dialogOpened.value = event.detail.value;
         }}
-        headerRenderer={() => (
+        header={
           <Button theme="tertiary" onClick={close}>
             <Icon icon="lumo:cross" />
           </Button>
-        )}
+        }
       >
         <VerticalLayout
           theme="spacing"

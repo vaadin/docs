@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
@@ -15,6 +15,7 @@ const avatarStyle = {
   width: '64px',
 };
 
+// tag::snippet[]
 function Example() {
   useSignals(); // hidden-source-line
   const people = useSignal<Person[]>([]);
@@ -26,45 +27,46 @@ function Example() {
     });
   }, []);
 
-  const personCardRenderer = ({ item: person }: { item: Person }) => (
-    <HorizontalLayout theme="spacing margin">
-      <Avatar
-        img={person.pictureUrl}
-        name={`${person.firstName} ${person.lastName}`}
-        style={avatarStyle}
-      />
+  const personCardRenderer = useCallback(
+    ({ item: person }: { item: Person }) => (
+      <HorizontalLayout theme="spacing margin">
+        <Avatar
+          img={person.pictureUrl}
+          name={`${person.firstName} ${person.lastName}`}
+          style={avatarStyle}
+        />
 
-      <VerticalLayout>
-        <b>
-          {person.firstName} {person.lastName}
-        </b>
-        <span>{person.profession}</span>
+        <VerticalLayout>
+          <b>
+            {person.firstName} {person.lastName}
+          </b>
+          <span>{person.profession}</span>
 
-        <Details
-          summary="Contact information"
-          opened={expandedPeople.value.includes(person)}
-          onClick={({ currentTarget: details }) => {
-            if (details.opened) {
-              expandedPeople.value = [...expandedPeople.value, person];
-            } else {
-              expandedPeople.value = expandedPeople.value.filter((p) => p !== person);
-            }
-          }}
-        >
-          <VerticalLayout>
-            <span>{person.email}</span>
-            <span>{person.address.phone}</span>
-          </VerticalLayout>
-        </Details>
-      </VerticalLayout>
-    </HorizontalLayout>
+          <Details
+            summary="Contact information"
+            opened={expandedPeople.value.includes(person)}
+            onClick={({ currentTarget: details }) => {
+              if (details.opened) {
+                expandedPeople.value = [...expandedPeople.value, person];
+              } else {
+                expandedPeople.value = expandedPeople.value.filter((p) => p !== person);
+              }
+            }}
+          >
+            <VerticalLayout>
+              <span>{person.email}</span>
+              <span>{person.address.phone}</span>
+            </VerticalLayout>
+          </Details>
+        </VerticalLayout>
+      </HorizontalLayout>
+    ),
+    []
   );
 
-  return (
-    // tag::snippet[]
-    <VirtualList items={people.value}>{personCardRenderer}</VirtualList>
-    // end::snippet[]
-  );
+  return <VirtualList items={people.value} renderer={personCardRenderer} />;
 }
+
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line
