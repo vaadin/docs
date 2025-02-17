@@ -8,6 +8,14 @@ import { GridProEditColumn } from '@vaadin/react-components-pro/GridProEditColum
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+function fullNameRenderer({ item }: { item: Person }) {
+  return (
+    <>
+      {item.firstName} {item.lastName}
+    </>
+  );
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -21,14 +29,7 @@ function Example() {
   return (
     // tag::snippet[]
     <GridPro items={items.value} enterNextRow>
-      <GridColumn header="Name (read-only)">
-        {({ item }) => (
-          <>
-            {item.firstName} {item.lastName}
-          </>
-        )}
-      </GridColumn>
-
+      <GridColumn header="Name (read-only)" renderer={fullNameRenderer} />
       <GridProEditColumn header="Profession (editable)" path="profession" />
     </GridPro>
     // end::snippet[]

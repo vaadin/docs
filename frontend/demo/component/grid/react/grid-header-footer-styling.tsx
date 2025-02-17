@@ -17,7 +17,7 @@ const ratingFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-const ratingRenderer = (person: PersonWithRating) => (
+const ratingRenderer = ({ item: person }: { item: PersonWithRating }) => (
   <span>{ratingFormatter.format(person.customerRating)}</span>
 );
 
@@ -43,13 +43,13 @@ function Example() {
         header="Customer rating (0-10)"
         header-part-name="rating-header"
         footer-part-name="rating-footer"
-        footerRenderer={() => <span>Avg rating: 5.32</span>}
-      >
-        {({ item }) => ratingRenderer(item)}
-      </GridColumn>
+        renderer={ratingRenderer}
+        footer={<span>Avg rating: 5.32</span>}
+      />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

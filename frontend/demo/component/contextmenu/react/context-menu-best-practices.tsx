@@ -1,5 +1,5 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React from 'react'; // hidden-source-line
+import React, { useCallback } from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
@@ -20,15 +20,15 @@ function Example() {
     { name: 'Financials.xlsx', size: '42 MB' },
   ]);
 
+  const renderMenuBar = useCallback(() => <MenuBar items={items.value} theme="tertiary" />, []);
+
   return (
     // tag::snippet[]
     <ContextMenu items={items.value}>
       <Grid allRowsVisible items={gridItems.value}>
         <GridColumn path="name" />
         <GridColumn path="size" />
-        <GridColumn width="70px" flexGrow={0}>
-          {() => <MenuBar items={items.value} theme="tertiary" />}
-        </GridColumn>
+        <GridColumn width="70px" flexGrow={0} renderer={renderMenuBar}/>
       </Grid>
     </ContextMenu>
     // end::snippet[]
