@@ -10,9 +10,12 @@ order: 5
 
 = Router Layouts in Flow
 
+This guide teaches you how to create a router layout in Flow, apply it to views automatically and explicitly, and work with nested layouts. A hands-on mini-tutorial at the end will help you put these concepts into practice.
+
+
 == Router Layouts in Flow
 
-Router layouts in Flow are user interface components that implement the [interfacename]`RouterLayout` interface. The interface declares two methods:
+In Flow, router layouts are UI components that implement the [interfacename]`RouterLayout` interface, which provides two key methods:
 
 * [methodname]`showRouterLayoutContent(HasElement)` -- shows the given view in the router layout.
 * [methodname]`removeRouterLayoutContent(HasElement)` -- removes the given view in the router layout.
@@ -22,7 +25,7 @@ When you navigate to a view, the router first determines which layout to use -- 
 
 == Automatic Layouts
 
-You can define an automatic layout by adding the [annotationname]`@Layout` annotation to a router layout. As the name suggest, an automatic layout is applied to views by default unless explicitly disabled.
+To create an automatic layout, add the [annotationname]`@Layout` annotation to a router layout. This layout is automatically applied to all views unless explicitly disabled.
 
 The following example applies [classname]`MainLayout` to *all views*:
 
@@ -105,7 +108,7 @@ Declaring a layout explicitly also disables the automatic layout for the view.
 
 == Nested Layouts
 
-Automatic layouts don't apply to other layouts. In other words, a router layout is rendered directly into the browser tab by default. To *render a router layout inside another router layout*, use the [annotationname]`@ParentLayout` annotation:
+Automatic layouts do not apply to other layouts. By default, a router layout is rendered directly in the browser tab. To *render a router layout inside another router layout*, use the [annotationname]`@ParentLayout` annotation:
 
 [source,java]
 ----
@@ -192,7 +195,8 @@ public class MyLayout extends Div implements RouterLayout {
 
 == Try It
 
-TODO
+In this mini-tutorial, you'll explore router layouts using the Vaadin walking skeleton. You'll then create a nested layout and experiment with different ways to apply it to views.
+
 
 === Set Up the Project
 
@@ -219,7 +223,8 @@ public final class MainLayout extends AppLayout {
 }
 ----
 
-It has a drawer on the left side with the following elements: an application header, a navigation menu, and a user menu.
+It has a drawer on the left side with the following elements: an application header, a navigation menu, and a user menu. All the elements are styled using <<{articles}/styling/lumo/utility-classes#,Lumo Utility Classes>>.
+
 
 ==== The Header
 
@@ -246,11 +251,230 @@ Now, change the name and the logo. Use an icon from <<{articles}/components/icon
 
 ==== The Navigation Menu
 
-TODO continue here...
+The navigation menu is created by the [methodname]`createSideNav()` method. It includes all views -- both Flow and React -- that have declared a menu item:
+
+[source,java]
+----
+private SideNav createSideNav() {
+    var nav = new SideNav();
+    nav.addClassNames(Margin.Horizontal.MEDIUM);
+    MenuConfiguration.getMenuEntries().forEach(entry -> // <1>
+        nav.addItem(createSideNavItem(entry)));
+    return nav;
+}
+
+private SideNavItem createSideNavItem(MenuEntry menuEntry) {
+    if (menuEntry.icon() != null) { // <2>
+        return new SideNavItem(menuEntry.title(), menuEntry.path(), 
+            new Icon(menuEntry.icon()));
+    } else {
+       return new SideNavItem(menuEntry.title(), menuEntry.path());
+    }
+}
+----
+<1> [classname]`MenuConfiguration` gives access to all registered view menu items.
+<2> This navigation menu assumes that all menu items have a title, but only some may have an icon. If you know all your menu items have icons, you can simplify this method.
+
 
 ==== The User Menu
+
+The user menu is created by the [methodname]`createUserMenu()` method. It is the only part of the router layout that is a stub:
+
+[source,java]
+----
+private Component createUserMenu() {
+    // TODO Replace with real user information and actions
+    var avatar = new Avatar("John Smith");
+    avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
+    avatar.addClassNames(Margin.Right.SMALL);
+    avatar.setColorIndex(5);
+
+    var userMenu = new MenuBar();
+    userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+    userMenu.addClassNames(Margin.MEDIUM);
+
+    var userMenuItem = userMenu.addItem(avatar);
+    userMenuItem.add("John Smith");
+    userMenuItem.getSubMenu().addItem("View Profile");
+    userMenuItem.getSubMenu().addItem("Manage Settings");
+    userMenuItem.getSubMenu().addItem("Logout");
+
+    return userMenu;
+}
+----
+
+The <<{articles}/building-apps/security#,Security>> guides show you how to add real functionality to the user menu.
 
 
 === Create a Nested Layout
 
+Create a new Java package [packagename]`com.example.application.tutorial.ui.view`. Inside this package, create a new class called [classname]`NestedLayout`, like this:
+
+.NestedLayout.java
+[source,java]
+----
+import com.example.application.base.ui.view.MainLayout;
+import com.vaadin.flow.component.HasElement;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.router.*;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+@ParentLayout(MainLayout.class) // <1>
+public class NestedLayout extends Div implements RouterLayout {
+
+    private final Div content;
+
+    public NestedLayout() {
+        addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN, 
+                LumoUtility.Gap.SMALL, LumoUtility.Padding.MEDIUM, 
+                LumoUtility.BoxSizing.BORDER, LumoUtility.Height.FULL);
+        content = new Div();
+        content.addClassNames(LumoUtility.Border.ALL, LumoUtility.Background.BASE);
+        content.setSizeFull();
+        add(new Div("This is a layout: " + this), content); // <2>
+    }
+
+    @Override
+    public void showRouterLayoutContent(HasElement content) { // <3>
+        this.content.getElement().appendChild(content.getElement());
+    }
+}
+----
+<1> This renders the nested layout inside the main layout.
+<2> Prints `this` on the screen so that you can see when the layout instance changes.
+<3> This renders views inside the `content` element.
+
+You can't see what your new layout looks like yet, because you don't have any views that use it. You'll fix that next.
+
+
 === Create Example Views
+
+You'll now create two views that contain links to each other and both use the new nested layout. Inside the [packagename]`com.example.application.tutorial.ui.view` package, create two new classes; [classname]`FirstView` and [classname]`SecondView`:
+
+.FirstView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+
+@Route(layout = NestedLayout.class)
+@Menu
+public class FirstView extends Main {
+
+    public FirstView() {
+        add(new H2("First View"),
+            new RouterLink("Second View", SecondView.class));
+    }
+}
+----
+
+.SecondView.java
+[source,java]
+----
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
+
+@Route(layout = NestedLayout.class)
+@Menu
+public class SecondView extends Main {
+
+    public SecondView() {
+        add(new H2("Second View"), 
+            new RouterLink("First View", FirstView.class));
+    }
+}
+----
+
+
+=== Test the Application
+
+Restart the application. Open your browser and navigate to: http://localhost:8080/first
+
+You should see the first view rendered inside the nested layout.
+
+Navigate back and forth between the first view and the second view. You should see that the nested layout instance remains unchanged.
+
+Now click on *Task List* in the navigation menu, then on *FirstView*. You should see that the nested layout instance has now changed.
+
+
+=== Add a Route Prefix
+
+Add a `layout` route prefix to the nested layout:
+
+.NestedLayout.java
+[source,java]
+----
+@ParentLayout(MainLayout.class)
+// tag::snippet[]
+@RoutePrefix("layout")
+// end::snippet[]
+public class NestedLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+Restart the application. Notice that the paths of first view and second view have now changed to `layout/first` and `layout/second`, respectively.
+
+
+=== Enable Automatic Layout
+
+Up to this point, the nested layout has been explicitly applied to the first view and second view. You'll now change this so that it is applied automatically, while keeping the application's behavior unchanged.
+
+Start by removing the reference to [classname]`NestedLayout` from first view and second view, and add the `layout` prefix to each route:
+
+.FirstView.java
+[source,java]
+----
+// tag::snippet[]
+@Route("layout/first")
+// end::snippet[]
+@Menu
+public class FirstView extends Main {
+    ...
+}
+----
+
+.SecondView.java
+[source,java]
+----
+// tag::snippet[]
+@Route("layout/second")
+// end::snippet[]
+@Menu
+public class SecondView extends Main {
+    ...
+}
+----
+
+Next, change the [classname]`NestedLayout` to be automatically applied to all paths that start with `/layout`. Remove the [annotationname]`@RoutePrefix` annotation and add the [annotationname]`@Layout` annotation:
+
+.NestedLayout.java
+[source,java]
+----
+@ParentLayout(MainLayout.class)
+// tag::snippet[]
+@Layout("/layout")
+// end::snippet[]
+public class NestedLayout extends Div implements RouterLayout {
+    ...
+}
+----
+
+Restart the application and click around. It should behave the same way as before.
+
+
+=== Final Thoughts
+
+You've now learned how to:
+
+* Create a custom router layout.
+* Apply layouts explicitly and automatically.
+* Use path prefixes in router layouts.
+
+Now, try experimenting with route aliases and absolute routes!
