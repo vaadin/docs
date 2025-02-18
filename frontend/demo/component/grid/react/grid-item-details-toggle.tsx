@@ -27,6 +27,19 @@ function Example() {
     });
   }, []);
 
+  const detailsRenderer = useCallback(({ item: person }: { item: Person }) => {
+    return (
+      <FormLayout responsiveSteps={[{ minWidth: '0', columns: 3 }]}>
+        <TextField label="Email address" value={person.email} data-colspan="3" readonly />
+        <TextField label="Phone number" value={person.address.phone} data-colspan="3" readonly />
+        <TextField label="Street address" value={person.address.street} data-colspan="3" readonly />
+        <TextField label="ZIP code" value={person.address.zip} readonly />
+        <TextField label="City" value={person.address.city} readonly />
+        <TextField label="State" value={person.address.state} readonly />
+      </FormLayout>
+    );
+  }, []);
+
   const toggleDetailsRenderer = useCallback(({ item: person }: { item: Person }) => {
     const isExpanded = detailsOpenedItems.value.includes(person);
     return (
@@ -50,25 +63,9 @@ function Example() {
       theme="row-stripes"
       items={items.value}
       detailsOpenedItems={detailsOpenedItems.value}
-      rowDetailsRenderer={({ item: person }) => (
-        <FormLayout responsiveSteps={[{ minWidth: '0', columns: 3 }]}>
-          <TextField label="Email address" value={person.email} data-colspan="3" readonly />
-          <TextField label="Phone number" value={person.address.phone} data-colspan="3" readonly />
-          <TextField
-            label="Street address"
-            value={person.address.street}
-            data-colspan="3"
-            readonly
-          />
-          <TextField label="ZIP code" value={person.address.zip} readonly />
-          <TextField label="City" value={person.address.city} readonly />
-          <TextField label="State" value={person.address.state} readonly />
-        </FormLayout>
-      )}
+      rowDetailsRenderer={detailsRenderer}
     >
-      <GridColumn width="80px" flexGrow={0} frozen>
-        {toggleDetailsRenderer}
-      </GridColumn>
+      <GridColumn width="80px" flexGrow={0} frozen renderer={toggleDetailsRenderer} />
       <GridColumn path="displayName" header="Name" />
       <GridColumn path="profession" />
     </Grid>

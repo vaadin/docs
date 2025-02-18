@@ -1,6 +1,6 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
@@ -42,6 +42,20 @@ function Example() {
     });
   }, []);
 
+  const removePersonRenderer = useCallback(
+    ({ item: person }: { item: Person }) => (
+      <Button
+        theme="error tertiary icon"
+        onClick={() => {
+          invitedPeople.value = invitedPeople.value.filter((p) => p.id !== person.id);
+        }}
+      >
+        <Icon icon="vaadin:trash" />
+      </Button>
+    ),
+    []
+  );
+
   function renderInvitedPeopleTable() {
     return (
       <>
@@ -50,18 +64,7 @@ function Example() {
           <GridColumn header="Name" path="displayName" autoWidth />
           <GridColumn path="email" />
           <GridColumn path="address.phone" />
-          <GridColumn header="Manage">
-            {({ item: person }) => (
-              <Button
-                theme="error tertiary icon"
-                onClick={() => {
-                  invitedPeople.value = invitedPeople.value.filter((p) => p.id !== person.id);
-                }}
-              >
-                <Icon icon="vaadin:trash" />
-              </Button>
-            )}
-          </GridColumn>
+          <GridColumn header="Manage" renderer={removePersonRenderer} />
         </Grid>
         {/* end::snippet[] */}
       </>

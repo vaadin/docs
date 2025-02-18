@@ -35,16 +35,6 @@ function Example() {
     };
   }, [notificationOpened.value]);
 
-  const renderer = () => (
-    <HorizontalLayout style={{ alignItems: 'center' }}>
-      <div>5 tasks deleted</div>
-      <Button style={{ marginLeft: 'var(--lumo-space-xl)' }} theme="primary" onClick={close}>
-        Undo
-        {isMac ? '⌘' : 'Ctrl-'}Z
-      </Button>
-    </HorizontalLayout>
-  );
-
   return (
     <>
       <Button disabled={notificationOpened.value} onClick={open}>
@@ -60,7 +50,13 @@ function Example() {
           notificationOpened.value = e.detail.value;
         }}
       >
-        {renderer}
+        <HorizontalLayout style={{ alignItems: 'center' }}>
+          <div>5 tasks deleted</div>
+          <Button style={{ marginLeft: 'var(--lumo-space-xl)' }} theme="primary" onClick={close}>
+            Undo
+            {isMac ? '⌘' : 'Ctrl-'}Z
+          </Button>
+        </HorizontalLayout>
       </Notification>
     </>
   );
