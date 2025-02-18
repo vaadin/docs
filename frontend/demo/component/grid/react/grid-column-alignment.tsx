@@ -8,6 +8,12 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+interface Loan {
+  displayName: string;
+  due: string;
+  amount: string;
+}
+
 function randomDate() {
   const futureDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
   return format(futureDate, 'P');
@@ -21,13 +27,14 @@ function randomAmount() {
 
 function Example() {
   useSignals(); // hidden-source-line
-  const items = useSignal<Person[]>([]);
+  const items = useSignal<Loan[]>([]);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
       items.value = people.map((person) => ({
-        ...person,
         displayName: `${person.firstName} ${person.lastName}`,
+        due: randomDate(),
+        amount: randomAmount(),
       }));
     });
   }, []);
@@ -36,10 +43,8 @@ function Example() {
     // tag::snippet[]
     <Grid items={items.value}>
       <GridColumn path="displayName" header="Name" />
-      <GridColumn header="Due">{() => <span>{randomDate()}</span>}</GridColumn>
-      <GridColumn header="Amount" textAlign="end">
-        {() => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{randomAmount()}</span>}
-      </GridColumn>
+      <GridColumn path="due" header="Due" />
+      <GridColumn path="amount" header="Amount" textAlign="end" />
     </Grid>
     // end::snippet[]
   );
