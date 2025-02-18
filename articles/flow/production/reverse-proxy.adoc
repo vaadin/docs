@@ -1,0 +1,940 @@
+---
+title: Reverse Proxies
+page-title: How to configure reverse proxy for Vaadin applications.
+description: Deploying your Vaadin application behind a reverse proxy.
+meta-description: Learn how to configure a reverse proxy in front of a Vaadin application.
+order: 56
+---
+
+
+= Deploying Vaadin Applications Behind Reverse Proxies
+
+Using a reverse proxy in front of a Java servlet container, such as Apache HTTPD with Tomcat or Jetty, is widely considered a best practice for deploying web applications. A reverse proxy acts as an intermediary between clients and the backend application server, offering numerous benefits that enhance performance, security, and scalability.
+
+By offloading tasks like SSL termination, request routing, and caching to the reverse proxy, the servlet container can focus on serving application logic, resulting in a more efficient and maintainable deployment architecture. Additionally, reverse proxies provide a unified interface for serving multiple applications, enabling load balancing, URL rewriting, and seamless integration of static content alongside dynamic applications.
+
+Security is another key advantage, as the reverse proxy can filter incoming requests, prevent direct exposure of the application server to the internet, and enforce access controls. This layer of abstraction not only simplifies scaling and maintenance but also enhances the reliability and robustness of your Java-based web applications.
+
+This guide covers common deployment scenarios, configuration for reverse proxies, and special considerations for Vaadin's server push functionality, session handling, and load balancing. It explains how to configure Vaadin applications to work seamlessly behind reverse proxies.
+
+Various configuration scenarios are implemented using https://httpd.apache.org/[`Apache HTTPD`] (2.4.47+) and https://nginx.org/en/[`nginx`]. The provided configurations are a working starting point that can be improved with specific customization for the production environment.
+
+
+== Apache HTTPD
+
+Proxying with Apache HTTPD is additionally expanded into two categories: HTTP and AJP backend protocols. Apache HTTPD should be configured to load https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html[`mod_rewrite`], https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[`mod_proxy`], and one or more proxy modules, such as https://httpd.apache.org/docs/2.4/mod/mod_proxy_http.html[`mod_proxy_http`], https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html[`mod_proxy_wstunnel`] or https://httpd.apache.org/docs/2.4/mod/mod_proxy_ajp.html[`mod_proxy_ajp`].
+
+[source]
+----
+LoadModule rewrite_module modules/mod_rewrite.so
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+
+# Optional, for AJP backend protocol
+# LoadModule proxy_ajp_module modules/mod_proxy_ajp.so
+----
+
+Example snippets are limited to the proxy configuration. In the simplest cases all relevant configurations are put into a `<Location>` directive. However, setups that require `mod_rewrite` should be directly used inside server config or virtual host definition.
+The proxying directives used in the examples are the following:
+
+- `ProxyPass`: maps remote servers into the local server URL-space.
+- `ProxyPassReverse`: adjusts the URL in HTTP response headers sent from a reverse proxied server.
+- `ProxyPassReverseCookiePath`: adjusts the Path string in `Set-Cookie` headers from a reverse-proxied server.
+
+`ProxyPass` directive can take a list of parameters in form of `key=value` pairs to tune the connection to the backend server. For simplicity, the examples won't set any option, but with complex network setup, it might be useful to configure some of them:
+
+- `keepalive=On`: should be used when you have a firewall between your Apache HTTPD and the backend server, which tends to drop inactive connections.
+- `disablereuse=On`: force `mod_proxy` to immediately close a connection to the backend after being used, and thus, disable its persistent connection and pool for that backend. This helps in various situations where a firewall between Apache HTTPD and the backend server (regardless of protocol) tends to silently drop connections.
+- `retry=0`: prevents Apache waiting for a while before sending request again to the backend server in case the worker is an error state.
+
+Also, only `Location`, `Content-Location` and `URI` headers in the HTTP response is rewritten by `ProxyPassReverse`. Apache HTTPD won't rewrite other response headers, nor does it by default rewrite URL references inside HTML pages. This means that if the proxied content contains absolute URL references, they'll bypass the proxy. To rewrite HTML content to match the proxy, you must load and enable https://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html[`mod_proxy_html`].
+
+
+=== AJP Protocol
+
+The Apache JServ Protocol (AJP) is a binary protocol commonly used to connect web servers and application servers. It can be an efficient alternative to HTTP(S) in certain scenarios, such as when reducing overhead is important or when working with legacy systems.
+
+In a Spring Boot application with embedded Apache Tomcat servlet container, AJP support can be configured as following:
+
+[source,java]
+----
+@ConditionalOnProperty("tomcat.ajp.port")
+@Configuration
+public class TomcatConfig implements WebServerFactoryCustomizer<TomcatServletWebServerFactory> {
+
+    private static final String PROTOCOL = "AJP/1.3";
+
+    @Value("${tomcat.ajp.port:8009}") //Defined on application.properties or as environment variable
+    private int ajpPort;
+
+    @Value("${tomcat.ajp.address:::}") //Defined on application.properties or as environment variable
+    private InetAddress ajpAddress;
+
+    @Value("${tomcat.ajp.secret}") // Defined on application.properties or as environment variable
+    private String ajpSecret;
+
+
+    @Override
+    public void customize(TomcatServletWebServerFactory factory) {
+        Connector ajpConnector = new Connector(PROTOCOL);
+        ajpConnector.setPort(ajpPort);
+        AbstractAjpProtocol<?> ajpProtocol = (AbstractAjpProtocol<?>) ajpConnector.getProtocolHandler();
+        ajpProtocol.setSecret(ajpSecret);
+        ajpProtocol.setAddress(ajpAddress);
+        factory.addAdditionalTomcatConnectors(ajpConnector);
+    }
+}
+----
+
+To enhance security, the above snippet is setting the AJP protocol secret, that should be included with every request from the proxy server.
+In the Apache HTTPD configuration examples, the value of the secret is supposed to be stored in an environment variable named `VAADIN_APP_AJP_SECRET`.
+
+For different setups, consult the documentation of the Servlet container.
+
+
+== `nginx`
+
+The `nginx` examples are mostly based on the online https://nginx.org/en/docs/http/websocket.html[WebSocket proxying guide]. The provided code snippets are supposed to be placed into the https://nginx.org/en/docs/http/ngx_http_core_module.html#http[`http`] block in the main configuration file.
+
+[.nginx.conf Example]
+[source]
+----
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+http {
+    
+    ## Example snippet goes here
+
+}
+----
+
+A `map` directive is used to handle the connection upgrade, to set the value of the `Connection` header field in a request to the proxied server depending on the presence of the `Upgrade` field in the client request header.
+
+[source]
+----
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+----
+
+Other used directive are:
+
+- `proxy_pass`: maps remote servers into the local server URL-space.
+- `proxy_set_header`: redefines or appends fields to the request header passed to the proxied server.
+- `proxy_redirect`: adjusts the URL in HTTP response headers sent from a reverse proxied server.
+- `proxy_cookie_path`: adjusts the Path string in `Set-Cookie` headers from a reverse-proxied server.
+
+
+== WebSockets in a Vaadin Application
+
+WebSockets provide a persistent, full-duplex communication channel between a client and a server, unlike traditional HTTP requests, which follow a request-response model. In the context of a Vaadin application, WebSockets are **optional** but enhance user experience by enabling (<<{articles}/flow/advanced/server-push#,server push>>), allowing real-time UI updates without requiring clients to repeatedly poll the server.
+
+WebSockets work by performing a protocol upgrade from HTTP to the WebSocket protocol (`ws://` or `wss://`) using the `Upgrade` and `Connection` headers.
+
+In Apache HTTPD WebSocket proxying is usually achieved by adding the `upgrade=websocket` option to the `ProxyPass` directive.
+However, AJP does not support WebSockets because it is designed for traditional request-response communication and does not handle persistent bidirectional connections.
+
+To support WebSockets behind a reverse proxy, Apache must route WebSocket traffic ensuring proper handling of the upgrade process and maintaining the connection between the client and the backend Vaadin server, meaning that a specific configuration is required.
+
+Similarly, `nginx` also needs to be configured to handle the protocol upgrade. In the proposed example, the WebSockets configuration blocks are marked with `Websockets only (begin)` and `Websockets only (end)` comments.
+If WebSockets support is not required by the application, the related configuration can be skipped. For Apache HTTPD `ProxyPass` directive remove the `upgrade` option.
+
+
+== Deployment Scenarios
+
+The next sections provide configuration examples covering the following deployment scenarios:
+
+[cols="2,1,1"]
+|===
+|Scenario|Public URL|Internal Vaadin Application URL
+
+| Web Server and Vaadin application on root context.
+| `http(s)://proxy/`
+| `http://vaadin-app:8080`
+
+| Web Server and Vaadin application on a sub context.
+| `http(s)://proxy/app`
+| `http://vaadin-app:8080/app`
+
+| Web Server on root context and Vaadin application on sub context.
+| `http(s)://proxy/`
+| `http://vaadin-app:8080/app`
+
+| Web Server on sub context and Vaadin application on root context.
+| `http(s)://proxy/app`
+| `http://vaadin-app:8080/`
+
+| Load Balancing with Sticky Session.
+| `http(s)://proxy/`
+| `http://vaadin-app-1:8080/`,`http://vaadin-app-2:8080/`
+
+|===
+
+All the scenarios assume the Vaadin application is built for production and `PUSH` communication over WebSocket is enabled. It's usually better to deploy the application on the backend server at the same path as the proxy rather than to take this approach, to avoid potential issues with URLs sent back to the client as HTTP headers or in the response body.
+
+
+=== Web Server & Vaadin on Root Context
+
+This is the most straightforward scenario, where a backend application served on the root context is published as-is on the internet, meaning that the browser requests to `http(s)://proxy/` are forwarded to `http://vaadin-app:8080`.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location />
+    ProxyPass         http://vaadin-app:8080/ upgrade=websocket
+    ProxyPassReverse  http://vaadin-app:8080/
+</Location>
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+# -- Websockets only (begin)
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "ws://vaadin-app:8080/$1" [P,L]
+# -- Websockets only (end)
+
+ProxyPass   "/"  ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        proxy_pass http://vaadin-app:8080/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/;
+
+    }
+}
+----
+--
+
+As an alternative, WebSocket upgrade can be limited to specific paths. This setup requires dedicated configuration for both Flow and Hilla WebSocket endpoints.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location />
+    ProxyPass               http://vaadin-app:8080/
+    ProxyPassReverse        http://vaadin-app:8080/
+</Location>
+
+# -- Websockets only (begin)
+<Location /VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/VAADIN/push
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+<Location />
+    ProxyPass               ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+</Location>
+
+# -- Websockets only (begin)
+<Location /VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/VAADIN/push
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        proxy_pass http://vaadin-app:8080/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/;
+    }
+
+    # -- Websockets only (begin)
+    location ~* "(/VAADIN|HILLA)/push" {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+
+        proxy_pass http://vaadin-app:8080;
+    }
+    # -- Websockets only (end)
+}
+----
+--
+
+
+=== Web Server & Vaadin on Sub-Context
+
+Similar to the previous scenario, but the Vaadin application is reachable on the same sub path on both the reverse proxy and the backend server. In this case `http(s)://proxy/app/` forwards to `http://vaadin-app:8080/app/`.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location /app/>
+    ProxyPass         http://vaadin-app:8080/app/ upgrade=websocket
+    ProxyPassReverse  http://vaadin-app:8080/app/
+</Location>
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+# -- Websockets only (begin)
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/app/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
+# -- Websockets only (end)
+
+ProxyPass   "/app/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location /app/ {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        proxy_pass http://vaadin-app:8080/app/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/;
+
+    }
+}
+----
+--
+
+As an alternative, WebSocket upgrade can be limited to specific paths. This setup requires dedicated configuration for both Flow and Hilla WebSocket endpoints.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location /app/>
+    ProxyPass               http://vaadin-app:8080/app/
+    ProxyPassReverse        http://vaadin-app:8080/app/
+</Location>
+
+# -- Websockets only (begin)
+<Location /app/VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/app/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+<Location /app/>
+    ProxyPass               ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+</Location>
+
+# -- Websockets only (begin)
+<Location /app/VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/app/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location /app/ {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        proxy_pass http://vaadin-app:8080/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
+    }
+
+    # -- Websockets only (begin)
+    location ~* ^/(VAADIN|HILLA)/push$ {
+
+        rewrite ^/(.*) /app/$1 break;
+
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+
+        proxy_pass http://vaadin-app:8080;
+    }
+    # -- Websockets only (end)
+}
+----
+--
+
+
+=== Web Server on Root Context & Vaadin on Sub-Context
+
+In this scenario the backend application is published on a sub context, but the proxy is reachable on the root context. Therefore, a request to `http(s)://proxy/` is forwarded to `http://vaadin-app/app/`. Since paths don't match, the reverse proxy must also rewrite the cookie paths.
+
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location />
+    ProxyPass         "http://vaadin-app:8080/app/" upgrade=websocket
+    ProxyPassReverse  "http://vaadin-app:8080/app/"
+    ProxyPassReverseCookiePath "/app" "/"
+</Location>
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+# -- Websockets only (begin)
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
+# -- Websockets only (end)
+
+ProxyPass         "/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+ProxyPassReverse  "/"      "/app/"
+ProxyPassReverseCookiePath "/app" "/"
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        proxy_pass http://vaadin-app:8080/app/;
+        proxy_redirect $scheme://$host/app/ $scheme://$http_host/;
+        proxy_cookie_path /app /;
+
+    }
+}
+----
+--
+
+Following, there's the same configuration for specific WebSocket upgrade paths.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location />
+    ProxyPass                  "http://vaadin-app:8080/app/"
+    ProxyPassReverse           "http://vaadin-app:8080/app/"
+    ProxyPassReverseCookiePath "/app" "/"
+</Location>
+
+# -- Websockets only (begin)
+<Location /VAADIN/push>
+    ProxyPass "ws://vaadin-app:8080/app/VAADIN/push"
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass "ws://vaadin-app:8080/app/HILLA/push"
+</Location>
+# -- Websockets only (end)
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+<location / >
+    ProxyPass         ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+    ProxyPassReverse  "/app/"
+    ProxyPassReverseCookiePath "/app" "/"
+</Location>
+
+# -- Websockets only (begin)
+<Location /VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/app/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        proxy_pass http://vaadin-app:8080/app/;
+        proxy_redirect $scheme://$host/app/ $scheme://$http_host/;
+        proxy_cookie_path /app /;
+    }
+
+    # -- Websockets only (begin)
+    location ~* ^/(VAADIN|HILLA)/push$ {
+
+        rewrite ^/(.*) /app/$1 break;
+
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+
+        proxy_pass http://vaadin-app:8080;
+    }
+    # -- Websockets only (end)
+}
+----
+--
+
+
+=== Web Server on Sub-Context & Vaadin on Root Context
+
+This is the opposite of the above scenario. The proxy server exposes the application on a sub context but it forwards the request to the backed server root path, for example `http(s)://proxy/app/` to `http://vaadin-app:8080/`. As in the previous case, the proxy server must rewrite the cookie path.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location /app/>
+    ProxyPass         "http://vaadin-app:8080/" upgrade=websocket
+    ProxyPassReverse  "/"
+    ProxyPassReverseCookiePath "/" "/app"
+</Location>
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+# -- Websockets only (begin)
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/app/(.*) "ws://vaadin-app:8080/$1" [P,L]
+# -- Websockets only (end)
+
+<Location /app/ >
+    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+    ProxyPassReverse  "/"
+    ProxyPassReverseCookiePath "/" "/app"
+</Location>
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location /app/ {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        proxy_pass http://vaadin-app:8080/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
+        proxy_cookie_path / /app;
+    }
+}
+----
+--
+
+Following, there's the same configuration for specific WebSocket upgrade paths.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Location /app/>
+    ProxyPass                  "http://vaadin-app:8080/"
+    ProxyPassReverse           "/"
+    ProxyPassReverseCookiePath "/" "/app"
+</Location>
+
+# -- Websockets only (begin)
+<Location /app/VAADIN/push>
+    ProxyPass "ws://vaadin-app:8080/VAADIN/push"
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass "ws://vaadin-app:8080/HILLA/push"
+</Location>
+# -- Websockets only (end)
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+<Location /app/ >
+    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+    ProxyPassReverse  "/"
+    ProxyPassReverseCookiePath "/" "/app"
+</Location>
+
+# -- Websockets only (begin)
+<Location /app/VAADIN/push>
+    ProxyPass               ws://vaadin-app:8080/VAADIN/push
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass               ws://vaadin-app:8080/HILLA/push
+</Location>
+# -- Websockets only (end)
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location /app/ {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        proxy_pass http://vaadin-app:8080/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
+        proxy_cookie_path /app /;
+    }
+
+    # -- Websockets only (begin)
+    location ~* ^/app/(VAADIN|HILLA)/push$ {
+
+        rewrite ^/app/(.*)      /$1 break;
+
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+
+        proxy_pass http://vaadin-app:8080;
+    }
+    # -- Websockets only (end)
+}
+----
+--
+
+
+=== Load Balancing with Sticky Session
+
+Load balancing is a critical mechanism for ensuring high availability, scalability, and fault tolerance in web applications. By distributing incoming client requests across multiple backend servers, load balancing improves application responsiveness and prevents any single server from becoming a bottleneck.
+
+For Vaadin applications, which maintain long-lived user sessions due to their stateful nature, implementing load balancing with sticky sessions becomes essential. Sticky sessions, also known as session affinity, ensure that each user's requests are consistently routed to the same backend server, preserving the application state and avoiding issues caused by session deserialization across servers.
+
+For Apache HTTPD, you need to load the https://httpd.apache.org/docs/2.4/mod/mod_proxy_balancer.html[`mod_proxy_balancer`] module and at least one module providing a scheduler algorithm. The example in this guide use https://httpd.apache.org/docs/2.4/mod/mod_lbmethod_byrequests.html[`mod_lbmethod_byrequests`] that distributes the requests among the various workers to ensure that each gets their configured share of the number of requests.
+
+Depending on the Apache server global setup, you may need to load also https://httpd.apache.org/docs/2.4/mod/mod_slotmem_shm.html[`mod_slotmem_shm`], used internally by other modules.
+
+[source]
+----
+LoadModule slotmem_shm_module modules/mod_slotmem_shm.so
+LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
+LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
+----
+
+Sticky sessions are managed using a custom `ROUTEID` cookie, simplifying configuration and ensuring proper session affinity without relying on backend modifications like adding a `jvmRoute` to Tomcat configuration.
+
+For `nginx`, cookie based https://nginx.org/en/docs/http/ngx_http_upstream_module.html#sticky[sticky] session is available only as part of the commercial subscription.
+
+On the free tier you can use the https://nginx.org/en/docs/http/ngx_http_upstream_module.html#ip_hash[`ip_hash`] directive, that uses the client IP address as a hashing key to determine what server in a server group should be selected for the client requests. The main drawback of the `ip_hash` approach is that it doesn't work well for clients behind proxies or NAT, since many clients share the same IP.
+
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<Proxy "balancer://application-balancer/">
+    BalancerMember "http://vaadin-app-1:8080" route=1 upgrade=websocket
+    BalancerMember "http://vaadin-app-2:8080" route=2 upgrade=websocket
+    ProxySet stickysession=ROUTEID
+    ProxySet lbmethod=byrequests
+</Proxy>
+
+<Location / >
+    # Adding a cookie for session affinity instead of backend JSESSIONID because:
+    # - additional configuration required on the backend server to add the route id
+    #   in the cookie value (e.g. jvmRoute for Tomcat)
+    # - The backend cookie might not be set on the very first request, causing unexpected behaviors
+    Header add Set-Cookie "ROUTEID=.%{BALANCER_WORKER_ROUTE}e; path=/; HttpOnly" env=BALANCER_ROUTE_CHANGED
+
+    ProxyPass         "balancer://application-balancer/"
+    ProxyPassReverse  "balancer://application-balancer/"
+</Location>
+----
+
+.Apache HTTPD - AJP
+[source]
+----
+<Proxy "balancer://application-balancer/">
+    BalancerMember "ajp://vaadin-app-1:8009" route=1
+    BalancerMember "ajp://vaadin-app-2:8009" route=2
+    ProxySet stickysession=ROUTEID
+    ProxySet lbmethod=byrequests
+</Proxy>
+
+# -- Websockets only (begin)
+<Proxy "balancer://application-websocket-balancer/">
+    BalancerMember "ws://vaadin-app-1:8080" route=1
+    BalancerMember "ws://vaadin-app-2:8080" route=2
+    ProxySet stickysession=ROUTEID
+    ProxySet lbmethod=byrequests
+</Proxy>
+
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "balancer://application-websocket-balancer/$1" [P,L]
+# -- Websockets only (end)
+
+# Adding a cookie for session affinity instead of backend JSESSIONID because:
+# - additional configuration required on the backend server to add the route id
+#   in the cookie value (e.g. jvmRoute for Tomcat)
+# - The backend cookie might not be set on the very first request, causing unexpected behaviors
+Header add Set-Cookie "ROUTEID=.%{BALANCER_WORKER_ROUTE}e; path=/; HttpOnly" env=BALANCER_ROUTE_CHANGED
+
+ProxyPass         / "balancer://application-balancer/"
+ProxyPassReverse  / "balancer://application-balancer/"
+----
+
+.`nginx`
+[source]
+----
+# -- Websockets only (begin)
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+# -- Websockets only (end)
+
+upstream application_balancer {
+    server vaadin-app-1:8080;
+    server vaadin-app-2:8080;
+    ip_hash;
+}
+
+server {
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header        Host $host;
+        proxy_set_header        X-Real-IP $remote_addr;
+        proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto $scheme;
+
+        # -- Websockets only (begin)
+        proxy_set_header        Upgrade $http_upgrade;
+        proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        proxy_pass http://application_balancer/;
+        proxy_redirect $scheme://$host/ $scheme://$http_host/;
+    }
+}
+----
+--
+
+
+== Proxying Multiple Backend Vaadin Application
+
+All proposed configurations can be applied when the reverse proxy exposes multiple backend Vaadin applications. In a similar setup, it's important that all backend applications define different cookie names, otherwise the proxy overwrites the same cookie with different values, preventing the Vaadin applications from working correctly.
+
+In a Spring Boot application, the cookie name can be set with the `server.servlet.session.cookie.name` property. Another possibility is to set programmatically the name in a Servlet listener by getting the `SessionCookieConfig` instance from the `ServletContext` and use the `setName(String)` method to change cookie name.
+
+
+== WebSocket Connection Timeout
+
+By default, the WebSocket connection is closed if the proxied server doesn't transmit any data within sixty seconds. Vaadin `PUSH` is configured to send a heartbeat message over WebSocket every sixty seconds, so the connection should not be closed. If the default is not working correctly, the timeout can be increased in both Apache HTTPD and `nginx` by applying the appropriate configuration.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+ProxyPass / http://vaadin-app:8080/ upgrade=websocket timeout=90
+
+# In alternative, use ProxyTimeout directive
+# ProxyTimeout 90
+----
+
+.`nginx`
+[source]
+----
+proxy_read_timeout 90;
+----
+--
+
+[discussion-id]`0C8F77AE-16A8-463B-8F43-1C9F3A7DF1E2`

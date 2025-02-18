@@ -36,22 +36,20 @@ function Example() {
           notificationOpened.value = event.detail.value;
         }}
       >
-        {() => (
-          <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
-            <div>5 tasks deleted</div>
-            <Button
-              theme="tertiary-inline"
-              style={{ marginLeft: 'var(--lumo-space-xl)' }}
-              onClick={close}
-            >
-              Undo
-            </Button>
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
+          <div>5 tasks deleted</div>
+          <Button
+            theme="tertiary-inline"
+            style={{ marginLeft: 'var(--lumo-space-xl)' }}
+            onClick={close}
+          >
+            Undo
+          </Button>
 
-            <Button theme="tertiary-inline" aria-label="Close" onClick={close}>
-              <Icon icon="lumo:cross" />
-            </Button>
-          </HorizontalLayout>
-        )}
+          <Button theme="tertiary-inline" aria-label="Close" onClick={close}>
+            <Icon icon="lumo:cross" />
+          </Button>
+        </HorizontalLayout>
       </Notification>
       {/* end::snippet[] */}
     </>

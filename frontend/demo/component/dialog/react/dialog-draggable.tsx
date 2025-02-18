@@ -31,7 +31,7 @@ function Example() {
         onOpenedChanged={(event) => {
           dialogOpened.value = event.detail.value;
         }}
-        headerRenderer={() => (
+        header={
           <h2
             className="draggable"
             style={{
@@ -45,7 +45,7 @@ function Example() {
           >
             Add note
           </h2>
-        )}
+        }
         footerRenderer={() => (
           <>
             <Button onClick={close}>Cancel</Button>
