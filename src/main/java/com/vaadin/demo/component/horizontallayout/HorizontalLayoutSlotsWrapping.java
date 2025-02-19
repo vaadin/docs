@@ -11,10 +11,11 @@ public class HorizontalLayoutSlotsWrapping extends Div {
     public HorizontalLayoutSlotsWrapping() {
         // tag::snippet[]
         HorizontalLayout layout = new HorizontalLayout();
+        layout.setWrap(true);
         layout.setPadding(true);
 
-        VerticalLayout start = new VerticalLayout();
-        start.setWidth("auto");
+        HorizontalLayout start = new HorizontalLayout();
+        start.setPadding(true);
         start.getStyle().set("margin-right", "auto");
 
         Div item1 = new Div("Start");
@@ -25,25 +26,31 @@ public class HorizontalLayoutSlotsWrapping extends Div {
 
         start.add(item1, item2);
 
-        VerticalLayout middle = new VerticalLayout();
-        middle.setWidth("auto");
+        HorizontalLayout middle = new HorizontalLayout();
+        middle.setPadding(true);
 
-        Div item3 = new Div("Start");
+        Div item3 = new Div("Middle");
         item3.setClassName("example-item");
 
-        middle.add(item3);
-
-        VerticalLayout end = new VerticalLayout();
-        end.setWidth("auto");
-        end.getStyle().set("margin-left", "auto");
-
-        Div item4 = new Div("End");
+        Div item4 = new Div("Middle");
         item4.setClassName("example-item");
 
-        Div item5 = new Div("End");
+        Div item5 = new Div("Middle");
         item5.setClassName("example-item");
 
-        end.add(item4, item5);
+        middle.add(item3, item4, item5);
+
+        HorizontalLayout end = new HorizontalLayout();
+        end.setPadding(true);
+        end.getStyle().set("margin-left", "auto");
+
+        Div item6 = new Div("End");
+        item6.setClassName("example-item");
+
+        Div item7 = new Div("End");
+        item7.setClassName("example-item");
+
+        end.add(item6, item7);
 
         layout.add(start, middle, end);
         // end::snippet[]
