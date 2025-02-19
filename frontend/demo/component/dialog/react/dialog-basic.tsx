@@ -21,7 +21,7 @@ function Example() {
         onOpenedChanged={({ detail }) => {
           dialogOpened.value = detail.value;
         }}
-        footerRenderer={() => (
+        footer={
           <>
             <Button
               onClick={() => {
@@ -39,7 +39,7 @@ function Example() {
               Add
             </Button>
           </>
-        )}
+        }
       >
         <VerticalLayout style={{ alignItems: 'stretch', width: '18rem', maxWidth: '100%' }}>
           <TextField label="First name" />
