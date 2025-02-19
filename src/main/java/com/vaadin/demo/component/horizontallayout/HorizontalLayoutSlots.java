@@ -14,16 +14,16 @@ public class HorizontalLayoutSlots extends Div {
 
         Div start = new Div("Start");
         start.setClassName("example-item");
-        start.getStyle().set("margin-right", "auto");
 
         Div middle = new Div("Middle");
         middle.setClassName("example-item");
 
         Div end = new Div("End");
         end.setClassName("example-item");
-        end.getStyle().set("margin-left", "auto");
 
-        layout.add(start, middle, end);
+        layout.addToStart(start);
+        layout.addToMiddle(middle);
+        layout.addToEnd(end);
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");

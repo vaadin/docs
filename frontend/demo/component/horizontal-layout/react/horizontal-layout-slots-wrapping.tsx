@@ -7,16 +7,16 @@ function Example() {
   return (
     // tag::snippet[]
     <HorizontalLayout theme="spacing padding wrap">
-      <HorizontalLayout style={{ marginRight: 'auto' }} theme="spacing padding">
-        <div className="example-item">Start</div>
-        <div className="example-item">Start</div>
-      </HorizontalLayout>
       <HorizontalLayout theme="spacing padding">
+        <div className="example-item">Start</div>
+        <div className="example-item">Start</div>
+      </HorizontalLayout>
+      <HorizontalLayout theme="spacing padding" slot="middle">
         <div className="example-item">Middle</div>
         <div className="example-item">Middle</div>
         <div className="example-item">Middle</div>
       </HorizontalLayout>
-      <HorizontalLayout style={{ marginLeft: 'auto' }} theme="spacing padding">
+      <HorizontalLayout theme="spacing padding" slot="end">
         <div className="example-item">End</div>
         <div className="example-item">End</div>
       </HorizontalLayout>

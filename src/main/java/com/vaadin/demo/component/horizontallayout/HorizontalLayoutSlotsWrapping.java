@@ -16,7 +16,6 @@ public class HorizontalLayoutSlotsWrapping extends Div {
 
         HorizontalLayout start = new HorizontalLayout();
         start.setPadding(true);
-        start.getStyle().set("margin-right", "auto");
 
         Div item1 = new Div("Start");
         item1.setClassName("example-item");
@@ -42,7 +41,6 @@ public class HorizontalLayoutSlotsWrapping extends Div {
 
         HorizontalLayout end = new HorizontalLayout();
         end.setPadding(true);
-        end.getStyle().set("margin-left", "auto");
 
         Div item6 = new Div("End");
         item6.setClassName("example-item");
@@ -52,7 +50,9 @@ public class HorizontalLayoutSlotsWrapping extends Div {
 
         end.add(item6, item7);
 
-        layout.add(start, middle, end);
+        layout.addToStart(start);
+        layout.addToMiddle(middle);
+        layout.addToEnd(end);
         // end::snippet[]
 
         this.setClassName("basic-layouts-example");
