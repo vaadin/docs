@@ -9,6 +9,10 @@ import { GridProEditColumn } from '@vaadin/react-components-pro/GridProEditColum
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
+function birthdayRenderer({ item: { birthday } }: { item: Person }) {
+  return format(parseISO(birthday), 'MM/dd/yyyy');
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
@@ -31,12 +35,11 @@ function Example() {
       <GridProEditColumn path="subscriber" editorType="checkbox" />
       <GridProEditColumn
         path="birthday"
+        renderer={birthdayRenderer}
         editModeRenderer={({ item: { birthday } }) => (
           <DatePicker style={{ width: '100%' }} value={birthday} />
         )}
-      >
-        {({ item: { birthday } }) => format(parseISO(birthday), 'MM/dd/yyyy')}
-      </GridProEditColumn>
+      />
     </GridPro>
     // end::snippet[]
   );
