@@ -12,7 +12,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-const employeeRenderer = (person: Person) => (
+const employeeRenderer = ({ item: person }: { item: Person }) => (
   <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
     <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
 
@@ -29,7 +29,7 @@ const employeeRenderer = (person: Person) => (
   </HorizontalLayout>
 );
 
-const statusRenderer = (person: Person) => (
+const statusRenderer = ({ item: person }: { item: Person }) => (
   <span {...{ theme: `badge ${person.status === 'Available' ? 'success' : 'error'}` }}>
     {person.status}
   </span>
@@ -49,18 +49,15 @@ function Example() {
     <Grid items={items.value}>
       <GridSelectionColumn />
 
-      <GridColumn header="Employee" flexGrow={0} autoWidth>
-        {({ item }) => employeeRenderer(item)}
-      </GridColumn>
+      <GridColumn header="Employee" flexGrow={0} autoWidth renderer={employeeRenderer} />
 
       <GridColumn path="profession" autoWidth />
 
-      <GridColumn header="Status" autoWidth>
-        {({ item }) => statusRenderer(item)}
-      </GridColumn>
+      <GridColumn header="Status" autoWidth renderer={statusRenderer} />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

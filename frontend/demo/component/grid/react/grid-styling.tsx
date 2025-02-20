@@ -34,7 +34,7 @@ const ratingFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 });
 
-const ratingRenderer = (person: PersonWithRating) => (
+const ratingRenderer = ({ item: person }: { item: PersonWithRating }) => (
   <span>{ratingFormatter.format(person.customerRating)}</span>
 );
 
@@ -57,10 +57,11 @@ function Example() {
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
       <GridColumn path="profession" />
-      <GridColumn header="Customer rating (0-10)">{({ item }) => ratingRenderer(item)}</GridColumn>
+      <GridColumn header="Customer rating (0-10)" renderer={ratingRenderer} />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

@@ -57,16 +57,13 @@ function Example() {
 
   return (
     <Grid items={items.value}>
-      <GridSortColumn header="Employee" path="lastName">
-        {employeeRenderer}
-      </GridSortColumn>
+      <GridSortColumn header="Employee" path="lastName" renderer={employeeRenderer} />
 
-      <GridSortColumn header="Birthdate" path="birthday">
-        {birthdayRenderer}
-      </GridSortColumn>
+      <GridSortColumn header="Birthdate" path="birthday" renderer={birthdayRenderer} />
     </Grid>
   );
 }
+
 // end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

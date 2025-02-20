@@ -51,6 +51,14 @@ function createItem(iconName: string, text: string) {
   );
 }
 
+function renderApplicant({ item }: { item: Person }) {
+  return (
+    <span>
+      {item.firstName} {item.lastName}
+    </span>
+  );
+}
+
 function Example() {
   useSignals(); // hidden-source-line
   const gridItems = useSignal<Person[]>([]);
@@ -109,13 +117,7 @@ function Example() {
   return (
     <ContextMenu items={items.value}>
       <Grid allRowsVisible items={gridItems.value} ref={gridRef}>
-        <GridColumn header="Applicant">
-          {({ item }) => (
-            <span>
-              {item.firstName} {item.lastName}
-            </span>
-          )}
-        </GridColumn>
+        <GridColumn header="Applicant" renderer={renderApplicant} />
         <GridColumn path="email" />
         <GridColumn header="Phone number" path="address.phone" />
       </Grid>
