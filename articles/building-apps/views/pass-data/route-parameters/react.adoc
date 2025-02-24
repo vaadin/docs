@@ -9,3 +9,96 @@ order: 10
 
 
 = Route Parameters in React
+
+In this guide, you’ll learn how to create a view that accepts a single route parameter. You’ll also explore the differences between required, optional, and wildcard route parameters. Finally, a mini-tutorial will help you apply these concepts in a real Vaadin application.
+
+
+== Required Route Parameters
+
+To create a React view that accepts a required route parameter, you need to define the parameter name as the view name placed in between curly braces (`{}`) followed by the `.tsx` suffix. For example, to create a view that accepts a required `productId` parameter, you should name the view as `{productId}.tsx`. The directory structure under the `views` will look like this:
+
+[source]
+----
+views/
+└── products/
+    └── {productId}.tsx <1>
+----
+<1> The view file that accepts the `productId` parameter. The route will be in form of `/products/{productId}`, where `productId` is a required parameter. The routes such as `/products/123`, `/products/prd222`, etc., will match this view. Trying to navigate to `/products` will result in a 404 Not Found error, unless a view matching the route is defined.
+
+Though, it's technically possible to define the views with parameters directly under the `views` directory, it's recommended to use subdirectories to keep the views organized.
+
+The routing system also supports having parameters in the middle of route, that means the directories can also have their names defined with a `{param-name}` convention. Here's an example of a view that accepts a required `productId` parameter:
+
+[source]
+----
+views/
+└── products
+    └── {productId} <1>
+        └── edit.tsx
+----
+<1> The directory that all its children files have `productId` parameter in the middle of their routes. The route will be in form of `/products/{productId}/edit`, where `productId` acts as placeholder for the required parameter, in this case the product ID. The routes such as `/products/123/edit`, `/products/prd222/edit`, etc., will match this view. Trying to navigate to `/products/edit` will result in a 404 Not Found error, unless a view matching the route is defined.
+
+
+=== Accessing Route Parameter Value
+
+To access the route parameter in the view, use the `useParams` hook from `react-router` in your component. Here’s an example of a view that accepts a required `productId` parameter:
+
+[source,tsx]
+.views/products/{productId}.tsx
+----
+import { useParams } from 'react-router';
+
+export default function ProductView() {
+  const { productId } = useParams(); <1>
+
+  const product = useSignal<Product | undefined>(undefined);
+
+  // Fetch product details for the given ID
+  useEffect(() => {
+    ProductEndpoint.getProduct(productId).then(p => product.value = p);
+  }, [productId]);
+
+  // render the product ...
+}
+----
+<1> The `useParams` hook returns an object containing the route parameters. In this case, the `productId` parameter is extracted from the object and stored in a variable.
+
+=== Passing Route Parameter
+
+To navigate to a view that accepts a route parameter, use the `NavLink` component from `react-router`. Here’s an example of how to create a link to a view located at `/products/123`:
+
+[source,tsx]
+----
+import { NavLink } from 'react-router';
+...
+<NavLink to="/products/123">Product 123</NavLink>
+----
+
+Another way is to use the `useNavigate` hook to navigate programmatically. Here’s an example of how to use `useNavigate` for programmatic navigation:
+
+[source,tsx]
+----
+import { useNavigate } from 'react-router';
+
+function MyComponent() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/products/123');
+  };
+
+  return (
+    <button onClick={handleClick}>
+      Go to Product 123
+    </button>
+  );
+}
+----
+
+By using either of the above methods, you can navigate to the `/views/products/{productId}.tsx` view that accepts `productId` route parameter. If you navigate to `/products/123`, the `productId` parameter will be extracted and used in the view to fetch the product details for the given ID.
+
+If a parameter is expected in the middle of the route, the method for navigating to the view is the same. For example, to navigate to `/products/123/edit`, use the same methods as above. The `useParams` hook will extract the `productId` parameter from the route, and the view will fetch the product details for the given ID.
+
+
+== Optional Route Parameters
+
