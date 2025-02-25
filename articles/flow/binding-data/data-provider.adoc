@@ -138,6 +138,7 @@ Currently, only `Grid` and `ComboBox` support lazy data binding. To use it, thou
 === Binding a Grid to a Spring Service for Lazy Loading
 
 For example, to bind a `Grid` to load its data on demand from a Spring service, you do:
+
 [source,java]
 ----
 grid.setItemsPageable(productService::list);
@@ -196,23 +197,21 @@ you could do
 
 [source,java]
 ----
-public void bindWithSorting() {
-    Grid<Person> grid = new Grid<>(Person.class);
-    grid.setSortableColumns("name", "email"); // <1>
-    grid.addColumn(person -> person.getTitle())
-            .setHeader("Title")
-            .setKey("title").setSortable(true); // <2>
-    grid.setItems(query -> { // <3>
-        String colKey = null;
-        boolean ascending = true;
-        if (!query.getSortOrders().isEmpty()) { // <4>
-            QuerySortOrder firstSort = query.getSortOrders().get(0);
-            colKey = firstSort.getSorted();
-            ascending = firstSort.getDirection() == SortDirection.ASCENDING;
-        }
-        return personService.list(query.getPage(), query.getOffset(), colKey, ascending).stream();
-    });
-}
+Grid<Person> grid = new Grid<>(Person.class);
+grid.setSortableColumns("name", "email"); // <1>
+grid.addColumn(person -> person.getTitle())
+        .setHeader("Title")
+        .setKey("title").setSortable(true); // <2>
+grid.setItems(query -> { // <3>
+    String colKey = null;
+    boolean ascending = true;
+    if (!query.getSortOrders().isEmpty()) { // <4>
+        QuerySortOrder firstSort = query.getSortOrders().get(0);
+        colKey = firstSort.getSorted();
+        ascending = firstSort.getDirection() == SortDirection.ASCENDING;
+    }
+    return personService.list(query.getPage(), query.getOffset(), colKey, ascending).stream();
+});
 ----
 <1> If you're using property-name-based column definition, `Grid` columns can be made sortable by their property names. The [methodname]`setSortableColumns()` method makes columns with given identifiers sortable and all others non-sortable.
 <2> Alternatively, define a key to your columns, which is passed to the callback, and define the column to be sortable.
@@ -257,33 +256,28 @@ A ComboBox differs in its databinding for Grid in two ways:
 
 The API for connecting a ComboBox to a Spring Service is quite similar to the Grid API:
 
+[source,java]
+----
+combobox.setItemsPageable(productService::list);
 
-You can handle filterable lazy data binding to a Spring Data repository as follows:
+// Assuming a service like
+class ProductService {
+  public List<Product> list(Pageable pageable, String filterString) { ... }
+}
+----
+
+A service used for a ComboBox always has at least two parameters: a `Pageable` instance to define which page to load and a `String` that provides the input the user has typed into the combobox field (empty by default).
+
+Similarly, when not using Spring, you would have
 
 [source,java]
 ----
-ComboBox<Person> cb = new ComboBox<>();
-cb.setItems(
-         query -> repo.findByNameLikeIgnoreCase(
-                 // Add `%` marks to filter for an SQL "LIKE" query
-                 "%" + query.getFilter().orElse("") + "%",
-                 PageRequest.of(query.getPage(), query.getPageSize()))
-                 .stream()
-);
+ComboBox<Person> comboBox = new ComboBox<>(Person.class);
+comboBox.setItems(query -> {
+    return personService.list(query.getPage(), query.getOffset(), query.getFilter().orElse("")).stream(); // <1>
+});
 ----
-
-The above example uses a fetch callback to lazy-load items, and the `ComboBox` fetches more items as the user scrolls the drop-down, until there are no more items returned. If you want the scrollbar in the drop-down to reflect the exact number of items matching the filter, an optional item count callback can be used, as shown in the following example:
-
-[source,java]
-----
-cb.setItems(
-         query -> repo.findByNameLikeIgnoreCase(
-                 "%" + query.getFilter().orElse("") + "%",
-                 PageRequest.of(query.getPage(), query.getPageSize()))
-                 .stream(),
-         query -> (int) repo.countByNameLikeIgnoreCase(
-                 "%" + query.getFilter().orElse("") + "%"));
-----
+<1> The [classname]`Query` object contains the filter
 
 If you want to filter items with a type other than a string, you can provide a filter converter with the fetch callback to get the right type of filter for the fetch query like so:
 
@@ -300,15 +294,32 @@ cb.setItemsWithFilterConverter(
      textFilter -> textFilter.isEmpty() ? null // <2>
              : Integer.parseInt(textFilter));
 ----
-<1> [classname]`Query` object contains the filter of type returned by given converter.
+<1> The [classname]`Query` object contains the filter of type returned by given converter.
 <2> The second callback is used to convert the filter from the combo box text on the client side into an appropriate value for the backend.
 
 
 === Improving Scrolling Behavior
 
-With lazy data binding, the component doesn't know how many items are actually available. When a user scrolls to the end of the scrollable area, `Grid` polls your callbacks for more items. If new items are found, these are added to the component. This causes the relative scrollbar to behave in a strange way as new items are added on the fly.
+With the lazy data binding described above, the component doesn't know how many items are actually available. When a user scrolls to the end of the scrollable area, the component (e.g. `Grid` or `ComboBox`) polls your callbacks for more items. If new items are found, these are added to the component. This pattern, often called infinite scrolling, causes the scrollbar to be updated when new items are added on the fly and does not allow the user to immediately scroll to the end.
 
-The usability can be improved by providing an estimate of the actual number of items in the binding code. The adjustment happens through a [classname]`DataView` instance, which is returned by the [methodname]`setItems()` method. For example, to configure the estimate of rows and how the "virtual row count" is adjusted when the user scrolls down, you could do this:
+The usability can be improved by either providing the exact number of items available or providing an estimate of the number of items. 
+
+If your service is able to provide the exact number of items available, you can add an additional "count" callback to `setItems` or `setItemsPageable` like
+
+[source,java]
+----
+grid.setItemsPageable(productService::list, productService::count);
+
+// Assuming a service like
+class ProductService {
+  public List<Product> list(Pageable pageable) { ... }
+  public long count(Pageable pageable) { ... } <1>
+}
+----
+<1> The count method should return the total number of items available. The pageable instance is also passed to the count method but in most cases you do not need to take it into account.
+
+If your service does not provide an exact count or requesting it is too costly (i.e. takes too long), you can provide an estimate instead.
+This you can do through a [classname]`DataView` instance, which is returned by the [methodname]`setItems()` method. For example, to configure the estimate of rows and how the "virtual row count" is adjusted when the user scrolls down, you could do this:
 
 [source,java]
 ----
