@@ -14,13 +14,13 @@ public class SecurityConfig extends VaadinWebSecurity {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
 
-        /* Disable on docs app, but leave in place to be used as snippet
+        /* Disable on docs app, but leave in place to be used as snippet // hidden-source-line
         // tag::download[]
         // Restrict access to FileDownloadEndpoint to authenticated users
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(new AntPathRequestMatcher("/download/**")).authenticated());
         // end::download[]
-        */
+        */ // hidden-source-line
     }
 
 }
