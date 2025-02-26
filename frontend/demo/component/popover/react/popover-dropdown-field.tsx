@@ -69,16 +69,19 @@ function Example() {
         label="Search date range"
         value={from.value && to.value ? `${from.value} − ${to.value}` : ''}
         style={{ width: '340px' }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown') {
+            opened.value = true;
+          }
+        }}
       >
         <Icon slot="suffix" icon="lumo:dropdown" />
       </TextField>
       {/* tag::snippet[] */}
       <Popover
         for="range-field"
-        trigger={['click', 'focus']}
-        focusDelay={0}
         modal
-        contentWidth="325px"
+        contentWidth="340px"
         position="bottom-start"
         accessibleName="Select a date range"
         opened={opened.value}
