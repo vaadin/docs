@@ -1,8 +1,8 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useDataProvider } from '@vaadin/hilla-react-crud';
+import { useGridDataProvider } from '@vaadin/hilla-react-crud';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
@@ -18,15 +18,12 @@ function Example() {
 
   // Create a data provider that calls a backend service with a
   // Spring Data pageable and the search term
-  const { dataProvider, refresh } = useDataProvider({
-    list: async (pageable) => GridPersonService.list(pageable, searchTerm.value),
-    count: () => GridPersonService.count(searchTerm.value),
-  });
-
-  // Refresh the data provider when the search term changes
-  useEffect(() => {
-    refresh();
-  }, [searchTerm.value]);
+  const dataProvider = useGridDataProvider(
+    async (pageable) => GridPersonService.list(pageable, searchTerm.value),
+    // Providing the search term as a dependency will automatically
+    // refresh the data provider when the search term changes
+    [searchTerm.value]
+  );
 
   return (
     <VerticalLayout theme="spacing">
