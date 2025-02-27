@@ -100,3 +100,55 @@ If a parameter is expected in the middle of the route, the method for navigating
 
 == Optional Route Parameters
 
+Views can also have optional route parameters. This means that the view can be navigated to with or without the parameter. To make a route parameter optional, use the doubly curly braces around the parameter name when naming the view file. For example, to create a view that accepts an optional `categoryName` parameter, name the view as `{{categoryName}}.tsx`. The directory structure under the `views` looks like this:
+
+[source]
+----
+views/
+└── products
+    └── {{categoryName}}.tsx <1>
+----
+
+<1> The view file that accepts the `categoryName` optional parameter. The route for this view is in form of `/products/{{categoryName}}`, where `categoryName` is an optional parameter. The routes such as `/products`, `/products/electronics`, `/products/clothing`, etc., match this view. Note that a view optional parameter should be able to handle both cases when the parameter is present and when it's not. Here's an example of a view that accepts an optional `categoryName` parameter:
+
+[source,tsx]
+.views/products/{{categoryName}}.tsx
+----
+import { useParams } from "react-router";
+import { ProductService } from "Frontend/generated/endpoints.js";
+import { useCallback, useEffect } from "react";
+import { useSignal } from "@vaadin/hilla-react-signals";
+
+export default function ProductByCategoriesView() {
+  const { categoryName } = useParams(); <1>
+  const products = useSignal<string[]>([]);
+
+  const fetchData = useCallback(async()=> {
+    if (categoryName == undefined) { <2>
+      products.value = await ProductService.allProducts();
+    } else {
+      products.value = await ProductService.productsInCategory(categoryName);
+    }
+  }, [categoryName]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return (
+    <>
+      <h3>Products from {categoryName ? `'${categoryName}' category` : "all categories"}:</h3>
+      <div>
+        <ul>{products.value.map((product) => (
+          <li key={product}>{product}</li>
+        ))}</ul>
+      </div>
+    </>
+  );
+}
+----
+<1> The `useParams` hook returns an object containing the route parameters. In this case, the `categoryName` parameter is extracted from the object and stored in a variable.
+<2> The `categoryName` parameter is checked to determine whether it's present or not. If it's not present, all products are fetched. Otherwise, products in the specified category are fetched.
+
+In the above example, the `ProductByCategoriesView` fetches all products when the `categoryName` parameter is not present. When the `categoryName` parameter is present, it fetches the products in the specified category. The view displays the products in the specified category or all products if the `categoryName` parameter is not present.
+
