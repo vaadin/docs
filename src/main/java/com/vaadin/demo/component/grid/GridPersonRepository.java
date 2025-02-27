@@ -14,8 +14,6 @@ import java.util.List;
 public interface GridPersonRepository extends JpaRepository<Person, Long> {
     List<Person> findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(
             String fullName, String profession, Pageable pageable);
-    long countByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(
-            String fullName, String profession);
 }
 */ // hidden-source-line
 // end::snippet[]
@@ -24,8 +22,5 @@ public interface GridPersonRepository extends JpaRepository<Person, Long> {
 public class GridPersonRepository { // hidden-source-line
     List<Person> findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(String fullName, String profession, Pageable pageable) { // hidden-source-line
         return List.of(); // hidden-source-line
-    } // hidden-source-line
-    long countByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(String fullName, String profession) { // hidden-source-line
-        return 0; // hidden-source-line
     } // hidden-source-line
 }// hidden-source-line

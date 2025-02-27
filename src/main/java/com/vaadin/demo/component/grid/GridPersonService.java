@@ -23,11 +23,5 @@ public class GridPersonService {
         // For this example, we're using a Spring Data repository
         return personRepository.findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(filter, filter, pageable);
     }
-
-    public long count(String filter) {
-        // Implement your data counting logic here
-        // For this example, we're using a Spring Data repository
-        return personRepository.countByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(filter, filter);
-    }
 }
 // end::snippet[]

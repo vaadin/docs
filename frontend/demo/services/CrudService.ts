@@ -1,4 +1,4 @@
-import type { CountService, CrudService } from '@vaadin/hilla-react-crud';
+import type { CrudService } from '@vaadin/hilla-react-crud';
 import type FilterUnion from 'Frontend/generated/com/vaadin/hilla/crud/filter/FilterUnion';
 import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStringFilter/Matcher';
 import type Pageable from 'Frontend/generated/com/vaadin/hilla/mappedtypes/Pageable';
@@ -69,7 +69,7 @@ function applyFilter<T>(item: T, filter: FilterUnion): boolean {
   return matchers.includes(filter.matcher);
 }
 
-export class CrudMockService<T extends AbstractEntity> implements CrudService<T>, CountService<T> {
+export class CrudMockService<T extends AbstractEntity> implements CrudService<T> {
   private items: T[];
 
   constructor(items: T[]) {
@@ -109,12 +109,6 @@ export class CrudMockService<T extends AbstractEntity> implements CrudService<T>
     const start = pageable.pageNumber * pageable.pageSize;
     const end = start + pageable.pageSize;
     return Promise.resolve(filtered.slice(start, end));
-  }
-
-  async count(filter: FilterUnion | undefined): Promise<number> {
-    return Promise.resolve(
-      this.items.filter((item) => !filter || applyFilter(item, filter)).length
-    );
   }
 
   async save(item: T): Promise<T> {
