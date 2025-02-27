@@ -10,7 +10,7 @@ import { formatISO, subMonths, subWeeks, subYears } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DatePickerChangeEvent } from '@vaadin/date-picker';
-import type { PopoverOpenedChangedEvent, PopoverTrigger } from '@vaadin/popover';
+import type { PopoverOpenedChangedEvent } from '@vaadin/popover';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -37,9 +37,6 @@ export class Example extends LitElement {
   opened = false;
 
   @state()
-  trigger: PopoverTrigger[] = ['click', 'focus'];
-
-  @state()
   presets = [
     { label: 'Today', value: 'today' },
     { label: 'Last week', value: 'last-week' },
@@ -56,16 +53,15 @@ export class Example extends LitElement {
         label="Search date range"
         style="width: 340px"
         .value="${this.from && this.to ? `${this.from} − ${this.to}` : ''}"
+        @keydown="${this.onKeyDown}"
       >
         <vaadin-icon icon="lumo:dropdown" slot="suffix"></vaadin-icon>
       </vaadin-text-field>
       <!-- tag::snippet[] -->
       <vaadin-popover
         for="range-field"
-        .trigger="${this.trigger}"
-        focus-delay="0"
         modal
-        content-width="325px"
+        content-width="340px"
         position="bottom-start"
         accessible-name="Select a date range"
         .opened="${this.opened}"
@@ -105,6 +101,12 @@ export class Example extends LitElement {
     `;
   }
   // end::snippet[]
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown') {
+      this.opened = true;
+    }
+  }
 
   onFromChange(event: DatePickerChangeEvent) {
     this.range = '';
