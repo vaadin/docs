@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Shortcuts;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
@@ -36,11 +38,12 @@ public class PopoverDropdownField extends Div {
 
         popover = new Popover();
         popover.setModal(true);
-        popover.setWidth("325px");
+        popover.setWidth("340px");
         popover.setAriaLabel("Select a date range");
-        popover.setOpenOnFocus(true);
-        popover.setFocusDelay(0);
         popover.setTarget(field);
+
+        Shortcuts.addShortcutListener(field, popover::open, Key.ARROW_DOWN)
+                .listenOn(field);
         // end::snippet[]
 
         rangeSelector = new Select<>();

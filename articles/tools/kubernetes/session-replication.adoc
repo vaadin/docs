@@ -47,9 +47,11 @@ For more information on serialization process, consult the Java documentation on
 
 The following sections contain best practices on how to code a fully serializable Vaadin application.
 
+
 === Collaboration Kit
 
 If you're using Collaboration Kit in an application, you may need to follow some <<{articles}/tools/collaboration/advanced/serialization#,specific serialization instructions>>.
+
 
 === Serializable Object as UI Component Members
 
@@ -273,6 +275,75 @@ When a serialization or a deserialization error happens, Kubernetes Kit provides
 The `SessionSerializationCallback` interface also provides the `onSerializationSuccess()` and `onDeserializationSuccess()` callback methods which can be used to add custom steps after a successful serialization or deserialization in the same way as for the error callbacks.
 
 
+=== Unserializable Component Wrapper
+
+A https://github.com/vaadin/kubernetes-kit/blob/main/kubernetes-kit-starter/src/main/java/com/vaadin/kubernetes/starter/sessiontracker/UnserializableComponentWrapper.java[wrapper component] that allows an otherwise unserializable [classname]`com.vaadin.flow.component.Component` to be serialized and deserialized using the provided serializer and deserializer functions.
+
+The unserializable component wrapper should only be used in cases where there's no other option. The preferred way is to make sure that your own components are fully serializable.
+
+During serialization, the serializer generates a serializable state object from the wrapped component. This state object is intended to store serializable and cacheable properties of the component. Upon deserialization, the deserializer reconstructs the component from scratch using the state object, after the entire object graph has been restored. Developers need to ensure the necessary component properties are properly persisted and restored. Also, the component listeners need to be registered again.
+
+Unserializable components are temporarily removed from the component tree during serialization and reinserted after the serialization is completed. Any [classname]`com.vaadin.flow.component.UI` changes caused by their removal and re-addition are silently ignored.
+
+[NOTE]
+Any attach or detach listeners registered on the wrapped component are still triggered.
+
+Below is an example using the unserializable component wrapper to wrap a [classname]`com.vaadin.flow.component.spreadsheet.Spreadsheet` component which is not fully serializable:
+
+[source,java]
+----
+class SpreadsheetView extends VerticalLayout {
+
+    public SpreadsheetView() {
+        setSizeFull();
+        Spreadsheet spreadsheet = new Spreadsheet();
+        spreadsheet.createCell(1, 0, "Nicolaus");
+        spreadsheet.createCell(1, 1, "Copernicus");
+        configureSpreadsheet(spreadsheet);
+        var wrapper = new UnserializableComponentWrapper<>(spreadsheet,
+                SpreadsheetView::serializer, SpreadsheetView::deserializer);
+        addAndExpand(wrapper);
+    }
+
+    private static WorkbookData serializer(Spreadsheet sheet) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            sheet.write(baos);
+            String selection = Optional
+                    .ofNullable(sheet.getCellSelectionManager()
+                            .getSelectedCellRange())
+                    .map(CellRangeAddress::formatAsString).orElse(null);
+            return new WorkbookData(baos.toByteArray(), selection);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static Spreadsheet deserializer(WorkbookData data) {
+        try {
+            Spreadsheet sheet = new Spreadsheet(
+                    new ByteArrayInputStream(data.data()));
+            if (data.selection() != null) {
+                sheet.setSelection(data.selection());
+            }
+            configureSpreadsheet(sheet);
+            return sheet;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static void configureSpreadsheet(Spreadsheet sheet) {
+        sheet.setLocale(Locale.getDefault());
+        sheet.setWidth("800px");
+    }
+
+    private record WorkbookData(byte[] data,
+            String selection) implements Serializable {
+    }
+}
+----
+
+
 == Session Replication Issues
 
 Despite applying the mentioned tips, session replication still may fail because of issues during serialization or deserialization.
@@ -284,7 +355,7 @@ Common issues with serialization and deserialization are presented in the follow
 
 === SerializedLambda ClassCastException
 
-A common Vaadin application extensively uses lambda expression for components listeners, binder, etc. When serializing and deserializing lambda expressions, it may happen to face [classname]`ClassCastException` with cryptic messages. For instance, `SerializedLambda cannot be cast to class <className>` on serialization, nor can `SerializedLambda be assigned to field <fieldName> of type <className>` on deserialization.
+A common Vaadin application extensively uses lambda expression for components listeners, binder, etc. When serializing and deserializing lambda expressions, it may happen to face [classname]`ClassCastException` with cryptic messages. For instance, `SerializedLambda` cannot be cast to class `<className>` on serialization, nor can `SerializedLambda` be assigned to field `<fieldName>` of type `<className>` on deserialization.
 
 Usually, the cause is a self reference. The lambda expression captures an object instance, but the expression is itself a member of the object graph of the captured object.
 
