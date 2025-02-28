@@ -40,6 +40,7 @@ public class PopoverNotificationPanel extends Div {
         popover.addThemeVariants(PopoverVariant.ARROW,
                 PopoverVariant.LUMO_NO_PADDING);
         popover.setPosition(PopoverPosition.BOTTOM);
+        popover.setModal(true);
         popover.setAriaLabelledBy("notifications-heading");
         // end::snippet[]
 
