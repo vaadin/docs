@@ -8,5 +8,291 @@ order: 5
 
 
 = Add a Form in Flow
+:toclevels: 2
 
 TODO
+
+This guide covers the basics to get you started. For more details, see the <<{articles}/flow/binding-data#,Flow Forms & Data Binding Reference Guide>>.
+
+== Laying Out the Fields
+
+In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column.
+
+[IMPORTANT]
+Layout components are not the same as router layouts. However, you can build a router layout using layout components.
+
+The follow example shows how to build a two-column project proposal form with various input components:
+
+[source,java]
+----
+@Route
+public class ProposalFormView extends VerticalLayout {
+
+    public ProposalFormView() {
+        var form = new FormLayout(); // <1>
+        add(form); // <2>
+
+        var title = new TextField("Title");
+        form.add(title); // <3>
+
+        var proposalType = new ComboBox<ProposalType>("Proposal Type");
+        proposalType.setItems(ProposalType.values());
+        form.add(proposalType);
+
+        var description = new TextArea("Description");
+        form.add(description);
+        form.setColspan(description, 2); // <4>
+
+        var startDate = new DatePicker("Start Date");
+        form.add(startDate);
+
+        var endDate = new DatePicker("End Date");
+        form.add(endDate);
+
+        var submitButton = new Button("Submit");
+        submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var cancelButton = new Button("Cancel");
+
+        add(new HorizontalLayout(submitButton, cancelButton)); // <5>
+    }
+}
+----
+<1> Creates a new `FormLayout`...
+<2> ... and adds it to `ProposalFormView`.
+<3> Form fields are added to the form layout, not to the view itself.
+<4> Since `FormLayout` has two columns by default, this makes the description field take up the full width of the layout.
+<5> The buttons are added below the form layout, aligned to the left with the primary button first.
+
+The finished form would look like this:
+
+[.fill]
+image::images/example-form.png[A screenshot of a form]
+
+`FormLayout` is progressive, which means that if there is not enough room, the layout adjusts to a single column, with each input component on its own row. It also has other features not presented here. For
+more information see the <<{articles}/components/form-layout#,FormLayout Documentation>>.
+
+
+== Introducing Binder
+
+While defining the fields is the first step, you have to bind them to a data object using Vaadin's [classname]`Binder` class to manage data flow between the UI and the <<../../business-logic/add-service#,application services>>. The binder calls this object a _bean_, since you originally bound fields to JavaBean properties. Nowadays you can also use Java records as data objects.
+
+When you bind a form to a data object, you associate a form field with a property of the data object. When you read data from the data object, the field is populated with the corresponding property value. When you write data back to the data object, the property is populated with the corresponding field value.
+
+You can attach a converter to a binding that allows the field and data object property to have different types. For instance, you could use a `String` in the field, and an `EmailAddress` value object in the data object.
+
+You can also attach validators, both to individual fields and to the form as a whole. This is covered in the <<../validate#,Validate a Form Guide>>.
+
+
+== Binding to a Bean
+
+When you bind to a bean, you need a *getter method* and a *setter method* for every field you want to bind. When you populate the form, the getter method is called. When you save the form, the setter method is called.
+
+You can also make a read-only binding, in which case a getter method is enough. 
+
+.JavaBean Conventions Are Optional
+[IMPORTANT]
+You can name your getters and setters any way you like, as long as their method descriptors match what's expected for property access methods. A getter should take no parameters and return a value, while a setter should accept a single parameter and return `void`.
+
+Continuing on the earlier project proposal form example, you could create a JavaBean that looks like this:
+
+.Proposal.java
+[source,java]
+----
+public class Proposal {
+    private String title;
+    private ProposalType type;
+    private String description;
+    private LocalDate startDate;
+    private LocalDate endDate;
+
+    public String getTitle() {
+        return title;
+    }
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public ProposalType getType() {
+        return type;
+    }
+    public void setType(ProposalType type) {
+        this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+}
+----
+
+To bind this bean to the form, you need to create a [classname]`Binder` and register each field with it. You then associate the field with the corresponding accessor methods, like this:
+
+[source,java]
+----
+@Route
+public class ProposalFormView extends VerticalLayout {
+
+    public ProposalFormView() {
+        var form = new FormLayout();
+        add(form);
+
+        // Creating and adding fields omitted for clarity
+        // ...
+
+ // tag::snippet[]
+        var binder = new Binder<Proposal>();
+        binder.forField(title) // <1>
+            // Converters and validators would go here
+            .bind(Proposal::getTitle, Proposal::setTitle); // <2>
+        binder.forField(proposalType)
+            .bind(Proposal::getType, Proposal::setType);
+        binder.forField(description)
+            .bind(Proposal::getDescription, Proposal::setDescription);
+        binder.forField(startDate)
+            .bind(Proposal::getStartDate, Proposal::setStartDate);
+        binder.forField(endDate)
+            .bind(Proposal::getEndDate, Proposal::setEndDate);
+// end::snippet[]
+    }
+}
+----
+<1> Creates a binding for the `title` field.
+<2> Reads from the bean by calling `getTitle()` and writes to it using `setTitle()`.
+
+
+=== Advantages with Bean Bindings
+
+Since you use references for the accessor methods, the compiler complains if you change the name of any of the methods without updating the form bindings.
+
+Furthermore, since the setter method is called when the form is saved, you can perform extra actions when the binder calls a setter. For example, you could update a change log inside the bean whenever a setter is called. You could then use this log to only send the changes to the application service, as opposed to the entire bean.
+
+
+=== Disadvantages with Bean Bindings
+
+The binder is one-directional only by design. If you manually call a setter method on the bean, the form won't update itself automatically. This can be confusing and lead to bugs in the code.
+
+
+== Binding to a Record
+
+When you bind to a record, you bind a field to a *record component*. When the form is populated, the binder read's the record component's value. When the form is saved, the binder creates a new record instance. Since records are populated through their constructors only, *you must create a binding for each record component*.
+
+A data record for the project proposal example could look like this:
+
+.Proposal.java
+[source,java]
+----
+public record Proposal(
+    String title, 
+    ProposalType type, 
+    String description, 
+    LocalDate startDate, 
+    LocalDate endDate
+) {
+}
+----
+
+There is no way of referencing a record component in code. Instead, you have to use the *record component names*. Furthermore, you have to pass the record class to the binder constructor so that it can create new instances:
+
+[source,java]
+----
+@Route
+public class ProposalFormView extends VerticalLayout {
+
+    public ProposalFormView() {
+        var form = new FormLayout();
+        add(form);
+
+        // Creating and adding fields omitted for clarity
+        // ...
+
+ // tag::snippet[]
+        var binder = new Binder<>(Proposal.class); // <1>
+        binder.forField(title)
+            // Converters and validators would go here
+            .bind("title"); // <2>
+        binder.forField(proposalType).bind("type");
+        binder.forField(description).bind("description");
+        binder.forField(startDate).bind("startDate");
+        binder.forField(endDate).bind("endDate");
+// end::snippet[]
+    }
+}
+----
+<1> Pass in the `Proposal` record class to the binder constructor.
+<2> Use the record component name.
+
+
+=== Advantages with Record Bindings
+
+Records are less verbose and reduce the boilerplate code you'd have to create -- or generate -- using JavaBeans.
+
+Furthermore, records are immutable. This clarifies when a form is populated and saved, and reduces the risk for bugs.
+
+
+=== Disadvantages with Record Bindings
+
+You must use record component names when creating field bindings. If you change the name of a record component and forget to update the binding, *you won't notice until during runtime.* 
+
+The `bind()` method would notice that no such record component exists, and throw an exception.
+
+To mitigate this, you can create a unit test that instantiates the form, like this:
+
+[source,java]
+----
+class ProposalFormViewTest {
+    @Test
+    void instantiating_view_throws_no_exceptions() {
+        new ProposalFormView(null);
+    }
+}
+----
+
+Since the `bind()` method is called in the constructor, this test would fail if it tried to bind a field to a non-existent record component.
+
+You can also create constants for each component name and use them instead of string literals when making bindings. The constants could look like this:
+
+.Proposal.java
+[source,java]
+----
+public record Proposal(
+    String title, 
+    ProposalType type, 
+    String description, 
+    LocalDate startDate, 
+    LocalDate endDate
+) {
+    public static final String PROP_TITLE = "title";
+    public static final String PROP_TYPE = "type";
+    // And so on...
+}
+----
+
+And you would use them in bindings like this:
+
+[source,java]
+----
+binder.forField(title).bind(Proposal.PROP_TITLE);
+binder.forField(proposalType).bind(Proposal.PROP_TYPE);
+// And so on...
+----
+
+
+// TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.
