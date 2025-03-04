@@ -2,7 +2,8 @@
 // During the build, the `Frontend/generated/endpoints` import is replaced with this module
 import DashboardService from 'Frontend/demo/services/DashboardService';
 import EmployeeService from 'Frontend/demo/services/EmployeeService';
+import GridPersonService from 'Frontend/demo/services/GridPersonService';
 import ProductService from 'Frontend/demo/services/ProductService';
 export * from 'Frontend/generated/endpoints.js';
 
-export { DashboardService, EmployeeService, ProductService };
+export { DashboardService, EmployeeService, ProductService, GridPersonService };
