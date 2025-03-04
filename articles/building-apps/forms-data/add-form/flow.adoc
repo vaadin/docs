@@ -16,7 +16,7 @@ This guide covers the basics to get you started. For more details, see the <<{ar
 
 == Laying Out the Fields
 
-In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column.
+In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column. You also often end up combinding these with <<{articles}/components/horizontal-layout#,HorizontalLayout>>, which lays out its components in a single row.
 
 [IMPORTANT]
 Layout components are not the same as router layouts. However, you can build a router layout using layout components.
@@ -73,16 +73,65 @@ image::images/example-form.png[A screenshot of a form]
 more information see the <<{articles}/components/form-layout#,FormLayout Documentation>>.
 
 
+== Introducing Form Model
+
+// TODO Some of this section may be better suited for the Overview page than under Flow. It depends on the Hilla-article.
+Forms are used to display and edit data. This data comes from a _form model_, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model, ensuring a seamless flow of data between the form and the underlying data source.
+
+Form models are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, transformation, or persistence. From an architectural point of view, *the form models belong to the application layer* rather than the presentation layer.
+// TODO When signal is added to the mix, we get a View Model, whereas the form model takes the role of the M in MVVM.
+
+
 == Introducing Binder
 
-While defining the fields is the first step, you have to bind them to a data object using Vaadin's [classname]`Binder` class to manage data flow between the UI and the <<../../business-logic/add-service#,application services>>. The binder calls this object a _bean_, since you originally bound fields to JavaBean properties. Nowadays you can also use Java records as data objects.
-
-When you bind a form to a data object, you associate a form field with a property of the data object. When you read data from the data object, the field is populated with the corresponding property value. When you write data back to the data object, the property is populated with the corresponding field value.
+Vaadin offers a [classname]`Binder` class that binds fields to form model properties. The `Binder` ensures a two-way connection between form fields and model properties. When loading a form, it populates fields with corresponding property values. When saving, it updates the model with the modified field values.
 
 You can attach a converter to a binding that allows the field and data object property to have different types. For instance, you could use a `String` in the field, and an `EmailAddress` value object in the data object.
 
 You can also attach validators, both to individual fields and to the form as a whole. This is covered in the <<../validate#,Validate a Form Guide>>.
 
+.Binder is one-directional
+[IMPORTANT]
+Any changes made directly to the form model (outside the binder) won't automatically reflect in the fields. To synchronize them, you need to reload the form.
+
+
+== Types of Form Models
+
+The form model can be a simple data container that only holds values, or it can be a more advanced model that includes business logic, such as validation rules. Each approach has its own advantages and trade-offs, depending on the complexity of the application and the level of control needed over the data.
+
+
+=== Simple Form Models
+
+Simple form models are typically implemented as records. *Every field in the form corresponds to a record component.*
+
+When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
+
+Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs. As a best practice, *start with a simple model*. If your form requires additional business logic or mutable state, consider upgrading to an advanced model.
+
+
+=== Advanced Form Models
+
+Advanced form models are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, the setter method can be left out.
+
+.JavaBean Conventions Are Optional
+[IMPORTANT]
+You can name your getters and setters any way you like, as long as their method descriptors match what's expected for property access methods. A getter should take no parameters and return a value, while a setter should accept a single parameter and return `void`.
+
+You can add additional business logic to the setters. For instance, you could perform validation, or maintain a change log inside the bean.
+
+When a form is loaded, the `Binder` populates each field with data from the corresponding getter. When the form is saved, the `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
+
+[NOTE]
+You can also configure the `Binder` to call a setter directly when a field is updated. See the <<../load-save-form#,Load and Save a Form>> guide fore details.
+
+Beans allow you to make more advanced forms, but also require more boilerplate code than records. Furthermore, since they are mutable, there is a higher risk of bugs, especially when rolling back changes.
+
+=== Entities as Form Models
+
+In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as form models. However, this tightly couples your domain model to the user interface, which can lead to maintainability issues. If form-specific requirements diverge from your domain model over time, consider introducing a separate form model and handling data mapping within the application service.
+
+
+// TODO Continue editing here! The sections below may no longer be up to date with the text above. There is at least some duplication.
 
 == Binding to a Bean
 
