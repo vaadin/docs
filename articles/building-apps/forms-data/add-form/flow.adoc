@@ -10,13 +10,11 @@ order: 5
 = Add a Form in Flow
 :toclevels: 2
 
-TODO
-
-This guide covers the basics to get you started. For more details, see the <<{articles}/flow/binding-data#,Flow Forms & Data Binding Reference Guide>>.
+In this guide, you'll learn the basics of creating a form in Flow and binding it to a form model. You'll learn the difference between using a JavaBean and a Java record as form model, and their pros and cons. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
 
 == Laying Out the Fields
 
-In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column. You also often end up combinding these with <<{articles}/components/horizontal-layout#,HorizontalLayout>>, which lays out its components in a single row.
+In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column. You also often end up combining these with <<{articles}/components/horizontal-layout#,HorizontalLayout>>, which lays out its components in a single row.
 
 [IMPORTANT]
 Layout components are not the same as router layouts. However, you can build a router layout using layout components.
@@ -70,29 +68,25 @@ The finished form would look like this:
 image::images/example-form.png[A screenshot of a form]
 
 `FormLayout` is progressive, which means that if there is not enough room, the layout adjusts to a single column, with each input component on its own row. It also has other features not presented here. For
-more information see the <<{articles}/components/form-layout#,FormLayout Documentation>>.
+more information see the <<{articles}/components/form-layout#,FormLayout>> documentation.
 
 
 == Introducing Form Model
 
 // TODO Some of this section may be better suited for the Overview page than under Flow. It depends on the Hilla-article.
-Forms are used to display and edit data. This data comes from a _form model_, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model, ensuring a seamless flow of data between the form and the underlying data source.
+Forms are used to display and edit data. This data comes from a _form model_, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model.
 
-Form models are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, transformation, or persistence. From an architectural point of view, *the form models belong to the application layer* rather than the presentation layer.
+Form models are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, and persistence. From an architectural point of view, *the form models belong to the application layer* rather than the presentation layer.
 // TODO When signal is added to the mix, we get a View Model, whereas the form model takes the role of the M in MVVM.
 
 
 == Introducing Binder
 
-Vaadin offers a [classname]`Binder` class that binds fields to form model properties. The `Binder` ensures a two-way connection between form fields and model properties. When loading a form, it populates fields with corresponding property values. When saving, it updates the model with the modified field values.
+Vaadin offers a [classname]`Binder` class that binds fields to form model properties, ensuring that changes made in the form update the model. However, since Binder is one-directional, *updates to the model outside of Binder won't automatically reflect in the form fields* unless manually refreshed.
 
-You can attach a converter to a binding that allows the field and data object property to have different types. For instance, you could use a `String` in the field, and an `EmailAddress` value object in the data object.
+When loading a form, it populates fields with corresponding property values. When saving, it updates the model with the modified field values.
 
-You can also attach validators, both to individual fields and to the form as a whole. This is covered in the <<../validate#,Validate a Form Guide>>.
-
-.Binder is one-directional
-[IMPORTANT]
-Any changes made directly to the form model (outside the binder) won't automatically reflect in the fields. To synchronize them, you need to reload the form.
+You can attach a converter to a binding to transform between field values and model properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the model. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
 
 
 == Types of Form Models
@@ -106,18 +100,18 @@ Simple form models are typically implemented as records. *Every field in the for
 
 When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
 
-Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs. As a best practice, *start with a simple model*. If your form requires additional business logic or mutable state, consider upgrading to an advanced model.
+Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs. As a best practice, *start with a simple model*. If your form requires extra business logic or mutable state, consider upgrading to an advanced model.
 
 
 === Advanced Form Models
 
-Advanced form models are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, the setter method can be left out.
+Advanced form models are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, you can leave out the setter method.
 
 .JavaBean Conventions Are Optional
 [IMPORTANT]
 You can name your getters and setters any way you like, as long as their method descriptors match what's expected for property access methods. A getter should take no parameters and return a value, while a setter should accept a single parameter and return `void`.
 
-You can add additional business logic to the setters. For instance, you could perform validation, or maintain a change log inside the bean.
+You can add business logic to the setters. For instance, you could perform validation, or maintain a change log inside the bean.
 
 When a form is loaded, the `Binder` populates each field with data from the corresponding getter. When the form is saved, the `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
 
@@ -126,22 +120,13 @@ You can also configure the `Binder` to call a setter directly when a field is up
 
 Beans allow you to make more advanced forms, but also require more boilerplate code than records. Furthermore, since they are mutable, there is a higher risk of bugs, especially when rolling back changes.
 
+
 === Entities as Form Models
 
-In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as form models. However, this tightly couples your domain model to the user interface, which can lead to maintainability issues. If form-specific requirements diverge from your domain model over time, consider introducing a separate form model and handling data mapping within the application service.
+In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as form models. However, using entities as form models tightly couples your domain logic to the UI. This can create maintainability issues, especially if UI requirements evolve separately from the business logic. If this happens, it's better to introduce a dedicated form model and handle data conversion in the application service.
 
-
-// TODO Continue editing here! The sections below may no longer be up to date with the text above. There is at least some duplication.
 
 == Binding to a Bean
-
-When you bind to a bean, you need a *getter method* and a *setter method* for every field you want to bind. When you populate the form, the getter method is called. When you save the form, the setter method is called.
-
-You can also make a read-only binding, in which case a getter method is enough. 
-
-.JavaBean Conventions Are Optional
-[IMPORTANT]
-You can name your getters and setters any way you like, as long as their method descriptors match what's expected for property access methods. A getter should take no parameters and return a value, while a setter should accept a single parameter and return `void`.
 
 Continuing on the earlier project proposal form example, you could create a JavaBean that looks like this:
 
@@ -227,23 +212,9 @@ public class ProposalFormView extends VerticalLayout {
 <2> Reads from the bean by calling `getTitle()` and writes to it using `setTitle()`.
 
 
-=== Advantages with Bean Bindings
-
-Since you use references for the accessor methods, the compiler complains if you change the name of any of the methods without updating the form bindings.
-
-Furthermore, since the setter method is called when the form is saved, you can perform extra actions when the binder calls a setter. For example, you could update a change log inside the bean whenever a setter is called. You could then use this log to only send the changes to the application service, as opposed to the entire bean.
-
-
-=== Disadvantages with Bean Bindings
-
-The binder is one-directional only by design. If you manually call a setter method on the bean, the form won't update itself automatically. This can be confusing and lead to bugs in the code.
-
-
 == Binding to a Record
 
-When you bind to a record, you bind a field to a *record component*. When the form is populated, the binder read's the record component's value. When the form is saved, the binder creates a new record instance. Since records are populated through their constructors only, *you must create a binding for each record component*.
-
-A data record for the project proposal example could look like this:
+A record for the project proposal example could look like this:
 
 .Proposal.java
 [source,java]
@@ -258,7 +229,7 @@ public record Proposal(
 }
 ----
 
-There is no way of referencing a record component in code. Instead, you have to use the *record component names*. Furthermore, you have to pass the record class to the binder constructor so that it can create new instances:
+Unlike JavaBeans, records do not have setter methods, so `Binder` uses *string-based mapping* to bind fields to record components. Furthermore, you have to pass the record class to the binder constructor so that it can create new instances:
 
 [source,java]
 ----
@@ -289,18 +260,9 @@ public class ProposalFormView extends VerticalLayout {
 <2> Use the record component name.
 
 
-=== Advantages with Record Bindings
+=== Avoiding Invalid Record Component Names
 
-Records are less verbose and reduce the boilerplate code you'd have to create -- or generate -- using JavaBeans.
-
-Furthermore, records are immutable. This clarifies when a form is populated and saved, and reduces the risk for bugs.
-
-
-=== Disadvantages with Record Bindings
-
-You must use record component names when creating field bindings. If you change the name of a record component and forget to update the binding, *you won't notice until during runtime.* 
-
-The `bind()` method would notice that no such record component exists, and throw an exception.
+If you rename a record component but forget to update the corresponding binding, it will only cause an error at runtime. The `bind()` method would notice that no such record component exists, and throw an exception.
 
 To mitigate this, you can create a unit test that instantiates the form, like this:
 
@@ -316,7 +278,7 @@ class ProposalFormViewTest {
 
 Since the `bind()` method is called in the constructor, this test would fail if it tried to bind a field to a non-existent record component.
 
-You can also create constants for each component name and use them instead of string literals when making bindings. The constants could look like this:
+To reduce this risk, you can also use constants for record component names instead of string literals. The constants could look like this:
 
 .Proposal.java
 [source,java]
