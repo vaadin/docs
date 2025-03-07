@@ -12,6 +12,7 @@ order: 5
 
 In this guide, you'll learn the basics of creating a form in Flow and binding it to a form model. You'll learn the difference between using a JavaBean and a Java record as form model, and their pros and cons. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
 
+
 == Laying Out the Fields
 
 In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column. You also often end up combining these with <<{articles}/components/horizontal-layout#,HorizontalLayout>>, which lays out its components in a single row.
@@ -23,51 +24,38 @@ The follow example shows how to build a two-column project proposal form with va
 
 [source,java]
 ----
-@Route
-public class ProposalFormView extends VerticalLayout {
+public class ProposalForm extends Composite<FormLayout> { // <1>
 
-    public ProposalFormView() {
-        var form = new FormLayout(); // <1>
-        add(form); // <2>
-
+    public ProposalForm() {
         var title = new TextField("Title");
-        form.add(title); // <3>
+        getContent().add(title); // <2>
 
         var proposalType = new ComboBox<ProposalType>("Proposal Type");
         proposalType.setItems(ProposalType.values());
-        form.add(proposalType);
+        getContent().add(proposalType);
 
         var description = new TextArea("Description");
-        form.add(description);
-        form.setColspan(description, 2); // <4>
+        getContent().add(description);
+        getContent().setColspan(description, 2); // <3>
 
         var startDate = new DatePicker("Start Date");
-        form.add(startDate);
+        getContent().add(startDate);
 
         var endDate = new DatePicker("End Date");
-        form.add(endDate);
-
-        var submitButton = new Button("Submit");
-        submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        var cancelButton = new Button("Cancel");
-
-        add(new HorizontalLayout(submitButton, cancelButton)); // <5>
+        getContent().add(endDate);
     }
 }
 ----
-<1> Creates a new `FormLayout`...
-<2> ... and adds it to `ProposalFormView`.
-<3> Form fields are added to the form layout, not to the view itself.
-<4> Since `FormLayout` has two columns by default, this makes the description field take up the full width of the layout.
-<5> The buttons are added below the form layout, aligned to the left with the primary button first.
+<1> `Composite` hides the API of `FormLayout` from users of `ProposalForm`, reducing the risk of misuse.
+<2> `getContent()` returns the `FormLayout`.
+<3> Since `FormLayout` has two columns by default, this makes the description field take up the full width of the layout.
 
 The finished form would look like this:
 
 [.fill]
 image::images/example-form.png[A screenshot of a form]
 
-`FormLayout` is progressive, which means that if there is not enough room, the layout adjusts to a single column, with each input component on its own row. It also has other features not presented here. For
+`FormLayout` is responsive, which means that if there is not enough room, the layout adjusts to a single column, with each input component on its own row. It also has other features not presented here. For
 more information see the <<{articles}/components/form-layout#,FormLayout>> documentation.
 
 
@@ -82,11 +70,11 @@ Form models are often fetched from and submitted to an <<../../business-logic/ad
 
 == Introducing Binder
 
-Vaadin offers a [classname]`Binder` class that binds fields to form model properties, ensuring that changes made in the form update the model. However, since Binder is one-directional, *updates to the model outside of Binder won't automatically reflect in the form fields* unless manually refreshed.
+Vaadin offers a [classname]`Binder` class that binds fields to form model properties, ensuring that changes made in the form update the model. For each field-property pair, the `Binder` creates a new `Binding` object. However, since Binder is one-directional, *updates to the model outside of the `Binding` won't automatically reflect in the form fields* unless manually refreshed.
 
 When loading a form, it populates fields with corresponding property values. When saving, it updates the model with the modified field values.
 
-You can attach a converter to a binding to transform between field values and model properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the model. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
+You can attach a converter to a `Binding` to transform between field values and model properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the model. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
 
 
 == Types of Form Models
@@ -100,7 +88,7 @@ Simple form models are typically implemented as records. *Every field in the for
 
 When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
 
-Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs. As a best practice, *start with a simple model*. If your form requires extra business logic or mutable state, consider upgrading to an advanced model.
+Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs.
 
 
 === Advanced Form Models
@@ -133,7 +121,7 @@ Continuing on the earlier project proposal form example, you could create a Java
 .Proposal.java
 [source,java]
 ----
-public class Proposal {
+public class ProposalBean {
     private String title;
     private ProposalType type;
     private String description;
@@ -181,34 +169,34 @@ To bind this bean to the form, you need to create a [classname]`Binder` and regi
 
 [source,java]
 ----
-@Route
-public class ProposalFormView extends VerticalLayout {
+public class ProposalForm extends Composite<FormLayout> {
 
-    public ProposalFormView() {
-        var form = new FormLayout();
-        add(form);
+// tag::snippet[]
+    private final Binder<ProposalBean> binder;
+// end::snippet[]
 
+    public ProposalForm() {
         // Creating and adding fields omitted for clarity
         // ...
 
- // tag::snippet[]
-        var binder = new Binder<Proposal>();
+// tag::snippet[]
+        binder = new Binder<>();
         binder.forField(title) // <1>
             // Converters and validators would go here
-            .bind(Proposal::getTitle, Proposal::setTitle); // <2>
+            .bind(ProposalBean::getTitle, ProposalBean::setTitle); // <2>
         binder.forField(proposalType)
-            .bind(Proposal::getType, Proposal::setType);
+            .bind(ProposalBean::getType, ProposalBean::setType);
         binder.forField(description)
-            .bind(Proposal::getDescription, Proposal::setDescription);
+            .bind(ProposalBean::getDescription, ProposalBean::setDescription);
         binder.forField(startDate)
-            .bind(Proposal::getStartDate, Proposal::setStartDate);
+            .bind(ProposalBean::getStartDate, ProposalBean::setStartDate);
         binder.forField(endDate)
-            .bind(Proposal::getEndDate, Proposal::setEndDate);
+            .bind(ProposalBean::getEndDate, ProposalBean::setEndDate);
 // end::snippet[]
     }
 }
 ----
-<1> Creates a binding for the `title` field.
+<1> Creates a `Binding` for the `title` field.
 <2> Reads from the bean by calling `getTitle()` and writes to it using `setTitle()`.
 
 
@@ -219,7 +207,7 @@ A record for the project proposal example could look like this:
 .Proposal.java
 [source,java]
 ----
-public record Proposal(
+public record ProposalRecord(
     String title, 
     ProposalType type, 
     String description, 
@@ -233,18 +221,18 @@ Unlike JavaBeans, records do not have setter methods, so `Binder` uses *string-b
 
 [source,java]
 ----
-@Route
-public class ProposalFormView extends VerticalLayout {
+public class ProposalForm extends Composite<FormLayout> {
 
-    public ProposalFormView() {
-        var form = new FormLayout();
-        add(form);
+// tag::snippet[]
+    private final Binder<ProposalRecord> binder;
+// end::snippet[]
 
+    public ProposalForm() {
         // Creating and adding fields omitted for clarity
         // ...
 
  // tag::snippet[]
-        var binder = new Binder<>(Proposal.class); // <1>
+        binder = new Binder<>(ProposalRecord.class); // <1>
         binder.forField(title)
             // Converters and validators would go here
             .bind("title"); // <2>
@@ -256,22 +244,22 @@ public class ProposalFormView extends VerticalLayout {
     }
 }
 ----
-<1> Pass in the `Proposal` record class to the binder constructor.
+<1> Pass in the `ProposalRecord` record class to the `Binder` constructor.
 <2> Use the record component name.
 
 
 === Avoiding Invalid Record Component Names
 
-If you rename a record component but forget to update the corresponding binding, it will only cause an error at runtime. The `bind()` method would notice that no such record component exists, and throw an exception.
+If you rename a record component but forget to update the corresponding `Binding`, it will only cause an error at runtime. The `bind()` method would notice that no such record component exists, and throw an exception.
 
 To mitigate this, you can create a unit test that instantiates the form, like this:
 
 [source,java]
 ----
-class ProposalFormViewTest {
+class ProposalFormTest {
     @Test
-    void instantiating_view_throws_no_exceptions() {
-        new ProposalFormView(null);
+    void instantiating_form_throws_no_exceptions() {
+        new ProposalForm();
     }
 }
 ----
@@ -283,7 +271,7 @@ To reduce this risk, you can also use constants for record component names inste
 .Proposal.java
 [source,java]
 ----
-public record Proposal(
+public record ProposalRecord(
     String title, 
     ProposalType type, 
     String description, 
@@ -296,14 +284,20 @@ public record Proposal(
 }
 ----
 
-And you would use them in bindings like this:
+And you would use them with `Binder` like this:
 
 [source,java]
 ----
-binder.forField(title).bind(Proposal.PROP_TITLE);
-binder.forField(proposalType).bind(Proposal.PROP_TYPE);
+binder.forField(title).bind(ProposalRecord.PROP_TITLE);
+binder.forField(proposalType).bind(ProposalRecord.PROP_TYPE);
 // And so on...
 ----
 
+
+//== Best Practices
+
+// TODO Explain how to pick the correct form model
+
+// == Try It
 
 // TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.

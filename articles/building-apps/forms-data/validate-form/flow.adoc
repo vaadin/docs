@@ -6,8 +6,338 @@ meta-description: TODO Write meta-description
 order: 5
 ---
 
+// TODO This page has NOT been AI reviewed yet!
+
 
 = Validate a Form in Flow
 :toclevels: 2
 
-TODO
+In this guide, you'll learn to add field and bean validators to a form, and how to trigger them. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
+
+
+== Required Fields
+
+To mark a [classname]`Binding` as required, use the [methodname]`asRequired()` method:
+
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    public ProposalForm() {
+        // Creating and adding fields omitted for clarity
+        // ...            
+        binder = new Binder<>();
+        binder.forField(title)
+// tag::snippet[]
+              .asRequired() // <1>
+// end::snippet[]
+              .bind(ProposalBean::getTitle, ProposalBean::setTitle);
+        binder.forField(proposalType)
+// tag::snippet[]
+              .asRequired("Please select a proposal type") // <2>
+// end::snippet[]
+              .bind(ProposalBean::getType, ProposalBean::setType);
+        binder.forField(description)
+              .bind(ProposalBean::getDescription, ProposalBean::setDescription);
+        binder.forField(startDate)
+// tag::snippet[]
+              .asRequired()
+// end::snippet[]
+              .bind(ProposalBean::getStartDate, ProposalBean::setStartDate);
+        binder.forField(endDate)
+// tag::snippet[]
+              .asRequired()
+// end::snippet[]
+              .bind(ProposalBean::getEndDate, ProposalBean::setEndDate);
+    }
+}
+----
+<1> If the field is left blank, it will be marked as invalid without showing an error message to the user.
+<2> If the field is left blank, the given error message is shown to the user.
+
+Marking a `Binding` as required does two things:
+
+1. It makes the required indicator visible on the field component.
+2. It validates that the field's `value` is not equal to the field's `emptyValue`.
+
+The `emptyValue` differs between field types. For instance, for `TextField` it is `""` (an empty string), and for `DatePicker` and `ComboBox` it is `null`.
+
+
+== Field Validators
+
+Field validators validate individual field values in isolation. To add a field validator to a `Binding`, use the `withValidator()` method:
+
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    public ProposalForm() {
+        // Creating and adding fields omitted for clarity
+        // ...            
+        binder = new Binder<>();
+        binder.forField(title)
+              .asRequired()
+// tag::snippet[]
+              .withValidator(new StringLengthValidator(
+                    "Title must be between 1 and 100 characters", 1, 100))
+// end::snippet[]
+              .bind(ProposalBean::getTitle, ProposalBean::setTitle);
+        binder.forField(proposalType)
+              .asRequired("Please select a proposal type") // <2>
+              .bind(ProposalBean::getType, ProposalBean::setType);
+        binder.forField(description)
+              .bind(ProposalBean::getDescription, ProposalBean::setDescription);
+        binder.forField(startDate)
+              .asRequired()
+              .bind(ProposalBean::getStartDate, ProposalBean::setStartDate);
+        binder.forField(endDate)
+              .asRequired()
+              .bind(ProposalBean::getEndDate, ProposalBean::setEndDate);
+    }
+}
+----
+
+
+=== Built-in Validators
+
+Vaadin offers several built-in validators that you can use.
+
+`BigDecimalRangeValidator` :: Validates that a `BigDecimal` is within a specific range.
+`BigIntegerRangeValidator` :: Validates that a `BigInteger` is within a specific range.
+`ByteRangeValidator` :: Validates that a `Byte` is within a specific range.
+`DateRangeValidator` :: Validates that a `LocalDate` is within a specific range.
+`DateTimeRangeValidator` :: Validates that a `LocalDateTime` is within a specific range.
+`DoubleRangeValidator` :: Validates that a `Double` is within a specific range.
+`EmailValidator` :: Validates that a `String` is a valid email address.
+`FloatRangeValidator` :: Validates that a `Float` is within a specific range.
+`IntegerRangeValidator` :: Validates that an `Integer` is within a specific range.
+`LongRangeValidator` :: Validates that a `Long` is within a specific range.
+`RangeValidator` :: Validates that any type is within a specific range using a `Comparator`.
+`RegexpValidator` :: Validates that a `String` matches a specific regular expression.
+`ShortRangeValidator` :: Validates that a `Short` is within a specific range.
+`StringLengthValidator` :: Validates that the length of a `String` is within a specific range.
+
+
+=== Custom Validators
+
+To create a custom validator, either implement the [interfacename]`Validator<T>` interface, or extend the [classname]`AbstractValidator<T>` base class. The following example is a validator that checks that an integer is positive:
+
+.PositiveIntegerValidator.java
+[source,java]
+----
+public class PositiveIntegerValidator implements Validator<Integer> {
+
+    @Override
+    public ValidationResult apply(Integer num, ValueContext context) { // <1>
+        if (num >= 0) {
+            return ValidationResult.ok();
+        } else {
+            return ValidationResult.error("number must be positive");
+        }
+    }
+}
+----
+<1> The `ValueContext` gives you access to information like the current locale, the field component, the `Binder`, etc.
+
+The interface is a functional interface which means you can implement a validator using a lambda:
+
+[source,java]
+----
+Validator<Integer> isPositiveValidator = (num, context) -> {
+    if (num >= 0) {
+        return ValidationResult.ok();
+    } else {
+        return ValidationResult.error("number must be positive");
+    }
+};
+----
+
+
+//=== Chained Field Validators
+
+// TODO Write about chained field validators, i.e. two validators that depend on each other. When one changes, it should trigger the other and vice versa.
+
+
+== Default Validators
+
+Some fields have built-in validators that are controlled by the field itself for improved UX. These validators are called _default validators_. 
+
+For example, `DatePicker` has `min` and `max` properties that disable the calendar outside that interval. If a user tries to manually enter a date outside of the interval, the field becomes invalid:
+
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    public ProposalForm(Clock clock) {
+        var title = new TextField("Title");
+        getContent().add(title);
+
+        var proposalType = new ComboBox<ProposalType>("Proposal Type");
+        proposalType.setItems(ProposalType.values());
+        getContent().add(proposalType);
+
+        var description = new TextArea("Description");
+        getContent().add(description);
+        getContent().setColspan(description, 2);
+    
+        var startDate = new DatePicker("Start Date");
+// tag::snippet[]
+        startDate.setMin(LocalDate.now(clock));
+// end::snippet[]
+        getContent().add(startDate);
+
+        var endDate = new DatePicker("End Date");
+// tag::snippet[]
+        endDate.setMin(LocalDate.now(clock));
+// end::snippet[]
+        getContent().add(endDate);
+
+        // Binder omitted for clarity
+        // ...
+    }
+}
+----
+
+`Binder` takes these validators into account by default. You can enable and disable them using the `Binder.setDefaultValidatorsEnabled()` method:
+
+[source,java]
+----
+var binder = new Binder<MyBean>();
+// ...
+binder.setDefaultValidatorsEnabled(false); // Disables default validators
+----
+
+If you want to enable or disable the default validator on a specific field, you can use the `withDefaultValidator()` method:
+
+[source,java]
+----
+var binder = new Binder<MyBean>();
+binder.forField(myDatePicker)
+      .withDefaultValidator(false) // Disables default validator for myDatePicker
+      .bind(MyBean::getDate, MyBean::setDate);
+----
+
+
+== Bean Validators
+
+Bean validators are applied to the form model itself, after all field validators have been applied. If all field validators passed, `Binder` copies the data to the form model and then call the bean validators on it. If any of the bean validators fail, the form model is reverted to its previous state.
+
+[IMPORTANT]
+Despite the name, bean validators can also be used when the form model is implemented as a record, but only when calling `Binder.writeRecord()`. See the <<../load-save-form/flow#,Load and Save a Form>> guide for details.
+
+You implement a bean validator the same way as you implement a field validator, but the value being validator is the form model itself. You then activate it by calling the `withValidator()` method on the `Binder` itself:
+
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    public ProposalForm() {
+        // Creating and adding fields omitted for clarity
+        // ...            
+        binder = new Binder<>();
+        binder.forField(title)
+              .asRequired()
+              .withValidator(new StringLengthValidator(
+                    "Title must be between 1 and 100 characters", 1, 100))
+              .bind(ProposalBean::getTitle, ProposalBean::setTitle);
+        binder.forField(proposalType)
+              .asRequired("Please select a proposal type") // <2>
+              .bind(ProposalBean::getType, ProposalBean::setType);
+        binder.forField(description)
+              .bind(ProposalBean::getDescription, ProposalBean::setDescription);
+        binder.forField(startDate)
+              .asRequired()
+              .bind(ProposalBean::getStartDate, ProposalBean::setStartDate);
+        binder.forField(endDate)
+              .asRequired()
+              .bind(ProposalBean::getEndDate, ProposalBean::setEndDate);
+// tag::snippet[]
+        binder.withValidator((bean, valueContext) -> {
+            if (bean.getStartDate().isAfter(bean.getEndDate())) { // <1>
+                return ValidationResult.error("Start date cannot be after end date");
+            }
+            return ValidationResult.ok();
+        });
+// end::snippet[]
+    }
+}
+----
+<1> Since `startDate` and `endDate` are already marked as required, you don't need to check for `null` here.
+
+
+== Triggering Validation
+
+Validators can be triggered both automatically and programmatically. Field validators are triggered automatically whenever a field value is changed. Both field validators and bean validators are also triggered before `Binder` writes changes to the form model. This is covered in the <<../load-save-form/flow#,Load and Save a Form>> guide.
+
+If you want to trigger the validators manually without writing changes, `Binder` has two methods for your to use:
+
+`isValid()` :: Runs all the validators and returns whether the form is valid or not, but *does not change the form state nor update the UI*.
+`validate()` :: Runs all the validators and returns the validation status, *changing the form state and updating the UI if needed*.
+
+[IMPORTANT]
+If you have bean validators, the `isValid()` and `validate()` methods *only work if your form model is a JavaBean* and it has been bound with the `Binder.setBean()` method. In all other cases you'll get an exception. See the <<../load-save-form/flow#,Load and Save a Form>> guide for details.
+
+
+== Handling Validation Errors
+
+`Binder` handles field validation errors by default. The field in question is marked as invalid, and the error message shown next to the field. It is possible to change this behavior by plugging in a new error handler using `Binder.setValidationErrorHandler()`. This is, however, outside the scope of this guide.
+
+Bean validation errors are different, since they are not associated with a particular field. You can still configure `Binder` to handle them for you by providing an _status label_. This is any component that can contain text. If a bean validator fails, `Binder` updates the component to show the error message. 
+
+You set the status label component using `Binder.setStatusLabel()`:
+
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    public ProposalForm() {
+        var title = new TextField("Title");
+        getContent().add(title);
+
+        var proposalType = new ComboBox<ProposalType>("Proposal Type");
+        proposalType.setItems(ProposalType.values());
+        getContent().add(proposalType);
+
+        var description = new TextArea("Description");
+        getContent().add(description);
+        getContent().setColspan(description, 2);
+
+        var startDate = new DatePicker("Start Date");
+        getContent().add(startDate);
+
+        var endDate = new DatePicker("End Date");
+        getContent().add(endDate);
+
+// tag::snippet[]
+        var beanValidationErrors = new Div(); // <1>
+        beanValidationErrors.addClassName(LumoUtility.TextColor.ERROR);
+        getContent().add(beanValidationErrors);
+// end::snippet[]
+
+        binder = new Binder<>();
+        // Bindings omitted for clarity
+        // ...
+
+// tag::snippet[]
+        binder.setStatusLabel(beanValidationErrors); // <2>
+// end::snippet[]
+    }
+}
+----
+<1> Creates a `<div>` for the bean validation error message.
+<2> Instructs `Binder` to show any bean validation error messages in the `<div>`.
+
+
+//== Try It
+
+// TODO Write a tutorial
