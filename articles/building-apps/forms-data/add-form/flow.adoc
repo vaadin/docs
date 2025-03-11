@@ -22,6 +22,7 @@ Layout components are not the same as router layouts. However, you can build a r
 
 The follow example shows how to build a two-column project proposal form with various input components:
 
+.ProposalForm.java
 [source,java]
 ----
 public class ProposalForm extends Composite<FormLayout> { // <1>
@@ -61,11 +62,11 @@ more information see the <<{articles}/components/form-layout#,FormLayout>> docum
 
 == Introducing Form Model
 
-// TODO Some of this section may be better suited for the Overview page than under Flow. It depends on the Hilla-article.
-Forms are used to display and edit data. This data comes from a _form model_, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model.
+// Some of this section may be better suited for the Overview page than under Flow. It depends on the Hilla-article.
+Forms are used to display and edit data. This data comes from a *form model*, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model.
 
 Form models are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, and persistence. From an architectural point of view, *the form models belong to the application layer* rather than the presentation layer.
-// TODO When signal is added to the mix, we get a View Model, whereas the form model takes the role of the M in MVVM.
+// When signal is added to the mix, we get a View Model, whereas the form model takes the role of the M in MVVM.
 
 
 == Introducing Binder
@@ -103,9 +104,6 @@ You can add business logic to the setters. For instance, you could perform valid
 
 When a form is loaded, the `Binder` populates each field with data from the corresponding getter. When the form is saved, the `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
 
-[NOTE]
-You can also configure the `Binder` to call a setter directly when a field is updated. See the <<../load-save-form#,Load and Save a Form>> guide fore details.
-
 Beans allow you to make more advanced forms, but also require more boilerplate code than records. Furthermore, since they are mutable, there is a higher risk of bugs, especially when rolling back changes.
 
 
@@ -116,9 +114,9 @@ In simple cases, such as CRUD-views and administration screens, the form model a
 
 == Binding to a Bean
 
-Continuing on the earlier project proposal form example, you could create a JavaBean that looks like this:
+Continuing with the earlier *Project Proposal* form example, you can create a JavaBean to represent the form model:
 
-.Proposal.java
+.ProposalBean.java
 [source,java]
 ----
 public class ProposalBean {
@@ -165,8 +163,9 @@ public class ProposalBean {
 }
 ----
 
-To bind this bean to the form, you need to create a [classname]`Binder` and register each field with it. You then associate the field with the corresponding accessor methods, like this:
+To bind this bean to the form, create a [classname]`Binder` instance and register each form field:
 
+.ProposalForm.java
 [source,java]
 ----
 public class ProposalForm extends Composite<FormLayout> {
@@ -177,7 +176,6 @@ public class ProposalForm extends Composite<FormLayout> {
 
     public ProposalForm() {
         // Creating and adding fields omitted for clarity
-        // ...
 
 // tag::snippet[]
         binder = new Binder<>();
@@ -197,14 +195,172 @@ public class ProposalForm extends Composite<FormLayout> {
 }
 ----
 <1> Creates a `Binding` for the `title` field.
-<2> Reads from the bean by calling `getTitle()` and writes to it using `setTitle()`.
+<2> Uses getter and setter methods for binding.
+
+
+=== Buffered vs. Write-Through
+
+When using a JavaBean as a form model, `Binder` can operate in *buffered* or *write-through* mode.
+
+* *Buffered mode*: Changes remain in the form until explicitly saved. This prevents side effects but may affect validation behavior.
+* *Write-through mode*: Updates the model immediately as the user edits the form. Business logic in setter methods is triggered immediately. However, invalid states can occur where the form contains errors, but the model remains valid.
+
+Form validation is covered in the <<../validate-form#,Validate a Form>> guide.
+
+
+=== Reading from a Bean
+
+To populate a form in *buffered mode*, use `Binder.readBean()`:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+// tag::snippet[]
+    public void read(ProposalBean formModel) {
+        binder.readBean(formModel);
+    }
+// end::snippet[]
+}
+----
+
+For *write-through mode*, use `Binder.setBean()`:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+// tag::snippet[]
+    public void bind(ProposalBean formModel) {
+        binder.setBean(formModel);
+    }
+// end::snippet[]
+}
+----
+
+
+=== Writing to a Bean
+
+In *buffered mode*, use `Binder.writeBean()`:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+    public void read(ProposalBean formModel) {
+        binder.readBean(formModel);
+    }
+
+// tag::snippet[]
+    public void write(ProposalBean formModel) throws ValidationException { // <1>
+        binder.writeBean(formModel);
+    }    
+// end::snippet[]
+}
+----
+<1> If validation fails, `ValidationException` is thrown.
+
+In *write-through mode*, no explicit write operation is needed. However, always check form validity before processing:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+    public void bind(ProposalBean formModel) {
+        binder.setBean(formModel);
+    }
+
+// tag::snippet[]
+    public boolean isValid() {
+        return binder.validate().isOk();
+    }
+// end::snippet[]
+}
+----
+
+
+=== Clearing the Form
+
+To clear the form in *buffered mode*, refresh the fields:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+    public void read(ProposalBean formModel) {
+        binder.readBean(formModel);
+    }
+
+    public void write(ProposalBean formModel) throws ValidationException { // <1>
+        binder.writeBean(formModel);
+    }    
+
+// tag::snippet[]
+    public void clear() {
+        binder.refreshFields();
+    }
+// end::snippet[]
+}
+----
+
+In *write-through mode*, unbind the model by setting it to `null`:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalBean> binder;
+
+    // Constructor omitted for clarity
+
+    public void bind(ProposalBean formModel) {
+        binder.setBean(formModel);
+    }
+
+    public boolean isValid() {
+        return binder.validate().isOk();
+    }
+
+// tag::snippet[]
+    public void unbind() {
+        binder.setBean(null);
+    }
+// end::snippet[]
+}
+----
 
 
 == Binding to a Record
 
-A record for the project proposal example could look like this:
+The equivalent *Project Proposal* form model using a *record* looks like this:
 
-.Proposal.java
+.ProposalRecord.java
 [source,java]
 ----
 public record ProposalRecord(
@@ -217,8 +373,9 @@ public record ProposalRecord(
 }
 ----
 
-Unlike JavaBeans, records do not have setter methods, so `Binder` uses *string-based mapping* to bind fields to record components. Furthermore, you have to pass the record class to the binder constructor so that it can create new instances:
+Unlike JavaBeans, records do not have setters. Instead, `Binder` uses *string-based mapping* to bind form fields to record components. You also need to specify the record class when creating the binder:
 
+.ProposalForm.java
 [source,java]
 ----
 public class ProposalForm extends Composite<FormLayout> {
@@ -229,7 +386,6 @@ public class ProposalForm extends Composite<FormLayout> {
 
     public ProposalForm() {
         // Creating and adding fields omitted for clarity
-        // ...
 
  // tag::snippet[]
         binder = new Binder<>(ProposalRecord.class); // <1>
@@ -244,8 +400,8 @@ public class ProposalForm extends Composite<FormLayout> {
     }
 }
 ----
-<1> Pass in the `ProposalRecord` record class to the `Binder` constructor.
-<2> Use the record component name.
+<1> Passes the `ProposalRecord` record class to the `Binder` constructor.
+<2> Uses record component names as string literals.
 
 
 === Avoiding Invalid Record Component Names
@@ -254,6 +410,7 @@ If you rename a record component but forget to update the corresponding `Binding
 
 To mitigate this, you can create a unit test that instantiates the form, like this:
 
+.ProposalFormTest.java
 [source,java]
 ----
 class ProposalFormTest {
@@ -268,7 +425,7 @@ Since the `bind()` method is called in the constructor, this test would fail if 
 
 To reduce this risk, you can also use constants for record component names instead of string literals. The constants could look like this:
 
-.Proposal.java
+.ProposalRecord.java
 [source,java]
 ----
 public record ProposalRecord(
@@ -293,9 +450,98 @@ binder.forField(proposalType).bind(ProposalRecord.PROP_TYPE);
 // And so on...
 ----
 
+
 === Reading from a Record
 
+To populate the form from a record, use `Binder.readRecord()`:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalRecord> binder;
+
+    // Constructor omitted for clarity
+
+// tag::snippet[]
+    public void read(ProposalRecord formModel) {
+        binder.readRecord(formModel);
+    }
+// end::snippet[]
+}
+----
+
+
 === Writing to a Record
+
+Since records are immutable, `Binder.writeRecord()` creates a new instance:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalRecord> binder;
+
+    // Constructor omitted for clarity
+
+    public void read(ProposalRecord formModel) {
+        binder.readRecord(formModel);
+    }
+
+// tag::snippet[]
+    public Optional<ProposalRecord> write() {
+        try {
+            return Optional.of(binder.writeRecord()); // <1>
+        } catch (ValidationException ex) {
+            // Binder already shows the error messages.
+            return Optional.empty(); // <2>
+        }
+    }
+// end::snippet[]
+}
+----
+<1> Returns a new `ProposalRecord` if validation succeeds.
+<2> Returns an empty `Optional` if validation fails.
+
+
+=== Clearing the Form
+
+To clear the form, refresh the fields:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<ProposalRecord> binder;
+
+    public ProposalForm() {
+        // Constructor implementation omitted for clarity
+        // ...
+    }
+
+    public void read(ProposalRecord formModel) {
+        binder.readRecord(formModel);
+    }
+
+    public Optional<ProposalRecord> write() {
+        try {
+            return Optional.of(binder.writeRecord());
+        } catch (ValidationException ex) {
+            // Binder already shows the error messages.
+            return Optional.empty();
+        }
+    }
+
+// tag::snippet[]
+    public void clear() {
+        binder.refreshFields();
+    }
+// end::snippet[]
+}
+----
 
 //== Best Practices
 
