@@ -1,11 +1,386 @@
 ---
 title: Hilla
 page-title: How to use query parameters in Hilla | Vaadin
-meta-description: TODO Write a meta description
+meta-description: Learn how to use query parameters in Hilla to manage view state, handle search and filtering, and enhance navigation in Hilla applications.
 order: 10
 ---
 
 
 = Query Parameters in Hilla
+:toclevels: 2
 
+In this guide, you’ll learn how to access and set query parameters in a Hilla view using React. A mini-tutorial at the end will help you apply these concepts in a real Vaadin application.
+
+
+== Using Query Parameters
+
+To work with query parameters in Hilla views, you can use the `useSearchParams` hook from `react-router`. This hook provides methods to read, update, and delete query parameters without causing a full page reload.
+
+Here's an example of a view that uses query parameters to manage a search term:
+
+[source,tsx]
+----
+// tag::snippet[]
+import { useSearchParams } from 'react-router'; // <1>
+// end::snippet[]
+import { TextField } from '@vaadin/react-components/TextField.js';
+
+export default function ProductView() {
+// tag::snippet[]
+    const [searchParams, setSearchParams] = useSearchParams(); // <2>
+    const searchTerm = searchParams.get('category') || ''; // <3>
+// end::snippet[]
+    return (
+        <div>
+            <TextField
+                label="Search for:"
+                value={searchTerm}
+                onValueChanged={(e) => {
+                    const newValue = e.detail.value;
+                    if (newValue) {
+// tag::snippet[]
+                        setSearchParams({ category: newValue }); // <4>
+// end::snippet[]                        
+                    } else {
+// tag::snippet[]                        
+                        setSearchParams({}); // <5>
+// end::snippet[]                        
+                    }
+                }}
+            />
+            <div>Current search term: {searchTerm}</div>
+        </div>
+    );
+}
+----
+
+<1> The `useSearchParams` hook is imported from `react-router`.
+<2> The `useSearchParams` returns an array with two elements:
+  - `searchParams`: A URLSearchParams object for reading parameters
+  - `setSearchParams`: A function to update parameters
+<3> The value of the expected parameter named as `category` is read. The literal value `category` as the name of the parameter can be chosen freely.
+<4> Upon changes to the search value, the `setSearchParams` function is used to set the new value for the query parameter.
+<5> Passing an empty object to the `setSearchParams` function is used to clear all the query parameters.
+
+
+== Multiple Query Parameters
+
+You can work with multiple query parameters simultaneously. Here's an example of a view that manages both two query parameters for sorting and filtering at the same time:
+
+[source,tsx]
+----
+import { useSearchParams } from 'react-router';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import {Select} from "@vaadin/react-components";
+
+export default function ProductView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const category = searchParams.get('category') || '';
+    const sortOrder = searchParams.get('sort') || 'asc';
+
+    // Update URL when search or sort changes
+    const updateParams = (params: Record<string, string>) => {
+        setSearchParams({
+            ...Object.fromEntries(searchParams),
+            ...params
+        });
+    };
+
+    if (category !== searchParams.get('category')
+        || sortOrder !== searchParams.get('sort')) {
+        updateParams({ category: category, sort: sortOrder });
+    }
+
+    return (
+        <div>
+            <TextField
+                label="Search for:"
+                value={category}
+                onValueChanged={(e) => updateParams({ category: e.detail.value })}
+            />
+            <Select
+                label="Sort order:"
+                value={sortOrder}
+                items={[
+                    { label: 'Ascending', value: 'asc' },
+                    { label: 'Descending', value: 'desc' },
+                ]}
+                onValueChanged={(e) => updateParams({ sort: e.detail.value })}
+            />
+            <div>Current search term: {category}</div>
+            <div>Current sort order: {sortOrder}</div>
+        </div>
+    );
+}
+----
+
+This example demonstrates:
+
+  1. Managing multiple parameters (`category` and `sort`) at the same time
+  2. Preserving existing parameters when updating the changed one 
+
+
+== Query Parameters Best Practices
+
+When working with query parameters in Hilla, follow these best practices:
+
+1. *Default Values*: Determine default values when parameters are missing:
++
+[source,tsx]
+----
+const page = parseInt(searchParams.get('page') || '1');
+const size = parseInt(searchParams.get('size') || '10');
+----
+
+2. *Type Safety*: Convert string parameters to appropriate types:
++
+[source,tsx]
+----
+const isActive = searchParams.get('active') === 'true';
+const count = Number(searchParams.get('count'));
+----
+
+3. *URL Length*: Keep URLs manageable by using concise parameter names and avoiding unnecessary parameters. Extremely long URLs cannot work across all browser or cannot be handled by all servers. 
+
+5. *State Management*: Use query parameters for shareable state that should persist across page reloads.
+
+6. *Security Awareness*: Remember that query parameters are visible in the URL and should not contain sensitive information.
+
+[.collapsible-list]
+== Try It
+
+In this mini-tutorial, you'll create a view that accesses and dynamically updates two query parameters.
+
+
+.Set Up the Project
+[%collapsible]
+====
+First, generate a <<{articles}/getting-started/start#,walking skeleton with a Hilla UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+====
+
+.Create Browser-Callable Service
+[%collapsible]
+====
+In the Java source, create a product Browser-Callable service that has methods accepting parameters for filtering and sorting:
+
+.ProductService.java
+[source,java]
+----
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.BrowserCallable;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+@AnonymousAllowed
+@BrowserCallable
+public class ProductService {
+
+    private static final Map<String, List<String>> CATEGORIES = Map.of(
+            "electronics", List.of("Product 1", "Product 2", "Product 3"),
+            "clothing", List.of("Product 4", "Product 5", "Product 6"),
+            "appliances", List.of("Product 7", "Product 8", "Product 9")
+    );
+
+    public List<String> allProducts(String sort) {
+        return CATEGORIES.values().stream().flatMap(List::stream)
+                .sorted("asc".equalsIgnoreCase(sort) 
+                        ? Comparator.naturalOrder()
+                        : Comparator.reverseOrder()).toList();
+    }
+
+    public List<String> productsInCategory(String category, String sort) {
+        var products = CATEGORIES.get(category);
+        return products == null ? List.of() :
+                products.stream()
+                        .sorted("asc".equalsIgnoreCase(sort)
+                                ? Comparator.naturalOrder()
+                                : Comparator.reverseOrder()).toList();
+    }
+}
+----
+====
+
+.Create the View
+[%collapsible]
+====
+Create a view file called `products.tsx` under `src/main/frontend/views/`:
+
+.products.tsx
+[source,tsx]
+----
+import { TextField } from '@vaadin/react-components/TextField.js';
+import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
+
+export default function ProductsView() {
+    return (
+        <VerticalLayout theme='padding'>
+            <HorizontalLayout theme='spacing padding'>
+                <TextField
+                    label="Category:"
+                />
+                <RadioGroup label="Sort order:">
+                    <RadioButton value="asc" label='Ascending'/>
+                    <RadioButton value="desc" label='Descending'/>
+                </RadioGroup>
+            </HorizontalLayout>
+            <div>Current search term:</div>
+            <div>Current sort order:</div>
+        </VerticalLayout>
+    );
+}
+----
+
+Open your browser and navigate to: http://localhost:8080/products
+
+You should see:
+
+1. an empty text field 
+2. two radio buttons.
+3. two labels that to show the values of the query parameters
+====
+
+
+.Access Query Parameters
+[%collapsible]
+====
+Import and use the `useSearchParams` from `react-router` to access the query parameters:
+
+.products.tsx
+[source,tsx]
+----
+// tag::snippet[]
+import { useSearchParams } from 'react-router';
+// end::snippet[]
+import { TextField } from '@vaadin/react-components/TextField.js';
+import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
+
+export default function ProductsView() {
+// tag::snippet[]    
+    const [searchParams, setSearchParams] = useSearchParams();
+    const rawCategory = searchParams.get('category');
+    const rawSort = searchParams.get('sort');
+// end::snippet[]    
+
+    return (
+        <VerticalLayout theme='padding'>
+            <HorizontalLayout theme='spacing padding'>
+                <TextField
+                    label="Category:"
+                />
+                <RadioGroup label="Sort order:">
+                    <RadioButton value="asc" label='Ascending'/>
+                    <RadioButton value="desc" label='Descending'/>
+                </RadioGroup>
+            </HorizontalLayout>
+            <div>Current search term: {rawCategory}</div>
+            <div>Current sort order: {rawSort}</div>
+        </VerticalLayout>
+    );
+}
+----
+
+Try entering the followings in the browser's URL and see how the values for the query parameters are rendered:
+
+1. Enter `http://localhost:8080/products?category=clothing` and hit enter key. You should see the literal value `clothing` is displayed in the respective label.
+2. Enter `http://localhost:8080/products?sort=asc` and hit enter key. You should see the literal value `asc` is displayed in the respective label.
+3. Enter `http://localhost:8080/products?category=clothing&sort=desc` and hit enter key. You should see the literal values `appliances` and `desc` is displayed in the respective labels.
+====
+
+.Call the Browser-Callable Service with Query Parameters
+[%collapsible]
+====
 TODO
+====
+
+.Update the `category` and `sort` Query Parameters
+[%collapsible]
+====
+TODO
+
+.products.tsx
+[source,tsx]
+----
+import { useSearchParams } from 'react-router';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { useEffect } from 'react';
+import { useSignal } from "@vaadin/hilla-react-signals";
+import {ProductService} from "Frontend/generated/endpoints";
+import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
+
+export default function ProductsView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const rawCategory = searchParams.get('category');
+    const rawSort = searchParams.get('sort');
+
+    const queryParams = useSignal(
+        { category: rawCategory || '', sort: rawSort || 'asc' });
+
+    const products = useSignal<string[]>([]);
+
+    useEffect(() => {
+        if (rawCategory !== queryParams.value.category || rawSort !== queryParams.value.sort) {
+            setSearchParams({ category: queryParams.value.category, sort: queryParams.value.sort });
+        }
+
+        if (queryParams.value.category === '') {
+            ProductService.allProducts(queryParams.value.sort)
+                .then((data) => products.value = data);
+        } else {
+            ProductService.productsInCategory(queryParams.value.category, queryParams.value.sort)
+                .then((data) => products.value = data);
+        }
+    }, [queryParams.value]);
+
+    return (
+        <VerticalLayout theme='padding'>
+            <HorizontalLayout theme='spacing padding'>
+                <TextField
+                    label="Category:"
+                    value={queryParams.value.category}
+                    onValueChanged={(e) => {
+                        const newValue = e.detail.value;
+                        if (newValue) {
+                            queryParams.value = { category: newValue, sort: queryParams.value.sort };
+                        } else {
+                            queryParams.value = { category: '', sort: queryParams.value.sort };
+                        }
+                    }}
+                />
+                <RadioGroup label="Sort order:"
+                            onValueChanged={(event) =>
+                                queryParams.value = { category: queryParams.value.category, sort: event.detail.value }}>
+                    <RadioButton value="asc" checked={queryParams.value.sort === 'asc'} label='Ascending'/>
+                    <RadioButton value="desc" checked={queryParams.value.sort === 'desc'} label='Descending'/>
+                </RadioGroup>
+            </HorizontalLayout>
+
+            <h3>Products from {queryParams.value.category
+                ? `'${queryParams.value.category}' category`
+                : "all categories"}:
+            </h3>
+            <div>
+                <ul>{products.value.map((product) => (
+                    <li key={product}>{product}</li>
+                ))}</ul>
+            </div>
+        </VerticalLayout>
+    );
+}
+----
+
+Try toggling the checkbox. The URL updates automatically while preserving the `text` parameter.
+====
+
+
+.Final Thoughts
+[%collapsible]
+====
+You've now successfully implemented query parameters in Hilla using React. You learned how to:
+
+* Access query parameter values.
+* Update query parameter values dynamically.
+
+You're now ready to use query parameters in real Vaadin applications!
+====
