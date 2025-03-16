@@ -142,9 +142,9 @@ const count = Number(searchParams.get('count'));
 
 3. *URL Length*: Keep URLs manageable by using concise parameter names and avoiding unnecessary parameters. Extremely long URLs cannot work across all browser or cannot be handled by all servers. 
 
-5. *State Management*: Use query parameters for shareable state that should persist across page reloads.
+4. *State Management*: Use query parameters for shareable state that should persist across page reloads.
 
-6. *Security Awareness*: Remember that query parameters are visible in the URL and should not contain sensitive information.
+5. *Security Awareness*: Remember that query parameters are visible in the URL and should not contain sensitive information. Thus, never include sensitive data such as security tokens as query parameters, but use HTTP headers e.g. authorization header, or request body of the post request, or store them in secure cookies.
 
 [.collapsible-list]
 == Try It
@@ -210,23 +210,13 @@ Create a view file called `products.tsx` under `src/main/frontend/views/`:
 .products.tsx
 [source,tsx]
 ----
-import { TextField } from '@vaadin/react-components/TextField.js';
-import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
+import { VerticalLayout } from "@vaadin/react-components";
 
 export default function ProductsView() {
     return (
         <VerticalLayout theme='padding'>
-            <HorizontalLayout theme='spacing padding'>
-                <TextField
-                    label="Category:"
-                />
-                <RadioGroup label="Sort order:">
-                    <RadioButton value="asc" label='Ascending'/>
-                    <RadioButton value="desc" label='Descending'/>
-                </RadioGroup>
-            </HorizontalLayout>
-            <div>Current search term:</div>
-            <div>Current sort order:</div>
+            <div>Selected category:</div>
+            <div>Sort order:</div>
         </VerticalLayout>
     );
 }
@@ -234,11 +224,10 @@ export default function ProductsView() {
 
 Open your browser and navigate to: http://localhost:8080/products
 
-You should see:
+You should see two labels:
 
-1. an empty text field 
-2. two radio buttons.
-3. two labels that to show the values of the query parameters
+1. "Selected category" to show value of the *category* query parameter
+2. "Sort order" to show value of the *sort* query parameter
 ====
 
 
@@ -250,64 +239,124 @@ Import and use the `useSearchParams` from `react-router` to access the query par
 .products.tsx
 [source,tsx]
 ----
+import { VerticalLayout } from "@vaadin/react-components";
 // tag::snippet[]
 import { useSearchParams } from 'react-router';
 // end::snippet[]
-import { TextField } from '@vaadin/react-components/TextField.js';
-import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
 
 export default function ProductsView() {
-// tag::snippet[]    
+// tag::snippet[]
     const [searchParams, setSearchParams] = useSearchParams();
     const rawCategory = searchParams.get('category');
     const rawSort = searchParams.get('sort');
-// end::snippet[]    
-
+// end::snippet[]
     return (
         <VerticalLayout theme='padding'>
-            <HorizontalLayout theme='spacing padding'>
-                <TextField
-                    label="Category:"
-                />
-                <RadioGroup label="Sort order:">
-                    <RadioButton value="asc" label='Ascending'/>
-                    <RadioButton value="desc" label='Descending'/>
-                </RadioGroup>
-            </HorizontalLayout>
-            <div>Current search term: {rawCategory}</div>
-            <div>Current sort order: {rawSort}</div>
+            <div>Selected category: <b>{rawCategory}</b></div>
+            <div>Sort order: <b>{rawSort}</b></div>
         </VerticalLayout>
     );
 }
 ----
 
-Try entering the followings in the browser's URL and see how the values for the query parameters are rendered:
+Try entering the followings in the browser's URL, and see how the values for the query parameters are rendered:
 
-1. Enter `http://localhost:8080/products?category=clothing` and hit enter key. You should see the literal value `clothing` is displayed in the respective label.
-2. Enter `http://localhost:8080/products?sort=asc` and hit enter key. You should see the literal value `asc` is displayed in the respective label.
-3. Enter `http://localhost:8080/products?category=clothing&sort=desc` and hit enter key. You should see the literal values `appliances` and `desc` is displayed in the respective labels.
+1. Enter `http://localhost:8080/products?category=clothing` and hit enter key. You should see the literal value `clothing` is displayed in front of the "Selected category:".
+2. Enter `http://localhost:8080/products?sort=asc` and hit enter key. You should see the literal value `asc` is displayed in front of the "Sort order:".
+3. Enter `http://localhost:8080/products?category=appliances&sort=desc` and hit enter key. You should see the literal values of `appliances` and `desc` are displayed in front of each respective label.
 ====
 
 .Call the Browser-Callable Service with Query Parameters
 [%collapsible]
 ====
-TODO
+Use the query parameters to call the `ProductService` methods:
+
+.products.tsx
+[source,tsx]
+----
+import { VerticalLayout } from "@vaadin/react-components";
+import { useSearchParams } from 'react-router';
+import { useSignal } from "@vaadin/hilla-react-signals";
+import { useEffect } from "react";
+import { ProductService } from "Frontend/generated/endpoints";
+
+export default function ProductsView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const rawCategory = searchParams.get('category');
+    const rawSort = searchParams.get('sort');
+
+    const queryParams = useSignal( // <1>
+        { category: rawCategory || '', sort: rawSort || 'asc' }
+    );
+
+    const products = useSignal<string[]>([]); // <2>
+
+    useEffect(() => {
+        if (queryParams.value.category === '') {
+            ProductService.allProducts(queryParams.value.sort) // <3>
+                .then((data) => products.value = data);
+        } else {
+            ProductService.productsInCategory( // <4>
+                queryParams.value.category,
+                queryParams.value.sort
+            ).then((data) => products.value = data);
+        }
+    }, []);
+
+    return (
+        <VerticalLayout theme='padding'>
+            <div>Current search term: <b>{rawCategory}</b></div>
+            <div>Current sort order: <b>{rawSort}</b></div>
+            <br/>
+            {/* <5> */}
+            <h3>Products from {queryParams.value.category
+                ? `'${queryParams.value.category}' category`
+                : "all categories"}:
+            </h3>
+
+            <div>
+                {/* <6> */}
+                <ul>{products.value.map((product) => (
+                    <li key={product}>{product}</li>
+                ))}</ul>
+        </div>
+        </VerticalLayout>
+    );
+}
+----
+<1> Holds the query parameters as a signal, and initializes default values for `category` and `sort`, if they are not present.
+<2> Holds the products as a signal to update the view when the products change.
+<3> Calls the `allProducts` method when the `category` is empty.
+<4> Calls the `productsInCategory` method when the `category` is not empty.
+<5> Displays the _category name_ or "all categories" based on the `category` query parameter.
+<6> Renders the list of products based on the `products` signal.
+
+Try entering the followings in the browser's URL, and verify the products are rendered based on the query parameters:
+
+1. Enter `http://localhost:8080/products?category=clothing` and hit enter key. You should see "Products 4", "Product 5", and "Product 6" are displayed in ascending order.
+2. Enter `http://localhost:8080/products?sort=asc` and hit enter key. You should see all the "Product 1" to "Product 9" are displayed in ascending order.
+3. Enter `http://localhost:8080/products?category=appliances&sort=desc` and hit enter key. You should see the "Products 9", "Product 8", and "Product 7" are displayed (in ascending order).
 ====
 
 .Update the `category` and `sort` Query Parameters
 [%collapsible]
 ====
-TODO
+Now, update the query parameters dynamically when the user changes the search term or sort order. For this, add a `TextField` and a `RadioGroup` to the view, and update the query parameters when the user interacts with them:
 
 .products.tsx
 [source,tsx]
 ----
+import {
+    HorizontalLayout,
+    RadioButton,
+    RadioGroup,
+    TextField,
+    VerticalLayout
+} from "@vaadin/react-components";
 import { useSearchParams } from 'react-router';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { useEffect } from 'react';
 import { useSignal } from "@vaadin/hilla-react-signals";
-import {ProductService} from "Frontend/generated/endpoints";
-import {HorizontalLayout, RadioButton, RadioGroup, VerticalLayout} from "@vaadin/react-components";
+import { useEffect } from "react";
+import { ProductService } from "Frontend/generated/endpoints";
 
 export default function ProductsView() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -315,21 +364,27 @@ export default function ProductsView() {
     const rawSort = searchParams.get('sort');
 
     const queryParams = useSignal(
-        { category: rawCategory || '', sort: rawSort || 'asc' });
+        { category: rawCategory || '', sort: rawSort || 'asc' }
+    );
 
     const products = useSignal<string[]>([]);
 
     useEffect(() => {
-        if (rawCategory !== queryParams.value.category || rawSort !== queryParams.value.sort) {
-            setSearchParams({ category: queryParams.value.category, sort: queryParams.value.sort });
+        if (rawCategory !== queryParams.value.category
+            || rawSort !== queryParams.value.sort) {
+            setSearchParams({
+                category: queryParams.value.category,
+                sort: queryParams.value.sort
+            });
         }
-
         if (queryParams.value.category === '') {
             ProductService.allProducts(queryParams.value.sort)
                 .then((data) => products.value = data);
         } else {
-            ProductService.productsInCategory(queryParams.value.category, queryParams.value.sort)
-                .then((data) => products.value = data);
+            ProductService.productsInCategory(
+                queryParams.value.category,
+                queryParams.value.sort
+            ).then((data) => products.value = data);
         }
     }, [queryParams.value]);
 
@@ -355,22 +410,32 @@ export default function ProductsView() {
                     <RadioButton value="desc" checked={queryParams.value.sort === 'desc'} label='Descending'/>
                 </RadioGroup>
             </HorizontalLayout>
-
+            <div>Current search term: <b>{rawCategory}</b></div>
+            <div>Current sort order: <b>{rawSort}</b></div>
+            <br/>
             <h3>Products from {queryParams.value.category
                 ? `'${queryParams.value.category}' category`
                 : "all categories"}:
             </h3>
+
             <div>
                 <ul>{products.value.map((product) => (
                     <li key={product}>{product}</li>
                 ))}</ul>
-            </div>
+        </div>
         </VerticalLayout>
     );
 }
 ----
 
-Try toggling the checkbox. The URL updates automatically while preserving the `text` parameter.
+1. Same as before, try entering the followings in the browser's URL, and verify the text field and the radio group values are in harmony with query parameters, as well as the rendered products:
+
+    - Enter `http://localhost:8080/products?category=clothing` and hit enter key. You should see "Products 4", "Product 5", and "Product 6" are displayed in ascending order.
+    - Enter `http://localhost:8080/products?sort=asc` and hit enter key. You should see all the "Product 1" to "Product 9" are displayed in ascending order.
+    - Enter `http://localhost:8080/products?category=appliances&sort=desc` and hit enter key. You should see the "Products 9", "Product 8", and "Product 7" are displayed (in ascending order).
+
+2. Try changing the text field value and the radio group value in the browser. Verify that the URL query parameters are updated automatically.
+3. Try adding the functionality of showing a warning message when users try to enter nonexistent categories, and show all the products instead of an empty list. (optional)
 ====
 
 
@@ -380,6 +445,7 @@ Try toggling the checkbox. The URL updates automatically while preserving the `t
 You've now successfully implemented query parameters in Hilla using React. You learned how to:
 
 * Access query parameter values.
+* Use query parameters to call Browser-Callable services.
 * Update query parameter values dynamically.
 
 You're now ready to use query parameters in real Vaadin applications!
