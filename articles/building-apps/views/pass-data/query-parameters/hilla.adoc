@@ -9,26 +9,31 @@ order: 10
 = Query Parameters in Hilla
 :toclevels: 2
 
-In this guide, you’ll learn how to access and set query parameters in a Hilla view using React. A mini-tutorial at the end will help you apply these concepts in a real Vaadin application.
+In this guide, you'll learn how to access and set query parameters in a Hilla view using React. A mini-tutorial at the end will help you apply these concepts in a real Vaadin application.
 
 
 == Using Query Parameters
 
 To work with query parameters in Hilla views, you can use the `useSearchParams` hook from `react-router`. This hook provides methods to read, update, and delete query parameters without causing a full page reload.
 
-Here's an example of a view that uses query parameters to manage a search term:
+The `useSearchParams` hook returns an array with two elements:
+
+- `searchParams` -- a `URLSearchParams` object for reading parameters.
+- `setSearchParams` -- a function to update or clear query parameters.
+
+Here's an example of a view that manages a search term using query parameters:
 
 [source,tsx]
 ----
 // tag::snippet[]
-import { useSearchParams } from 'react-router'; // <1>
+import { useSearchParams } from 'react-router';
 // end::snippet[]
 import { TextField } from '@vaadin/react-components/TextField.js';
 
 export default function ProductView() {
 // tag::snippet[]
-    const [searchParams, setSearchParams] = useSearchParams(); // <2>
-    const searchTerm = searchParams.get('category') || ''; // <3>
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchTerm = searchParams.get('category') || '';
 // end::snippet[]
     return (
         <div>
@@ -39,11 +44,11 @@ export default function ProductView() {
                     const newValue = e.detail.value;
                     if (newValue) {
 // tag::snippet[]
-                        setSearchParams({ category: newValue }); // <4>
+                        setSearchParams({ category: newValue });
 // end::snippet[]
                     } else {
 // tag::snippet[]
-                        setSearchParams({}); // <5>
+                        setSearchParams({});
 // end::snippet[]
                     }
                 }}
@@ -54,17 +59,12 @@ export default function ProductView() {
 }
 ----
 
-<1> The `useSearchParams` hook is imported from `react-router`.
-<2> The `useSearchParams` returns an array with two elements:
-- `searchParams`: A URLSearchParams object for reading parameters.
-- `setSearchParams`: A function to update parameters.
-<3> The value of the expected parameter named `category` is read. The literal value `category` as the name of the parameter can be chosen freely.
-<4> Upon changes to the search value, the `setSearchParams` function is used to set the new value for the query parameter.
-<5> Passing an empty object to the `setSearchParams` function is used to clear all the query parameters.
+In this example, the `category` parameter is used to store the search term. When a user types a new value, `setSearchParams` updates the query parameter accordingly. If the value is empty, passing an empty object to `setSearchParams` clears all query parameters.
+
 
 == Multiple Query Parameters
 
-You can work with multiple query parameters simultaneously. Here's an example of a view that manages both sorting and filtering query parameters at the same time:
+You can work with multiple query parameters simultaneously. In the following example, a view manages both a search filter (`category`) and a sorting order (`sort`) while ensuring any other query parameters are preserved when updating values:
 
 [source,tsx]
 ----
@@ -77,7 +77,7 @@ export default function ProductView() {
     const category = searchParams.get('category') || '';
     const sortOrder = searchParams.get('sort') || 'asc';
 
-    // Update URL when search or sort changes
+    // Function to update query parameters while preserving existing ones
     const updateParams = (params: Record<string, string>) => {
         setSearchParams({
             ...Object.fromEntries(searchParams),
@@ -85,6 +85,7 @@ export default function ProductView() {
         });
     };
 
+    // Ensure URL parameters reflect the current state
     if (category !== searchParams.get('category')
         || sortOrder !== searchParams.get('sort')) {
         updateParams({ category: category, sort: sortOrder });
@@ -113,10 +114,11 @@ export default function ProductView() {
 }
 ----
 
-This example demonstrates:
+In this example:
 
-1. Managing multiple parameters (`category` and `sort`) at the same time.
-2. Preserving existing parameters when updating the changed one.
+- The `category` and `sort` parameters are managed together in the query string.
+- The `updateParams` function ensures that only the changed parameter is updated while preserving any other existing parameters.
+- The URL parameters are updated dynamically to reflect changes in search input and sorting selection.
 
 
 == Query Parameters Best Practices
@@ -160,7 +162,7 @@ First, generate a <<{articles}/getting-started/start#,walking skeleton with a Hi
 .Create Browser-Callable Service
 [%collapsible]
 ====
-In the Java source, create a product Browser-Callable service that has methods accepting parameters for filtering and sorting:
+Create a new package `[application package].tutorial.service`. Then, create a class named `ProductService`:
 
 .ProductService.java
 [source,java]
@@ -247,13 +249,13 @@ export default function ProductsView() {
     const [searchParams, setSearchParams] = useSearchParams();
     const rawCategory = searchParams.get('category');
     const rawSort = searchParams.get('sort');
-// end::snippet[]
     return (
         <VerticalLayout theme='padding'>
             <div>Selected category: <b>{rawCategory}</b></div>
             <div>Sort order: <b>{rawSort}</b></div>
         </VerticalLayout>
     );
+// end::snippet[]
 }
 ----
 
@@ -274,21 +276,28 @@ Use the query parameters to call the `ProductService` methods:
 ----
 import { VerticalLayout } from "@vaadin/react-components";
 import { useSearchParams } from 'react-router';
+// tag::snippet[]
 import { useSignal } from "@vaadin/hilla-react-signals";
 import { useEffect } from "react";
 import { ProductService } from "Frontend/generated/endpoints";
+// end::snippet[]
 
 export default function ProductsView() {
     const [searchParams, setSearchParams] = useSearchParams();
     const rawCategory = searchParams.get('category');
     const rawSort = searchParams.get('sort');
 
+// tag::snippet[]
     const queryParams = useSignal( // <1>
         { category: rawCategory || '', sort: rawSort || 'asc' }
     );
+// end::snippet[]
 
+// tag::snippet[]
     const products = useSignal<string[]>([]); // <2>
+// end::snippet[]
 
+// tag::snippet[]
     useEffect(() => {
         if (queryParams.value.category === '') {
             ProductService.allProducts(queryParams.value.sort) // <3>
@@ -300,7 +309,9 @@ export default function ProductsView() {
             ).then((data) => products.value = data);
         }
     }, []);
+// end::snippet[]
 
+// tag::snippet[]
     return (
         <VerticalLayout theme='padding'>
             <div>Current search term: <b>{rawCategory}</b></div>
@@ -320,6 +331,7 @@ export default function ProductsView() {
         </div>
         </VerticalLayout>
     );
+// end::snippet[]
 }
 ----
 <1> Holds the query parameters as a signal, and initializes default values for `category` and `sort`, if they are not present.
@@ -344,6 +356,7 @@ Now, update the query parameters dynamically when the user changes the search te
 .products.tsx
 [source,tsx]
 ----
+// tag::snippet[]
 import {
     HorizontalLayout,
     RadioButton,
@@ -351,6 +364,7 @@ import {
     TextField,
     VerticalLayout
 } from "@vaadin/react-components";
+// end::snippet[]
 import { useSearchParams } from 'react-router';
 import { useSignal } from "@vaadin/hilla-react-signals";
 import { useEffect } from "react";
@@ -386,6 +400,7 @@ export default function ProductsView() {
         }
     }, [queryParams.value]);
 
+// tag::snippet[]
     return (
         <VerticalLayout theme='padding'>
             <HorizontalLayout theme='spacing padding'>
@@ -436,6 +451,7 @@ export default function ProductsView() {
             </div>
         </VerticalLayout>
     );
+// end::snippet[]
 }
 ----
 
