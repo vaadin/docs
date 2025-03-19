@@ -12,197 +12,174 @@ order: 5
 
 INTRO HERE
 
-
-== Buffered Mode
-
-The most straight forward way of working with a form in Flow is to use the `Binder` in _buffered mode_. This means that you have to explicitly call a method on the binder to write the data from the form back to form model. The changes are "buffered" in the form until it is time to write them to the form model.
-
-// TODO Why is this recommended?
-
-
-
-=== Reading from a JavaBean
-
-To populate a form with data from a JavaBean, use [methodname]`Binder.readBean()`:
-
-[source,java]
-----
-@Route
-public class ProposalFormView extends VerticalLayout {
-
-    private final Binder<ProposalBean> binder;
- 
-    public ProposalFormView() {
-        // Constructor implementation omitted for clarity
-    }
-
-// tag::snippet[]
-    private void readForm(ProposalBean formModel) {
-        binder.readBean(formModel);
-    }
-// end::snippet[]
-}
-----
-
-
-=== Reading from a Record
-
-To populate a form with data from a record, use [methodname]`Binder.readRecord()`:
-
-[source,java]
-----
-@Route
-public class ProposalFormView extends VerticalLayout {
-
-    private final Binder<ProposalRecord> binder;
- 
-    public ProposalFormView() {
-        // Constructor implementation omitted for clarity
-    }
-
-// tag::snippet[]
-    private void readForm(ProposalRecord formModel) {
-        binder.readRecord(formModel);
-    }
-// end::snippet[]
-}
-----
-
-=== Writing to a JavaBean
-
-Over the years, several methods of writing data back to a JavaBean has been added to the `Binder`:
-
-[methodname]`writeBean()` :: Writes all form fields to the JavaBean if _all_ validators -- both field and bean level -- pass. If any validator fails, the method throws a `ValidationException`, without updating the bean.
-
-[methodname]`writeBeanAsDraft()` :: Writes _valid_ form fields to the JavaBean, ignoring any invalid fields. This method does not run any bean-level validators.
-
-[methodname]`writeBeanIfValid()` :: Writes all form fields to the JavaBean and returns `true` if _all_ validators -- both field and bean level -- pass. If any validator fails, the method returns `false`, without updating the bean.
-
-[methodname]`writeChangedBindingsToBean()` :: Writes only the form fields that have been modified to the JavaBean if _all validators_ -- both field and bean level -- pass. If any validator fails, the method throws a `ValidationException`, without updating the bean.
-
-[IMPORTANT]
-The methods implement bean-level validation by first writing the changes to the JavaBean, then running the validators. If any validator fails, the changes are reverted. Any extra business logic in the setters of the JavaBean must take this into account.
-
-// TODO Which options should we recommend? What kind of example should we include?
-
-=== Writing to a Record
-
-
-== Write-through Mode
-
-
 == Application Service Design
 
+Vaadin applications use an <<../../business-logic/add-service#,application service>> to load and save form models. The application service's API depends on several aspects:
+
+* whether you're using a JavaBean or a record as form model,
+* whether you're using entities or dedicated classes as form models,
+* how you assign or generate entity IDs, and,
+* how you store the entities in a database.
+
+You'll now learn the basics of designing an application service for loading and saving a JavaBean form model, and a record form model, respectively. The implementation of the service is not covered in this guide, but it assumes an unsaved form model lacks an ID, whereas an existing form model has an ID.
 
 
 === Using JavaBean Form Models
 
+When using a JavaBean as a form model, the form model contains the ID of the corresponding entity. If the form model is new and hasn't been saved yet, this ID is `null`. Because of this, you can use a single `save()` method instead of separate `insert()` and `update()` methods. When implementing this method, you check whether the form model has an ID or not to decide whether to perform an update or an insert.
+
+You also need a method for retrieving a form model by its corresponding entity ID. This method should return an empty `Optional` if the entity does not exist.
+
+This is an example of an application service that retrieves and saves a `ProposalBean` form model:
+
 .ProposalService.java
 [source,java]
 ----
-public interface ProposalService {
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+// Security annotations omitted
+public class ProposalService {
 
-    Optional<ProposalBean> findById(long proposalId); // <1>
+    public Optional<ProposalBean> findById(long proposalId) {
+        // ...
+    }
 
-    ProposalBean save(ProposalBean proposal); // <2>
+    public ProposalBean save(ProposalBean proposal) {
+        // ...
+    }
 }
 ----
-<1> Foo
-<2> Bar
+
+It is good practice for the `save()` method to return an instance of the form model. This allows the service implementation to either set the ID directly on the original form model object, or return a new object with the ID.
+
+[NOTE]
+This approach also works when you use the entity itself as a form model.
 
 
 === Using Record Form Models
+
+When using a record as a form model, every record component must be bound to a field. This is problematic from the point of view of the ID, as you normally don't want to show the ID in the UI. To work around this limitation, you can create another record that wraps the form model and includes the ID. The wrapper record can also include other meta-data like an optimistic locking version number, last modified timestamp, and so on.
+
+In the following example, `ProposalRecord` is the form model:
 
 .PersistentProposalRecord.java
 [source,java]
 ----
 public record PersistentProposalRecord(
-    long proposalId, // <1>
-    ProposalRecord data // <2>
+    long proposalId,
+    ProposalRecord data
 ) {    
 }
 ----
-<1> Foo
-<2> Bar
 
+Because you now use different data types to differentiate between unsaved and saved form models, it is natural to create separate `insert()` and `update()` methods. You also need a method for retrieving a form model by its corresponding entity ID. 
+
+Here is an example of an application service with the three methods:
 
 .ProposalService.java
 [source,java]
 ----
-public interface ProposalService {
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+// Security annotations omitted
+public class ProposalService {
 
-    Optional<PersistentProposalRecord> findById(long proposalId); // <1>
-
-    PersistentProposalRecord insert(ProposalRecord proposal); // <2>
-
-    PersistentProposalRecord update(PersistentProposalRecord proposal); // <3>
-}
-----
-<1> Foo
-<2> Bar
-
-
-== Application Service Interaction
-
-=== Using JavaBean Form Models
-
-=== Using Record Form Models
-
-[source,java]
-----
-@Route
-public class ProposalFormView extends VerticalLayout 
-// tag::snippet[]
-        implements HasUrlParameter<Long> {
-// end::snippet[]
-
-    private final ProposalService proposalService;
-    private final Binder<ProposalRecord> binder;
-// tag::snippet[]
-    private Long proposalId;
-// end::snippet[]
-
-    public ProposalFormView(ProposalService proposalService) {
-        this.proposalService = proposalService;
-        // The rest of the constructor omitted for clarity
+    public Optional<PersistentProposalRecord> findById(long proposalId) {
         // ...
     }
 
-// tag::snippet[]
-    private void editProposal(PersistentProposalRecord proposal) {
-        this.proposalId = proposal.proposalId();
-        binder.readRecord(proposal.data());
-        // Perform any other operations such as updating the view title
-    }
-// end::snippet[]
-
-// tag::snippet[]
-    private void createProposal() {
-        this.proposalId = null;
-        binder.refreshFields();
-        // Perform any other operations such as updating the view title
-    }
-// end::snippet[]
-
-    private void saveProposal() {
-        try {
-            var data = binder.writeRecord();
-            
-        } catch (ValidationException ex) {
-            // Handle the exception or rely on the field validation errors
-        }
+    public PersistentProposalRecord insert(ProposalRecord proposal) {
+        // ...
     }
 
-// tag::snippet[]
-    @Override
-    public void setParameter(BeforeEvent beforeEvent, 
-            @OptionalParameter Long propsalId) {
-        Optional.ofNullable(proposalId)
-                .flatMap(proposalService::findById)
-                .ifPresentOrElse(this::editProposal, this::createProposal);
+    public PersistentProposalRecord update(PersistentProposalRecord proposal) {
+        // ...
     }
-// end::snippet[]
 }
 ----
+
+Both `insert()` and `update()` return new instances of `PersistentProposalRecord`, allowing them to return updated meta-data to the UI.
+
+
+== Loading a Form
+
+It is good practice to keep the code that implements the form, and the code that interacts with the application service, in separate classes. This makes it possible to reuse the form in various use-cases. For example, you might want to use a dialog for adding new items, and a drawer for editing existing items.
+
+Whenever you are loading existing data from the database, you must decide what to do if the data doesn't exist. Sometimes, you may want to show an error message:
+
+[source,java]
+----
+public void editProposal(long proposalId) {
+    service.findById(proposalId).ifPresentOrElse(
+        this::editProposal, 
+        this::showProposalNotFound
+    );
+}
+
+private void editProposal(Proposal proposal) {
+    // ...
+}
+
+private void showProposalNotFound() {
+    // ...
+}
+----
+
+Other times, you may want to show the form for adding a new item:
+
+[source,java]
+----
+public void editProposal(long proposalId) {
+    service.findById(proposalId).ifPresentOrElse(
+        this::editProposal, 
+        this::newProposal
+    );
+}
+
+private void editProposal(Proposal proposal) {
+    // ...
+}
+
+private void newProposal() {
+    // ...
+}
+----
+
+The code is easier to read if you design the methods so that they can be passed as method references to the `Optional` returned by the application service.
+
+=== Using JavaBean Form Models 
+
+*Buffered mode*:
+
+[source,java]
+----
+private void editProposal(ProposalBean proposal) {
+    this.proposal = proposal;
+    form.read(proposal);
+}
+----
+
+*Write-through mode*:
+
+[source,java]
+----
+private void editProposal(ProposalBean proposal) {
+    this.proposal = proposal;
+    form.bind(proposal);
+}
+----
+
+
+=== Using Record Form Models
+
+
+== Saving a Form
+
+
+=== Using JavaBean Form Models
+
+
+=== Using Record Form Models
+
 
 // TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.
