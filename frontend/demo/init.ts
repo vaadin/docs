@@ -2,20 +2,11 @@
 import '@vaadin/polymer-legacy-adapter/style-modules.js';
 import './init-flow-namespace';
 import './init-flow-components';
+import '../generated/activate-vaadin-featureflags.js';
 import '../generated/vaadin-featureflags';
 import '../generated/theme-docs.global.generated.js';
 import client from 'Frontend/generated/connect-client.default';
 import { applyTheme } from 'Frontend/generated/theme';
-
-// Fix feature flags
-// Since https://github.com/vaadin/flow/pull/21066 Flow sets feature flags at runtime. However, that
-// doesn't work when rendering only Lit / React examples, as the Flow bootstrap logic is never
-// loaded. So for now, feature flags are set here in addition to vaadin-featureflags.properties.
-window.Vaadin.featureFlags = {
-  ...window.Vaadin.featureFlags,
-  cardComponent: true,
-  dashboardComponent: true,
-};
 
 // Apply the theme, so that overlay elements styles and custom property overrides work as expected
 applyTheme(document);
