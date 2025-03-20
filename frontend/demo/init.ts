@@ -2,6 +2,7 @@
 import '@vaadin/polymer-legacy-adapter/style-modules.js';
 import './init-flow-namespace';
 import './init-flow-components';
+import '../generated/activate-vaadin-featureflags.js';
 import '../generated/vaadin-featureflags';
 import '../generated/theme-docs.global.generated.js';
 import client from 'Frontend/generated/connect-client.default';
