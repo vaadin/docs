@@ -11,3 +11,118 @@ order: 10
 :toclevels: 2
 
 TODO
+
+== Client Side vs. Server Side Validation
+
+In a Hilla application, you have to validate all input twice:
+
+1. In the user interface, to improve the user experience.
+2. In the server, to ensure application security.
+
+Always consider client-side validation as an *improvement of the user experience* rather than actual data validation. *A malicious user can bypass the browser validation* using browser development tools.
+
+This guide only covers the client-side validation. For server-side validation, see the <<{articles}/building-apps/deep-dives/application-layer/consistency/validation#,Validation Deep Dive>>.
+
+.Jakarta Bean Validation
+[NOTE]
+If you are using Jakarta Bean Validation on the server side, Hilla can use the annotations to automatically apply corresponding validators on the client side. For details, see the <<{articles}/hilla/guides/forms/binder-validation#,Hilla Reference Guide>>.
+
+
+== Field Validators
+
+To add a validator to a field in Hilla, you first need to get access to that field's model part of the form. Hilla offers a `useFormPart`-hook for this purpose:
+// TODO  "field's model part of the form" says nothing. Improve!
+
+[source,typescript]
+----
+const { model } = useForm(MyFormModel);
+const titleField = useFormPart(model.title); // <1>
+----
+<1> This assumes that `MyForm` has a string property called `title`.
+
+Next, you call the `addValidator()` method inside a React effect:
+
+[source,typescript]
+----
+useEffect(() => {
+    titleField.addValidator(new Size({
+        message: "Title must be between 1 and 100 characters",
+        min: 1,
+        max: 100
+    }));
+});
+----
+
+You can add as many validators as you need. They are validated in the order they were added. If a validator fails, the validation stops.
+
+
+=== Built-in Validators
+
+Vaadin provides a set of *built-in validators* for common validation scenarios:
+
+* *Numeric Range Validators* -- Ensure that a numeric value falls within a valid range.
+  - `Min`, `Max`, `DecimalMin`, `DecimalMax`, `Negative`, `NegativeOrZero`, `Positive`, `PositiveOrZero`
+
+* *Date Validators* -- Ensure that a date value falls within a valid range.
+  - `Past`, `Future`
+
+* *Boolean Validators* -- Ensure that a boolean value is `true` or `false`.
+  - `AssertTrue`, `AssertFalse`
+
+* *Required Field Validators* -- Ensure that a value is not `null` or empty.
+  - `NotNull`, `NotEmpty`, `NotBlank`
+
+* *Other Validators*
+  - `Digits` -- Ensures a numeric value has a specific number of digits.
+  - `Email` -- Ensures the value is a valid email address.
+  - `Null` -- Ensures the value is `null`.
+  - `Pattern` -- Ensures the value matches a specified regular expression.
+  - `Size` -- Ensures a string is within a valid length range.
+
+
+=== Custom Validators
+
+If the built-in validators do not meet your requirements, you can create a custom validator by implementing [interfacename]`Validator<T>`. The following example ensures an integer is positive:
+
+[source,typescript]
+----
+useEffect(() => {
+    numericField.addValidator({
+        message: "The number must be positive",
+        validate: num => num >= 0
+    });
+});
+----
+
+To make the validator mark the field as required, set the `impliesRequired` attribute:
+
+[source,typescript]
+----
+useEffect(() => {
+    numericField.addValidator({
+        message: "The number must be positive",
+        validate: num => num >= 0,
+// tag::snippet[]
+        impliesRequired: true
+// end::snippet[]
+    });
+});
+----
+
+
+== Required Fields
+
+- There is a required flag on the form part, but you can't set it explicitly
+- Instead add a validator that implies the field is required
+- Show an example
+
+
+== Triggering Validation
+
+- When is validation triggered?
+
+== Handling Validation Errors
+
+- How do you handle validation errors?
+
+// TODO What about validators that operate on the entire form model and not on individual fields?
