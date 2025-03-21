@@ -4,7 +4,7 @@ const key = 'dashboard-config';
 
 class DashboardService {
   // eslint-disable-next-line @typescript-eslint/require-await
-  async loadDashboard(): Promise<WidgetConfig[]> {
+  async loadDashboard(): Promise<WidgetConfig[] | null> {
     const config = localStorage.getItem(key);
     return config ? JSON.parse(config) : null;
   }
