@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 // tag::snippet[]
+// @BrowserCallable and @AnonymousAllowed are only required if you want
+// to use the service from a Hilla view
 @BrowserCallable
 @AnonymousAllowed
 public class ComboBoxCountryService {
