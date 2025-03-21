@@ -28,22 +28,22 @@ The follow example shows how to build a two-column project proposal form with va
 public class ProposalForm extends Composite<FormLayout> { // <1>
 
     public ProposalForm() {
-        var title = new TextField("Title");
-        getContent().add(title); // <2>
+        var titleField = new TextField("Title");
+        getContent().add(titleField); // <2>
 
-        var proposalType = new ComboBox<ProposalType>("Proposal Type");
-        proposalType.setItems(ProposalType.values());
-        getContent().add(proposalType);
+        var proposalTypeField = new ComboBox<ProposalType>("Proposal Type");
+        proposalTypeField.setItems(ProposalType.values());
+        getContent().add(proposalTypeField);
 
-        var description = new TextArea("Description");
-        getContent().add(description);
-        getContent().setColspan(description, 2); // <3>
+        var descriptionField = new TextArea("Description");
+        getContent().add(descriptionField);
+        getContent().setColspan(descriptionField, 2); // <3>
 
-        var startDate = new DatePicker("Start Date");
-        getContent().add(startDate);
+        var startDateField = new DatePicker("Start Date");
+        getContent().add(startDateField);
 
-        var endDate = new DatePicker("End Date");
-        getContent().add(endDate);
+        var endDateField = new DatePicker("End Date");
+        getContent().add(endDateField);
     }
 }
 ----
@@ -179,22 +179,22 @@ public class ProposalForm extends Composite<FormLayout> {
 
 // tag::snippet[]
         binder = new Binder<>();
-        binder.forField(title) // <1>
+        binder.forField(titleField) // <1>
             // Converters and validators would go here
             .bind(ProposalBean::getTitle, ProposalBean::setTitle); // <2>
-        binder.forField(proposalType)
+        binder.forField(proposalTypeField)
             .bind(ProposalBean::getType, ProposalBean::setType);
-        binder.forField(description)
+        binder.forField(descriptionField)
             .bind(ProposalBean::getDescription, ProposalBean::setDescription);
-        binder.forField(startDate)
+        binder.forField(startDateField)
             .bind(ProposalBean::getStartDate, ProposalBean::setStartDate);
-        binder.forField(endDate)
+        binder.forField(endDateField)
             .bind(ProposalBean::getEndDate, ProposalBean::setEndDate);
 // end::snippet[]
     }
 }
 ----
-<1> Creates a `Binding` for the `title` field.
+<1> Creates a `Binding` for `titleField`.
 <2> Uses getter and setter methods for binding.
 
 
@@ -251,7 +251,7 @@ public class ProposalForm extends Composite<FormLayout> {
 
 === Writing to a Bean
 
-In *buffered mode*, use `Binder.writeBean()`:
+In *buffered mode*, use `Binder.writeBeanIfValid()`:
 
 .ProposalForm.java
 [source,java]
@@ -268,19 +268,25 @@ public class ProposalForm extends Composite<FormLayout> {
 
 // tag::snippet[]
     public boolean write(ProposalBean formModel) {
-        try {
-            binder.writeBean(formModel);
-            return true; // <1>
-        } catch (ValidationException ex) {
-            // Binder already shows the error messages.
-            return false; // <2>
-        }
+        return binder.writeBeanIfValid(formModel); // <1>
     }    
 // end::snippet[]
 }
 ----
-<1> Returns `true` if validation succeeds.
-<2> Returns `false` if validation fails.
+<1> Returns `true` if validation succeeds, `false` otherwise.
+
+.Other methods for writing to a bean
+[%collapsible]
+====
+The `Binder` class provides four methods for writing form data to a model:
+
+`writeBean` :: Validates the entire form and writes all values to the model if validation passes. Throws an exception if validation fails.
+`writeBeanAsDraft` :: Writes all valid values to the model while ignoring invalid values. No exception is thrown.
+`writeBeanIfValid` :: Validates the form and writes all values if validation passes. Returns false (rather than throwing an exception) if validation fails.
+`writeChangedBindingsToBean` :: Validates the entire form but only writes modified fields to the model if validation passes. Throws an exception if validation fails.
+
+Some methods have overloaded versions that allow you to further customize the write operation. See the JavaDocs for details.
+====
 
 In *write-through mode*, no explicit write operation is needed. However, always check form validity before processing:
 
@@ -324,14 +330,8 @@ public class ProposalForm extends Composite<FormLayout> {
     }
 
     public boolean write(ProposalBean formModel) {
-        try {
-            binder.writeBean(formModel);
-            return true;
-        } catch (ValidationException ex) {
-            // Binder already shows the error messages.
-            return false;
-        }
-    }    
+        return binder.writeBeanIfValid(formModel);
+    }
 
 // tag::snippet[]
     public void clear() {
@@ -402,13 +402,13 @@ public class ProposalForm extends Composite<FormLayout> {
 
  // tag::snippet[]
         binder = new Binder<>(ProposalRecord.class); // <1>
-        binder.forField(title)
+        binder.forField(titleField)
             // Converters and validators would go here
             .bind("title"); // <2>
-        binder.forField(proposalType).bind("type");
-        binder.forField(description).bind("description");
-        binder.forField(startDate).bind("startDate");
-        binder.forField(endDate).bind("endDate");
+        binder.forField(proposalTypeField).bind("type");
+        binder.forField(descriptionField).bind("description");
+        binder.forField(startDateField).bind("startDate");
+        binder.forField(endDateField).bind("endDate");
 // end::snippet[]
     }
 }
@@ -458,8 +458,8 @@ And you would use them with `Binder` like this:
 
 [source,java]
 ----
-binder.forField(title).bind(ProposalRecord.PROP_TITLE);
-binder.forField(proposalType).bind(ProposalRecord.PROP_TYPE);
+binder.forField(titleField).bind(ProposalRecord.PROP_TITLE);
+binder.forField(proposalTypeField).bind(ProposalRecord.PROP_TYPE);
 // And so on...
 ----
 
