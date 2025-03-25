@@ -33,15 +33,20 @@ When Control Center's URL or a deployed application's URL is not resolving after
 
 === Solution
 
-- Verify DNS records:
+Verify DNS records of your domain are ready and available.
+To check the IP address a domain resolves to, run:
 
 [source,shell]
 ----
 nslookup <domain>
 ----
 
-- Wait for propagation.
-- Check external DNS settings.
+Here's an example of what the above-mentioned command would result for `vaadin.com`:
+
+image::images/nslookup_vaadin.png[dnslookup vaadin.com]
+
+If the lookup cannot resolve the hostname into an IP address, double-check for typos. 
+If the DNS server can't find the domain, then it is yet to be propagated.
 
 == Crash Loop
 
@@ -62,3 +67,36 @@ kubectl -n <namespace> events
 ----
 
 If you see events of failing probes, then xref:../application-deployment/index.adoc#deploy-with-control-center[increase the startup delay time] enough to give it time to finish.
+
+== Invalid docker image
+
+A docker image reference consists of several components that describe where the image is stored and its identity. These components are:
+
+```
+[HOST[:PORT]/]NAMESPACE/REPOSITORY[:TAG]
+```
+
+`HOST` +
+Specifies the registry location where the image resides. If omitted, Docker defaults to Docker Hub (`docker.io`).
+
+`PORT` +
+An optional port number for the registry, if necessary (for example, `:5000`).
+
+`NAMESPACE/REPOSITORY` +
+The namespace (optional) usually represents a user or organization. The repository is required and identifies the specific image. If the namespace is omitted, Docker defaults to `library`, the namespace reserved for Docker Official Images.
+
+`TAG` +
+An optional identifier used to specify a particular version or variant of the image. If no tag is provided, Docker defaults to `latest`.
+
+If an invalid docker image is used to deploy an application, the application may never become available.
+To check if an unavailable application has an invalid image, look for a Warning event with the message `Failed to pull image...`
+
+[source,shell]
+----
+kubectl -n <namespace> events --types=Warning
+----
+
+image::images/docker_image_not_found.png[Docker image not found]
+
+If the image is hosted in a private repository, you might need to provide an image pull secret as necessary authentication to pull the image.
+This value can be provided in the application deploy screen, below the field where the docker image is provided.
