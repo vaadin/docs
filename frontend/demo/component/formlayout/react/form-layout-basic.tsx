@@ -1,23 +1,28 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { PasswordField } from '@vaadin/react-components/PasswordField.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
+import {
+  EmailField,
+  FormLayout,
+  FormRow,
+  PasswordField,
+  TextField,
+} from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]
-  const responsiveSteps = [
-    { minWidth: '0', columns: 1 },
-    { minWidth: '500px', columns: 2 },
-  ];
-
   return (
-    <FormLayout responsiveSteps={responsiveSteps}>
-      <TextField label="First name" />
-      <TextField label="Last name" />
-      <TextField label="Username" data-colspan="2" />
-      <PasswordField label="Password" />
-      <PasswordField label="Confirm password" />
+    <FormLayout autoResponsive>
+      <FormRow>
+        <TextField label="First name" />
+        <TextField label="Last name" />
+      </FormRow>
+      <FormRow>
+        <EmailField label="Email" />
+      </FormRow>
+      <FormRow>
+        <PasswordField label="Password" />
+        <PasswordField label="Confirm password" />
+      </FormRow>
     </FormLayout>
   );
   // end::snippet[]
