@@ -1,80 +1,75 @@
 ---
 title: NetBeans
-page-title: How to run Vaadin projects in NetBeans
-description: How to run a project in NetBeans.
-meta-description: Learn how to set up and run your Vaadin applications using NetBeans.
+page-title: How to run a Vaadin application in NetBeans
+meta-description: Run and debug your Vaadin app in NetBeans, with instructions to enable Java hotswap using JetBrains Runtime and HotswapAgent for a smoother dev experience.
 order: 300
 ---
 
 
-= Run a Project in NetBeans
+= NetBeans
 
-This page describes how to run a project with NetBeans.
+You can run and debug your Vaadin application in NetBeans as you would any other Java application. Start by selecting menu:File[Project Properties]. Select the *Run* category and specify your *Main Class*, like this:
 
+image::images/netbeans-properties.png[NetBeans project properties dialog]
 
-== Run Maven Goals
+Click [guibutton]*OK* to close the dialog. Next, click the *Debug* button on the toolbar, indicated by a red circle in this screenshot:
 
-NetBeans integrates with Maven, enabling you to run Maven commands. Besides building and cleaning the project, you can run the web application on an embedded web server.
+image::images/netbeans-debug.png[NetBeans debug button]
 
-Select the project in the [guilabel]*Projects* view. NetBeans shows common https://vaadin.com/blog/learning-maven-concepts[Maven goals] inside the [guilabel]*Navigator* view:
-
-.Navigator View
-image::_images/netbeans/navigator-view.png[The Navigator view in Netbeans IDE]
-
-Double-click a goal to execute it.
+The application starts up and you can access it at http://localhost:8080. Hot deploy of the frontend files is enabled automatically. However, to enable Java hotswap, you have to take some additional actions.
 
 
-[[getting-started.netbeans.maven.running]]
-=== Run the Web Application
+== Enabling Hotswap
 
-You can run the web application in an embedded web server by running the appropriate goal for your technology stack.
+Enabling hotswap manually consists of three steps:
 
-[cols=3*,options=header]
-|===
-| Technology Stack | Embedded Server | Goal to Run
-| Spring Boot | – | `spring-boot:run`
-| CDI / Java EE | Apache TomEE | `tomee:run`
-| Plain Java | Jetty | `jetty:run`
-|===
-
-While the server is running, when you edit and save any source files, the server notices the change and redeploys the web application. <<{articles}/flow/configuration/live-reload#, Live Reload>> should be enabled by default, making the page refresh automatically.
-
-To stop the server, click the "stop" button (red stop sign) in the [guilabel]*Output* view:
-
-.Output View
-image::_images/netbeans/output-view.png[The Output view in Netbeans, with the stop button]
-
-[[maven.actions]]
-=== Bind Maven Goals to IDE Actions
-
-As running the web application is a frequent task during development, you may want to bind such a Maven goal to an _IDE action_.
-
-To associate the [guilabel]*Run project* action with a Maven goal to start the server, proceed as follows:
-
-- Right-click the project in the [guilabel]*Projects* view and select [guilabel]*Properties*.
-- In the [guilabel]*Project Properties* window, select menu:Categories[Actions].
-- Select the menu:Actions[Run project] option.
-- Type the goal to start the web server in [guilabel]*Execute Goals*: `jetty:run` (plain Java project), `tomee:run` (CDI project), or `spring-boot:run` (Spring Boot project).
-- Click [guibutton]*OK*:
-+
-image:_images/netbeans/actions.png[Actions]
-
-You can now deploy and run the web application by clicking the "run" icon (green play triangle) in the toolbar:
-
-image::_images/netbeans/toolbar.png[Toolbar]
-
-You can repeat the process to bind the same Maven goal to the [guilabel]*Debug project* IDE action, as well.
-
-If the Vaadin application was created with <</getting-started/project#,Vaadin Start>> or a <</getting-started/project/maven-archetype#,Maven archetype>>, you should be able to access it at http://localhost:8080/[localhost:8080].
-
-With the above configuration, you can now use NetBeans to develop your Vaadin application with Maven.
-
-ifdef::web[]
-To learn more about:
-
-- The key concepts in Maven, see https://vaadin.com/blog/learning-maven-concepts[Learning Maven concepts].
-- How to develop a Java web application without coding JavaScript or HTML, see the <</flow/tutorial#,Vaadin Flow tutorial>>.
-endif::web[]
+1. Download and install JetBrains Runtime;
+2. Download HotswapAgent and install it into JetBrains Runtime; and
+3. Create a launch configuration for VS Code that runs the application with JetBrain Runtime and additional JVM parameters.
 
 
-[discussion-id]`9E46A6C2-30AC-4252-810A-B95BB6D177F2`
+=== JetBrains Runtime
+
+You can download the latest version from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrains GitHub release page]. Be sure to select the correct architecture. Use JetBrains Runtime to execute your application, not necessarily your IDE.
+
+
+=== HotswapAgent
+
+You can download HotswapAgent from the https://github.com/HotswapProjects/HotswapAgent/releases[HotswapAgent GitHub release page]. You'll need version 1.4.2 or later.
+
+Download the JAR file and place it inside the JetBrains Runtime installation directory as [filename]`lib/hotswap/hotswap-agent.jar`. You'll need to create the `hotswap` folder, and rename the downloaded file to `hotswap-agent.jar`.
+
+If you want to know more about the features of HotswapAgent, the documentation in the https://hotswapagent.org/[HotswapAgent webpage] is a good resource.
+
+
+== Project Configuration
+
+Select menu:File[Project Properties]. If the menu item is disabled, your application is likely running and you have to stop it. Then go to the menu:Build[Compile] category.
+
+image::images/netbeans-jvm.png[NetBeans project properties dialog]
+
+Under *JDK Settings*, click [guibutton]*Manage* and locate the JetBrains Runtime. Then select it as your *Java Platform*.
+
+Next, go to the *Run* category. In the *VM Options* field, copy-paste the following:
+
+[source]
+----
+-XX:+AllowEnhancedClassRedefinition -XX:+ClassUnloading -XX:HotswapAgent=fatjar
+----
+
+image::images/netbeans-vm-options.png[NetBeans project properties dialog]
+
+Click [guibutton]*OK* to close the dialog, then start the application again. The application starts up.
+
+Open the application in a browser and verify that everything is working through Vaadin Copilot. Move your mouse pointer over the *Copilot* button at the bottom-right corner:
+
+image::images/copilot-development-workflow-netbeans.png[Vaadin Copilot menu visible in a browser]
+
+[IMPORTANT]
+The Copilot button is only available when the application is running in development mode. It is not available in <<../build#,production mode>>.
+
+Now click *Development workflow*. Your browser should look something like this:
+
+image::images/copilot-development-workflow-netbeans2.png[Vaadin Copilot development workflow dialog]
+
+The first item is orange because Vaadin does not have an official plugin for NetBeans. However, Java hotswap is enabled.
