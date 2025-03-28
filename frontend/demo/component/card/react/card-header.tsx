@@ -10,11 +10,10 @@ function Example() {
         {/* tag::[] */}
         <div
           slot="header"
-          className="leading-xs"
-          style={{ display: 'flex', flexDirection: 'column' }}
+          className="leading-xs flex flex-col"
         >
-          <h2 style={{ order: 2 }}>Lapland</h2>
-          <div className="uppercase text-xs text-secondary" style={{ order: 1 }}>
+          <h2>Lapland</h2>
+          <div className="uppercase text-xs text-secondary" style={{ order: -1 }}>
             The Exotic North
           </div>
         </div>
