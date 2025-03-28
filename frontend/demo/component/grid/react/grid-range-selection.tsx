@@ -53,7 +53,14 @@ function Example() {
   };
 
   return (
-    <Grid items={items.value} selectedItems={selectedItems.value} onItemToggle={handleItemToggle}>
+    <Grid
+      items={items.value}
+      selectedItems={selectedItems.value}
+      onSelectedItemsChanged={(event) => {
+        selectedItems.value = event.detail.value;
+      }}
+      onItemToggle={handleItemToggle}
+    >
       <GridSelectionColumn />
       <GridColumn path="firstName" />
       <GridColumn path="lastName" />
