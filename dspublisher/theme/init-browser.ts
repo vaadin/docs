@@ -44,7 +44,6 @@ class Header extends LitElement {
 
     return html`
       <link
-        crossorigin
         rel="stylesheet"
         href="https://cdn.vaadin.com/staging/website/antlers/v2/assets/fonts/nbinternationalpro/stylesheet.css"
       />
