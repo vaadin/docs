@@ -9,17 +9,17 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
-@Route("form-layout-custom-layout")
-public class FormLayoutCustomLayout extends Div {
+@Route("form-layout-steps-basic")
+public class FormLayoutStepsBasic extends Div {
 
-    public FormLayoutCustomLayout() {
+    public FormLayoutStepsBasic() {
+        // tag::snippet[]
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
-        EmailField email = new EmailField("Email");
+        EmailField email = new EmailField("Email address");
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(firstName, lastName, email);
-        // tag::snippet[]
         formLayout.setResponsiveSteps(
                 // Use one column by default
                 new ResponsiveStep("0", 1),
@@ -33,6 +33,6 @@ public class FormLayoutCustomLayout extends Div {
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<FormLayoutCustomLayout> { // hidden-source-line
+    public static class Exporter extends DemoExporter<FormLayoutStepsBasic> { // hidden-source-line
     } // hidden-source-line
 }

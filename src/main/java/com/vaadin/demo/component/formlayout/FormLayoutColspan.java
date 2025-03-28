@@ -1,30 +1,29 @@
 package com.vaadin.demo.component.formlayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.router.Route;
 
 @Route("form-layout-colspan")
 public class FormLayoutColspan extends Div {
 
     public FormLayoutColspan() {
-        TextField title = new TextField("Title");
-        DatePicker date = new DatePicker("Date");
-        TimePicker from = new TimePicker("From");
-        TimePicker to = new TimePicker("To");
+        // tag::snippet[]
+        TextField streetAddress = new TextField("Street address");
+        TextField postalCode = new TextField("Postal code");
+        TextField city = new TextField("City/Town");
+        TextField country = new TextField("Country");
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(title, date, from, to);
-        // tag::snippet[]
-        formLayout.setColspan(title, 3);
+        formLayout.setAutoResponsive(true);
+        formLayout.addFormRow(streetAddress);
+        formLayout.add(streetAddress, 3);
+        formLayout.add(postalCode);
+        formLayout.add(city, 2);
+        formLayout.add(country, 2);
         // end::snippet[]
-        formLayout.setResponsiveSteps(new ResponsiveStep("0", 1),
-                new ResponsiveStep("500px", 3));
         add(formLayout);
     }
 
