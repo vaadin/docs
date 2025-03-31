@@ -1,0 +1,106 @@
+---
+title: Add Login
+page-title: How to login a user to a Vaadin application
+description: Learn how to add user login to a Vaadin application using Spring Security.
+meta-description: Learn how to add user login to a Vaadin application using Spring Security. This guide covers setting up in-memory authentication for development and testing.
+layout: tabbed-page
+tab-title: Overview
+order: 1
+---
+
+
+= Add Login
+
+Most enterprise applications require users to authenticate before accessing the application. Vaadin applications use *Spring Security* for all security features, including authentication. Any authentication method available in Spring Security can also be used in a Vaadin application.
+
+This guide shows you how to set up *in-memory authentication* for development and testing purposes.
+
+.Never Use Hard-Coded Credentials In Production
+[WARNING]
+In-memory authentication is convenient for development, but production applications must use a more secure approach, such as *JDBC authentication*, *LDAP authentication*, or *OAuth 2.0*. Refer to the https://docs.spring.io/spring-security/reference/servlet/authentication/index.html[Spring Security Reference Manual] for more details.
+
+// TODO add links to our own guides that explain how to do this.
+
+
+== Steps to Set Up Authentication
+
+To enable authentication in a Vaadin application, follow these steps:
+
+1. Add the *Spring Security dependency* to your project.
+2. Create a *Spring Security configuration class*.
+3. Create a *login view*.
+4. Grant access to specific views and layouts.
+
+This guide covers the first three steps. For the fourth step, see the <<../protect-views#,Protect Views>> guide.
+
+
+== Add Spring Security Dependency
+
+Since Vaadin applications are built on Spring Boot, adding the *Spring Security starter* dependency enables authentication:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+----
+
+
+== Create a Security Configuration Class
+
+Simply adding Spring Security to your project locks you out of your application unless you configure authentication. You must define a [interfacename]`UserDetailsService` and a login form to allow users to log in.
+
+[TIP]
+It's best practice to create a dedicated package for security-related classes. If your root package is [packagename]`com.example.application`, place the security configuration inside: `com.example.application.security`
+
+This is a minimal implementation of a security configuration class:
+
+.SecurityConfig.class
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig extends VaadinWebSecurity {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        super.configure(http); // <1>
+        // TODO Configure the login view
+    }
+
+    @Bean
+    public UserDetailsManager userDetailsManager() {
+        LoggerFactory.getLogger(SecurityConfig.class)
+            .warn("NOT FOR PRODUCITON: Using in-memory user details manager!"); // <2>
+        var user = User.withUsername("user")
+                .password("{noop}user")
+                .roles("USER")
+                .build();
+        var admin = User.withUsername("admin")
+                .password("{noop}admin")
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+<1> Always call `super.configure()` -- this ensures that the application is properly configured.
+<2> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
+
+The [classname]`VaadinWebSecurity` class provides essential security configurations out of the box, including:
+
+* CSRF protection
+* Default request caching
+* Access restriction to Vaadin views and services
+
+[NOTE]
+If you need to customize security rules, such as allowing anonymous access to static resources, do so  _before_ calling `super.configure()`. This is because [classname]`VaadinWebSecurity` applies a *catch-all rule* that requires authentication for _all_ requests.
+
+
+== Create a Login View
+
+You can implement the login view using Flow or Hilla. Follow the guides below:
+
+* <<flow#,Add a Flow Login View>>
+* <<hilla#,Add a Hilla Login View>>
