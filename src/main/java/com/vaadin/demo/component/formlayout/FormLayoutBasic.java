@@ -16,7 +16,7 @@ public class FormLayoutBasic extends Div {
         // tag::snippet[]
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
-        EmailField email = new EmailField("Email");
+        EmailField email = new EmailField("Email address");
         PasswordField password = new PasswordField("Password");
         PasswordField confirmPassword = new PasswordField("Confirm password");
 

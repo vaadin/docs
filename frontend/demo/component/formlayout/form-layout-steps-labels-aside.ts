@@ -6,10 +6,9 @@ import '@vaadin/split-layout';
 import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('form-layout-steps-basic')
+@customElement('form-layout-steps-labels-aside')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
