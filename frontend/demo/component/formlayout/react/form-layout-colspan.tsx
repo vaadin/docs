@@ -1,25 +1,32 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { TimePicker } from '@vaadin/react-components/TimePicker.js';
+import { FormLayout, FormRow, SplitLayout, TextField } from '@vaadin/react-components';
 
 function Example() {
-  const responsiveSteps = [
-    { minWidth: '0', columns: 1 },
-    { minWidth: '20em', columns: 3 },
-  ];
+  function renderFormLayout() {
+    // tag::snippet[]
+    return (
+      <FormLayout className="w-full" autoResponsive columnWidth="8em" expandFields>
+        <FormRow>
+          <TextField label="Street address" data-colspan="3" />
+        </FormRow>
+        <FormRow>
+          <TextField label="Postal code" />
+          <TextField label="City/Town" data-colspan="2" />
+        </FormRow>
+        <FormRow>
+          <TextField label="Country" data-colspan="2" />
+        </FormRow>
+      </FormLayout>
+    );
+    // end::snippet[]
+  }
 
   return (
-    <FormLayout responsiveSteps={responsiveSteps}>
-      {/* tag::snippet[] */}
-      <TextField label="Title" data-colspan="3" />
-      {/* end::snippet[] */}
-      <DatePicker label="Date" />
-      <TimePicker label="From" />
-      <TimePicker label="To" />
-    </FormLayout>
+    <SplitLayout>
+      {renderFormLayout()}
+      <div></div>
+    </SplitLayout>
   );
 }
 
