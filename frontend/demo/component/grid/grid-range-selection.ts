@@ -3,7 +3,7 @@ import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { GridItemToggleEvent } from '@vaadin/grid';
+import type { GridItemToggleEvent, GridSelectedItemsChangedEvent } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -67,6 +67,9 @@ export class Example extends LitElement {
       <vaadin-grid
         .items="${this.items}"
         .selectedItems="${this.selectedItems}"
+        @selected-items-changed="${(e: GridSelectedItemsChangedEvent<Person>) => {
+          this.selectedItems = e.detail.value;
+        }}"
         @item-toggle="${this.handleItemToggle}"
       >
         <vaadin-grid-selection-column></vaadin-grid-selection-column>
