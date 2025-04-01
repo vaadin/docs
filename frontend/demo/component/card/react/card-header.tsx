@@ -8,9 +8,14 @@ function Example() {
       {/* tag::snippet[] */}
       <Card>
         {/* tag::[] */}
-        <div slot="header" className="leading-xs">
-          <div className="uppercase text-xs text-secondary">The Exotic North</div>
+        <div
+          slot="header"
+          className="leading-xs flex flex-col"
+        >
           <h2>Lapland</h2>
+          <div className="uppercase text-xs text-secondary" style={{ order: -1 }}>
+            The Exotic North
+          </div>
         </div>
         {/* end::[] */}
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>

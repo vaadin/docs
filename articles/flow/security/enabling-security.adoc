@@ -517,6 +517,50 @@ For more information about navigation access control consult the <<{articles}/fl
 
 Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views. Doing so might cause unwanted access configurations, and would be an unnecessary complication in the authorization of views.
 
+== Spring Concurrency Support with Vaadin
+
+Spring Security provides built-in https://docs.spring.io/spring-security/reference/servlet/integrations/concurrency.html[concurrency support] to propagate security contexts across asynchronous operations. One of the key components for this is [classname]`DelegatingSecurityContextExecutor`, which wraps an [classname]`Executor` and ensures that the [classname]`SecurityContext` is properly propagated to background tasks.
+
+In a Vaadin application, [classname]`VaadinSecurityContextHolderStrategy` should be initialized before any custom [classname]`DelegatingSecurityContextExecutor` bean is created. This ensures that the correct security context holder is used, preventing potential issues with authentication propagation in async tasks.
+
+To guarantee that [classname]`VaadinSecurityContextHolderStrategy` is set before the [classname]`DelegatingSecurityContextExecutor` bean is instantiated, consider the following approaches:
+
+* add `@DependsOn("VaadinSecurityContextHolderStrategy")` to the custom [classname]`DelegatingSecurityContextExecutor` bean definition to explicitly enforce the initialization order
+* instead of relying on implicit ordering, have [classname]`VaadinSecurityContextHolderStrategy` directly injected into the bean method definition and manually wire it into the [classname]`DelegatingSecurityContextExecutor` instance.
+
+
+[source,java]
+.Using @DependsOn
+----
+@Bean
+@DependsOn("VaadinSecurityContextHolderStrategy")
+public DelegatingSecurityContextAsyncTaskExecutor taskExecutor() {
+    var delegate = new ThreadPoolTaskExecutor();
+    //configure the executor
+    delegate.initialize();
+
+    return new DelegatingSecurityContextAsyncTaskExecutor(delegate);
+}
+----
+
+[source,java]
+.Injecting VaadinSecurityContextHolderStrategy Manually
+----
+@Bean
+public DelegatingSecurityContextAsyncTaskExecutor taskExecutor(
+    VaadinAwareSecurityContextHolderStrategy strategy) {
+    var delegate = new ThreadPoolTaskExecutor();
+    //configure the executor
+    delegate.initialize();
+
+    var executor = new DelegatingSecurityContextAsyncTaskExecutor(delegate);
+    executor.setSecurityContextHolderStrategy(strategy);
+    return executor;
+}
+----
+
+By applying either of these solutions, you ensure that the correct security context holder is used for asynchronous task execution in a Vaadin application.
+
 
 == Spring Impersonation with Vaadin
 
