@@ -10,28 +10,28 @@ order: 5
 = Load and Save a Form in Flow
 :toclevels: 2
 
-In this guide, you'll learn how to design an application service for loading and saving a form model in Flow. You'll also learn how to integrate this services into your form. Application services are covered in more detail in the <<../../business-logic/add-service#,Add a Service>> guide.
+In this guide, you'll learn how to design an application service for loading and saving a Form Data Object (FDO) in Flow. You'll also learn how to integrate this services into your form. Application services are covered in more detail in the <<../../business-logic/add-service#,Add a Service>> guide.
 
 
 == Application Service Design
 
-Vaadin applications use an application service to load and save form models. The application service's API depends on several aspects:
+Vaadin applications use an application service to load and save FDO:s. The application service's API depends on several aspects:
 
-* the choice of JavaBean or record as a form model
-* whether you're using entities or dedicated classes as form models
+* the choice of JavaBean or record as an FDO
+* whether you're using entities or dedicated classes as FDO:s
 * entity ID assignment strategy
 * how you store the entities in a database
 
-This section covers the basics of designing an application service for loading and saving a JavaBean form model, and a record form model, respectively. The implementation of the service is not covered in this guide, but it assumes an unsaved form model lacks an ID, whereas an existing form model has an ID.
+This section covers the basics of designing an application service for loading and saving a JavaBean FDO, and a record FDO, respectively. The implementation of the service is not covered in this guide, but it assumes an unsaved FDO lacks an ID, whereas an existing FDO has an ID.
 
 
-=== Using JavaBean Form Models
+=== Using JavaBean FDO:s
 
-A JavaBean form model typically contains the ID of the corresponding entity. If unsaved, this ID is `null`. Because of this, you can use a single `save()` method instead of separate `insert()` and `update()` methods. The implementation should check whether the ID exists to decide whether to perform an update or an insert.
+A JavaBean FDO typically contains the ID of the corresponding entity. If unsaved, this ID is `null`. Because of this, you can use a single `save()` method instead of separate `insert()` and `update()` methods. The implementation should check whether the ID exists to decide whether to perform an update or an insert.
 
-You also need a method for retrieving a form model by its corresponding entity ID. This method should return an empty `Optional` if the entity does not exist.
+You also need a method for retrieving an FDO by its corresponding entity ID. This method should return an empty `Optional` if the entity does not exist.
 
-This is an example of an application service that retrieves and saves a `ProposalBean` form model:
+This is an example of an application service that retrieves and saves a `ProposalBean` FDO:
 
 .ProposalService.java
 [source,java]
@@ -52,17 +52,17 @@ public class ProposalService {
 ----
 <1> Always use transactions when saving and loading data.
 
-Ideally, the `save()` method returns an instance of the form model. This allows the service implementation to either set the ID directly on the original form model object, or return a new object with the ID.
+Ideally, the `save()` method returns an instance of the FDO. This allows the service implementation to either set the ID directly on the original FDO, or return a new FDO with the ID.
 
 [NOTE]
-This approach also works when you use the entity itself as a form model.
+This approach also works when you use the entity itself as an FDO.
 
 
-=== Using Record Form Models
+=== Using Record FDO:s
 
-Record form models require binding every record component to a field. This presents challenges with IDs, as they are typically not bound. To work around this limitation, you can create another record that wraps the form model and includes the ID. The wrapper record can also include other meta-data like an optimistic locking version number, last modified timestamp, and so on.
+Record FDO:s require binding every record component to a field. This presents challenges with IDs, as they are typically not bound. To work around this limitation, you can create another record that wraps the FDO and includes the ID. The wrapper record can also include other meta-data like an optimistic locking version number, last modified timestamp, and so on.
 
-In the following example, `ProposalRecord` is the form model:
+In the following example, `ProposalRecord` is the FDO:
 
 .PersistentProposalRecord.java
 [source,java]
@@ -78,7 +78,7 @@ public record PersistentProposalRecord(
 ----
 <1> Helper method that makes it easier to perform updates.
 
-Separate `insert()` and `update()` methods are appropriate due to distinct data types used for saved versus unsaved records. You also need a method for retrieving a form model by its corresponding entity ID. 
+Separate `insert()` and `update()` methods are appropriate due to distinct data types used for saved versus unsaved records. You also need a method for retrieving an FDO by its corresponding entity ID. 
 
 Here is an example of an application service with the three methods:
 
@@ -160,9 +160,9 @@ private void newProposal() {
 The code is easier to read if you design the methods so that they can be passed as method references to the `Optional` returned by the application service.
 
 
-=== Using JavaBean Form Models 
+=== Using JavaBean FDO:s
 
-In *buffered mode*, you use the form model to populate the form with existing data. Since the form model also contains the ID, you should store it in a local field for future reference, as demonstrated in the following example:
+In *buffered mode*, you use the FDO to populate the form with existing data. Since the FDO also contains the ID, you should store it in a local field for future reference, as demonstrated in the following example:
 
 [source,java]
 ----
@@ -191,7 +191,7 @@ private void newProposal() {
 ----
 <1> Storing an empty `ProposalBean` instead of `null` makes the code for saving the form simpler.
 
-*Write-through mode* requires a form model for both existing data and creating new entries. Again, since the form model contains the ID, you should store it in a local field:
+*Write-through mode* requires an FDO for both existing data and creating new entries. Again, since the FDO contains the ID, you should store it in a local field:
 
 [source,java]
 ----
@@ -220,9 +220,9 @@ private void newProposal() {
 ----
 
 
-=== Using Record Form Models
+=== Using Record FDO:s
 
-For record form models, you need to store the wrapper record in a local field to access its ID:
+For record FDO:s, you need to store the wrapper record in a local field to access its ID:
 
 [source,java]
 ----
@@ -254,17 +254,17 @@ private void newProposal() {
 
 == Saving a Form
 
-Saving forms typically follows the same pattern regardless of the form model:
+Saving forms typically follows the same pattern regardless of the FDO:
 
 1. Validate the form.
-2. Update the form model.
-3. Call the application service to save the form model.
-4. Re-initialize the form with the form model returned by the service.
+2. Update the FDO.
+3. Call the application service to save the FDO.
+4. Re-initialize the form with the FDO returned by the service.
 
 
-=== Using JavaBean Form Models
+=== Using JavaBean FDO:s
 
-In *buffered mode*, the form explicitly updates the form model. This operation includes validation, as explained in the <<../add-form/flow#writing-to-a-bean,Add a Form>> guide:
+In *buffered mode*, the form explicitly updates the FDO. This operation includes validation, as explained in the <<../add-form/flow#writing-to-a-bean,Add a Form>> guide:
 
 [source,java]
 ----
@@ -280,7 +280,7 @@ private void saveProposal() {
     }
 }
 ----
-<1> Validates the form and updates the form model if successful.
+<1> Validates the form and updates the FDO if successful.
 
 In *write-through mode*, only validation is necessary before calling the application service:
 
@@ -300,9 +300,9 @@ private void saveProposal() {
 ----
 
 
-=== Using Record Form Models
+=== Using Record FDO:s
 
-For record form models, the save operation distinguishes between inserts and updates:
+For record FDO:s, the save operation distinguishes between inserts and updates:
 
 [source,java]
 ----
@@ -313,15 +313,15 @@ private PersistentProposalRecord proposal;
 
 private void saveProposal() {
     form.write() // <1>
-        .ifPresent(formModel -> { 
+        .ifPresent(formDataObject -> { 
             if (proposal == null) {
-                editProposal(service.insert(formModel));
+                editProposal(service.insert(formDataObject));
             } else {
-                editProposal(service.update(proposal.withData(formModel)));
+                editProposal(service.update(proposal.withData(formDataObject)));
             }
         });
 }
 ----
-<1> Validates the form and returns a new form model record if successful.
+<1> Validates the form and returns a new FDO record if successful.
 
 // TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.

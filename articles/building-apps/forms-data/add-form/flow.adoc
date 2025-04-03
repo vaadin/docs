@@ -10,7 +10,7 @@ order: 5
 = Add a Form in Flow
 :toclevels: 2
 
-In this guide, you'll learn the basics of creating a form in Flow and binding it to a form model. You'll learn the difference between using a JavaBean and a Java record as form model, and their pros and cons. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
+In this guide, you'll learn the basics of creating a form in Flow and binding it to a form data object. You'll learn the difference between using a JavaBean and a Java record as form data object, and their pros and cons. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
 
 
 == Laying Out the Fields
@@ -60,41 +60,39 @@ image::images/example-form.png[A screenshot of a form]
 more information see the <<{articles}/components/form-layout#,FormLayout>> documentation.
 
 
-== Introducing Form Model
+== Introducing Form Data Object (FDO)
 
-// Some of this section may be better suited for the Overview page than under Flow. It depends on the Hilla-article.
-Forms are used to display and edit data. This data comes from a *form model*, which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the model.
+Forms are used to display and edit data. This data comes from a *Form Data Object* (FDO), which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the FDO.
 
-Form models are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, and persistence. From an architectural point of view, *the form models belong to the application layer* rather than the presentation layer.
-// When signal is added to the mix, we get a View Model, whereas the form model takes the role of the M in MVVM.
+FDO:s are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, and persistence. From an architectural point of view, *an FDO belongs to the application layer* rather than the presentation layer.
 
 
 == Introducing Binder
 
-Vaadin offers a [classname]`Binder` class that binds fields to form model properties, ensuring that changes made in the form update the model. For each field-property pair, the `Binder` creates a new `Binding` object. However, since Binder is one-directional, *updates to the model outside of the `Binding` won't automatically reflect in the form fields* unless manually refreshed.
+Vaadin offers a [classname]`Binder` class that binds fields to FDO properties, ensuring that changes made in the form update the FDO. For each field-property pair, the `Binder` creates a new `Binding` object. However, since Binder is one-directional, *updates to the FDO outside of the `Binding` won't automatically reflect in the form fields* unless manually refreshed.
 
-When loading a form, it populates fields with corresponding property values. When saving, it updates the model with the modified field values.
+When loading a form, it populates fields with corresponding property values. When saving, it updates the FDO with the modified field values.
 
-You can attach a converter to a `Binding` to transform between field values and model properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the model. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
-
-
-== Types of Form Models
-
-The form model can be a simple data container that only holds values, or it can be a more advanced model that includes business logic, such as validation rules. Each approach has its own advantages and trade-offs, depending on the complexity of the application and the level of control needed over the data.
+You can attach a converter to a `Binding` to transform between field values and FDO properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the FDO. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
 
 
-=== Simple Form Models
+== Types of FDO:s
 
-Simple form models are typically implemented as records. *Every field in the form corresponds to a record component.*
+The FDO can be a simple data container that only holds values, or it can be a more advanced class that includes business logic, such as validation rules. Each approach has its own advantages and trade-offs, depending on the complexity of the application and the level of control needed over the data.
+
+
+=== Simple FDO:s
+
+Simple FDO:s are typically implemented as records. *Every field in the form corresponds to a record component.*
 
 When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
 
 Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs.
 
 
-=== Advanced Form Models
+=== Advanced FDO:s
 
-Advanced form models are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, you can leave out the setter method.
+Advanced FDO:s are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, you can leave out the setter method.
 
 .JavaBean Conventions Are Optional
 [IMPORTANT]
@@ -107,14 +105,14 @@ When a form is loaded, the `Binder` populates each field with data from the corr
 Beans allow you to make more advanced forms, but also require more boilerplate code than records. Furthermore, since they are mutable, there is a higher risk of bugs, especially when rolling back changes.
 
 
-=== Entities as Form Models
+=== Entities as FDO:s
 
-In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as form models. However, using entities as form models tightly couples your domain logic to the UI. This can create maintainability issues, especially if UI requirements evolve separately from the business logic. If this happens, it's better to introduce a dedicated form model and handle data conversion in the application service.
+In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as FDO:s. However, using entities as FDO:s tightly couples your domain logic to the UI. This can create maintainability issues, especially if UI requirements evolve separately from the business logic. If this happens, it's better to introduce a dedicated FDO and handle data conversion in the application service.
 
 
 == Binding to a Bean
 
-Continuing with the earlier *Project Proposal* form example, you can create a JavaBean to represent the form model:
+Continuing with the earlier *Project Proposal* form example, you can create a JavaBean to represent the FDO:
 
 .ProposalBean.java
 [source,java]
@@ -200,10 +198,10 @@ public class ProposalForm extends Composite<FormLayout> {
 
 === Buffered vs. Write-Through
 
-When using a JavaBean as a form model, `Binder` can operate in *buffered* or *write-through* mode.
+When using a JavaBean as an FDO, `Binder` can operate in *buffered* or *write-through* mode.
 
 * *Buffered mode*: Changes remain in the form until explicitly saved. This prevents side effects but may affect validation behavior.
-* *Write-through mode*: Updates the model immediately as the user edits the form. Business logic in setter methods is triggered immediately. However, invalid states can occur where the form contains errors, but the model remains valid.
+* *Write-through mode*: Updates the FDO immediately as the user edits the form. Business logic in setter methods is triggered immediately. However, invalid states can occur where the form contains errors, but the FDO remains valid.
 
 Form validation is covered in the <<../validate-form#,Validate a Form>> guide.
 
@@ -222,8 +220,8 @@ public class ProposalForm extends Composite<FormLayout> {
     // Constructor omitted for clarity
 
 // tag::snippet[]
-    public void read(ProposalBean formModel) {
-        binder.readBean(formModel);
+    public void read(ProposalBean formDataObject) {
+        binder.readBean(formDataObject);
     }
 // end::snippet[]
 }
@@ -241,8 +239,8 @@ public class ProposalForm extends Composite<FormLayout> {
     // Constructor omitted for clarity
 
 // tag::snippet[]
-    public void bind(ProposalBean formModel) {
-        binder.setBean(formModel);
+    public void bind(ProposalBean formDataObject) {
+        binder.setBean(formDataObject);
     }
 // end::snippet[]
 }
@@ -262,13 +260,13 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // Constructor omitted for clarity
 
-    public void read(ProposalBean formModel) {
-        binder.readBean(formModel);
+    public void read(ProposalBean formDataObject) {
+        binder.readBean(formDataObject);
     }
 
 // tag::snippet[]
-    public boolean write(ProposalBean formModel) {
-        return binder.writeBeanIfValid(formModel); // <1>
+    public boolean write(ProposalBean formDataObject) {
+        return binder.writeBeanIfValid(formDataObject); // <1>
     }    
 // end::snippet[]
 }
@@ -278,12 +276,12 @@ public class ProposalForm extends Composite<FormLayout> {
 .Other methods for writing to a bean
 [%collapsible]
 ====
-The `Binder` class provides four methods for writing form data to a model:
+The `Binder` class provides four methods for writing form data to an FDO:
 
-`writeBean` :: Validates the entire form and writes all values to the model if validation passes. Throws an exception if validation fails.
-`writeBeanAsDraft` :: Writes all valid values to the model while ignoring invalid values. No exception is thrown.
+`writeBean` :: Validates the entire form and writes all values to the FDO if validation passes. Throws an exception if validation fails.
+`writeBeanAsDraft` :: Writes all valid values to the FDO while ignoring invalid values. No exception is thrown.
 `writeBeanIfValid` :: Validates the form and writes all values if validation passes. Returns false (rather than throwing an exception) if validation fails.
-`writeChangedBindingsToBean` :: Validates the entire form but only writes modified fields to the model if validation passes. Throws an exception if validation fails.
+`writeChangedBindingsToBean` :: Validates the entire form but only writes modified fields to the FDO if validation passes. Throws an exception if validation fails.
 
 Some methods have overloaded versions that allow you to further customize the write operation. See the JavaDocs for details.
 ====
@@ -299,8 +297,8 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // Constructor omitted for clarity
 
-    public void bind(ProposalBean formModel) {
-        binder.setBean(formModel);
+    public void bind(ProposalBean formDataObject) {
+        binder.setBean(formDataObject);
     }
 
 // tag::snippet[]
@@ -325,12 +323,12 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // Constructor omitted for clarity
 
-    public void read(ProposalBean formModel) {
-        binder.readBean(formModel);
+    public void read(ProposalBean formDataObject) {
+        binder.readBean(formDataObject);
     }
 
-    public boolean write(ProposalBean formModel) {
-        return binder.writeBeanIfValid(formModel);
+    public boolean write(ProposalBean formDataObject) {
+        return binder.writeBeanIfValid(formDataObject);
     }
 
 // tag::snippet[]
@@ -341,7 +339,7 @@ public class ProposalForm extends Composite<FormLayout> {
 }
 ----
 
-In *write-through mode*, unbind the model by setting it to `null`:
+In *write-through mode*, unbind the FDO by setting it to `null`:
 
 .ProposalForm.java
 [source,java]
@@ -352,8 +350,8 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // Constructor omitted for clarity
 
-    public void bind(ProposalBean formModel) {
-        binder.setBean(formModel);
+    public void bind(ProposalBean formDataObject) {
+        binder.setBean(formDataObject);
     }
 
     public boolean isValid() {
@@ -371,7 +369,7 @@ public class ProposalForm extends Composite<FormLayout> {
 
 == Binding to a Record
 
-The equivalent *Project Proposal* form model using a *record* looks like this:
+The equivalent *Project Proposal* FDO using a *record* looks like this:
 
 .ProposalRecord.java
 [source,java]
@@ -478,8 +476,8 @@ public class ProposalForm extends Composite<FormLayout> {
     // Constructor omitted for clarity
 
 // tag::snippet[]
-    public void read(ProposalRecord formModel) {
-        binder.readRecord(formModel);
+    public void read(ProposalRecord formDataObject) {
+        binder.readRecord(formDataObject);
     }
 // end::snippet[]
 }
@@ -499,8 +497,8 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // Constructor omitted for clarity
 
-    public void read(ProposalRecord formModel) {
-        binder.readRecord(formModel);
+    public void read(ProposalRecord formDataObject) {
+        binder.readRecord(formDataObject);
     }
 
 // tag::snippet[]
@@ -535,8 +533,8 @@ public class ProposalForm extends Composite<FormLayout> {
         // ...
     }
 
-    public void read(ProposalRecord formModel) {
-        binder.readRecord(formModel);
+    public void read(ProposalRecord formDataObject) {
+        binder.readRecord(formDataObject);
     }
 
     public Optional<ProposalRecord> write() {
@@ -558,7 +556,7 @@ public class ProposalForm extends Composite<FormLayout> {
 
 //== Best Practices
 
-// TODO Explain how to pick the correct form model
+// TODO Explain how to pick the correct FDO type
 
 // == Try It
 
