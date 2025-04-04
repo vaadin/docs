@@ -11,3 +11,91 @@ order: 10
 :toclevels: 2
 
 TODO
+
+Form Data Object (FDO)
+
+
+== Application Service Design
+
+Vaadin applications use an application service to load and save FDO:s. For Hilla forms, the service must be browser callable, which has some implications on its design. Its design is also impacted by the following aspects:
+
+* whether you need separate insert and update methods, or only a save method
+* what your UI does after it has saved an FDO
+
+A typical service for loading and saving an FDO for Hilla form looks like this:
+
+.ProposalService.java
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW) // <1>
+// Security annotations omitted
+public class ProposalService {
+
+    public Optional<Proposal> findById(long proposalId) {
+        // ...
+    }
+
+    public Proposal save(Proposal proposal) {
+        // ...
+    }
+}
+----
+<1> Always use transactions when saving and loading data.
+
+The `Proposal` FDO can be either a Java record or a POJO, as long as Vaadin can serialize it to JSON and back.
+
+The `save()` method checks the `proposal` FDO for an ID. If it has one, it performs an update. Otherwise, it performs an insert. It returns the saved FDO, allowing the UI to update itself with data set by the service, such as the ID, creation timestamp, optimistic locking version, and so on.
+
+[IMPORTANT]
+What the `save()` method returns depends on what your UI does after it has called it. For instance, if it is more appropriate to refresh the entire screen, the method shouldn't return anything.
+
+
+== Loading a Form
+
+The `useForm` hook provides a `read()` function that populates the form with data from the FDO. You typically call it inside an effect, like this:
+
+.ProposalForm.tsx
+[source,tsx]
+----
+export type ProposalFormProps = {
+    proposal?: Proposal
+}
+
+export function ProposalForm(props: ProposalFormProps) {
+    const { field, model, read } = useForm(ProposalModel);
+
+    useEffect(() => {
+        read(props.proposal) // <1>
+    }, [props.proposal]);
+
+    return (
+        <FormLayout>
+            ...
+        </FormLayout>
+    );
+}
+----
+<1> Calling `read()` with an `undefined` FDO clears the form.
+
+
+
+=== Calling the Service
+
+
+== Saving a Form
+
+[source,typescript]
+----
+    const submit = async (unsavedProposal: Proposal) => {
+        try {
+            proposal.value = await ProposalService.save(unsavedProposal)
+        } catch (error) {
+            handleError(error)
+        }
+    }
+----
+
+== Making a Custom Hook
+
+
