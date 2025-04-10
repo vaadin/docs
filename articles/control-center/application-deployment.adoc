@@ -1,0 +1,246 @@
+---
+title: "Application Deployment"
+page-title: "Deploy a Vaadin Application with Control Center"
+description: "Learn how to package and deploy a Vaadin application using the Control Center App resource."
+meta-description: "Step-by-step guide for deploying a Vaadin application using the Control Center App resource and Kubernetes manifests."
+order: 20
+---
+
+= Deploying a Vaadin Application with Control Center
+
+Control Center manages the deployment of Vaadin applications through a custom Kubernetes resource called `App`. When an `App` manifest is applied, Control Center automatically provisions all necessary components: deployments, services, ingress routing, configuration, certificate requests, and more.
+
+To learn more about how Control Center manages applications internally, refer to the <<architecture.adoc#the-app-custom-resource,Architecture section>>.
+
+This guide covers the steps to prepare a Vaadin application, package it as a container image, and deploy it to a cluster using Control Center.
+
+== Add the Control Center Dependency
+
+To enable Control Center integration (for example, metadata reporting and health endpoints), add the `control-center-starter` dependency to your project.
+
+[.example]
+--
+.build.gradle.kts
+[source,kotlin]
+----
+<source-info group="Gradle"></source-info>
+dependencies {
+    implementation("com.vaadin:control-center-starter")
+}
+----
+
+.pom.xml
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>control-center-starter</artifactId>
+</dependency>
+----
+--
+
+[TIP]
+When using the Vaadin Platform, the version does not need to be specified explicitly.
+
+== Build the Application Image
+
+Spring Boot supports building container images using https://buildpacks.io/[Cloud Native Buildpacks,window=read-later], which is the recommended approach for Vaadin applications.
+
+Buildpacks offer several benefits:
+
+* *Simplified image creation* -- no need to write or maintain a Dockerfile
+* *Optimized image layering* -- dependencies, classes, and static resources are separated to improve caching and rebuild performance
+* *Secure defaults* -- minimal base images, non-root execution, and JVM tuning are applied automatically
+
+The resulting image is production-ready and follows best practices out-of-the-box.
+
+[.example]
+--
+.Terminal
+[source,shell]
+----
+<source-info group="Gradle"></source-info>
+./gradlew bootBuildImage -Pvaadin.productionMode=true --imageName=company/my-app:1.0.0
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="Maven"></source-info>
+./mvnw spring-boot:build-image -Pproduction -Dspring-boot.build-image.imageName=company/my-app:1.0.0
+----
+--
+
+This produces a Docker image tagged as `company/my-app:1.0.0`.
+
+For more information, see related Spring documentation for https://docs.spring.io/spring-boot/gradle-plugin/packaging-oci-image.html[Gradle] and https://docs.spring.io/spring-boot/maven-plugin/build-image.html[Maven].
+
+=== Push to a Container Registry
+
+For remote Kubernetes clusters, the image must be pushed to a registry:
+
+.Terminal
+[source,shell]
+----
+docker push company/my-app:1.0.0
+----
+
+[NOTE]
+If not pushed, the image will only be available on the local system where it was built.
+
+=== Local Cluster Support
+
+For local development clusters, load the image into the runtime:
+
+[.example]
+--
+.Terminal
+[source,shell]
+----
+<source-info group="minikube"></source-info>
+minikube image load company/my-app:1.0.0
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="k3d"></source-info>
+k3d image import company/my-app:1.0.0 -c my-cluster
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="KinD"></source-info>
+kind load docker-image company/my-app:1.0.0
+----
+--
+
+== Create and Apply the App Resource
+
+Create a Kubernetes manifest using the `App` custom resource. This manifest instructs Control Center to deploy the application and manage its configuration.
+
+.my-app.yaml
+[source,yaml]
+----
+apiVersion: vaadin.com/v1alpha1
+kind: App
+metadata:
+  name: my-app
+  namespace: vaadin
+spec:
+  host: demo.example.com
+  image: company/my-app:1.0.0
+  version: "1.0.0"
+  replicas: 3
+----
+
+=== Field Overview
+
+* `metadata.name`: Logical name of the application inside the cluster.
+* `metadata.namespace`: Namespace where the app should be deployed (optional).
+* `spec.host`: Public hostname where the application will be exposed.
+* `spec.image`: Fully qualified container image reference.
+* `spec.version`: Application version (used for tracking and visibility).
+* `spec.replicas`: Number of instances (default: 1).
+
+=== Add Environment Variables
+
+Environment variables can be added to the application using the `spec.env` field. These variables are injected into the container and become available to the Vaadin application at runtime—either through the standard Java `System.getenv()` API or automatically mapped by Spring Boot into configuration properties.
+
+This mechanism is useful for setting configuration values such as logging levels, Spring profiles, external API keys, or feature toggles.
+
+.my-app.yaml
+[source,yaml]
+----
+spec:
+  env:
+    - name: LOGGING_LEVEL_MY_PACKAGE
+      value: debug
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: my-secret
+          key: api-key
+----
+
+[IMPORTANT]
+Changes to environment variables will trigger an application redeployment.
+
+=== Configure Resource Limits
+
+To control the amount of CPU and memory allocated to the application pods, use the `spec.resources` field. This helps ensure fair scheduling and cluster stability.
+
+.my-app.yaml
+[source,yaml]
+----
+spec:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"
+----
+
+* `requests` define the minimum resources the pod is guaranteed to receive.
+* `limits` define the maximum resources the pod can consume.
+
+Setting both helps the Kubernetes scheduler place the pod efficiently and enforce upper bounds during runtime.
+
+=== Apply the Manifest
+
+Once the `App` manifest is written and saved, it can be applied to the Kubernetes cluster using the `kubectl apply` command.
+
+.Terminal
+[source,shell]
+----
+kubectl apply -f my-app.yaml
+----
+
+This instructs Kubernetes to create the custom resource in the specified namespace. Control Center continuously watches for changes to `App` resources and will automatically begin provisioning the application based on the declared specification.
+
+When the manifest is applied, Control Center performs a series of automated operations:
+
+. A Kubernetes `Deployment` is created using the specified image, configured with sane defaults for Vaadin applications, including health probes, memory and CPU limits, and internal management ports.
+. A `Service` and `Ingress` are provisioned to expose the application on the specified `host`, using HTTPS.
+. A TLS certificate is requested from the configured issuer (such as Let's Encrypt) for the `host`.
+. If DNS management is enabled, a corresponding DNS record is created automatically and kept in sync.
+. Runtime configuration is injected via config maps and secrets, including identity provider integration and optional database connections.
+
+This flow ensures that the application is fully integrated into the cluster with minimal configuration, using secure and production-ready defaults.
+
+To verify the deployment status, run:
+
+.Terminal
+[source,shell]
+----
+kubectl get apps -A
+----
+
+Example output:
+
+----
+NAMESPACE   NAME      AGE   PHASE     READY   URI                                VERSION
+vaadin      my-app    32s   RUNNING   3/3     https://demo.example.com           1.0.0
+----
+
+Explanation of the columns:
+
+* `PHASE`: Current lifecycle state (`PENDING`, `RUNNING`, `FAILED`)
+* `READY`: Indicates how many replicas are running and ready
+* `URI`: Public HTTPS URL where the application is exposed
+* `VERSION`: Application version as declared in `spec.version`
+
+If the `PHASE` remains in `PENDING`, inspect the related events, pod status, and logs to determine whether an image pull, DNS, or certificate issue is delaying the rollout.
+
+Once the status is `RUNNING` and the `READY` column matches the desired replicas, the application is live.
+
+To access it, point your browser to:
+----
+https://demo.example.com
+----
+
+This completes the deployment process. The application is now fully integrated into the cluster, secured with HTTPS, and managed by Control Center.
