@@ -6,11 +6,15 @@ meta-description: TODO Write meta-description
 order: 10
 ---
 
+// TODO Review with AI
+// TODO Write tutorial
+// TODO Check all the other todos
 
 = Validate a Form in Hilla
 :toclevels: 2
 
-TODO
+In this guide, you'll learn how to validate both individual form fields and entire Form Data Objects (FDO)s in Hilla. You'll learn about the difference between client side and server side validation, Hilla's built-in validators, and how to make your own. You'll also learn how to trigger validation and how to handle validation errors. A hands-on mini tutorial at the end helps you apply these concepts in a real Vaadin application.
+
 
 == Client Side vs. Server Side Validation
 
@@ -50,8 +54,9 @@ useEffect(() => {
         min: 1,
         max: 100
     }));
-});
+}, []); // <1>
 ----
+<1> Always use an empty dependency array. Otherwise you'll add a new validator every time the component is rendered.
 
 You can add as many validators as you need. They are validated in the order they were added. If a validator fails, the validation stops.
 
@@ -94,7 +99,23 @@ useEffect(() => {
 });
 ----
 
-To make the validator mark the field as required, set the `impliesRequired` attribute:
+
+== Required Fields
+
+Form parts have a `required` flag, but it's read-only. To switch it on, you add a validator that has the `impliesRequired` attribute set to true. 
+
+The built-in validators `NotNull`, `NotEmpty`, and `NotBlank` all imply that the field is required. For example, here is how you would make a string field required:
+
+[source,typescript]
+----
+useEffect(() => {
+    stringField.addValidator(new NotBlank({
+        message: "Please enter value"
+    }));
+}, []);
+----
+
+You can also make custom validators mark the field as required:
 
 [source,typescript]
 ----
@@ -106,24 +127,130 @@ useEffect(() => {
         impliesRequired: true
 // end::snippet[]
     });
-});
+}, []);
 ----
 
+The `validate()` function can be asynchronous. This means that you can call browser callable services from your custom validators:
 
-== Required Fields
+[source,typescript]
+----
+useEffect(() => {
+    bankAccountField.addValidator({
+        message: "Invalid bank account number",
+        validate: async (value) => {
+            const result = await BankAccountService.validateBankAccountNumber(value);
+            if (result == BankAccountNumberValidationResult.INVALID_NUMBER) {
+                return { // <1>
+                    property: bankAccountField.model,
+                    message: "Invalid bank account number",
+                };
+            } else if (result == BankAccountNumberValidationResult.DOES_NOT_EXIST) {
+                return {
+                    property: bankAccountField.model,
+                    message: "Bank account number does not exist",
+                };
+            }
+            return true; // No problems
+        }
+    });
+}, []);
+----
+<1> Instead of returning `false`, you can return a `ValidationResult` object that allows you to customize the error message.
 
-- There is a required flag on the form part, but you can't set it explicitly
-- Instead add a validator that implies the field is required
-- Show an example
+[IMPORTANT]
+Validators are triggered quite often. Keep this in mind if your custom validator involves a roundtrip to the server.
+
+
+== Form Validators
+
+Whereas field validators validate values of individual fields, form validators *validate the entire FDO*. To add a form validator, use the `addValidator()` function returned by the `useForm` hook:
+
+[source,typescript]
+----
+const form = useForm(ChangePasswordFormModel);
+
+useEffect(() => {
+    form.addValidator({
+        message: "The passwords don't match",
+        validate: (fdo) => {
+            return fdo.newPassword === fdo.confirmPassword;
+        }
+    });
+}, []);
+----
+
+// TODO Form validators seem to always run after every field validator, but their errors are discarded until you submit or call validate(). Is this by design, a bug, or am I holding it wrong?
 
 
 == Triggering Validation
 
-- When is validation triggered?
+Hilla triggers validation automatically whenever a field is updated and when the form is submitted.
+
+When field validation is triggered depends on the state of the field. Every field has a default value, which is the value that the field was initialized to. If the field value is equal to its default value, validation is triggered when the field is blurred. If the field value is different from its default value, validation is triggered on every value change even when the field has focus.
+
+
+=== Manual Validation
+
+Both the `useForm` and `useFormPart` hooks return an asynchronous `validate()` function. The function returns an array of validation errors if any validators fail. 
+
+The following example triggers validation of the entire form:
+
+[source,typescript]
+----
+const form = useForm(MyFormModel);
+
+const doSomethingThatNeedsValidation = async (): Promise<void> => {
+    const result = await form.validate();
+    if (result.length > 0) {
+        // Handle the errors
+        return;
+    }
+    // No validation errors, proceed with the operation    
+}
+----
+
+To validate an individual field, call the `validate()` function returned by the `useFormPart` hook.
 
 
 == Handling Validation Errors
 
-- How do you handle validation errors?
+Hilla automatically shows field validation errors next to the field in question. Form validation errors must be handled manually.
 
-// TODO What about validators that operate on the entire form model and not on individual fields?
+To handle validation errors manually, the `useForm` and `useFormPart` hooks return several properties that you can use:
+
+`readonly invalid: boolean` :: Whether the form or field has any validation errors.
+`readonly ownErrors: ReadonlyArray<ValueError<T>>` :: The validation errors that are related to this particular field or form.
+`readonly errors: ReadonlyArray<ValueError<any>>` :: The validation errors that are related to this particular field or form, and all its children.
+
+This example renders all validation errors, regardless of whether they are field or form errors:
+
+[source,tsx]
+----
+const form = useForm(MyFormModel);
+...
+
+<ul>
+  {form.errors.map(error => (
+    <li>{error.message}</li>
+  ))}
+</ul>
+----
+
+To only render validation errors from form validators, use `ownErrors`:
+
+[source,tsx]
+----
+const form = useForm(MyFormModel);
+...
+
+<ul>
+  {form.ownErrors.map(error => (
+    <li>{error.message}</li>
+  ))}
+</ul>
+----
+
+
+== Try It
+
+- Write a tutorial here
