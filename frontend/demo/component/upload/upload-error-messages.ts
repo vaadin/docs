@@ -5,7 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import { applyTheme } from 'Frontend/generated/theme';
-/* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
+/* prettier-ignore */
+import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-source-line
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
@@ -33,7 +34,7 @@ export class Example extends LitElement {
   private recommendedI18n = {
     uploading: {
       error: {
-        unexpectedServerError: 'File upload failed',
+        unexpectedServerError: "File couldn't be uploaded, try again later",
       },
     },
   };
