@@ -16,24 +16,24 @@ export class Example extends LitElement {
     return root;
   }
 
+  private uploadI18n = {
+    addFiles: {
+      many: 'Select Files...',
+    },
+  };
+
   // tag::snippet[]
   @query('vaadin-upload')
   private upload!: Upload;
 
-  // end::snippet[]
-  protected override firstUpdated() {
-    this.upload.i18n.addFiles.many = 'Select Files...';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
-
-  // tag::snippet[]
   protected override render() {
     return html`
       <vaadin-upload
         no-auto
+        .i18n="${this.uploadI18n}"
         .files="${createFakeFilesUploadAllFiles() /* hidden-source-line */}"
       ></vaadin-upload>
-      <vaadin-button theme="primary" @click="${this.uploadFiles}"> Upload All Files </vaadin-button>
+      <vaadin-button theme="primary" @click="${this.uploadFiles}"> Upload All Files</vaadin-button>
     `;
   }
 
