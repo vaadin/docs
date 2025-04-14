@@ -12,7 +12,6 @@ interface PersonListProps {
 function PersonList({ people, selectedPerson, onSelect }: PersonListProps) {
   return (
     <VerticalLayout theme="padding spacing" style={{ height: '100%' }}>
-      <h2>People</h2>
       <p>Select a person to view their details:</p>
       <Grid
         items={people}
