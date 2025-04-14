@@ -2,6 +2,7 @@ package com.vaadin.demo.component.formlayout;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.FormRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -22,13 +23,17 @@ public class FormLayoutColspan extends Div {
         formLayout.setExpandFields(true);
         formLayout.setColumnWidth("8em");
 
-        formLayout.addFormRow(streetAddress);
-        formLayout.addFormRow(postalCode, city);
-        formLayout.addFormRow(country);
+        FormRow firstRow = new FormRow();
+        firstRow.add(streetAddress, 3); // colspan 3
 
-        formLayout.setColspan(streetAddress, 3);
-        formLayout.setColspan(city, 2);
-        formLayout.setColspan(country, 2);
+        FormRow secondRow = new FormRow();
+        secondRow.add(postalCode);
+        secondRow.add(city, 2); // colspan 2
+
+        FormRow thirdRow = new FormRow();
+        thirdRow.add(country, 2); // colspan 2
+
+        formLayout.add(firstRow, secondRow, thirdRow);
         // end::snippet[]
 
         formLayout.setWidthFull();
