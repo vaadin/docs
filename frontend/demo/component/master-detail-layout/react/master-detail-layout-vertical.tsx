@@ -23,9 +23,9 @@ function Example() {
       {/* tag::snippet[] */}
       <MasterDetailLayout
         orientation="vertical"
-        masterMinSize="400px"
+        masterMinSize="150px"
         detailSize="250px"
-        stackThreshold="400px"
+        stackThreshold="350px"
       >
         {/* end::snippet[] */}
         <MasterDetailLayout.Master>
@@ -50,7 +50,9 @@ function Example() {
         {/* tag::snippet[] */}
       </MasterDetailLayout>
       {/* end::snippet[] */}
-      <div style={{ flex: '0', backgroundColor: 'var(--lumo-contrast-20pct)' }}></div>
+      <div style={{ flex: '0 0 auto', backgroundColor: 'var(--lumo-contrast-5pct)', textAlign: 'center' }}>
+        <span style={{fontWeight: 'bold', minHeight: '1.75em'}}>Drag to resize</span>
+      </div>
     </SplitLayout>
   );
 }
