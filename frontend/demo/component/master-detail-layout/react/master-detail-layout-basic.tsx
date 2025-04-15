@@ -21,7 +21,7 @@ function Example() {
   return (
     <SplitLayout style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      <MasterDetailLayout masterMinSize="600px" detailSize="300px" stackThreshold="600px">
+      <MasterDetailLayout masterMinSize="450px" detailSize="250px" stackThreshold="450px">
         <MasterDetailLayout.Master>
           <PersonList
             people={items.value}
@@ -43,7 +43,9 @@ function Example() {
         </MasterDetailLayout.Detail>
       </MasterDetailLayout>
       {/* end::snippet[] */}
-      <div style={{ flex: '0', backgroundColor: 'var(--lumo-contrast-20pct)' }}></div>
+      <div style={{ flex: '0 0 auto', minWidth: '1.75em', backgroundColor: 'var(--lumo-contrast-5pct)', display: 'flex', textAlign: 'center' }}>
+        <span style={{textOrientation: 'sideways', writingMode: 'vertical-lr', fontWeight: 'bold'}}>Drag to resize</span>
+      </div>
     </SplitLayout>
   );
 }
