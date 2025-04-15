@@ -1,30 +1,25 @@
 ---
 title: Flow
-page-title: How to add a form to a Flow view | Vaadin
-description: TODO Write description
+page-title: How to build a form in Flow | Vaadin
 meta-description: TODO Write meta-description
 order: 5
 ---
 
 
-// TODO Add tutorial
-// TODO Re-write introduction
-// TODO Review with AI
-
 = Add a Form in Flow
 :toclevels: 2
 
-In this guide, you'll learn the basics of creating a form in Flow and binding it to a form data object. You'll learn the difference between using a JavaBean and a Java record as form data object, and their pros and cons. Because data binding in Flow is a large topic, this guide only contains enough to get you started. For more details, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
+This guide teaches you how to visually build forms in Flow and display them in dialogs.
 
 
 == Laying Out the Fields
 
-In Flow, you build the form visually by *adding input components to a layout component*. The most common layout components for forms are <<{articles}/components/form-layout#,FormLayout>> and <<{articles}/components/vertical-layout#,VerticalLayout>>. `FormLayout` supports multiple columns, whereas `VerticalLayout` lays out the components in a single column. You also often end up combining these with <<{articles}/components/horizontal-layout#,HorizontalLayout>>, which lays out its components in a single row.
+In Flow, forms you build forms visually by *adding input components to layout components*. The most commonly used layout components for forms include <<{articles}/components/form-layout#,Form Layout>> and <<{articles}/components/vertical-layout#,Vertical Layout>>. Form Layout supports multiple columns, whereas Vertical Layout lays out the components in a single column. These are often combined with <<{articles}/components/horizontal-layout#,Horizontal Layout>>, which lays out its components in a single row.
 
 [IMPORTANT]
-Layout components are not the same as router layouts. However, you can build a router layout using layout components.
+Layout components differ from router layouts, although you can construct a router layout using them.
 
-The follow example shows how to build a two-column project proposal form with various input components:
+The following example demonstrates how to build a two-column project proposal form using various input components:
 
 .ProposalForm.java
 [source,java]
@@ -51,21 +46,155 @@ public class ProposalForm extends Composite<FormLayout> { // <1>
     }
 }
 ----
-<1> `Composite` hides the API of `FormLayout` from users of `ProposalForm`, reducing the risk of misuse.
-<2> `getContent()` returns the `FormLayout`.
-<3> Since `FormLayout` has two columns by default, this makes the description field take up the full width of the layout.
+<1> `Composite` hides the API of Form Layout from users of `ProposalForm`, reducing the risk of misuse.
+<2> `getContent()` returns the Form Layout.
+<3> Because Form Layout uses two columns by default, this expands the description field to span the full width.
 
 The finished form would look like this:
 
 [.fill]
 image::images/example-form.png[A screenshot of a form]
 
-`FormLayout` is responsive, which means that if there is not enough room, the layout adjusts to a single column, with each input component on its own row. It also has other features not presented here. For
-more information see the <<{articles}/components/form-layout#,FormLayout>> documentation.
+Form Layout is responsive; when space is limited, it automatically adjusts to a single-column layout, placing each input on its own row. It also includes additional features not covered in this example. For
+more information see the <<{articles}/components/form-layout#,Form Layout>> documentation.
 
 
-== Try It
+== Showing Forms in Dialogs
 
-- Add a tutorial here
+In business applications, dialogs are commonly used for creating new items, while drawers are typically used for editing existing ones. By implementing the form as a class of its own, you can reuse it in both dialogs and drawers.
 
-// TODO Add mini tutorial later.
+When working with dialogs in Vaadin, it's important to remember they do not alter the application's control flow. For example in Swing, you can hand over control to a dialog and wait until the user closes the dialog. After that, control returns to the calling code and you can proceed, depending on what option the user selected. In Vaadin, opening a dialog is another way of displaying a UI element -- it doesn't block execution or pause logic. Instead, user interactions are handled through event listeners or callbacks.
+
+Here is an example of a dialog that is used to create new project proposals. The caller supplies an `onSave` callback, which is triggered when the user clicks the [guibutton]*Save* button:
+
+[source,java]
+----
+public class ProposalDialog extends Dialog {
+        
+    private final SerializableConsumer<Proposal> onSave;
+    private final ProposalForm form;
+
+    public ProposalDialog(SerializableConsumer<Proposal> onSave) {
+        this.onSave = onSave;
+        form = new ProposalForm();
+        var saveBtn = new Button("Create Proposal", event -> save());
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        var cancelBtn = new Button("Cancel", event -> close());
+            
+        setHeaderTitle("New Proposal");
+        add(form);
+        getFooter().add(cancelBtn, saveBtn);
+    }
+
+    private void save() {
+        var proposal = new Proposal();
+        if (form.write(proposal)) { // <1>
+            onSave.accept(proposal); // <2>
+            close();
+        }
+    }
+}
+----
+<1> Writes the form data to a new `Proposal` Form Data Object (FDO). See the <<../bind-form#,Bind a Form>> guide for details.
+<2> Uses a callback to let the caller decide how to save the FDO.
+
+Here's how you might use the dialog in your application:
+
+[source,java]
+----
+var grid = new Grid<Proposal>();
+// Configure grid here...
+
+var createProposalButton = new Button("Create Proposal", event -> {
+    new ProposalDialog(proposal -> {
+        var saved = proposalService.save(proposal); // <1>
+        grid.getDataProvider().refreshAll(); // <2>
+        grid.select(saved); // <3>
+    }).open();
+});
+----
+<1> Saves the proposal with an application service. See the <<../load-save-form#,Load and Save a Form>> guide for details.
+<2> Refreshes the grid of proposals so that the new one shows up.
+<3> Selects the newly added proposal, opening the edit drawer.
+
+
+== Showing Forms in Drawers
+
+// TODO Write about the new master-detail layout that is coming in the next Vaadin version!
+// TODO Explain this code
+// TODO Verify that it works for real!
+
+[source,java]
+----
+public class ProposalDrawer extends Section {
+
+    private final SerializableConsumer<Proposal, Proposal> onSave;
+    private final SerializableRunnable onClose;
+    private final ProposalForm form;
+    private Proposal proposal;
+
+    public ProposalDrawer(SerializableFunction<Proposal, Proposal> onSave, 
+                          SerializableRunnable onClose) {
+        this.onSave = onSave;
+        this.onClose = onClose;
+        form = new ProposalForm();
+        var header = new H2("Edit Proposal");
+        var saveBtn = new Button("Create Proposal", event -> save());
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        var cancelBtn = new Button("Cancel", event -> close());
+        var buttons = new HorizontalLayout(cancelBtn, saveBtn);
+        
+        add(header, form, buttons);
+    }
+
+    public void editProposal(Proposal proposal) {
+        this.proposal = proposal;
+        form.read(proposal);
+        setVisible(true);
+    }
+
+    private void save() {
+        if (form.write(proposal)) {
+            proposal = onSave.apply(proposal);
+            form.read(proposal);
+        }
+    }
+
+    private void close() {
+        proposal = null;
+        form.clear();
+        setVisible(false);
+        onClose.run();
+    }
+}
+----
+
+[source,java]
+----
+var grid = new Grid<Proposal>();
+// Configure grid here...
+
+var drawer = new ProposalDrawer(
+    proposal -> {
+        var saved = proposalService.save(proposal); // <1>
+        grid.getDataProvider().refreshAll(); // <2>
+        return saved;
+    }, 
+    grid::deselectAll // <3>
+);
+grid.addSelectionListener(event -> {
+    event.getFirstSelectedItem.ifPresentOrElse(
+        drawer::editProposal,  // <4>
+        drawer::close // <5>
+    );
+});
+----
+<1> Saves the proposal with an application service.
+<2> Refreshes the grid so that the updated proposal shows up.
+<3> Clears the grid selection when the drawer is closed.
+<4> Opens the selected proposal in the drawer.
+<5> Closes the drawer if no proposal is selected.
+
+//== Try It
+
+//- Add a tutorial here
