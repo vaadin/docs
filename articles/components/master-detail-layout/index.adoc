@@ -192,27 +192,56 @@ endif::[]
 
 == Router Integration
 
-Master Detail Layout can be used either as the application's root layout or as a nested layout.
-It is also possible to have multiple Master Detail Layout nested within each other.
+Master Detail Layout can be used as a router layout, so that nested views are automatically shown in the details area of the component. This allows showing nested views without having to manage the contents of the details area manually when the route changes, while providing the same benefits such as responsive behavior that the component normally provides.
 
-[.example.show-code]
+[.example]
 --
+
+The Flow `MasterDetailLayout` component implements the `RouterLayout` interface. When using a view class that extends from `MasterDetailLayout` as a layout for a nested view, that view is then automatically shown in the details area of the component.
+
+The example below shows how to set up a master and a detail view. The master view is `ProductListView`, which would show a list of products, and the detail view is `ProductDetailView`, which shows information about a specific product. The `ProductListView` extends from `MasterDetailLayout`, so that it can be used as a route layout by the detail view. It also configures a `@Route` so that it can be navigated to by itself. Assuming there is a main layout for the application, for example one using `AppLayout`, it configures that as a parent layout. The `ProductDetailView` configures a `@Route`, using the `ProductListView` as the route layout.
+
+With this setup, when navigating to `/products`, the layout would only show the product list. When navigating to a product detail, for example `/products/1`, it would then also show the product details next to, or on top of, the product list.
 
 [source,java]
 ----
 <source-info group="Flow"></source-info>
-// Category view with a list of products as the master area
-@Route("category/:categoryName")
-public class CategoryView extends MasterDetailLayout { ... }
+@ParentLayout(MainLayout.class)
+@Route(value = "products", layout = MainLayout.class)
+public class ProductListView extends MasterDetailLayout { ... }
 
-// Product view rendered inside the category view detail area
-@Route(value = "category/:categoryName/product/:productId", layout = CategoryView.class)
-public class ProductView extends VerticalLayout { ... }
+@Route(value = "products/:productId", layout = ProductListView.class)
+public class ProductDetailView extends VerticalLayout { ... }
 ----
+
+The `MasterDetailLayout` React component can be integrated with Hilla's routing mechanism, so that any nested views automatically show up in the details area of the component.
+
+The example below shows how to set up a master and a detail view. The master view is `ProductListView`, which would show a list of products, and the detail view is `ProductDetailView`, which shows information about a specific product. `ProductListView` is a layout component that renders a `MasterDetailLayout` component. The layout component retrieves the nested child view using `useOutlet` and renders it into the details area. Depending on whether a nested child view is present, `MasterDetailLayout` will automatically show or hide the details area. `ProductDetailView` is just a regular component, there is no specific configuration necessary to make it work.
+
+With this setup, when navigating to `/products`, the layout would only show the product list. When navigating to a product detail, for example `/products/1`, it would then also show the product details next to, or on top of, the product list.
 
 [source,tsx]
 ----
 <source-info group="React"></source-info>
-Todo
+// frontend/views/products/@layout.tsx
+import { useOutlet } from 'react-router';
+
+export default function ProductListView() {
+  const childView = useOutlet();
+
+  return (
+    <MasterDetailLayout>
+      <MasterDetailLayout.Master>
+        <ProductList />
+      </MasterDetailLayout.Master>
+      <MasterDetailLayout.Detail>
+        { childView }
+      </MasterDetailLayout.Detail>
+    </MasterDetailLayout>
+  );
+}
+
+// frontend/views/products/{productId}/@index.tsx
+export default function ProductDetailView() { ... }
 ----
 --
