@@ -1,24 +1,15 @@
 ---
 title: Flow
 page-title: How to bind a Flow form to a Form Data Object | Vaadin
-description: TODO Write description
-meta-description: TODO Write meta-description
+meta-description: Learn how to bind forms to data in Vaadin Flow using the Binder class, with support for JavaBeans, records, converters, validation, and form state management.
 order: 5
 ---
 
 
-// TODO Fix references to "earlier Project Proposal example".
-
 # Form Binding in Flow
+:toclevels: 2
 
-TODO
-
-
-== Introducing Form Data Object (FDO)
-
-Forms are used to display and edit data. This data comes from a *Form Data Object* (FDO), which has a structure that aligns with the fields of the form. Each field in the form is typically mapped to a corresponding property in the FDO.
-
-FDO:s are often fetched from and submitted to an <<../../business-logic/add-service#,application service>> for further processing, such as validation, and persistence. From an architectural point of view, *an FDO belongs to the application layer* rather than the presentation layer.
+This guide teaches you the basics of the Flow binder, and how to implement *Form Data Objects* (FDO) both as JavaBeans and as Java records.
 
 
 == Introducing Binder
@@ -27,26 +18,17 @@ Vaadin offers a [classname]`Binder` class that binds fields to FDO properties, e
 
 When loading a form, it populates fields with corresponding property values. When saving, it updates the FDO with the modified field values.
 
-You can attach a converter to a `Binding` to transform between field values and FDO properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the FDO. You can also attach validators to ensure the input meets specific constraints, such as requiring a non-empty email.
+You can *attach a converter* to a `Binding` to transform between field values and FDO properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the FDO. You can also *attach validators* to ensure the input meets specific constraints, such as requiring a non-empty email.
 
 
-== Types of FDO:s
+== Types of FDOs
 
-The FDO can be a simple data container that only holds values, or it can be a more advanced class that includes business logic, such as validation rules. Each approach has its own advantages and trade-offs, depending on the complexity of the application and the level of control needed over the data.
-
-
-=== Simple FDO:s
-
-Simple FDO:s are typically implemented as records. *Every field in the form corresponds to a record component.*
-
-When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
-
-Java records are compact and require no boilerplate code. Furthermore, records are immutable. This clarifies when a form is loaded and saved, and reduces the risk for bugs.
+An FDO can range from a simple data container that holds only values, to a more advanced class that includes business logic such as validation rules. The best approach depends on your application's complexity and how much control you need over the data.
 
 
-=== Advanced FDO:s
+=== JavaBean FDOs
 
-Advanced FDO:s are typically implemented as JavaBeans. *Every field in the form corresponds to a getter method and a setter method.* If a field is read-only, you can leave out the setter method.
+When implementing FDOs as JavaBeans, *each form field maps to a corresponding getter and setter method.* If a field is read-only, you can leave out the setter method.
 
 .JavaBean Conventions Are Optional
 [IMPORTANT]
@@ -56,17 +38,25 @@ You can add business logic to the setters. For instance, you could perform valid
 
 When a form is loaded, the `Binder` populates each field with data from the corresponding getter. When the form is saved, the `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
 
-Beans allow you to make more advanced forms, but also require more boilerplate code than records. Furthermore, since they are mutable, there is a higher risk of bugs, especially when rolling back changes.
+Beans give you more flexibility for complex forms but require more boilerplate code than records, due to the need for explicit getters and setters. Since they are mutable, there's also a higher risk of bugs, especially when handling form cancellations or undo actions.
+
+.Beware of Stale Data
+[IMPORTANT]
+If your FDOs come from a shared cache or data provider, be careful to avoid stale data. This can occur if a user starts editing an item and changes are written back to the FDO, but the user then cancels instead of saving. To prevent this, you can use buffered mode, refresh the FDO after cancellation, or bind a copy of the FDO instead of the original.
 
 
-=== Entities as FDO:s
+=== Record FDOs
 
-In simple cases, such as CRUD-views and administration screens, the form model and the domain model may be the same. In that case, you can use your entities as FDO:s. However, using entities as FDO:s tightly couples your domain logic to the UI. This can create maintainability issues, especially if UI requirements evolve separately from the business logic. If this happens, it's better to introduce a dedicated FDO and handle data conversion in the application service.
+When implementing FDOs as Java records, *each form field corresponds to a record component.*
+
+When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
+
+Java records are concise and eliminate boilerplate. Their immutability makes form state easier to manage, reducing the risk of subtle bugs. It also makes it clear when the form has been read or written. However, using records means your application service must handle object creation more explicitly, which can lead to slightly more verbose code. This is discussed further in the <<../load-save-form#,Load and Save a Form>> guide.
 
 
 == Binding to a Bean
 
-Continuing with the earlier *Project Proposal* form example, you can create a JavaBean to represent the FDO:
+Continuing with the *Project Proposal* form example from the <<../add-form/flow#,Add a Form>> guide, you can create a JavaBean to represent the FDO:
 
 .ProposalBean.java
 [source,java]
@@ -508,12 +498,8 @@ public class ProposalForm extends Composite<FormLayout> {
 }
 ----
 
-//== Best Practices
 
-// TODO Explain how to pick the correct FDO type
+//== Try It
 
-== Try It
+// TODO Add a tutorial here
 
-- Add a tutorial here
-
-// TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.
