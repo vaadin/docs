@@ -117,8 +117,48 @@ Import-Certificate -FilePath "control-center-ca.crt" -CertStoreLocation "Cert:\L
 
 [TIP]
 ====
-Trusting the CA allows the browser to accept the certificates issued by Control Center without warnings. This improves the developer experience by enabling secure HTTPS access without security errors or unsafe site prompts.
+Trusting the CA allows the browser to accept the certificates issued by Control Center without warnings.This improves the developer experience by enabling secure HTTPS access without security errors or unsafe site prompts.
 ====
+
+[#_database_storage_and_backup_for_local_clusters]
+== Database Storage and Backup for Local Clusters
+
+To support backups in a local development environment, volume snapshot functionality must be available.Minikube provides built-in StorageClass and VolumeSnapshotClass implementations that are compatible with Control Center and can be easily enabled using addons.
+
+Enable both required addons with:
+
+.Terminal
+[source,shell]
+----
+minikube start
+minikube addons enable csi-hostpath-driver
+minikube addons enable volumesnapshots
+----
+
+Once enabled, the following classes will be available:
+
+* StorageClass: `csi-hostpath-sc`
+* VolumeSnapshotClass: `csi-hostpath-snapclass`
+
+To confirm they are available:
+
+.Terminal
+[source,shell]
+----
+kubectl get storageclass
+kubectl get volumesnapshotclass
+----
+
+To configure Control Center to use these classes, set the following Helm values:
+
+.Terminal
+[source,shell]
+----
+--set postgres.storageClass=csi-hostpath-sc
+--set postgres.volumeSnapshotClass=csi-hostpath-snapclass
+----
+
+This configuration ensures that Postgres data volumes and scheduled snapshot backups use Minikube’s CSI-based local drivers.
 
 == Installing Control Center Locally
 
