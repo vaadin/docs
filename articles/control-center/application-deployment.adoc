@@ -190,6 +190,73 @@ spec:
 
 Setting both helps the Kubernetes scheduler place the pod efficiently and enforce upper bounds during runtime.
 
+=== Provision a Database
+
+Control Center can automatically provision a PostgreSQL database for a deployed application by connecting it to a managed Postgres cluster. The database is automatically created, and credentials are injected into the application environment.
+
+To enable this, set the `spec.postgres.cluster` field in the App manifest with the name of an existing Postgres cluster.
+
+To list the available Postgres clusters in the namespace:
+
+.Terminal
+[source,shell]
+----
+kubectl get clusters -n vaadin
+----
+
+Example output:
+
+----
+NAME                      AGE   INSTANCES   READY   STATUS                     PRIMARY
+control-center-postgres   30m   1           1       Cluster in healthy state   control-center-postgres-1
+----
+
+[IMPORTANT]
+====
+The Postgres cluster must exist in the **same namespace** as the application. When Control Center is installed, it provisions a default cluster in its own namespace.
+====
+
+Example `App` manifest with database provisioning enabled:
+
+.my-app.yaml
+[source,yaml]
+----
+apiVersion: vaadin.com/v1alpha1
+kind: App
+metadata:
+  name: my-app
+  namespace: vaadin
+spec:
+  host: demo.example.com
+  image: company/my-app:1.0.0
+  version: "1.0.0"
+  postgres:
+    cluster: control-center-postgres
+----
+
+When the app starts, Control Center injects the database configuration into the environment, and Spring Boot automatically configures a `DataSource` bean.
+
+This `DataSource` can be used directly in the application, for example via `JdbcTemplate`.
+
+.Inject and use the database connection
+[source,java]
+----
+public class CustomerView extends VerticalLayout {
+
+    public CustomerView(DataSource dataSource) {
+        var customerList = new UnorderedList();
+        var jdbc = new JdbcTemplate(dataSource);
+        jdbc.queryForList("SELECT name FROM customers", String.class).forEach(name -> {
+            customerList.add(new ListItem(name));
+        });
+        add(new H1("Customer List"));
+        add(customerList);
+    }
+}
+----
+
+Database configuration is handled entirely through environment variables, allowing standard Spring Boot features such as Flyway migrations or JPA/Hibernate integration to work without additional configuration.
+
 === Apply the Manifest
 
 Once the `App` manifest is written and saved, it can be applied to the Kubernetes cluster using the `kubectl apply` command.
@@ -224,7 +291,7 @@ Example output:
 
 ----
 NAMESPACE   NAME      AGE   PHASE     READY   URI                                VERSION
-vaadin      my-app    32s   RUNNING   3/3     https://demo.example.com           1.0.0
+vaadin      my-app    30s   RUNNING   3/3     https://demo.example.com           1.0.0
 ----
 
 Explanation of the columns:
