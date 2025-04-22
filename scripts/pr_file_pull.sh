@@ -3,7 +3,14 @@
 # PR info
 OWNER="vaadin"
 REPO="docs"
-PR_NUMBER=4255
+
+if [ -z "$1" ]; then
+  echo "Error: PR number must be provided as the first argument"
+  echo "Usage: $0 <PR_NUMBER>"
+  exit 1
+fi
+
+PR_NUMBER=$1
 
 # Get changed files in the PR
 gh api -H "Authorization: token $GITHUB_TOKEN" \
