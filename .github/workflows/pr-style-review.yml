@@ -11,10 +11,20 @@ jobs:
   review-docs-pr:
     runs-on: ubuntu-latest
 
+
+
     steps:
-      - name: Fetch changes and review them
-        id: fetch_and_review_changes
-        run: |
+        - name: Checkout scripts directory
+          uses: actions/checkout@v3
+          with:
+            repository: vaadin/docs
+            path: .
+            sparse-checkout: |
+               scripts/
+
+        - name: Fetch changes and review them
+          id: fetch_and_review_changes
+          run: |
             chmod +x ./scripts/pr-file-pull.sh
             chmod +x ./scripts/multi_file_chat.sh
             chmod +x ./scripts/ratePR.sh
@@ -22,9 +32,9 @@ jobs:
             export OPENAI_API_KEY=${{secrets.OPENAI_TOKEN}}
             ./scripts/ratePR.sh ${{ github.event.pull_request.number }}
 
-      - name: Post comment on PR
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.fetch_and_review_changes.outputs.result }}
+        - name: Post comment on PR
+          if: github.event_name == 'pull_request'
+          uses: peter-evans/create-or-update-comment@v1
+          with:
+           issue-number: ${{ github.event.pull_request.number }}
+           body: ${{ steps.fetch_and_review_changes.outputs.result }}
