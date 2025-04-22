@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [[ -z $OPENAI_API_KEY ]]; then
  echo "Please set the OPENAI_API_KEY environment variable."
