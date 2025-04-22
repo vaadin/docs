@@ -10,5 +10,131 @@ order: 8
 
 
 = Load and Save a Form
+:toclevels: 2
 
-TODO
+In a typical Vaadin application, a dedicated application service is responsible for loading and saving Form Data Objects (FDOs). Although the underlying design principles apply to both Flow and Hilla, Hilla introduces some architectural constraints due to its client-server communication model. These restrictions, and application services overall, are covered in more detail in the <<../../business-logic/add-service#,Add a Service>> guide.
+
+
+// TODO When written, add links to the Persistence guides where appropriate.
+
+
+== Application Service Design
+
+The application service's API depends on several aspects:
+
+* whether you're using entities or dedicated classes (or records) as FDOs
+* entity ID assignment strategy
+* what your UI does after it has saved an FDO
+
+This section covers the basics of designing an application service for loading and saving an FDO. The implementation of the service is not covered in this guide.
+
+
+=== Using a Single Save Operation
+
+The simplest approach is to have a single save operation that is used both to insert new entities and update existing ones. For this to work, the application service must be able to decide whether the FDO is new or persistent. This is typically done by including the entity ID in the FDO. If unsaved, this ID is `null`:
+
+.Proposal.java
+[source,java]
+----
+public class Proposal {
+    private Long proposalId;
+    // Other fields omitted
+
+    public @Nullable Long getProposalId() {
+        return proposalId;
+    }
+    public void setProposalId(@Nullable Long proposalId) {
+        this.proposalId = proposalId;
+    }
+}
+----
+
+Here's an example of an application service that saves and retrieves a `Proposal` FDO:
+
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW) // <1>
+@PreAuthorize("isAuthenticated()") // <2>
+public class ProposalService {
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Proposal save(Proposal proposal) {
+        // Validate and save the proposal.
+    }
+
+    public Optional<Proposal> findById(long proposalId) {
+        // Find and return the proposal.
+    }
+}
+----
+<1> Always use transactions when saving and loading data.
+<2> Always secure your application services. See the <<{articles}/building-apps/security/protect-services#,Protect Services>> guide for details.
+
+Returning the saved FDO allows the UI to access generated fields, such as IDs or timestamps, without needing to reload the data. However, if your UI does not need the result -- for example if it navigates to a different view, or refreshes itself completely -- the method should not return anything.
+
+[NOTE]
+This approach works well when you use the entity itself as an FDO.
+
+
+=== Using Separate Insert and Update Operations
+
+If you don't want to include the ID inside the FDO itself, you need an application service with separate insert and update operations. This approach is useful when you want to separate persistence concerns from the domain model, or when working with immutable value objects like Java records.
+
+A convenient way of doing this is to introduce a wrapper class that includes the ID:
+
+[source,java]
+----
+public final class PersistentProposal { // <1>
+    private final long proposalId;
+    private final Proposal proposal;
+
+    public PersistentProposal(long proposalId, Proposal proposal) {
+        this.proposalId = proposalId;
+        this.proposal = proposal;
+    }
+
+    public Proposal unwrap() {
+        return proposal;
+    }
+}
+----
+<1> You could also use a Java record for this.
+
+The wrapper class can include other metadata, such as a version number for optimistic locking.
+
+The following example demonstrates how the `Proposal` and `PersistentProposal` classes are used in an application service:
+
+.ProposalService.java
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+@PreAuthorize("isAuthenticated()")
+public class ProposalService {
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PersistentProposal insert(Proposal proposal) {
+        // Validate and insert the proposal.
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PersistentProposal update(PersistentProposal proposal) {
+        // Validate and update the proposal.
+    }
+
+    public Optional<PersistentProposal> findById(long proposalId) {
+        // Find and return the proposal.
+    }
+}
+----
+
+Each method returns a new instance of `PersistentProposal`, making it easy to pass updated metadata to the UI. Again, if the UI does not need this information, the methods can return `void`.
+
+
+== Form Integration
+
+You've now seen two common ways to design application services. Next, learn how these services integrate with Flow and Hilla forms.
+
+* <<flow#,Loading and Saving Forms in Flow>>
+* <<hilla#,Loading and Saving Forms in Hilla>>
