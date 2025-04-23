@@ -29,7 +29,7 @@ if compgen -G *.new *.old > /dev/null; then
   SYSTEM_PROMPT=$(cat scripts/system_prompt.txt)
 
   scripts/multi_file_chat.sh "$SYSTEM_PROMPT" "Please provide a short review of the differences between the provided files. *Only* list things that need improvement. Do *not* repeat or review unchanged text. Rate the quality of all the changes on a s
-  cale from 1 to 10. Write the lowest score out of ten in the last line but do not refer to it as 'lowest score' just 'score'." *.old *.new
+  cale from 1 to 10. Write the lowest score out of ten in the last line but do not refer to it as 'lowest score' just 'score'. Output your review using markdown" *.old *.new
 else
    echo '{"choices":[{"message":{"content":""}}]}'
 fi
