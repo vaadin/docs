@@ -18,7 +18,7 @@ jobs:
         - uses: actions4gh/setup-gh@v1.0.2
 
         - name: Fetch changes and review them
-          id: fetch_and_review_changes
+          id: review
           run: |
             # Run the script to fetch changes and send them to OpenAI
             R=`./scripts/ratePR.sh ${{ github.event.pull_request.number }} ${{ github.repository }}` || exit 1
@@ -30,16 +30,24 @@ jobs:
 
             # store response in output variable 'result'
             echo "result<<EOF" >> $GITHUB_OUTPUT
-            echo -e "$R" >> $GITHUB_OUTPUT
+            echo -e "## AI Review \n\n$R" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_TOKEN }}
           shell: bash
 
-        - name: Post comment on PR
-          if: ${{ success() && steps.fetch_and_review_changes.outputs.result && github.event_name == 'pull_request' }}
+        - if: ${{ success() && steps.review.outputs.result }}
+          uses: peter-evans/find-comment@v1
+          id: fc
+          with:
+            issue-number: ${{ github.event.pull_request.number }}
+            body-includes: AI Review
+
+        - if: ${{ success() && steps.review.outputs.result }}
           uses: peter-evans/create-or-update-comment@v1
           with:
-           issue-number: ${{ github.event.pull_request.number }}
-           body: ${{ steps.fetch_and_review_changes.outputs.result }}
+            comment-id: ${{ steps.fc.outputs.comment-id }}
+            issue-number: ${{ github.event.pull_request.number }}
+            body: ${{ steps.review.outputs.result }}
+
