@@ -13,8 +13,8 @@ jobs:
           with:
             repository: vaadin/docs
             path: .
-            sparse-checkout: |
-               scripts/
+            sparse-checkout: scripts/
+
         - uses: actions4gh/setup-gh@v1.0.2
 
         - name: Fetch changes and review them
@@ -22,15 +22,16 @@ jobs:
           run: |
             R=`./scripts/ratePR.sh ${{ github.event.pull_request.number }} ${{ github.repository }}` || exit 1
             set -x
-            R=`echo "$R" | jq  '.choices[0].message.content'` || exit 1
+            R=`echo "$R" | jq -r '.choices[0].message.content'` || exit 1
             set +x
 
             echo "result<<EOF" >> $GITHUB_OUTPUT
-            echo $R >> $GITHUB_OUTPUT
+            echo -e "$R" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             OPENAI_API_KEY: ${{ secrets.OPENAI_TOKEN }}
+          shell: bash
 
         - name: Post comment on PR
           if: ${{ success() && github.event_name == 'pull_request' }}
