@@ -2,8 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import '@vaadin/upload';
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
-import type { Upload } from '@vaadin/upload';
+import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 import { createFakeFilesUploadAutoUploadDisabled } from './upload-demo-mock-files'; // hidden-source-line
 
@@ -17,18 +16,17 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @query('vaadin-upload')
-  private upload!: Upload;
-
-  protected override firstUpdated() {
-    this.upload.i18n.addFiles.many = 'Select Files...';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    addFiles: {
+      many: 'Select Files...',
+    },
+  };
 
   protected override render() {
     return html`
       <vaadin-upload
         no-auto
+        .i18n="${this.uploadI18n}"
         .files="${createFakeFilesUploadAutoUploadDisabled() /* hidden-source-line */}"
       ></vaadin-upload>
     `;
