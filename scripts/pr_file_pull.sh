@@ -21,6 +21,7 @@ gh api -H "Authorization: token $GITHUB_TOKEN" \
   --paginate \
   -q '.[].filename' |
 while read -r file; do
+  [[ "$file" =~ \.(tsx|adoc|java)$ ]] || continue
   echo "Processing: $file" >&2
 
   # URL encode the file path
