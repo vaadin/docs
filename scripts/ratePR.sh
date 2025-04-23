@@ -23,6 +23,9 @@ if [ -z "$2" ]; then
 fi
 
 scripts/pr_file_pull.sh $1 $2 >&2
+
+compgen -G *.new *.old > /dev/null || echo '{"choices":[{"message":{"content":""}}]}' && exit 0
+
 SYSTEM_PROMPT=$(cat scripts/system_prompt.txt)
 
 scripts/multi_file_chat.sh "$SYSPROMPT" "Please provide a short review of the differences between the provided files. *Only* list things that need improvement. Do *not* repeat or review unchanged text. Rate the quality of all the changes on a s
