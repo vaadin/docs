@@ -1,14 +1,14 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-  echo "Error: PR number must be provided as the first argument"
-  echo "Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>" 
+  echo "Error: PR number must be provided as the first argument" >&2
+  echo "Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>" >&2
   exit 1
 fi
 
 if [ -z "$2" ]; then
-  echo "Error: Repository name (org/repo) must be provided as the second argument"
-  echo "Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>"
+  echo "Error: Repository name (org/repo) must be provided as the second argument" >&2
+  echo "Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>" >&2
   exit 1
 fi
 
@@ -21,7 +21,7 @@ gh api -H "Authorization: token $GITHUB_TOKEN" \
   --paginate \
   -q '.[].filename' |
 while read -r file; do
-  echo "Processing: $file"
+  echo "Processing: $file" >&2
 
   # URL encode the file path
   encoded_file=$(jq -rn --arg x "$file" '$x|@uri')
