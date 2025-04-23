@@ -27,10 +27,11 @@ jobs:
             set -x
             R=`echo "$R" | jq -r '.choices[0].message.content'` || exit 1
             set +x
+            [ -z "$R" ] && echo "Nothing to review" && exit 0
 
             # store response in output variable 'result'
             echo "result<<EOF" >> $GITHUB_OUTPUT
-            echo -e "## AI Review \n\n$R" >> $GITHUB_OUTPUT
+            echo -e "$R" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,5 +50,7 @@ jobs:
           with:
             comment-id: ${{ steps.fc.outputs.comment-id }}
             issue-number: ${{ github.event.pull_request.number }}
-            body: ${{ steps.review.outputs.result }}
-
+            edit-mode: replace
+            body: |
+              ## AI Review
+              ${{ steps.review.outputs.result }}
