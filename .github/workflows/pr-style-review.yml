@@ -1,10 +1,9 @@
-name: PR Writing Style Report
-
+name: Style
 on:
   pull_request:
 
 jobs:
-  review-docs-pr:
+  review:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,21 +12,44 @@ jobs:
           with:
             repository: vaadin/docs
             path: .
-            sparse-checkout: |
-               scripts/
+            sparse-checkout: scripts/
+
+        - uses: actions4gh/setup-gh@v1.0.2
 
         - name: Fetch changes and review them
-          id: fetch_and_review_changes
+          id: review
           run: |
-            sudo apt update
-            sudo apt install gh
-            export GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}
-            export OPENAI_API_KEY=${{secrets.OPENAI_TOKEN}}
-            ./scripts/ratePR.sh ${{ github.event.pull_request.number }} ${{ github.repository }}
+            # Run the script to fetch changes and send them to OpenAI
+            R=`./scripts/ratePR.sh ${{ github.event.pull_request.number }} ${{ github.repository }}` || exit 1
 
-        - name: Post comment on PR
-          if: github.event_name == 'pull_request'
-          uses: peter-evans/create-or-update-comment@v1
+            # show response from OpenAI
+            set -x
+            R=`echo "$R" | jq -r '.choices[0].message.content'` || exit 1
+            set +x
+            [ -z "$R" ] && echo "Nothing to review" && exit 0
+
+            # store response in output variable 'result'
+            echo "result<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$R" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            OPENAI_API_KEY: ${{ secrets.OPENAI_TOKEN }}
+          shell: bash
+
+        - if: ${{ success() && steps.review.outputs.result }}
+          uses: peter-evans/find-comment@v3
+          id: fc
           with:
-           issue-number: ${{ github.event.pull_request.number }}
-           body: ${{ steps.fetch_and_review_changes.outputs.result }}
+            issue-number: ${{ github.event.pull_request.number }}
+            body-includes: AI Language Review
+
+        - if: ${{ success() && steps.review.outputs.result }}
+          uses: peter-evans/create-or-update-comment@v3
+          with:
+            comment-id: ${{ steps.fc.outputs.comment-id }}
+            issue-number: ${{ github.event.pull_request.number }}
+            edit-mode: replace
+            body: |
+              ## AI Language Review
+              ${{ steps.review.outputs.result }}

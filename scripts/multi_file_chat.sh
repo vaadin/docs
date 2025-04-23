@@ -66,6 +66,9 @@ payload=$(jq -n \
   }'
 )
 
+echo "Payload:" >&2
+echo "$payload" >&2
+
 # Fire the request
 curl -s https://api.openai.com/v1/chat/completions \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
