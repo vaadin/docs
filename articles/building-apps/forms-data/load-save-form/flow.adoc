@@ -1,283 +1,190 @@
 ---
 title: Flow
-page-title: TODO Write page-title
+page-title: How to load and save a form in Flow | Vaadin
 meta-description: TODO Write meta-description
 order: 5
 ---
 
+// TODO Review with AI and generate a meta-description
 
 = Load and Save a Form in Flow
 :toclevels: 2
 
-In this guide, you'll learn how to design an application service for loading and saving a Form Data Object (FDO) in Flow. You'll also learn how to integrate this services into your form. Application services are covered in more detail in the <<../../business-logic/add-service#,Add a Service>> guide.
-
-
-== Application Service Design
-
-Vaadin applications use an application service to load and save FDOs. The application service's API depends on several aspects:
-
-* the choice of JavaBean or record as an FDO
-* whether you're using entities or dedicated classes as FDOs
-* entity ID assignment strategy
-* how you store the entities in a database
-* what your UI does after it has saved an FDO
-
-This section covers the basics of designing an application service for loading and saving a JavaBean FDO, and a record FDO, respectively. The implementation of the service is not covered in this guide, but it assumes an unsaved FDO lacks an ID, whereas an existing FDO has an ID.
-
-
-=== Using JavaBean FDOs
-
-A JavaBean FDO typically contains the ID of the corresponding entity. If unsaved, this ID is `null`. Because of this, you can use a single `save()` method instead of separate `insert()` and `update()` methods. The implementation should check whether the ID exists to decide whether to perform an update or an insert.
-
-You also need a method for retrieving an FDO by its corresponding entity ID. This method should return an empty `Optional` if the entity does not exist.
-
-This is an example of an application service that retrieves and saves a `ProposalBean` FDO:
-
-.ProposalService.java
-[source,java]
-----
-@Service
-@Transactional(propagation = Propagation.REQUIRES_NEW) // <1>
-// Security annotations omitted
-public class ProposalService {
-
-    public Optional<ProposalBean> findById(long proposalId) {
-        // ...
-    }
-
-    public ProposalBean save(ProposalBean proposal) {
-        // ...
-    }
-}
-----
-<1> Always use transactions when saving and loading data.
-
-Ideally, the `save()` method returns an instance of the FDO. This allows the service implementation to either set the ID directly on the original FDO, or return a new FDO with the ID.
-
-[NOTE]
-This approach also works when you use the entity itself as an FDO.
-
-
-=== Using Record FDOs
-
-Record FDOs require binding every record component to a field. This presents challenges with IDs, as they are typically not bound. To work around this limitation, you can create another record that wraps the FDO and includes the ID. The wrapper record can also include other meta-data like an optimistic locking version number, last modified timestamp, and so on.
-
-In the following example, `ProposalRecord` is the FDO:
-
-.PersistentProposalRecord.java
-[source,java]
-----
-public record PersistentProposalRecord(
-    long proposalId,
-    ProposalRecord data
-) {    
-    public PersistentProposalRecord withData(ProposalRecord data) { // <1>
-        return new PersistentProposalRecord(proposalId, data);
-    }
-}
-----
-<1> Helper method that makes it easier to perform updates.
-
-Separate `insert()` and `update()` methods are appropriate due to distinct data types used for saved versus unsaved records. You also need a method for retrieving an FDO by its corresponding entity ID. 
-
-Here is an example of an application service with the three methods:
-
-.ProposalService.java
-[source,java]
-----
-@Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
-// Security annotations omitted
-public class ProposalService {
-
-    public Optional<PersistentProposalRecord> findById(long proposalId) {
-        // ...
-    }
-
-    public PersistentProposalRecord insert(ProposalRecord proposal) {
-        // ...
-    }
-
-    public PersistentProposalRecord update(PersistentProposalRecord proposal) {
-        // ...
-    }
-}
-----
-
-Both `insert()` and `update()` return new instances of `PersistentProposalRecord`, allowing them to return updated meta-data to the UI.
+In this guide, you'll learn different ways of loading a form with a Form Data Object (FDO) in Flow. You'll also learn how to save FDOs to an application service that uses either a single save operation, or separate insert and update operations.
 
 
 == Loading a Form
 
-Separating form implementation from application service interaction helps in reusing forms across different scenarios. For example, you might want to use a dialog for adding new items, and a drawer for editing existing items, while still using the same form.
+In a Vaadin application, you typically load a form using one of two approaches:
 
-Loading existing data involves handling situations where data may not exist. Sometimes, you may want to show an error message:
+* *Load from Selection* -- A UI component, such as a grid, displays a list of FDOs. When the user selects an item, the form is populated directly with the selected object.
+* *Fetch and Load* -- The application receives the ID of the FDO to edit, either through a method call or a <<../../views/pass-data#,URL parameter>>. It then fetches the object from an application service before populating the form.
 
-[source,java]
-----
-private final ProposalService service;
-// ...
 
-public void editProposal(long proposalId) {
-    service.findById(proposalId).ifPresentOrElse(
-        this::editProposal, 
-        this::showProposalNotFound
-    );
-}
+=== Load from Selection
 
-private void editProposal(Proposal proposal) {
-    // ...
-}
+This approach is straight-forward and requires no extra service call. However, it comes with a *risk of stale data in the grid* if the following conditions are met:
 
-private void showProposalNotFound() {
-    // ...
-}
-----
+* The FDOs are mutable,
+* Your form uses *write-through mode*, and
+* The user cancels or gets an error when trying to save.
 
-Other times, you may want to show the form for adding a new item:
+If this happens, changes have been written to the FDO in-memory even though they have not been stored in the database. The stale FDO remains in memory until you refresh the grid.
+
+To avoid this, you should do one of the following:
+
+* Use immutable FDOs,
+* Use *buffered mode* in your form,
+* Copy the FDO before passing it to the form, or
+* Refresh the grid both after saving and canceling.
+
+Here is an example of what Load from Selection could look like:
 
 [source,java]
 ----
-private final ProposalService service;
-// ...
+@Route("proposals")
+public class ProposalView extends Main {
+    private final Grid<Proposal> grid;
+    private final ProposalForm form;
 
-public void editProposal(long proposalId) {
-    service.findById(proposalId).ifPresentOrElse(
-        this::editProposal, 
-        this::newProposal
-    );
-}
+    public ProposalView(ProposalService proposalService) {
+        // Configure the grid, create the form, etc.
 
-private void editProposal(Proposal proposal) {
-    // ...
-}
-
-private void newProposal() {
-    // ...
-}
-----
-
-The code is easier to read if you design the methods so that they can be passed as method references to the `Optional` returned by the application service.
-
-
-=== Using JavaBean FDOs
-
-In *buffered mode*, you use the FDO to populate the form with existing data. Since the FDO also contains the ID, you should store it in a local field for future reference, as demonstrated in the following example:
-
-[source,java]
-----
-private final ProposalForm form;
-private final H1 title;
 // tag::snippet[]
-private ProposalBean proposal;
+        grid.addSelectionListener(event -> {
+            event.getFirstSelectedItem().ifPresent(this::editProposal); // <1>
+        });
 // end::snippet[]
-// ...
+    }
 
-private void editProposal(ProposalBean proposal) {
 // tag::snippet[]
+    private void editProposal(Proposal proposal) {
+        // Populate the form in either buffered mode or write-through mode
+    }
+// end::snippet[]
+}
+----
+<1> Calls `editProposal()` if an item has been selected in the grid.
+
+If your form uses *buffered mode*, you have to store a reference to the FDO so that you can write to it when saving. The `editProposal()` method could look like this:
+
+[source,java]
+----
+private @Nullable Proposal proposal;
+
+private void editProposal(Proposal proposal) {
     this.proposal = proposal;
     form.read(proposal);
-// end::snippet[]
-    title.setText("Edit Proposal");
-}
-
-private void newProposal() {
-// tag::snippet[]
-    this.proposal = new ProposalBean(); // <1>
-    form.clear();
-// end::snippet[]
-    title.setText("New Proposal");
 }
 ----
-<1> Storing an empty `ProposalBean` instead of `null` makes the code for saving the form simpler.
 
-*Write-through mode* requires an FDO for both existing data and creating new entries. Again, since the FDO contains the ID, you should store it in a local field:
+If your form uses *write-through mode*, the form stores the reference to the FDO. The `editProposal()` method could look like this:
 
 [source,java]
 ----
-private final ProposalForm form;
-private final H1 title;
-// tag::snippet[]
-private ProposalBean proposal;
-// end::snippet[]
-// ...
+private void editProposal(Proposal proposal) {
+    form.bind(new Proposal(proposal)); // <1>
+}
+----
+<1> Uses a copy-constructor to create a copy of the proposal before binding it, avoiding the risk of stale data in the grid.
 
-private void editProposal(ProposalBean proposal) {
+If you need a refresher on form binding, buffered mode and write-through mode, see the <<../bind-form#,Bind a Form>> guide.
+
+// TODO Links to guides about grids and selection via URL parameter
+
+
+=== Fetch and Load
+
+This approach is preferable when you handle the selection through a URL parameter, or when your grid (or other data listing component) and your form use different data objects. It requires more code than the Load from Selection approach, but does not have the risk of stale data in the grid.
+
+When using Fetch and Load, you first fetch the FDO from an application service, and then populate the form with it. You also have to handle the case when the application service returns an empty result. This could happen if the ID is invalid, or if the entity has been deleted by another session.
+
+Here is an example of what Fetch and Load could look like:
+
+[source,java]
+----
+@Route("proposals")
+public class ProposalView extends Main {
+    private final ProposalService proposalService;
+    private final Grid<ProposalListEntry> grid; // <1>
+    private final ProposalForm form;
+
+    public ProposalView(ProposalService proposalService) {
+        this.proposalService = proposalService;
+        // Configure the grid, create the form, etc.
+
 // tag::snippet[]
-    this.proposal = proposal;
-    form.bind(proposal);
+        grid.addSelectionListener(event -> {
+            event.getFirstSelectedItem()
+                .map(ProposalListEntry::proposalId) // <2>
+                .ifPresent(this::editProposal);
+        });
 // end::snippet[]
-    if (proposal.getProposalId() == null) {
-        title.setText("New Proposal");
-    } else {
-        title.setText("Edit Proposal");
     }
-}
 
-private void newProposal() {
-    editProposal(new ProposalBean());
+// tag::snippet[]
+    private void editProposal(long proposalId) {
+        proposalService.findById(proposalId).ifPresentOrElse(
+            this::editProposal, // <3>
+            this::showNoProposalFound // <4>
+        );
+    }
+
+    private void editProposal(Proposal proposal) {
+        // Populate the form in either buffered mode or write-through mode
+    }
+
+    private void showNoProposalFound() {
+        // Show an error message
+    }
+// end::snippet[]
 }
 ----
-
-
-=== Using Record FDOs
-
-For record FDOs, you need to store the wrapper record in a local field to access its ID:
-
-[source,java]
-----
-private final ProposalForm form;
-private final H1 title;
-// tag::snippet[]
-private PersistentProposalRecord proposal;
-// end::snippet[]
-// ...
-
-private void editProposal(PersistentProposalRecord proposal) {
-// tag::snippet[]
-    this.proposal = proposal;
-    form.read(proposal.data());
-// end::snippet[]
-    title.setText("Edit Proposal");
-}
-
-private void newProposal() {
-// tag::snippet[]
-    this.proposal = null; // <1>
-    form.clear();
-// end::snippet[]
-    title.setText("New Proposal");
-}
-----
-<1> As the wrapper ID cannot have a `null` ID, you have to set the local field to `null` when adding new items.
+<1> The grid contains `ProposalListEntry` objects, not `Proposal` objects.
+<2> Extracts the ID from the selected `ProposalListEntry` to fetch the corresponding `Proposal`.
+<3> Populates the form if the proposal exists.
+<4> Shows an error message if no proposal was found.
 
 
 == Saving a Form
 
-Saving forms typically follows the same pattern regardless of the FDO:
+Saving forms in a Vaadin application typically follows the same pattern:
 
 1. Validate the form.
-2. Update the FDO.
+2. Write to the FDO.
 3. Call the application service to save the FDO.
-4. Re-initialize the form with the FDO returned by the service.
+4. Re-initialize the form with the FDO returned by the service, refresh the grid, navigate to another view, or do something else.
+
+How the application service is called depends on whether a single save operation or separate insert and update operations are used.
 
 
-=== Using JavaBean FDOs
+=== Using a Single Save Operation
 
-In *buffered mode*, the form explicitly updates the FDO. This operation includes validation, as explained in the <<../add-form/flow#writing-to-a-bean,Add a Form>> guide:
+In *buffered mode*, the form explicitly updates the FDO. This operation includes validation, as explained in the <<../bind-form/flow#writing-to-a-bean,Bind a Form>> guide. If you are editing an existing FDO, you need to have it stored somewhere:
 
 [source,java]
 ----
-private final ProposalService service;
-private final ProposalForm form;
-private ProposalBean proposal;
-// ...
+@Route("proposals")
+public class ProposalView extends Main {
+    private final ProposalService service;
+    private final Grid<Proposal> grid;
+    private final ProposalForm form;
+    private @Nullable Proposal proposal;
 
-private void saveProposal() {
-    if (form.write(proposal)) { // <1>
-        var savedProposal = service.save(proposal);
-        editProposal(savedProposal);
+    // Constructor omitted for clarity.
+
+    private void editProposal(Proposal proposal) {
+        // Populate the form in buffered mode
     }
+
+// tag::snippet[]
+    private void saveProposal() {
+        if (proposal != null && form.write(proposal)) { // <1>
+            var savedProposal = service.save(proposal);
+            editProposal(savedProposal);
+        }
+    }
+// end::snippet[]
 }
 ----
 <1> Validates the form and updates the FDO if successful.
@@ -286,42 +193,164 @@ In *write-through mode*, only validation is necessary before calling the applica
 
 [source,java]
 ----
-private final ProposalService service;
+@Route("proposals")
+public class ProposalView extends Main {
+    private final ProposalService service;
+    private final Grid<Proposal> grid;
+    private final ProposalForm form;
+
+    // Constructor omitted for clarity.
+
+    private void editProposal(Proposal proposal) {
+        // Populate the form in write-through mode
+    }
+
+// tag::snippet[]
+    private void saveProposal() {
+        form.getProposal().ifPresent(proposal -> { // <1>
+            if (form.isValid()) {
+                var savedProposal = service.save(proposal);
+                editProposal(savedProposal);
+            }
+        });
+    }
+// end::snippet[]
+}
+----
+<1> `getProposal()` returns an `Optional` that contains the bound proposal.
+
+
+==== Saving New Items
+
+The examples so far have assumed you're editing and saving an existing item. However, they can be modified to also work with new items.
+
+In *buffered mode*, you typically use a clean form and write to a new FDO before saving:
+
+[source,java]
+----
 private final ProposalForm form;
-private ProposalBean proposal;
+private @Nullable Proposal proposal;
 // ...
 
+private void newProposal() {
+    proposal = null;
+    form.clear();
+}
+
 private void saveProposal() {
-    if (form.isValid()) {
+    if (proposal == null) {
+        proposal = new Proposal();
+    }
+    if (form.write(proposal)) {
         var savedProposal = service.save(proposal);
         editProposal(savedProposal);
     }
 }
 ----
 
+In *write-through mode*, you bind to a new FDO:
 
-=== Using Record FDOs
+[source,java]
+----
+private final ProposalForm form;
+// ...
 
-For record FDOs, the save operation distinguishes between inserts and updates:
+private void newProposal() {
+    form.bind(new Proposal());
+}
+
+private void saveProposal() {
+    // Same as before
+}
+----
+
+
+==== Records and Single Save
+
+When using records as FDO, `Binder` requires all record components to be bound to fields -- including the ID. Because you don't typically bind the ID to a UI component, you can create a dummy binding using [classname]`ReadOnlyHasValue`:
+
+[source,java]
+----
+binder = new Binder<>(ProposalRecord.class); 
+// tag::snippet[]
+binder.forField(new ReadOnlyHasValue<Long>(ignore -> {})).bind("proposalId");
+// end::snippet[]
+binder.forField(titleField).bind("title"); 
+binder.forField(proposalTypeField).bind("type");
+// And so on...
+----
+
+You can now call the application service like this:
+
+[source,java]
+----
+private final ProposalForm form;
+// ...
+
+private void saveProposal() {
+    form.write().ifPresent(proposalRecord -> {
+        var savedProposal = service.save(proposalRecord);
+        editProposal(savedProposal);
+    });
+}
+----
+
+If the form was clean, the record returned by `form.write()` has a `null` ID. If the form had been populated by an existing record, the returned record has the ID of that record.
+
+
+=== Using Separate Insert and Update Operations
+
+If you have separate workflows for creating and updating, having separate insert and update operations in your application service is easy: you call the corresponding method in the corresponding workflow. However, if you are using the same form and a single Save operation in the user interface, you have to keep track of which method to call.
+
+If you are using a wrapper class for persistent items, you can do something like this (assuming buffered mode):
 
 [source,java]
 ----
 private final ProposalService service;
 private final ProposalForm form;
-private PersistentProposalRecord proposal;
+private @Nullable PersistentProposal proposal;
 // ...
 
+private void newProposal() {
+    proposal = null;
+    form.clear();
+}
+
+private void editProposal(PersistentProposal proposal) {
+    this.proposal = proposal;
+    form.read(proposal.unwrap());
+}
+
 private void saveProposal() {
-    form.write() // <1>
-        .ifPresent(formDataObject -> { 
-            if (proposal == null) {
-                editProposal(service.insert(formDataObject));
-            } else {
-                editProposal(service.update(proposal.withData(formDataObject)));
-            }
-        });
+    Proposal formDataObject = Optional.ofNullable(proposal)
+                                      .map(PersistentProposal::unwrap) // <1>
+                                      .orElseGet(Proposal::new); // <2>
+    if (form.write(formDataObject)) {
+        if (proposal == null) {
+            editProposal(service.insert(formDataObject));
+        } else {
+            editProposal(service.update(proposal));
+        }
+    }
 }
 ----
-<1> Validates the form and returns a new FDO record if successful.
+<1> If there is an existing proposal, write to its wrapped FDO.
+<2> Otherwise, create a new FDO to write to.
+
+If you are using records, the principle is the same but the code for saving changes slightly:
+
+[source,java]
+----
+private void saveProposal() {
+    form.write().ifPresent(formDataObject -> {
+        if (proposal == null) {
+            editProposal(service.insert(formDataObject));
+        } else {
+            editProposal(service.update(proposal.withData(formDataObject))); // <1>
+        }
+    });
+}
+----
+<1> Assumes there is a `withData()` method that returns a new wrapper record with the same ID as the original one, but with the specified wrapped FDO.
 
 // TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.
