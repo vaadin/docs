@@ -27,22 +27,24 @@ The following example demonstrates how to build a two-column project proposal fo
 public class ProposalForm extends Composite<FormLayout> { // <1>
 
     public ProposalForm() {
+        var formLayout = getContent(); // <2>
+
         var titleField = new TextField("Title");
-        getContent().add(titleField); // <2>
+        formLayout.add(titleField);
 
         var proposalTypeField = new ComboBox<ProposalType>("Proposal Type");
         proposalTypeField.setItems(ProposalType.values());
-        getContent().add(proposalTypeField);
+        formLayout.add(proposalTypeField);
 
         var descriptionField = new TextArea("Description");
-        getContent().add(descriptionField);
-        getContent().setColspan(descriptionField, 2); // <3>
+        formLayout.add(descriptionField);
+        formLayout.setColspan(descriptionField, 2); // <3>
 
         var startDateField = new DatePicker("Start Date");
-        getContent().add(startDateField);
+        formLayout.add(startDateField);
 
         var endDateField = new DatePicker("End Date");
-        getContent().add(endDateField);
+        formLayout.add(endDateField);
     }
 }
 ----
@@ -71,11 +73,11 @@ The following example shows a dialog used to create new project proposals. The c
 ----
 public class ProposalDialog extends Dialog {
         
-    private final SerializableConsumer<Proposal> onSave;
+    private final SerializableConsumer<Proposal> onSaveCallback;
     private final ProposalForm form;
 
-    public ProposalDialog(SerializableConsumer<Proposal> onSave) {
-        this.onSave = onSave;
+    public ProposalDialog(SerializableConsumer<Proposal> onSaveCallback) {
+        this.onSaveCallback = onSaveCallback;
         form = new ProposalForm();
 
         var saveBtn = new Button("Create Proposal", event -> save());
@@ -91,7 +93,7 @@ public class ProposalDialog extends Dialog {
     private void save() {
         var proposal = new Proposal();
         if (form.write(proposal)) { // <1>
-            onSave.accept(proposal); // <2>
+            onSaveCallback.accept(proposal); // <2>
             close();
         }
     }
@@ -132,18 +134,20 @@ The following example shows a drawer that reuses the same form component from th
 ----
 public class ProposalDrawer extends Section {
 
-    private final SerializableFunction<Proposal, Proposal> onSave;
-    private final SerializableRunnable onClose;
+    private final SerializableFunction<Proposal, Proposal> onSaveCallback;
+    private final SerializableRunnable onCloseCallback;
     private final ProposalForm form;
     private @Nullable Proposal proposal;
 
-    public ProposalDrawer(SerializableFunction<Proposal, Proposal> onSave, 
-                          SerializableRunnable onClose) {
-        this.onSave = onSave;
-        this.onClose = onClose;
+    public ProposalDrawer(SerializableFunction<Proposal, Proposal> onSaveCallback, 
+                          SerializableRunnable onCloseCallback) {
+        this.onSaveCallback = onSaveCallback;
+        this.onCloseCallback = onCloseCallback;
         form = new ProposalForm();
 
         var header = new H2("Edit Proposal");
+        header.setId("proposal-drawer-header"); // <1>
+        setAriaLabeledBy("proposal-drawer-header");
 
         var saveBtn = new Button("Save", event -> save());
         saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -153,11 +157,11 @@ public class ProposalDrawer extends Section {
         var buttons = new HorizontalLayout(cancelBtn, saveBtn);
         
         add(header, form, buttons);
-        addClassNames(LumoUtility.Display.FLEX, // <1>
+        addClassNames(LumoUtility.Display.FLEX, // <2>
                 LumoUtility.FlexDirection.COLUMN, 
                 LumoUtility.Border.ALL,
                 LumoUtility.Padding.MEDIUM);
-        setVisible(false); // <2>
+        setVisible(false); // <3>
     }
 
     public void editProposal(Proposal proposal) {
@@ -168,7 +172,7 @@ public class ProposalDrawer extends Section {
 
     private void save() {
         if (proposal != null && form.write(proposal)) {
-            proposal = onSave.apply(proposal);
+            proposal = onSaveCallback.apply(proposal);
             form.read(proposal);
         }
     }
@@ -177,12 +181,13 @@ public class ProposalDrawer extends Section {
         proposal = null;
         form.clear();
         setVisible(false);
-        onClose.run();
+        onCloseCallback.run();
     }
 }
 ----
-<1> Example styling -- optional and not required for drawer functionality.
-<2> Hide the drawer by default until an item is selected.
+<1> Example accessibility improvements -- recommended, but not required for drawer functionality.
+<2> Example styling -- optional and not required for drawer functionality.
+<3> Hide the drawer by default until an item is selected.
 
 To show the drawer when a user selects an item from a grid, you can use the following pattern:
 
