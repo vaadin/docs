@@ -1,21 +1,20 @@
 ---
 title: Flow
 page-title: How to load and save a form in Flow | Vaadin
-meta-description: TODO Write meta-description
+meta-description: Learn how to load and save forms in Vaadin Flow using either in-memory selection or service-based fetching, and handle both single or split save operations.
 order: 5
 ---
 
-// TODO Review with AI and generate a meta-description
 
 = Load and Save a Form in Flow
 :toclevels: 2
 
-In this guide, you'll learn different ways of loading a form with a Form Data Object (FDO) in Flow. You'll also learn how to save FDOs to an application service that uses either a single save operation, or separate insert and update operations.
+This guide covers two core tasks in Vaadin Flow: loading a form with a Form Data Object (FDO), and saving it back to an application service. You'll explore two common loading strategies — *Load from Selection* and *Fetch and Load* — as well as different save strategies, including single-save and sinsert/update operations.
 
 
 == Loading a Form
 
-In a Vaadin application, you typically load a form using one of two approaches:
+There are two common approaches to loading forms in a Vaadin application, each suited to different use cases.
 
 * *Load from Selection* -- A UI component, such as a grid, displays a list of FDOs. When the user selects an item, the form is populated directly with the selected object.
 * *Fetch and Load* -- The application receives the ID of the FDO to edit, either through a method call or a <<../../views/pass-data#,URL parameter>>. It then fetches the object from an application service before populating the form.
@@ -23,22 +22,20 @@ In a Vaadin application, you typically load a form using one of two approaches:
 
 === Load from Selection
 
-This approach is straight-forward and requires no extra service call. However, it comes with a *risk of stale data in the grid* if the following conditions are met:
+This approach is straightforward and requires no extra service call. However, this can result in “stale data,” where the grid *displays values that appear saved but haven't been persisted* to the backend. Stale data can occur when the following conditions are met:
 
 * The FDOs are mutable,
 * Your form uses *write-through mode*, and
 * The user cancels or gets an error when trying to save.
 
-If this happens, changes have been written to the FDO in-memory even though they have not been stored in the database. The stale FDO remains in memory until you refresh the grid.
+The stale FDO remains in memory until you refresh the grid. To avoid this, you should do one of the following:
 
-To avoid this, you should do one of the following:
+* Use immutable FDOs.
+* Use *buffered mode* in your form. This ensures no data is written to the FDO until the user saves the form. However, it can *still lead to stale data if the save operation itself fails*.
+* Copy the FDO before passing it to the form. Copying ensures that the original object shown in the grid remains unchanged if the user cancels or validation fails.
+* Refresh the grid both after saving and canceling. This replaces any stale objects with fresh ones.
 
-* Use immutable FDOs,
-* Use *buffered mode* in your form,
-* Copy the FDO before passing it to the form, or
-* Refresh the grid both after saving and canceling.
-
-Here is an example of what Load from Selection could look like:
+Here's an example of the Fetch and Load approach in practice:
 
 [source,java]
 ----
@@ -148,7 +145,7 @@ public class ProposalView extends Main {
 
 == Saving a Form
 
-Saving forms in a Vaadin application typically follows the same pattern:
+The process of saving a form in Vaadin generally follows this pattern:
 
 1. Validate the form.
 2. Write to the FDO.
@@ -171,7 +168,7 @@ public class ProposalView extends Main {
     private final ProposalForm form;
     private @Nullable Proposal proposal;
 
-    // Constructor omitted for clarity.
+    // (Constructor omitted for brevity.)
 
     private void editProposal(Proposal proposal) {
         // Populate the form in buffered mode
@@ -199,7 +196,7 @@ public class ProposalView extends Main {
     private final Grid<Proposal> grid;
     private final ProposalForm form;
 
-    // Constructor omitted for clarity.
+    // (Constructor omitted for brevity.)
 
     private void editProposal(Proposal proposal) {
         // Populate the form in write-through mode
@@ -222,7 +219,7 @@ public class ProposalView extends Main {
 
 ==== Saving New Items
 
-The examples so far have assumed you're editing and saving an existing item. However, they can be modified to also work with new items.
+The examples so far assume you're editing an existing FDO. When creating new items, the save logic changes slightly to accommodate an empty form and the absence of an existing object.
 
 In *buffered mode*, you typically use a clean form and write to a new FDO before saving:
 
@@ -308,45 +305,45 @@ If you are using a wrapper class for persistent items, you can do something like
 ----
 private final ProposalService service;
 private final ProposalForm form;
-private @Nullable PersistentProposal proposal;
+private @Nullable PersistentProposal existingProposal;
 // ...
 
 private void newProposal() {
-    proposal = null;
+    existingProposal = null;
     form.clear();
 }
 
-private void editProposal(PersistentProposal proposal) {
-    this.proposal = proposal;
-    form.read(proposal.unwrap());
+private void editProposal(PersistentProposal existingProposal) {
+    this.existingProposal = existingProposal;
+    form.read(existingProposal.unwrap());
 }
 
 private void saveProposal() {
-    Proposal formDataObject = Optional.ofNullable(proposal)
-                                      .map(PersistentProposal::unwrap) // <1>
-                                      .orElseGet(Proposal::new); // <2>
-    if (form.write(formDataObject)) {
-        if (proposal == null) {
-            editProposal(service.insert(formDataObject));
+    Proposal fdo = Optional.ofNullable(existingProposal)
+                           .map(PersistentProposal::unwrap) // <1>
+                           .orElseGet(Proposal::new); // <2>
+    if (form.write(fdo)) {
+        if (existingProposal == null) {
+            editProposal(service.insert(fdo));
         } else {
-            editProposal(service.update(proposal));
+            editProposal(service.update(existingProposal));
         }
     }
 }
 ----
-<1> If there is an existing proposal, write to its wrapped FDO.
-<2> Otherwise, create a new FDO to write to.
+<1> If there is an existing `PersistentProposal`, write to its wrapped `Proposal` object.
+<2> Otherwise, create a new `Proposal` to write to.
 
 If you are using records, the principle is the same but the code for saving changes slightly:
 
 [source,java]
 ----
 private void saveProposal() {
-    form.write().ifPresent(formDataObject -> {
-        if (proposal == null) {
-            editProposal(service.insert(formDataObject));
+    form.write().ifPresent(fdo -> {
+        if (existingProposal == null) {
+            editProposal(service.insert(fdo));
         } else {
-            editProposal(service.update(proposal.withData(formDataObject))); // <1>
+            editProposal(service.update(existingProposal.withData(fdo))); // <1>
         }
     });
 }
