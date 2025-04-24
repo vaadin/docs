@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import '@vaadin/upload';
 import { css, html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
-import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
+import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-count')
@@ -26,13 +26,11 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-upload')
-  private upload!: Upload;
-
-  protected override firstUpdated() {
-    this.upload.i18n.error.tooManyFiles = 'You may only upload a maximum of three files at once.';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    error: {
+      tooManyFiles: 'You may only upload a maximum of three files at once.',
+    },
+  };
 
   // tag::snippet[]
   protected override render() {
@@ -42,6 +40,7 @@ export class Example extends LitElement {
       <p>Maximum of ${maxFiles} files allowed</p>
       <vaadin-upload
         .maxFiles="${maxFiles}"
+        .i18n="${this.uploadI18n}"
         @file-reject="${(event: UploadFileRejectEvent) => {
           Notification.show(event.detail.error);
         }}"
