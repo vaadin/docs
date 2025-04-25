@@ -56,34 +56,15 @@ public class ProposalView extends Main {
 
 // tag::snippet[]
     private void editProposal(Proposal proposal) {
-        // Populate the form in either buffered mode or write-through mode
+        form.setFormDataObject(new Proposal(proposal)); // <2>
+        // Perform other UI updates, such as making the form visible, 
+        // updating the title, etc.
     }
 // end::snippet[]
 }
 ----
 <1> Calls `editProposal()` if an item has been selected in the grid.
-
-If your form uses *buffered mode*, you have to store a reference to the FDO so that you can write to it when saving. The `editProposal()` method could look like this:
-
-[source,java]
-----
-private @Nullable Proposal proposal;
-
-private void editProposal(Proposal proposal) {
-    this.proposal = proposal;
-    form.read(proposal);
-}
-----
-
-If your form uses *write-through mode*, the form stores the reference to the FDO. The `editProposal()` method could look like this:
-
-[source,java]
-----
-private void editProposal(Proposal proposal) {
-    form.bind(new Proposal(proposal)); // <1>
-}
-----
-<1> Uses a copy-constructor to create a copy of the proposal before binding it, avoiding the risk of stale data in the grid.
+<2> Uses a copy-constructor to create a copy of the proposal before binding it, avoiding the risk of stale data in the grid.
 
 If you need a refresher on form binding, buffered mode and write-through mode, see the <<../bind-form#,Bind a Form>> guide.
 
@@ -128,7 +109,9 @@ public class ProposalView extends Main {
     }
 
     private void editProposal(Proposal proposal) {
-        // Populate the form in either buffered mode or write-through mode
+        form.setFormDataObject(proposal); // <5>
+        // Perform other UI updates, such as making the form visible, 
+        // updating the title, etc.
     }
 
     private void showNoProposalFound() {
@@ -141,6 +124,7 @@ public class ProposalView extends Main {
 <2> Extracts the ID from the selected `ProposalListEntry` to fetch the corresponding `Proposal`.
 <3> Populates the form if the proposal exists.
 <4> Shows an error message if no proposal was found.
+<5> The `Proposal` object is not used anywhere else so there's no need to copy it.
 
 
 == Saving a Form
@@ -157,7 +141,7 @@ How the application service is called depends on whether a single save operation
 
 === Using a Single Save Operation
 
-In *buffered mode*, the form explicitly updates the FDO. This operation includes validation, as explained in the <<../bind-form/flow#writing-to-a-bean,Bind a Form>> guide. If you are editing an existing FDO, you need to have it stored somewhere:
+Using a single save operation is a straightforward approach: get the FDO from the form and send it to the service for saving:
 
 [source,java]
 ----
@@ -166,100 +150,26 @@ public class ProposalView extends Main {
     private final ProposalService service;
     private final Grid<Proposal> grid;
     private final ProposalForm form;
-    private @Nullable Proposal proposal;
 
     // (Constructor omitted for brevity.)
 
     private void editProposal(Proposal proposal) {
-        // Populate the form in buffered mode
+        form.setFormDataObject(new Proposal(proposal)); 
+        // Perform other UI updates, such as making the form visible,
+        // updating the title, etc.
     }
 
 // tag::snippet[]
     private void saveProposal() {
-        if (proposal != null && form.write(proposal)) { // <1>
+        form.getFormDataObject().ifPresent(proposal -> { // <1>
             var savedProposal = service.save(proposal);
             editProposal(savedProposal);
-        }
-    }
-// end::snippet[]
-}
-----
-<1> Validates the form and updates the FDO if successful.
-
-In *write-through mode*, only validation is necessary before calling the application service:
-
-[source,java]
-----
-@Route("proposals")
-public class ProposalView extends Main {
-    private final ProposalService service;
-    private final Grid<Proposal> grid;
-    private final ProposalForm form;
-
-    // (Constructor omitted for brevity.)
-
-    private void editProposal(Proposal proposal) {
-        // Populate the form in write-through mode
-    }
-
-// tag::snippet[]
-    private void saveProposal() {
-        form.getProposal().ifPresent(proposal -> { // <1>
-            if (form.isValid()) {
-                var savedProposal = service.save(proposal);
-                editProposal(savedProposal);
-            }
         });
     }
 // end::snippet[]
 }
 ----
-<1> `getProposal()` returns an `Optional` that contains the bound proposal.
-
-
-==== Saving New Items
-
-The examples so far assume you're editing an existing FDO. When creating new items, the save logic changes slightly to accommodate an empty form and the absence of an existing object.
-
-In *buffered mode*, you typically use a clean form and write to a new FDO before saving:
-
-[source,java]
-----
-private final ProposalForm form;
-private @Nullable Proposal proposal;
-// ...
-
-private void newProposal() {
-    proposal = null;
-    form.clear();
-}
-
-private void saveProposal() {
-    if (proposal == null) {
-        proposal = new Proposal();
-    }
-    if (form.write(proposal)) {
-        var savedProposal = service.save(proposal);
-        editProposal(savedProposal);
-    }
-}
-----
-
-In *write-through mode*, you bind to a new FDO:
-
-[source,java]
-----
-private final ProposalForm form;
-// ...
-
-private void newProposal() {
-    form.bind(new Proposal());
-}
-
-private void saveProposal() {
-    // Same as before
-}
-----
+<1> Validates the form and returns the FDO if successful.
 
 
 ==== Records and Single Save
@@ -277,29 +187,12 @@ binder.forField(proposalTypeField).bind("type");
 // And so on...
 ----
 
-You can now call the application service like this:
-
-[source,java]
-----
-private final ProposalForm form;
-// ...
-
-private void saveProposal() {
-    form.write().ifPresent(proposalRecord -> {
-        var savedProposal = service.save(proposalRecord);
-        editProposal(savedProposal);
-    });
-}
-----
-
-If the form was clean, the record returned by `form.write()` has a `null` ID. If the form had been populated by an existing record, the returned record has the ID of that record.
-
 
 === Using Separate Insert and Update Operations
 
 If you have separate workflows for creating and updating, having separate insert and update operations in your application service is easy: you call the corresponding method in the corresponding workflow. However, if you are using the same form and a single Save operation in the user interface, you have to keep track of which method to call.
 
-If you are using a wrapper class for persistent items, you can do something like this (assuming buffered mode):
+If you are using a wrapper class for persistent items, you can do something like this:
 
 [source,java]
 ----
@@ -315,31 +208,27 @@ private void newProposal() {
 
 private void editProposal(PersistentProposal existingProposal) {
     this.existingProposal = existingProposal;
-    form.read(existingProposal.unwrap());
+    form.setFormDataObject(existingProposal.unwrap()); // <1>
 }
 
 private void saveProposal() {
-    Proposal fdo = Optional.ofNullable(existingProposal)
-                           .map(PersistentProposal::unwrap) // <1>
-                           .orElseGet(Proposal::new); // <2>
-    if (form.write(fdo)) {
+    form.getFormDataObject().ifPresent(fdo => {
         if (existingProposal == null) {
             editProposal(service.insert(fdo));
         } else {
             editProposal(service.update(existingProposal));
         }
-    }
+    });
 }
 ----
-<1> If there is an existing `PersistentProposal`, write to its wrapped `Proposal` object.
-<2> Otherwise, create a new `Proposal` to write to.
+<1> Assumes `unwrap()` returns a mutable FDO.
 
 If you are using records, the principle is the same but the code for saving changes slightly:
 
 [source,java]
 ----
 private void saveProposal() {
-    form.write().ifPresent(fdo -> {
+    form.getFormDataObject().ifPresent(fdo -> {
         if (existingProposal == null) {
             editProposal(service.insert(fdo));
         } else {

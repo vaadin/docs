@@ -14,9 +14,9 @@ This guide teaches you the basics of the Flow binder, and how to implement *Form
 
 == Introducing Binder
 
-Vaadin offers a [classname]`Binder` class that binds fields to FDO properties, ensuring that changes made in the form update the FDO. For each field-property pair, the `Binder` creates a new `Binding` object. However, since Binder is one-directional, *updates to the FDO outside of the `Binding` won't automatically reflect in the form fields* unless manually refreshed.
+Vaadin offers a [classname]`Binder` class that binds fields to FDO properties, ensuring that changes made in the form update the FDO. For each field-property pair, `Binder` creates a new `Binding` object. However, since Binder is one-directional, *updates to the FDO outside of the `Binding` won't automatically reflect in the form fields* unless manually refreshed.
 
-When loading a form, it populates fields with corresponding property values. When saving, it updates the FDO with the modified field values.
+When reading an FDO, `Binder` populates fields with corresponding property values. When writing, it updates the FDO with the modified field values.
 
 You can *attach a converter* to a `Binding` to transform between field values and FDO properties with different types. For example, a `String` field can be converted into an `EmailAddress` object in the FDO. You can also *attach validators* to ensure the input meets specific constraints, such as requiring a non-empty email.
 
@@ -36,7 +36,7 @@ You can name your getters and setters any way you like, as long as their method 
 
 You can add business logic to the setters. For instance, you could perform validation, or maintain a change log inside the bean.
 
-When a form is loaded, the `Binder` populates each field with data from the corresponding getter. When the form is saved, the `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
+When an FDO is read, `Binder` populates each field with data from the corresponding getter. When the FDO is written, `Binder` calls the setters to update the bean with data in the form. You can then send the bean to an application service for processing.
 
 Beans give you more flexibility for complex forms but require more boilerplate code than records, due to the need for explicit getters and setters. Since they are mutable, there's also a higher risk of bugs, especially when handling form cancellations or undo actions.
 
@@ -49,7 +49,7 @@ If your FDOs come from a shared cache or data provider, be careful to avoid stal
 
 When implementing FDOs as Java records, *each form field corresponds to a record component.*
 
-When the form is loaded, the `Binder` populates each field with data from the corresponding record component. When the form is saved, the `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
+When an FDO is read, `Binder` populates each field with data from the corresponding record component. When the FDO is written, `Binder` creates a new record instance from the data in the form. You can then send the record to an application service for processing.
 
 Java records are concise and eliminate boilerplate. Their immutability makes form state easier to manage, reducing the risk of subtle bugs. It also makes it clear when the form has been read or written.
 
@@ -117,7 +117,7 @@ public class ProposalForm extends Composite<FormLayout> {
 // end::snippet[]
 
     public ProposalForm() {
-        // Creating and adding fields omitted for clarity
+        // (Creating and adding fields omitted for brevity)
 
 // tag::snippet[]
         binder = new Binder<>();
@@ -160,16 +160,19 @@ To populate a form in *buffered mode*, use `Binder.readBean()`:
 public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
+    private @Nullable Proposal formDataObject;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void read(Proposal formDataObject) {
+    public void setFormDataObject(Proposal formDataObject) {
+        this.formDataObject = formDataObject; // <1>
         binder.readBean(formDataObject);
     }
 // end::snippet[]
 }
 ----
+<1> Store the FDO for future reference. You'll need it when you implement the write functionality.
 
 For *write-through mode*, use `Binder.setBean()`:
 
@@ -180,20 +183,15 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void bind(Proposal formDataObject) {
+    public void setFormDataObject(Proposal formDataObject) {
         binder.setBean(formDataObject);
     }
 // end::snippet[]
-
-    public Optional<Proposal> getProposal() {
-        return Optional.ofNullable(binder.getBean()); // <1>
-    }
 }
 ----
-<1> It is a good idea to also add a getter method for the bound FDO.
 
 
 === Writing to a Bean
@@ -206,21 +204,32 @@ In *buffered mode*, use `Binder.writeBeanIfValid()`:
 public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
+    private Proposal formDataObject;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
-    public void read(Proposal formDataObject) {
+    public void setFormDataObject(Proposal formDataObject) {
+        this.formDataObject = formDataObject;
         binder.readBean(formDataObject);
     }
 
 // tag::snippet[]
-    public boolean write(Proposal formDataObject) {
-        return binder.writeBeanIfValid(formDataObject); // <1>
+    public Optional<Proposal> getFormDataObject() {
+        if (formDataObject == null) {
+            formDataObject = new Proposal(); // <1>
+        }
+        if (binder.writeBeanIfValid(formDataObject)) {
+            return Optional.of(formDataObject); // <2>
+        } else {
+            return Optional.empty(); // <3>
+        }
     }    
 // end::snippet[]
 }
 ----
-<1> Returns `true` if validation succeeds, `false` otherwise.
+<1> Creates a new, empty `Proposal` if `setFormDataObject()` was never called.
+<2> Returns the updated `Proposal` if validation succeedes.
+<3> Returns an empty `Optional` if validation fails.
 
 .Other methods for writing to a bean
 [%collapsible]
@@ -244,23 +253,27 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
-    public void bind(Proposal formDataObject) {
+    public void setFormDataObject(Proposal formDataObject) {
         binder.setBean(formDataObject);
     }
 
-    public Optional<Proposal> getProposal() {
-        return Optional.ofNullable(binder.getBean());
+    public Optional<Proposal> getFormDataObject() {
+        if (binder.getBean() == null) {
+            binder.setBean(new Proposal()); // <1>
+        }
+        if (binder.validate().isOk()) {
+            return Optional.of(binder.getBean()); // <2>
+        } else {
+            return Optional.empty(); // <3>
+        }
     }
-
-// tag::snippet[]
-    public boolean isValid() {
-        return binder.validate().isOk();
-    }
-// end::snippet[]
 }
 ----
+<1> Creates a new, empty `Proposal` if `setFormDataObject()` was never called.
+<2> Returns the updated `Proposal` if validation succeedes.
+<3> Returns an empty `Optional` if validation fails.
 
 
 === Clearing the Form
@@ -273,20 +286,22 @@ To clear the form in *buffered mode*, refresh the fields:
 public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
+    private Proposal formDataObject;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
-    public void read(Proposal formDataObject) {
-        binder.readBean(formDataObject);
+    public void setFormDataObject(Proposal formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
-    public boolean write(Proposal formDataObject) {
-        return binder.writeBeanIfValid(formDataObject);
-    }
+    public Optional<Proposal> getFormDataObject() {
+        // (Implementation omitted for brevity)
+    }    
 
 // tag::snippet[]
     public void clear() {
         binder.refreshFields();
+        formDataObject = null;
     }
 // end::snippet[]
 }
@@ -301,22 +316,18 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<Proposal> binder;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
-    public void bind(Proposal formDataObject) {
-        binder.setBean(formDataObject);
+    public void setFormDataObject(Proposal formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
-    public Optional<Proposal> getProposal() {
-        return Optional.ofNullable(binder.getBean());
-    }
-
-    public boolean isValid() {
-        return binder.validate().isOk();
+    public Optional<Proposal> getFormDataObject() {
+        // (Implementation omitted for brevity)
     }
 
 // tag::snippet[]
-    public void unbind() {
+    public void clear() {
         binder.setBean(null);
     }
 // end::snippet[]
@@ -353,7 +364,7 @@ public class ProposalForm extends Composite<FormLayout> {
 // end::snippet[]
 
     public ProposalForm() {
-        // Creating and adding fields omitted for clarity
+        // (Creating and adding fields omitted for brevity)
 
  // tag::snippet[]
         binder = new Binder<>(ProposalRecord.class); // <1>
@@ -430,10 +441,10 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<ProposalRecord> binder;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void read(ProposalRecord formDataObject) {
+    public void setFormDataObject(ProposalRecord formDataObject) {
         binder.readRecord(formDataObject);
     }
 // end::snippet[]
@@ -452,14 +463,14 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<ProposalRecord> binder;
 
-    // Constructor omitted for clarity
+    // (Constructor omitted for brevity)
 
-    public void read(ProposalRecord formDataObject) {
+    public void setFormDataObject(ProposalRecord formDataObject) {
         binder.readRecord(formDataObject);
     }
 
 // tag::snippet[]
-    public Optional<ProposalRecord> write() {
+    public Optional<ProposalRecord> getFormDataObject() {
         try {
             return Optional.of(binder.writeRecord()); // <1>
         } catch (ValidationException ex) {
@@ -488,22 +499,14 @@ public class ProposalForm extends Composite<FormLayout> {
 
     private final Binder<ProposalRecord> binder;
 
-    public ProposalForm() {
-        // Constructor implementation omitted for clarity
-        // ...
+    // (Constructor omitted for brevity)
+
+    public void setFormDataObject(ProposalRecord formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
-    public void read(ProposalRecord formDataObject) {
-        binder.readRecord(formDataObject);
-    }
-
-    public Optional<ProposalRecord> write() {
-        try {
-            return Optional.of(binder.writeRecord());
-        } catch (ValidationException ex) {
-            // Binder already shows the error messages.
-            return Optional.empty();
-        }
+    public Optional<ProposalRecord> getFormDataObject() {
+        // (Implementation omitted for brevity)
     }
 
 // tag::snippet[]

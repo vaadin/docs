@@ -27,23 +27,24 @@ The following example demonstrates how to build a two-column project proposal fo
 public class ProposalForm extends Composite<FormLayout> { // <1>
 
     public ProposalForm() {
-        var formLayout = getContent(); // <2>
-
+        // Create the components
         var titleField = new TextField("Title");
-        formLayout.add(titleField);
 
         var proposalTypeField = new ComboBox<ProposalType>("Proposal Type");
         proposalTypeField.setItems(ProposalType.values());
-        formLayout.add(proposalTypeField);
 
         var descriptionField = new TextArea("Description");
-        formLayout.add(descriptionField);
-        formLayout.setColspan(descriptionField, 2); // <3>
 
         var startDateField = new DatePicker("Start Date");
-        formLayout.add(startDateField);
 
         var endDateField = new DatePicker("End Date");
+
+        // Configure the form
+        var formLayout = getContent(); // <2>
+        formLayout.add(titleField);
+        formLayout.add(proposalTypeField);
+        formLayout.add(descriptionField, 2); // <3>
+        formLayout.add(startDateField);
         formLayout.add(endDateField);
     }
 }
@@ -78,28 +79,30 @@ public class ProposalDialog extends Dialog {
 
     public ProposalDialog(SerializableConsumer<Proposal> onSaveCallback) {
         this.onSaveCallback = onSaveCallback;
+
+        // Create the components
         form = new ProposalForm();
 
         var saveBtn = new Button("Create Proposal", event -> save());
         saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         var cancelBtn = new Button("Cancel", event -> close());
-            
+
+        // Configure the dialog
         setHeaderTitle("New Proposal");
         add(form);
         getFooter().add(cancelBtn, saveBtn);
     }
 
     private void save() {
-        var proposal = new Proposal();
-        if (form.write(proposal)) { // <1>
+        form.getFormDataObject().ifPresent(proposal -> { // <1>
             onSaveCallback.accept(proposal); // <2>
             close();
-        }
+        });
     }
 }
 ----
-<1> Writes the form data to a new `Proposal` FDO (Form Data Object). See the <<../bind-form#,Bind a Form>> guide for details (the example uses a JavaBean FDO and buffered mode).
+<1> Writes the form data to a new `Proposal` FDO (Form Data Object). See the <<../bind-form#,Bind a Form>> guide for details.
 <2> Uses a callback to let the caller decide how to save the FDO.
 
 Here's how you might use the dialog in your application:
@@ -137,12 +140,13 @@ public class ProposalDrawer extends Section {
     private final SerializableFunction<Proposal, Proposal> onSaveCallback;
     private final SerializableRunnable onCloseCallback;
     private final ProposalForm form;
-    private @Nullable Proposal proposal;
 
     public ProposalDrawer(SerializableFunction<Proposal, Proposal> onSaveCallback, 
                           SerializableRunnable onCloseCallback) {
         this.onSaveCallback = onSaveCallback;
         this.onCloseCallback = onCloseCallback;
+
+        // Create the components
         form = new ProposalForm();
 
         var header = new H2("Edit Proposal");
@@ -156,6 +160,7 @@ public class ProposalDrawer extends Section {
 
         var buttons = new HorizontalLayout(cancelBtn, saveBtn);
         
+        // Configure the drawer
         add(header, form, buttons);
         addClassNames(LumoUtility.Display.FLEX, // <2>
                 LumoUtility.FlexDirection.COLUMN, 
@@ -165,20 +170,18 @@ public class ProposalDrawer extends Section {
     }
 
     public void editProposal(Proposal proposal) {
-        this.proposal = proposal;
-        form.read(proposal);
+        form.setFormDataObject(proposal);
         setVisible(true);
     }
 
     private void save() {
-        if (proposal != null && form.write(proposal)) {
-            proposal = onSaveCallback.apply(proposal);
-            form.read(proposal);
-        }
+        form.getFormDataObject.ifPresent(proposal -> {
+            var savedProposal = onSaveCallback.apply(proposal);
+            form.setFormDataObject(savedProposal);
+        });
     }
 
     public void close() {
-        proposal = null;
         form.clear();
         setVisible(false);
         onCloseCallback.run();
@@ -202,9 +205,9 @@ public class ProposalView extends Main {
 
         var drawer = new ProposalDrawer(
             proposal -> {
-                var saved = proposalService.save(proposal); // <1>
+                var savedProposal = proposalService.save(proposal); // <1>
                 grid.getDataProvider().refreshAll(); // <2>
-                return saved;
+                return savedProposal;
             }, 
             grid::deselectAll // <3>
         );
