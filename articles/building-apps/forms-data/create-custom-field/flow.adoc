@@ -15,9 +15,9 @@ Write a short introduction about what the user will find on this page.
 
 == Custom Fields in Flow
 
-If you have multiple components that you want to act as a single field, or just a component that does not have support for use with Binder, setting a label, setting a helper message, you will likely want to wrap those components within a Custom Field.
-To create a Custom Field in Flow you will need to create a class extending `CustomField` and specify the value type, that will represent the combined value of all its child components.
-You will also have to implement two methods `generateModelValue` (compute the Custom Field value from child components) and `setPresentationValue` (distribute the Custom Field value to child components). These methods will be called automatically once a value change is detected on client-side or server-side respectively.
+If you have multiple components that you want to act as a single field, or just a component that does not have support for use with Binder, setting a label, or setting a helper message, you will likely want to wrap those components within a Custom Field.
+To create a Custom Field in Flow you will need to create a class extending `CustomField` and specify a value type that will represent the combined value of all its child components.
+You will also have to implement two methods `generateModelValue` (to compute the Custom Field value from child components) and `setPresentationValue` (to distribute the Custom Field value to child components). These methods will be called automatically once a value change is detected on client-side or server-side respectively.
 
 // TODO maybe as info?
 The child components you decide to use in your Custom Field can be any class extending `Component` class, which includes but is not limited to components offered by Vaadin (`TextField`, `DatePicker`, `Grid`, etc.), representations of native HTML components (`Input`, `Div`, `NativeButton`, etc.), and many components available through Add-ons on Vaadin Directory.
@@ -33,6 +33,29 @@ Introduce the basic principles of creating custom fields in Flow. Cover just eno
 
 
 == Data Binding
+
+There are two main approaches for interacting and processing the value in your Custom Field.
+
+* Through direct interaction with the Custom Field
+* Through Binder
+
+The approach that you should use depends on the context of where and how your field is being used. If it's part of a form with multiple components, you should likely use it with the binder. If it's on its own or it's not relevant to the data object in the binder (for example, if the Custom Field is only used to filter some data in the form) then you should likely interact with it directly. We will cover both cases below.
+
+=== Direct interaction
+
+CustomField implements the `HasValue` interface, which means you get the same API used in many other fields to interact with its data. With `myCustomField.getValue()` you can retrieve the current value and with `myCustomField.setValue(value)` you can update the value.
+
+If you need to be aware of your Custom Field's value changing, then you can listen to the value change event by passing a listener to  `myCustomField.addValueChangeListener(listener)`. It is recommended that you either use a lambda expression (if it will contain only few lines of code) or a method reference in place of a listener. The received event object will contain the new value (through `event.getValue()`), the old value (through `event.getOldValue()`), reference to your custom field (through `event.getSource()`), and whether the change is coming from the client (through `event.isFromClient()`) instead of being set programmatically with `myCustomField.setValue(value)` for example.
+```java
+myCustomField.addValueChangeListener(event -> {
+    if (event.isFromClient()) {
+        var value = event.getValue();
+        fullNameDiv.setText("Updated name: %s %s".formatted(value.getFirstName(), value.getLastName()));
+    }
+});
+```
+
+=== Interaction through Binder
 
 Explain how to set and get a value. Binder is introduced in a guide being written here: https://github.com/vaadin/docs/tree/forms-howto-guides
 You can assume that the reader already knows what Binder is and how it works.
