@@ -165,14 +165,19 @@ public class ProposalForm extends Composite<FormLayout> {
     // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void setFormDataObject(Proposal formDataObject) {
+    public void setFormDataObject(@Nullable Proposal formDataObject) {
         this.formDataObject = formDataObject; // <1>
-        binder.readBean(formDataObject);
+        if (formDataObject != null) {
+            binder.readBean(formDataObject);
+        } else {
+            binder.refreshFields(); // <2>
+        }
     }
 // end::snippet[]
 }
 ----
 <1> Store the FDO for future reference. You'll need it when you implement the write functionality.
+<2> Clears the form if there is no FDO.
 
 For *write-through mode*, use `Binder.setBean()`:
 
@@ -186,12 +191,13 @@ public class ProposalForm extends Composite<FormLayout> {
     // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void setFormDataObject(Proposal formDataObject) {
-        binder.setBean(formDataObject);
+    public void setFormDataObject(@Nullable Proposal formDataObject) {
+        binder.setBean(formDataObject); // <1>
     }
 // end::snippet[]
 }
 ----
+<1> If `formDataObject` is `null`, this also clears the form.
 
 
 === Writing to a Bean
@@ -208,9 +214,8 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // (Constructor omitted for brevity)
 
-    public void setFormDataObject(Proposal formDataObject) {
-        this.formDataObject = formDataObject;
-        binder.readBean(formDataObject);
+    public void setFormDataObject(@Nullable Proposal formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
 // tag::snippet[]
@@ -255,10 +260,11 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // (Constructor omitted for brevity)
 
-    public void setFormDataObject(Proposal formDataObject) {
-        binder.setBean(formDataObject);
+    public void setFormDataObject(@Nullable Proposal formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
+// tag::snippet[]
     public Optional<Proposal> getFormDataObject() {
         if (binder.getBean() == null) {
             binder.setBean(new Proposal()); // <1>
@@ -269,70 +275,12 @@ public class ProposalForm extends Composite<FormLayout> {
             return Optional.empty(); // <3>
         }
     }
+// end::snippet[]
 }
 ----
 <1> Creates a new, empty `Proposal` if `setFormDataObject()` was never called.
 <2> Returns the updated `Proposal` if validation succeedes.
 <3> Returns an empty `Optional` if validation fails.
-
-
-=== Clearing the Form
-
-To clear the form in *buffered mode*, refresh the fields:
-
-.ProposalForm.java
-[source,java]
-----
-public class ProposalForm extends Composite<FormLayout> {
-
-    private final Binder<Proposal> binder;
-    private Proposal formDataObject;
-
-    // (Constructor omitted for brevity)
-
-    public void setFormDataObject(Proposal formDataObject) {
-        // (Implementation omitted for brevity)
-    }
-
-    public Optional<Proposal> getFormDataObject() {
-        // (Implementation omitted for brevity)
-    }    
-
-// tag::snippet[]
-    public void clear() {
-        binder.refreshFields();
-        formDataObject = null;
-    }
-// end::snippet[]
-}
-----
-
-In *write-through mode*, unbind the FDO by setting it to `null`:
-
-.ProposalForm.java
-[source,java]
-----
-public class ProposalForm extends Composite<FormLayout> {
-
-    private final Binder<Proposal> binder;
-
-    // (Constructor omitted for brevity)
-
-    public void setFormDataObject(Proposal formDataObject) {
-        // (Implementation omitted for brevity)
-    }
-
-    public Optional<Proposal> getFormDataObject() {
-        // (Implementation omitted for brevity)
-    }
-
-// tag::snippet[]
-    public void clear() {
-        binder.setBean(null);
-    }
-// end::snippet[]
-}
-----
 
 
 == Binding to a Record
@@ -444,8 +392,12 @@ public class ProposalForm extends Composite<FormLayout> {
     // (Constructor omitted for brevity)
 
 // tag::snippet[]
-    public void setFormDataObject(ProposalRecord formDataObject) {
-        binder.readRecord(formDataObject);
+    public void setFormDataObject(@Nullable ProposalRecord formDataObject) {
+        if (formDataObject != null) {
+            binder.readRecord(formDataObject);
+        } else {
+            binder.refreshFields();
+        }
     }
 // end::snippet[]
 }
@@ -465,8 +417,8 @@ public class ProposalForm extends Composite<FormLayout> {
 
     // (Constructor omitted for brevity)
 
-    public void setFormDataObject(ProposalRecord formDataObject) {
-        binder.readRecord(formDataObject);
+    public void setFormDataObject(@Nullable ProposalRecord formDataObject) {
+        // (Implementation omitted for brevity)
     }
 
 // tag::snippet[]
@@ -486,36 +438,6 @@ public class ProposalForm extends Composite<FormLayout> {
 
 [IMPORTANT]
 Since `Binder` creates a new record instance, *you must bind every record component to a field*. Otherwise, `Binder` does not know what values to pass to the unbound fields.
-
-
-=== Clearing the Form
-
-To clear the form, refresh the fields:
-
-.ProposalForm.java
-[source,java]
-----
-public class ProposalForm extends Composite<FormLayout> {
-
-    private final Binder<ProposalRecord> binder;
-
-    // (Constructor omitted for brevity)
-
-    public void setFormDataObject(ProposalRecord formDataObject) {
-        // (Implementation omitted for brevity)
-    }
-
-    public Optional<ProposalRecord> getFormDataObject() {
-        // (Implementation omitted for brevity)
-    }
-
-// tag::snippet[]
-    public void clear() {
-        binder.refreshFields();
-    }
-// end::snippet[]
-}
-----
 
 
 //== Try It

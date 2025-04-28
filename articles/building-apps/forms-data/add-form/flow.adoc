@@ -156,9 +156,9 @@ public class ProposalDrawer extends Section {
         var saveBtn = new Button("Save", event -> save());
         saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        var cancelBtn = new Button("Cancel", event -> close());
+        var closeBtn = new Button("Close", event -> close());
 
-        var buttons = new HorizontalLayout(cancelBtn, saveBtn);
+        var buttons = new HorizontalLayout(closeBtn, saveBtn);
         
         // Configure the drawer
         add(header, form, buttons);
@@ -169,9 +169,9 @@ public class ProposalDrawer extends Section {
         setVisible(false); // <3>
     }
 
-    public void editProposal(Proposal proposal) {
+    public void setProposal(@Nullable Proposal proposal) {
         form.setFormDataObject(proposal);
-        setVisible(true);
+        setVisible(proposal != null);
     }
 
     private void save() {
@@ -181,9 +181,7 @@ public class ProposalDrawer extends Section {
         });
     }
 
-    public void close() {
-        form.clear();
-        setVisible(false);
+    private void close() {
         onCloseCallback.run();
     }
 }
@@ -211,12 +209,9 @@ public class ProposalView extends Main {
             }, 
             grid::deselectAll // <3>
         );
-        grid.addSelectionListener(event -> {
-            event.getFirstSelectedItem.ifPresentOrElse(
-                drawer::editProposal,  // <4>
-                drawer::close // <5>
-            );
-        });
+        grid.addSelectionListener(event -> 
+            drawer.setProposal(event.getFirstSelectedItem().orElse(null)) // <4>
+        );
 
         add(grid, drawer);
 
@@ -227,8 +222,8 @@ public class ProposalView extends Main {
 <1> Saves the proposal with an application service.
 <2> Refreshes the grid so that the updated proposal shows up.
 <3> Clears the grid selection when the drawer is closed.
-<4> Displays the selected proposal in the drawer.
-<5> Closes the drawer when the selection is cleared.
+<4> Displays the selected proposal in the drawer, or closes the drawer if the selection is empty.
+
 
 //== Try It
 
