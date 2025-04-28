@@ -9,7 +9,7 @@ function Example() {
   // tag::snippet[]
   const selectedItem = useSignal<MenuBarItem | undefined>(undefined);
 
-  const items = [
+  const items: Array<MenuBarItem> = [
     { text: 'View' },
     { text: 'Edit' },
     {
