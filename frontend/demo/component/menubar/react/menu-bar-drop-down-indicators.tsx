@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { MenuBar, MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
-  const items = [
+  const items : Array<MenuBarItem> = [
     { text: 'View' },
     { text: 'Edit' },
     {
