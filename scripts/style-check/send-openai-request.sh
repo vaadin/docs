@@ -1,12 +1,12 @@
 #!/bin/bash
-set -euo pipefail
-
 # --------------------------------------
-# Usage: ./multi_file_chat.sh \
+# Usage: $0 \
 #          "System prompt here" \
 #          "User prompt here" \
 #          file1.txt file2.adoc ...
 # --------------------------------------
+
+set -euo pipefail
 
 if [ "$#" -lt 3 ]; then
   echo "Usage: $0 \"System prompt\" \"User prompt\" file1 [file2 ...]" >&2

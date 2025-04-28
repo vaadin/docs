@@ -1,4 +1,9 @@
 #!/bin/bash
+# --------------------------------------
+# Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>
+#
+# OPENAI_API_KEY and GITHUB_TOKEN must be set in the environment.
+# --------------------------------------
 
 DIR=$(dirname "$0")
 

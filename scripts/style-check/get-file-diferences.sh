@@ -1,4 +1,7 @@
 #!/bin/bash
+# --------------------------------------
+# Usage: $0 <PR_NUMBER> <ORG/REPO_NAME>
+# --------------------------------------
 
 if [ -z "$1" ]; then
   echo "Error: PR number must be provided as the first argument"
