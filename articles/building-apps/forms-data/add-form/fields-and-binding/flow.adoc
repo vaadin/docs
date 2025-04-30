@@ -1,15 +1,89 @@
 ---
 title: Flow
-page-title: How to bind a Flow form to a Form Data Object | Vaadin
-meta-description: Learn how to bind forms to data in Vaadin Flow using the Binder class, with support for JavaBeans, records, converters, validation, and form state management.
+page-title: How to use fields and data binding in Flow | Vaadin
+meta-description: Learn how to create and bind form fields in Vaadin using UI components and the Binder API with JavaBeans and records for data synchronization.
 order: 5
 ---
 
 
-# Form Binding in Flow
+= Fields and Binding in Flow
 :toclevels: 2
 
-This guide teaches you the basics of the Flow binder, and how to implement *Form Data Objects* (FDO) both as JavaBeans and as Java records.
+This guide walks you through the fundamentals of working with fields and binding in Flow. It covers how to lay out form fields, choose the appropriate input components, and use the powerful `Binder` class to connect those components to your application's data model. You'll learn how to use both mutable JavaBeans and immutable records as Form Data Objects (FDOs), and how to manage form state, perform validation, and safely read from and write to FDOs.
+
+== Laying Out the Fields
+
+In Flow, forms you build forms visually by *adding input components to layout components*. The most commonly used layout components for forms include <<{articles}/components/form-layout#,Form Layout>> and <<{articles}/components/vertical-layout#,Vertical Layout>>. Form Layout supports multiple columns, whereas Vertical Layout lays out the components in a single column. These are often combined with <<{articles}/components/horizontal-layout#,Horizontal Layout>>, which lays out its components in a single row.
+
+[NOTE]
+Layout components differ from router layouts, although you can construct a router layout using them.
+
+The following example demonstrates how to build a two-column project proposal form using various input components:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> { // <1>
+
+    public ProposalForm() {
+        // Create the components
+        var titleField = new TextField("Title");
+
+        var proposalTypeField = new ComboBox<ProposalType>("Proposal Type");
+        proposalTypeField.setItems(ProposalType.values());
+
+        var descriptionField = new TextArea("Description");
+
+        var startDateField = new DatePicker("Start Date");
+
+        var endDateField = new DatePicker("End Date");
+
+        // Configure the form
+        var formLayout = getContent(); // <2>
+        formLayout.add(titleField);
+        formLayout.add(proposalTypeField);
+        formLayout.add(descriptionField, 2); // <3>
+        formLayout.add(startDateField);
+        formLayout.add(endDateField);
+    }
+}
+----
+<1> `Composite` hides the API of Form Layout from users of `ProposalForm`, reducing the risk of misuse.
+<2> `getContent()` returns the Form Layout.
+<3> Because Form Layout uses two columns by default, this expands the description field to span the full width.
+
+The finished form would look like this:
+
+[.fill]
+image::../images/example-form.png[A screenshot of a form]
+
+Form Layout is responsive; when space is limited, it automatically adjusts to a single-column layout, placing each input on its own row. It also includes additional features not covered in this example. For
+more information see the <<{articles}/components/form-layout#,Form Layout>> documentation.
+
+
+== Common Field Components
+
+Vaadin provides a set of *build-in field components* that you can use in your forms:
+
+* *Text Input Components*
+  - <<{articles}/components/text-field#,Text Field>> -- For standard single-line text input
+  - <<{articles}/components/text-area#,Text Area>> -- For multi-line text input
+  - <<{articles}/components/email-field#,Email Field>> -- Specialized field for email addresses
+  - <<{articles}/components/password-field#,Password Field>> - Secure field for password entry
+  - <<{articles}/components/rich-text-editor#,Rich Text Editor>> - Advanced text editing with formatting options
+* *Selection Components*
+  - <<{articles}/components/checkbox#,Checkbox>> -- For binary (true/false) selections
+  - <<{articles}/components/radio-button#,Radio Button Group>> -- For selecting a single option from a visibe list
+  - <<{articles}/components/combo-box#,Combo Box>> -- Dropdown for selecting a single option
+  - <<{articles}/components/multi-select-combo-box#,Multi-Select Combo Box>> -- Dropdown for selecting multiple options
+  - <<{articles}/components/select#,Select>> -- Simple dropdown menu
+  - <<{articles}/components/list-box#,List Box>> -- Scrollable list of options
+* *Date and Time Components*
+  - <<{articles}/components/date-picker#,Date Picker>> -- For selecting a date
+  - <<{articles}/components/time-picker#,Time Picker>> -- For selecting a time
+  - <<{articles}/components/date-time-picker#,Date Time Picker>> -- For selecting both date and time
+* *Numeric Components*
+  - <<{articles}/components/number-field#,Number Field>> -- For numeric input
 
 
 == Introducing Binder
@@ -56,7 +130,7 @@ Java records are concise and eliminate boilerplate. Their immutability makes for
 
 == Binding to a Bean
 
-Continuing with the *Project Proposal* form example from the <<../add-form/flow#,Add a Form>> guide, you can create a JavaBean to represent the FDO:
+Continuing with the *Project Proposal* form example, you can create a JavaBean to represent the FDO:
 
 .Proposal.java
 [source,java]
@@ -147,7 +221,7 @@ When using a JavaBean as an FDO, `Binder` can operate in *buffered* or *write-th
 * *Buffered mode*: Changes remain in the form until explicitly saved. This prevents side effects but may affect validation behavior.
 * *Write-through mode*: Updates the FDO immediately as the user edits the form. Business logic in setter methods is triggered immediately. However, invalid states can occur where the form contains errors, but the FDO remains valid.
 
-Form validation is covered in the <<../validate-form#,Validate a Form>> guide.
+Form validation is covered in the <<../validation#,Form Validation>> guide.
 
 
 === Reading from a Bean
@@ -438,9 +512,4 @@ public class ProposalForm extends Composite<FormLayout> {
 
 [IMPORTANT]
 Since `Binder` creates a new record instance, *you must bind every record component to a field*. Otherwise, `Binder` does not know what values to pass to the unbound fields.
-
-
-//== Try It
-
-// TODO Add a tutorial here
 
