@@ -1,0 +1,199 @@
+---
+title: Hilla
+page-title: TODO Write page-title
+meta-description: TODO Write meta-description
+order: 10
+---
+
+
+// TODO Revisit these sections after you've written Bind a Form.
+
+== Displaying Forms in Dialogs
+
+In business applications, dialogs are commonly used for creating new items, while drawers are typically used for editing existing ones. By implementing the form as a component of its own, you can reuse it in both dialogs and drawers.
+
+The following example shows a dialog used to create new project proposals. The parent supplies an `onSave` event handler, which is called when the user clicks the `Create Proposal` button. The example also uses the `UseForm` hook, which is covered in the <<../bind-form#,Bind a Form>> guide:
+
+.ProposalDialog.tsx
+[source,tsx]
+----
+import { Button, Dialog } from "@vaadin/react-components";
+import { useForm } from "@vaadin/hilla-react-form";
+
+import ProposalForm from "Frontend/components/ProposalForm";
+import Proposal from "Frontend/generated/com/example/application/tutorial/domain/Proposal";
+import ProposalModel from "Frontend/generated/com/example/application/tutorial/domain/ProposalModel";
+
+export type ProposalDialogProps = {
+    opened?: boolean,
+    onOpenedChanged?: (opened: boolean) => void,
+    onSave?: (proposal: Proposal) => Promise<void>
+}
+
+export function ProposalDialog(
+        {opened = false, onOpenedChanged, onSave}: ProposalDialogProps
+    ) {
+
+    const form = useForm(ProposalModel, {
+        onSubmit: onSave
+    });
+
+    const handleClose = () => {
+        form.clear();
+        onOpenedChanged?.(false);
+    };
+
+    const handleSubmit = async () => {
+        await form.submit();
+        handleClose();
+    };
+
+    return (
+        <Dialog 
+            opened={opened} 
+            headerTitle="New Proposal"
+            onOpenedChanged={e => onOpenedChanged?.(e.detail.value)}
+            footer={
+                <>
+                    <Button theme="primary" onClick={handleSubmit}>
+                        Create Proposal
+                    </Button>
+                    <Button onClick={handleClose}>Cancel</Button>
+                </>
+            }
+        >
+            <ProposalForm form={form}/>
+        </Dialog>
+    );
+}
+----
+
+Here's how you might use the dialog in your application:
+
+[source,tsx]
+----
+// (Imports omitted for clarity)
+
+export default function ProposalView() {
+    const createDialogOpened = useSignal(false);
+
+    const insertProposal = async (proposal: Proposal) => {
+        // Save the proposal, refresh, etc.
+    };
+
+    return (
+        <main>
+            <Button onClick={event => createDialogOpened.value = true}>
+                Create Proposal
+            </Button>
+            <ProposalDialog 
+                opened={createDialogOpened.value}
+                onOpenedChanged={opened => createDialogOpened.value = opened}
+                onSave={insertProposal}
+            />
+        </main>
+    );
+}
+----
+// TODO Explain what the code does here!
+
+
+== Displaying Forms in Drawers
+
+In many applications, drawers are used to edit existing items and are often tied to a selection. When a user selects an item, the drawer is shown; when the drawer is closed, the selection is typically cleared.
+
+The following example shows a drawer that reuses the same form component from the dialog example to edit project proposals:
+
+.ProposalDrawer.tsx
+[source,tsx]
+----
+import { Button } from "@vaadin/react-components";
+import { useForm } from "@vaadin/hilla-react-form";
+import { useEffect } from "react";
+
+import ProposalForm from "Frontend/components/ProposalForm";
+import Proposal from "Frontend/generated/com/example/application/tutorial/domain/Proposal";
+
+export type ProposalDrawerProps = {
+    opened?: boolean,
+    onOpenedChanged?: (opened: boolean) => void,
+    proposal?: Proposal,
+    onSave?: (proposal: Proposal) => Promise<void>
+}
+
+export function ProposalDrawer(
+        {opened = false, onOpenedChanged, proposal, onSave}: ProposalDrawerProps
+    ) {
+
+    const form = useForm(ProposalModel, {
+        onSubmit: onSave
+    });
+
+    const handleClose = () => {
+        onOpenedChanged?.(false);
+    }
+
+    const handleSubmit = async () => {
+        await form.submit();
+        handleClose();
+    }
+
+    useEffect(() => {
+        form.read(proposal);
+    }, [proposal]);
+
+    return (
+        <section hidden={!opened}>
+            <h2>Edit Proposal</h2>
+            <ProposalForm form={form}/>
+            <div className="flex flex-row gap-s">
+                <Button theme="primary" onClick={handleSubmit}>Save</Button>
+                <Button onClick={handleClose}>Close</Button>
+            </div>
+        </section>
+    );
+}
+----
+
+To show the drawer when a user selects an item from a grid, you can use the following pattern:
+
+[source,tsx]
+----
+// (Imports omitted for clarity)
+
+export default function ProposalView() {
+    const proposals = useSignal<Proposal[]>([]);
+    // Populate the `proposals` signal with data here...
+
+    const selectedItems = useSignal<Proposal[]>([]);
+
+    const updateProposal = async (proposal: Proposal) => {
+        // Save the proposal, refresh the grid, etc.
+    }
+
+    return (
+        <main>
+            <Grid items={proposals.value}
+                  selectedItems={selectedItems.value}
+                  onActiveItemChanged={event => {
+                      const item = event.detail.value;
+                      selectedItems.value = item ? [item] : [];
+                  }}>
+                <GridColumn path="title" header="Title"/>
+                <GridColumn path="type" header="Type"/>
+                <GridColumn path="description" header="Description"/>
+            </Grid>
+            <ProposalDrawer opened={selectedItems.value.length > 0}
+                            onOpenedChanged={opened => {
+                                if (!opened) {
+                                    selectedItems.value = [];
+                                }
+                            }}
+                            proposal={selectedItems.value[0]}
+                            onSave={updateProposal}/>
+        </main>
+    );
+}
+----
+
+// TODO Explain what the code does here!
