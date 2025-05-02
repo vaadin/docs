@@ -93,7 +93,7 @@ const GridPaginationControls = ({
             '--vaadin-input-field-value-font-size': 'var(--lumo-font-size-s)',
           }}
           items={['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}
-          value={pageSize.toString()}
+          value={pageSize.value.toString()}
           onValueChanged={handlePageSizeChange}
         ></Select>
       </HorizontalLayout>
@@ -159,7 +159,7 @@ function Example() {
 
   const itemsFilteredByTerm = allItems.value.filter(
     ({ displayName, email, profession }) =>
-      !currentSearchTerm ||
+      !currentSearchTerm.value ||
       matchesTerm(displayName, currentSearchTerm.value) ||
       matchesTerm(email, currentSearchTerm.value) ||
       matchesTerm(profession, currentSearchTerm.value)
