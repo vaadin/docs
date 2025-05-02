@@ -31,48 +31,29 @@ interface GridPaginationControlsProps {
 
 // GridPaginationControls component
 const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginationControlsProps) => {
-  const [pageSize, setPageSize] = useState(10);
-  const [pageCount, setPageCount] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const dispatchPageChanged = (page: number, size: number) => {
-    onPageChanged({
-      currentPage: page,
-      pageSize: size,
-    });
+  const [pageSize, setPageSize] = useState(10);
+  const calculatePageCount = (itemCount: number, size: number): number => {
+    if (itemCount === 0) {
+      return 1; // Display one page even if there are no items
+    }
+    return Math.ceil(itemCount / size);
   };
 
-  const updatePageCount = () => {
-    let newPageCount;
-    if (totalItemCount === 0) {
-      newPageCount = 1; // Display one page even if there are no items
-    } else {
-      newPageCount = Math.ceil(totalItemCount / pageSize);
-    }
-    setPageCount(newPageCount);
+  const pageCount = calculatePageCount(totalItemCount, pageSize);
 
-    // Adjust the current page if it exceeds the new page count
-    if (currentPage > newPageCount) {
-      setCurrentPage(newPageCount); // this will also trigger the page-changed event
-    } else {
-      dispatchPageChanged(currentPage, pageSize); // this is needed so the grid will update the data
-    }
-  };
-
-  // Update page count when any of the following properties change
   useEffect(() => {
-    updatePageCount();
-  }, [totalItemCount, pageSize]);
-
-  // Dispatch page changed event when the current page changes
-  useEffect(() => {
-    dispatchPageChanged(currentPage, pageSize);
-  }, [currentPage]);
+    // Adjust the current page if it exceeds the new page count as a side effect of the total item count changing.
+    if (currentPage > pageCount) {
+      setCurrentPage(pageCount);
+      onPageChanged({ currentPage: pageCount, pageSize });
+    }
+  }, [totalItemCount]);
 
   const smallIconButton = (
     ariaLabel: string,
     icon: string,
-    onClick: any,
+    newPageCalculator: () => number, // should return page number we want to go to
     disabledWhen: boolean
   ) => (
     <Button
@@ -80,11 +61,27 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       slot="end"
       aria-label={ariaLabel}
       disabled={disabledWhen}
-      onClick={onClick}
+      onClick={() => {
+        const newCurrentPage = newPageCalculator();
+        setCurrentPage(newCurrentPage);
+        onPageChanged({ currentPage: newCurrentPage, pageSize });
+      }}
     >
       <Icon icon={icon}></Icon>
     </Button>
   );
+
+  const handlePageSizeChange = (e: CustomEvent) => {
+    const newPageSize = parseInt(e.detail.value);
+    setPageSize(newPageSize);
+    const newPageCount = calculatePageCount(totalItemCount, newPageSize);
+    if (currentPage > newPageCount) {
+      setCurrentPage(newPageCount);
+      onPageChanged({ currentPage: newPageCount, pageSize: newPageSize });
+    } else {
+      onPageChanged({ currentPage, pageSize: newPageSize });
+    }
+  };
 
   return (
     <HorizontalLayout style={{ alignItems: 'center', gap: '0.3rem', width: '100%' }}>
@@ -101,25 +98,14 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
           }}
           items={['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}
           value={pageSize.toString()}
-          onValueChanged={(e: CustomEvent) => {
-            setPageSize(parseInt(e.detail.value));
-          }}
+          onValueChanged={handlePageSizeChange}
         ></Select>
       </HorizontalLayout>
-      {smallIconButton(
-        'Go to first page',
-        'vaadin:angle-double-left',
-        () => {
-          setCurrentPage(1);
-        },
-        currentPage === 1
-      )}
+      {smallIconButton('Go to first page', 'vaadin:angle-double-left', () => 1, currentPage === 1)}
       {smallIconButton(
         'Go to previous page',
         'vaadin:angle-left',
-        () => {
-          setCurrentPage(currentPage - 1);
-        },
+        () => currentPage - 1,
         currentPage === 1
       )}
       <span className="text-s px-s" slot="end">
@@ -128,17 +114,13 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       {smallIconButton(
         'Go to next page',
         'vaadin:angle-right',
-        () => {
-          setCurrentPage(currentPage + 1);
-        },
+        () => currentPage + 1,
         currentPage === pageCount
       )}
       {smallIconButton(
         'Go to last page',
         'vaadin:angle-double-right',
-        () => {
-          setCurrentPage(pageCount);
-        },
+        () => pageCount,
         currentPage === pageCount
       )}
     </HorizontalLayout>
@@ -156,28 +138,12 @@ function nameRenderer({ item: person }: { item: PersonEnhanced }) {
 
 // tag::snippet[]
 function Example() {
-  const [gridItems, setGridItems] = useState<PersonEnhanced[]>([]);
   const [allItems, setAllItems] = useState<PersonEnhanced[]>([]);
   const [currentSearchTerm, setCurrentSearchTerm] = useState('');
-  const [itemsFilteredByTermCount, setItemsFilteredByTermCount] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState(10);
-
-  const matchesTerm = (value: string, term: string): boolean =>
-    value.toLowerCase().includes(term.toLowerCase());
-
-  const updateGridItems = () => {
-    const itemsFilteredByTerm = allItems.filter(
-      ({ displayName, email, profession }) =>
-        !currentSearchTerm ||
-        matchesTerm(displayName, currentSearchTerm) ||
-        matchesTerm(email, currentSearchTerm) ||
-        matchesTerm(profession, currentSearchTerm)
-    );
-
-    setItemsFilteredByTermCount(itemsFilteredByTerm.length);
-    setGridItems(itemsFilteredByTerm.slice(offset, offset + limit));
-  };
+  const [paginationState, setPaginationState] = useState({
+    offset: 0,
+    limit: 10,
+  });
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -190,34 +156,54 @@ function Example() {
     });
   }, []);
 
-  useEffect(() => {
-    updateGridItems();
-  }, [allItems, currentSearchTerm, offset, limit]);
+  const matchesTerm = (value: string, term: string): boolean =>
+    value.toLowerCase().includes(term.toLowerCase());
 
-  const handleSearchChange = (e: TextFieldValueChangedEvent) => {
-    setCurrentSearchTerm((e.detail.value || '').trim());
-  };
+  const itemsFilteredByTerm = allItems.filter(
+    ({ displayName, email, profession }) =>
+      !currentSearchTerm ||
+      matchesTerm(displayName, currentSearchTerm) ||
+      matchesTerm(email, currentSearchTerm) ||
+      matchesTerm(profession, currentSearchTerm)
+  );
+
+  const itemsFilteredByTermCount = itemsFilteredByTerm.length;
+  const gridItems = itemsFilteredByTerm.slice(
+    paginationState.offset,
+    paginationState.offset + paginationState.limit
+  );
 
   const handlePageChanged = (detail: PageChangedEventDetail) => {
-    setOffset((detail.currentPage - 1) * detail.pageSize);
-    setLimit(detail.pageSize);
+    const newOffset = (detail.currentPage - 1) * detail.pageSize;
+    setPaginationState({
+      offset: newOffset,
+      limit: detail.pageSize,
+    });
   };
 
   return (
     <VerticalLayout theme="spacing">
-      <TextField placeholder="Search" style={{ width: '50%' }} onValueChanged={handleSearchChange}>
+      <TextField
+        placeholder="Search"
+        style={{ width: '50%' }}
+        value={currentSearchTerm}
+        onValueChanged={(e: TextFieldValueChangedEvent) => {
+          setCurrentSearchTerm((e.detail.value || '').trim());
+        }}
+      >
         <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
-
-      <Grid items={gridItems} all-rows-visible>
-        <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
-        <GridColumn path="email" />
-        <GridColumn path="profession" />
-      </Grid>
-      <GridPaginationControls
-        totalItemCount={itemsFilteredByTermCount}
-        onPageChanged={handlePageChanged}
-      />
+      <VerticalLayout theme="spacing-xs" style={{ width: '100%' }}>
+        <Grid items={gridItems} all-rows-visible>
+          <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
+          <GridColumn path="email" />
+          <GridColumn path="profession" />
+        </Grid>
+        <GridPaginationControls
+          totalItemCount={itemsFilteredByTermCount}
+          onPageChanged={handlePageChanged}
+        />
+      </VerticalLayout>
     </VerticalLayout>
   );
 }
