@@ -69,6 +69,23 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
     dispatchPageChanged(currentPage, pageSize);
   }, [currentPage]);
 
+  const smallIconButton = (
+    ariaLabel: string,
+    icon: string,
+    onClick: any,
+    disabledWhen: boolean
+  ) => (
+    <Button
+      theme="small icon"
+      slot="end"
+      aria-label={ariaLabel}
+      disabled={disabledWhen}
+      onClick={onClick}
+    >
+      <Icon icon={icon}></Icon>
+    </Button>
+  );
+
   return (
     <HorizontalLayout style={{ alignItems: 'center', gap: '0.3rem', width: '100%' }}>
       <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing-s">
@@ -89,53 +106,41 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
           }}
         ></Select>
       </HorizontalLayout>
-      <Button
-        theme="small icon"
-        slot="end"
-        aria-label="Go to first page"
-        disabled={currentPage === 1}
-        onClick={() => {
+      {smallIconButton(
+        'Go to first page',
+        'vaadin:angle-double-left',
+        () => {
           setCurrentPage(1);
-        }}
-      >
-        <Icon icon="vaadin:angle-double-left"></Icon>
-      </Button>
-      <Button
-        theme="small icon"
-        slot="end"
-        aria-label="Go to previous page"
-        disabled={currentPage === 1}
-        onClick={() => {
+        },
+        currentPage === 1
+      )}
+      {smallIconButton(
+        'Go to previous page',
+        'vaadin:angle-left',
+        () => {
           setCurrentPage(currentPage - 1);
-        }}
-      >
-        <Icon icon="vaadin:angle-left"></Icon>
-      </Button>
+        },
+        currentPage === 1
+      )}
       <span className="text-s px-s" slot="end">
         Page {currentPage} of {pageCount}
       </span>
-      <Button
-        theme="small icon"
-        slot="end"
-        aria-label="Go to next page"
-        disabled={currentPage === pageCount}
-        onClick={() => {
+      {smallIconButton(
+        'Go to next page',
+        'vaadin:angle-right',
+        () => {
           setCurrentPage(currentPage + 1);
-        }}
-      >
-        <Icon icon="vaadin:angle-right"></Icon>
-      </Button>
-      <Button
-        theme="small icon"
-        slot="end"
-        aria-label="Go to last page"
-        disabled={currentPage === pageCount}
-        onClick={() => {
+        },
+        currentPage === pageCount
+      )}
+      {smallIconButton(
+        'Go to last page',
+        'vaadin:angle-double-right',
+        () => {
           setCurrentPage(pageCount);
-        }}
-      >
-        <Icon icon="vaadin:angle-double-right"></Icon>
-      </Button>
+        },
+        currentPage === pageCount
+      )}
     </HorizontalLayout>
   );
 };
@@ -209,7 +214,6 @@ function Example() {
         <GridColumn path="email" />
         <GridColumn path="profession" />
       </Grid>
-
       <GridPaginationControls
         totalItemCount={itemsFilteredByTermCount}
         onPageChanged={handlePageChanged}
