@@ -135,7 +135,6 @@ function Example() {
   const currentSearchTerm = useSignal('');
   const currentPage = useSignal(1);
   const pageSize = useSignal(10);
-  const itemsFilteredByTermCount = useSignal(0);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -149,17 +148,22 @@ function Example() {
   const matchesTerm = (value: string, term: string): boolean =>
     value.toLowerCase().includes(term.toLowerCase());
 
-  const itemsFilteredByTerm = allItems.value.filter(
-    ({ displayName, email, profession }) =>
-      !currentSearchTerm.value ||
-      matchesTerm(displayName, currentSearchTerm.value) ||
-      matchesTerm(email, currentSearchTerm.value) ||
-      matchesTerm(profession, currentSearchTerm.value)
+  const itemsFilteredByTerm = useComputed<PersonEnhanced[]>(() =>
+    allItems.value.filter(
+      ({ displayName, email, profession }) =>
+        !currentSearchTerm.value ||
+        matchesTerm(displayName, currentSearchTerm.value) ||
+        matchesTerm(email, currentSearchTerm.value) ||
+        matchesTerm(profession, currentSearchTerm.value)
+    )
   );
 
-  itemsFilteredByTermCount.value = itemsFilteredByTerm.length;
-  const offset = (currentPage.value - 1) * pageSize.value;
-  const gridItems = itemsFilteredByTerm.slice(offset, offset + pageSize.value);
+  const itemsFilteredByTermCount = useComputed<number>(() => itemsFilteredByTerm.value.length);
+
+  const gridItems = useComputed<PersonEnhanced[]>(() => {
+    const offset = (currentPage.value - 1) * pageSize.value;
+    return itemsFilteredByTerm.value.slice(offset, offset + pageSize.value);
+  });
 
   const handleCurrentPageChanged = (newCurrentPage: number) => {
     currentPage.value = newCurrentPage;
@@ -180,7 +184,7 @@ function Example() {
         <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
       <VerticalLayout theme="spacing-xs" style={{ width: '100%' }}>
-        <Grid items={gridItems} all-rows-visible>
+        <Grid items={gridItems.value} all-rows-visible>
           <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
           <GridColumn path="email" />
           <GridColumn path="profession" />
