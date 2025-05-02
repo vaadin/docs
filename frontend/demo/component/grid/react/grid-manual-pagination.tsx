@@ -1,6 +1,8 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
@@ -31,8 +33,10 @@ interface GridPaginationControlsProps {
 
 // GridPaginationControls component
 const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginationControlsProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  useSignals(); // hidden-source-line
+  const currentPage = useSignal<number>(1);
+  const pageSize = useSignal<number>(10);
+
   const calculatePageCount = (itemCount: number, size: number): number => {
     if (itemCount === 0) {
       return 1; // Display one page even if there are no items
@@ -40,13 +44,13 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
     return Math.ceil(itemCount / size);
   };
 
-  const pageCount = calculatePageCount(totalItemCount, pageSize);
+  const pageCount = calculatePageCount(totalItemCount, pageSize.value);
 
   useEffect(() => {
     // Adjust the current page if it exceeds the new page count as a side effect of the total item count changing.
-    if (currentPage > pageCount) {
-      setCurrentPage(pageCount);
-      onPageChanged({ currentPage: pageCount, pageSize });
+    if (currentPage.value > pageCount) {
+      currentPage.value = pageCount;
+      onPageChanged({ currentPage: pageCount, pageSize: pageSize.value });
     }
   }, [totalItemCount]);
 
@@ -63,8 +67,8 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       disabled={disabledWhen}
       onClick={() => {
         const newCurrentPage = newPageCalculator();
-        setCurrentPage(newCurrentPage);
-        onPageChanged({ currentPage: newCurrentPage, pageSize });
+        currentPage.value = newCurrentPage;
+        onPageChanged({ currentPage: newCurrentPage, pageSize: pageSize.value });
       }}
     >
       <Icon icon={icon}></Icon>
@@ -73,13 +77,13 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
 
   const handlePageSizeChange = (e: CustomEvent) => {
     const newPageSize = parseInt(e.detail.value);
-    setPageSize(newPageSize);
+    pageSize.value = newPageSize;
     const newPageCount = calculatePageCount(totalItemCount, newPageSize);
-    if (currentPage > newPageCount) {
-      setCurrentPage(newPageCount);
+    if (currentPage.value > newPageCount) {
+      currentPage.value = newPageCount;
       onPageChanged({ currentPage: newPageCount, pageSize: newPageSize });
     } else {
-      onPageChanged({ currentPage, pageSize: newPageSize });
+      onPageChanged({ currentPage: currentPage.value, pageSize: newPageSize });
     }
   };
 
@@ -101,12 +105,17 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
           onValueChanged={handlePageSizeChange}
         ></Select>
       </HorizontalLayout>
-      {smallIconButton('Go to first page', 'vaadin:angle-double-left', () => 1, currentPage === 1)}
+      {smallIconButton(
+        'Go to first page',
+        'vaadin:angle-double-left',
+        () => 1,
+        currentPage.value === 1
+      )}
       {smallIconButton(
         'Go to previous page',
         'vaadin:angle-left',
-        () => currentPage - 1,
-        currentPage === 1
+        () => currentPage.value - 1,
+        currentPage.value === 1
       )}
       <span className="text-s px-s" slot="end">
         Page {currentPage} of {pageCount}
@@ -114,14 +123,14 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       {smallIconButton(
         'Go to next page',
         'vaadin:angle-right',
-        () => currentPage + 1,
-        currentPage === pageCount
+        () => currentPage.value + 1,
+        currentPage.value === pageCount
       )}
       {smallIconButton(
         'Go to last page',
         'vaadin:angle-double-right',
         () => pageCount,
-        currentPage === pageCount
+        currentPage.value === pageCount
       )}
     </HorizontalLayout>
   );
@@ -138,47 +147,46 @@ function nameRenderer({ item: person }: { item: PersonEnhanced }) {
 
 // tag::snippet[]
 function Example() {
-  const [allItems, setAllItems] = useState<PersonEnhanced[]>([]);
-  const [currentSearchTerm, setCurrentSearchTerm] = useState('');
-  const [paginationState, setPaginationState] = useState({
+  useSignals(); // hidden-source-line
+  const allItems = useSignal<PersonEnhanced[]>([]);
+  const currentSearchTerm = useSignal('');
+  const paginationState = useSignal({
     offset: 0,
     limit: 10,
   });
 
   useEffect(() => {
     getPeople().then(({ people }) => {
-      setAllItems(
-        people.map((person) => ({
-          ...person,
-          displayName: `${person.firstName} ${person.lastName}`,
-        }))
-      );
+      allItems.value = people.map((person) => ({
+        ...person,
+        displayName: `${person.firstName} ${person.lastName}`,
+      }));
     });
   }, []);
 
   const matchesTerm = (value: string, term: string): boolean =>
     value.toLowerCase().includes(term.toLowerCase());
 
-  const itemsFilteredByTerm = allItems.filter(
+  const itemsFilteredByTerm = allItems.value.filter(
     ({ displayName, email, profession }) =>
       !currentSearchTerm ||
-      matchesTerm(displayName, currentSearchTerm) ||
-      matchesTerm(email, currentSearchTerm) ||
-      matchesTerm(profession, currentSearchTerm)
+      matchesTerm(displayName, currentSearchTerm.value) ||
+      matchesTerm(email, currentSearchTerm.value) ||
+      matchesTerm(profession, currentSearchTerm.value)
   );
 
   const itemsFilteredByTermCount = itemsFilteredByTerm.length;
   const gridItems = itemsFilteredByTerm.slice(
-    paginationState.offset,
-    paginationState.offset + paginationState.limit
+    paginationState.value.offset,
+    paginationState.value.offset + paginationState.value.limit
   );
 
   const handlePageChanged = (detail: PageChangedEventDetail) => {
     const newOffset = (detail.currentPage - 1) * detail.pageSize;
-    setPaginationState({
+    paginationState.value = {
       offset: newOffset,
       limit: detail.pageSize,
-    });
+    };
   };
 
   return (
@@ -186,9 +194,8 @@ function Example() {
       <TextField
         placeholder="Search"
         style={{ width: '50%' }}
-        value={currentSearchTerm}
         onValueChanged={(e: TextFieldValueChangedEvent) => {
-          setCurrentSearchTerm((e.detail.value || '').trim());
+          currentSearchTerm.value = (e.detail.value || '').trim();
         }}
       >
         <Icon slot="prefix" icon="vaadin:search" />
