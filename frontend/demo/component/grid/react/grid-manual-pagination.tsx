@@ -2,7 +2,7 @@ import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useSignal } from '@vaadin/hilla-react-signals';
+import { type Signal, useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
@@ -19,24 +19,24 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 // Extend Person type with displayName
 type PersonEnhanced = Person & { displayName: string };
 
-// Interface for pagination event
-interface PageChangedEventDetail {
-  currentPage: number;
-  pageSize: number;
-}
-
 interface GridPaginationControlsProps {
   totalItemCount: number;
+  currentPage: Signal<number>;
+  pageSize: Signal<number>;
 
-  onPageChanged(detail: PageChangedEventDetail): void;
+  onCurrentPageChanged(newCurrentPage: number): void;
+
+  onPageSizeChanged(newPageSize: number): void;
 }
 
-// GridPaginationControls component
-const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginationControlsProps) => {
-  useSignals(); // hidden-source-line
-  const currentPage = useSignal<number>(1);
-  const pageSize = useSignal<number>(10);
-
+// Page size and page selector visual component
+const GridPaginationControls = ({
+  totalItemCount,
+  currentPage,
+  pageSize,
+  onCurrentPageChanged,
+  onPageSizeChanged,
+}: GridPaginationControlsProps) => {
   const calculatePageCount = (itemCount: number, size: number): number => {
     if (itemCount === 0) {
       return 1; // Display one page even if there are no items
@@ -49,15 +49,14 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
   useEffect(() => {
     // Adjust the current page if it exceeds the new page count as a side effect of the total item count changing.
     if (currentPage.value > pageCount) {
-      currentPage.value = pageCount;
-      onPageChanged({ currentPage: pageCount, pageSize: pageSize.value });
+      onCurrentPageChanged(pageCount);
     }
   }, [totalItemCount]);
 
   const smallIconButton = (
     ariaLabel: string,
     icon: string,
-    newPageCalculator: () => number, // should return page number we want to go to
+    onClick: () => void, // should return page number we want to go to
     disabledWhen: boolean
   ) => (
     <Button
@@ -65,11 +64,7 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       slot="end"
       aria-label={ariaLabel}
       disabled={disabledWhen}
-      onClick={() => {
-        const newCurrentPage = newPageCalculator();
-        currentPage.value = newCurrentPage;
-        onPageChanged({ currentPage: newCurrentPage, pageSize: pageSize.value });
-      }}
+      onClick={onClick}
     >
       <Icon icon={icon}></Icon>
     </Button>
@@ -77,14 +72,11 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
 
   const handlePageSizeChange = (e: CustomEvent) => {
     const newPageSize = parseInt(e.detail.value);
-    pageSize.value = newPageSize;
     const newPageCount = calculatePageCount(totalItemCount, newPageSize);
     if (currentPage.value > newPageCount) {
-      currentPage.value = newPageCount;
-      onPageChanged({ currentPage: newPageCount, pageSize: newPageSize });
-    } else {
-      onPageChanged({ currentPage: currentPage.value, pageSize: newPageSize });
+      onCurrentPageChanged(newPageCount);
     }
+    onPageSizeChanged(newPageSize);
   };
 
   return (
@@ -108,28 +100,28 @@ const GridPaginationControls = ({ totalItemCount, onPageChanged }: GridPaginatio
       {smallIconButton(
         'Go to first page',
         'vaadin:angle-double-left',
-        () => 1,
+        () => onCurrentPageChanged(1),
         currentPage.value === 1
       )}
       {smallIconButton(
         'Go to previous page',
         'vaadin:angle-left',
-        () => currentPage.value - 1,
+        () => onCurrentPageChanged(currentPage.value - 1),
         currentPage.value === 1
       )}
       <span className="text-s px-s" slot="end">
-        Page {currentPage} of {pageCount}
+        Page {currentPage.value} of {pageCount}
       </span>
       {smallIconButton(
         'Go to next page',
         'vaadin:angle-right',
-        () => currentPage.value + 1,
+        () => onCurrentPageChanged(currentPage.value + 1),
         currentPage.value === pageCount
       )}
       {smallIconButton(
         'Go to last page',
         'vaadin:angle-double-right',
-        () => pageCount,
+        () => onCurrentPageChanged(pageCount),
         currentPage.value === pageCount
       )}
     </HorizontalLayout>
@@ -150,10 +142,8 @@ function Example() {
   useSignals(); // hidden-source-line
   const allItems = useSignal<PersonEnhanced[]>([]);
   const currentSearchTerm = useSignal('');
-  const paginationState = useSignal({
-    offset: 0,
-    limit: 10,
-  });
+  const currentPage = useSignal(1);
+  const pageSize = useSignal(10);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -176,17 +166,14 @@ function Example() {
   );
 
   const itemsFilteredByTermCount = itemsFilteredByTerm.length;
-  const gridItems = itemsFilteredByTerm.slice(
-    paginationState.value.offset,
-    paginationState.value.offset + paginationState.value.limit
-  );
+  const offset = (currentPage.value - 1) * pageSize.value;
+  const gridItems = itemsFilteredByTerm.slice(offset, offset + pageSize.value);
 
-  const handlePageChanged = (detail: PageChangedEventDetail) => {
-    const newOffset = (detail.currentPage - 1) * detail.pageSize;
-    paginationState.value = {
-      offset: newOffset,
-      limit: detail.pageSize,
-    };
+  const handleCurrentPageChanged = (newCurrentPage: number) => {
+    currentPage.value = newCurrentPage;
+  };
+  const handlePageSizeChanged = (newPageSize: number) => {
+    pageSize.value = newPageSize;
   };
 
   return (
@@ -208,7 +195,10 @@ function Example() {
         </Grid>
         <GridPaginationControls
           totalItemCount={itemsFilteredByTermCount}
-          onPageChanged={handlePageChanged}
+          currentPage={currentPage}
+          onCurrentPageChanged={handleCurrentPageChanged}
+          pageSize={pageSize}
+          onPageSizeChanged={handlePageSizeChanged}
         />
       </VerticalLayout>
     </VerticalLayout>
