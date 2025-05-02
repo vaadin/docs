@@ -2,7 +2,7 @@ import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { type Signal, useSignal } from '@vaadin/hilla-react-signals';
+import { type Signal, useComputed, useSignal, useSignalEffect } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
@@ -20,7 +20,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 type PersonEnhanced = Person & { displayName: string };
 
 interface GridPaginationControlsProps {
-  totalItemCount: number;
+  totalItemCount: Signal<number>;
   currentPage: Signal<number>;
   pageSize: Signal<number>;
 
@@ -37,21 +37,19 @@ const GridPaginationControls = ({
   onCurrentPageChanged,
   onPageSizeChanged,
 }: GridPaginationControlsProps) => {
-  const calculatePageCount = (itemCount: number, size: number): number => {
-    if (itemCount === 0) {
+  const pageCount = useComputed<number>(() => {
+    if (totalItemCount.value === 0) {
       return 1; // Display one page even if there are no items
     }
-    return Math.ceil(itemCount / size);
-  };
+    return Math.ceil(totalItemCount.value / pageSize.value);
+  });
 
-  const pageCount = calculatePageCount(totalItemCount, pageSize.value);
-
-  useEffect(() => {
-    // Adjust the current page if it exceeds the new page count as a side effect of the total item count changing.
-    if (currentPage.value > pageCount) {
-      onCurrentPageChanged(pageCount);
+  useSignalEffect(() => {
+    // Adjust the current page if it exceeds the new page count
+    if (currentPage.value > pageCount.value) {
+      onCurrentPageChanged(pageCount.value);
     }
-  }, [totalItemCount]);
+  });
 
   const smallIconButton = (
     ariaLabel: string,
@@ -70,15 +68,6 @@ const GridPaginationControls = ({
     </Button>
   );
 
-  const handlePageSizeChange = (e: CustomEvent) => {
-    const newPageSize = parseInt(e.detail.value);
-    const newPageCount = calculatePageCount(totalItemCount, newPageSize);
-    if (currentPage.value > newPageCount) {
-      onCurrentPageChanged(newPageCount);
-    }
-    onPageSizeChanged(newPageSize);
-  };
-
   return (
     <HorizontalLayout style={{ alignItems: 'center', gap: '0.3rem', width: '100%' }}>
       <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing-s">
@@ -94,7 +83,9 @@ const GridPaginationControls = ({
           }}
           items={['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}
           value={pageSize.value.toString()}
-          onValueChanged={handlePageSizeChange}
+          onValueChanged={(e: CustomEvent) => {
+            onPageSizeChanged(parseInt(e.detail.value));
+          }}
         ></Select>
       </HorizontalLayout>
       {smallIconButton(
@@ -110,19 +101,19 @@ const GridPaginationControls = ({
         currentPage.value === 1
       )}
       <span className="text-s px-s" slot="end">
-        Page {currentPage.value} of {pageCount}
+        Page {currentPage.value} of {pageCount.value}
       </span>
       {smallIconButton(
         'Go to next page',
         'vaadin:angle-right',
         () => onCurrentPageChanged(currentPage.value + 1),
-        currentPage.value === pageCount
+        currentPage.value === pageCount.value
       )}
       {smallIconButton(
         'Go to last page',
         'vaadin:angle-double-right',
-        () => onCurrentPageChanged(pageCount),
-        currentPage.value === pageCount
+        () => onCurrentPageChanged(pageCount.value),
+        currentPage.value === pageCount.value
       )}
     </HorizontalLayout>
   );
@@ -144,6 +135,7 @@ function Example() {
   const currentSearchTerm = useSignal('');
   const currentPage = useSignal(1);
   const pageSize = useSignal(10);
+  const itemsFilteredByTermCount = useSignal(0);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -165,7 +157,7 @@ function Example() {
       matchesTerm(profession, currentSearchTerm.value)
   );
 
-  const itemsFilteredByTermCount = itemsFilteredByTerm.length;
+  itemsFilteredByTermCount.value = itemsFilteredByTerm.length;
   const offset = (currentPage.value - 1) * pageSize.value;
   const gridItems = itemsFilteredByTerm.slice(offset, offset + pageSize.value);
 
