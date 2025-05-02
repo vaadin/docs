@@ -21,8 +21,10 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -31,10 +33,9 @@ public class GridManualPagination extends VerticalLayout {
 
     private final PaginationControls paginationControls = new PaginationControls();
     private final DataSource dataSource = new DataSource();
-    private final TextField searchField = new TextField();
 
     // tag::snippet[]
-    private final DataProvider<Person, Void> dataProvider = DataProvider.fromCallbacks(query -> {
+    private final DataProvider<Person, String> pagingDataProvider = DataProvider.fromFilteringCallbacks(query -> {
         // We are implementing our own way of data pagination. Unfortunately, the data provider contract requires these
         // two methods to be called during data fetch, otherwise IllegalStateException is thrown
         // -> so we just call them but ignore their return values.
@@ -45,10 +46,14 @@ public class GridManualPagination extends VerticalLayout {
         var offset = paginationControls.calculateOffset();
         var limit = paginationControls.getPageSize();
 
-        return dataSource.fetch(searchField.getValue(), offset, limit);
+        return dataSource.fetch(query.getFilter(), offset, limit);
     }, query -> {
         // Total count of filtered items
-        var itemCount = dataSource.count(searchField.getValue());
+        var itemCount = dataSource.count(query.getFilter());
+
+        // Recalculate page count here to avoid calling
+        // dataSource.count twice
+        paginationControls.recalculatePageCount(itemCount);
 
         var offset = paginationControls.calculateOffset();
         var limit = paginationControls.getPageSize();
@@ -62,46 +67,64 @@ public class GridManualPagination extends VerticalLayout {
         setPadding(false);
 
         Grid<Person> grid = new Grid<>(Person.class, false);
+
         grid.addColumn(createPersonRenderer()).setHeader("Name").setFlexGrow(0)
                 .setWidth("230px");
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(Person::getProfession).setHeader("Profession");
 
         grid.setAllRowsVisible(true); // this will prevent scrolling in the grid
+        var dataProvider = pagingDataProvider.withConfigurableFilter();
         grid.setDataProvider(dataProvider);
 
-        paginationControls.update(dataSource.count(searchField.getValue()));
         paginationControls.onPageChanged(() -> grid.getDataProvider().refreshAll());
 
-        var gridWithPaginationLayout = new VerticalLayout(grid, paginationControls);
+        final TextField searchField = createSearchField();
+        searchField.addValueChangeListener(e -> {
+            // setFilter will refresh the data provider and trigger data
+            // provider fetch / count queries. As a side effect, the pagination
+            // controls will be updated.
+            dataProvider.setFilter(e.getValue());
+        });
+
+        add(searchField, wrapWithVerticalLayout(grid, paginationControls));
+    }
+
+    @NotNull
+    private VerticalLayout wrapWithVerticalLayout(Component component1, Component component2) {
+        var gridWithPaginationLayout = new VerticalLayout(component1, component2);
         gridWithPaginationLayout.setPadding(false);
         gridWithPaginationLayout.setSpacing(false);
         gridWithPaginationLayout.getThemeList().add("spacing-xs");
+        return gridWithPaginationLayout;
+    }
 
+    @NotNull
+    private TextField createSearchField() {
+        TextField searchField = new TextField();
         searchField.setWidth("50%");
         searchField.setPlaceholder("Search");
         searchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         searchField.setValueChangeMode(ValueChangeMode.EAGER);
-        searchField.addValueChangeListener(e -> {
-            paginationControls.update(dataSource.count(searchField.getValue()));
-            grid.getDataProvider().refreshAll();
-        });
-
-        add(searchField, gridWithPaginationLayout);
+        return searchField;
     }
     // end::snippet[]
 
     public static class DataSource {
         private final List<Person> people = DataService.getPeople();
 
-        public Stream<Person> fetch(String searchTerm, int offset, int limit) {
+        public Stream<Person> fetch(Optional<String> searchTerm, int offset, int limit) {
             // emulate accessing the backend datasource - in a real application this would
             // call, for example, an SQL query, passing an offset and a limit to the query
-            return people.stream().filter(person -> matchesSearchTerm(person, searchTerm)).skip(offset).limit(limit);
+            return people.stream().filter(
+                            person -> matchesSearchTerm(person, searchTerm.orElse("")))
+                    .skip(offset).limit(limit);
         }
 
-        public int count(String searchTerm) {
-            return (int) people.stream().filter(person -> matchesSearchTerm(person, searchTerm)).count();
+        public int count(Optional<String> searchTerm) {
+            return (int) people.stream().filter(
+                            person -> matchesSearchTerm(person, searchTerm.orElse("")))
+                    .count();
         }
 
         public boolean matchesSearchTerm(Person person, String searchTerm) {
@@ -158,7 +181,7 @@ public class GridManualPagination extends VerticalLayout {
             addToEnd(firstPageButton, goToPreviousPageButton, currentPageLabel, goToNextPageButton, lastPageButton);
         }
 
-        private void update(int totalItemCount) {
+        private void recalculatePageCount(int totalItemCount) {
             this.totalItemCount = totalItemCount;
             updatePageCount();
         }
