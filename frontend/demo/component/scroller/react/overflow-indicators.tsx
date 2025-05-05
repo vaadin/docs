@@ -15,7 +15,7 @@ function Example() {
 
       {/* tag::snippet[] */}
       <Scroller scrollDirection="vertical" theme="overflow-indicators">
-        <div className="flex flex-col gap-m p-m">
+        <div className="flex flex-col pb-m px-m">
           <TextField className="w-full" label="First name"></TextField>
           <TextField className="w-full" label="Last name"></TextField>
           <TextField className="w-full" label="Email"></TextField>
