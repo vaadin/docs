@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.scroller;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -12,6 +13,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.time.LocalDate;
 
@@ -22,31 +24,27 @@ public class ScrollerBasic extends VerticalLayout {
     public static final String EMPLOYMENT_TITLE_ID = "employment-title";
 
     public ScrollerBasic() {
-        setAlignItems(Alignment.STRETCH);
-        setHeight("400px");
-        setMaxWidth("100%");
+        addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_20);
+        setHeight(400, Unit.PIXELS);
+        setMaxWidth(100, Unit.PERCENTAGE);
         setPadding(false);
         setSpacing(false);
-        setWidth("360px");
-        getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
+        setWidth(360, Unit.PIXELS);
 
         // Header
         Header header = new Header();
-        header.getStyle().set("align-items", "center")
-                .set("border-bottom", "1px solid var(--lumo-contrast-20pct)")
-                .set("display", "flex").set("padding", "var(--lumo-space-m)");
+        header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Border.BOTTOM, LumoUtility.Display.FLEX,
+                LumoUtility.Gap.MEDIUM, LumoUtility.Padding.MEDIUM);
 
         H2 editEmployee = new H2("Edit employee");
-        editEmployee.getStyle().set("margin", "0");
+        editEmployee.addClassNames(LumoUtility.FontSize.XLARGE);
 
         Icon arrowLeft = VaadinIcon.ARROW_LEFT.create();
-        arrowLeft.setSize("var(--lumo-icon-size-m)");
+        arrowLeft.addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.IconSize.MEDIUM, LumoUtility.Padding.XSMALL);
         arrowLeft.getElement().setAttribute("aria-hidden", "true");
-        arrowLeft.getStyle().set("box-sizing", "border-box")
-                .set("margin-right", "var(--lumo-space-m)")
-                .set("padding", "calc(var(--lumo-space-xs) / 2)");
 
         Anchor goBack = new Anchor("#", arrowLeft);
+        goBack.setAriaLabel("Go back");
 
         header.add(goBack, editEmployee);
         add(header);
@@ -54,6 +52,7 @@ public class ScrollerBasic extends VerticalLayout {
         // tag::snippet[]
         // Personal information
         H3 personalTitle = new H3("Personal information");
+        personalTitle.addClassNames(LumoUtility.FontSize.LARGE);
         personalTitle.setId(PERSONAL_TITLE_ID);
 
         TextField firstName = new TextField("First name");
@@ -73,6 +72,7 @@ public class ScrollerBasic extends VerticalLayout {
 
         // Employment information
         H3 employmentTitle = new H3("Employment information");
+        employmentTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.Top.LARGE);
         employmentTitle.setId(EMPLOYMENT_TITLE_ID);
 
         TextField position = new TextField("Position");
@@ -86,29 +86,22 @@ public class ScrollerBasic extends VerticalLayout {
         employmentInformation.getElement().setAttribute("aria-labelledby",
                 EMPLOYMENT_TITLE_ID);
 
-        // NOTE
-        // We are using inline styles here to keep the example simple.
-        // We recommend placing CSS in a separate style sheet and to
-        // encapsulating the styling in a new component.
-        Scroller scroller = new Scroller(
-                new Div(personalInformation, employmentInformation));
+        Scroller scroller = new Scroller(new Div(personalInformation, employmentInformation));
+        scroller.addClassNames(LumoUtility.Border.BOTTOM, LumoUtility.Padding.MEDIUM);
         scroller.setScrollDirection(Scroller.ScrollDirection.VERTICAL);
-        scroller.getStyle()
-                .set("border-bottom", "1px solid var(--lumo-contrast-20pct)")
-                .set("padding", "var(--lumo-space-m)");
         add(scroller);
         // end::snippet[]
 
         // Footer
         Button save = new Button("Save");
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        save.getStyle().set("margin-right", "var(--lumo-space-s)");
 
         Button reset = new Button("Reset");
         reset.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         Footer footer = new Footer(save, reset);
-        footer.getStyle().set("padding", "var(--lumo-space-wide-m)");
+        footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.Padding.Horizontal.MEDIUM,
+                LumoUtility.Padding.Vertical.SMALL);
         add(footer);
     }
 

@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.scroller;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Section;
@@ -9,19 +10,20 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("scroller-mobile")
 public class ScrollerMobile extends Section {
 
     public ScrollerMobile() {
-        setMaxWidth("100%");
-        setWidth("360px");
-        getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
+        addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_20);
+        setMaxWidth(100, Unit.PERCENTAGE);
+        setWidth(360, Unit.PIXELS);
 
         // Header
         H2 createNewTitle = new H2("Create new...");
-        createNewTitle.getStyle().set("margin-left", "var(--lumo-space-m)")
-                .set("margin-right", "var(--lumo-space-m)");
+        createNewTitle.addClassNames(LumoUtility.FontSize.XLARGE, LumoUtility.Padding.Top.MEDIUM,
+                LumoUtility.Padding.Horizontal.MEDIUM);
         add(createNewTitle);
 
         // tag::snippet[]
@@ -46,8 +48,8 @@ public class ScrollerMobile extends Section {
 
         HorizontalLayout buttons = new HorizontalLayout(auditBtn, reportBtn,
                 dashboardBtn, invoiceBtn);
+        buttons.addClassName(LumoUtility.Display.INLINE_FLEX);
         buttons.setPadding(true);
-        buttons.getStyle().set("display", "inline-flex");
 
         scroller.setContent(buttons);
         add(scroller);

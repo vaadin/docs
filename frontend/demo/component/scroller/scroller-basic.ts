@@ -15,38 +15,8 @@ import { applyTheme } from 'Frontend/generated/theme';
 export class Example extends LitElement {
   static override styles = css`
     #container {
-      align-items: stretch;
-      border: 1px solid var(--lumo-contrast-20pct);
-      max-width: 100%;
       height: 400px;
       width: 360px;
-    }
-
-    header {
-      align-items: center;
-      display: flex;
-      border-bottom: 1px solid var(--lumo-contrast-20pct);
-      padding: var(--lumo-space-m);
-    }
-
-    header h2 {
-      margin: 0;
-    }
-
-    header vaadin-icon {
-      box-sizing: border-box;
-      height: var(--lumo-icon-size-m);
-      margin-right: var(--lumo-space-m);
-      padding: calc(var(--lumo-space-xs) / 2);
-      width: var(--lumo-icon-size-m);
-    }
-
-    footer {
-      padding: var(--lumo-space-wide-m);
-    }
-
-    footer vaadin-button:first-child {
-      margin-right: var(--lumo-space-s);
     }
   `;
 
@@ -59,41 +29,39 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout id="container">
-        <header>
+      <vaadin-vertical-layout class="border border-contrast-20 items-stretch max-w-full" id="container">
+        <header class="flex gap-m items-center border-b p-m">
           <a href="#" aria-label="Go back">
-            <vaadin-icon icon="vaadin:arrow-left" aria-hidden="true"></vaadin-icon>
+            <vaadin-icon
+              class="box-border icon-m p-xs"
+              icon="vaadin:arrow-left"
+              aria-hidden="true"
+            ></vaadin-icon>
           </a>
-          <h2>Edit employee</h2>
+          <h2 class="text-xl">Edit employee</h2>
         </header>
 
         <!-- tag::snippet[] -->
-        <vaadin-scroller
-          scroll-direction="vertical"
-          style="border-bottom: 1px solid var(--lumo-contrast-20pct); padding: var(--lumo-space-m);"
-        >
+        <vaadin-scroller class="border-b p-m" scroll-direction="vertical">
           <section aria-labelledby="personal-title">
-            <h3 id="personal-title">Personal information</h3>
-            <vaadin-text-field style="width: 100%;" label="First name"></vaadin-text-field>
-            <vaadin-text-field style="width: 100%;" label="Last name"></vaadin-text-field>
+            <h3 class="text-l" id="personal-title">Personal information</h3>
+            <vaadin-text-field class="w-full" label="First name"></vaadin-text-field>
+            <vaadin-text-field class="w-full" label="Last name"></vaadin-text-field>
             <vaadin-date-picker
+              class="w-full"
               initial-position="1990-01-01"
               label="Birthdate"
-              style="width: 100%;"
             ></vaadin-date-picker>
           </section>
           <section aria-labelledby="employment-title">
-            <h3 id="employment-title">Employment information</h3>
-            <vaadin-text-field style="width: 100%;" label="Position"></vaadin-text-field>
-            <vaadin-text-area
-              style="width: 100%;"
-              label="Additional information"
-            ></vaadin-text-area>
+            <h3 class="mt-l text-l" id="employment-title">Employment information</h3>
+            <vaadin-text-field class="w-full" label="Position"></vaadin-text-field>
+            <vaadin-text-area class="w-full" label="Additional information"></vaadin-text-area>
           </section>
         </vaadin-scroller>
         <!-- end::snippet[] -->
 
-        <footer>
+        <footer class="flex gap-s px-m py-s">
           <vaadin-button theme="primary">Save</vaadin-button>
           <vaadin-button theme="tertiary">Reset</vaadin-button>
         </footer>
