@@ -34,7 +34,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-vertical-layout id="container">
-        <h2 class="text-xl px-m py-s">Create your account</h2>
+        <h2 class="text-xl px-m py-m">Create your account</h2>
         <!-- tag::snippet[] -->
         <vaadin-scroller scroll-direction="vertical" theme="overflow-indicators">
           <div class="flex flex-col pb-m px-m">

@@ -11,7 +11,7 @@ import exampleStyles from './scroller-basic-styles'; // hidden-source-line
 function Example() {
   return (
     <VerticalLayout className="border border-contrast-20 items-stretch max-w-full" id="container">
-      <h2 className="text-xl px-m py-s">Create your account</h2>
+      <h2 className="text-xl px-m py-m">Create your account</h2>
 
       {/* tag::snippet[] */}
       <Scroller scrollDirection="vertical" theme="overflow-indicators">

@@ -37,7 +37,7 @@ public class OverflowIndicators extends VerticalLayout {
         // Header
         H2 createYourAccount = new H2("Create your account");
         createYourAccount.addClassNames(LumoUtility.FontSize.XLARGE, LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.Padding.Vertical.SMALL);
+                LumoUtility.Padding.Vertical.MEDIUM);
         add(createYourAccount);
 
         // tag::snippet[]
