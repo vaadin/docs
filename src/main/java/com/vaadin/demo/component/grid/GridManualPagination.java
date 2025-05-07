@@ -89,6 +89,7 @@ public class GridManualPagination extends VerticalLayout {
 
         add(searchField, wrapWithVerticalLayout(grid, paginationControls));
     }
+    // end::snippet[]
 
     @NotNull
     private VerticalLayout wrapWithVerticalLayout(Component component1, Component component2) {
@@ -108,7 +109,6 @@ public class GridManualPagination extends VerticalLayout {
         searchField.setValueChangeMode(ValueChangeMode.EAGER);
         return searchField;
     }
-    // end::snippet[]
 
     public static class DataSource {
         private final List<Person> people = DataService.getPeople();
