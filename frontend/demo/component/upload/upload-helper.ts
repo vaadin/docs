@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import '@vaadin/upload';
 import { css, html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
-import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
+import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-helper')
@@ -26,17 +26,14 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-upload')
-  private upload!: Upload;
-
   // tag::snippet[]
-  protected override firstUpdated() {
-    this.upload.i18n.addFiles.one = 'Upload Spreadsheet...';
-    this.upload.i18n.dropFiles.one = 'Drop spreadsheet here';
-    this.upload.i18n.error.incorrectFileType =
-      'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    addFiles: { one: 'Upload Spreadsheet...' },
+    dropFiles: { one: 'Drop spreadsheet here' },
+    error: {
+      incorrectFileType: 'Provide the file in one of the supported formats (.xls, .xlsx, .csv).',
+    },
+  };
 
   protected override render() {
     // end::snippet[]
@@ -64,6 +61,7 @@ export class Example extends LitElement {
         max-files="1"
         .maxFileSize="${maxFileSizeInBytes}"
         .accept="${acceptedTypes.join(',')}"
+        .i18n="${this.uploadI18n}"
         @file-reject="${this.fileRejectHandler}"
       ></vaadin-upload>
     `;
