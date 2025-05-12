@@ -63,20 +63,23 @@ Spring Boot includes Testcontainers support in its parent POM, so you don't need
 ----
 <dependency>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-testcontainers</artifactId>
+    <artifactId>spring-boot-testcontainers</artifactId> <!--1-->
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>junit-jupiter</artifactId>
+    <artifactId>junit-jupiter</artifactId> <!--2-->
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>postgresql</artifactId>
+    <artifactId>postgresql</artifactId> <!--3-->
     <scope>test</scope>
 </dependency>
 ----
+<1> Spring Boot integration for Testcontainers.
+<2> JUnit Jupiter support for Testcontainers.
+<3> PostgreSQL support for Testcontainers.
 
 
 === Update Integration Tests
@@ -96,14 +99,16 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-    @Bean
-    @ServiceConnection
+    @Bean // <1>
+    @ServiceConnection // <2>
     public JdbcDatabaseContainer<?> postgresContainer() {
-        return new PostgreSQLContainer<>("postgres:17-alpine"); // <1>
+        return new PostgreSQLContainer<>("postgres:17-alpine"); // <3>
     }
 }
 ----
-<1> Specifies the PostgreSQL Docker image to use.
+<1> Configures the container as a Spring bean.
+<2> Informs Spring Boot that this bean provides a service that can be connected to.
+<3> Specifies the PostgreSQL Docker image to use.
 
 Then, import this configuration in your test class:
 
@@ -214,6 +219,10 @@ In this tutorial, you'll replace H2 with PostgreSQL in a real Vaadin application
 [%collapsible]
 ====
 Use the same project from the <<add-flyway#,Add Flyway>> mini-tutorial. Complete that tutorial before proceeding with this one.
+
+[NOTE]
+Older versions of the walking skeleton did not include Testcontainers support, whereas newer versions do. If the necessary dependencies and configuration classes are not present in your project, start over with a new <<{articles}/getting-started/start#,walking skeleton>>.
+
 ====
 
 .Update Database Dependencies
@@ -241,7 +250,7 @@ Replace it with the PostgreSQL dependency:
 </dependency>
 ----
 
-Also add the Flyway PostgreSQL dependency:
+Also add the Flyway and Testcontainers PostgreSQL dependencies:
 
 [source,xml]
 ----
@@ -250,88 +259,43 @@ Also add the Flyway PostgreSQL dependency:
     <artifactId>flyway-database-postgresql</artifactId>
     <scope>runtime</scope>
 </dependency>
-----
-====
 
-.Add Testcontainers Dependency
-[%collapsible]
-====
-Still in `pom.xml`, add the following test dependencies:
-
-[source,xml]
-----
 <dependency>
     <groupId>org.testcontainers</groupId>
     <artifactId>postgresql</artifactId>
     <scope>test</scope>
 </dependency>
-<dependency>
-    <groupId>org.testcontainers</groupId>
-    <artifactId>junit-jupiter</artifactId>
-    <scope>test</scope>
-</dependency>
 ----
 ====
 
-.Create Integration Test Base Class
+
+.Add PostgreSQL Service Connection
 [%collapsible]
 ====
-In `[application package]`, create a new `AbstractIntegrationTest` class:
+Add the following code to the `TestcontainersConfiguration` class:
 
-.AbstractIntegrationTest.java
+.TestcontainersConfiguration.java
 [source,java]
 ----
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-
-public abstract class AbstractIntegrationTest {
-
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-            "postgres:17-alpine"
-    );
-
-    @BeforeAll
-    static void beforeAll() {
-        postgres.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        postgres.stop();
-    }
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
-}
-----
-====
-
-.Update Integration Test
-[%collapsible]
-====
-Open `TaskServiceIT` and change it to extend the base class:
-
-.TaskServiceIT.java
-[source,java]
-----
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
-// tag::snippet[]
-class TaskServiceIT extends AbstractIntegrationTest {
-// end::snippet[]
-    // (tests omitted)
+@Bean
+@ServiceConnection
+public JdbcDatabaseContainer<?> postgresContainer() {
+    return new PostgreSQLContainer<>("postgres:17-alpine");
 }
 ----
 
 Now run the integration test. Remember that you must have Docker running for everything to work.
 ====
+
+
+.Run the Test Application
+[%collapsible]
+====
+Open `TestApplication` in your IDE and run its `main()` method. The application should start up, using a PostgreSQL database managed by Testcontainers.
+
+Make sure everything works as before, then stop the application.
+====
+
 
 .Start Development Database
 [%collapsible]
@@ -343,6 +307,7 @@ Open a terminal and run the following command:
 docker run --name my-development-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres:17-alpine 
 ----
 
+[NOTE]
 If you already have PostgreSQL running on your machine, this won't work as port 5432 is already in use. If port 5432 is in use, map it to a different host port -- such as `-p 5433:5432` -— to avoid conflicts.
 ====
 
@@ -360,6 +325,7 @@ spring.flyway.user=${secrets.flyway.user:${spring.datasource.username}}
 spring.flyway.password=${secrets.flyway.password:${spring.datasource.password}}
 ----
 
+[NOTE]
 If you mapped PostgreSQL to a different port than 5432, you have to update the URL accordingly (e.g., `jdbc:postgresql://localhost:5433/postgres`).
 ====
 
