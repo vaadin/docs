@@ -1,0 +1,207 @@
+---
+title: Identity Management
+page-title: Manage user authentication with Control Center
+description: Configure and manage user authentication realms using Control Center and Keycloak.
+meta-description: Learn how to configure identity providers, realms, and login policies using Control Center and Keycloak.
+order: 40
+---
+
+= Identity Management
+
+Control Center includes a fully integrated instance of link:https://www.keycloak.org/[Keycloak,window=read-later], an open-source identity and access management solution. Keycloak provides authentication, authorization, and user federation features out-of-the-box. Control Center uses it to enable secure access to deployed applications and support identity features such as:
+
+* User login and role management
+* Multi-Factor Authentication (MFA)
+* Passwordless login with device passkeys
+* Integration with external identity providers
+* Password reset and email account verification
+
+== Hosting and Accessing Keycloak
+
+Control Center deploys Keycloak as part of its Helm chart. By default, Keycloak is accessible at the same host as the Control Center app, under the path `/keycloak`.
+
+The access URL can be customized during installation with the following Helm values:
+
+.my-values.yaml
+[source,yaml]
+----
+keycloak:
+  host: keycloak.example.com
+  path: /
+----
+
+These values determine the public base URL where Keycloak will be served, such as `https://keycloak.example.com/`.
+
+To use a custom TLS certificate for Keycloak, reference a Secret with the certificate details setting the `keycloak.tlsSecret` value:
+
+.my-values.yaml
+[source,yaml]
+----
+keycloak:
+  tlsSecret: my-auth-cert
+----
+
+To create a Secret with certificate details, refer to link:https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_secret_tls/[Kubernetes documentation,window=read-later].
+
+[TIP]
+If this value is not provided, Control Center will automatically generate a certificate using its default issuer.
+
+== Realms
+
+Keycloak organizes users and clients into _realms_. A realm is an isolated authentication namespace that manages its own users, credentials, roles, and authentication policies.
+
+Control Center introduces a custom resource named `Realm` to provision and manage realms declaratively. A `Realm` resource can be applied using standard Kubernetes tools.
+
+.Example: Create a new realm
+[source,yaml]
+----
+apiVersion: vaadin.com/v1alpha1
+kind: Realm
+metadata:
+  name: my-realm
+spec:
+  name: my-realm
+  displayName: My Realm
+----
+
+Apply the realm definition:
+
+.Terminal
+[source,shell]
+----
+kubectl apply -f my-realm.yaml
+----
+
+To view all available realms:
+
+.Terminal
+[source,shell]
+----
+kubectl get realms -n vaadin
+----
+
+Example output:
+
+----
+NAME             AGE   MESSAGE               STATE
+control-center   30s   Realm is up-to-date   APPLIED
+my-realm         10s   Realm is up-to-date   APPLIED
+----
+
+By default, Control Center creates a realm named `control-center`. This can be used immediately when deploying authenticated applications.
+
+== Customizing the Login Theme
+
+The login screen presented to users can be customized using the `loginTheme` property in the `Realm` specification. Control Center includes a theme named `control-center-lumo` that applies the Vaadin Lumo design system.
+
+.Example: Set the login theme
+[source,yaml]
+----
+spec:
+  loginTheme: control-center-lumo
+----
+
+This results in a modern, branded login page consistent with the Vaadin UI experience.
+
+== Email Settings for Password Reset and Verification
+
+Keycloak uses email for several critical features:
+
+* Sending password reset links
+* Notifying users of account-related actions
+* Verifying email addresses at account registration
+
+To enable these features, SMTP settings must be provided via a Kubernetes `Secret`. The `Realm` resource then references this secret via the `smtpSettingsSecret` property.
+
+.Example: SMTP settings secret
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-smtp-settings
+stringData:
+  from: "control-center@example.com"
+  fromDisplayName: "Control Center"
+  host: "smtp.example.com"
+  port: "587"
+  starttls: "true"
+  auth: "true"
+  user: "smtp-user"
+  password: "smtp-password"
+----
+
+To apply it:
+
+.Terminal
+[source,shell]
+----
+kubectl apply -f my-smtp-settings.yaml
+----
+
+And reference it in the realm definition:
+
+[source,yaml]
+----
+spec:
+  smtpSettingsSecret:
+    name: my-smtp-settings
+----
+
+Supported keys and their meaning:
+
+[cols="1,3", options="header"]
+|===
+| Key | Description
+
+| `host`
+| SMTP server hostname or IP address (required)
+
+| `port`
+| SMTP port (e.g., `25`, `465`, `587`)
+
+| `from`
+| Email address to use in the From header (required)
+
+| `fromDisplayName`
+| Optional display name shown as sender
+
+| `replyTo`
+| Optional address for Reply-To header
+
+| `replyToDisplayName`
+| Optional display name for Reply-To header
+
+| `ssl`
+| `true` or `false` to enable SSL (usually used on port `465`)
+
+| `starttls`
+| `true` or `false` to enable STARTTLS (commonly used on port `587`)
+
+| `auth`
+| `true` if SMTP server requires authentication
+
+| `user`
+| SMTP username (required if `auth: true`)
+
+| `password`
+| SMTP password (required if `auth: true`)
+|===
+
+=== Enabling Email-Based Login Features
+
+Once SMTP settings are configured, the following options can be enabled in the realm:
+
+[source,yaml]
+----
+spec:
+  verifyEmail: true
+  resetPasswordAllowed: true
+----
+
+These instruct Keycloak to require users to verify their email address before login and allow password reset via email links.
+
+[NOTE]
+====
+When SMTP settings are configured, `resetPasswordAllowed` is enabled by default.
+====

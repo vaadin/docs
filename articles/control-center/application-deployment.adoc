@@ -237,6 +237,70 @@ public class CustomerView extends VerticalLayout {
 
 Database configuration is handled entirely through environment variables, allowing standard Spring Boot features such as Flyway migrations or JPA/Hibernate integration to work without additional configuration.
 
+=== Enable User Authentication
+
+Control Center includes a preconfigured instance of link:https://www.keycloak.org/[Keycloak,window=read-later] to provide secure user authentication for deployed applications. This integration supports advanced identity features including multi-factor authentication (MFA) and passwordless login.
+
+==== Configure Spring Security
+
+Add the following link:https://spring.io/projects/spring-security[Spring Security,window=read-later] configuration to the application using the `ControlCenterSecurityConfigurer` provided by the `control-center-starter` dependency:
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .with(ControlCenterSecurityConfigurer.controlCenter(), Customizer.withDefaults())
+            .build();
+    }
+}
+----
+
+This configuration enables authentication through the Keycloak instance managed by Control Center.
+
+To define who can access to the application views, refer to xref:../flow/security/enabling-security.adoc#annotating-the-view-classes[Annotating View Classes].
+
+[NOTE]
+The configurer can be added to an existing security configuration.
+
+==== Reference a Keycloak Realm in the App Manifest
+
+To activate authentication, the application must declare the Keycloak realm to use in the `App` manifest. This is done by adding the `keycloak.realm` property:
+
+.my-app.yaml
+[source,yaml]
+----
+spec:
+  keycloak:
+    realm: my-realm
+----
+
+A _realm_ in Keycloak represents an isolated identity space. Each realm contains its own users, credentials, roles, and authentication settings.
+
+To list available realms in the cluster:
+
+.Terminal
+[source,shell]
+----
+kubectl get realms -n vaadin
+----
+
+Example output:
+
+----
+NAME             AGE   MESSAGE               STATE
+control-center   30s   Realm is up-to-date   APPLIED
+my-realm         30s   Realm is up-to-date   APPLIED
+----
+
+A default realm named `control-center` is created automatically during Control Center installation. New realms can also be created and managed; for details, refer to the xref:identity-management.adoc[Identity Management] documentation.
+
+Once configured, users must authenticate through the specified realm before accessing the application.
+
 === Apply the Manifest
 
 Once the `App` manifest is written and saved, it can be applied to the Kubernetes cluster using the `kubectl apply` command.
