@@ -1,8 +1,8 @@
 ---
-title: Database and Volume Configuration
-page-title: Configure database storage for Control Center
-description: Learn how to configure persistent volumes and backup snapshots for the managed Postgres cluster used by Control Center.
-meta-description: Learn how to configure volume storage and snapshot support for the Postgres cluster provisioned by Control Center.
+title: Database and Backups
+page-title: Configure database and backups for Control Center
+description: Learn how to configure database storage and backup snapshots for the managed Postgres cluster used by Control Center.
+meta-description: Learn how to configure database storage and backup snapshots for the Postgres cluster provisioned by Control Center.
 order: 30
 ---
 
@@ -12,7 +12,7 @@ Control Center provisions a managed Postgres cluster to provide databases for de
 
 == Why It Matters
 
-All application data managed by Control Center is persisted in Kubernetes volumes. How these volumes are created, stored, and backed up depends on the links:https://kubernetes.io/docs/concepts/storage/storage-classes/[storage class] and links:https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/[volume-snapshot class] used in the cluster. Choosing the right class is critical for:
+All application data managed by Control Center is persisted in Kubernetes volumes. How these volumes are created, stored, and backed up depends on the link:https://kubernetes.io/docs/concepts/storage/storage-classes/[storage class,window=read-later] and link:https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/[volume-snapshot class,window=read-later] used in the cluster. Choosing the right class is critical for:
 
 * Ensuring high availability and data durability
 * Supporting volume snapshots for scheduled backups
@@ -20,12 +20,13 @@ All application data managed by Control Center is persisted in Kubernetes volume
 
 == Recommended Configuration
 
-When installing Control Center, explicitly specify the storage and snapshot classes using these Helm values:
+When installing Control Center, explicitly specify the storage and snapshot classes along with the size to allocate for the volume, using these Helm values:
 
 .my-values.yaml
 [source,yaml]
 ----
 postgres:
+  size: 1Gi
   storageClass: ...
   volumeSnapshotClass: ...
 ----
@@ -43,6 +44,11 @@ kubectl get storageclass
 ----
 kubectl get volumesnapshotclass
 ----
+
+The default size of the volume allocated for Postgres data is `1Gi`. To allocate a different size, set the `postgres.size` value when installing Control Center. The value must use Go-style quantity syntax, refer to the link:https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity[Go documentation,window=read-later] for details.
+
+[IMPORTANT]
+Once the volume size is set and the Postgres cluster is deployed, the size can be increased but not reduced. Shrinking a volume is not supported by most Kubernetes storage providers and would require manual intervention or data migration.
 
 == Cloud Provider Configuration
 
@@ -113,7 +119,7 @@ To restore from an existing backup, specify the name of the backup resource usin
 postgres:
   storageClass: ...
   volumeSnapshotClass: ...
-  restoreFromBackup: hourly-backup-20250417210000
+  restoreFromBackup: "hourly-backup-20250417210000"
 ----
 
 Then install Control Center with the desired backup:
