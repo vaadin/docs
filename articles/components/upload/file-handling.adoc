@@ -31,19 +31,20 @@ All of the build-in implementations extend [classname]`TransferProgressAwareHand
 
 The [classname]`InMemoryUploadHandler` stores uploaded files in memory as byte arrays.
 
-The handler is given a `successhandler` of type `SerializableBiConsumer<UploadMetadata, byte[]> successHandler` that is called for each successful upload.
-The `successhandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and a `byte[]` that contains the actual data from the upload.
+The handler is given a `successHandler` of type `SerializableBiConsumer<UploadMetadata, byte[]> successHandler` that is called for each successful upload.
+The `successHandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and a `byte[]` that contains the actual data from the upload.
 
 [source,java]
 ----
 InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
     (metadata, data) -> {
         // Get other information about the file.
-        String fileName = event.getFileName();
-        String mimeType = event.getMIMEType();
-        long contentLength = event.getContentLength();
+        String fileName = metadata.fileName();
+        String mimeType = metadata.contentType();
+        long contentLength = metadata.contentLength();
 
         // Do something with the file data...
+        // processFile(data, fileName);
     });
 
 
@@ -54,8 +55,8 @@ Upload upload = new Upload(inMemoryHandler);
 
 The [classname]`FileUploadHandler` stores  the upload as a file to the file system.
 
-The handler is given a `successhandler` of type `SerializableBiConsumer<UploadMetadata, File> successHandler` that is called for each successful upload and a [classname]`FileFactory`.
-The `successhandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and the actual [classname]`File` where the data was written.
+The handler is given a `successHandler` of type `SerializableBiConsumer<UploadMetadata, File> successHandler` that is called for each successful upload and a [classname]`FileFactory`.
+The `successHandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and the actual [classname]`File` where the data was written.
 
 The file used is defined with [classname]`FileFactory` that gets the filename for the upload and should return the [classname]`File` to store the data into.
 
@@ -73,8 +74,8 @@ Upload upload = new Upload(fileHandler);
 
 The [classname]`TemporaryFileUploadHandler` works the same as [classname]`FileUploadHandler`, except that instead of taking in a [classname]`FileFactory`, it stores the data into a temporary file in the system default temporary-file directory.
 
-The handler is given a `successhandler` of type `SerializableBiConsumer<UploadMetadata, File> successHandler` that is called for each successful upload and a [classname]`FileFactory`.
-The `successhandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and the actual [classname]`File` where the data was written.
+The handler is given a `successHandler` of type `SerializableBiConsumer<UploadMetadata, File> successHandler` that is called for each successful upload and a [classname]`FileFactory`.
+The `successHandler` callback contains [classname]`UploadMetadata` with information on the uploaded file and the actual [classname]`File` where the data was written.
 
 [source,java]
 ----
@@ -102,6 +103,8 @@ public class CustomUploadHandler implements UploadHandler {
             // Process the uploaded file
             // ...
         } catch (IOException e) {
+            // The thrown exception will be caught and will fire
+            // a responseHandled(false, response) method call.
             throw new UncheckedIOException(e);
         }
     }
@@ -121,6 +124,8 @@ UploadHandler uploadHandler = (event) -> {
         // Process the uploaded file
         // ...
     } catch (IOException e) {
+        // The thrown exception will be caught and will fire
+        // a responseHandled(false, response) method call.
         throw new UncheckedIOException(e);
     }
 };

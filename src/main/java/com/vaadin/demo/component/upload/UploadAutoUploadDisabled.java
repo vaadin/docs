@@ -5,14 +5,17 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.InMemoryUploadHandler;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-auto-upload-disabled")
 public class UploadAutoUploadDisabled extends Div {
 
     public UploadAutoUploadDisabled() {
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
+        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
+                (metadata, data) -> {});
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryHandler);
         upload.setAutoUpload(false);
 
         UploadExamplesI18N i18n = new UploadExamplesI18N();

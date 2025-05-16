@@ -7,19 +7,24 @@ import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.InMemoryUploadHandler;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-drag-and-drop")
 public class UploadDragAndDrop extends Div {
 
     public UploadDragAndDrop() {
-        MultiFileMemoryBuffer buffer1 = new MultiFileMemoryBuffer();
-        MultiFileMemoryBuffer buffer2 = new MultiFileMemoryBuffer();
+
+        InMemoryUploadHandler inMemoryHandler1 = UploadHandler.inMemory(
+                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler2 = UploadHandler.inMemory(
+                (metadata, data) -> {});
 
         // tag::snippet[]
-        Upload dropEnabledUpload = new Upload(buffer1);
+        Upload dropEnabledUpload = new Upload(inMemoryHandler1);
         dropEnabledUpload.setDropAllowed(true);
 
-        Upload dropDisabledUpload = new Upload(buffer2);
+        Upload dropDisabledUpload = new Upload(inMemoryHandler2);
         dropDisabledUpload.setDropAllowed(false);
         // end::snippet[]
 
