@@ -4,6 +4,12 @@ Official documentation and code examples for Vaadin.
 
 This repository does not generate the [vaadin.com/docs](https://vaadin.com/docs) website. It only contains the content for them. The builds are done using [Vaadin Design System Publisher](https://vaadin.com/design-system-publisher).
 
+If you have a Vaadin subscription that includes a license to use Design System Publisher, you can run the local development build with the following command:
+
+```sh
+npm run dspublisher:start
+```
+
 ## Contents
 
 Files not explicitly listed below are from the standard Vaadin project setup.

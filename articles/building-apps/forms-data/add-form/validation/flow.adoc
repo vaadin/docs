@@ -1,0 +1,260 @@
+---
+title: Flow
+page-title: How to validate a Flow form | Vaadin
+meta-description: Learn how to validate forms and handle validation errors in Vaadin Flow using validators and converters.
+order: 5
+---
+
+
+= Form Validation in Flow
+:toclevels: 2
+
+This guide introduces the essential concepts for validating forms in Flow, including how to add and trigger validators, use built-in and custom validators, and handle validation errors. For advanced validation techniques, see Flow's <<{articles}/flow/binding-data#,Forms & Data Binding>> reference guide.
+
+.Part of a Series
+[TIP]
+This is part 2 of the *Add a Form* series. It builds on the concepts introduced in the <<../fields-and-binding/flow#,Fields & Binding>> guide. You should also read the <<.#,Overview>>.
+
+== Required Fields
+
+To mark a field as required, use the [methodname]`asRequired()` method. This ensures that a user cannot leave the field empty when submitting the form.
+
+[source,java]
+----
+binder.forField(title)
+// tag::snippet[]
+      .asRequired() // <1>
+// end::snippet[]
+      .bind(Proposal::getTitle, Proposal::setTitle);
+binder.forField(proposalType)
+// tag::snippet[]
+      .asRequired("Please select a proposal type") // <2>
+// end::snippet[]
+      .bind(Proposal::getType, Proposal::setType);
+----
+<1> Marks the field as required but does not display an error message when left blank. The field is visually indicated as required.
+<2> Displays the specified error message when the user leaves the field blank.
+
+Using `asRequired()` has two effects:
+
+1. A visual required indicator appears on the field.
+2. The validation checks whether the field's value matches its `emptyValue` -- for example, an empty string for `TextField`, or `null` for components like `DatePicker` and `ComboBox`.
+
+
+== Binding-Level Validators
+
+`Binding`-level validators *check individual field values* against specific conditions before allowing them to be copied to the FDO (Form Data Object). To add a validator, use the `withValidator()` method:
+
+[source,java]
+----
+binder.forField(title)
+      .asRequired() // <1>
+// tag::snippet[]
+      .withValidator(new StringLengthValidator(
+          "Title must be between 1 and 100 characters", 1, 100)) // <2>
+// end::snippet[]
+       .bind(Proposal::getTitle, Proposal::setTitle);
+----
+<1> Ensures the field is not empty.
+<2> Enforces a character limit.
+
+While `asRequired()` prevents empty fields, other validators enforce constraints like value ranges, valid formats, or business-specific rules.
+
+
+=== Built-in Validators
+
+Vaadin provides a set of *built-in validators* for common validation scenarios:
+
+* *Numeric Range Validators* -- Ensure that a numeric value falls within a valid range.
+  - `BigDecimalRangeValidator`, `BigIntegerRangeValidator`, `ByteRangeValidator`, `DoubleRangeValidator`, `FloatRangeValidator`, `IntegerRangeValidator`, `LongRangeValidator`, `ShortRangeValidator`
+  
+* *Date Validators* -- Ensure that a date or time value falls within a valid range.
+  - `DateRangeValidator`, `DateTimeRangeValidator`
+
+* *Other Validators*
+  - `EmailValidator` -- Ensures the value is a valid email address.
+  - `RangeValidator` -- Works for any type using a `Comparator`.
+  - `RegexpValidator` -- Ensures the value matches a specified regular expression.
+  - `StringLengthValidator` -- Ensures a string is within a valid length range.
+
+Use these built-in validators when possible to avoid unnecessary custom implementations.
+
+.Jakarta Bean Validation
+[NOTE]
+If you are using Jakarta Bean Validation, Flow can delegate to it for validation. For details, see Flow's <<{articles}/flow/binding-data/components-binder-beans#using-jsr-303-bean-validation,Binding Beans to Forms>> reference guide.
+
+=== Custom Validators
+
+If the built-in validators do not meet your requirements, you can create a custom validator by implementing [interfacename]`Validator<T>`. The following example ensures an integer is positive:
+
+.PositiveIntegerValidator.java
+[source,java]
+----
+public class PositiveIntegerValidator implements Validator<Integer> {
+
+    @Override
+    public ValidationResult apply(Integer num, ValueContext context) { // <1>
+        return (num >= 0)
+            ? ValidationResult.ok()
+            : ValidationResult.error("number must be positive");
+    }
+}
+----
+<1> The `ValueContext` gives you access to information like the current locale, the field component, the `Binder`, etc.
+
+You can also implement a validator using a lambda expression instead of a separate class:
+
+[source,java]
+----
+binder.forField(myNumberField)
+      .withValidator(num -> num >= 0, "number must be positive")
+      .bind(myBean::getInteger, myBean::setInteger);
+----
+
+
+=== Converters
+
+If you're using value objects or domain primitives in your FDO, you can create a converter by implementing [interfacename]`Converter<T>`. The following example converts between an [clasname]`EmailAddress` and a [classname]`String`:
+
+.EmailAddressConverter.java
+[source,java]
+----
+public class EmailAddressConverter implements Converter<String, EmailAddress> {
+
+    @Override
+    public Result<EmailAddress> convertToModel(String value, ValueContext context) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Result.ok(new EmailAddress(value));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public String convertToPresentation(EmailAddress emailAddress, 
+                                        ValueContext context) {
+        return emailAddress == null ? null : emailAddress.toString();
+    }
+}
+----
+
+You'd use it with `Binder` like this:
+
+[source,java]
+----
+binder.forField(myEmailAddress)
+      .withConverter(new EmailAddressConverter())
+      .bind(myBean::getEmail, myBean::setEmail);
+----
+
+Converters implicitly perform validation. For instance, if the `EmailAddress` constructor throws an exception, `Binder` shows the error message as a validation message.
+
+You can add validators after the converter as well. For example, if you need to validate that an email address has not been used already, you could do something like this:
+
+[source,java]
+----
+binder.forField(myEmailAddress)
+      .withConverter(new EmailAddressConverter())
+      .withValidator(emailValidationService::notAlreadyInUse, 
+          "The email address is already in use")
+      .bind(myBean::getEmail, myBean::setEmail);
+----
+
+For more information about domain primitives, see the <<{articles}/building-apps/deep-dives/application-layer/domain-primitives#,Domain Primitives>> deep dive.
+
+// TODO Write about chained validators, i.e. two validators that depend on each other. When one changes, it should trigger the other and vice versa.
+
+
+== Default Validators
+
+Some fields include *default validators* that enforce constraints directly within the component. These validators improve UX by preventing invalid input before submission.
+
+For example, `DatePicker` has built-in min and max constraints. If a user selects a date outside the range, the field automatically becomes invalid.
+
+[source,java]
+----
+myDatePicker.setMin(LocalDate.now());
+----
+
+To disable all default validators in a `Binder`:
+
+[source,java]
+----
+binder.setDefaultValidatorsEnabled(false);
+----
+
+To disable validation for a specific field:
+
+[source,java]
+----
+binder.forField(myDatePicker)
+      .withDefaultValidator(false)
+      .bind(MyBean::getDate, MyBean::setDate);
+----
+
+
+== Binder-Level Validators
+
+Unlike `Binding`-level validators, which validate individual fields, `Binder`-level validators *validate the entire FDO* after all fields have been processed.
+
+The following example ensures that the start date is not after the end date:
+
+[source,java]
+----
+binder.withValidator((bean, valueContext) -> {
+    if (bean.getStartDate() != null && bean.getEndDate() != null 
+            && bean.getStartDate().isAfter(bean.getEndDate())) {
+        return ValidationResult.error("Start date cannot be after end date");
+    }
+    return ValidationResult.ok();
+});
+----
+
+
+== Triggering Validation
+
+Validation can be *triggered automatically* or *programmatically*.
+
+`Binding`-level validators are always triggered whenever a field value changes.
+
+`Binder`-level validators are triggered differently depending on whether the form is operating in *buffered mode* or *write-through mode*:
+
+* *Buffered mode*: Validators are only triggered when calling `writeBean()` or `writeRecord()`.
+* *Write-through mode*: Validators are triggered whenever a field value changes.
+
+[NOTE]
+When validating the FDO, `Binder` first writes the change to the FDO, then runs the validators. If any validator fails, `Binder` reverts the change. Any extra business logic in the setters of the FDO must consider this.
+
+You can also trigger validation without writing to the FDO:
+
+* `isValid()` -- Checks all validators but does not update the UI.
+* `validate()` -- Checks all validators and updates the UI if needed.
+
+
+[IMPORTANT]
+If you have `Binder`-level validators, these methods only work in *write-through mode*.
+
+
+== Handling Validation Errors
+
+By default, `Binding`-level validation errors are displayed next to the corresponding input fields.
+
+For `Binder`-level validation errors, which do not belong to a specific field, you can use a *status label* to display error messages:
+
+[source,java]
+----
+var beanValidationErrors = new Div();
+beanValidationErrors.addClassName(LumoUtility.TextColor.ERROR);
+
+binder.setStatusLabel(beanValidationErrors);
+----
+
+This ensures that validation messages are displayed appropriately, whenever they originate from `Binding`-level validation or `Binder`-level validation.
+
+
+//== Try It
+
+//- TODO Write a tutorial here
