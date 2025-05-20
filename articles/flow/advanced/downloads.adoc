@@ -12,10 +12,7 @@ order: 110
 The [classname]`DownloadHandler` API provides a flexible high-level abstraction to implement file and arbitrary contents downloads from server to browser in Vaadin applications.
 This API supports various download scenarios, from simple file downloads to complex streaming with progress tracking.
 
-Downloading is supported by multiple Vaadin Components where applicable.
-
-[NOTE]
-"Download" here doesn't refer to only downloading a file to the user's file system, but it also covers cases where an HTML element downloads a file into the browser's cache and renders it from there, e.g. `Image` component.
+[classname]`DownloadHandler` is supported by multiple Vaadin Components where applicable.
 
 This documentation covers the main features of the `DownloadHandler` API, including:
 
@@ -118,7 +115,15 @@ The fluent API provides the following methods:
 
 * `whenStart(Runnable)`: Called when the download starts
 * `onProgress(BiConsumer<Long, Long>)`: Called during the download with transferred and total bytes
+* `onProgress(BiConsumer<Long, Long>, Long)`: Called during the download with transferred and total bytes and with the given progress interval in bytes
 * `whenComplete(Consumer<Boolean>)`: Called when the download completes successfully or with a failure
+
+These methods have overloads that accept also the [classname]`TransferContext` object that gives more information and references:
+* [classname]`VaadinRequest`, [classname]`VaadinResponse`, [classname]`VaadinSession` instances
+* The owner component and element of the data transfer that you can change when transfer is in progress, e.g. disable the component, or get attributes or properties
+* [classname]`UI` instance that you can use to call `UI.access()` for asynchronous updates in threads
+* The name of the file being transferred, might be <code>null</code> if the file name is not known
+* The content length of the file being transferred, might be <code>-1</code> if the content length is not known
 
 === TransferProgressListener Interface
 
@@ -172,16 +177,17 @@ The `TransferProgressListener` interface provides the following methods:
 * `onComplete(TransferContext, long)`: Called when the download completes with the total transferred bytes
 * `progressReportInterval()`: Defines how often progress updates are sent (in bytes)
 
-The [classname]`TransferContext` provides information about the download, such as the file name, content length (if known), a reference to an owner component and Vaadin request, response and session.
+The [classname]`TransferContext` objects are the same as in the fluent API.
 
 [#custom]
 == Custom Download Handlers
 
 For more complex download scenarios, you can create custom download handlers by implementing the `DownloadHandler` interface or extending existing implementations.
 
-=== Implementing DownloadHandler Interface
+=== Implementing DownloadHandler Interface Using Lambda Expression
 
-You can implement the `DownloadHandler` interface to create a custom download handler or use a lambda.
+The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` and can be created using a lambda expression or by creating an implementation.
+Creating an implementation is needed only when overriding some of the default methods from the interface, e.g. [methodname]`getUrlPostfix`, [methodname]`isAllowInert` or [methodname]`getDisabledUpdateMode`:
 
 [source,java]
 ----
@@ -204,14 +210,18 @@ Here's an example of a custom download handler that adds a checksum header, upda
 
 [source,java]
 ----
+var filename = getFileName();
+var contentType = getContentType();
 LinkWithMD5Validation link = new LinkWithMD5Validation(event -> {
     try {
-        var data = loadFileFromS3(event.getFileName(), event.getContentType());
+        event.setFileName(filename);
+        event.setContentType(contentType);
+        var data = loadFileFromS3(filename, contentType);
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         byte[] digest = md5.digest(data);
         String base64Md5 = Base64.getEncoder().encodeToString(digest);
         event.getResponse().setHeader("Content-MD5", base64Md5);
-        event.getResponse().getOutputStream().write(data);
+        event.getOutputStream().write(data);
         event.getUI().access(() -> Notification.show(
                 "Download completed, number of downloads: " +
                     numberOfDownloads.incrementAndGet()));
@@ -246,12 +256,19 @@ This example shows how to:
 * Update the UI after the download completes
 * Store download statistics in the session
 
-Note that `UI.access` is needed for updating the UI and also session locking if you want to access session.
+The [classname]`DownloadEvent` gives the access to the following information and helper methods:
+* [classname]`VaadinRequest`, [classname]`VaadinResponse`, [classname]`VaadinSession` instances
+* The owner component and element of the download that you can change when download is in progress, e.g. disable the component, or get attributes or properties
+* [classname]`UI` instance that you can use to call `UI.access()` for asynchronous updates
+* The helper [methodname]`setFileName` method sets the file name for the download, empty name gives a default name and `null` value doesn't set anything
+* The helper [methodname]`setContentType` method sets the content type for the download
+* The helper [methodname]`setContentLength` method sets the content length for the download or does nothing if the `-1` value is given
 
-The [classname]`DownloadEvent` provides information about the download, such as the file name, content length (if known), a reference to an owner component and Vaadin request, response and session.
+[NOTE]
+`UI.access` is needed for updating the UI and also session locking if you want to access the session.
 
 [#low-level]
-== Low-Level API
+== Low-Level DownloadHandler API
 
 The `DownloadHandler` API provides several low-level features for advanced use cases.
 
@@ -260,7 +277,7 @@ The `DownloadHandler` API provides several low-level features for advanced use c
 The `inert` property controls whether the download should be handled when the owner component is in an inert state, e.g. when a modal dialog is opened while the owner component is on the underlined page.
 See the <<../advanced/server-side-modality.adoc#,Server-Side Modality>> for details.
 
-[classname]`DownloadHandler` allows to handle download request from inert component by overriding the `allowInert()` method.
+[classname]`DownloadHandler` allows to handle download request from inert component by overriding the [methodname]`isAllowInert()` method.
 
 === Disabled Update Mode
 
@@ -271,11 +288,11 @@ The available modes are:
 * `ONLY_WHEN_ENABLED`: Download handling is rejected when the owner component is disabled (default)
 * `ALWAYS`: Download handling is allowed even when the owner component is disabled
 
-[classname]`DownloadHandler` allows to override this mode by overriding the `getDisabledUpdateMode()` method.
+[classname]`DownloadHandler` allows to override this mode by overriding the [methodname]`getDisabledUpdateMode()` method.
 
 === URL Postfix
 
-The `getUrlPostfix()` method allows you to specify an optional URL postfix that appends application-controlled string, e.g. the logical name of the target file, to the end of the otherwise random-looking download URL.
+The [methodname]`getUrlPostfix()` method allows you to specify an optional URL postfix that appends application-controlled string, e.g. the logical name of the target file, to the end of the otherwise random-looking download URL.
 If defined, requests that would otherwise be servable are still rejected if the postfix is missing or invalid.
 
 This is useful for:
