@@ -1,29 +1,34 @@
 ---
-title: Flyway
+title: Add Flyway
 page-title: Database migration with Flyway in Vaadin applications
-description: How to manage your relational database schema with Flyway.
+description: Learn how to manage your relational database schema with Flyway.
 meta-description: Learn how you can manage your relational database schema and database migrations with Flyway in your Vaadin applications.
 order: 30
 ---
 
-= Flyway
+= Add Flyway
 
-Whenever you store data in a relational database, you have to manage the database schema in some way. When the application is first installed, you have to create the entire database schema. When new features are deployed, you have to update the database schema. You may need to add new tables to the database. You may need to add new columns to existing tables. You may need to move data from one table to another one, and delete the old one. 
+Whenever you store data in a relational database, you have to manage the database schema in some way. When the application is first installed, you have to create the entire database schema. When new features are deployed, you have to update the database schema. You might need to add new tables, introduce new columns, or move data between tables and remove the obsolete ones. 
 
-Some object-relational mapping tools, like Hibernate, can generate the initial schema for you. They may also be able to perform trivial updates to the schema, like creating new tables. In more complex cases, however, they are at a loss. Therefore, https://www.red-gate.com/products/flyway/community/[Flyway] is the recommended tool for managing database schemas in Vaadin applications.
+Some object-relational mapping tools, like Hibernate, can generate the initial schema for you. They may also be able to perform trivial updates to the schema, like creating new tables. In more complex cases, however, they are at a loss. For this reason, https://www.red-gate.com/products/flyway/community/[Flyway] is the recommended tool for managing database schemas in Vaadin applications.
 
-[NOTE]
-On this page, you'll learn enough about Flyway to get started using it in your Vaadin applications. Because Flyway has more features than presented here, you should also read the https://documentation.red-gate.com/flyway[Flyway Documentation].
+In this guide, you'll learn enough about Flyway to get started using it in your Vaadin applications. At the end, a mini-tutorial helps you apply these concepts in a real Vaadin application. Because Flyway has more features than presented here, you should also read the https://documentation.red-gate.com/flyway[Flyway Documentation].
+
 
 == Migrations
 
-Flyway is based on the concept of _migrations_. A migration is a script that performs some changes on your database. Every migration is versioned. As you implement new features, you add new migrations to the project. Flyway keeps track of which migrations have been applied to the database in a separate table. This table includes a checksum of every migration script.
+Flyway operates on the concept of _migrations_. A migration is a script that performs some changes on your database. Every migration is versioned. As you implement new features, you add new migrations to the project. Flyway keeps track of which migrations have been applied to the database in a separate table. This table includes a checksum of every migration script.
 
 When Flyway runs, either at application startup, or as a part of your deployment pipeline, it compares the contents of this table with the migrations in your project. It then executes all the migrations that were missing, from the oldest to the newest version. If the database is new, Flyway creates its metadata table and executes all the migrations. 
 
 Versioned migrations should not change after they have been applied. When Flyway runs, it recalculates the checksums of all the migrations in your project, and compares them with the checksums in the table. If there are any mismatches, it throws an exception and aborts.
 
 In addition to versioned migrations, Flyway also supports repeatable migrations. These migrations can change after they have been applied, and are automatically re-applied after every change. Repeatable migrations are always applied after the versioned migrations.
+
+.Why you shouldn't mix `data.sql` with Flyway
+[IMPORTANT]
+Spring Boot's `data.sql` runs after Hibernate initializes the schema. When using Flyway, schema initialization is handled by Flyway itself, and using `data.sql` in parallel may lead to inconsistent state or runtime errors. Convert `data.sql` contents into migration scripts instead.
+
 
 == Writing Migrations
 
@@ -35,6 +40,7 @@ You should store your SQL scripts in the `src/main/resources/db/migration` direc
 
 For information about writing migrations in other languages than SQL, see the https://documentation.red-gate.com/flyway[Flyway Documentation].
 
+
 == Migrating on Application Startup
 
 Spring Boot has built-in support for Flyway. If the `org.flywaydb:flyway-core` module is on the classpath, Flyway is automatically executed on application startup. 
@@ -44,7 +50,7 @@ Flyway has built-in support for clustered environments. If you launch multiple i
 Unless you are using an in-memory database like H2, you have to add a database specific module to the classpath, in addition to the database's own JDBC driver. For example, use `org.flywaydb:flyway-database-postgresql` with PostgreSQL and `org.flywaydb:flyway-mysql` with MySQL.
 
 [NOTE]
-See the https://documentation.red-gate.com/flyway/flyway-cli-and-api/supported-databases[Flyway Documentation] for a complete list of supported databases.
+See the https://documentation.red-gate.com/flyway/getting-started-with-flyway/system-requirements/supported-databases-and-versions[Flyway Documentation] for a complete list of supported databases.
 
 Spring Boot declares the modules in its parent POM, so you don't have to look up their versions. To use them, add them to your project POM-file, like this:
 
@@ -75,9 +81,14 @@ By default, Flyway uses your application's primary data source to apply the migr
 
 From a security point of view, it is better to have one database user for DDL, and another for Data Modification Language (DML) statements. The DDL user is used by Flyway to migrate the database schema. The DML user is used by the application to query and modify data without touching the schema itself.
 
-To make Flyway use its own data source, set the `spring.flyway.[url,user,password]` configuration properties. If you leave out `spring.flyway.url`, Flyway uses the same URL as the application's primary data source.
+To configure Flyway to use a separate data source from your main application, set the `spring.flyway.url`, `spring.flyway.user`, and `spring.flyway.password` properties in your configuration. If you leave out `spring.flyway.url`, Flyway uses the same URL as the application's primary data source.
 
 For more information, see the https://docs.spring.io/spring-boot/how-to/data-initialization.html#howto.data-initialization.migration-tool.flyway[Spring Boot Documentation].
+
+.Don't defer data source initialization
+[CAUTION]
+When you are using Flyway, you have to make sure the `spring.jpa.defer-datasource-initialization` configuration property is `false`. Otherwise, *your application fails to start*. The purpose of having this flag set to `true` is to allow JPA to create the schema before populating the database with data from `data.sql`. However, now Flyway is taking care of both of these tasks.
+
 
 == Migrating with Maven
 
@@ -109,7 +120,7 @@ To run Flyway with Maven, you should still keep the migration scripts in the sam
 </build>
 ----
 
-Note, that when you are adding dependencies to a Maven plugin, you have to specify their versions even if they have been declared in a parent POM. Spring Boot declares the versions of all its dependencies as properties, so you don't have to look them up yourself.
+Note: When adding dependencies inside a Maven plugin declaration, you must explicitly specify their versions-—even if those versions are declared in a parent POM. You can reference Spring Boot's property values like `${flyway.version}` to avoid hardcoding them.
 
 Now, whenever you want to run Flyway, execute the following command:
 
@@ -118,4 +129,92 @@ Now, whenever you want to run Flyway, execute the following command:
 $ mvn -Dflyway.user=YOUR_DDL_USER -Dflyway.password=YOUR_DDL_USER_PASSWORD -Dflyway.url=YOUR_DB_URL flyway:migrate 
 ----
 
-For more information about what you can do with the Flyway Maven plugin and how to configure it, see the https://documentation.red-gate.com/flyway/flyway-cli-and-api/usage/maven-goal[Flyway Documentation].
+For more information about what you can do with the Flyway Maven plugin and how to configure it, see the https://documentation.red-gate.com/flyway/reference/usage/maven-goal[Flyway Documentation].
+
+
+[.collapsible-list]
+== Try It
+
+In this tutorial, you'll add Flyway to a real Vaadin application.
+
+.Set Up the Project
+[%collapsible]
+====
+First, generate a <<{articles}/getting-started/start#,walking skeleton>> with either a Flow or a Hilla UI, and <<{articles}/getting-started/import#,open>> it in your IDE.
+====
+
+.Add Maven Dependency
+[%collapsible]
+====
+Open `pom.xml` and add the following dependency:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+</dependency>
+----
+
+====
+
+.Write Migration Script
+[%collapsible]
+====
+Create a new directory `src/main/resources/db/migration`. In this directory, create a file `V1__task_management.sql`:
+
+.V1__task_management.sql
+[source,sql]
+----
+create table task
+(
+    task_id       bigint generated always as identity not null,
+    description   varchar(255)                        not null,
+    creation_date timestamp with time zone            not null,
+    due_date      date,
+    primary key (task_id)
+);
+----
+
+Open `[application package].taskmanagement.domain.Task` and compare the `@Entity` and `@Column` annotations with the SQL script. The names, size, and nullability should match.
+
+====
+
+.Disable deferred data source initialization
+[%collapsible]
+====
+Open `src/main/resources/application.properties` and remove the line that sets `spring.jpa.defer-datasource-initialization` to `true`. This reverts the property to its default value, which is `false`.
+====
+
+
+.Run the Integration Test
+[%collapsible]
+====
+Run the `TaskServiceIT` integration test in your IDE. The test should pass, and in the log, you should see messages like the following:
+
+[source]
+----
+Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+Successfully validated 1 migration
+Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+Current version of schema "PUBLIC": << Empty Schema >>
+Migrating schema "PUBLIC" to version "1 - task management"
+Successfully applied 1 migration to schema "PUBLIC", now at version v1
+----
+
+====
+
+.Run the Application
+[%collapsible]
+====
+Now <<{articles}/getting-started/run#,run>> the application. You should see similar messages in the startup log. Open the application in your browser and create some tasks. Everything should work normally.
+====
+
+.Final Thoughts
+[%collapsible]
+====
+You've now implemented Flyway for schema management in a Vaadin application and replaced Hibernate's DDL auto-generation with a structured, version-controlled approach.
+
+Next, you should consider replacing H2 with a better database, such as PostgreSQL. For details, see the <<replace-h2#,Replace H2>> guide.
+====
