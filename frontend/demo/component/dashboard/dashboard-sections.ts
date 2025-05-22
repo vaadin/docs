@@ -38,7 +38,7 @@ export class Example extends LitElement {
         <vaadin-dashboard-section section-title="Visitor Details">
           <vaadin-dashboard-widget
             widget-title="Visitors by country"
-            style="--vaadin-dashboard-item-rowspan: 2;"
+            style="--vaadin-dashboard-widget-rowspan: 2;"
           >
             <div class="dashboard-widget-content"></div>
           </vaadin-dashboard-widget>
@@ -50,7 +50,7 @@ export class Example extends LitElement {
           </vaadin-dashboard-widget>
           <vaadin-dashboard-widget
             widget-title="Visitors by browser"
-            style="--vaadin-dashboard-item-colspan: 2;"
+            style="--vaadin-dashboard-widget-colspan: 2;"
           >
             <div class="dashboard-widget-content"></div>
           </vaadin-dashboard-widget>

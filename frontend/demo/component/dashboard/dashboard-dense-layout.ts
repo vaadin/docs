@@ -33,13 +33,13 @@ export class Example extends LitElement {
       >
         <vaadin-dashboard-widget
           widget-title="Wide widget 1"
-          style="--vaadin-dashboard-item-colspan: 2"
+          style="--vaadin-dashboard-widget-colspan: 2"
         >
           <div class="dashboard-widget-content small"></div>
         </vaadin-dashboard-widget>
         <vaadin-dashboard-widget
           widget-title="Wide widget 2"
-          style="--vaadin-dashboard-item-colspan: 2"
+          style="--vaadin-dashboard-widget-colspan: 2"
         >
           <div class="dashboard-widget-content small"></div>
         </vaadin-dashboard-widget>
