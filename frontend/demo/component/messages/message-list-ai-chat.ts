@@ -26,36 +26,32 @@ export class Example extends LitElement {
   }
 
   @state()
-  private chatDisabled = true;
+  private messageListItems: MessageListItem[] = [];
 
   @state()
-  private messageListItems: MessageListItem[] = [];
+  private announcement: string = '';
 
   private chatId = '1234'; // Placeholder chat identifier
 
   protected override async firstUpdated() {
     const messages = await LLMChatService.getHistory(this.chatId);
     this.messageListItems = messages.map((message) => createItem(message.text, message.assistant));
-    this.chatDisabled = false;
   }
 
   protected override render() {
     return html`
+      <!-- Live region for screen reader announcements -->
+      <div aria-live="polite" class="sr-only">${this.announcement}</div>
+
       <!-- tag::snippet[] -->
       <vaadin-message-list .items="${this.messageListItems}" markdown></vaadin-message-list>
       <!-- end::snippet[] -->
-      <vaadin-message-input
-        ?disabled="${this.chatDisabled}"
-        @submit="${this.handleChatSubmit}"
-      ></vaadin-message-input>
+      <vaadin-message-input @submit="${this.handleChatSubmit}"></vaadin-message-input>
     `;
   }
 
   private handleChatSubmit(e: MessageInputSubmitEvent) {
     const userInput = e.detail.value;
-
-    // Disable the input field while waiting for the Assistant response
-    this.chatDisabled = true;
 
     // Add the user message to the list
     this.messageListItems = [...this.messageListItems, createItem(userInput)];
@@ -63,6 +59,9 @@ export class Example extends LitElement {
     // Add the Assistant message to the list
     const newAssistantItem = createItem('', true);
     this.messageListItems = [...this.messageListItems, newAssistantItem];
+
+    // Announce that AI is processing
+    this.announcement = 'AI is processing the prompt';
 
     LLMChatService.stream(this.chatId, userInput)
       .onNext((token) => {
@@ -72,8 +71,8 @@ export class Example extends LitElement {
         this.messageListItems = [...this.messageListItems];
       })
       .onComplete(() => {
-        // Re-enable the input field when streaming is complete
-        this.chatDisabled = false;
+        // Announce that a new message is available
+        this.announcement = 'New message available';
       });
   }
 }
