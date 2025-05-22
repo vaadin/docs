@@ -9,6 +9,7 @@ import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("message-list-ai-chat")
 public class MessageListAiChat extends Div {
@@ -29,6 +30,12 @@ public class MessageListAiChat extends Div {
         // end::snippet[]
         MessageInput input = new MessageInput();
 
+        // Live region for screen reader announcements
+        Div liveRegion = new Div();
+        liveRegion.getElement().setAttribute("aria-live", "polite");
+        liveRegion.addClassName(LumoUtility.Accessibility.SCREEN_READER_ONLY);
+        add(liveRegion);
+
         List<Message> history = LLMClient.getHistory(chatId);
 
         list.setItems(history.stream()
@@ -40,16 +47,17 @@ public class MessageListAiChat extends Div {
             getUI().get().setPollInterval(300);
             String userInput = e.getValue();
 
-            // Disable the input field while waiting for the Assistant response
-            input.setEnabled(false);
-
             // Add the user message to the list
             list.addItem(createItem(userInput, false));
 
             // Add the Assistant message to the list
             MessageListItem newAssistantMessage = createItem("", true);
             list.addItem(newAssistantMessage);
+            
+            // Announce that AI is processing
+            liveRegion.setText("AI is processing the prompt");
 
+            int messageListItemCount = list.getItems().size();
             LLMClient.stream(chatId, userInput).subscribe(token -> {
                 getUI().get().access(() -> {
                     // Update the Assistant message with the response
@@ -62,9 +70,14 @@ public class MessageListAiChat extends Div {
                 // Handle error
             }, () -> {
                 getUI().get().access(() -> {
+                    if (messageListItemCount != list.getItems().size()) {
+                        // Another message is still being processed
+                        return;
+                    }
+
                     getUI().get().setPollInterval(-1);
-                    // Re-enable the input field when streaming is complete
-                    input.setEnabled(true);
+                    // Announce that a new message is available
+                    liveRegion.setText("New message available");
                 });
 
             });
