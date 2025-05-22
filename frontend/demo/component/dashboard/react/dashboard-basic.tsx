@@ -22,7 +22,7 @@ function Example() {
       </DashboardWidget>
       <DashboardWidget
         widgetTitle="Visitors by country"
-        style={{ '--vaadin-dashboard-item-rowspan': '2' }}
+        style={{ '--vaadin-dashboard-widget-rowspan': '2' }}
       >
         <div className="dashboard-widget-content" />
       </DashboardWidget>
@@ -34,7 +34,7 @@ function Example() {
       </DashboardWidget>
       <DashboardWidget
         widgetTitle="Visitors by browser"
-        style={{ '--vaadin-dashboard-item-colspan': '2' }}
+        style={{ '--vaadin-dashboard-widget-colspan': '2' }}
       >
         <div className="dashboard-widget-content" />
       </DashboardWidget>
