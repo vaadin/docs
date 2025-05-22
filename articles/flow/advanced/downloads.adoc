@@ -59,46 +59,7 @@ This is the most flexible helper method as it can be used with any data source t
 
 [source,java]
 ----
-Anchor downloadAttachment = new Anchor(DownloadHandler.fromInputStream((event) -> {
-    try {
-        Attachment attachment = attachmentsRepository.findById(attachmentId);
-        return new DownloadResponse(attachment.getData().getBinaryStream(),
-                attachment.getName(), attachment.getMime(), attachment.getSize());
-    } catch (Exception e) {
-        return DownloadResponse.error(500);
-    }
-}, "attachment.txt"), "Download attachment");
-
-@Entity
-@Table(name = "attachment")
-public class Attachment {
-    @Lob
-    @Column(name = "data", nullable = false)
-    private Blob data;
-
-    @Column(name = "size", nullable = false)
-    private Integer size;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "mime", nullable = false)
-    private String mime;
-
-    public Blob getData() { return data; }
-    public Integer getSize() { return size; }
-    public String getName() { return name; }
-    public String getMime() { return mime; }
-
-    // other class fields and methods are omitted
-}
-
-public interface AttachmentRepository extends
-    JpaRepository<Attachment, Long>, JpaSpecificationExecutor<Attachment> {
-    Attachment findById(long id);
-
-    // other class fields and methods are omitted
-}
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/download/InputStreamDownloadView.java[render,tags=snippet,indent=0]
 ----
 
 This method is particularly useful for:
@@ -114,7 +75,15 @@ For more complex download scenarios, you can create custom download handlers by 
 
 === Implementing DownloadHandler Interface Using Lambda Expression
 
-The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` and can be created using a lambda expression or by creating an implementation.
+The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` and can be created using a lambda expression or by creating an implementation:
+
+[source,java]
+----
+Anchor downloadLink = new Anchor(event -> {
+    // Custom download handling logic
+}, "Download me!");
+----
+
 Creating an implementation is needed only when overriding some of the default methods from the interface, e.g. [methodname]`getUrlPostfix`, [methodname]`isAllowInert` or [methodname]`getDisabledUpdateMode`:
 
 [source,java]
@@ -135,21 +104,19 @@ Anchor downloadLink = new Anchor(new DownloadHandler() {
 === Custom Download Handler Examples
 
 Here's an example of how a custom download handler can be written with lambda.
-It adds a checksum header, updates the UI and tracks the number of downloads per session:
+It adds a header to the response, write data to `OutputStream`, updates the UI, and tracks the number of downloads per session:
 
 [source,java]
 ----
-var filename = getFileName();
-var contentType = getContentType();
-LinkWithMD5Validation link = new LinkWithMD5Validation(event -> {
+String filename = getFileName();
+String contentType = getContentType();
+AtomicInteger numberOfDownloads = new AtomicInteger(0);
+Anchor link = new Anchor(event -> {
     try {
         event.setFileName(filename);
         event.setContentType(contentType);
-        var data = loadFileFromS3(filename, contentType);
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-        byte[] digest = md5.digest(data);
-        String base64Md5 = Base64.getEncoder().encodeToString(digest);
-        event.getResponse().setHeader("Content-MD5", base64Md5);
+        byte[] data = loadFileFromS3(filename, contentType);
+        event.getResponse().setHeader("Cache-Control", "public, max-age=3600");
         event.getOutputStream().write(data);
         event.getUI().access(() -> Notification.show(
                 "Download completed, number of downloads: " +
@@ -171,16 +138,12 @@ private byte[] loadFileFromS3(String fileName, String contentType) {
     // load from file storage by file name and content type
     return bytes;
 }
-
-private static class LinkWithMD5Validation extends Anchor {
-     // JS customizations in <a> for checksum checking on the client-side
-}
 ----
 
 This example shows how to:
 
 * Set file meta-data with helpers in [classname]`DownloadEvent`
-* Set the MD5 checksum header to the response
+* Set a header to the response
 * Write data directly to the response output stream
 * Update the UI after the download completes
 * Store download statistics in the session
@@ -217,7 +180,7 @@ Button button = new Button("Generate Image", click -> image.setData(
 
 The `HtmlObject` component is used to render the SVG image in the browser that is generated dynamically based on the input from the `TextField`.
 On a button click the [classname]`DownloadHandler` is created with the [methodname]`fromInputStream` method that is set to `HtmlObject` component and that sends content to a client.
-And here is an example of how to generate an svg image and create an input stream:
+And here is an example of how to generate a svg image and create an input stream:
 
 [source,java]
 ----
@@ -235,6 +198,49 @@ private InputStream getImageInputStream(TextField name) {
     return new ByteArrayInputStream(svg.getBytes(StandardCharsets.UTF_8));
 }
 ----
+
+When [classname]`DownloadHandler` is used with `Anchor` component, the data is downloaded as a file.
+This can be changed to render the data in the browser by using [methodname]`inline()` method:
+
+[source,java]
+----
+Anchor downloadLink = new Anchor(DownloadHandler.fromFile(
+        new File("/path/to/document.pdf"), "report.pdf").inline(), "Download Report");
+----
+
+The second parameter of the `fromFile` method is the file name that will be used for download.
+This name is also used as a URL postfix.
+
+Finally, the [classname]`DownloadHandler` can be created from an abstract base class [classname]`AbstractDownloadHandler`:
+
+[source,java]
+----
+public class MyDownloadHandler extends AbstractDownloadHandler<MyDownloadHandler> {
+    @Override
+    public void handleDownloadRequest(DownloadEvent downloadEvent) {
+        byte[] data;
+        // load data from backend...
+        try (OutputStream outputStream = downloadEvent.getOutputStream();
+             ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
+            TransferUtil.transfer(inputStream, outputStream,
+                    getTransferContext(downloadEvent), getListeners());
+        } catch (IOException ioe) {
+            downloadEvent.getResponse().setStatus(
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getCode());
+            notifyError(downloadEvent, ioe);
+        }
+    }
+}
+----
+
+This example shows how to:
+
+* Extend the [classname]`AbstractDownloadHandler` class
+* Override the [methodname]`handleDownloadRequest` method to implement custom download handling logic
+* Use the [classname]`TransferUtil` class to transfer data from an `InputStream` to an `OutputStream`.
+This helper method also fires progress events to the listeners so no need to implement this logic manually, see also <<#progress,Download progress tracking>>
+* Notify progress listeners about errors by calling the [methodname]`notifyError` method
+
 
 [#progress]
 == Download Progress Listeners
@@ -369,11 +375,18 @@ The available modes are:
 
 The [methodname]`getUrlPostfix()` method allows you to specify an optional URL postfix that appends application-controlled string, e.g. the logical name of the target file, to the end of the otherwise random-looking download URL.
 If defined, requests that would otherwise be servable are still rejected if the postfix is missing or invalid.
+[classname]`DownloadHandler` factory methods have overloads that accept the postfix as a parameter.
 
 This is useful for:
 
 * Providing a meaningful filename into the download handler callback
 * Making the download request URL look more user-friendly as otherwise it is a random-looking URL
+
+The request URL looks like when the postfix is set:
+`/VAADIN/dynamic/resource/0/5298ee8b-9686-4a5a-ae1d-b38c62767d6a/meeting-notes.txt`.
+
+By default, the postfix is not set and the request URL looks like:
+`/VAADIN/dynamic/resource/0/5298ee8b-9686-4a5a-ae1d-b38c62767d6a`.
 
 [source,java]
 ----
