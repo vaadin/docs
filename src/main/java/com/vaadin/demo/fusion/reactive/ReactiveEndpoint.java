@@ -3,7 +3,7 @@ package com.vaadin.demo.fusion.reactive;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.Endpoint;
 import com.vaadin.hilla.EndpointSubscription;
-import com.vaadin.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -19,13 +19,13 @@ public class ReactiveEndpoint {
 
     // tag::snippet[]
     @AnonymousAllowed
-    public Flux<@Nonnull String> getClock() {
+    public Flux<@NonNull String> getClock() {
         return Flux.interval(Duration.ofSeconds(1)).onBackpressureDrop()
                 .map(_interval -> new Date().toString());
     }
 
     @AnonymousAllowed
-    public EndpointSubscription<@Nonnull String> getClockCancellable() {
+    public EndpointSubscription<@NonNull String> getClockCancellable() {
         return EndpointSubscription.of(getClock(), () -> {
             LOGGER.info("Subscription has been cancelled");
         });

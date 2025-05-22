@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.dashboard;
 
-import com.vaadin.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 // tag::snippet[]
 // In order to save and load the dashboard configuration we need a class for storing
@@ -40,7 +40,7 @@ public class WidgetConfig {
         this.rowspan = rowspan;
     }
 
-    @Nonnull
+    @NonNull
     public WidgetType getType() {
         return type;
     }
@@ -49,7 +49,7 @@ public class WidgetConfig {
         this.type = type;
     }
 
-    @Nonnull
+    @NonNull
     public int getColspan() {
         return colspan;
     }
@@ -58,7 +58,7 @@ public class WidgetConfig {
         this.colspan = colspan;
     }
 
-    @Nonnull
+    @NonNull
     public int getRowspan() {
         return rowspan;
     }

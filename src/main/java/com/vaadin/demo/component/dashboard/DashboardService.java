@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.dashboard;
 
 import com.vaadin.hilla.BrowserCallable;
-import com.vaadin.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -18,11 +18,11 @@ public class DashboardService {
         this.dashboardStorage = dashboardStorage;
     }
 
-    public void saveDashboard(@Nonnull List<@Nonnull WidgetConfig> config) {
+    public void saveDashboard(@NonNull List<@NonNull WidgetConfig> config) {
         dashboardStorage.save(config);
     }
 
-    public List<@Nonnull WidgetConfig> loadDashboard() {
+    public List<@NonNull WidgetConfig> loadDashboard() {
         return dashboardStorage.load();
     }
 }
