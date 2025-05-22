@@ -13,14 +13,21 @@ public class MasterDetailLayoutBasic extends Div {
     public MasterDetailLayoutBasic() {
         // tag::snippet[]
         MasterDetailLayout layout = new MasterDetailLayout();
-        layout.setMasterMinSize("600px");
-        layout.setDetailSize("300px");
+        /* Sets the minimum size of the flexible master area to 450px,
+           below which the detail area will be rendered as an overlay:*/
+        layout.setMasterMinSize("450px");
+        /* Sets the detail area size to a static size: */
+        layout.setDetailSize("250px");
+        // end::snippet[]
 
         PersonList personList = new PersonList(DataService.getPeople());
         layout.setMaster(personList);
 
         PersonDetail personDetail = new PersonDetail();
 
+        // tag::snippet[]
+        /* The detail area is revealed when it's populated with a component,
+         * and hidden when the component is removed: */
         personList.getGrid().asSingleSelect().addValueChangeListener(event -> {
             Person selectedPerson = event.getValue();
             if (selectedPerson != null) {
