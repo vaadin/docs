@@ -4,7 +4,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const flowDefaults = require('./webpack.generated.js');
 
 const fileNameOfTheFlowGeneratedMainEntryPoint = require('path').resolve(
