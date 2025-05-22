@@ -22,7 +22,7 @@ The following built-in implementations of [classname]`UploadHandler` are availab
 
 - [classname]`InMemoryUploadHandler`, stores uploaded files in memory
 - [classname]`FileUploadHandler`, stores uploaded files to the file system
-- [classname]`TemporaryFileUploadHandler`, stores uploaded files to temporary files
+- [classname]`TemporaryFileUploadHandler`, stores uploaded files to temporary filestly even when
 
 These are described in the sub-sections that follow.
 All of the build-in implementations extend [classname]`TransferProgressAwareHandler` and support <<add-progress-listener, adding progress listeners>>.
@@ -97,9 +97,9 @@ Upload upload = new Upload(temporaryFileHandler);
 === Custom UploadHandler Implementations
 
 For more advanced use cases, you can provide custom implementations for [classname]`UploadHandler`.
-You might do this, for example, to save files into a specific directory, or to upload them to cloud storage.
+You might do this, for example, to upload files to cloud storage or to load data into memory first, validate and save to file.
 
-[classname]`UploadHandler` is a [annotationname]`FuncionalInterface` so it can be implemented or just be a lambda expression.
+[classname]`UploadHandler` is a [annotationname]`FunctionalInterface` so it can be implemented or just be a lambda expression.
 
 [source,java]
 ----
@@ -140,6 +140,64 @@ UploadHandler uploadHandler = (event) -> {
 
 == Upload Progress Tracking
 
+The built-in implementations support [classname]`TransferProgressListeners` which can be added through the fluent API directly to the handler for specific events
+
+[[add-progress-listener]]
+[source,java]
+----
+UploadHandler.toTempFile(
+        (metadata, file) -> System.out.printf("File saved to: %s%n",
+            file.getAbsolutePath()))
+    .whenStart(() -> System.out.println("Upload started"))
+    .onProgress((transferredBytes, totalBytes) -> {
+        double percentage = (double) transferredBytes / totalBytes * 100;
+        System.out.printf("Upload progress: %.2f%%\n", percentage);
+    }).whenComplete((success) -> {
+        if (success) {
+            System.out.println("Upload completed successfully");
+        } else {
+            System.out.println("Upload failed");
+        }
+    });
+----
+
+or giving a TransferProgressListener through the factory methods as a parameter.
+
+[source,java]
+----
+TransferProgressListener progressListener = new TransferProgressListener() {
+        @Override
+        public void onStart(TransferContext context) {
+            Assert.assertEquals(165000, context.contentLength());
+            Assert.assertEquals("download", context.fileName());
+            invocations.add("onStart");
+        }
+
+        @Override
+        public void onProgress(TransferContext context,
+                long transferredBytes, long totalBytes) {
+            double percentage = (double) transferredBytes / totalBytes * 100;
+            System.out.printf("Upload progress: %.2f%%\n", percentage);
+        }
+
+        @Override
+        public void onComplete(TransferContext context,
+               long transferredBytes) {
+            System.out.println("Upload completed successfully");
+        }
+
+        @Override
+        public void onError(TransferContext context,
+                IOException reason) {
+            System.out.println("Upload failed");
+        }
+    };
+
+UploadHandler.toTempFile(
+        (metadata, file) -> System.out.printf("File saved to: %s%n",
+            file.getAbsolutePath()), progressListener);
+----
+
 To add progress tracking to a custom upload handler, you can extend [classname]`TransferProgressAwareHandler`:
 
 [source,java]
@@ -151,9 +209,9 @@ public class CustomUploadHandler
     public void handleUploadRequest(UploadEvent event) {
         try (InputStream inputStream = event.getInputStream();
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();) {
-            // Use the TransferProgressListener.transfer method to copy the data
+            // Use the TransferUtil.transfer method to copy the data
             // to notify progress listeners
-            TransferProgressListener.transfer(
+            TransferUtil.transfer(
                     inputStream,
                     outputStream,
                     getTransferContext(event),
@@ -181,7 +239,6 @@ public class CustomUploadHandler
 ----
 With this you can add the fluent methods to add handling for specific progress events.
 
-[[add-progress-listener]]
 [source,java]
 ----
 CustomUploadHandler uploadHandler = new CustomUploadHandler()
