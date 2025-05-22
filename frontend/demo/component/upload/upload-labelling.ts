@@ -2,9 +2,9 @@ import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
 import '@vaadin/upload';
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
-import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
+import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-labelling')
@@ -16,23 +16,21 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-upload')
-  private upload!: Upload;
-
   // tag::snippet[]
-  protected override firstUpdated() {
-    this.upload.i18n.addFiles.one = 'Upload PDF...';
-    this.upload.i18n.dropFiles.one = 'Drop PDF here';
-    this.upload.i18n.error.incorrectFileType =
-      'The provided file does not have the correct format (PDF document).';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    addFiles: { one: 'Upload Report...' },
+    dropFiles: { one: 'Drop report here' },
+    error: {
+      incorrectFileType: 'The provided file does not have the correct format (PDF document).',
+    },
+  };
 
   protected override render() {
     return html`
       <vaadin-upload
         max-files="1"
         accept="application/pdf,.pdf"
+        .i18n="${this.uploadI18n}"
         @file-reject="${this.fileRejectHandler}"
       ></vaadin-upload>
     `;
