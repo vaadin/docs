@@ -23,6 +23,9 @@ const themePlugin = vaadin.plugins?.find((plugin: any) => plugin.name === 'vaadi
 
 const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
 
+// Use newer target to support top-level await in Hilla dependencies
+const target = ['safari15', 'es2022'];
+
 const config: UserConfig = {
   resolve: {
     alias: {
@@ -40,6 +43,14 @@ const config: UserConfig = {
       '/vaadin': {
         target: 'http://localhost:8080',
       },
+    },
+  },
+  build: {
+    target,
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target,
     },
   },
   plugins: [
