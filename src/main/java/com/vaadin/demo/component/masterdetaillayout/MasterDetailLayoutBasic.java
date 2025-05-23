@@ -15,7 +15,6 @@ public class MasterDetailLayoutBasic extends Div {
         MasterDetailLayout layout = new MasterDetailLayout();
         layout.setMasterMinSize("600px");
         layout.setDetailSize("300px");
-        layout.setStackThreshold("600px");
 
         PersonList personList = new PersonList(DataService.getPeople());
         layout.setMaster(personList);
