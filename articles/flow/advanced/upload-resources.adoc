@@ -28,7 +28,95 @@ StreamRegistration streamRegistration = VaadinSession.getCurrent()
         .getResourceRegistry()
         .registerResource(uploadHandler, getElement());
 
-getElement().setAttribute("target", streamRegistration);
+getElement().setAttribute("target", streamRegistration.getResource());
 ----
+
+The element can be a form on the client that sends file data using form submission:
+
+[source,html]
+----
+<iframe name="dummyFrame" id="dummyFrame" display="none"/>
+<form method="post" enctype="multipart/form-data" action="Element.getAttribute('target')" target="dummyFrame">
+  <input type="file" name="file"/>
+  <input type="submit"/>
+</form>
+----
+
+The dummyFrame iframe is to keep the post from navigating to the action url on submit.
+For multiple files add the attribute `multiple` to the file type input e.g. `<input type="file" name="file" multiple/>`.
+
+Using the element API this could be done as:
+
+[source,java]
+----
+InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+    (uploadMetadata, bytes) -> {
+        // handle Uploaded data here
+    });
+StreamRegistration streamRegistration = VaadinSession.getCurrent()
+    .getResourceRegistry().registerResource(inMemoryUploadHandler);
+
+// Generate dummy iframe for navigation on submit action
+IFrame dummy = new IFrame();
+dummy.setName("dummy");
+dummy.setId("dummy");
+dummy.getStyle().set("display", "none");
+
+// Setup the form using the element api
+Element formElement = new Element("form").setAttribute("method", "post")
+    .setAttribute("enctype", "multipart/form-data")
+    .setAttribute("action", streamRegistration.getResource())
+    .setAttribute("target", "dummy");
+Element files = new Element("input").setAttribute("type", "file")
+    .setAttribute("name", "file");
+Element submit = new Element("input").setAttribute("type", "submit");
+formElement.appendChild(files).appendChild(submit);
+
+add(dummy);
+getElement().appendChild(formElement);
+----
+
+Another possibility is to do a `fetch` action from javascript to send the data to the server.
+This could be done as:
+
+[source,java]
+----
+Span container = new Span();
+Input input = new Input();
+input.setType("file");
+
+NativeButton uploadButton = new NativeButton("Upload",
+    (event) -> event.getSource().getElement().executeJs("""
+        const file = $0.files[0];
+        if (!file) {
+          alert("No file selected");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        fetch(this.getAttribute("endpoint"), {
+          method: "POST",
+          body: formData
+        }).then(response => {
+          if (response.ok) {
+            alert("Upload successful");
+          } else {
+            alert("Upload failed");
+          }
+        });
+        """, input.getElement()));
+
+InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+    (uploadMetadata, bytes) -> {
+        // handle Uploaded data here
+    });
+StreamRegistration streamRegistration = VaadinSession.getCurrent().getResourceRegistry()
+    .registerResource(inMemoryUploadHandler,uploadButton.getElement());
+uploadButton.getElement()
+    .setAttribute("endpoint", streamRegistration.getResource());
+
+container.add(input, uploadButton);
+----
+
 
 [discussion-id]`4482D0BF-E742-4FEA-A888-854B758FE576`
