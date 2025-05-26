@@ -8,12 +8,13 @@ meta-description: Create, schedule, or delete database backups in Control Center
 = Backups
 
 Control Center manages databases using https://cloudnative-pg.io[CloudNativePG], an open-source Kubernetes operator to manage PostgreSQL workloads on any supported Kubernetes cluster.
-PostgreSQL natively provides backup and recovery capabilities based on file system level (physical) copy.
+PostgreSQL natively provides https://www.postgresql.org/docs/current/backup.html[backup and recovery] capabilities based on file system level (physical) copy.
+This means that backups are done by copying the files that PostgreSQL uses to store the data in the database.
 
 In CloudNativePG, the backup infrastructure for each PostgreSQL cluster is made up of the following resources:
 
 - *https://www.postgresql.org/docs/current/wal-intro.html[WAL archive]*: a location containing the WAL files (transactional logs) that are continuously written by Postgres and archived for data durability
-- *Physical base backups*: a copy of all the files that PostgreSQL uses to store the data in the database (primarily the `PGDATA` and any tablespace)
+- *Physical base backups*: a copy of all the files that PostgreSQL uses to store the data in the database (primarily the `PGDATA` directory and any tablespaces)
 
 CloudNativePG supports two ways to store physical base backups:
 
@@ -27,7 +28,7 @@ Keycloak's data (all users, roles, etc.), and all data from databases of deploye
 
 == Configuring Backups
 
-IMPORTANT: Backup are configured during installation of Control Center.
+IMPORTANT: Backups are configured during installation of Control Center.
 
 Enable backups by setting the `postgres.backups.enabled` value to `true` when installing Control Center.
 Enabling backups does nothing by itself.
@@ -48,8 +49,8 @@ You can configure hot backups with the volume snapshots method if you also confi
 
 Cold backups, also known as offline backups, are instead physical base backups taken when the PostgreSQL instance (standby or primary) is shut down.
 They are consistent per definition and they represent a snapshot of the database at the time it was shut down.
-As a result, PostgreSQL instances can be restarted from a cold backup without the need of a WAL archive, even though they can take advantage of it, if available (with all the benefits on the recovery side highlighted in the previous section).
-In those situations with a higher RPO (for example, 1 hour or 24 hours), and shorter retention periods, cold backups represent a viable option to be considered for your disaster recovery plans.
+As a result, PostgreSQL instances can be restarted from a cold backup without the need of a WAL archive. However, though they can take advantage of the WAL archive, if it is available (with all the benefits on the recovery side highlighted in the previous section).
+In those situations with a higher https://en.wikipedia.org/wiki/IT_disaster_recovery#Recovery_Point_Objective[RPO] (for example, 1 hour or 24 hours), and shorter retention periods, cold backups represent a viable option to be considered for your disaster recovery plans.
 
 == Volume Snapshots
 
@@ -88,7 +89,7 @@ helm install control-center oci://docker.io/vaadin/control-center -n control-cen
 The backup configuration using a cloud object store depends on which cloud object store is used.
 https://cloudnative-pg.io/documentation/1.25/appendixes/object_stores/[CouldNativePG's official documentation] lists common object stores and how to configure them.
 We provide example configurations for AWS S3 and other S3 compatible object stores, Microsoft Azure Blob Storage and Google Cloud Storage.
-Control Center does not currently support IRSA authentication method nor MinIO gateways.
+Control Center doesn't currently support IAM Role for Service Account (IRSA) authentication method or https://cloudnative-pg.io/documentation/1.25/appendixes/object_stores/#minio-gateway[MinIO gateways].
 
 == AWS S3
 
@@ -106,7 +107,7 @@ kubectl create secret generic aws-creds \
   --from-literal=ACCESS_SECRET_KEY=<secret key here>
 ----
 
-Once the secret is created its values can be referred to in the backup configuration when installing Control Center:
+Once the secret is created, its values can be referred to in the backup configuration when installing Control Center:
 
 .Example values.yaml for barman object store backups on AWS S3
 [source,yaml]
@@ -136,7 +137,7 @@ The destination path can be any URL pointing to a folder where the instance can 
 
 === S3 Compatible Buckets
 
-In case you're using S3-compatible object storage, like *MinIO* or *Linode Object Storage*, you can specify an endpoint instead of using the default S3 one.
+In case you're using an S3-compatible object storage, like *MinIO* or *Linode Object Storage*, you can specify an endpoint instead of using the default S3 one.
 
 In this example, it will use the `bucket` of *Linode* in the region `us-east1`.
 
@@ -155,7 +156,7 @@ postgres:
 [...]
 ----
 
-In case you're using *Digital Ocean Spaces*, you will have to use the Path-style syntax.
+In case you're using *Digital Ocean Spaces*, you will have to use the path-style syntax.
 In this example, it will use the `bucket` from *Digital Ocean Spaces* in the region `SF03`.
 
 .Example S3 compatible bucket configuration
@@ -196,8 +197,6 @@ kubectl create secret generic azure-creds \
   --from-literal=AZURE_STORAGE_SAS_TOKEN=<SAS token> \
   --from-literal=AZURE_STORAGE_CONNECTION_STRING=<connection string>
 ----
-
-The credentials will be encrypted at rest, if this feature is enabled in the used Kubernetes cluster.
 
 Given the previous secret, the provided credentials can be injected inside the cluster configuration:
 
