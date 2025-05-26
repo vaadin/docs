@@ -8,10 +8,11 @@ meta-description: Create, schedule, or delete database backups in Control Center
 = Backups
 
 Control Center manages databases using https://cloudnative-pg.io[CloudNativePG], an open-source Kubernetes operator to manage PostgreSQL workloads on any supported Kubernetes cluster.
-PostgreSQL natively provides first class backup and recovery capabilities based on file system level (physical) copy.
+PostgreSQL natively provides backup and recovery capabilities based on file system level (physical) copy.
+
 In CloudNativePG, the backup infrastructure for each PostgreSQL cluster is made up of the following resources:
 
-- *WAL archive*: a location containing the WAL files (transactional logs) that are continuously written by Postgres and archived for data durability
+- *https://www.postgresql.org/docs/current/wal-intro.html[WAL archive]*: a location containing the WAL files (transactional logs) that are continuously written by Postgres and archived for data durability
 - *Physical base backups*: a copy of all the files that PostgreSQL uses to store the data in the database (primarily the `PGDATA` and any tablespace)
 
 CloudNativePG supports two ways to store physical base backups:
@@ -22,7 +23,7 @@ CloudNativePG supports two ways to store physical base backups:
 Backups are done at the cluster level, not at the database level.
 This means that you cannot backup a single database at a time using Control Center.
 Each backup includes all data of all databases in the cluster.
-Keycloak's data (all users, roles, etc.), and all data from databases of deployed applications.
+Keycloak's data (all users, roles, etc.), and all data from databases of deployed applications are included in backups.
 
 == Configuring Backups
 
@@ -36,7 +37,7 @@ The available methods for backups are:
 - <<Volume Snapshots>>
 - <<Barman Object Stores>>
 
-To decide which method to use, we recommend reading https://cloudnative-pg.io/documentation/1.25/backup/#object-stores-or-volume-snapshots-which-one-to-use[CloudNativePG's official documentation].
+To decide which method to use, it is recommended to read https://cloudnative-pg.io/documentation/1.25/backup/#object-stores-or-volume-snapshots-which-one-to-use[CloudNativePG's official documentation].
 
 === Hot or Cold Backups
 
@@ -52,9 +53,12 @@ In those situations with a higher RPO (for example, 1 hour or 24 hours), and sho
 
 == Volume Snapshots
 
-Configuring backups using volume snapshots are easy to configure (assuming your Kubernetes server has a storage class )
-A storage class can be defined but you can also work with the default storage class, so long as it supports volume snapshots.
-A volume snapshot class must be defined for volume snapshots backups to work.
+Volume snapshots provide Kubernetes users with a standardized way to copy a volume's contents at a particular point in time without creating an entirely new volume.
+This functionality enables, for example, database administrators to backup databases before performing edit or delete modifications.
+
+A volume snapshot class must be defined in the Control Center configuration for volume snapshots backups to work.
+A storage class can also be defined, but you can also work with the default storage class.
+You can read more about `volume snapshots` in the https://kubernetes.io/docs/concepts/storage/volume-snapshots/[official Kubernetes documentation].
 
 .Example values.yaml file for volume snapshot backups
 [source,yaml]
@@ -84,7 +88,7 @@ helm install control-center oci://docker.io/vaadin/control-center -n control-cen
 The backup configuration using a cloud object store depends on which cloud object store is used.
 https://cloudnative-pg.io/documentation/1.25/appendixes/object_stores/[CouldNativePG's official documentation] lists common object stores and how to configure them.
 We provide example configurations for AWS S3 and other S3 compatible object stores, Microsoft Azure Blob Storage and Google Cloud Storage.
-Control Center does not currently support IRSA authentication method nnor MinIO gateways.
+Control Center does not currently support IRSA authentication method nor MinIO gateways.
 
 == AWS S3
 
@@ -180,7 +184,7 @@ In order to access your storage account for backup and recovery of CloudNativePG
 - Storage account name and https://docs.microsoft.com/en-us/azure/storage/blobs/sas-service-create[Storage account SAS Token]
 - Storage account name and https://azure.github.io/azure-workload-identity/docs/introduction.html[Azure AD Workload Identity] properly configured.
 
-Using both *Storage account access key* or *Storage account SAS Token*, the credentials need to be stored inside a Kubernetes Secret, adding data entries only when needed.
+When using either *Storage account access key* or *Storage account SAS Token*, the credentials need to be stored inside a Kubernetes Secret, adding data entries only when needed.
 The following command performs that:
 
 .Create secret for Azure credentials
@@ -197,6 +201,7 @@ The credentials will be encrypted at rest, if this feature is enabled in the use
 
 Given the previous secret, the provided credentials can be injected inside the cluster configuration:
 
+.Example Microsoft Azure Blob Storage backup configuration
 [source,yaml]
 ----
 [...]
@@ -271,15 +276,15 @@ postgres:
 
 Now the operator will use the credentials to authenticate against Google Cloud Storage.
 
-WARNING: This way of authentication will create a JSON file inside the container with all the needed information to access your Google Cloud Storage bucket, meaning that if someone gets access to the pod will also have write permissions to the bucket.
+WARNING: This method of authentication will create a JSON file inside the container with all the needed information to access your Google Cloud Storage bucket, meaning that if someone gets access to the pod they will also have write permissions to the bucket.
 
 == Creating a Backup
 
 You can see the list of backups, create a new backup, and delete backups from the [guilabel]*Backups* screen in the `Settings` section of Control Center.
 To create a new backup, click on the [guibutton]*New* button on the top right corner of the screen.
-In the right-hand panel, write a name for the backup.
+In the right-hand panel, write a name for the backup in the `Name` field.
 The name must not contain spaces, uppercase letters or any special characters other than dash `-`.
-Select a backup method.
+Select a backup method using the `Method` select component.
 Your Control Center installation must be configured to support the selected backup method.
 Click the [guibutton]*Create* button at the bottom of the panel and the backup is created.
 The status of the backup is shown in the table.
@@ -316,7 +321,7 @@ You cannot perform recovery in place on an existing installation.
 Recovery is instead a way to bootstrap a new Control Center cluster starting from an available physical backup.
 This is a limitation of CloudNativePG.
 
-To start a new installation from a backup, you must set the `postgres.bootstrapFromBackup` value with the name of the backup as shown in the list of backups as its value.
+To start a new installation from a backup, you must set the `postgres.restoreFromBackup` value with the name of the backup as shown in the list of backups as its value.
 Run `helm install` command as usual, using the aforementioned value and the new installation will have all the data stored in the backup, including Keycloak users and configuration, and any and all deployed application's databases.
 
 .Recovery configuration example
