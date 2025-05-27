@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { MenuBar, MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 
 function Example() {
   // tag::snippet[]
-  const items = [
+  const items: Array<MenuBarItem> = [
     { text: 'View' },
     { text: 'Edit' },
     {
