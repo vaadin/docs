@@ -17,7 +17,6 @@ public class MasterDetailLayoutVertical extends Div {
         // end::snippet[]
         layout.setMasterMinSize("150px");
         layout.setDetailSize("250px");
-        layout.setStackThreshold("350px");
 
         PersonList personList = new PersonList(DataService.getPeople());
         layout.setMaster(personList);
