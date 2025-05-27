@@ -9,25 +9,31 @@ import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("message-list-ai-chat")
 public class MessageListAiChat extends Div {
 
     private MessageListItem createItem(String text, boolean assistant) {
-        MessageListItem item = new MessageListItem(text, null,
+        MessageListItem item = new MessageListItem(text,
                 assistant ? "Assistant" : "User");
         item.setUserColorIndex(assistant ? 2 : 1);
         return item;
     }
 
     public MessageListAiChat() {
-
         String chatId = "1234"; // Placeholder chat identifier
         // tag::snippet[]
         MessageList list = new MessageList();
         list.setMarkdown(true);
         // end::snippet[]
         MessageInput input = new MessageInput();
+
+        // Live region for screen reader announcements
+        Div liveRegion = new Div();
+        liveRegion.getElement().setAttribute("aria-live", "polite");
+        liveRegion.addClassName(LumoUtility.Accessibility.SCREEN_READER_ONLY);
+        add(liveRegion);
 
         List<Message> history = LLMClient.getHistory(chatId);
 
@@ -36,12 +42,7 @@ public class MessageListAiChat extends Div {
                 .toList());
 
         input.addSubmitListener(e -> {
-            // Prefer using push instead of polling
-            getUI().get().setPollInterval(300);
             String userInput = e.getValue();
-
-            // Disable the input field while waiting for the Assistant response
-            input.setEnabled(false);
 
             // Add the user message to the list
             list.addItem(createItem(userInput, false));
@@ -50,27 +51,37 @@ public class MessageListAiChat extends Div {
             MessageListItem newAssistantMessage = createItem("", true);
             list.addItem(newAssistantMessage);
 
+            // Announce that AI is processing
+            liveRegion.setText("AI is processing the prompt");
+
+            int messageListItemCount = list.getItems().size();
             LLMClient.stream(chatId, userInput).subscribe(token -> {
                 getUI().get().access(() -> {
                     // Update the Assistant message with the response
+                    // Make sure to have server push enabled!
+                    // See
+                    // https://vaadin.com/docs/latest/flow/advanced/server-push
                     newAssistantMessage.appendText(token);
                 });
             }, error -> {
-                getUI().get().access(() -> {
-                    getUI().get().setPollInterval(-1);
-                });
                 // Handle error
             }, () -> {
                 getUI().get().access(() -> {
-                    getUI().get().setPollInterval(-1);
-                    // Re-enable the input field when streaming is complete
-                    input.setEnabled(true);
+                    if (messageListItemCount != list.getItems().size()) {
+                        // Another message is still being processed
+                        return;
+                    }
+
+                    // Announce that a new message is available
+                    liveRegion.setText("New message available");
                 });
 
             });
         });
 
         add(list, input);
+
+        com.vaadin.demo.component.messages.LLMClient.initPolling(list); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MessageListAiChat> { // hidden-source-line

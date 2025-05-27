@@ -16,8 +16,8 @@ function createItem(text: string, assistant = false): MessageListItem {
 
 function Example() {
   useSignals(); // hidden-source-line
-  const chatDisabled = useSignal(true);
   const messageListItems = useSignal<MessageListItem[]>([]);
+  const announcement = useSignal('');
   const chatId = '1234'; // Placeholder chat identifier
 
   useEffect(() => {
@@ -25,15 +25,11 @@ function Example() {
       messageListItems.value = messages.map((message) =>
         createItem(message.text, message.assistant)
       );
-      chatDisabled.value = false;
     });
   }, []);
 
   const handleChatSubmit = useCallback((e: MessageInputSubmitEvent) => {
     const userInput = e.detail.value;
-
-    // Disable the input field while waiting for the Assistant response
-    chatDisabled.value = true;
 
     // Add the user message to the list
     messageListItems.value = [...messageListItems.value, createItem(userInput)];
@@ -41,6 +37,9 @@ function Example() {
     // Add the Assistant message to the list
     const newAssistantItem = createItem('', true);
     messageListItems.value = [...messageListItems.value, newAssistantItem];
+
+    // Announce that AI is processing
+    announcement.value = 'AI is processing the prompt';
 
     LLMChatService.stream(chatId, userInput)
       .onNext((token) => {
@@ -50,17 +49,22 @@ function Example() {
         messageListItems.value = [...messageListItems.value];
       })
       .onComplete(() => {
-        // Re-enable the input field when streaming is complete
-        chatDisabled.value = false;
+        // Announce that a new message is available
+        announcement.value = 'New message available';
       });
   }, []);
 
   return (
     <div>
+      {/* Live region for screen reader announcements */}
+      <div aria-live="polite" className="sr-only">
+        {announcement.value}
+      </div>
+
       {/* tag::snippet[] */}
       <MessageList items={messageListItems.value} markdown />
       {/* end::snippet[] */}
-      <MessageInput disabled={chatDisabled.value} onSubmit={handleChatSubmit} />
+      <MessageInput onSubmit={handleChatSubmit} />
     </div>
   );
 }
