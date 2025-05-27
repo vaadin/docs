@@ -99,7 +99,7 @@ Upload upload = new Upload(temporaryFileHandler);
 For more advanced use cases, you can provide custom implementations for [classname]`UploadHandler`.
 You might do this, for example, to upload files to cloud storage or to load data into memory first, validate and save to file.
 
-[classname]`UploadHandler` is a [annotationname]`FunctionalInterface` so it can be implemented or just be a lambda expression.
+[classname]`UploadHandler` can be implemented to override default methods:
 
 [source,java]
 ----
@@ -121,8 +121,37 @@ public class CustomUploadHandler implements UploadHandler {
         // Set your own custom response value for success/fail by overriding this method.
         // Default responses are 200 ok for success and 500 internal server error for failure
     }
+
+    @Override
+    public long getRequestSizeMax() {
+        // Return the maximum size, in bytes, of a complete request for multipart upload.
+        return -1; // -1 means no limit and is the default
+    }
+
+    @Override
+    public long getFileSizeMax() {
+        // Return the maximum size, in bytes, of a single file for multipart upload.
+        return -1; // -1 means no limit and is the default
+    }
+
+    @Override
+    public long getFileCountMax() {
+        // Return the maximum amount of files allowed for multipart upload.
+        return 10000; // -1 means no limit default is 10000
+    }
 }
 ----
+
+The `responseHandled` method is called after upload has succeeded or an exception has been thrown.
+For multipart upload this is called after each part has succeeded.
+
+Maximum values for requestSize, fileSize and fileCount only target multipart uploads that are iterated (multipart uploads where the type is not `multipart/form-data`).
+
+- getRequestSizeMax sets the maximum size for the whole request.
+- getFileSizeMax sets the maximum size for single files in the request.
+- getFileCountMax sets the maximum amount of files in the request. 
+
+[classname]`UploadHandler` is an [annotationname]`FunctionalInterface` so it can just be a lambda expression also.
 
 [source,java]
 ----
