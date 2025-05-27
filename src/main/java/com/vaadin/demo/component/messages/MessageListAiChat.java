@@ -15,7 +15,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MessageListAiChat extends Div {
 
     private MessageListItem createItem(String text, boolean assistant) {
-        MessageListItem item = new MessageListItem(text, null,
+        MessageListItem item = new MessageListItem(text,
                 assistant ? "Assistant" : "User");
         item.setUserColorIndex(assistant ? 2 : 1);
         return item;
@@ -59,7 +59,8 @@ public class MessageListAiChat extends Div {
                 getUI().get().access(() -> {
                     // Update the Assistant message with the response
                     // Make sure to have server push enabled!
-                    // See https://vaadin.com/docs/latest/flow/advanced/server-push
+                    // See
+                    // https://vaadin.com/docs/latest/flow/advanced/server-push
                     newAssistantMessage.appendText(token);
                 });
             }, error -> {
