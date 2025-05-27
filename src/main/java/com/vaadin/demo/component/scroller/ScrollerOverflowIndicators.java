@@ -1,31 +1,25 @@
 package com.vaadin.demo.component.scroller;
 
-import com.vaadin.demo.DemoExporter;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasSize;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Footer;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
-import java.time.LocalDate;
+@Route("scroller-overflow-indicators")
+public class ScrollerOverflowIndicators extends VerticalLayout {
 
-@Route("overflow-indicators")
-public class OverflowIndicators extends VerticalLayout {
-
-    public OverflowIndicators() {
+    public ScrollerOverflowIndicators() {
         addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_20);
         setAlignItems(Alignment.STRETCH);
         setHeight(400, Unit.PIXELS);
@@ -74,6 +68,6 @@ public class OverflowIndicators extends VerticalLayout {
         add(footer);
     }
 
-    public static class Exporter extends DemoExporter<OverflowIndicators> { // hidden-source-line
+    public static class Exporter extends DemoExporter<ScrollerOverflowIndicators> { // hidden-source-line
     } // hidden-source-line
 }

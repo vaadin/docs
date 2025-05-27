@@ -1,10 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/checkbox';
-import '@vaadin/date-picker';
 import '@vaadin/email-field';
-import '@vaadin/icon';
-import '@vaadin/icons';
 import '@vaadin/scroller';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
@@ -12,7 +9,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('overflow-indicators')
+@customElement('scroller-overflow-indicators')
 export class Example extends LitElement {
   static override styles = css`
     #container {
