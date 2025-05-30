@@ -1,0 +1,393 @@
+---
+title: Reactive UI with Signals
+page-title: How to create reactive UIs with the Flow Signals library
+description: Using the Flow Signals library to manage UI state reactively in Vaadin applications.
+meta-description: Manage UI state reactively and share it within an application or cluster with Vaadin Flow Signals library.
+version: since:com.vaadin:vaadin@V24.8
+order: 125
+---
+
+== Introduction
+
+The Flow Signal library provides a reactive state management solution for Vaadin Flow applications.
+Its ultimate goal is to enable sharing state between multiple clients and the server in a thread-safe manner.
+Signals are designed to make UI state management less complicated, especially when dealing with concurrent access from multiple users.
+
+The library offers a set of signal types that support atomic operations, conditional operations and transactions.
+Signals are reactive by design, automatically updating dependent parts of the UI when their values change.
+
+[NOTE]
+Vaadin Flow Signals library is a preview feature in Vaadin 24.8 and may change in future releases.
+Signals integration into components API is planned in future releases but not yet included, thus you need to add listeners to components and effect functions manually.
+
+=== Key Features
+
+* *Thread-safe by design*: Signals are designed to handle concurrent access from multiple users.
+* *Reactive*: Changes to signal values automatically propagate to dependent parts of the UI.
+* *Atomic operations*: Signals support atomic updates to ensure data consistency.
+* *Transactions*: Multiple operations can be grouped into a transaction that either succeeds or fails as a whole.
+* *Hierarchical data structures*: Signals can represent complex hierarchical data structures.
+* *Immutable values*: Signals work best with immutable values, e.g. String or Java Records, to ensure data consistency.
+
+== Core Concepts
+
+=== Signals
+
+A signal is a reactive value holder with automatic subscription and unsubscription of listeners. When a signal's value changes, all dependent parts of the UI are automatically updated.
+
+=== Effects
+
+Effects are callbacks that automatically re-run when any signal value they depend on changes. They are used to update the UI in response to signal changes.
+
+[source,java]
+----
+Signal.effect(() -> {
+    // This code will run whenever any signal value used inside changes
+    button.setText("Counter: " + counter.value());
+});
+----
+
+=== Computed Signals
+
+Computed signals derive their values from other signals. They are automatically updated when any of the signals they depend on change.
+
+[source,java]
+----
+Signal<String> fullName = Signal.computed(() ->
+    firstName.value() + " " + lastName.value());
+----
+
+=== Transactions
+
+Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together.
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // All operations here will be committed atomically
+    firstName.value("John");
+    lastName.value("Doe");
+});
+----
+
+== Signal Types
+
+The Flow Signal library provides several signal types for different use cases:
+
+=== ValueSignal
+
+A signal containing a single value. The value is updated as a single atomic change.
+
+[source,java]
+----
+ValueSignal<String> name = SignalFactory.IN_MEMORY_SHARED.value("name", String.class);
+name.value("John Doe"); // Set the value
+String currentName = name.value(); // Get the value
+----
+
+=== NumberSignal
+
+A specialized signal for numeric values with support for atomic increments.
+
+[source,java]
+----
+NumberSignal counter = SignalFactory.IN_MEMORY_SHARED.number("counter");
+counter.value(0); // Set initial value
+counter.incrementBy(1.0); // Increment by 1
+int count = counter.valueAsInt(); // Get value as int
+----
+
+=== ListSignal
+
+A signal containing a list of values. Each value in the list is accessed as a separate ValueSignal.
+
+[source,java]
+----
+ListSignal<Person> persons = SignalFactory.IN_MEMORY_SHARED.list("persons", Person.class);
+persons.insertLast(new Person("John", 30)); // Add to the end
+persons.insertFirst(new Person("Jane", 25)); // Add to the beginning
+List<ValueSignal<Person>> personList = persons.value(); // Get all persons
+----
+
+=== MapSignal
+
+A signal containing a map of values with string keys. Each value in the map is accessed as a separate ValueSignal.
+
+[source,java]
+----
+MapSignal<String> properties = SignalFactory.IN_MEMORY_SHARED.map("properties", String.class);
+properties.put("name", "John"); // Add or update a property
+properties.putIfAbsent("age", "30"); // Add only if not present
+Map<String, ValueSignal<String>> propertyMap = properties.value(); // Get all properties
+----
+
+=== NodeSignal
+
+A signal representing a node in a tree structure. A node can have its own value, parent node, children signals accessed by order or by a key. A child node is always either a list child or a map child, but it cannot have both roles at the same time.
+
+[source,java]
+----
+NodeSignal user = SignalFactory.IN_MEMORY_SHARED.node("user");
+user.putChildWithValue("name", "John Doe"); // Add a map child
+user.putChildWithValue("age", 30); // Add another map child
+user.insertChildWithValue("hobby", "Reading"); // Add a list child
+
+user.value().mapChildren().get("name").asValue(String.class).value(); // Access child value 'John Doe'
+user.value().mapChildren().get("age").asValue(Integer.class).value(); // Access child value 30
+user.value().listChildren().getLast().asValue(String.class).value(); // Access last list child value 'Reading'
+----
+
+== Signal Factory
+
+The [classname]`SignalFactory` interface provides methods for creating signal instances based on a string key, value type and initial value. It supports different strategies for creating instances:
+
+=== IN_MEMORY_EXCLUSIVE
+
+Always returns a new instance that is not shared within JVM nor cluster.
+
+[source,java]
+----
+NodeSignal exclusive = SignalFactory.IN_MEMORY_EXCLUSIVE.node("myNode");
+----
+
+=== IN_MEMORY_SHARED
+
+Returns the same signal for the same name within the same JVM.
+
+[source,java]
+----
+NodeSignal shared = SignalFactory.IN_MEMORY_SHARED.node("myNode");
+----
+
+The [classname]`SignalFactory` is the extension point for creating custom signal factories. You can implement your own factory to create signals that are shared across multiple JVMs in clusters.
+
+== Usage Examples
+
+=== Simple Counter Example
+
+[source,java]
+----
+public class CounterView extends VerticalLayout {
+    private final NumberSignal counter =
+            SignalFactory.IN_MEMORY_SHARED.number("counter");
+
+    public CounterView() {
+        Button button = new Button("Click me",
+                click -> counter.incrementBy(1.0));
+        Span count = new Span();
+        Signal.effect(() -> count.setText("Count: " + counter.valueAsInt()));
+        add(button, count);
+    }
+}
+----
+
+=== Form Binding Example
+
+[source,java]
+----
+public class UserForm extends FormLayout {
+    private final ValueSignal<User> user =
+            SignalFactory.IN_MEMORY_SHARED.value("user", User.class);
+
+    public UserForm() {
+        TextField nameField = new TextField("Name");
+        NumberField ageField = new NumberField("Age");
+
+        Signal.effect(() -> {
+            User currentUser = user.value();
+            nameField.setValue(currentUser.getName());
+            ageField.setValue(currentUser.getAge());
+        });
+
+        nameField.addValueChangeListener(event ->
+            user.update(u -> new User(event.getValue(), u.getAge())));
+
+        ageField.addValueChangeListener(event ->
+            user.update(u -> new User(u.getName(), event.getValue())));
+
+        add(nameField, ageField);
+    }
+}
+----
+
+=== List Example
+
+[source,java]
+----
+public class PersonList extends VerticalLayout {
+    private final ListSignal<Person> persons =
+            SignalFactory.IN_MEMORY_SHARED.list("persons", Person.class);
+
+    public PersonList() {
+        Grid<Person> grid = new Grid<>();
+        grid.addColumn(Person::getName).setHeader("Name");
+        grid.addColumn(Person::getAge).setHeader("Age");
+
+        Button addButton = new Button("Add Person", click -> {
+            persons.insertLast(new Person("New Person", 25));
+        });
+
+        Signal.effect(() -> {
+            List<Person> list = persons.value().stream()
+                    .map(Signal::value)
+                    .toList();
+            grid.setItems(list);
+        });
+
+        add(grid, addButton);
+    }
+}
+----
+
+=== Node Example
+
+[source,java]
+----
+public class CategoryForm extends FormLayout {
+    private final NodeSignal category =
+            SignalFactory.IN_MEMORY_SHARED.node("category");
+
+    public CategoryForm() {
+        TextField nameField = new TextField("Name");
+        NumberField idField = new NumberField("ID");
+
+        Signal.effect(() -> {
+            nameField.setValue(category.value().mapChildren()
+                    .get("name").asValue(String.class).value());
+            idField.setValue(category.value().mapChildren()
+                    .get("id").asValue(Double.class).value());
+        });
+
+        nameField.addValueChangeListener(event -> {
+            // ignores nameField.setValue() calls from the server to avoid infinite loop
+            if (event.isFromClient()) {
+                ValueSignal<String> nameSignal = category.value().mapChildren()
+                        .get("name").asValue(String.class);
+                nameSignal.value(event.getValue());
+            }
+        });
+
+        idField.addValueChangeListener(event -> {
+            // ignores idSignal.setValue() calls from the server to avoid infinite loop
+            if (event.isFromClient()) {
+                ValueSignal<Double> idSignal = category.value().mapChildren()
+                        .get("id").asValue(Double.class);
+                idSignal.value(event.getValue());
+            }
+        });
+
+        add(nameField, idField);
+    }
+}
+----
+
+== Best Practices
+
+=== Use Immutable Values
+
+Signals work best with immutable values. This ensures that changes to signal values are always made through the signal API, which maintains consistency and reactivity.
+
+[source,java]
+----
+ValueSignal<User> user = new ValueSignal<>(User.class);
+// Good: Creating a new immutable object
+user.update(u -> new User(u.getName(), u.getAge() + 1));
+
+// Bad: Modifying the object directly
+User u = user.value();
+u.setAge(u.getAge() + 1); // This won't trigger reactivity!
+----
+
+=== Use Effects for UI Updates
+
+Use [methodname]`Signal.effect()` to automatically update the UI when signal values change.
+
+[source,java]
+----
+Signal.effect(() -> {
+    label.setText("Hello, " + user.value().getName());
+});
+----
+
+=== Use Transactions for Atomic Updates
+
+Use transactions when you need to update multiple signals atomically.
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    firstName.value("John");
+    lastName.value("Doe");
+    age.value(30);
+});
+----
+
+=== Use update() for Atomic Updates Based on Current Value
+
+Use the update() method when you need to update a signal's value based on its current value.
+
+[source,java]
+----
+counter.update(current -> current + 1);
+----
+
+=== Cleanup Effects When No Longer Needed
+
+Store the returned [classname]`Runnable` from [methodname]`Signal.effect()` and call it to clean up the effect when it's no longer necessary.
+
+[source,java]
+----
+Runnable cleanup = Signal.effect(() -> {
+    // Update UI
+});
+
+// Later, when the effect is no longer needed
+cleanup.run();
+----
+
+== Advanced Topics
+
+=== Computed Signals
+
+Computed signals derive their values from other signals and automatically update when those signals change.
+
+[source,java]
+----
+ValueSignal<String> firstName = SignalFactory.IN_MEMORY_SHARED.value("firstName", String.class);
+ValueSignal<String> lastName = SignalFactory.IN_MEMORY_SHARED.value("lastName", String.class);
+
+Signal<String> fullName = Signal.computed(() ->
+    firstName.value() + " " + lastName.value());
+----
+
+=== Signal Mapping
+
+You can transform a signal's value using the map() method.
+
+[source,java]
+----
+ValueSignal<Integer> age = SignalFactory.IN_MEMORY_SHARED.value("age", Integer.class);
+Signal<String> ageCategory = age.map(a ->
+    a < 18 ? "Child" : (a < 65 ? "Adult" : "Senior"));
+----
+
+=== Read-Only Signals
+
+You can create read-only versions of signals that don't allow modifications.
+
+[source,java]
+----
+ValueSignal<String> name = SignalFactory.IN_MEMORY_SHARED.value("name", String.class);
+ValueSignal<String> readOnlyName = name.asReadonly();
+----
+
+=== Untracked Signal Access
+
+You can access a signal's value without registering a dependency, i.e., without triggering reactive effect functions.
+It's also possible to pick the confirmed value of a signal without triggering the effect function.
+
+[source,java]
+----
+String name = nameSignal.peek(); // Won't trigger Signal.effect()
+String name = nameSignal.peekConfirmed(); // Also won't trigger Signal.effect() and returns only the confirmed value
+----
