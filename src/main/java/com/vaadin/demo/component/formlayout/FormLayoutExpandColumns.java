@@ -9,29 +9,31 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("form-layout-basic")
-public class FormLayoutBasic extends Div {
+@Route("form-layout-expand-columns")
+public class FormLayoutExpandColumns extends Div {
 
-    public FormLayoutBasic() {
+    public FormLayoutExpandColumns() {
         // tag::snippet[]
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
-        EmailField email = new EmailField("Email address");
+        EmailField email = new EmailField("Email");
         PasswordField password = new PasswordField("Password");
         PasswordField confirmPassword = new PasswordField("Confirm password");
 
         FormLayout formLayout = new FormLayout();
         formLayout.setAutoResponsive(true);
+        formLayout.setColumnWidth("8em");
+        formLayout.setExpandColumns(true);
         formLayout.addFormRow(firstName, lastName);
         formLayout.addFormRow(email);
         formLayout.addFormRow(password, confirmPassword);
         // end::snippet[]
-
         formLayout.setWidthFull();
+
         SplitLayout splitLayout = new SplitLayout(formLayout, new Div());
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
+    public static class Exporter extends DemoExporter<FormLayoutExpandColumns> { // hidden-source-line
     } // hidden-source-line
 }

@@ -4,34 +4,32 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-@Route("form-layout-basic")
-public class FormLayoutBasic extends Div {
+@Route("form-layout-labels-aside")
+public class FormLayoutLabelsAside extends Div {
 
-    public FormLayoutBasic() {
+    public FormLayoutLabelsAside() {
         // tag::snippet[]
-        TextField firstName = new TextField("First name");
-        TextField lastName = new TextField("Last name");
-        EmailField email = new EmailField("Email address");
-        PasswordField password = new PasswordField("Password");
-        PasswordField confirmPassword = new PasswordField("Confirm password");
+        TextField firstName = new TextField();
+        TextField lastName = new TextField();
+        EmailField email = new EmailField();
 
         FormLayout formLayout = new FormLayout();
         formLayout.setAutoResponsive(true);
-        formLayout.addFormRow(firstName, lastName);
-        formLayout.addFormRow(email);
-        formLayout.addFormRow(password, confirmPassword);
+        formLayout.setLabelsAside(true);
+        formLayout.addFormItem(firstName, "First name");
+        formLayout.addFormItem(lastName, "Last name");
+        formLayout.addFormItem(email, "Email address");
         // end::snippet[]
-
         formLayout.setWidthFull();
+
         SplitLayout splitLayout = new SplitLayout(formLayout, new Div());
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
+    public static class Exporter extends DemoExporter<FormLayoutLabelsAside> { // hidden-source-line
     } // hidden-source-line
 }
