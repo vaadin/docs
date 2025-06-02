@@ -15,14 +15,13 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MessageListAiChat extends Div {
 
     private MessageListItem createItem(String text, boolean assistant) {
-        MessageListItem item = new MessageListItem(text, null,
+        MessageListItem item = new MessageListItem(text,
                 assistant ? "Assistant" : "User");
         item.setUserColorIndex(assistant ? 2 : 1);
         return item;
     }
 
     public MessageListAiChat() {
-
         String chatId = "1234"; // Placeholder chat identifier
         // tag::snippet[]
         MessageList list = new MessageList();
@@ -43,8 +42,6 @@ public class MessageListAiChat extends Div {
                 .toList());
 
         input.addSubmitListener(e -> {
-            // Prefer using push instead of polling
-            getUI().get().setPollInterval(300);
             String userInput = e.getValue();
 
             // Add the user message to the list
@@ -53,7 +50,7 @@ public class MessageListAiChat extends Div {
             // Add the Assistant message to the list
             MessageListItem newAssistantMessage = createItem("", true);
             list.addItem(newAssistantMessage);
-            
+
             // Announce that AI is processing
             liveRegion.setText("AI is processing the prompt");
 
@@ -61,12 +58,12 @@ public class MessageListAiChat extends Div {
             LLMClient.stream(chatId, userInput).subscribe(token -> {
                 getUI().get().access(() -> {
                     // Update the Assistant message with the response
+                    // Make sure to have server push enabled!
+                    // See
+                    // https://vaadin.com/docs/latest/flow/advanced/server-push
                     newAssistantMessage.appendText(token);
                 });
             }, error -> {
-                getUI().get().access(() -> {
-                    getUI().get().setPollInterval(-1);
-                });
                 // Handle error
             }, () -> {
                 getUI().get().access(() -> {
@@ -75,7 +72,6 @@ public class MessageListAiChat extends Div {
                         return;
                     }
 
-                    getUI().get().setPollInterval(-1);
                     // Announce that a new message is available
                     liveRegion.setText("New message available");
                 });
@@ -84,6 +80,8 @@ public class MessageListAiChat extends Div {
         });
 
         add(list, input);
+
+        com.vaadin.demo.component.messages.LLMClient.initPolling(list); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MessageListAiChat> { // hidden-source-line
