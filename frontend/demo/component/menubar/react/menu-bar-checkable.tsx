@@ -12,7 +12,7 @@ import {
 function Example() {
   useSignals(); // hidden-source-line
   // tag::snippet[]
-  const items = useSignal<Array<MenuBarItem>>([
+  const items = useSignal<MenuBarItem[]>([
     {
       text: 'Options',
       children: [{ text: 'Save automatically', checked: true }, { text: 'Notify watchers' }],
