@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/form-layout';
-import '@vaadin/form-layout/vaadin-form-row.js';
-import '@vaadin/password-field';
+import '@vaadin/form-layout/vaadin-form-item.js';
 import '@vaadin/text-field';
 import '@vaadin/email-field';
 import '@vaadin/split-layout';
@@ -9,7 +8,7 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
-@customElement('form-layout-basic')
+@customElement('form-layout-labels-aside')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -30,18 +29,19 @@ export class Example extends LitElement {
   private renderFormLayout() {
     // tag::snippet[]
     return html`
-      <vaadin-form-layout class="w-full" auto-responsive>
-        <vaadin-form-row>
-          <vaadin-text-field label="First name"></vaadin-text-field>
-          <vaadin-text-field label="Last name"></vaadin-text-field>
-        </vaadin-form-row>
-        <vaadin-form-row>
-          <vaadin-email-field label="Email address"></vaadin-email-field>
-        </vaadin-form-row>
-        <vaadin-form-row>
-          <vaadin-password-field label="Password"></vaadin-password-field>
-          <vaadin-password-field label="Confirm password"></vaadin-password-field>
-        </vaadin-form-row>
+      <vaadin-form-layout class="w-full" auto-responsive labels-aside>
+        <vaadin-form-item>
+          <label slot="label">First name</label>
+          <vaadin-text-field></vaadin-text-field>
+        </vaadin-form-item>
+        <vaadin-form-item>
+          <label slot="label">Last name</label>
+          <vaadin-text-field></vaadin-text-field>
+        </vaadin-form-item>
+        <vaadin-form-item>
+          <label slot="label">Email address</label>
+          <vaadin-email-field></vaadin-email-field>
+        </vaadin-form-item>
       </vaadin-form-layout>
     `;
     // end::snippet[]
