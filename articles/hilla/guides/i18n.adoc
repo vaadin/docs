@@ -6,14 +6,9 @@ meta-description: Guide to setting up and using internationalization (i18n) with
 order: 140
 ---
 
-= [since:com.vaadin:vaadin@V24.6]#Internationalization (i18n) Support#
+= [since:com.vaadin:vaadin@V24.6]#Internationalization (I18n) Support#
 
-You can easily add internationalization (i18n) support to your Hilla applications using the `@vaadin/hilla-react-i18n` package. This guide walks you through setting up and using the feature effectively to create multilingual user interfaces.
-
-[NOTE]
-====
-Internationalization in Hilla is still under active development and is not yet suitable for production. Therefore, to use it in Vaadin projects, you'll need to enable explicitly the experimental feature in Copilot, or add `com.vaadin.experimental.hillaI18n=true` to the [filename]`src/main/resources/vaadin-featureflags.properties` file.
-====
+You can add internationalization (i18n) support to your Hilla applications using the `@vaadin/hilla-react-i18n` package. This guide walks you through setting up and using the feature effectively to create multilingual user interfaces.
 
 == Add and Configure `i18n`
 
@@ -70,13 +65,13 @@ If a translation is missing in the most specific file (e.g., `translations_de_DE
 
 == Use the `translate` Function
 
-The `translate` function retrieves translated strings based on the active language.
+The `translate` function retrieves translated strings based on the active language. Those strings must be marked with the `key` tag, so that Hilla can identify them and include in the right chunk when building the application for production.
 
 [source,tsx]
 ----
-import { translate } from '@vaadin/hilla-react-i18n';
+import { key, translate } from '@vaadin/hilla-react-i18n';
 
-return <div>{translate('addresses.form.city.label')}</div>;
+return <div>{translate(key`addresses.form.city.label`)}</div>;
 ----
 
 If a translation is missing, the key will be shown as-is.
@@ -90,14 +85,14 @@ Example using computed signals:
 [source,tsx]
 ----
 import { useComputed } from '@vaadin/hilla-react-signals';
-import { translate } from '@vaadin/hilla-react-i18n';
+import { key, translate } from '@vaadin/hilla-react-i18n';
 
 function OrderSummary({ itemCount }: { itemCount: number }) {
   const orderMessage = useComputed(() => {
     if (itemCount === 0) {
-      return translate('order.empty');
+      return translate(key`order.empty`);
     } else {
-      return translate('order.details', { count: itemCount });
+      return translate(key`order.details`, { count: itemCount });
     }
   });
 
@@ -111,6 +106,50 @@ You can also show placeholders before i18n is initialized:
 ----
 {i18n.initialized.value ? <ActualContent /> : <LoadingSpinner />}
 ----
+
+== File Router Integration
+
+The file router allows you to define a <<routing#customizing-routes,configuration>> for each view. This configuration contains elements that are good targets for translation, such as the page title and the menu link title.
+
+Because translation keys need to be discoverable by the build system, use the `key` tag to mark these elements:
+
+[source,tsx]
+.`src/main/frontend/views/about.tsx`
+----
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import { key } from '@vaadin/hilla-react-i18n';
+
+export default function AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig = {
+  title: key`about.title`,
+  menu: {
+    title: key`about.menuTitle`,
+  },
+};
+----
+
+When creating the menu, use the `translateDynamic` function to retrieve translated values. Unlike `translate`, `translateDynamic` does not require the `key` tag and returns a `Signal` instead of a string.
+
+[source,tsx]
+----
+import { i18n } from '@vaadin/hilla-react-i18n';
+
+{createMenuItems().map(({ to, title, icon }) => (
+  <SideNavItem path={to} key={to}>
+    {icon ? <Icon src={icon} slot="prefix"></Icon> : <></>}
+    {i18n.translateDynamic(title)}
+  </SideNavItem>
+))}
+----
+
+A similar approach can be used for the page title.
+
+If the value passed to `translateDynamic` is not a translation key, a server call is made to retrieve the translation. To avoid performance issues, use `translateDynamic` only with known keys. If the received string is a key, `translateDynamic` behaves like `translate` and returns the translation efficiently.
 
 == Dynamically Changing the Language
 
@@ -136,7 +175,7 @@ Usage example:
 
 [source,typescript]
 ----
-translate('messages.count', { count: 5 }); // Output: "You have 5 messages."
+translate(key`messages.count`, { count: 5 }); // Output: "You have 5 messages."
 ----
 
 Supported ICU features include:
