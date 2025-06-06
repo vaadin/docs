@@ -31,6 +31,80 @@ All of the build-in implementations extend [classname]`TransferProgressAwareHand
 The [classname]`Receiver` had implementations for single and multiple file upload.
 [classname]`UploadHandler` handles both version so `Upload.setMaxFiles(1)` needs to be called manually for single-file uploads.
 
+
+=== Custom UploadHandler Implementations
+
+For more advanced use cases, you can provide custom implementations for [classname]`UploadHandler`.
+You might do this, for example, to upload files to cloud storage or to load data into memory first, validate and save to file.
+
+[classname]`UploadHandler` is an [annotationname]`FunctionalInterface` so it can just be a lambda expression.
+
+[source,java]
+----
+UploadHandler uploadHandler = (event) -> {
+    try (InputStream inputStream = event.getInputStream()) {
+        // Process the uploaded file
+        // ...
+    }
+    // Any exception will be caught and fire
+    // a responseHandled(false, response) method call.
+};
+----
+
+The [methodname]`responseHandled` will write the upload status to the response.
+By default a success will set it to `HttpStatusCode.OK` and any failure will instead set `HttpStatusCode.INTERNAL_SERVER_ERROR`.
+This can be overridden when implementing the interface.
+
+[classname]`UploadHandler` can be implemented to override default methods:
+
+[source,java]
+----
+public class CustomUploadHandler implements UploadHandler {
+    @Override
+    public void handleUploadRequest(UploadEvent event) {
+        try (InputStream inputStream = event.getInputStream()) {
+            // Process the uploaded file
+            // ...
+        }
+    // Any exception will be caught and fire
+    // a responseHandled(false, response) method call.
+    }
+
+    @Override
+    public void responseHandled(boolean success, VaadinResponse response) {
+        // Set your own custom response value for success/fail by overriding this method.
+        // Default responses are 200 ok for success and 500 internal server error for failure
+    }
+
+    @Override
+    public long getRequestSizeMax() {
+        // Return the maximum size, in bytes, of a complete request for multipart upload.
+        return -1; // -1 means no limit and is the default
+    }
+
+    @Override
+    public long getFileSizeMax() {
+        // Return the maximum size, in bytes, of a single file for multipart upload.
+        return -1; // -1 means no limit and is the default
+    }
+
+    @Override
+    public long getFileCountMax() {
+        // Return the maximum amount of files allowed for multipart upload.
+        return 10000; // -1 means no limit default is 10000
+    }
+}
+----
+
+The `responseHandled` method is called after upload has succeeded or an exception has been thrown.
+For multipart upload this is called after each part has succeeded.
+
+Maximum values for requestSize, fileSize and fileCount only target multipart uploads that are iterated (multipart uploads where the type is not `multipart/form-data`).
+
+- getRequestSizeMax sets the maximum size for the whole request.
+- getFileSizeMax sets the maximum size for single files in the request.
+- getFileCountMax sets the maximum amount of files in the request.
+
 === InMemoryUploadHandler
 
 The [classname]`InMemoryUploadHandler` stores uploaded files in memory as byte arrays.
@@ -92,79 +166,6 @@ SerializableBiConsumer<UploadMetadata, File> successHandler = (metadata, file) -
 TemporaryFileUploadHandler temporaryFileHandler = UploadHandler.toTempFile(successHandler);
 
 Upload upload = new Upload(temporaryFileHandler);
-----
-
-=== Custom UploadHandler Implementations
-
-For more advanced use cases, you can provide custom implementations for [classname]`UploadHandler`.
-You might do this, for example, to upload files to cloud storage or to load data into memory first, validate and save to file.
-
-[classname]`UploadHandler` can be implemented to override default methods:
-
-[source,java]
-----
-public class CustomUploadHandler implements UploadHandler {
-    @Override
-    public void handleUploadRequest(UploadEvent event) {
-        try (InputStream inputStream = event.getInputStream()) {
-            // Process the uploaded file
-            // ...
-        } catch (IOException e) {
-            // The thrown exception will be caught and will fire
-            // a responseHandled(false, response) method call.
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
-    public void responseHandled(boolean success, VaadinResponse response) {
-        // Set your own custom response value for success/fail by overriding this method.
-        // Default responses are 200 ok for success and 500 internal server error for failure
-    }
-
-    @Override
-    public long getRequestSizeMax() {
-        // Return the maximum size, in bytes, of a complete request for multipart upload.
-        return -1; // -1 means no limit and is the default
-    }
-
-    @Override
-    public long getFileSizeMax() {
-        // Return the maximum size, in bytes, of a single file for multipart upload.
-        return -1; // -1 means no limit and is the default
-    }
-
-    @Override
-    public long getFileCountMax() {
-        // Return the maximum amount of files allowed for multipart upload.
-        return 10000; // -1 means no limit default is 10000
-    }
-}
-----
-
-The `responseHandled` method is called after upload has succeeded or an exception has been thrown.
-For multipart upload this is called after each part has succeeded.
-
-Maximum values for requestSize, fileSize and fileCount only target multipart uploads that are iterated (multipart uploads where the type is not `multipart/form-data`).
-
-- getRequestSizeMax sets the maximum size for the whole request.
-- getFileSizeMax sets the maximum size for single files in the request.
-- getFileCountMax sets the maximum amount of files in the request. 
-
-[classname]`UploadHandler` is an [annotationname]`FunctionalInterface` so it can just be a lambda expression also.
-
-[source,java]
-----
-UploadHandler uploadHandler = (event) -> {
-    try (InputStream inputStream = event.getInputStream()) {
-        // Process the uploaded file
-        // ...
-    } catch (IOException e) {
-        // The thrown exception will be caught and will fire
-        // a responseHandled(false, response) method call.
-        throw new UncheckedIOException(e);
-    }
-};
 ----
 
 == Upload Progress Tracking
