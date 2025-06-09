@@ -17,18 +17,14 @@ The existing [classname]`UploadHandler` implementations are accessible through t
 [NOTE]
 When receiving a multipart upload the [methodname]`handleUploadRequest` will be called separately for each file in the upload.
 
-Then the handler can be registered through the [classname]`Element` API after registering it to the [classname]`StreamResourceRegistration`.
+Then the handler can be registered through the [classname]`Element` API by setting it as an attribute.
 
 [source,java]
 ----
 List<File> outputFiles = new ArrayList<>(1);
 UploadHandler uploadHandler = UploadHandler.toTempFile((uploadMetadata, file) -> outputFiles.add(file));
 
-StreamRegistration streamRegistration = VaadinSession.getCurrent()
-        .getResourceRegistry()
-        .registerResource(uploadHandler, getElement());
-
-getElement().setAttribute("target", streamRegistration.getResource());
+getElement().setAttribute("target", uploadHandler);
 ----
 
 The Upload element can be composed from an [classname]`Input` of type `file` and a [classname]`Button` that sends the file to the server using JavaScript.
@@ -64,10 +60,9 @@ InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
     (uploadMetadata, bytes) -> {
         // handle Uploaded data here
     });
-StreamRegistration streamRegistration = VaadinSession.getCurrent().getResourceRegistry()
-    .registerResource(inMemoryUploadHandler,uploadButton.getElement());
+
 uploadButton.getElement()
-    .setAttribute("endpoint", streamRegistration.getResource());
+    .setAttribute("endpoint", inMemoryUploadHandler);
 
 container.add(input, uploadButton);
 ----
@@ -99,8 +94,6 @@ InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
     (uploadMetadata, bytes) -> {
         // handle Uploaded data here
     });
-StreamRegistration streamRegistration = VaadinSession.getCurrent()
-    .getResourceRegistry().registerResource(inMemoryUploadHandler);
 
 // Generate dummy iframe for navigation on submit action
 IFrame dummy = new IFrame();
@@ -111,7 +104,7 @@ dummy.getStyle().set("display", "none");
 // Setup the form using the element api
 Element formElement = new Element("form").setAttribute("method", "post")
     .setAttribute("enctype", "multipart/form-data")
-    .setAttribute("action", streamRegistration.getResource())
+    .setAttribute("action", inMemoryUploadHandler)
     .setAttribute("target", "dummy");
 Element files = new Element("input").setAttribute("type", "file")
     .setAttribute("name", "file");
