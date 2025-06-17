@@ -256,7 +256,7 @@ export default function MainLayout() {
 
 === View Config Options Reference
 
-Here are the options supported in the `config: ViewConfig` object:
+Here are the options supported in the `config: ViewConfig<T>` object (all of them are optional):
 
 `title: string`::
   View title for use in the main layout header, in the browser window `document.title`, and as the default for the menu entry. If not defined, the component name is used.
@@ -276,18 +276,75 @@ For applications using authentication, requires user authentication for accessin
 `menu: object`::
   The menu item metadata object with the following options:
 
-  `title?: string`:::
+  `title: string`:::
     Title to use in the menu item.
 
-  `icon?: string;`:::
+  `icon: string;`:::
     Icon to use in the menu.
 
-  `order?: number`:::
+  `order: number`:::
     The number used to determine the order in the menu. Ties are resolved based on the used title. Entries without explicitly defined ordering are put below entries with an order.
 
-  `exclude?: boolean`:::
+  `exclude: boolean`:::
     Set to true to explicitly exclude a view from the automatically populated menu.
 
+`detail?: T`::
+  Optional detailed metadata for the view. This can be used for various purposes, such as displaying extra information in the UI. The type `T` can be any custom type you define.
+
+=== Advanced Customization
+
+Sometimes, you may want to customize the view metadata even further. The following example shows how to use the `detail` property of `ViewConfig` to add badges to menu items. Both `ViewConfig<T>` and `createMenuItems<T>()` support the `detail` property, which allows you to pass additional metadata for the view.
+
+[.example]
+--
+[source,ts]
+.`types/view-detail.ts`
+----
+export default type ViewDetail = {
+  badgeText: string;
+  badgeVariant: '' | 'success' | 'error' | 'contrast';
+};
+----
+
+[source,tsx]
+.`views/about.tsx`
+----
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import type ViewDetail from 'Frontend/types/view-detail.js';
+
+export default function AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig<ViewDetail> = {
+  title: 'About Us',
+  detail: {
+    badgeText: 'New',
+    badgeVariant: 'success',
+  },
+};
+----
+
+[source,tsx]
+.`views/@layout.tsx`
+----
+// ...
+<SideNav onNavigate={({ path }) => navigate(path!)} location={location}>
+  {createMenuItems<ViewDetail>().map(({ to, title, icon, detail }) => (
+    <SideNavItem path={to} key={to}>
+      {icon ? <Icon src={icon} slot="prefix"></Icon> : <></>}
+      {title}{' '}
+      {detail && (
+        <span {...{ theme: `badge small ${detail.badgeVariant}` }}>{detail.badgeText}</span>
+      )}
+    </SideNavItem>
+  ))}
+</SideNav>
+// ...
+----
+--
 
 == Programmatic Navigation
 
