@@ -16,19 +16,59 @@ This API supports various download scenarios, from simple file downloads to comp
 
 This documentation covers the main features of the `DownloadHandler` API, including:
 
-* <<#helpers,Static helper methods for common download scenarios>>
+* <<#common,Common download scenarios>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
 * <<#low-level,Low-level API features>>
 
-[#helpers]
+[#common]
 == Common Download Scenarios
 
-The `DownloadHandler` API provides several static helper methods to simplify common download scenarios.
+The `DownloadHandler` can be in a form of lambda, where you can control the data transfer and UI updates thanks to [classname]`DownloadEvent` API, or can use several provided static helper methods to simplify common download scenarios.
 
-=== Download a Classpath Resource
+=== Using DownloadEvent And Lambda Expression
 
-The `forClassResource` method allows you to serve resources from the classpath.
+The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` and can be created using a lambda expression:
+
+[source,java]
+----
+Anchor downloadLink = new Anchor((DownloadEvent event) -> {
+    event.setFileName("readme.md");
+    var anchor = event.getOwningComponent();
+    event.getResponse().setHeader("Cache-Control", "public, max-age=3600");
+    try (OutputStream outputStream = event.getOutputStream()) {
+        // Write data to the output stream
+    }
+    event.getUI().access(() -> { /* UI updates */});
+}, "Download me!");
+----
+
+Using [classname]`DownloadEvent` and lambda is particularly useful for:
+
+* Writing arbitrary data to the response output stream
+* Setting file meta-data like file name, content type, and content length
+* Update UI or owner component during the download
+* Having access to the [classname]`VaadinRequest`, [classname]`VaadinResponse`, and [classname]`VaadinSession` instances
+
+=== Download Content from InputStream
+
+The `fromInputStream` method allows you to serve content from any [classname]`InputStream`.
+This is the most flexible helper method as it can be used with any data source that can provide an `InputStream`.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/download/InputStreamDownloadView.java[render,tags=snippet,indent=0]
+----
+
+This method is particularly useful for:
+
+* Serving content from databases or file storage
+* Generating dynamic content
+* Streaming large files
+
+=== Render Or Download Static Resource
+
+The [methodname]`forClassResource` and [methodname]`forServletResource` methods allows you to serve resources from the classpath or servlet context.
 For instance, for the file [filename]`src/main/resources/com/example/ui/vaadin.jpeg` and class [classname]`com.example.ui.MainView` the code would be:
 
 [source,java]
@@ -60,37 +100,10 @@ If the content should be inlined to the page, this have to be set explicitly by 
 Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-and-conditions.md")).inline(), AttachmentType.INLINE, "View Terms and Conditions");
 ----
 
-=== Download Content from InputStream
-
-The `fromInputStream` method allows you to serve content from any [classname]`InputStream`.
-This is the most flexible helper method as it can be used with any data source that can provide an `InputStream`.
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/flow/advanced/download/InputStreamDownloadView.java[render,tags=snippet,indent=0]
-----
-
-This method is particularly useful for:
-
-* Serving content from databases or file storage
-* Generating dynamic content
-* Streaming large files
-
 [#custom]
 == Custom Download Handlers
 
 For more complex download scenarios, you can create custom download handlers by implementing the `DownloadHandler` interface or extending existing implementations.
-
-=== Implementing DownloadHandler Interface Using Lambda Expression
-
-The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` and can be created using a lambda expression or by creating an implementation:
-
-[source,java]
-----
-Anchor downloadLink = new Anchor(event -> {
-    // Custom download handling logic
-}, "Download me!");
-----
 
 Creating an implementation is needed only when overriding some of the default methods from the interface, e.g. [methodname]`getUrlPostfix`, [methodname]`isAllowInert` or [methodname]`getDisabledUpdateMode`:
 
