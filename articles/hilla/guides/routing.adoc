@@ -293,7 +293,7 @@ For applications using authentication, requires user authentication for accessin
 
 === Advanced Customization
 
-Sometimes, you may want to customize the view metadata even further. The following example shows how to use the `detail` property of `ViewConfig` to add badges to menu items. Both `ViewConfig<T>` and `createMenuItems<T>()` support the `detail` property, which allows you to pass additional metadata for the view.
+Sometimes, you may want to customize the view metadata even further. The following example shows how to use the `detail` property of `ViewConfig` to add badges to menu items. Both `ViewConfig<T>` and `createMenuItems<T>()` support the `detail` property, which allows you to pass additional metadata for the view. Also, `useViewConfig` hook can be used to access the current view configuration, including the custom type.
 
 [.example]
 --
@@ -301,9 +301,11 @@ Sometimes, you may want to customize the view metadata even further. The followi
 .`types/view-detail.ts`
 ----
 export default type ViewDetail = { // <1>
-  badgeText: string;
-  badgeVariant: '' | 'success' | 'error' | 'contrast';
-};
+  description: string;
+  badge: {
+    text: string;
+    variant: '' | 'success' | 'error' | 'contrast';
+  };
 ----
 
 [source,tsx]
@@ -321,8 +323,11 @@ export default function AboutView() {
 export const config: ViewConfig<ViewDetail> = { // <2>
   title: 'About Us',
   detail: { // <3>
-    badgeText: 'New',
-    badgeVariant: 'success',
+    description: 'Learn more about us',
+    badge: {
+      text: 'New',
+      variant: 'success',
+    },
   },
 };
 ----
@@ -331,25 +336,34 @@ export const config: ViewConfig<ViewDetail> = { // <2>
 .`views/@layout.tsx`
 ----
 // ...
+const viewConfig = useViewConfig<ViewConfig<ViewDetail>>(); // <4>
+// ...
 <SideNav onNavigate={({ path }) => navigate(path!)} location={location}>
-  {createMenuItems<ViewDetail>().map(({ to, title, icon, detail }) => ( {/* <4> */}
+  {createMenuItems<ViewDetail>().map(({ to, title, icon, detail }) => ( {/* <5> */}
     <SideNavItem path={to} key={to}>
       {icon ? <Icon src={icon} slot="prefix"></Icon> : <></>}
       {title}{' '}
-      {detail && ( {/* <5> */}
-        <span {...{ theme: `badge small ${detail.badgeVariant}` }}>{detail.badgeText}</span>
+      {detail && ( {/* <6> */}
+        <span {...{ theme: `badge small ${detail.badge.variant}` }}>{detail.badge.text}</span>
       )}
     </SideNavItem>
   ))}
 </SideNav>
+// ...
+<h1 slot="navbar" className="text-l m-0">
+  {viewConfig?.title}{' '}
+  <span className="text-s text-secondary">{viewConfig?.detail?.description}</span> {/* <7> */}
+</h1>
 // ...
 ----
 --
 <1> Define a custom type for view details.
 <2> Use the custom type in the `ViewConfig` definition.
 <3> Add the `detail` property to the `ViewConfig` object.
-<4> Use the custom type in the `createMenuItems` function and get the `detail` property.
-<5> Use the `detail` property to render a badge in the menu item.
+<4> Use the `useViewConfig` hook to get the current view configuration, including the custom type.
+<5> Use the custom type in the `createMenuItems` function and get the `detail` property.
+<6> Use the `detail` property to render a badge in the menu item.
+<7> Use the `detail` property to display additional information in the header.
 
 == Programmatic Navigation
 
