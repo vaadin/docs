@@ -7,14 +7,18 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-button-theme-variant")
 public class UploadButtonThemeVariant extends Div {
 
     public UploadButtonThemeVariant() {
-        MemoryBuffer buffer = new MemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
+        upload.setMaxFiles(1);
         upload.setAcceptedFileTypes("application/pdf", ".pdf");
 
         Button uploadButton = new Button("Upload PDF...");
