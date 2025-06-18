@@ -3,6 +3,9 @@ package com.vaadin.demo.component.messages;
 import java.time.Duration;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
+
+import com.vaadin.flow.component.messages.MessageList;
+
 import reactor.core.publisher.Flux;
 
 public class LLMClient {
@@ -49,5 +52,35 @@ public class LLMClient {
     }
 
     record Message(@NonNull boolean assistant, @NonNull String text) {
+    }
+
+    public static void initPolling(MessageList list) {
+        // Since push is not in use in docs and poll interval isn't an option
+        // (can't be safely cleared),
+        // we use a custom polling mechanism for the example.
+        list.getElement().addEventListener("poll", e -> {
+        });
+        list.getElement().executeJs(
+                """
+                            let previousMutation;
+                            let interval;
+
+                            const observer = new MutationObserver(() => {
+                                previousMutation = Date.now();
+
+                                // Clear existing interval before creating a new one
+                                clearInterval(interval);
+                                interval = setInterval(() => {
+                                    if (!this.isConnected || previousMutation < Date.now() - 4000) {
+                                        // It's been over 4 seconds since the last mutation, stop polling
+                                        clearInterval(interval);
+                                    } else {
+                                        this.dispatchEvent(new Event('poll'));
+                                    }
+                                }, 200);
+                            });
+
+                            observer.observe(this, { childList: true, subtree: true });
+                        """);
     }
 }

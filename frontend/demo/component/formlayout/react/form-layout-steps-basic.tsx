@@ -1,9 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { EmailField } from '@vaadin/react-components/EmailField.js';
-import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
+import { EmailField, FormLayout, SplitLayout, TextField } from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]
@@ -16,17 +13,23 @@ function Example() {
     { minWidth: '500px', columns: 3 },
   ];
 
-  return (
-    <SplitLayout>
+  function renderFormLayout() {
+    return (
       <FormLayout responsiveSteps={responsiveSteps}>
         <TextField label="First name" />
         <TextField label="Last name" />
-        <EmailField label="Email" />
+        <EmailField label="Email address" />
       </FormLayout>
+    );
+  }
+  // end::snippet[]
+
+  return (
+    <SplitLayout>
+      {renderFormLayout()}
       <div></div>
     </SplitLayout>
   );
-  // end::snippet[]
 }
 
 export default reactExample(Example); // hidden-source-line

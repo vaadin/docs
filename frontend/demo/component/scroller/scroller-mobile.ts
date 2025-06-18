@@ -12,14 +12,7 @@ import { applyTheme } from 'Frontend/generated/theme';
 export class Example extends LitElement {
   static override styles = css`
     section {
-      border: 1px solid var(--lumo-contrast-20pct);
-      max-width: 100%;
       width: 360px;
-    }
-
-    section h2 {
-      margin-left: var(--lumo-space-m);
-      margin-right: var(--lumo-space-m);
     }
   `;
 
@@ -32,12 +25,12 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <section id="container">
-        <h2>Create new...</h2>
+      <section class="border border-contrast-20 max-w-full" id="container">
+        <h2 class="pt-m px-m text-xl">Create new...</h2>
 
         <!-- tag::snippet[] -->
         <vaadin-scroller scroll-direction="horizontal">
-          <vaadin-horizontal-layout style="display: inline-flex;" theme="padding spacing">
+          <vaadin-horizontal-layout class="inline-flex" theme="padding spacing">
             <vaadin-button style="height: 100px;">
               <vaadin-icon icon="vaadin:clipboard-check" slot="prefix"></vaadin-icon>
               Audit
