@@ -2,7 +2,7 @@ import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { MenuBar, type MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 
 function createItem(iconName: string, text: string, isChild = false) {
   const iconStyle: React.CSSProperties = {
@@ -26,7 +26,7 @@ function createItem(iconName: string, text: string, isChild = false) {
 
 function Example() {
   // tag::snippet[]
-  const items = [
+  const items: MenuBarItem[] = [
     {
       component: createItem('share', 'Share'),
       children: [

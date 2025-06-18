@@ -15,7 +15,7 @@ page-links:
 = Master-Detail Layout
 
 // tag::description[]
-Master-Detail Layout is component for building UIs with a horizontally or vertically split pair of a master (or primary) area and a detail (or secondary) area that can responsively switch to an overlay.
+Master-Detail Layout is component for building UIs with a horizontally or vertically split pair consisting of a master area and a detail area that can responsively switch to an overlay.
 // end::description[]
 
 :preview-feature: Master-Detail Layout
@@ -76,6 +76,116 @@ include::{root}/frontend/demo/component/master-detail-layout/react/PersonDetail.
 endif::[]
 --
 
+== Setting the Overlay Breakpoint
+
+For each area, either a _fixed_ size or a _minimum_ size can be specified. The area with a minimum size takes whatever space is available next to the fixed size area. If the available space is smaller than the minimum size, the detail area is rendered as an overlay.
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setMasterMinSize("600px");
+layout.setDetailSize("300px");
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout
+  masterMinSize="600px"
+  detailSize="300px"
+/>
+----
+endif::[]
+--
+
+The two most common configurations are:
+
+* A flexible master area with a minimum size, next to a fixed-size detail area;
+* A fixed-size master area, next to a flexible detail area with a minimum size.
+
+If both areas are configured to be flexible, whichever reaches its minimum size first determines the overlay breakpoint.
+
+If neither a minimum or a fixed size is explicitly set, the layout tries to determine an appropriate minimum size for each area automatically based on its content.
+
+
+== Stack Mode
+
+By default, the detail overlay is rendered as a drawer that opens from the right-hand side of the layout. By switching to _stack mode_, the two areas are rendered "stacked" on top of each other, with the detail area fully covering the master area, when rendered as an overlay.
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout stackOverlay />
+----
+endif::[]
+--
+
+== Forced Overlay Mode
+
+The layout can be configured to _always_ render the detail area as an overlay (either as drawer or stack), regardless of minimum sizes:
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setForceOverlay(true);
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout forceOverlay />
+----
+endif::[]
+--
+
+== Overlay Containment Modes
+
+The overlay can be configured to render in two different ways, called _containment modes_:
+
+* *Layout*: The overlay only covers the master area (default);
+* *Viewport*: The overlay covers the entire viewport (i.e. page).
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout containment="viewport" />
+----
+endif::[]
+--
+
+.Limited Modality with Viewport-Containment
+[NOTE]
+Due to browser support constraints, the modality of the detail overlay in viewport containment mode is currently limited to pointer interactions. Elements behind the overlay can be focused by keyboard. This limitation is planned to be addressed in V25.
+
+
 == Orientation
 
 By default, the Master-Detail Layout is split horizontally. This can be changed to a vertical split.
@@ -122,114 +232,53 @@ include::{root}/frontend/demo/component/master-detail-layout/react/PersonDetail.
 endif::[]
 --
 
-== Responsive Details Area
 
-The detail area can be rendered in three different ways:
+== Hiding the Detail Area
 
-* *Split*: Side-by-side with the master area (horizontally or vertically, depending on the orientation);
-* *Drawer*: As an overlay partially covering the master area;
-* *Stack*: As a full-size overlay fully covering the master area.
+The detail area is automatically shown or hidden when content is added or removed from it. There is no explicit property to control the visibility of the detail area.
 
-=== Overlay Based on Available Space
+Master-Detail Layout exposes the following events that can be used to hide the detail area by removing the content from it:
 
-For each area, either a _fixed_ size or a _minimum_ size can be specified. The area with a minimum size takes whatever space is available next to the fixed size area. If the available space is smaller than the minimum size, the detail area is rendered as an overlay.
-
-The two most common configurations are:
-
-* A flexible master area with a minimum size, next to a fixed-size detail area;
-* A fixed-size master area, next to a flexible detail area with a minimum size.
-
-If both areas are configured to be flexible, whichever reaches its minimum size first determines the overlay breakpoint.
-
-If not explicitly set, the layout tries to determine an appropriate minimum size automatically based on the content.
+- `backdrop-click`: Fired when the user clicks on the backdrop of the detail overlay when it is in drawer mode.
+- `detail-escape-press`: Fired when the user presses kbd:[Escape] within the detail area.
 
 [.example]
 --
 ifdef::flow[]
-[source,Java]
+[source,java]
 ----
 <source-info group="Flow"></source-info>
-layout.setMasterMinSize("600px");
-layout.setDetailSize("300px");
+layout.addBackdropClickListener(event -> {
+    // Hide the detail area by removing the content
+    layout.setDetail(null);
+});
+
+layout.addDetailEscapePressListener(event -> {
+    // Hide the detail area by removing the content
+    layout.setDetail(null);
+});
 ----
 endif::[]
+
 ifdef::react[]
 [source,tsx]
 ----
 <source-info group="React"></source-info>
-<MasterDetailLayout
-  masterMinSize="600px"
-  detailSize="300px"
-/>
-----
-endif::[]
---
+const selectedPerson = useSignal<Person | null>(null);
 
-=== Stack Mode
+const closeDetail = () => {
+  // Clear selected person to not render the detail content
+  selectedPerson.value = null;
+};
 
-The layout can be configured to make the detail area in the overlay mode render as a _stack_ (i.e. fully cover the master area):
-
-[.example]
---
-ifdef::flow[]
-[source,Java]
-----
-<source-info group="Flow"></source-info>
-layout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
-----
-endif::[]
-ifdef::react[]
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<MasterDetailLayout stackOverlay />
-----
-endif::[]
---
-
-=== Forced Overlay Mode
-
-The layout can be configured to _always_ render the detail area as an overlay (either as drawer or stack), regardless of minimum sizes:
-
-[.example]
---
-ifdef::flow[]
-[source,Java]
-----
-<source-info group="Flow"></source-info>
-layout.setForceOverlay(true);
-----
-endif::[]
-ifdef::react[]
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<MasterDetailLayout forceOverlay />
-----
-endif::[]
---
-
-=== Overlay Containment Modes
-
-The overlay can be configured to render in two different ways, called _containment modes_:
-
-* *Layout*: The overlay only covers the master area (default);
-* *Viewport*: The overlay covers the entire viewport (i.e. page).
-
-[.example]
---
-ifdef::flow[]
-[source,Java]
-----
-<source-info group="Flow"></source-info>
-layout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
-----
-endif::[]
-ifdef::react[]
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<MasterDetailLayout containment="viewport" />
+<MasterDetailLayout onBackdropClick={closeDetail} onDetailEscapePress={closeDetail}>
+  <MasterDetailLayout.Master>
+    <PersonList onSelect={(person) => { selectedPerson.value = person}} />
+  </MasterDetailLayout.Master>
+  <MasterDetailLayout.Detail>
+    {selectedPerson.value && <PersonDetail person={selectedPerson.value} />}
+  </MasterDetailLayout.Detail>
+</MasterDetailLayout>
 ----
 endif::[]
 --
