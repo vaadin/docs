@@ -165,21 +165,36 @@ The [classname]`SignalFactory` is the extension point for creating custom signal
 
 === Simple Counter Example
 
+This example demonstrates how to bind a counter signal (state) to a button (UI) — the button's text is updated reactively based on the counter value.
+The binding between state and UI is done using a [classname]`ComponentEffect.format` helper that receives an owner component, the method reference that in turn plays a role of a signal effect function and the formatted string with the corresponding signals holding the values:
+
 [source,java]
 ----
-public class CounterView extends VerticalLayout {
+public class SignalDemo extends VerticalLayout {
+    // creates a signal instance that can be shared across the application
     private final NumberSignal counter =
             SignalFactory.IN_MEMORY_SHARED.number("counter");
 
-    public CounterView() {
-        Button button = new Button("Click me",
+    public SignalDemo() {
+        Button button = new Button();
+        button.addClickListener(
+                // updates the signal value on each button click
                 click -> counter.incrementBy(1.0));
-        Span count = new Span();
-        Signal.effect(() -> count.setText("Count: " + counter.valueAsInt()));
-        add(button, count);
+        add(button);
+
+        // Effect that resolves the button's text whenever the counter changes
+        ComponentEffect.format(button, Button::setText, "Clicked %.0f times", counter);
     }
 }
 ----
+
+The [classname]`ComponentEffect.format` internally initializes effect function:
+[source,java]
+----
+Signal.effect(() -> button.setText(String.format("Clicked %.0f times", counter.value())));
+----
+
+and automatically enables/disables it when a component is attached or detached from the UI.
 
 === Form Binding Example
 
@@ -305,8 +320,29 @@ Use [methodname]`Signal.effect()` to automatically update the UI when signal val
 [source,java]
 ----
 Signal.effect(() -> {
-    label.setText("Hello, " + user.value().getName());
+    label.setText(user.value().getName());
 });
+----
+
+Few helper methods are available for easier binding of signals to components that automatically enable/disable effect functions when a component is attached or detached from the UI:
+
+[source,java]
+----
+// Bind an effect function to a component:
+import java.util.Locale;ComponentEffect.effect(myComponent, () -> {
+  Notification.show("Component is attached and signal value is " + someSignal.value());
+});
+
+// Bind an effect function to a component using a value from a give signal:
+ComponentEffect.bind(label, user.map(u -> u.getName()), Span::setText);
+ComponentEffect.bind(label, stringSignal, Span::setText);
+ComponentEffect.bind(label, stringSignal.map(value -> !value.isEmpty()), Span::setVisible);
+
+// Bind a formatted string to a component based on 1..n signals:
+ComponentEffect.format(label, Span::setText, "The price of %s is %.2f", nameSignal, priceSignal);
+
+// Bind a formatted string to a component based on 1..n signals using a given locale:
+ComponentEffect.format(label, Span::setText, Locale.US, "The price of %s is %.2f", nameSignal, priceSignal);
 ----
 
 === Use Transactions for Atomic Updates
