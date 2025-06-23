@@ -1,5 +1,5 @@
 // tag::snippet[]
-import { Flow } from '@vaadin/flow-frontend';
+import { Flow } from '@vaadin/flow-frontend/Flow';
 import { Router } from '@vaadin/router';
 
 // Get automatically generated routes to server-side views

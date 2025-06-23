@@ -256,7 +256,7 @@ export default function MainLayout() {
 
 === View Config Options Reference
 
-Here are the options supported in the `config: ViewConfig` object:
+Here are the options supported in the `config: ViewConfig<T>` object (all of them are optional):
 
 `title: string`::
   View title for use in the main layout header, in the browser window `document.title`, and as the default for the menu entry. If not defined, the component name is used.
@@ -276,18 +276,94 @@ For applications using authentication, requires user authentication for accessin
 `menu: object`::
   The menu item metadata object with the following options:
 
-  `title?: string`:::
+  `title: string`:::
     Title to use in the menu item.
 
-  `icon?: string;`:::
+  `icon: string;`:::
     Icon to use in the menu.
 
-  `order?: number`:::
+  `order: number`:::
     The number used to determine the order in the menu. Ties are resolved based on the used title. Entries without explicitly defined ordering are put below entries with an order.
 
-  `exclude?: boolean`:::
+  `exclude: boolean`:::
     Set to true to explicitly exclude a view from the automatically populated menu.
 
+`detail: T`::
+  Optional detailed metadata for the view. This can be used for various purposes, such as displaying extra information in the UI. The type `T` can be any custom type you define.
+
+=== Advanced Customization
+
+Sometimes, you may want to customize the view metadata even further. The following example shows how to use the `detail` property of `ViewConfig` to add badges to menu items. Both `ViewConfig<T>` and `createMenuItems<T>()` support the `detail` property, which allows you to pass additional metadata for the view. Also, the `useViewConfig` hook can be used to access the current view configuration, including the custom type.
+
+[.example]
+--
+[source,ts]
+.`types/view-detail.ts`
+----
+export default type ViewDetail = { // <1>
+  description: string;
+  badge: {
+    text: string;
+    variant: '' | 'success' | 'error' | 'contrast';
+  };
+----
+
+[source,tsx]
+.`views/about.tsx`
+----
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import type ViewDetail from 'Frontend/types/view-detail.js';
+
+export default function AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig<ViewDetail> = { // <2>
+  title: 'About Us',
+  detail: { // <3>
+    description: 'Learn more about us',
+    badge: {
+      text: 'New',
+      variant: 'success',
+    },
+  },
+};
+----
+
+[source,tsx]
+.`views/@layout.tsx`
+----
+// ...
+const viewConfig = useViewConfig<ViewConfig<ViewDetail>>(); // <4>
+// ...
+<SideNav onNavigate={({ path }) => navigate(path!)} location={location}>
+  {createMenuItems<ViewDetail>().map(({ to, title, icon, detail }) => ( {/* <5> */}
+    <SideNavItem path={to} key={to}>
+      {icon ? <Icon src={icon} slot="prefix"></Icon> : <></>}
+      {title}{' '}
+      {detail && ( {/* <6> */}
+        <span {...{ theme: `badge small ${detail.badge.variant}` }}>{detail.badge.text}</span>
+      )}
+    </SideNavItem>
+  ))}
+</SideNav>
+// ...
+<h1 slot="navbar" className="text-l m-0">
+  {viewConfig?.title}{' '}
+  <span className="text-s text-secondary">{viewConfig?.detail?.description}</span> {/* <7> */}
+</h1>
+// ...
+----
+--
+<1> Define a custom type for view details.
+<2> Use the custom type in the `ViewConfig` definition.
+<3> Add the `detail` property to the `ViewConfig` object.
+<4> Use the `useViewConfig` hook to get the current view configuration, including the custom type.
+<5> Use the custom type in the `createMenuItems` function and get the `detail` property.
+<6> Use the `detail` property to render a badge in the menu item.
+<7> Use the `detail` property to display additional information in the header.
 
 == Programmatic Navigation
 

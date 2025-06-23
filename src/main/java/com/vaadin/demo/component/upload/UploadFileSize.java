@@ -9,14 +9,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-file-size")
 public class UploadFileSize extends Div {
 
     public UploadFileSize() {
-        MemoryBuffer buffer = new MemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
 
         int maxFileSizeInBytes = 10 * 1024 * 1024; // 10MB
         upload.setMaxFileSize(maxFileSizeInBytes);
