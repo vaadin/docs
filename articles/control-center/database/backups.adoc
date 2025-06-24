@@ -3,9 +3,13 @@ title: Backups
 page-title: Database backups in Control Center
 description: How to manage backups in Control Center
 meta-description: Create, schedule, or delete database backups in Control Center
+section-nav: commercial
 ---
 
 = Backups
+
+:commercial-feature: Backups
+include::{articles}/_commercial-banner.adoc[opts=optional]
 
 Control Center manages databases using https://cloudnative-pg.io[CloudNativePG], an open-source Kubernetes operator to manage PostgreSQL on any supported Kubernetes cluster.
 PostgreSQL natively provides https://www.postgresql.org/docs/current/backup.html[backup and recovery] capabilities based on file system level (physical) copy.
@@ -104,12 +108,14 @@ You will need the following information about the object store:
 - `ACCESS_KEY_ID`: the ID of the access key that will be used to upload files into S3
 - `ACCESS_SECRET_KEY`: the secret part of the access key mentioned above
 
+WARNING: To prevent the sensitive values of the secrets to be *stored in the shell's history*, write down the values in files *without an extra newline character* at the end of the text and pass those files to `kubectl` to save their content as the secret's values.
+
 .Create secret for AWS S3 credentials
 [source,shell]
 ----
 kubectl create secret generic aws-creds \
-  --from-literal=ACCESS_KEY_ID=<access key here> \
-  --from-literal=ACCESS_SECRET_KEY=<secret key here>
+  --from-file=ACCESS_KEY_ID=/path/to/access_key_id_file.txt \
+  --from-file=ACCESS_SECRET_KEY=/path/to/access_secret_key_file.txt
 ----
 
 Once the secret is created, its values can be referred to in the backup configuration when installing Control Center:
@@ -193,14 +199,16 @@ In order to access your storage account for backup and recovery of CloudNativePG
 When using either *Storage account access key* or *Storage account SAS Token*, the credentials need to be stored inside a Kubernetes Secret, adding data entries only when needed.
 The following command performs that:
 
+WARNING: To prevent the sensitive values of the secrets to be *stored in the shell's history*, write down the values in files *without an extra newline character* at the end of the text and pass those files to `kubectl` to save their content as the secret's values.
+
 .Create secret for Azure credentials
 [source,shell]
 ----
 kubectl create secret generic azure-creds \
-  --from-literal=AZURE_STORAGE_ACCOUNT=<storage account name> \
-  --from-literal=AZURE_STORAGE_KEY=<storage account key> \
-  --from-literal=AZURE_STORAGE_SAS_TOKEN=<SAS token> \
-  --from-literal=AZURE_STORAGE_CONNECTION_STRING=<connection string>
+  --from-file=AZURE_STORAGE_ACCOUNT=/path/to/storage_account_name.txt \
+  --from-file=AZURE_STORAGE_KEY=/path/to/storage_account_key.txt \
+  --from-file=AZURE_STORAGE_SAS_TOKEN=/path/to/sas_token.txt \
+  --from-file=AZURE_STORAGE_CONNECTION_STRING=/path/to/connection_string.txt
 ----
 
 Given the previous secret, the provided credentials can be injected inside the cluster configuration:
@@ -338,7 +346,3 @@ postgres:
   restoreFromBackup: example-backup
 [...]
 ----
-
-// TODO there are still issues with recovery such as new secrets generated with values different than those in the previous instance
-// The user must save these values before performing a backup to then update the secrets when recovery is completed.
-// We are trying to figure out a way to avoid this process and streamline the recovery process.
