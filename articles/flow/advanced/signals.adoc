@@ -335,12 +335,44 @@ Use the update() method when you need to update a signal's value based on its cu
 counter.update(current -> current + 1);
 ----
 
+=== Avoid changing signal values from inside effect or computed signal callbacks
+
+Updating the value of a signal as a direct reaction to some other signal value change might cause an infinite loop.
+To help protect against this, effect and computed signal callbacks are run inside a read-only transaction to prevent any accidental changes.
+
+Whenever possible, you should create a computed signal for any case where the value of some signal affects the value of another signal.
+
+[source,java]
+----
+Signal<String> otherSignal = Signal.computed(() -> {
+  return oneSignal.value();
+});
+----
+
+
+If that is not possible and you are certain there's no risk for infinite loops, you can bypass the check by using the `runWithoutTransaction` method.
+
+[source,java]
+----
+CompnentEffect.effect(() -> {
+  String value = oneSignal.value();
+
+  // This might lead to infinite loops.
+  // Do this only if absolutely necessary.
+  Signal.runWithoutTransaction(() -> {
+    otherSignal.value(value);
+  });
+});
+----
+
 == Advanced Topics
 
 === Standalone effects
 
 A standalone signal effect can be used for effects that aren't related to any UI component.
-Explicit cleanup is needed to release memory after the effect is no longer needed.
+
+The effect remains active until explicitly cleaned up.
+This might lead to memory leaks through any instances referenced by the closure of the effect callback.
 
 [source,java]
 ----
@@ -377,7 +409,6 @@ ValueSignal<String> readOnlyName = name.asReadonly();
 === Untracked Signal Access
 
 You can access a signal's value without registering a dependency, i.e., without triggering reactive effect functions.
-It's also possible to pick the confirmed value of a signal without triggering the effect function.
 
 [source,java]
 ----
