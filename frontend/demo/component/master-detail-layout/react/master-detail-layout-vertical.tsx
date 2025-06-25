@@ -25,7 +25,6 @@ function Example() {
         orientation="vertical"
         masterMinSize="150px"
         detailSize="250px"
-        stackThreshold="350px"
       >
         {/* end::snippet[] */}
         <MasterDetailLayout.Master>

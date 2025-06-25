@@ -12,37 +12,31 @@ import exampleStyles from './scroller-basic-styles'; // hidden-source-line
 
 function Example() {
   return (
-    <VerticalLayout id="container">
-      <header>
+    <VerticalLayout className="border border-contrast-20 items-stretch max-w-full" id="container">
+      <header className="flex gap-m items-center border-b p-m">
         <a href="#" aria-label="Go back">
-          <Icon icon="vaadin:arrow-left" aria-hidden="true" />
+          <Icon className="box-border icon-m p-xs" icon="vaadin:arrow-left" aria-hidden="true" />
         </a>
-        <h2>Edit employee</h2>
+        <h2 className="text-xl">Edit employee</h2>
       </header>
 
       {/* tag::snippet[] */}
-      <Scroller
-        scrollDirection="vertical"
-        style={{
-          borderBottom: '1px solid var(--lumo-contrast-20pct)',
-          padding: 'var(--lumo-space-m)',
-        }}
-      >
+      <Scroller className="border-b p-m" scrollDirection="vertical">
         <section aria-labelledby="personal-title">
-          <h3 id="personal-title">Personal information</h3>
-          <TextField style={{ width: '100%' }} label="First name" />
-          <TextField style={{ width: '100%' }} label="Last name" />
-          <DatePicker initialPosition="1990-01-01" label="Birthdate" style={{ width: '100%' }} />
+          <h3 className="text-l" id="personal-title">Personal information</h3>
+          <TextField className="w-full" label="First name" />
+          <TextField className="w-full" label="Last name" />
+          <DatePicker initialPosition="1990-01-01" label="Birthdate" className="w-full" />
         </section>
         <section aria-labelledby="employment-title">
-          <h3 id="employment-title">Employment information</h3>
-          <TextField style={{ width: '100%' }} label="Position" />
-          <TextArea style={{ width: '100%' }} label="Additional information" />
+          <h3 className="mt-l text-l" id="employment-title">Employment information</h3>
+          <TextField className="w-full" label="Position" />
+          <TextArea className="w-full" label="Additional information" />
         </section>
       </Scroller>
       {/* end::snippet[] */}
 
-      <footer>
+      <footer className="flex gap-s px-m py-s">
         <Button theme="primary">Save</Button>
         <Button theme="tertiary">Reset</Button>
       </footer>

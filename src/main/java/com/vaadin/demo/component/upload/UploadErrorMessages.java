@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-error-messages")
 public class UploadErrorMessages extends Div {
@@ -24,8 +25,10 @@ public class UploadErrorMessages extends Div {
     }
 
     private Div setupCautionExample() {
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
-        Upload upload = new Upload(buffer);
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
+        Upload upload = new Upload(inMemoryUploadHandler);
         upload.setDropAllowed(false);
 
         UploadExamplesI18N i18N = new UploadExamplesI18N();
@@ -45,9 +48,9 @@ public class UploadErrorMessages extends Div {
     }
 
     private Div setupRecommendedExample() {
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory((uploadMetadata, bytes) -> {});
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
         upload.setDropAllowed(false);
 
         UploadExamplesI18N i18N = new UploadExamplesI18N();
