@@ -14,7 +14,7 @@ public class MessageListMarkdown extends Div {
         MessageList list = new MessageList();
         list.setItems(new MessageListItem(
                 "**Hello team!** Did everyone review the *design document* for the new project?",
-                null, "Alex Johnson"),
+                "Alex Johnson"),
                 new MessageListItem(
                         """
                                 ## Project Update
@@ -26,7 +26,7 @@ public class MessageListMarkdown extends Div {
 
                                 Let me know your thoughts!
                                 """,
-                        null, "Sam Rivera"));
+                        "Sam Rivera"));
         list.setMarkdown(true);
         // end::snippet[]
 

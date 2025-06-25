@@ -4,6 +4,7 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   MenuBar,
+  type MenuBarItem,
   type MenuBarItemSelectedEvent,
   type SubMenuItem,
 } from '@vaadin/react-components/MenuBar.js';
@@ -11,7 +12,7 @@ import {
 function Example() {
   useSignals(); // hidden-source-line
   // tag::snippet[]
-  const items = useSignal([
+  const items = useSignal<MenuBarItem[]>([
     {
       text: 'Options',
       children: [{ text: 'Save automatically', checked: true }, { text: 'Notify watchers' }],
