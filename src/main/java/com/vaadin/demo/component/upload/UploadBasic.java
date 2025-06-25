@@ -5,6 +5,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.InMemoryUploadHandler;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 import java.io.InputStream;
 
@@ -13,16 +15,17 @@ public class UploadBasic extends Div {
 
     public UploadBasic() {
         // tag::snippet[]
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
-        Upload upload = new Upload(buffer);
+        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
+                (metadata, data) -> {
+                    // Get other information about the file.
+                    String fileName = metadata.fileName();
+                    String mimeType = metadata.contentType();
+                    long contentLength = metadata.contentLength();
 
-        upload.addSucceededListener(event -> {
-            String fileName = event.getFileName();
-            InputStream inputStream = buffer.getInputStream(fileName);
-
-            // Do something with the file data
-            // processFile(inputStream, fileName);
-        });
+                    // Do something with the file data...
+                    // processFile(data, fileName);
+                });
+        Upload upload = new Upload(inMemoryHandler);
         // end::snippet[]
 
         upload.getElement() // hidden-source-line
