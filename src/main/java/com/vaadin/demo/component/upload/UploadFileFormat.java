@@ -9,14 +9,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-file-format")
 public class UploadFileFormat extends Div {
 
     public UploadFileFormat() {
-        MemoryBuffer buffer = new MemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
         upload.setAcceptedFileTypes("application/pdf", ".pdf");
 
         upload.addFileRejectedListener(event -> {
