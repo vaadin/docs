@@ -44,9 +44,13 @@ export class Example extends LitElement {
             !datePicker.value && !!(datePicker.inputElement as HTMLInputElement).value;
           const hasBadTimeInput =
             !timePicker.value && !!(timePicker.inputElement as HTMLInputElement).value;
+          const hasIncompleteInput =
+            (datePicker.value && !timePicker.value) || (timePicker.value && !datePicker.value);
 
           if (hasBadDateInput || hasBadTimeInput) {
             this.errorMessage = 'Invalid date or time';
+          } else if (hasIncompleteInput) {
+            this.errorMessage = 'Missing date or time';
           } else if (!field.value) {
             this.errorMessage = 'Field is required';
           } else if (field.value < field.min!) {
