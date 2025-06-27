@@ -4,7 +4,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 @Route("application-images-class")
 public class ImageClassResource extends Div {
@@ -12,10 +12,7 @@ public class ImageClassResource extends Div {
 
     public ImageClassResource() {
         // tag::snippet[]
-        StreamResource imageResource = new StreamResource("myimage.png",
-                () -> getClass().getResourceAsStream("/images/myimage.png"));
-
-        Image image = new Image(imageResource, "My Streamed Image");
+        Image image = new Image(DownloadHandler.forClassResource(getClass(),"/images/myimage.png"), "My Streamed Image");
         add(image);
         // end::snippet[]
     }
