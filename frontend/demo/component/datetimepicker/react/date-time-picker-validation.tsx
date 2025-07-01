@@ -32,9 +32,13 @@ function Example() {
           !datePicker.value && !!(datePicker.inputElement as HTMLInputElement).value;
         const hasBadTimeInput =
           !timePicker.value && !!(timePicker.inputElement as HTMLInputElement).value;
+        const hasIncompleteInput =
+          (datePicker.value && !timePicker.value) || (timePicker.value && !datePicker.value);
 
         if (hasBadDateInput || hasBadTimeInput) {
           errorMessage.value = 'Invalid date or time';
+        } else if (hasIncompleteInput) {
+          errorMessage.value = 'Missing date or time';
         } else if (!field.value) {
           errorMessage.value = 'Field is required';
         } else if (field.value < field.min!) {
