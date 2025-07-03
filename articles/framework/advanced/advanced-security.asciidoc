@@ -49,3 +49,49 @@ and is not sanitized. As the entire purpose of the [classname]#RichTextArea#
 component is to allow input of formatted text, you can not just remove all HTML
 tags. Also many attributes, such as [parameter]#style#, should pass through the
 sanitization.
+
+[[advanced.security.logging]]
+== Browser Logging in Debug mode
+
+When Vaadin 8 application runs in debug mode, the client produces extensive debug
+log, which can be visible in the browser console. When running the application
+in the actual production environment, it is recommended to turn off this logging
+by setting Vaadin 8 to production mode.
+
+[source, java]
+----
+@VaadinServletConfiguration(productionMode = true, ui = MyUI.class)
+----
+
+[NOTE]
+Despite of the production mode is on, the bootstrap will do some logging when
+application starts if `?debug` query parameter is included in the url. This is
+harmless, no sensitive information will be logged. The logged information is
+available also in DOM and request response. Logging is turned off when production
+mode is detected.
+
+[NOTE]
+If you want to configure production mode programmatically by system property,
+it needs to be done when application is started by the container. Doing this in
+UI init is too late as the client is already started and will be in debug mode.
+The robust way is to do this by overriding the `createDeploymentConfiguration` method
+in servlet.
+
+[source,java]
+----
+    @VaadinServletConfiguration(productionMode = false, ui = MyUI.class)
+    public static class Servlet extends VaadinServlet {
+
+        @Override
+        protected DeploymentConfiguration createDeploymentConfiguration(
+                Properties initParameters) {
+            var env = System.getProperty("vaadin.productionMode");
+            var productionMode = "false";
+            if (env != null) {
+                productionMode = env.equals("true") ? "true" : "false";
+            }
+            initParameters.put("productionMode", productionMode);
+            return new DefaultDeploymentConfiguration(getClass(),
+                    initParameters);
+        }
+----
