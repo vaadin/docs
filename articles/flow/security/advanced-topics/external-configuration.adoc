@@ -13,7 +13,7 @@ It's often bad practice to put sensitive information, such as database URI, user
 
 To avoid leaking sensitive information, you should consider storing sensitive information outside of your project files. In no case should you ever `git commit` passwords or other secrets into the repository.
 
-This guide demonstrates two ways to externalize sensitive data: using system environment variables; and using an external properties file
+This guide demonstrates three ways to externalize sensitive data: using system environment variables; using an external properties file; and using encrypted property values with Jasypt.
 
 
 == Use System Environment Variables
@@ -88,6 +88,98 @@ Then you can import this file into your Vaadin app's default [filename]`applicat
 ...
 spring.config.import = file:/Users/MyUserName/secret/db.properties
 ...
+----
+
+
+== Use Encrypted Property Values with Jasypt
+Jasypt (Java Simplified Encryption) is a Java library that provides simple and transparent encryption/decryption for application data. It integrates with Spring Boot to encrypt sensitive values (e.g., database passwords) directly in properties files like `application.properties`.
+
+This prevents accidental exposure of sensitive values by decrypting values at runtime using a master password.
+
+For using this in your project, add the Jasypt Spring Boot starter dependency in the project like this:
+
+.pom.xml
+[source,xml]
+----
+...
+<dependency>
+  <groupId>com.github.ulisesbocchio</groupId>
+  <artifactId>jasypt-spring-boot-starter</artifactId>
+  <version>3.0.4</version>
+</dependency>
+...
+----
+
+Add the Jasypt Maven plugin to the plugins section.
+
+.pom.xml
+[source,xml]
+----
+...
+<plugin>
+  <groupId>com.github.ulisesbocchio</groupId>
+  <artifactId>jasypt-maven-plugin</artifactId>
+  <version>3.0.4</version>
+</plugin>
+...
+----
+
+
+Enable Jasypt for properties decryption by annotating a `@Configuration` class with `@EnableEncryptableProperties`. Only one occurrence of this annotation is needed.
+
+For example, add `@EnableEncryptableProperties` annotation to the Spring Boot `Application` class like this:
+
+.Application.java
+[source,java]
+----
+...
+@SpringBootApplication
+@EnableEncryptableProperties
+public class Application implements AppShellConfigurator {
+...
+----
+
+Now, wrap the values that you want to encrypt with `DEC()`, for example, `DEC(your-secret-value-here)` in any properties file that is used in the Spring Boot application like this:
+
+.application.properties
+[source,properties]
+----
+...
+spring.datasource.password=DEC(super-secret-password)
+...
+----
+
+Run the following command to encrypt the values in place. The `jasypt.plugin.path` should point to the properties file where you have the `DEC()` wrapped value which you want to encrypt.
+
+The file path specified is relative to the directory the command is executed in.
+
+[source,sh]
+----
+mvn jasypt:encrypt -Djasypt.encryptor.password=<choose-a-password-to-use-for-encryption> -Djasypt.plugin.path="file:src/main/resources/application.properties"
+----
+
+Once the above command completes, all `DEC()` wrapped values in the properties file should have been encrypted in place and replaced with `ENC(....)` like this:
+
+.application.properties
+[source,properties]
+----
+...
+spring.datasource.password=ENC(C7lfsna/9gxDsdfsdfsXiJQcFzpsdfsdfss70sdfsdfsr2wfjEa+qDM)
+...
+----
+
+The Jasypt encrypted property files can be checked into source control, since the values are now encrypted.
+
+.Do not commit the password used for encryption
+[CAUTION]
+If the password is leaked all encrypted values are compromised. Attackers with read access to both the encrypted file and the password can recover the sensitive values.
+
+When starting the application, set the system property `jasypt.encryptor.password` to the password that was used for encryption in the step above.
+
+For example,
+[source,sh]
+----
+java -Djasypt.encryptor.password=<the-password-used-for-encryption> -jar your-application.jar
 ----
 
 [discussion-id]`FCC4C231-5DB9-4950-9559-C89630042A43`

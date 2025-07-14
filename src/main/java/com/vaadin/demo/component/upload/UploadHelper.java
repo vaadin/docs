@@ -9,18 +9,21 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-helper")
 public class UploadHelper extends Div {
 
     public UploadHelper() {
-        MemoryBuffer buffer = new MemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
         H4 title = new H4("Upload spreadsheet");
         Paragraph hint = new Paragraph(
                 "File size must be less than or equal to 1 MB. Only Excel and CSV files are accepted.");
 
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
         upload.setAcceptedFileTypes(
                 // Microsoft Excel (.xls)
                 "application/vnd.ms-excel", ".xls",

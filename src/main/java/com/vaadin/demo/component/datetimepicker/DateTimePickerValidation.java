@@ -24,6 +24,7 @@ public class DateTimePickerValidation extends Div {
         dateTimePicker.setI18n(new DateTimePickerI18n()
                 .setRequiredErrorMessage("Field is required")
                 .setBadInputErrorMessage("Invalid date or time format")
+                .setIncompleteInputErrorMessage("Missing date or time")
                 .setMinErrorMessage("Too early, choose another date and time")
                 .setMaxErrorMessage("Too late, choose another date and time"));
 

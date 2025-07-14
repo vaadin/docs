@@ -10,7 +10,7 @@ order: 40
 = Replace H2
 :toclevels: 2
 
-Many Spring Boot applications start with H2 because it's lightweight and easy to configure. For instance, Vaadin's <</getting-started/walk-through#,Walking Skeleton>> uses H2. However, you typically don't run H2 in production. Switching to your production database early in development helps catch compatibility issues sooner and lets you leverage database-specific features for performance.
+Many Spring Boot applications start with H2 because it's lightweight and easy to configure. However, you typically don't run H2 in production. Switching to your production database early in development helps catch compatibility issues sooner and lets you leverage database-specific features for performance.
 
 This guide teaches you how to replace H2 with PostgreSQL, although the same principle can be applied to other databases such as MySQL, Oracle, and Microsoft SQL Server. A hands-on mini-tutorial at the end helps you apply these concepts in a real Vaadin application.
 
@@ -219,75 +219,41 @@ In this tutorial, you'll replace H2 with PostgreSQL in a real Vaadin application
 [%collapsible]
 ====
 Use the same project from the <<add-flyway#,Add Flyway>> mini-tutorial. Complete that tutorial before proceeding with this one.
-
-[NOTE]
-Older versions of the walking skeleton did not include Testcontainers support, whereas newer versions do. If the necessary dependencies and configuration classes are not present in your project, start over with a new <<{articles}/getting-started/start#,walking skeleton>>.
-
 ====
 
 .Update Database Dependencies
 [%collapsible]
 ====
-In `pom.xml`, locate the H2 dependency:
+The walking skeleton already comes with PostgreSQL configured. However, when run locally it still uses H2.
+
+In `pom.xml`, locate the `h2-local-development` profile:
 
 [source,xml]
 ----
-<dependency>
-    <!-- Replace with the database you will be using in production -->
-    <groupId>com.h2database</groupId>
-    <artifactId>h2</artifactId>
-</dependency>
+<profile>
+    <!--
+    ...
+     -->
+    <activation>
+        <activeByDefault>true</activeByDefault>
+    </activation>
+    <id>h2-local-development</id>
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</profile>
 ----
 
-Replace it with the PostgreSQL dependency:
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>runtime</scope>
-</dependency>
-----
-
-Also add the Flyway and Testcontainers PostgreSQL dependencies:
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-database-postgresql</artifactId>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.testcontainers</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>test</scope>
-</dependency>
-----
-====
-
-
-.Add PostgreSQL Service Connection
-[%collapsible]
-====
-Add the following code to the `TestcontainersConfiguration` class:
-
-.TestcontainersConfiguration.java
-[source,java]
-----
-@Bean
-@ServiceConnection
-public JdbcDatabaseContainer<?> postgresContainer() {
-    return new PostgreSQLContainer<>("postgres:17-alpine");
-}
-----
-
-Now run the integration test. Remember that you must have Docker running for everything to work.
+Delete this profile. The application is now using PostgreSQL everywhere.
 ====
 
 
