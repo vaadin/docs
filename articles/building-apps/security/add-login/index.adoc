@@ -61,19 +61,22 @@ This is a minimal implementation of a security configuration class:
 ----
 @EnableWebSecurity
 @Configuration
-// TODO: use VaadinSecurityConfigurer
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http); // <1>
-        // TODO Configure the login view
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView("/login");
+        });
+        return http.build();
     }
 
     @Bean
     public UserDetailsManager userDetailsManager() {
         LoggerFactory.getLogger(SecurityConfig.class)
-            .warn("NOT FOR PRODUCITON: Using in-memory user details manager!"); // <2>
+            .warn("NOT FOR PRODUCTION: Using in-memory user details manager!"); // <1>
         var user = User.withUsername("user")
                 .password("{noop}user")
                 .roles("USER")
@@ -86,10 +89,9 @@ class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
-<1> Always call `super.configure()` -- this ensures that the application is properly configured.
-<2> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
+<1> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
 
-The [classname]`VaadinWebSecurity` class provides essential security configurations out of the box, including:
+The [classname]`VaadinSecurityConfigurer` class provides essential security configurations out of the box, including:
 
 * CSRF protection
 * Default request caching
