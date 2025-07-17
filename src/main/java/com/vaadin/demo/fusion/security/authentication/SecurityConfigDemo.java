@@ -1,27 +1,38 @@
 package com.vaadin.demo.fusion.security.authentication;
 
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * An example code for demoing the Spring Security configuration, shouldn't
  * affect the doc application itself.
  */
-public class SecurityConfigDemo extends VaadinWebSecurity {
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfigDemo {
 
-    // tag::login[]
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
-        setLoginView(http, "/login");
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // tag::public-resources[]
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/images/**").permitAll());
+        // end::public-resources[]
+        // tag::login[]
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer.loginView("/login"));
+        // end::login[]
+        return http.build();
     }
-    // end::login[]
 
     @Bean
     public UserDetailsManager userDetailsService() {
@@ -32,12 +43,4 @@ public class SecurityConfigDemo extends VaadinWebSecurity {
                 User.withUsername("user").password("{noop}password")
                         .roles("USER").build());
     }
-
-    // tag::public-resources[]
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        super.configure(web);
-        web.ignoring().requestMatchers(new AntPathRequestMatcher("/images/**"));
-    }
-    // end::public-resources[]
 }

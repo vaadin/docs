@@ -80,7 +80,7 @@ For integration with other OAuth2 providers, refer to the https://docs.spring.io
 
 == Enable OAuth2 Login in Vaadin
 
-To enable OAuth2 login in a Vaadin application, extend the [classname]`VaadinWebSecurity` class and configure the login page and post-logout redirect URI using the [methodname]`setOAuth2LoginPage` method.
+To enable OAuth2 login in a Vaadin application, use the [classname]`VaadinSecurityConfigurer` class and configure the login page and post-logout redirect URI using the [methodname]`oauth2LoginPage` method.
 
 Besides the [classname]`HttpSecurity` instance, there are two method parameters:
 
@@ -94,22 +94,24 @@ The post logout redirect URI can be expressed as a relative or absolute URI, or 
 [source,java]
 ----
 @Configuration
-// TODO: use VaadinSecurityConfigurer
-class SecurityConfiguration extends VaadinWebSecurity {
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
-        setOAuth2LoginPage(http,
-            "/oauth2/authorization/keycloak", // (1)
-            "{baseUrl}/session-ended"         // (2)
-        );
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfiguration {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.oauth2LoginPage(
+                        "/oauth2/authorization/keycloak", // (1)
+                        "{baseUrl}/session-ended"         // (2)
+            );
+        });
+        return http.build();
     }
 }
 ----
 <1> Login page for initiating OAuth2 login with the Keycloak client.
 <2> Post logout redirect URI uses a template to resolve dynamically the URL.
 
-The [methodname]`setOAuth2LoginPage(HttpSecurity, String)` method is a shortcut that defaults the post-logout redirect URL to `{baseUrl}`.
+The [methodname]`oauth2LoginPage(String)` method is a shortcut that defaults the post-logout redirect URL to `{baseUrl}`.
 
 
 [discussion-id]`EF8F6AC3-BE67-4BE2-9A78-C371C1D4B9FD`

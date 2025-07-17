@@ -34,17 +34,17 @@ After doing this, the application is protected with a default Spring login view.
 
 == Server Configuration
 
-To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class. Then annotate it to enable security.
+To implement your own security configuration, create a new configuration class that uses the [classname]`VaadinSecurityConfigurer` class. Then annotate it to enable security.
 
-[classname]`VaadinWebSecurity` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
+[classname]`VaadinSecurityConfigurer` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
 .`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-// TODO: use VaadinSecurityConfigurer
-public class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
 
   private final RouteUtil routeUtil;
 
@@ -52,15 +52,15 @@ public class SecurityConfig extends VaadinWebSecurity {
     this.routeUtil = routeUtil;
   }
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http, RouteUtil routeUtil) throws Exception {
     // Set default security policy that permits Hilla internal requests and
     // denies all other
     http.authorizeHttpRequests(registry -> registry.requestMatchers(
             routeUtil::isRouteAllowed).permitAll());
-    super.configure(http);
     // use a custom login view and redirect to root on logout
-    setLoginView(http, "/login", "/");
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer.loginView("login", "/"));
+    return http.build();
   }
 
   @Bean
@@ -82,21 +82,22 @@ You should never hard-code credentials in an application. The <<{articles}/hilla
 
 === Public Views & Resources
 
-Public views need to be added to the configuration before calling [methodname]`super.configure()`. Here's an example of this:
+Public views need to be added to the configuration in [methodname]`securityFilterChain`. Here's an example of this:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(registry -> {
-        registry.requestMatchers(new AntPathRequestMatcher("/public-view")).permitAll(); // custom matcher
+        registry.requestMatchers("/public-view").permitAll(); // custom matcher
     });
-    super.configure(http);
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { ... });
+    return http.build();
   }
 ----
 
-Public resources can be added by overriding [methodname]`configure(WebSecurity web)` like so:
+Public resources can be added to the configuration in [methodname]`securityFilterChain` like so:
 
 .`SecurityConfig.java`
 [source,java]
@@ -149,7 +150,7 @@ const routes = [
 ]
 ----
 
-Update the [classname]`SecurityConfig` to use the [methodname]`setLogin()` helper, which sets up everything needed for a Hilla-based login view:
+Update the [classname]`SecurityConfig` to use the [methodname]`loginView()` helper, which sets up everything needed for a Hilla-based login view:
 
 [source,java]
 ----
@@ -329,7 +330,7 @@ The `getRoles` function is still expected to return an array of strings. As a re
 endif::hilla-react[]
 
 
-=== Configuration Helper Alternatives
+=== [deprecated:com.vaadin:vaadin@V24.8]#Configuration Helper Alternatives#
 
 [methodname]`VaadinWebSecurity.configure(http)` configures HTTP security to bypass framework internal resources. If you prefer to make your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`VaadinWebSecurity.getDefaultHttpSecurityPermitMatcher()`.
 
