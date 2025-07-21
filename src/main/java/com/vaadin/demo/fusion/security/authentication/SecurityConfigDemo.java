@@ -17,9 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
  * An example code for demoing the Spring Security configuration, shouldn't
  * affect the doc application itself.
  */
-@EnableWebSecurity
-@Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+//@EnableWebSecurity
+//@Configuration
+//@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfigDemo {
 
     @Bean
