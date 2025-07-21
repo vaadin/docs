@@ -204,11 +204,18 @@ public class MainLayout extends AppLayout {
 
 The next step is to have a Spring Security configuration class that uses [classname]`VaadinSecurityConfigurer`. There's no convention for naming this class, so here it's named [classname]`SecurityConfiguration`. However, take care with Spring Security annotations.
 
+Examples shows also how to use [classname]`VaadinWebSecurity` class instead. It's deprecated since 24.8 and will be removed in next major release.
+
 This is a minimal implementation of such a class:
+
+
+[.example]
+--
 
 .[filename]`SecurityConfiguration.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity // <1>
 @Configuration
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class) // <2>
@@ -256,6 +263,68 @@ public class SecurityConfiguration {
 }
 ----
 
+.[filename]`SecurityConfiguration.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@EnableWebSecurity // <1>
+@Configuration
+public class SecurityConfiguration
+extends VaadinWebSecurity { // <2>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // Delegating the responsibility of general configurations
+        // of http security to the super class. It's configuring
+        // the followings: Vaadin's CSRF protection by ignoring
+        // framework's internal requests, default request cache,
+        // ignoring public views annotated with @AnonymousAllowed,
+        // restricting access to other views/endpoints, and enabling
+        // NavigationAccessControl authorization.
+        // You can add any possible extra configurations of your own
+        // here (the following is just an example):
+
+        // http.rememberMe().alwaysRemember(false);
+
+        // Configure your static resources with public access before calling
+        // super.configure(HttpSecurity) as it adds final anyRequest matcher
+        http.authorizeHttpRequests(auth -> auth.requestMatchers(new AntPathRequestMatcher("/public/**"))
+            .permitAll());
+
+        super.configure(http); // <3>
+
+        // This is important to register your login view to the
+        // navigation access control mechanism:
+        setLoginView(http, LoginView.class); // <4>
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        // Customize your WebSecurity configuration.
+        super.configure(web);
+    }
+
+    /**
+     * Demo UserDetailsManager which only provides two hardcoded
+     * in memory users and their roles.
+     * NOTE: This shouldn't be used in real world applications.
+     */
+    @Bean
+    public UserDetailsManager userDetailsService() {
+        UserDetails user =
+                User.withUsername("user")
+                        .password("{noop}user")
+                        .roles("USER")
+                        .build();
+        UserDetails admin =
+                User.withUsername("admin")
+                        .password("{noop}admin")
+                        .roles("ADMIN")
+                        .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
 Notice the including of [annotationname]`@EnableWebSecurity`, [annotationname]`@Configuration`, and [annotationname]`@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)` annotations on top of the above class. As their names imply, they instruct Spring to enable its security features and configure the Vaadin-aware security context holder strategy.
 
 [classname]`VaadinSecurityConfigurer` is a helper class that configures the common Vaadin-related Spring Security settings. By using it, the view-based access control mechanism is enabled automatically, and no further configuration is needed.

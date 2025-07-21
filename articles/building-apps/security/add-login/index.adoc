@@ -56,9 +56,13 @@ It's best practice to create a dedicated package for security-related classes. I
 
 This is a minimal implementation of a security configuration class:
 
-.SecurityConfig.class
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
@@ -67,8 +71,8 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // Configure Vaadin's security using VaadinSecurityConfigurer
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView("/login");
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { // <1>
+            // TODO Configure the login view
         });
         return http.build();
     }
@@ -76,7 +80,7 @@ class SecurityConfig {
     @Bean
     public UserDetailsManager userDetailsManager() {
         LoggerFactory.getLogger(SecurityConfig.class)
-            .warn("NOT FOR PRODUCTION: Using in-memory user details manager!"); // <1>
+            .warn("NOT FOR PRODUCTION: Using in-memory user details manager!"); // <2>
         var user = User.withUsername("user")
                 .password("{noop}user")
                 .roles("USER")
@@ -89,7 +93,42 @@ class SecurityConfig {
     }
 }
 ----
-<1> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@EnableWebSecurity
+@Configuration
+class SecurityConfig extends VaadinWebSecurity {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        super.configure(http); // <3>
+        // TODO Configure the login view
+    }
+
+    @Bean
+    public UserDetailsManager userDetailsManager() {
+        LoggerFactory.getLogger(SecurityConfig.class)
+            .warn("NOT FOR PRODUCITON: Using in-memory user details manager!"); // <2>
+        var user = User.withUsername("user")
+                .password("{noop}user")
+                .roles("USER")
+                .build();
+        var admin = User.withUsername("admin")
+                .password("{noop}admin")
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+
+--
+<1> Always call with `VaadinSecurityConfigurer.vaadin()` -- this ensures that the application is properly configured.
+<2> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
+<3> Always call `super.configure()` -- this ensures that the application is properly configured.
 
 The [classname]`VaadinSecurityConfigurer` class provides essential security configurations out of the box, including:
 

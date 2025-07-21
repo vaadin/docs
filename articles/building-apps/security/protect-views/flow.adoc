@@ -140,9 +140,13 @@ The security annotations are actually enforced by a built-in access checker.
 
 To enable a custom [interfacename]`NavigationAccessChecker`, create a new [classname]`NavigationAccessControlConfigurer` Spring bean:
 
-.SecurityConfig.java
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
@@ -157,6 +161,26 @@ class SecurityConfig {
     ...
 }
 ----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@EnableWebSecurity
+@Configuration
+class SecurityConfig extends VaadinWebSecurity {
+
+    @Bean
+    static NavigationAccessControlConfigurer navigationAccessControlConfigurer( // <1>
+            CustomAccessChecker customAccessChecker) {
+        return new NavigationAccessControlConfigurer()
+                .withNavigationAccessChecker(customAccessChecker); // <2>
+    }
+    ...
+}
+----
+
+--
 <1> The [annotationname]`@Bean` method must be `static` to prevent bootstrap errors caused by circular dependencies in bean definitions.
 <2> [classname]`CustomAccessChecker` is now *the only enabled access checker*.
 
@@ -290,9 +314,13 @@ public final class Roles {
 
 Then update the [methodname]`userDetailsManager()` method of the [classname]`SecurityConfig` class to use the new constants:
 
-.SecurityConfig.java
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
@@ -319,6 +347,38 @@ class SecurityConfig {
     }
 }
 ----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@EnableWebSecurity
+@Configuration
+class SecurityConfig extends VaadinWebSecurity {
+    ...
+
+    @Bean
+    public UserDetailsManager userDetailsManager() {
+        LoggerFactory.getLogger(SecurityConfig.class)
+            .warn("Using in-memory user details manager!");
+        var user = User.withUsername("user")
+                .password("{noop}user")
+// tag::snippet[]
+                .roles(Roles.USER)
+// end::snippet[]
+                .build();
+        var admin = User.withUsername("admin")
+                .password("{noop}admin")
+// tag::snippet[]
+                .roles(Roles.ADMIN)
+// end::snippet[]
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+
+--
 ====
 
 

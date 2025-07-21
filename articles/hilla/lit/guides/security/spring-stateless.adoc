@@ -113,12 +113,38 @@ After completing the previous steps, your application should be using stateless 
 
 By default, the JWT and cookies expire thirty minutes after the last server request. You can customize the expiration period by using an additional duration argument for the configuration method like so:
 
+[.example]
+--
+
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-// TODO: use VaadinSecurityConfigurer
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        ...
+        http.with(new VaadinStatelessSecurityConfigurer<>(),
+            cfg -> cfg.withSecretKey().secretKey(
+                 new SecretKeySpec(Base64.getDecoder().decode("..."),
+                      JwsAlgorithms.HS256)
+           ).and().issuer("com.example.application")
+            .expiresIn(3600) // The JWT lifetime in seconds
+        );
+        return http.build();
+    }
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@EnableWebSecurity
+@Configuration
 public class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -132,5 +158,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
+
+--
 
 // end::content[]
