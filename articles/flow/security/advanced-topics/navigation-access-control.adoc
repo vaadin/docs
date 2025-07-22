@@ -49,8 +49,12 @@ The Vaadin Spring add-on offers an [interfacename]`AccessPathChecker` implementa
 
 This means that to protect a Flow route, you can configure a Spring request matchers matching the route path, and use the authorization helpers to define the access grants, as in the following example.
 
+[.example]
+--
+
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @Route("admin")
 public class AdminView extends Div { }
 
@@ -65,19 +69,24 @@ public class HomeView extends Div { }
 
 @Configuration
 @EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(antMatchers("/admin")).hasAnyRole(ROLE_ADMIN)
-                .requestMatchers(antMatchers("/protected/**")).authenticated()
-                .requestMatchers(antMatchers("/special/**"))
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/admin")).hasAnyRole(ROLE_ADMIN)
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/protected/**")).authenticated()
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/special/**"))
                     .access((authentication, object) -> {
                         // Custom authorization logic
                         return new AuthorizationDecision(isPremiumUser(authentication));
                     })
-                .requestMatchers(antMatchers("/"))
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/"))
                 .permitAll()
         );
 
@@ -90,6 +99,41 @@ public class SecurityConfig {
 }
 ----
 
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.8)"></source-info>
+@Route("admin")
+public class AdminView extends Div { }
+
+@Route("protected/profile")
+public class ProfileView extends Div { }
+
+@Route("special/preview-feature")
+public class ProfileView extends Div { }
+
+@Route("")
+public class HomeView extends Div { }
+
+public class SecurityConfig extends VaadinWebSecurity {
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(antMatchers("/admin")).hasAnyRole(ROLE_ADMIN)
+                .requestMatchers(antMatchers("/protected/**")).authenticated()
+                .requestMatchers(antMatchers("/special/**"))
+                    .access((authentication, object) -> {
+                        // Custom authorization logic
+                        return new AuthorizationDecision(isPremiumUser(authentication));
+                    })
+                .requestMatchers(antMatchers("/"))
+                .permitAll()
+        );
+    }
+}
+----
+
+--
 
 Integration with other security frameworks can be accomplished similarly by providing a specific [interfacename]`AccessPathChecker` implementation.
 
@@ -535,10 +579,12 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(new AntPathRequestMatcher("/admin-only/**"))
-                .hasAnyRole("ADMIN")
-                .requestMatchers(RequestUtil.antMatchers("/public/**", "/error"))
-                .permitAll());
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/admin-only/**")).hasAnyRole("ADMIN")
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/public/**")).permitAll()
+                .requestMatchers(PathPatternRequestMatcher.withDefaults()
+                            .matcher("/error")).permitAll());
 
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
             configurer.loginView(LoginView.class)
