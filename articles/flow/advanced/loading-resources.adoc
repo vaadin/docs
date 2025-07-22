@@ -104,9 +104,9 @@ anchor.getElement().setAttribute("router-ignore", true);
 
 == Programmatically Load Resources
 
-Components such as [classname]`Image` and [classname]`Anchor` allow you to display or download dynamic content by providing a [classname]`StreamResource`. Content is fetched by an instance of [interfacename]`InputStreamFactory`, that is passed to the [classname]`StreamResource` as a constructor parameter. The [interfacename]`InputStreamFactory` requires implementing the [methodname]`createInputStream()` method. It can be used to load, for example, images and documents shipped along with the application. Resources can be loaded from an application classpath or from the web application.
+Components such as [classname]`Image` and [classname]`Anchor` allow you to display or download dynamic content by providing using [classname]`DownloadHandler.forClassResource(clazz, resourceName)`. It can be used to load, for example, images and documents shipped along with the application. Resources can be loaded from an application classpath or from the web application.
 
-The classpath resources are stored in the `/src/main/resources` folder and can be loaded using the  [methodname]`Class.getResourceAsStream(name)` or [methodname]`ClassLoader.getResourceAsStream(name)` methods. The name is always considered to be an absolute path (i.e., starting with a `/`) for [methodname]`ClassLoader.getResourceAsStream(name)`. For [methodname]`Class.getResourceAsStream(name)`, however, it can be an absolute path or relative to the class package.
+The classpath resources are stored in the `/src/main/resources` folder and can be loaded using this. If the resource name starts with `/`, it is considered to be an absolute path (underneath `/src/main/resources`). Otherwise, it will relative to the class package.
 
 .Load resources from classpath
 [source,java]
@@ -117,12 +117,12 @@ The classpath resources are stored in the `/src/main/resources` folder and can b
 package com.example;
 class MyView extends Div {
     public MyView() {
-        add(new Image(new StreamResource("flower.jpg",
-            () -> getClass().getResourceAsStream("/img/flower.jpg")),
+        add(new Image(DownloadHandler.forClassResource(getClass(),
+                "/img/flower.jpg")),
             "Plant 3"
-        ));
-        Anchor anchor = new Anchor(new StreamResource("document.pdf",
-            () -> getClass().getResourceAsStream("document.pdf")),
+        );
+        Anchor anchor = new Anchor(DownloadHandler.forClassResource(
+                getClass(), "document.pdf"),
             "A document"
         );
         anchor.getElement().setAttribute("router-ignore", true);
@@ -137,15 +137,21 @@ Web application resources can be loaded through [methodname]`VaadinService.getRe
 [source,java]
 ----
 package com.example;
-class MyView extends Div {
+import com.vaadin.flow.server.streams.DownloadHandler;class MyView extends Div {
     public MyView() {
-        add(new Image(new StreamResource("flower.jpg",
-            () -> VaadinService.getCurrent().getResourceAsStream("/img/flower.jpg")),
+        add(new Image(DownloadHandler.fromInputStream(getClass(),
+            context -> {
+                    context.setFileName("flower.jpg");
+                    VaadinService.getCurrent().getResourceAsStream("/img/flower.jpg");
+            }),
             "Plant 3"
         ));
-        Anchor anchor = new Anchor(new StreamResource("document.pdf",
-            () ->  VaadinServlet.getCurrent().getServletContext()
-                      .getResourceAsStream("/assets/document.pdf")),
+        Anchor anchor = new Anchor(DownloadHandler.fromInputStream(getClass(),
+            context ->  {
+                    context.setFileName("document.pdf");
+                    VaadinServlet.getCurrent().getServletContext()
+                            .getResourceAsStream("/assets/document.pdf");
+            }),
             "A document");
         anchor.getElement().setAttribute("router-ignore", true);
         add(anchor);

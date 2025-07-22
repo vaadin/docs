@@ -4,8 +4,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 @Route("icons-padding")
 public class IconsPadding extends Div {
@@ -15,8 +15,8 @@ public class IconsPadding extends Div {
         layout.setSpacing(true);
         layout.addClassName("items-end");
 
-        StreamResource codeBranch = new StreamResource("svg-branch.svg",
-                () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
+        DownloadHandler codeBranch = DownloadHandler.forClassResource(
+                getClass(), "/icons/code-branch.svg");
         // tag::snippet[]
         SvgIcon iconDefaultSize = new SvgIcon(codeBranch);
 

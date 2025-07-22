@@ -8,7 +8,7 @@ import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
 import com.vaadin.flow.component.map.configuration.feature.MarkerFeature;
 import com.vaadin.flow.component.map.configuration.style.Icon;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 @Route("map-markers")
 public class MapMarkers extends Div {
@@ -43,12 +43,11 @@ public class MapMarkers extends Div {
         map.getFeatureLayer().addFeature(germanOffice);
 
         // Add marker for Vaadin office in the US, using image from a
-        // StreamResource
-        StreamResource streamResource = new StreamResource("us-flag.png",
-                () -> getClass().getResourceAsStream(
-                        "/META-INF/resources/images/us-flag.png"));
+        // DownloadHandler
+        DownloadHandler downloadHandler = DownloadHandler.forClassResource(
+                getClass(), "/META-INF/resources/images/us-flag.png");
         Icon.Options usFlagIconOptions = new Icon.Options();
-        usFlagIconOptions.setImg(streamResource);
+        usFlagIconOptions.setImg(downloadHandler);
         Icon usFlagIcon = new Icon(usFlagIconOptions);
         MarkerFeature usOffice = new MarkerFeature(usOfficeCoordinates,
                 usFlagIcon);
