@@ -45,7 +45,8 @@ public class MapMarkers extends Div {
         // Add marker for Vaadin office in the US, using image from a
         // DownloadHandler
         DownloadHandler downloadHandler = DownloadHandler.forClassResource(
-                getClass(), "/META-INF/resources/images/us-flag.png");
+                getClass(), "/META-INF/resources/images/us-flag.png",
+                "us-flag.png");
         Icon.Options usFlagIconOptions = new Icon.Options();
         usFlagIconOptions.setImg(downloadHandler);
         Icon usFlagIcon = new Icon(usFlagIconOptions);

@@ -24,7 +24,7 @@ public class CardCoverMedia extends Div {
         imageCard.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/lapland.avif");
+                getClass(), "/images/lapland.avif", "lapland.avif");
         Image image = new Image(imageHandler, "");
         imageCard.setMedia(image);
 

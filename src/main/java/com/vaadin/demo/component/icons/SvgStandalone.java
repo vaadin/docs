@@ -16,7 +16,7 @@ public class SvgStandalone extends Div {
         // you could use "/themes/myapp/code-branch.svg"
         // tag::snippet[]
         DownloadHandler iconHandler = DownloadHandler.forClassResource(
-                getClass(), "/icons/code-branch.svg");
+                getClass(), "/icons/code-branch.svg", "code-branch.svg");
         SvgIcon icon = new SvgIcon(iconHandler);
         // end::snippet[]
 

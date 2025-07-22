@@ -17,7 +17,7 @@ public class SvgSprites extends Div {
 
         // tag::snippet[]
         DownloadHandler iconHandler = DownloadHandler.forClassResource(
-                getClass(), "/icons/solid.svg");
+                getClass(), "/icons/solid.svg", "solid.svg");
 
         SvgIcon codeBranchIcon = new SvgIcon(iconHandler, "code-branch");
         SvgIcon userIcon = new SvgIcon(iconHandler, "user");

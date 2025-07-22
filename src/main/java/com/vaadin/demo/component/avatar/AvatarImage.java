@@ -23,7 +23,7 @@ public class AvatarImage extends HorizontalLayout {
 
         Avatar company = new Avatar("Company Inc.");
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/company-logo.png");
+                getClass(), "/images/company-logo.png", "company-logo.png");
         company.setImageHandler(imageHandler);
         // end::snippet[]
 

@@ -21,7 +21,7 @@ public class CardCombineVariants extends Div {
         );
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/lapland.avif");
+                getClass(), "/images/lapland.avif", "lapland.avif");
         Image image = new Image(imageHandler, "");
         image.setWidth("200px");
         card.setMedia(image);

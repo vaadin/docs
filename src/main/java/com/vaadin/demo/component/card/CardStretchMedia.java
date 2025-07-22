@@ -24,7 +24,7 @@ public class CardStretchMedia extends Div {
         imageCard.addThemeVariants(CardVariant.LUMO_STRETCH_MEDIA);
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/lapland.avif");
+                getClass(), "/images/lapland.avif", "lapland.avif");
         Image image = new Image(imageHandler, "");
         imageCard.setMedia(image);
 

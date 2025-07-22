@@ -16,7 +16,7 @@ public class IconsSizing extends Div {
         layout.addClassName("items-end");
 
         DownloadHandler codeBranch = DownloadHandler.forClassResource(
-                getClass(), "/icons/code-branch.svg");
+                getClass(), "/icons/code-branch.svg", "svg-branch.svg");
         // tag::snippet[]
         SvgIcon iconDefaultSize = new SvgIcon(codeBranch);
 

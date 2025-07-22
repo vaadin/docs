@@ -18,7 +18,7 @@ public class IconsColor extends Div {
 
         // tag::snippet[]
         DownloadHandler codeBranch = DownloadHandler.forClassResource(
-                getClass(), "/icons/code-branch.svg");
+                getClass(), "/icons/code-branch.svg", "svg-branch.svg");
         SvgIcon svgIcon = new SvgIcon(codeBranch);
         svgIcon.setColor("red");
 

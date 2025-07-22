@@ -22,7 +22,7 @@ public class CardMedia extends Div {
         // Card with image media
         Card imageCard = new Card();
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/lapland.avif");
+                getClass(), "/images/lapland.avif", "lapland.avif");
         Image image = new Image(imageHandler, "");
         image.setWidth("100px");
         imageCard.setMedia(image);

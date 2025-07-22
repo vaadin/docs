@@ -12,7 +12,8 @@ import com.vaadin.flow.server.streams.DownloadHandler;
 public class ButtonImages extends Div {
     public ButtonImages() {
         DownloadHandler src = DownloadHandler.forClassResource(
-                getClass(), "/images/vaadin-logo-dark.png");
+                getClass(), "/images/vaadin-logo-dark.png",
+                "vaadin-logo-dark.png");
         // tag::snippet[]
         Image img = new Image(src, "Vaadin logo");
         img.setWidth("100px");

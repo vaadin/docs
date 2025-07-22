@@ -17,7 +17,7 @@ public class ScrollerBoth extends Div {
         scroller.setHeight("300px");
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
-                getClass(), "/images/reindeer.jpg");
+                getClass(), "/images/reindeer.jpg", "reindeer.jpg");
 
         Image img = new Image(imageHandler,
                 "A reindeer walking on a snowy lake shore at dusk");
