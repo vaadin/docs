@@ -1,12 +1,12 @@
 package com.vaadin.demo.component.button;
 
-import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("button-images")
 public class ButtonImages extends Div {
