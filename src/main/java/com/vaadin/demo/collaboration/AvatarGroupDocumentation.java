@@ -8,7 +8,8 @@ import com.vaadin.demo.domain.User;
 import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 
 /**
  * Code snippets used in CollaborationAvatarGroup's reference documentation.
@@ -41,18 +42,19 @@ public class AvatarGroupDocumentation extends VerticalLayout {
         // end::avatar-group-own[]
     }
 
-    private void imageProvider() {
+    private void imageHandler() {
         // tag::avatar-group-images[]
-        avatarGroup.setImageProvider(userInfo -> {
-            StreamResource streamResource = new StreamResource(
-                    "avatar_" + userInfo.getId(), () -> {
+        avatarGroup.setImageHandler(userInfo -> {
+            DownloadHandler downloadHandler = DownloadHandler.fromInputStream(
+                    context -> {
                         User userEntity = userService
                                 .findById(userInfo.getId());
                         byte[] imageBytes = userEntity.getImage();
-                        return new ByteArrayInputStream(imageBytes);
+                        return new DownloadResponse(new ByteArrayInputStream(imageBytes),
+                                "avatar_" + userInfo.getId() + ".png",
+                                "image/png", imageBytes.length);
                     });
-            streamResource.setContentType("image/png");
-            return streamResource;
+            return downloadHandler;
         });
         // end::avatar-group-images[]
     }
