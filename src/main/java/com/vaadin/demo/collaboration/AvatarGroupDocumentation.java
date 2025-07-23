@@ -44,18 +44,17 @@ public class AvatarGroupDocumentation extends VerticalLayout {
 
     private void imageHandler() {
         // tag::avatar-group-images[]
-        avatarGroup.setImageHandler(userInfo -> {
-            DownloadHandler downloadHandler = DownloadHandler.fromInputStream(
-                    context -> {
+        avatarGroup.setImageHandler(userInfo ->
+            DownloadHandler.fromInputStream(
+                    event -> {
                         User userEntity = userService
                                 .findById(userInfo.getId());
                         byte[] imageBytes = userEntity.getImage();
                         return new DownloadResponse(new ByteArrayInputStream(imageBytes),
                                 "avatar_" + userInfo.getId() + ".png",
                                 "image/png", imageBytes.length);
-                    });
-            return downloadHandler;
-        });
+                    })
+        );
         // end::avatar-group-images[]
     }
 
