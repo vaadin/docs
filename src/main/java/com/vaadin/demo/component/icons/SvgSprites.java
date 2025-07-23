@@ -1,10 +1,10 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("svg-sprites")
@@ -16,11 +16,11 @@ public class SvgSprites extends Div {
         layout.addClassName("items-center");
 
         // tag::snippet[]
-        StreamResource iconResource = new StreamResource("solid.svg",
-                () -> getClass().getResourceAsStream("/icons/solid.svg"));
+        DownloadHandler iconHandler = DownloadHandler.forClassResource(
+                getClass(), "/icons/solid.svg", "solid.svg");
 
-        SvgIcon codeBranchIcon = new SvgIcon(iconResource, "code-branch");
-        SvgIcon userIcon = new SvgIcon(iconResource, "user");
+        SvgIcon codeBranchIcon = new SvgIcon(iconHandler, "code-branch");
+        SvgIcon userIcon = new SvgIcon(iconHandler, "user");
         // end::snippet[]
 
         layout.add(codeBranchIcon, userIcon);
