@@ -571,19 +571,19 @@ public class SecurityConfig {
   //...
 
   @Bean
-  AuthenticationManager authenticationManager(HttpSecurity http, DataSource dataSource)
-        throws Exception {
-    // Configure users and roles in a JDBC database
-    return http.getSharedObject(AuthenticationManagerBuilder.class)
-            .jdbcAuthentication()
-            .dataSource(dataSource)
-            .usersByUsernameQuery(
-                    "SELECT username, password, enabled FROM users WHERE username=?")
-            .authoritiesByUsernameQuery(
-                    "SELECT username, authority FROM from authorities WHERE username=?")
-            .passwordEncoder(new BCryptPasswordEncoder())
-            .and()
-            .build();
+  UserDetailsService userDetailsService(DataSource dataSource) {
+      // Configure users and roles in a JDBC database
+      JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+      jdbcUserDetailsManager.setUsersByUsernameQuery(
+              "SELECT username, password, enabled FROM users WHERE username=?");
+      jdbcUserDetailsManager.setAuthoritiesByUsernameQuery(
+              "SELECT username, authority FROM authorities WHERE username=?");
+      return jdbcUserDetailsManager;
+  }
+
+  @Bean
+  PasswordEncoder passwordEncoder() {
+      return new BCryptPasswordEncoder();
   }
 }
 ----
