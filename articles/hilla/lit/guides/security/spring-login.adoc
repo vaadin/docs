@@ -634,21 +634,30 @@ This next example shows how to configure authentication by using an LDAP reposit
 public class SecurityConfig {
   //...
 
-  @Bean
-  AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-    AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
-    // Obtain users and roles from an LDAP service
-    auth.ldapAuthentication()
-      .userDnPatterns("uid={0},ou=people")
-      .userSearchBase("ou=people")
-      .groupSearchBase("ou=groups")
-      .contextSource()
-      .url("ldap://localhost:8389/dc=example,dc=com")
-      .and()
-      .passwordCompare()
-      .passwordAttribute("userPassword");
-    return auth.build();
-  }
+    @Bean
+    public EmbeddedLdapServerContextSourceFactoryBean contextSourceFactoryBean() { // <1>
+        return EmbeddedLdapServerContextSourceFactoryBean.fromEmbeddedLdapServer();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(BaseLdapPathContextSource contextSource, LdapAuthoritiesPopulator authorities) {
+        LdapPasswordComparisonAuthenticationManagerFactory factory = new LdapPasswordComparisonAuthenticationManagerFactory(
+                contextSource, NoOpPasswordEncoder.getInstance());
+        factory.setUserDnPatterns("uid={0},ou=people");
+        factory.setUserSearchBase("ou=people");
+        factory.setPasswordAttribute("userPassword");
+        factory.setLdapAuthoritiesPopulator(authorities);
+        return factory.createAuthenticationManager();
+    }
+
+    @Bean
+    LdapAuthoritiesPopulator authorities(BaseLdapPathContextSource contextSource) {
+        String groupSearchBase = "ou=groups";
+        DefaultLdapAuthoritiesPopulator authorities =
+                new DefaultLdapAuthoritiesPopulator(contextSource, groupSearchBase);
+        authorities.setGroupSearchFilter("member={0}");
+        return authorities;
+    }
 }
 ----
 
@@ -678,6 +687,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 ----
 
 --
+<1> `VaadinSecurityConfigurer` example here configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-embedded[embedded UnboundID LDAP server]. You can also configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-contextsource[LDAP ContextSource] to connect to other LDAP server.
 
 Remember to add the corresponding LDAP client dependency to the project:
 
