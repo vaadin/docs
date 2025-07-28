@@ -80,8 +80,50 @@ You can assume that the reader already knows what Binder is and how it works.
 
 == Label
 
-Explain how to create a label for a custom field so that it is rendered correctly in at least VerticalLayout, HorizontalLayout and FormLayout.
+When you implement a CustomField you get a label out of the box, it is recommended that you take advantage of this feature,
+as it looks and behaves just like the labels for other Vaadin field components. That makes it easy to maintain the same label
+styling between different types of fields.
+You can use `customField.setLabel("My field")` to set the label text.
 
+In case you need custom label, for example, if you have multiple input fields and need a label for each of them, you'll
+need to use the `NativeLabel` component. You will also have to override the `getLabel()` and `setLabel(String text)` methods so that they interact with the new label. You should also make the `NativeLabel` point to the input field by using the `label.setFor(Component)` or `label.setFor(String)` method. The input field should have a unique id set on it, and that id should be specified when using `label.setFor(String)` method. In cases where there are multiple input fields are present, you can either use individual `NativeLabel` to describe them, or use `aria-labelledby` attribute on each input field pointing to a specific `NativeLabel` id, in which case multiple inputs could point to the same label.
+
+```java
+public class MyCustomField extends CustomField<Integer> {
+    // ...
+    private final NativeLabel label;
+    private final Input input;
+
+    public MyCustomField(String label) {
+        input = createInput();
+        label = new NativeLabel(label);
+        label.setFor(input);
+
+        var layout = new Div(label, input);
+        add(layout);
+    }
+
+    @Override
+    public String getLabel() {
+        return label.getText();
+    }
+
+    @Override
+    public void setLabel(String labelText) {
+        label.setText(labelText);
+    }
+
+    private Input createInput() {
+        var input = new Input();
+        // Generate a (very likely) unique field id
+        input.setId("my-custom-field-" + RandomGenerator.getDefault().nextInt(1, 100_000));
+        // or input.setAriaLabelledBy("my-custom-field-label-...");
+        return input;
+    }
+}
+```
+
+// TODO Explain how to create a label for a custom field so that it is rendered correctly in at least VerticalLayout, HorizontalLayout and FormLayout.
 
 == Validation
 
