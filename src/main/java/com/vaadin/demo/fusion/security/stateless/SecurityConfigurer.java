@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
@@ -33,10 +32,8 @@ public class SecurityConfigurer {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // end::stateless-configure[]
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(PathPatternRequestMatcher.withDefaults()
-                        .matcher("/admin-only/**")).hasAnyRole("admin")
-                .requestMatchers(PathPatternRequestMatcher.withDefaults()
-                        .matcher("/public/**")).permitAll()
+                .requestMatchers("/admin-only/**").hasAnyRole("admin")
+                .requestMatchers("/public/**").permitAll()
         );
 
         // tag::stateless-configure[]
