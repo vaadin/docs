@@ -15,37 +15,55 @@ Write a short introduction about what the user will find on this page.
 
 == Custom Fields in Flow
 
-If you have multiple components that you want to act as a single field, or just a component that does not have support for use with Binder, setting a label, or setting a helper message, you will likely want to wrap those components within a Custom Field.
-To create a Custom Field in Flow you will need to create a class extending `CustomField` and specify a value type that will represent the combined value of all its child components.
-You will also have to implement two methods `generateModelValue` (to compute the Custom Field value from child components) and `setPresentationValue` (to distribute the Custom Field value to child components). These methods will be called automatically once a value change is detected on client-side or server-side respectively.
+When you want multiple components to behave as a single form field, or you have a component that doesn’t support integration with Binder, setting labels, or displaying helper text, you should encapsulate those components in a Custom Field.
+To create a Custom Field in Flow, you need to define a class that extends the `CustomField` base class and specify the value type that represents the combined value of its internal components.
+You'll also need to implement two key methods:
+
+* `generateModelValue()`: Computes the field’s value from the values of its internal components.
+* `setPresentationValue(T value)`: Distributes the given value to the internal components.
+These methods are automatically invoked when a value changes either on the client side (`generateModelValue`) or on the server side (`setPresentationValue`).
 
 // TODO maybe as info?
-The child components you decide to use in your Custom Field can be any class extending `Component` class, which includes but is not limited to components offered by Vaadin (`TextField`, `DatePicker`, `Grid`, etc.), representations of native HTML components (`Input`, `Div`, `NativeButton`, etc.), and many components available through Add-ons on Vaadin Directory.
+The internal components you embed can be any class that extends the Component class. This includes (but is not limited to) <<{articles}/components#,Vaadin Components>> like `TextField`, `DatePicker`, or `Grid`; <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> like `Input`, `Div`, or `NativeButton`; and third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons.
 
-// TODO Link to components https://vaadin.com/docs/latest/components
-// TODO Link to native components https://vaadin.com/docs/latest/flow/create-ui/standard-html
-// TODO link to Vaadin directory https://vaadin.com/directory/
 
 // TODO gotcha on value-change events?
 
-
-Introduce the basic principles of creating custom fields in Flow. Cover just enough theory to get the task done. Refer to the Flow reference manual for details.
-
-
 == Data Binding
 
-There are two main approaches for interacting and processing the value in your Custom Field.
+There are two primary ways to work with values in a Custom Field:
 
-* Through direct interaction with the Custom Field
-* Through Binder
+* Direct interaction with the Custom Field instance
+* Integration through Binder
 
-The approach that you should use depends on the context of where and how your field is being used. If it's part of a form with multiple components, you should likely use it with the binder. If it's on its own or it's not relevant to the data object in the binder (for example, if the Custom Field is only used to filter some data in the form) then you should likely interact with it directly. We will cover both cases below.
+The right approach depends on your use case. If the Custom Field is part of a larger form that maps to a data object, you should typically bind it using `Binder`. However, if the field is standalone, such as when it's used only to filter content in the UI, it may be more appropriate to interact with it directly.
 
-=== Direct interactions
+Both approaches are covered below.
 
-CustomField implements the `HasValue` interface, which means you get the same API used in many other fields to interact with its data. With `myCustomField.getValue()` you can retrieve the current value and with `myCustomField.setValue(value)` you can update the value.
+=== Direct interaction
 
-If you need to be aware of your Custom Field's value changing, then you can listen to the value change event by passing a listener to  `myCustomField.addValueChangeListener(listener)`. It is recommended that you either use a lambda expression (if it will contain only few lines of code) or a method reference in place of a listener. The received event object will contain the new value (through `event.getValue()`), the old value (through `event.getOldValue()`), reference to your custom field (through `event.getSource()`), and whether the change is coming from the client (through `event.isFromClient()`) instead of being set programmatically with `myCustomField.setValue(value)` for example.
+Since CustomField implements the HasValue interface, it supports the same API used by other form field components in Vaadin.
+
+You can retrieve and set values using:
+```java
+myCustomField.getValue();      // Retrieve current value
+myCustomField.setValue(value); // Update value
+```
+
+To react to value changes, you can register a listener:
+```java
+myCustomField.addValueChangeListener(listener);
+```
+
+It's recommended to use a lambda expression (for short handlers) or a method reference to keep your code concise.
+
+The ValueChangeEvent provides:
+
+* `event.getValue()` – the new value
+* `event.getOldValue()` – the previous value
+* `event.getSource()` – the source component (your Custom Field)
+* `event.isFromClient()` – whether the change originated from the client side
+
 ```java
 myCustomField.addValueChangeListener(event -> {
     if (event.isFromClient()) {
@@ -55,12 +73,11 @@ myCustomField.addValueChangeListener(event -> {
 });
 ```
 
-=== Interactions through Binder
+=== Using Binder
 
-Just like with the direct interactions there's really no difference between when you are binding a `TextField`, a `ComboBox` or a Custom Field.
-You should be already familiar with the Binder, how set up value binding and use features like validation.
+Binding a Custom Field works the same way as with built-in components like `TextField` or `ComboBox`. If you’re already familiar with Binder setup and validation, the process will feel familiar.
 
-Here's an example of binding a Custom Field to an existing `Binder<MyBinderObject> binder` instance:
+Example binding:
 ```java
 binder.forField(myCustomField)
     .withValidator(new MyValidator())
@@ -69,25 +86,32 @@ binder.forField(myCustomField)
 
 In this example, the `MyBinderObject.getName()` (and `setName(..)`) should match the same object type as the Custom Field's value, meaning if your Custom Field extends `CustomField<MyNameObject>` the return type for `MyBinderObject.getName()` should be `MyNameObject`.
 
-Now when you call `binder.setBean(myObject)` or `binder.readBean(myObject)` your Custom Field should receive the relevant value.
-
-// TODO still might want to combine the two approaches for value change listening sometimes.
-
-// TODO
-Explain how to set and get a value. Binder is introduced in a guide being written here: https://github.com/vaadin/docs/tree/forms-howto-guides
-You can assume that the reader already knows what Binder is and how it works.
-
+Once the binding is configured, calling `binder.setBean(myObject)` or `binder.readBean(myObject)` will automatically populate your Custom Field with the correct value.
 
 == Label
 
-When you implement a CustomField you get a label out of the box, it is recommended that you take advantage of this feature,
-as it looks and behaves just like the labels for other Vaadin field components. That makes it easy to maintain the same label
-styling between different types of fields.
-You can use `customField.setLabel("My field")` to set the label text.
+When you extend a `CustomField`, it provides built-in support for setting a label, just like standard Vaadin field components. This means you can use `customField.setLabel("My Field");` to assign a label, and it will behave and appear consistently with other Vaadin input components, making it easy to maintain a uniform design across your forms.
 
-In case you need custom label, for example, if you have multiple input fields and need a label for each of them, you'll
-need to use the `NativeLabel` component. You will also have to override the `getLabel()` and `setLabel(String text)` methods so that they interact with the new label. You should also make the `NativeLabel` point to the input field by using the `label.setFor(Component)` or `label.setFor(String)` method. The input field should have a unique id set on it, and that id should be specified when using `label.setFor(String)` method. In cases where there are multiple input fields are present, you can either use individual `NativeLabel` to describe them, or use `aria-labelledby` attribute on each input field pointing to a specific `NativeLabel` id, in which case multiple inputs could point to the same label.
 
+=== Custom Labels for Internal Inputs
+
+In more advanced use cases, your Custom Field might need a special label that cannot be achieved with just styling the label. In such cases, you should:
+
+* Use the `NativeLabel` component to create accessible and styled labels.
+* Override the `getLabel()` and `setLabel(String)` methods in your Custom Field to interact with your custom label logic.
+* Link each label to its corresponding input using either:
+  ** `label.setFor(Component)` (direct reference)
+  ** `label.setFor(String)` (by ID)
+
+The input component should have a unique ID set via `input.setId(String)`.
+
+If you have multiple inputs, you can:
+
+* Use individual `NativeLabel` elements for each input.
+* Or assign a shared label by setting the `aria-labelledby` attribute on each input to point to a common label ID.
+
+
+==== Example: Custom Label Handling
 ```java
 public class MyCustomField extends CustomField<Integer> {
     // ...
@@ -117,13 +141,11 @@ public class MyCustomField extends CustomField<Integer> {
         var input = new Input();
         // Generate a (very likely) unique field id
         input.setId("my-custom-field-" + RandomGenerator.getDefault().nextInt(1, 100_000));
-        // or input.setAriaLabelledBy("my-custom-field-label-...");
         return input;
     }
 }
 ```
 
-// TODO Explain how to create a label for a custom field so that it is rendered correctly in at least VerticalLayout, HorizontalLayout and FormLayout.
 
 == Validation
 
