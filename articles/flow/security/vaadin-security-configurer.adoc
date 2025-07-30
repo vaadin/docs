@@ -208,6 +208,8 @@ public class SecurityConfig {
 
 ===== Multiple Filter Chains
 
+To configure multiple filter chains, use `@Order` annotation to specify the order of the filter chains. The lower the order value, the higher the priority of the filter chain.
+
 [source,java]
 ----
 @Configuration
@@ -215,6 +217,7 @@ public class SecurityConfig {
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfig {
 
+    @Order(1)
     @Bean
     SecurityFilterChain privateFilterChain(HttpSecurity http) throws Exception {
         return http.securityMatcher("/private/**")
@@ -223,12 +226,70 @@ public class SecurityConfig {
                 }).build();
     }
 
+    @Order(0)
     @Bean
     SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         return http.securityMatcher("/public/**")
-                .with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-                    configurer.anyRequest(AuthorizedUrl::permitAll);
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest(AuthorizedUrl::permitAll);
                 }).build();
+    }
+}
+----
+
+Example of two separate security filters: one for handling stateless Spring Boot APIs with token-based authentication, and another for a stateful Vaadin web application with login view.
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfigurationAPI {
+
+    private final UserDetailsService userDetailsService;
+    private final AuthTokenFilter authTokenFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    @Order(0)
+    public SecurityFilterChain securityFilterApi(HttpSecurity http) throws Exception {
+        HttpSecurity httpSecurity = http
+                .securityMatcher("/api/**")
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/login").anonymous()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/**").authenticated());
+
+        http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return httpSecurity.build();
+    }
+}
+
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Order(1)
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        }).build();
     }
 }
 ----
