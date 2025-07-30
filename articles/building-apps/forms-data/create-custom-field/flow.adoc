@@ -209,12 +209,55 @@ public class ButtonTextFieldCustomField extends CustomField<String> {
 
 ```
 
-=== Custom Error message
+=== Using a custom element for error messages
 
-In more advanced use cases, your Custom Field might need to display the error differently. You might want to simply reuse the built-in error message in an internal element, or you
+In more advanced use cases, your Custom Field might need to display the errors in a separate element.
+There are several things that you will need to do to achieve this.
 
-// TODO
+* Use an appropriate element / component that will contain the error message (usually `Div`)
+* Give your element / component a unique `id` (you will likely need to generate part of it).
+* Use `aria-describedby` on your `input` elements to link them to the error message, by setting its value
+to the error message element `id`. When there is no error message, you should remove the reference to the error message element.
+This is required for screen readers to provide user with info about the error.
+* Handle the visibility of the error message element(s) yourself. Usually you should hide it if the component is marked as valid
+(you can override the `setInvalid(boolean)` method and add code to handle this) and reveal it if it's invalid and there's
+an error message to be shown.
 
+```java
+private final Div errorDiv = new Div();
+
+public MyCustomField() {
+    errorDiv.setId("my-custom-field-error-" + uniqueFieldNumber);
+
+    Input input = createInput();
+
+    var layout = new Div(label, errorDiv, input);
+
+    add(layout);
+}
+
+@Override
+public String getErrorMessage() {
+    return errorDiv.getText();
+}
+@Override
+public void setErrorMessage(String errorMessage) {
+    errorDiv.setText(errorMessage);
+}
+
+@Override
+public void setInvalid(boolean invalid) {
+    super.setInvalid(invalid);
+    if (invalid) {
+        errorDiv.setVisible(true);
+        input.getElement().setAttribute("aria-describedby", errorDiv.getId().orElse(""));
+    } else {
+        errorDiv.setVisible(false);
+        input.getElement().removeAttribute("aria-describedby",);
+    }
+}
+
+```
 
 // TODO internal validation
 
