@@ -149,20 +149,30 @@ public class MyCustomField extends CustomField<Integer> {
 
 == Validation
 
-When you extend a `CustomField`, it provides built-in support for displaying the field errors and marking the field as invalid.
-This means you can use `customField.setErrorMessage("My Field")` to specify an error message, mark field as invalid with `customField.setInvalid(true)'` so that it displays the error message, and applies "invalid" styling to the field. Built-in implementation will behave and appear consistently with other Vaadin input components, making it easy to maintain a uniform design across your forms.
+When extending a CustomField, you get built-in support for marking the field as invalid and displaying error messages. This ensures your Custom Field behaves consistently with other Vaadin field components in terms of visual appearance and accessibility.
 
-Field that is attached to a binder and that has validators specified will automatically handle the visibility and content of the error message within the field.
+You can use:
+```java
+customField.setErrorMessage("This field is required");
+customField.setInvalid(true);
+```
 
-=== Using built-in error message of an internal component
+This displays the error message below the field and applies Vaadin’s standard "invalid" styling.
 
-If you just want to move validation to an internal component of your Custom Field, it is as simple as overriding a few methods.
-In the following example, we have a Custom field that displays button and a text field side-by-side, but instead of the error message appearing under the combined field, we want it to be displayed only under the text field. For that to work we need to override:
+When the field is bound to a Binder with one or more validators, Vaadin automatically manages the error state and message visibility for you.
 
-* `isInvalid()` to use both the invalid state from the custom field and internal field.
-* `setInvalid(boolean)` to set the invalid state on both the custom field and internal field.
-* `getErrorMessage()` to retrieve the error message only from the internal field.
-* `setErrorMessage(String)` to set the error message only on the internal field.
+=== Using the Internal Component’s Error Handling
+
+If you want the error message to appear under a specific internal component, rather than under the entire Custom Field, you can override a few methods to delegate the validation logic.
+
+In the example below, a TextField and Button are placed side by side inside a CustomField. The goal is to show validation feedback only under the TextField, while keeping the Custom Field logic intact.
+
+Override the following methods:
+
+* isInvalid() — to reflect both the outer and internal component's invalid states.
+* setInvalid(boolean) — to set both the outer and internal states.
+* getErrorMessage() — to return the message from the internal field.
+* setErrorMessage(String) — to assign the message to the internal field.
 
 ```java
 public class ButtonTextFieldCustomField extends CustomField<String> {
@@ -209,19 +219,19 @@ public class ButtonTextFieldCustomField extends CustomField<String> {
 
 ```
 
-=== Using a custom element for error messages
+=== Using a Custom Element for Error Messages
 
-In more advanced use cases, your Custom Field might need to display the errors in a separate element.
-There are several things that you will need to do to achieve this.
+In advanced cases, you may want to display validation messages in a custom location or format.
 
-* Use an appropriate element / component that will contain the error message (usually `Div`)
-* Give your element / component a unique `id` (you will likely need to generate part of it).
-* Use `aria-describedby` on your `input` elements to link them to the error message, by setting its value
-to the error message element `id`. When there is no error message, you should remove the reference to the error message element.
-This is required for screen readers to provide user with info about the error.
+To achieve this, you need to:
+
+* Use an appropriate element / component (typically a `Div`) to display the message.
+* Assign it a unique `id`, e.g. `"my-custom-field-error-42"` (you will likely need to generate part of it).
+* Link it to the input using the `aria-describedby` attribute, so assistive technologies can describe the error.
 * Handle the visibility of the error message element(s) yourself. Usually you should hide it if the component is marked as valid
 (you can override the `setInvalid(boolean)` method and add code to handle this) and reveal it if it's invalid and there's
 an error message to be shown.
+* Control its visibility by overriding `setInvalid(boolean)` to show or hide it based on the validation state.
 
 ```java
 private final Div errorDiv = new Div();
@@ -240,6 +250,7 @@ public MyCustomField() {
 public String getErrorMessage() {
     return errorDiv.getText();
 }
+
 @Override
 public void setErrorMessage(String errorMessage) {
     errorDiv.setText(errorMessage);
@@ -253,16 +264,19 @@ public void setInvalid(boolean invalid) {
         input.getElement().setAttribute("aria-describedby", errorDiv.getId().orElse(""));
     } else {
         errorDiv.setVisible(false);
-        input.getElement().removeAttribute("aria-describedby",);
+        input.getElement().removeAttribute("aria-describedby");
     }
 }
 
 ```
 
+// TODO as info
+Note: Always remove aria-describedby when hiding the error element to avoid confusing screen readers.
+
 // TODO internal validation
 
-Explain how to handle required fields and validation errors in a custom field.
-You can assume the reader already knows how to add validators to the Binder.
+// TODO Explain how to handle required fields and validation errors in a custom field.
+// TODO You can assume the reader already knows how to add validators to the Binder.
 
 
 == Styling
