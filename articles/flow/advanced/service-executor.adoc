@@ -1,0 +1,131 @@
+---
+title: Vaadin Executor
+page-title: How to configure and use Vaadin built-in Executor
+description: Configuring and using Vaadin Executor to run background tasks.
+meta-description: Discover how to configure and use Vaadin Executor to run run background tasks.
+order: 177
+---
+
+
+= Vaadin Executor
+
+The Vaadin Executor provides a centralized mechanism for managing asynchronous tasks in Vaadin applications.
+It offers a configurable thread pool that can be used for executing background operations without blocking the UI thread.
+
+This feature is particularly useful for performing time-consuming operations asynchronously, executing background tasks
+that should not block the UI, managing concurrent operations efficiently and integrating with framework-specific task execution mechanisms,
+like Spring [classname]`TaskExecutor` or CDI [classname]`ManagedExecutor`.
+
+By default, Vaadin creates a thread pool executor with the following configuration:
+
+* Core pool size: 8 threads
+* Maximum pool size: Unbounded (Integer.MAX_VALUE)
+* Keep-alive time: 60 seconds for idle threads
+* Custom thread factory that creates daemon threads
+* Core threads are allowed to time out when idle
+
+This default configuration is suitable for most applications but can be customized as needed.
+
+== Accessing and Using the Executor
+
+You can access the executor service through the [classname]`VaadinService` instance:
+
+[source,java]
+----
+VaadinService service = VaadinService.getCurrent();
+Executor executor = service.getExecutor();
+
+// Execute a task asynchronously
+executor.execute(() -> {
+    // Your background task here
+    service.longRunningTask();
+});
+
+// Execute a task asynchronously using CompletableFeature
+CompletableFuture.supplyAsync(service::longRunningTask, executor);
+    .thenAccept(this::computeResult);
+----
+
+You can use the executor service in your UI components to perform background operations and update the UI when complete.
+
+[source,java]
+----
+Button button = new Button("Start Background Task");
+button.addClickListener(event -> {
+    UI ui = UI.getCurrent();
+    VaadinService.getCurrent().getExecutor().execute(() -> {
+
+        // Perform time-consuming operation
+        service.longRunningTask();
+
+        // Update UI from background thread
+        ui.access(() -> {
+            Notification.show("Background task completed!");
+        });
+    });
+});
+----
+
+Remember that code running in the executor is not automatically thread-safe:
+
+* Use `UI.access()` to update the UI from background threads.
+* Be careful with shared state and consider using thread-safe collections or synchronization.
+* Avoid long-running tasks that might block the thread pool.
+
+== Configuring a Custom Executor
+
+In standard Java applications, you can customize the executor by registering a <<service-init-listener#,VaadinServiceInitListener>> and providing your own executor implementation:
+
+.`CustomExecutorServiceInitListener.java`
+[source,java]
+----
+package com.example;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+
+public class CustomExecutorServiceInitListener implements VaadinServiceInitListener {
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        ThreadPoolExecutor customExecutor = new ThreadPoolExecutor(
+            16, // Core pool size
+            32, // Maximum pool size
+            120, // Keep-alive time
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            r -> {
+                Thread thread = new Thread(r, "CustomVaadinExecutor-" + r.hashCode());
+                thread.setDaemon(true);
+                return thread;
+            });
+
+        // Allow core threads to time out
+        customExecutor.allowCoreThreadTimeOut(true);
+
+        // Set the custom executor
+        event.setExecutor(customExecutor);
+    }
+}
+----
+
+Register your listener using Java's `ServiceLoader` mechanism by creating a file at
+`META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`.
+The file should contain the fully qualified name of your implementation class:
+`com.example.CustomExecutorServiceInitListener`
+
+When configuring a custom Thread Pool, consider the following best practices:
+
+* *Core Pool Size*: Set based on the number of concurrent tasks your application typically handles. A good starting point is the number of CPU cores.
+* *Maximum Pool Size*: Set to a reasonable upper limit to prevent resource exhaustion. Consider your server's memory and CPU constraints.
+* *Queue Capacity*: Use a bounded queue to prevent memory issues when task submission rate exceeds execution rate.
+* Use descriptive thread names to make debugging easier.
+* Make threads daemon threads (`Thread.setDaemon(true)`) to prevent them from blocking JVM shutdown.
+* Allow core threads to time out if your application has periods of inactivity
+
+For framework integrations, consult the specific documentation pages for <<../integrations/spring/configuration#configure-custom-vaadin-executor,Spring>>, <<../integrations/cdi/service-beans#configure-custom-vaadin-executor,CDI>> and <<../integrations/quarkus#configure-custom-vaadin-executor,Quarkus>>.
+
+
+[discussion-id]`2EF7B593-E426-479E-89D7-E62667D316C2`
