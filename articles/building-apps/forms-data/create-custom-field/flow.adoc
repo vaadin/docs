@@ -1,8 +1,8 @@
 ---
 title: Flow
-page-title: TODO Write page-title
-description: TODO Write description
-meta-description: TODO Write meta-description
+page-title: Create a Custom Field in Flow
+description: Guide on how to create a Custom Field in Vaadin Flow.
+meta-description: Guide on how to create a Custom Field in Vaadin Flow.
 order: 5
 ---
 
@@ -10,12 +10,18 @@ order: 5
 = Create a Custom Field in Flow
 :toclevels: 2
 
-Write a short introduction about what the user will find on this page.
+On this page you should be able to find all the necessary information to create a custom field.
 
 
 == Custom Fields in Flow
 
 When you want multiple components to behave as a single form field, or you have a component that doesn’t support integration with Binder, setting labels, or displaying helper text, you should encapsulate those components in a Custom Field.
+There are several approaches available, depending on how much customization is needed. The simplest solution will extend `CustomField` class, while a more complex solution could require extending `AbstractField` or `AbstractSinglePropertyField`.
+
+=== Extending `CustomField`
+
+When extending `CustomField` you get various built-in features like label, helper text, error message and validation state control. They are styled and function the same way other Vaadin field components do.
+
 To create a Custom Field in Flow, you need to define a class that extends the `CustomField` base class and specify the value type that represents the combined value of its internal components.
 You'll also need to implement two key methods:
 
@@ -23,8 +29,68 @@ You'll also need to implement two key methods:
 * `setPresentationValue(T value)`: Distributes the given value to the internal components.
 These methods are automatically invoked when a value changes either on the client side (`generateModelValue`) or on the server side (`setPresentationValue`).
 
-// TODO maybe as info?
+In the following example, we create a custom field that has a "Roll" button and a disabled input element that displays the field value. Every time the "Roll" button is clicked, it generates a new value.
+
+```java
+public class SingleDiceCustomField extends CustomField<Integer> {
+    private static final int MIN_VALUE = 1;
+    private static final int MAX_VALUE = 6;
+
+    private final NativeButton button;
+    private final Input input;
+
+    public SingleDiceCustomField() {
+        addClassName("single-dice-custom-field");
+        button = createButton();
+        input = createInput();
+
+        setValue(0);
+        setInvalid(false);
+
+        var layout = new HorizontalLayout(button, input);
+        add(layout);
+    }
+
+    @Override
+    protected Integer generateModelValue() {
+        String value = input.getValue();
+        // Verify it is a number, before parsing it to a number
+        if (NumberUtils.isCreatable(value)) {
+            return NumberUtils.createInteger(value);
+        }
+
+        return null;
+    }
+
+    @Override
+    protected void setPresentationValue(Integer value) {
+        input.setValue(String.valueOf(value)); // add value to input
+    }
+
+    private Input createInput() {
+        var input = new Input();
+        input.setEnabled(false); // Do not allow custom input
+
+        return input;
+    }
+
+    private NativeButton createButton() {
+        var button = new NativeButton("Roll");
+        button.addClickListener(clickEvent -> {
+            // Generate a random number, set as value
+            setValue(RandomGenerator.getDefault().nextInt(MIN_VALUE, MAX_VALUE + 1));
+        });
+
+        return button;
+    }
+}
+```
+
+
+[IMPORTANT]
 The internal components you embed can be any class that extends the Component class. This includes (but is not limited to) <<{articles}/components#,Vaadin Components>> like `TextField`, `DatePicker`, or `Grid`; <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> like `Input`, `Div`, or `NativeButton`; and third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons.
+
+=== Extending `AbstractField`
 
 
 // TODO gotcha on value-change events?
@@ -86,7 +152,7 @@ binder.forField(myCustomField)
 
 In this example, the `MyBinderObject.getName()` (and `setName(..)`) should match the same object type as the Custom Field's value, meaning if your Custom Field extends `CustomField<MyNameObject>` the return type for `MyBinderObject.getName()` should be `MyNameObject`.
 
-Once the binding is configured, calling `binder.setBean(myObject)` or `binder.readBean(myObject)` will automatically populate your Custom Field with the correct value.
+Once the binding is configured, calling `binder.setBean(myObject)` or `binder.readBean(myObject)` will automatically populate your Custom Field with the appropriate value.
 
 == Label
 
@@ -315,8 +381,9 @@ vaadin-custom-field.my-custom-field[invalid]::part(label) {
 }
 ```
 
-// TODO info
-Best practice: Use both vaadin-custom-field and the custom class in your selector to prevent accidental styling of unrelated components.
+.Best practice
+[IMPORTANT]
+Use both `vaadin-custom-field` and the custom class in your selector to prevent accidental styling of unrelated components.
 
 === Styling Custom Internal Elements
 
