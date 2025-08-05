@@ -21,7 +21,7 @@ public class MenuBarDividers extends Div {
         subMenu.addSeparator();
         subMenu.addItem("By email");
         subMenu.addItem("Get link");
-        subMenu.addComponent(new Hr());
+        subMenu.addSeparator();
         subMenu.addItem("Set permissions");
         // end::snippet[]
 
