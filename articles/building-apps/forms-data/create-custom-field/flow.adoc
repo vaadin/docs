@@ -16,7 +16,7 @@ On this page you should be able to find all the necessary information to create 
 == Custom Fields in Flow
 
 When you want multiple components to behave as a single form field, or you have a component that doesn’t support integration with Binder, setting labels, or displaying helper text, you should encapsulate those components in a Custom Field.
-There are several approaches available, depending on how much customization is needed. The simplest solution will extend `CustomField` class, while a more complex solution could require extending `AbstractField` or `AbstractSinglePropertyField`.
+There are several approaches available, depending on how much customization is needed. The simplest solution will extend `CustomField` class, while a more complex solution could require extending `AbstractField`, `AbstractSinglePropertyField` or `AbstractCompositeField`.
 
 === Extending `CustomField`
 
@@ -29,73 +29,66 @@ You'll also need to implement two key methods:
 * `setPresentationValue(T value)`: Distributes the given value to the internal components.
 These methods are automatically invoked when a value changes either on the client side (`generateModelValue`) or on the server side (`setPresentationValue`).
 
-In the following example, we create a custom field that has a "Roll" button and a disabled input element that displays the field value. Every time the "Roll" button is clicked, it generates a new value.
+In the following example, we create a custom field that has a "Roll" button and an `IntegerField` that displays field value that can be modified. Every time the "Roll" button is clicked, it generates a new value.
 
 ```java
 public class SingleDiceCustomField extends CustomField<Integer> {
     private static final int MIN_VALUE = 1;
     private static final int MAX_VALUE = 6;
 
-    private final NativeButton button;
-    private final Input input;
+    private final Button button;
+    private final IntegerField input;
 
     public SingleDiceCustomField() {
         addClassName("single-dice-custom-field");
-        button = createButton();
-        input = createInput();
 
-        setValue(0);
-        setInvalid(false);
+        button = new Button("Roll");
+        button.addClickListener(clickEvent -> {
+            setValue(RandomGenerator.getDefault().nextInt(MIN_VALUE, MAX_VALUE + 1));
+        });
+
+        input = new IntegerField();
+        input.setMin(MIN_VALUE);
+        input.setMax(MAX_VALUE);
 
         var layout = new HorizontalLayout(button, input);
         add(layout);
     }
 
-    @Override
-    protected Integer generateModelValue() {
-        String value = input.getValue();
-        // Verify it is a number, before parsing it to a number
-        if (NumberUtils.isCreatable(value)) {
-            return NumberUtils.createInteger(value);
-        }
-
-        return null;
-    }
-
-    @Override
-    protected void setPresentationValue(Integer value) {
-        input.setValue(String.valueOf(value)); // add value to input
-    }
-
-    private Input createInput() {
-        var input = new Input();
-        input.setEnabled(false); // Do not allow custom input
-
-        return input;
-    }
-
-    private NativeButton createButton() {
-        var button = new NativeButton("Roll");
+    private Button createButton() {
+        var button = new Button("Roll");
         button.addClickListener(clickEvent -> {
-            // Generate a random number, set as value
             setValue(RandomGenerator.getDefault().nextInt(MIN_VALUE, MAX_VALUE + 1));
         });
 
         return button;
     }
+
+    @Override
+    protected Integer generateModelValue() {
+        return input.getValue();
+    }
+
+    @Override
+    protected void setPresentationValue(Integer value) {
+        input.setValue(value);
+    }
 }
 ```
 
-
-[IMPORTANT]
-The internal components you embed can be any class that extends the Component class. This includes (but is not limited to) <<{articles}/components#,Vaadin Components>> like `TextField`, `DatePicker`, or `Grid`; <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> like `Input`, `Div`, or `NativeButton`; and third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons.
-
 === Extending `AbstractField`
 
-// TODO Im not sure whether component extending abstract field counts as custom field?
-<<{articles}/flow/binding-data/field,Creating a Component that Has a Value>>
+If you want more control than what extending `CustomField` provides, you could extend `AbstractField` or one of the other Helper classes based on it.
+This is outside the scope of this article, you can instead read the article about <<{articles}/flow/binding-data/field,Creating a Component that Has a Value>>.
 
-// TODO gotcha on value-change events?
+== Choosing Internal Components
+
+The internal components you embed can be any class that extends the Component class. This includes (but is not limited to) <<{articles}/components#,Vaadin Components>> like `TextField`, `DatePicker`, or `Grid`; <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> like `Input`, `Div`, or `NativeButton`; and third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons.
+
+Using <<{articles}/components#,Vaadin Components>> is usually the simplest choice, as it allows you to rely on the styles of the fields, and you can just propagate various states (like "invalid", "readonly", "disabled") and texts (helper text, error message) to the sub-fields.
+
+Using <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> usually requires more careful design with various states the custom fields support. Depending on the design of your application, some custom fields states might not be relevant to it, if they are never used, so it is not required that you properly handle all these cases.
+
 
 == Data Binding
 
@@ -107,6 +100,9 @@ There are two primary ways to work with values in a Custom Field:
 The right approach depends on your use case. If the Custom Field is part of a larger form that maps to a data object, you should typically bind it using `Binder`. However, if the field is standalone, such as when it's used only to filter content in the UI, it may be more appropriate to interact with it directly.
 
 Both approaches are covered below.
+
+[WARNING]
+Custom Field will automatically pick up value changes from input elements attached to it (either directly, or as part of another component), which means you usually don't have to add additional value change listeners that update the Custom Field value. You just have to make sure that `generateModelValue()` collects the changes correctly to create the custom field value. Being aware of this feature is critical to avoiding running into unexpected side effects.
 
 === Direct interaction
 
@@ -178,7 +174,6 @@ If you have multiple inputs, you can:
 * Use individual `NativeLabel` elements for each input.
 * Or assign a shared label by setting the `aria-labelledby` attribute on each input to point to a common label ID.
 
-
 ==== Example: Custom Label Handling
 ```java
 public class MyCustomField extends CustomField<Integer> {
@@ -214,6 +209,7 @@ public class MyCustomField extends CustomField<Integer> {
 }
 ```
 
+// TODO CustomField itself has a label, and in single input case, you usually do not need to introduce labels ... Although from accessibility perspective you should hack the CustomField integrated label to be linked to the wrapped input's input element. (Speaking of which, I have forgotten that in DecimalField, need to fix) And also by default the CustomField role is group, not field. If there is only one input, the group role is wrong.
 
 == Validation
 
@@ -223,6 +219,7 @@ When extending `CustomField`, you get built-in support for marking the field as 
 If you're extending `AbstractField`, you will have to implement the `HasValidationProperties` interface and add the necessary elements that use these (`invalid` and `errorMessage`) properties.
 
 You can use:
+
 ```java
 myCustomField.setErrorMessage("This field is required");
 myCustomField.setInvalid(true);
@@ -344,10 +341,13 @@ public void setInvalid(boolean invalid) {
 [IMPORTANT]
 Always remove aria-describedby when hiding the error element to avoid confusing screen readers.
 
-// TODO internal validation
+=== Internal Validation
 
-// TODO Explain how to handle required fields and validation errors in a custom field.
-// TODO You can assume the reader already knows how to add validators to the Binder.
+// TODO does this section make sense?
+There might be some validation that you want to handle from the inside of your Custom Field, instead of relying only on external validation. This, however, could present various problems if unaccounted for. You should never rely on the same `invalid` and `errorMessage` parameters to implement it. This is so that when your custom field is bound to a binder, validation doesn't ignore the internal validation state.
+Instead, you should use a different approach to indicate an error state. You might also want to have a method that an external binder could use to be aware of the error state.
+
+
 
 
 == Styling
