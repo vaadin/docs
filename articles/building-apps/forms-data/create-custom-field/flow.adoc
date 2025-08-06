@@ -81,6 +81,9 @@ public class SingleDiceCustomField extends CustomField<Integer> {
 If you want more control than what extending `CustomField` provides, you could extend `AbstractField` or one of the other Helper classes based on it.
 This is outside the scope of this article, you can instead read the article about <<{articles}/flow/binding-data/field,Creating a Component that Has a Value>>.
 
+[IMPORTANT]
+If your `AbstractField` has a client-side code imported with `@JsModule` and it uses Vaadin components like ComboBox or even is wrapped in a client-side version of the `CustomField` (`vaadin-custom-field`), then you might need add `@Uses({component}.class)` annotation, for example `@Uses(ComboBox.class)`, `@Uses(CustomField.class)`, otherwise the bundle optimization might exclude these components and your fields might fail to render.
+
 == Choosing Internal Components
 
 The internal components you embed can be any class that extends the Component class. This includes (but is not limited to) <<{articles}/components#,Vaadin Components>> like `TextField`, `DatePicker`, or `Grid`; <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> like `Input`, `Div`, or `NativeButton`; and third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons.
@@ -88,7 +91,6 @@ The internal components you embed can be any class that extends the Component cl
 Using <<{articles}/components#,Vaadin Components>> is usually the simplest choice, as it allows you to rely on the styles of the fields, and you can just propagate various states (like "invalid", "readonly", "disabled") and texts (helper text, error message) to the sub-fields.
 
 Using <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> usually requires more careful design with various states the custom fields support. Depending on the design of your application, some custom fields states might not be relevant to it, if they are never used, so it is not required that you properly handle all these cases.
-
 
 == Data Binding
 
@@ -102,7 +104,7 @@ The right approach depends on your use case. If the Custom Field is part of a la
 Both approaches are covered below.
 
 [WARNING]
-Custom Field will automatically pick up value changes from input elements attached to it (either directly, or as part of another component), which means you usually don't have to add additional value change listeners that update the Custom Field value. You just have to make sure that `generateModelValue()` collects the changes correctly to create the custom field value. Being aware of this feature is critical to avoiding running into unexpected side effects.
+Custom Field will automatically pick up value changes from input elements attached to it (either directly, or as part of another component), which means you *usually* don't have to add additional value change listeners that update the Custom Field value. You just have to make sure that `generateModelValue()` collects the changes correctly to create the custom field value. Being aware of this feature is critical to avoiding running into unexpected side effects. This is not the case for components like `Grid`, where you only get selection changed events.
 
 === Direct interaction
 
@@ -209,7 +211,6 @@ public class MyCustomField extends CustomField<Integer> {
 }
 ```
 
-// TODO CustomField itself has a label, and in single input case, you usually do not need to introduce labels ... Although from accessibility perspective you should hack the CustomField integrated label to be linked to the wrapped input's input element. (Speaking of which, I have forgotten that in DecimalField, need to fix) And also by default the CustomField role is group, not field. If there is only one input, the group role is wrong.
 
 == Validation
 
@@ -343,11 +344,9 @@ Always remove aria-describedby when hiding the error element to avoid confusing 
 
 === Internal Validation
 
-// TODO does this section make sense?
-There might be some validation that you want to handle from the inside of your Custom Field, instead of relying only on external validation. This, however, could present various problems if unaccounted for. You should never rely on the same `invalid` and `errorMessage` parameters to implement it. This is so that when your custom field is bound to a binder, validation doesn't ignore the internal validation state.
-Instead, you should use a different approach to indicate an error state. You might also want to have a method that an external binder could use to be aware of the error state.
-
-
+There might be some validation that you want to handle from the inside of your Custom Field, instead of relying only on external validation. This, however, could present various problems if unaccounted for. For internal validation you should never rely on the same `invalid` and `errorMessage` parameters to implement it. This is so that when your custom field is bound to a binder, validation doesn't ignore the internal validation state.
+Instead, you should use a different approach to indicate an error state. It's recommended that you limit internal validation to the default validators available through Vaadin components, such as, for `IntegerField` using `field.setMax(Integer)`.
+Alternatively you could have a method that an external binder could use to be aware of the error state. We will not cover such complex cases here.
 
 
 == Styling
@@ -388,7 +387,7 @@ vaadin-custom-field.my-custom-field[invalid]::part(label) {
 ```
 
 .Best practice
-[IMPORTANT]
+[TIP]
 Use both `vaadin-custom-field` and the custom classname in your selector to prevent accidental styling of unrelated components.
 
 === Styling Custom Internal Elements
@@ -426,12 +425,13 @@ vaadin-custom-field.my-custom-field input {
 }
 ```
 
-=== Styling an `AbstractField`
-
 
 == Accessibility
 
 Explain how to make the custom field accessible.
+
+// TODO CustomField itself has a label, and in single input case, you usually do not need to introduce labels ... Although from accessibility perspective you should hack the CustomField integrated label to be linked to the wrapped input's input element. (Speaking of which, I have forgotten that in DecimalField, need to fix) And also by default the CustomField role is group, not field. If there is only one input, the group role is wrong.
+
 
 
 [.collapsible-list]
@@ -450,6 +450,9 @@ To start, generate a <<{articles}/getting-started/start#,walking skeleton with a
 .Step 2
 [%collapsible]
 ====
+
+// TODO Duration custom field
+
 Step 2 goes here
 ====
 
