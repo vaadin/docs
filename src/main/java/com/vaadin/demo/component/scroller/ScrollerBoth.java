@@ -5,7 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 @Route("scroller-both")
 public class ScrollerBoth extends Div {
@@ -16,10 +16,10 @@ public class ScrollerBoth extends Div {
         scroller.setWidthFull();
         scroller.setHeight("300px");
 
-        StreamResource imageResource = new StreamResource("reindeer+.jpg",
-                () -> getClass().getResourceAsStream("/images/reindeer.jpg"));
+        DownloadHandler imageHandler = DownloadHandler.forClassResource(
+                getClass(), "/images/reindeer.jpg", "reindeer.jpg");
 
-        Image img = new Image(imageResource,
+        Image img = new Image(imageHandler,
                 "A reindeer walking on a snowy lake shore at dusk");
         scroller.setContent(img);
 

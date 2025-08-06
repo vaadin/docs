@@ -17,6 +17,7 @@ The https://vaadin.com/directory/component/vaadin-cdi/[Vaadin CDI] add-on refere
 - [interfacename]`InstantiatorFactory`
 - [interfacename]`SystemMessagesProvider`
 - [interfacename]`ErrorHandler`
+- [interfacename]`Executor`
 
 To ensure the beans are recognized, they should be qualified by the `@VaadinServiceEnabled` annotation. This is required because it marks a bean which is used as an `I18NProvider` by the service. If there are any other `I18NProvider` beans, the one that's also used by the service is used.
 
@@ -53,6 +54,50 @@ public class TestSystemMessagesProvider
 The purpose of `@VaadinServiceScoped` is to define a context of the lifespan of the Vaadin service. It isn't necessary for this kind of bean, but it's recommended because other Vaadin contexts can be problematic.
 
 For example, there's no guarantee that an active Vaadin session or UI context exists when the add-on looks for any of these beans. It's safe, though, to use standard CDI `@Dependent` and `@ApplicationScoped` contexts.
+
+
+== Configure Custom Vaadin Executor
+
+When a Vaadin application starts in a CDI environment, the [classname]`CdiVaadinServletService` overrides the `createDefaultExecutor()` method to use CDI capabilities for selecting an appropriate [interfacename]`Executor` for executing Vaadin's internal tasks. The selection process follows this order:
+
+1. Look for a custom [interfacename]`Executor` bean qualified with the [annotationname]`@VaadinServiceEnabled` annotation
+2. If no custom executor is found, try to use the container's [interfacename]`ManagedExecutorService` (available in Jakarta EE environments)
+3. If neither is available, fall back to Vaadin's <<{articles}/flow/advanced/service-executor#, default executor>> implementation
+
+To avoid ambiguity, the CDI extension enforces these rules:
+
+* There can be at most one [interfacename]`Executor` bean annotated with [annotationname]`@VaadinServiceEnabled`
+* If multiple [interfacename]`Executor` beans with [annotationname]`@VaadinServiceEnabled` annotation are found, the application deployment will fail with an appropriate error message
+
+
+You can provide your own task executor to customize how Vaadin executes server-side operations. This can be useful for implementing custom threading models, using specific thread pools, or integrating with other execution frameworks.
+To provide a custom executor, define a CDI bean that implements the [interfacename]`Executor` interface and annotate it with [annotationname]`@VaadinServiceEnabled`:
+
+[source,java]
+----
+@ApplicationScoped
+public class ExecutorConfiguration {
+
+    @Produces
+    @Singleton
+    @VaadinServiceEnabled
+    public Executor vaadinTaskExecutor() {
+        ThreadPoolExecutor customExecutor = new ThreadPoolExecutor(
+            16, // Core pool size
+            32, // Maximum pool size
+            120, // Keep-alive time
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            r -> {
+                Thread thread = new Thread(r, "CustomVaadinExecutor-" + r.hashCode());
+                thread.setDaemon(true);
+                return thread;
+            });
+        customExecutor.allowCoreThreadTimeOut(true);
+        return customExecutor;
+    }
+}
+----
 
 
 [discussion-id]`A55D3416-D5B7-40B9-8C4A-1454E97C92F1`
