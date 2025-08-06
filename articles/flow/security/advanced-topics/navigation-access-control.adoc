@@ -49,8 +49,55 @@ The Vaadin Spring add-on offers an [interfacename]`AccessPathChecker` implementa
 
 This means that to protect a Flow route, you can configure a Spring request matchers matching the route path, and use the authorization helpers to define the access grants, as in the following example.
 
+[.example]
+--
+
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@Route("admin")
+public class AdminView extends Div { }
+
+@Route("protected/profile")
+public class ProfileView extends Div { }
+
+@Route("special/preview-feature")
+public class ProfileView extends Div { }
+
+@Route("")
+public class HomeView extends Div { }
+
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin").hasAnyRole(ROLE_ADMIN)
+                .requestMatchers("/protected/**").authenticated()
+                .requestMatchers("/special/**")
+                    .access((authentication, object) -> {
+                        // Custom authorization logic
+                        return new AuthorizationDecision(isPremiumUser(authentication));
+                    })
+                .requestMatchers("/")
+                .permitAll()
+        );
+
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            // Configure Vaadin security settings
+        });
+
+        return http.build();
+    }
+}
+----
+
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @Route("admin")
 public class AdminView extends Div { }
 
@@ -82,6 +129,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 }
 ----
 
+--
 
 Integration with other security frameworks can be accomplished similarly by providing a specific [interfacename]`AccessPathChecker` implementation.
 
@@ -172,19 +220,19 @@ include::{root}/src/main/java/com/vaadin/demo/flow/auth/CustomDecisionResolver.j
 
 == Configuration
 
-Navigation Access Control is enabled automatically on Spring Boot projects using [classname]`VaadinWebSecurity`. To enable the feature in plain Java projects, follow the specific <<{articles}/flow/security/advanced-topics/securing-plain-java-app#, documentation page>>.
+Navigation Access Control is enabled automatically on Spring Boot projects using <<{articles}/flow/security/vaadin-security-configurer.adoc#configurer,VaadinSecurityConfigurer>>. To enable the feature in plain Java projects, follow the specific <<{articles}/flow/security/advanced-topics/securing-plain-java-app#, documentation page>>.
 
 This section shows how to customize Navigation Access Control for both Spring and plain Java projects.
 
 
 === Spring Projects
 
-When using [classname]`VaadinWebSecurity` as base class for configuring Spring Security, the Navigation Access Control feature is enabled by default. You can disable it by overriding the [methodname]`enableNavigationAccessControl` method in [classname]`VaadinWebSecurity` to return `false`. For backward compatibility, only the [classname]`AnnotatedViewAccessChecker` is active by default.
+When using [classname]`VaadinSecurityConfigurer` for configuring Spring Security, the Navigation Access Control feature is enabled by default. You can disable it by calling the [methodname]`enableNavigationAccessControl(false)` method on the configurer. For backward compatibility, only the [classname]`AnnotatedViewAccessChecker` is active by default.
 
 For a fine-grained configuration, you can expose a bean of type [classname]`NavigationAccessControlConfigurer`. [classname]`NavigationAccessControlConfigurer` allows activating out-of-the-box navigation access checkers or adding new ones, providing a custom decision resolver, completely disable the functionality, etc.
 
 [NOTE]
-If [classname]`VaadinWebSecurity` is not used, exposing the [classname]`NavigationAccessControlConfigurer` bean is mandatory to activate navigation access control.
+If [classname]`VaadinSecurityConfigurer` is not used, exposing the [classname]`NavigationAccessControlConfigurer` bean is mandatory to activate navigation access control.
 
 In the following example, Navigation Access Control is configured to activate route path checker, a custom checker instance and all available [interfacename]`NavigationAccessChecker` beans that extend [classname]`VotingNavigationAccessChecker`. It also provides a custom decision resolver.
 
@@ -208,11 +256,38 @@ NavigationAccessControlConfigurer navigationAccessControlConfigurerCustomizer() 
 <4> Sets a custom decision resolver.
 
 [IMPORTANT]
-If you add the bean definition method in a configuration class extending [classname]`VaadinWebSecurity`, the method must be declared `static`, to prevent bootstrap errors because of circular dependencies in bean definitions.
+When using [classname]`VaadinSecurityConfigurer` in the same configuration class where you define the [classname]`NavigationAccessControlConfigurer` bean, make sure to declare the bean method as `static` to prevent bootstrap errors due to circular dependencies in bean definitions.
+
+[.example]
+--
+
+.Define NavigationAccessControlConfigurer Bean with VaadinSecurityConfigurer
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    static NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+        return new NavigationAccessControlConfigurer()
+            .withRoutePathAccessChecker()
+            .withDecisionResolver(new CustomDecisionResolver());
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            // VaadinSecurityConfigurer will use the NavigationAccessControlConfigurer bean
+        }).build();
+    }
+}
+----
 
 .Define NavigationAccessControlConfigurer Bean in VaadinWebSecurity Subclass
 [source,java]
 ----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 class SecurityConfig extends VaadinWebSecurity {
     @Bean
     static NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
@@ -223,6 +298,7 @@ class SecurityConfig extends VaadinWebSecurity {
 }
 ----
 
+--
 Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for more information on how navigation access control can be customized.
 
 
@@ -259,6 +335,8 @@ public class NavigationAccessCheckerInitializer implements VaadinServiceInitList
     }
 }
 ----
+
+
 
 
 [discussion-id]`4164EB30-201D-4FD3-940F-03630A752AD5`
