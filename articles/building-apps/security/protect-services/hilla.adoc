@@ -24,7 +24,7 @@ Vaadin protects browser-callable services in the same way as it protects <<../pr
 [IMPORTANT]
 All browser-callable services are *inaccessible by default* and require explicit annotations to grant access.
 
-You can annotate both *service classes* and individual *service methods*. An annotation placed on the class applies to *all public methods* of the class. An annotation placed on a method *overrides any annotation on the class*. 
+You can annotate both *service classes* and individual *service methods*. An annotation placed on the class applies to *all public methods* of the class. An annotation placed on a method *overrides any annotation on the class*.
 
 The following annotations are supported:
 
@@ -68,7 +68,7 @@ public class ProtectedService {
 // tag::snippet[]
     @RolesAllowed(Roles.ADMIN) // <2>
 // end::snippet[]
-    public void callableByAdminsOnly() { 
+    public void callableByAdminsOnly() {
     }
 }
 ----
@@ -91,7 +91,7 @@ public class ProtectedService {
     public void callableByAllUsers() {
     }
 
-    public void callableByAdminsOnly() { 
+    public void callableByAdminsOnly() {
     }
 }
 ----
@@ -104,7 +104,7 @@ public class ProtectedService {
 [NOTE]
 The following assumes you have already set up Spring method security. For details, see the <<flow#,Protect Flow Services>> guide.
 
-By default, requests coming in from the browser are denied by Vaadin before the service is even called. This applies even when the service is proxied and protected by Spring Security. 
+By default, requests coming in from the browser are denied by Vaadin before the service is even called. This applies even when the service is proxied and protected by Spring Security.
 
 To *bypass Vaadin's security check and rely on Spring Security instead*, you have to add [annotationname]`@AnonymousAllowed` to the service, like this:
 
@@ -134,7 +134,7 @@ public class ProtectedService {
 Better support for Spring Security is planned for a future version of Vaadin Hilla. See https://github.com/vaadin/hilla/issues/3271[this ticket] for more information.
 
 .Don't configure Spring Security to use JSR-250 annotations
-[WARNING] 
+[WARNING]
 Spring method security has support for the JSR-250 annotations that Vaadin uses to protect browser-callable services. However, *Vaadin treats [annotationname]`@PermitAll` differently than Spring Security*. Whereas Vaadin allows access to _authenticated_ users only, Spring Security allows access to _all_ users.
 
 
@@ -166,9 +166,44 @@ public final class Roles {
 
 Then update the [methodname]`userDetailsManager()` method of the [classname]`SecurityConfig` class to use the new constants:
 
-.SecurityConfig.java
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
+    ...
+
+    @Bean
+    public UserDetailsManager userDetailsManager() {
+        LoggerFactory.getLogger(SecurityConfig.class)
+            .warn("Using in-memory user details manager!");
+        var user = User.withUsername("user")
+                .password("{noop}user")
+// tag::snippet[]
+                .roles(Roles.USER)
+// end::snippet[]
+                .build();
+        var admin = User.withUsername("admin")
+                .password("{noop}admin")
+// tag::snippet[]
+                .roles(Roles.ADMIN)
+// end::snippet[]
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 class SecurityConfig extends VaadinWebSecurity {
@@ -194,6 +229,8 @@ class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
+
+--
 ====
 
 
