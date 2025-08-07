@@ -45,12 +45,18 @@ export class NewsletterDialog extends LitElement {
       <vaadin-dialog
         header-title="Newsletter subscription"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(e: DialogOpenedChangedEvent) => (this.dialogOpened = e.detail.value)}"
+        @closed="${() => {
+          this.dialogOpened = false;
+        }}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}
       ></vaadin-dialog>
 
-      <vaadin-button @click="${() => (this.dialogOpened = true)}">
+      <vaadin-button
+        @click="${() => {
+          this.dialogOpened = true;
+        }}"
+      >
         Subscribe to our newsletter
       </vaadin-button>
     `;
