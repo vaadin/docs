@@ -28,8 +28,8 @@ function Example(): JSX.Element {
         theme="no-padding"
         header-title="Filter reports by users:"
         opened={dialogOpened.value}
-        onOpenedChanged={({ detail }) => {
-          dialogOpened.value = detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
         footer={
           <Button
