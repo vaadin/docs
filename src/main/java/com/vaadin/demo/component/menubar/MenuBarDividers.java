@@ -18,10 +18,10 @@ public class MenuBarDividers extends Div {
         subMenu.addItem("Facebook");
         subMenu.addItem("Twitter");
         subMenu.addItem("Instagram");
-        subMenu.add(new Hr());
+        subMenu.addSeparator();
         subMenu.addItem("By email");
         subMenu.addItem("Get link");
-        subMenu.add(new Hr());
+        subMenu.addSeparator();
         subMenu.addItem("Set permissions");
         // end::snippet[]
 

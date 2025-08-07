@@ -31,12 +31,12 @@ public class ContextMenuDividers extends Div {
         GridContextMenu<Person> menu = grid.addContextMenu();
         menu.addItem("View", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
         menu.addItem("Edit", event -> {
         });
         menu.addItem("Delete", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
         menu.addItem("Email", event -> {
         });
         menu.addItem("Call", event -> {

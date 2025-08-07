@@ -143,10 +143,79 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 
 === Deprecation
 
-The deprecated `VaadinWebSecurityConfigurerAdapter` class was removed since Spring no longer includes the `WebSecurityConfigurerAdapter` class. Use instead the `VaadinWebSecurity` base class for your security configuration. Below is an example of this:
+The deprecated `VaadinWebSecurityConfigurerAdapter` class was removed since Spring no longer includes the `WebSecurityConfigurerAdapter` class. Use instead the `VaadinSecurityConfigurer` class or [deprecated:com.vaadin:vaadin@V24.9]#`VaadinWebSecurity` base class# for your security configuration. Below is an example of this:
+
+[.example]
+--
 
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        /**
+         * Delegating the responsibility of general configuration
+         * of HTTP security to the VaadinSecurityConfigurer.
+         *
+         * It's configuring the following:
+         * - Vaadin's CSRF protection by ignoring internal framework requests,
+         * - default request cache,
+         * - ignoring public views annotated with @AnonymousAllowed,
+         * - restricting access to other views/endpoints, and
+         * - enabling ViewAccessChecker authorization.
+         */
+
+        // You can add any possible extra configurations of your own
+        // here - the following is just an example:
+        http.rememberMe(customizer -> customizer.alwaysRemember(false));
+
+        // Configure your static resources with public access before calling
+        // VaadinSecurityConfigurer.vaadin() as it adds final anyRequest matcher
+        http.authorizeHttpRequests(auth -> {
+            auth.requestMatchers("/admin-only/**").hasAnyRole("admin")
+            .requestMatchers("/public/**").permitAll();
+        });
+
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            // This is important to register your login view to the
+            // view access checker mechanism:
+            configurer.loginView(LoginView.class);
+        });
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Demo UserDetailsManager which only provides two hardcoded
+     * in-memory users and their roles.
+     * This shouldn't be used in real-world applications.
+     */
+    @Bean
+    public UserDetailsService userDetailsService(
+            PasswordEncoder passwordEncoder) {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        manager.createUser(User.withUsername("user")
+                .password(passwordEncoder.encode("userPass"))
+                .roles("USER").build());
+        manager.createUser(User.withUsername("admin")
+                .password(passwordEncoder.encode("adminPass"))
+                .roles("USER", "ADMIN").build());
+        return manager;
+    }
+}
+----
+
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity {
@@ -215,6 +284,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 }
 ----
 
+--
 In the example here, `AuthenticationManagerBuilder` -- used in Spring Boot 2 -- is replaced by `UserDetailsService`. Also, `http.authorizeRequests().antMatchers()` is replaced with `http.authorizeHttpRequests(auth -> auth.requestMatchers())`.
 
 
@@ -224,7 +294,7 @@ If the application is using Spring Security 5, the default behavior is for the `
 
 In Spring Security 6, users now must explicitly save the `SecurityContext` to the `SecurityContextRepository`.
 
-You can return the old behavior by adding to [methodname]`configure(HttpSecurity http)` the line `http.securityContext ( (securityContext) -> securityContext.requireExplicitSave( false ) );`.
+You can return the old behavior by adding to [methodname]`SecurityFilterChain securityFilterChain(HttpSecurity http)` (or [methodname]`configure(HttpSecurity http)` with `VaadinWebSecurity`) the line `http.securityContext ( (securityContext) -> securityContext.requireExplicitSave( false ) );`.
 
 For more information see https://docs.spring.io/spring-security/reference/5.8/migration/servlet/session-management.html#_require_explicit_saving_of_securitycontextrepository[Servlet Migrations - Session Management].
 
@@ -921,3 +991,8 @@ textField.addValueChangeListener(event -> {
 APIs that were deprecated earlier have now been removed. The following linked GitHub issue lists these removals:
 
 - https://github.com/vaadin/flow/issues/15665[Remove deprecated API and tools in Flow 24.0]
+
+== Side Navigation Replaces AppNav and AppNavItem
+
+Some starter projects previously used the `AppNav` and `AppNavItem` components, which relied on the Vaadin Component Factory components, vcf-nav and vcf-nav-item. These Component Factory components are no longer supported and you should replace `AppNav` and `AppNavItem` with their successor, <</components/side-nav#,Side Navigation>>.
+
