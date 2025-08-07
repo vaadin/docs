@@ -17,9 +17,8 @@ class Header extends HTMLElement {
 
       this.innerHTML = `
         <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700&display=swap"
+          rel="stylesheet"
+          href="https://cdn.vaadin.com/website/antlers/v2/assets/fonts/nbinternationalpro/stylesheet.css"
         />
         <link
           rel="preload"
