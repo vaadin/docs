@@ -32,8 +32,8 @@ function Example() {
       <Dialog
         headerTitle={`Delete user "${user.value?.firstName} ${user.value?.lastName}"?`}
         opened={dialogOpened.value}
-        onOpenedChanged={(event) => {
-          dialogOpened.value = event.detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
         footer={
           <>
