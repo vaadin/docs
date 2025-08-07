@@ -57,12 +57,24 @@ Add the following dependencies to the project's [filename]`pom.xml` file:
 
 Modify the Spring Security configuration and use the [methodname]`VaadinWebSecurity.setStatelessAuthentication()` method to set up stateless authentication, as follows:
 
+[.example]
+--
+
+.`SecurityConfigurer.java`
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfigurer.java[tags="stateless-configure"]
+----
 
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfig.java[tags="stateless-configure"]
 ----
+
+--
 <1> Sets the secret key that's used for signing and verifying the JWT.
 <2> Sets the JWT signature algorithm. The key length should match the algorithm chosen. For example, the HS256 algorithm used here requires a 32-byte secret key.
 <3> Sets the issuer JWT claim &ndash; a string or a URL that identifies your application.
@@ -113,9 +125,36 @@ After completing the previous steps, your application should be using stateless 
 
 By default, the JWT and cookies expire thirty minutes after the last server request. You can customize the expiration period by using an additional duration argument for the configuration method like so:
 
+[.example]
+--
+
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        ...
+        http.with(new VaadinStatelessSecurityConfigurer<>(),
+            cfg -> cfg.withSecretKey().secretKey(
+                 new SecretKeySpec(Base64.getDecoder().decode("..."),
+                      JwsAlgorithms.HS256)
+           ).and().issuer("com.example.application")
+            .expiresIn(3600) // The JWT lifetime in seconds
+        );
+        return http.build();
+    }
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig extends VaadinWebSecurity {
@@ -131,5 +170,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
+
+--
 
 // end::content[]
