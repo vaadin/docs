@@ -4,7 +4,6 @@ import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('confirm-dialog-reject-button')
@@ -38,7 +37,7 @@ export class Example extends LitElement {
           reject-text="Discard"
           confirm-text="Save"
           .opened="${this.dialogOpened}"
-          @opened-changed="${this.openedChanged}"
+          @closed="${this.onClosed}"
           @confirm="${() => {
             this.status = 'Saved';
           }}"
@@ -58,14 +57,12 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: ConfirmDialogOpenedChangedEvent) {
-    this.dialogOpened = e.detail.value;
-    if (this.dialogOpened) {
-      this.status = '';
-    }
+  onClosed() {
+    this.dialogOpened = false;
   }
 
   private open() {
     this.dialogOpened = true;
+    this.status = '';
   }
 }
