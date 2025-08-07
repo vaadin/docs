@@ -1,0 +1,254 @@
+---
+title: Hilla
+page-title: How to show a form in dialogs and drawers in Hilla | Vaadin
+meta-description: Learn how to reuse a form component for both creating and editing items in Vaadin Hilla.
+order: 10
+---
+
+= Form Dialogs and Drawers in Hilla
+
+This guide explains how to reuse a form component for both creating and editing items in Hilla, manage form state using callbacks, and integrate with other UI elements like grids.
+
+.Part of a Series
+[TIP]
+This is part 4 of the *Add a Form* series. It builds on the concepts introduced in the <<../fields-and-binding/hilla#,Fields & Binding>>, <<../validation/hilla#,Form Validation>> and <<../loading-and-saving/hilla#,Loading & Saving>> guides. You should also read the <<.#,Overview>>.
+
+
+== Displaying Forms in Dialogs
+
+The following example shows a dialog used to create new project proposals. The parent supplies an `onSave` event handler, which is called when the user clicks the `Create Proposal` button. The example uses the `useForm` hook, introduced in the <<../fields-and-binding/hilla#,Fields & Binding>> guide:
+
+.ProposalDialog.tsx
+[source,tsx]
+----
+import { Button, Dialog } from "@vaadin/react-components";
+import { useForm } from "@vaadin/hilla-react-form";
+
+import ProposalForm from "Frontend/components/ProposalForm";
+import Proposal from "Frontend/generated/com/example/application/tutorial/domain/Proposal";
+import ProposalModel from "Frontend/generated/com/example/application/tutorial/domain/ProposalModel";
+
+export type ProposalDialogProps = {
+    opened?: boolean,
+    onOpenedChanged?: (opened: boolean) => void,
+    onSave?: (proposal: Proposal) => Promise<void>
+}
+
+export function ProposalDialog(
+        {opened = false, onOpenedChanged, onSave}: ProposalDialogProps
+    ) {
+
+    const form = useForm(ProposalModel, {
+        onSubmit: onSave // <1>
+    });
+
+    const handleClose = () => {
+        form.clear(); // <2>
+        onOpenedChanged?.(false);
+    };
+
+    const handleSubmit = async () => {
+        await form.submit(); // <3>
+        handleClose();
+    };
+
+    return (
+        <Dialog 
+            opened={opened} 
+            headerTitle="New Proposal"
+            onOpenedChanged={e => onOpenedChanged?.(e.detail.value)}
+            footer={
+                <>
+                    <Button theme="primary" onClick={handleSubmit}>
+                        Create Proposal
+                    </Button>
+                    <Button onClick={handleClose}>Cancel</Button>
+                </>
+            }>
+            <ProposalForm form={form}/>
+        </Dialog>
+    );
+}
+----
+<1> Uses a callback to let the caller decide how to save the FDO.
+<2> Clears the form after the dialog is closed, so that it is fresh when re-opened.
+<3> Throws an error if the form is invalid, keeping the dialog visible.
+
+.Tip for Flow Developers
+[TIP]
+In Hilla, you don't call `open()` to show a dialog. Instead, you control its visibility using the `opened` property. The dialog itself can't update this property directly. Instead, it emits an `onOpenedChanged` event to inform the parent that it was closed. The parent is then responsible for updating the opened property accordingly.
+
+
+Here's how you might use the dialog in your application:
+
+[source,tsx]
+----
+// (Imports omitted for clarity)
+
+export default function ProposalView() {
+    const createDialogOpened = useSignal(false); // <1>
+    const dataProvider = useDataProvider<Proposal>({ // <2>
+        list: (pageable) => ProposalService.list(pageable),
+    });
+    const selection = useSignal<Proposal[]>([]); // <3>
+
+    const insertProposal = async (proposal: Proposal) => {
+        try {
+            const result = await ProposalService.save(proposal); // <4>
+            dataProvider.refresh(); // <5>
+            selection.value = [result]; // <6>
+        } catch (error) {
+            handleError(error);
+        }
+    };
+
+    return (
+        <main>
+            <Button onClick={event => createDialogOpened.value = true}>
+                Create Proposal
+            </Button>
+            <Grid
+                dataProvider={dataProvider.dataProvider}
+                itemIdPath="proposalId"
+                selectedItems={selection.value}
+                activeItem={selection.value[0]}
+                onActiveItemChanged={event => {
+                    const item = event.detail.value;
+                    selection.value = item ? [item] : [];
+                }}>
+                <GridColumn path="title"/>
+                <GridColumn path="type"/>
+                <GridColumn path="description"/>
+            </Grid>            
+            <ProposalDialog 
+                opened={createDialogOpened.value}
+                onOpenedChanged={opened => createDialogOpened.value = opened}
+                onSave={insertProposal}
+            />
+        </main>
+    );
+}
+----
+<1> This signal controls whether the dialog is open or closed.
+<2> This is a data provider for <<{articles}/components/grid#lazy-loading,lazy-loading a Grid>>.
+<3> This signal contains the selected proposals.
+<4> Inserts the proposal with an application service using *Single Save*.
+<5> Refreshes the grid of proposals so that the new one shows up.
+<6> Selects the newly added proposal, opening the edit drawer.
+
+
+== Displaying Forms in Drawers
+
+The following example shows *a drawer that reuses the same form component from the dialog example to edit project proposals*:
+
+.ProposalDrawer.tsx
+[source,tsx]
+----
+import { Button } from "@vaadin/react-components";
+import { useForm } from "@vaadin/hilla-react-form";
+import { useEffect } from "react";
+
+import ProposalForm from "Frontend/components/ProposalForm";
+import Proposal from "Frontend/generated/com/example/application/tutorial/domain/Proposal";
+
+export type ProposalDrawerProps = {
+    opened?: boolean,
+    onOpenedChanged?: (opened: boolean) => void,
+    proposal?: Proposal,
+    onSave?: (proposal: Proposal) => Promise<void>
+}
+
+export function ProposalDrawer(
+        {opened = false, onOpenedChanged, proposal, onSave}: ProposalDrawerProps
+    ) {
+
+    const form = useForm(ProposalModel, {
+        onSubmit: onSave // <1>
+    });
+
+    const handleClose = () => {
+        onOpenedChanged?.(false);
+    }
+
+    const handleSubmit = async () => {
+        await form.submit();
+        handleClose(); // <2>
+    }
+
+    useEffect(() => {
+        form.read(proposal); // <3>
+    }, [proposal]);
+
+    return (
+        <section hidden={!opened}>
+            <h2>Edit Proposal</h2>
+            <ProposalForm form={form}/>
+            <div className="flex flex-row gap-s">
+                <Button theme="primary" onClick={handleSubmit}>Save</Button>
+                <Button onClick={handleClose}>Close</Button>
+            </div>
+        </section>
+    );
+}
+----
+<1> Uses a callback to let the caller decide how to save the FDO.
+<2> Closes the drawer after submitting. Depending on the UX design, you may want to keep the drawer open.
+<3> Populates the form whenever the `proposal` prop is changed.
+
+To show the drawer when a user selects an item from a grid, you can use the following pattern:
+
+[source,tsx]
+----
+// (Imports omitted for clarity)
+
+export default function ProposalView() {
+    const dataProvider = useDataProvider<Proposal>({
+        list: (pageable) => ProposalService.list(pageable),
+    });
+    const selection = useSignal<Proposal[]>([]); // <1>
+
+    const updateProposal = async (proposal: Proposal) => {
+        try {
+            await ProposalService.save(proposal); // <2>
+            dataProvider.refresh(); // <3>
+        } catch (error) {
+            handleError(error);
+        }
+    }
+
+    return (
+        <main>
+            <Grid
+                dataProvider={dataProvider.dataProvider}
+                itemIdPath="proposalId"
+                selectedItems={selection.value}
+                activeItem={selection.value[0]}
+                onActiveItemChanged={event => {
+                    const item = event.detail.value;
+                    selection.value = item ? [item] : [];
+                }}>
+                <GridColumn path="title"/>
+                <GridColumn path="type"/>
+                <GridColumn path="description"/>
+            </Grid> 
+            <ProposalDrawer opened={selection.value.length > 0}
+                            onOpenedChanged={opened => {
+                                if (!opened) {
+                                    selection.value = [];
+                                }
+                            }}
+                            proposal={selection.value[0]}
+                            onSave={updateProposal}/>
+        </main>
+    );
+}
+----
+<1> The drawer is visible whenever the this signal contains a proposal. When the drawer is closed, the signal is cleared. The drawer uses *Load from Selection*.
+<2> Saves the proposal with an application service using *Single Save*.
+<3> Refreshes the grid of proposals so that the changes show up.
+
+.Tip for Flow Developers
+[TIP]
+In Hilla, you can't directly access the current selection of a Grid. Instead, you create a signal to hold the selected item and update it using the `onActiveItemChanged` event. In the example above, the grid's selection, the drawer's visibility, and the form's content are all driven by a single `selection` signal.
+
+If you need a refresher on form loading and saving strategies, see the <<../loading-and-saving#,Loading & Saving>> guide.

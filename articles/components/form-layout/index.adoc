@@ -1,9 +1,10 @@
 ---
-tab-title: Usage
 title: Form Layout
 page-title: Form Layout component | Vaadin components
 description: Using Form Layout to build responsive forms with multiple columns and better positioned input labels.
 meta-description: Use the Form Layout component in Vaadin to create responsive and structured forms.
+tab-title: Usage
+layout: tabbed-page
 page-links:
   - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/form-layout}/#/elements/vaadin-form-layout[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/formlayout/FormLayout.html[Java]'
   - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/form-layout}/packages/form-layout[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-form-layout-flow-parent[Java]'
@@ -18,259 +19,410 @@ Form Layout allows you to build responsive forms with multiple columns, and to p
 
 [.example]
 --
-
-ifdef::lit[]
-[source,typescript]
-----
-include::{root}/frontend/demo/component/formlayout/form-layout-basic.ts[render,tags=snippet,indent=0,group=Lit]
-----
-endif::[]
-
-ifdef::flow[]
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutBasic.java[render,tags=snippet,indent=0,group=Flow]
 ----
-endif::[]
 
-ifdef::react[]
 [source,tsx]
 ----
 include::{root}/frontend/demo/component/formlayout/react/form-layout-basic.tsx[render,tags=snippet,indent=0,group=React]
 ----
-endif::[]
---
 
-
-== Columns
-
-By default, Form Layout has two columns: it displays two input fields per line. When the layout width is smaller, it adjusts to a single-column.
-
-
-=== Custom Layout
-
-You can define how many columns that Form Layout should use based on the screen width. Use the draggable split handle to resize Form Layout's available space and to test its responsiveness.
-
-[.example]
---
-
-ifdef::lit[]
 [source,typescript]
 ----
-include::{root}/frontend/demo/component/formlayout/form-layout-custom-layout.ts[render,tags=snippet,indent=0,group=Lit]
+include::{root}/frontend/demo/component/formlayout/form-layout-basic.ts[render,tags=snippet,indent=0,group=Lit]
 ----
-endif::[]
-
-ifdef::flow[]
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutCustomLayout.java[render,tags=snippet,indent=0,group=Flow]
-----
-endif::[]
-
-ifdef::react[]
-[source,tsx]
-----
-include::{root}/frontend/demo/component/formlayout/react/form-layout-custom-layout.tsx[render,tags=snippet,indent=0,group=React]
-----
-endif::[]
 --
 
-A single-column layout is preferable to a multi-column layout. A multi-column layout can be prone to confusion and misinterpretation by the user. However, related fields placed in a line are typically understandable. Examples of this would be first and last name, address fields such as city and postal code, and ranged input for dates, time, and price or cost.
+Form Layout automatically adjusts how fields are laid out in columns and rows to utilize the available space and avoid overflow. There are two discrete layouting modes that determine how this works:
 
+- [since:com.vaadin:vaadin@V24.8]#<<#auto-responsive-mode,Auto-responsive mode>>#, based on column width
+- <<#responsive-steps-mode,Responsive steps mode>>, based on defined breakpoints
 
-=== Column Span
+.Default mode depends on feature flag
+[NOTE]
+In V24.8+, the default mode depends on the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout`. When enabled, auto-responsive mode is the default; otherwise, responsive steps mode is the default.
 
-When using a multi-column layout, you can define a `colspan` for each component. The `colspan` determines how many columns a component extends or stretches across.
+[role="since:com.vaadin:vaadin@V24.8"]
+== Auto-Responsive Mode
 
-For example, if you have a Form Layout with three columns and a component's `colspan` is set to 3, it'll therefore take the entire width of the Form Layout.
+In auto-responsive mode, Form Layout automatically determines the appropriate number of columns based on the <<#column-width,column width>> and spacing, and the available horizontal space.
 
 [.example]
 --
+[source,java]
+----
+<source-info group="Flow"></source-info>
+formLayout.setAutoResponsive(true);
+----
 
-ifdef::lit[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormLayout autoResponsive>
+----
+
 [source,html]
 ----
-include::{root}/frontend/demo/component/formlayout/form-layout-colspan.ts[render,tags=snippet,indent=0,group=Lit]
+<source-info group="Lit"></source-info>
+<vaadin-form-layout auto-responsive>
 ----
-endif::[]
+--
 
-ifdef::flow[]
+.Feature Flag Controls Default Mode
+[NOTE]
+In V24.8+, auto-responsive mode can be set as default by setting the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout` to true. This is recommended for new projects as auto-responsive will be the default mode in V25.
+
+The sections below describe features available in auto-responsive mode.
+
+=== Form Rows
+
+In auto-responsive mode, all fields are laid out in a single column by default. To render multiple fields side-by-side, i.e. in multiple columns, they can be grouped into Form Rows.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-basic.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+Form Rows automatically wrap their contents into multiple rows if the layout doesn't have enough columns to fit them on a single row.
+
+.UX Tip: Group Related Fields Into Rows
+[NOTE]
+Forms are easier to understand if fields are grouped into rows based on how closely related they are, rather than arbitrarily. As an example, first name and last name are typically placed on the same row, while a date-of-birth field would typically be on a different row.
+
+=== Label Position
+
+By default, labels are rendered above the field. Labels can be rendered next to the field by wrapping fields into Form Items and switching to labels-aside mode.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutLabelsAside.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-labels-aside.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-labels-aside.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+The field label must be applied on the Form Item rather than the field itself.
+
+When the Form Layout's width isn't sufficient to render labels next to fields, it automatically reverts back to rendering them above fields.
+
+.UX Tip: Labels Aside Work Best In Single Column Forms
+[NOTE]
+Forms with labels next to the fields can be confusing if fields are rendered in multiple columns. Although Form Layout supports combining side-labels with multiple columns, this combination is not recommended.
+
+The width of side labels can be configured with the `--vaadin-form-item-label-width` CSS property. The Flow API also has a dedicated `setLabelWidth` API for this.
+
+=== Column Width
+
+All columns in a Form Layout have the same width, which can be configured to any CSS length value in absolute or font-relative units like `px`, `pt`, `em`, `rem`, or `ch` (percentages and length keywords like `auto` or `min-content` are not supported).
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+formLayout.setColumnWidth("8em");
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormLayout columnWidth="8em">
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-layout column-width="8em">
+----
+--
+
+Additionally, columns can be set to expand to fill any remaining available space in the layout:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutExpandColumns.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-expand-columns.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-expand-columns.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+This is typically combined with expanding fields to fill the full width of their columns, as described below.
+
+=== Expanding Fields to Fill Their Columns
+
+In auto-responsive mode, fields do not fill the columns they're in by default (although they are prevented from overflowing them). This can be changed by enabling field expansion:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutExpandFields.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-expand-fields.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-expand-fields.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+If only certain fields should expand, this can be achieved by setting their widths to 100%.
+
+.UX Tip: Fields Should Match Their Typical Content Length
+[NOTE]
+Although a uniform field size may look nice, matching field widths to the typical length of their contents makes it easier to find the correct field and the form easier to understand. This can be achieved by leaving field expansion disabled, or by using <<#column-span,column span>> to determine the relative widths of fields.
+
+=== Column Limit
+
+The number of columns can be limited by setting the maximum column count.
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+formLayout.setMaxColumns(3);
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormLayout maxColumns="3">
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-layout max-columns="3">
+----
+--
+
+== Responsive Steps Mode
+
+In responsive steps mode, columns are defined explicitly for a number of breakpoints, or _steps_, based on the layout's width, and fields are automatically laid out in the available columns, wrapping to the next row as needed.
+
+The default breakpoint configuration is one column below a layout width of `40em`, and two columns above that.
+
+.Feature Flag Controls Default Mode
+[NOTE]
+In V24.8+, the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout` makes auto-responsive mode the default. With the flag enabled, individual Form Layouts can be switched to responsive steps mode by defining the responsive steps manually.
+
+=== Setting the Breakpoints
+
+Each breakpoint defines the minimum layout width at which it is applied, and the number of columns rendered.
+
+The following example sets
+
+- One column when the layout is less than 320 pixels wide
+- Two columns when the layout is at least 320 pixels wide
+- Three columns when the layout is at least 500 pixels wide
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutStepsBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-steps-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-steps-basic.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+Note that
+
+- The smallest breakpoint should always be at zero pixels;
+- The breakpoints must be ordered by width.
+
+=== Label Position
+
+By default, labels are rendered above the field. Labels can be rendered next to the field by wrapping the fields into Form Items.
+
+In responsive steps mode, fields wrapped in Form Items render their fields on the side by default, unless the breakpoint configuration defines the label position to be above the fields.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutStepsLabelsAside.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-steps-labels-aside.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-steps-labels-aside.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+The _default_ breakpoint configuration renders Form Item wrapped fields with labels on the side, but reverts to labels above fields when the layout is less than `20em` wide.
+
+Note that
+
+- The field label must be applied on the Form Item rather than the field itself.
+- Fields wrapped into Form Items do not match the size of the wrapper by default. To avoid empty space or overflow in the column, set the widths of the fields to 100%.
+
+.UX Tip: Labels Aside Work Best In Single Column Forms
+[NOTE]
+Forms with labels next to the fields can be confusing if fields are rendered in multiple columns. Although Form Layout supports combining side-labels with multiple columns, this combination is not recommended.
+
+=== Row Breaks
+
+Fields can be forced to break into multiple rows using html `<br>` line break elements:
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+formLayout.add(new TextField("First name"));
+formLayout.add(new TextField("Last name"));
+formLayout.getElement().appendChild(ElementFactory.createBr()); // row break
+formLayout.add(new EmailField("Email address"));
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormLayout>
+	<TextField label="First name" />
+	<TextField label="Last name" />
+	<br/> {/* row break */}
+	<EmailField label="Email address" />
+</FormLayout>
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-layout>
+	<vaadin-text-field label="First name"></vaadin-text-field>
+  <vaadin-text-field label="Last name"></vaadin-text-field>
+  <br/> <!-- row break -->
+  <vaadin-email-field label="Email address"></vaadin-email-field>
+</vaadin-form-layout>
+----
+--
+
+=== Field Width
+
+In responsive steps mode, fields are automatically scaled to fit and fill the columns. Overriding this by setting minimum or maximum width on the field breaks the layout.
+
+To prevent a field from stretching to fill the full width of the column, wrap it in a Form Item. Note that the field may overflow the Form Item and break the layout if its width is larger than the width of the column. To avoid this, set the field's maximum width to 100%.
+
+== Column Span
+
+Fields can span multiple columns. Note that fields wrapped into Form Items must have their columns span set on the Form Item instead of the field itself.
+
+[.example]
+--
 [source,java]
 ----
 include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutColspan.java[render,tags=snippet,indent=0,group=Flow]
 ----
-endif::[]
 
-ifdef::react[]
 [source,tsx]
 ----
 include::{root}/frontend/demo/component/formlayout/react/form-layout-colspan.tsx[render,tags=snippet,indent=0,group=React]
 ----
-endif::[]
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-colspan.ts[render,tags=snippet,indent=0,group=Lit]
+----
 --
 
-
-== Label Position
-
-The built-in labels for input fields are positioned above the input. Form Layout supports side-positioned labels, provided they're wrapped in Form Items and the label position is set to `aside`.
-
-The only reason for wrapping labels in Form Items is to put the labels to the side of the input.
-
-
-=== Top
-
-Users complete forms that have top-positioned labels more quickly because they provide a consistent scanning pattern -- top-down, as opposed to zigzag -- while minimizing the distance between the label and input field.
-
-Top-positioned labels are also less prone to causing layout issues due to variable label lengths, which happens usually in multilingual applications.  However, they do result in vertically longer forms. This is why <<#sectioning,sectioning>> is important.
-
-
-=== Side
-
-Side-positioned labels help reduce a form's total height. This is especially useful for longer forms and when vertical space is limited.
-
-The positioning of labels on the side is also useful when there's a need to compare numeric data.
-
-[.example]
---
-
-ifdef::lit[]
-[source,html]
-----
-include::{root}/frontend/demo/component/formlayout/form-layout-side.ts[render,tags=snippet,indent=0,group=Lit]
-----
-endif::[]
-
-ifdef::flow[]
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutSide.java[render,tags=snippet,indent=0,group=Flow]
-----
-endif::[]
-
-ifdef::react[]
-[source,tsx]
-----
-include::{root}/frontend/demo/component/formlayout/react/form-layout-side.tsx[render,tags=snippet,indent=0,group=React]
-----
-endif::[]
---
-
-Aim for similar-length labels to keep the distance consistent between the labels and the input fields. Inconsistent spacing can slow the user in completing a form.
-
-Forms that use this position require more horizontal space, which isn't always ideal in narrow forms. Instead, configure Form Layout to use top-positioned labels when the form has a narrow width.
-
-The width of side-positioned labels can be adjusted using the `--vaadin-form-item-label-width` CSS property on the Form Layout element, or with the [since:com.vaadin:vaadin@V24.5]#[methodname]`setLabelWidth()` method# on the [classname]`FormLayout` instance in Flow.
-
-
-=== Responsive Label Position
-
-Similar to the number of columns, the label position is configurable based on the width of the layout. For example, you can position the labels to the side when there's ample horizontal space available, and on top for narrower screens.
-
+Column span is capped to the number of columns currently in the layout to prevent overflow.
 
 == Spacing
 
 Form Layout allows you to configure the spacing between columns, rows, and between the label and input field when labels are positioned on the side.
 
-To configure the spacing, use the following CSS properties on the Form Layout element:
-
-[.example]
+Use the following CSS properties on individual `vaadin-form-layout` elements, or globally on the `html` element. The Flow API also provides setters for these properties.
 
 |===
-| Property | Default Value
+|Spacing |CSS Property |Flow API
 
-| `--vaadin-form-layout-column-spacing`
-| `var(--lumo-space-l)`
+|Between columns
+|`--vaadin-form-layout-column-spacing`
+|`setColumnSpacing`
 
-| `--vaadin-form-item-row-spacing`
-| `1em`
+|Between rows
+|`--vaadin-form-layout-row-spacing`
+|`setRowSpacing`
 
-| `--vaadin-form-item-label-spacing`
-| `1em`
+|Between side label and field
+|`--vaadin-form-layout-label-spacing`
+|`setLabelSpacing`
 |===
 
+== Miscellaneous
 
-== Native Input Fields
+=== Form Item Usage
 
-Form Item allows you to set a label for any type of component that you want to use in a Form Layout. It supports both Vaadin components and native HTML components.
+Form Item is only intended for wrapping individual input field components or native html `<input>` elements. It automatically applies an https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-labelledby[`aria-labelledby`] attribute to the element for screen reader support, which only works correctly with input fields and Web Components with an `ariaTarget` property that returns an appropriate element to which the `aria-labelledby` attribute can be applied.
 
-[.example]
---
+To combine multiple inputs in the same form field, or to provide a label to other elements that lack labels, use <<../custom-field#,Custom Field>> instead. A Custom Field can be further wrapped into a Form Item for side-label support.
 
-ifdef::lit[]
-[source,html]
-----
-include::{root}/frontend/demo/component/formlayout/form-layout-native-input.ts[render,tags=snippet,indent=0,group=Lit]
-----
-endif::[]
+=== Scrolling
 
-ifdef::flow[]
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutNativeInput.java[render,tags=snippet,indent=0,group=Flow]
-----
-endif::[]
+Form Layout does not provide its own scroll area. To make a scrollable form, wrap the layout into a <<../scroller#,Scroller>>, and make sure that its size is undefined in the desired scroll direction.
 
-ifdef::react[]
-[source,tsx]
-----
-include::{root}/frontend/demo/component/formlayout/react/form-layout-native-input.tsx[render,tags=snippet,indent=0,group=React]
-----
-endif::[]
---
+=== Field Focus Order
 
+Fields in multi-column Form Layouts always flow from left to right, then down, and the focus order of the fields will match this order. To make a form where focus flows from top to bottom, column by column, split the form into multiple single-column Form Layouts instead.
 
-== Multiple Fields
+=== Buttons
 
-Form Item only supports placing a single field inside. Where you need to place multiple fields, <<../custom-field#,Custom Field>> should be used as a wrapper:
-
-[.example]
---
-
-ifdef::lit[]
-[source,js]
-----
-include::{root}/frontend/demo/component/formlayout/form-layout-custom-field.ts[render,tags=snippet,indent=0,group=Lit]
-----
-endif::[]
-
-ifdef::flow[]
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutCustomField.java[render,tags=snippet,indent=0,group=Flow]
-----
-endif::[]
-
-ifdef::react[]
-[source,tsx]
-----
-include::{root}/frontend/demo/component/formlayout/react/form-layout-custom-field.tsx[render,tags=snippet,indent=0,group=React]
-----
-endif::[]
---
-
-Keeping fields in individual Form Items is preferable. Wrapped fields can be hard to distinguish visually since they usually have no individual label except for a placeholder, which is only visible when the field has no value.
-
-
-== Best Practices
-
-With regards to developing with Form Layout, this section provides some suggestions for better user experiences.
-
-
-=== Sectioning
-
-Longer forms should be split into smaller, more manageable and user-friendly sections using sub-headings, <<../tabs#,Tabs>>, <<../details#,Details>> or separate views when possible. Each section should consist of related content and fields.
-
-
-=== Button Placement
-
-Use the following guidelines for Button placement in forms:
-
-- Buttons should be placed below the form with which they're associated.
-- Buttons should be aligned to the left.
-- Primary action should be placed first, followed by other actions, in order of importance.
-
-For more information, see the <<../button#,Button documentation>>.
-
+Forms usually have buttons at the bottom for saving or cancelling changes. While these can be placed in the Form Layout itself, it is usually better to put them in a separate layout below the Form Layout. The
+<<../button#,Button component documentation>> provides more recommendations on buttons in forms.
 
 [discussion-id]`7B8E4F98-540C-4622-A39F-907C95E9DFFD`
