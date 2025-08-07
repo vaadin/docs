@@ -348,6 +348,8 @@ There might be some validation that you want to handle from the inside of your C
 Instead, you should use a different approach to indicate an error state. It's recommended that you limit internal validation to the default validators available through Vaadin components, such as, for `IntegerField` using `field.setMax(Integer)`.
 Alternatively you could have a method that an external binder could use to be aware of the error state. We will not cover such complex cases here.
 
+== Localization
+// TODO
 
 == Styling
 
@@ -425,6 +427,20 @@ vaadin-custom-field.my-custom-field input {
 }
 ```
 
+=== Styling Directly in Java
+Alternatively, you can style components directly through Java in several ways:
+
+* Using <<{articles}/styling/lumo/utility-classes#,Lumo Utility classes>>, for example `label.addClassName(LumoUtility.Padding.Left.SMALL);`
+* Using `HasStyle` API on the component
+** Through predefined methods, for example `label.getStyle().setPaddingLeft("var(--lumo-space-xs)")`
+** Through a generic style property setter `label.getStyle().set("padding-left", "var(--lumo-space-xs)"`.
+
+[TIP]
+If the component doesn't directly implement the `HasStyle` interface, in most cases you can access the same API through `component.getElement().getStyle()`.
+
+[IMPORTANT]
+When using `HasStyle` API, its is recommended that you use <<{articles}/styling/lumo/lumo-style-properties#,Lumo Style Properties>> when possible, if you're using the Lumo theme (or your own defined CSS properties). For example use `"var(--lumo-space-xs)"` instead of "4px". This provides consistent styling, with the ability to make consistent changes, if, for example, sizing needs to be decreased.
+
 
 == Accessibility
 
@@ -437,8 +453,7 @@ Explain how to make the custom field accessible.
 [.collapsible-list]
 == Try It
 
-Introduce the mini-tutorial here. The user should download the skeleton and then follow the steps in the tutorial to build and test a custom field.
-
+Let's create a duration field. It will require two input fields "hours" and "minutes", as well as custom labels for them, so that the field can be read as, for example "2 hours and 30 minutes". The input fields will be `IntegerField` components. It will support localization, and it will be accessible.
 
 .Set Up the Project
 [%collapsible]
@@ -447,15 +462,118 @@ To start, generate a <<{articles}/getting-started/start#,walking skeleton with a
 ====
 
 
-.Step 2
+.Step 2 - Setup Basics
 [%collapsible]
 ====
 
 // TODO Duration custom field
 
-Step 2 goes here
+Step 3 - Setup Basics
 ====
 
+```java
+package com.vaadin.cf.components;
+
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+import java.util.random.RandomGenerator;
+
+public class DurationField extends CustomField<Duration> {
+
+    private final RandomGenerator rand = RandomGenerator.getDefault();
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel(hoursId);
+        minutesLabel = createMinutesLabel(minutesId);
+        hours = createHoursField(hoursId);
+        minutes = createMinutesField(minutesId);
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel(String id) {
+        var label = new NativeLabel(i18n.getHours());
+        label.setId(id);
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel(String id) {
+        var label = new NativeLabel(i18n.getMinutes());
+        label.setId(id);
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField(String ariaLabelledBy) {
+        var hours = new IntegerField();
+        hours.setAriaLabelledBy(ariaLabelledBy);
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        hours.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField(String ariaLabelledBy) {
+        var minutes = new IntegerField();
+        minutes.setAriaLabelledBy(ariaLabelledBy);
+        minutes.setMax(59);
+        minutes.setMin(0);
+        minutes.setWidth("45px");
+        minutes.setStep(15);
+
+        minutes.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span(i18n.getAnd());
+        andSpan.addClassName(LumoUtility.Padding.Left.SMALL);
+        andSpan.addClassName(LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        return Duration.ofMinutes(60
+                * (hours.getValue() != null ? hours.getValue() : 0)
+                + (minutes.getValue() != null ? minutes.getValue() : 0));
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+```
 
 .Step 3
 [%collapsible]
