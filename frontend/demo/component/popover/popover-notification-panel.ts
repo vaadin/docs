@@ -74,7 +74,7 @@ export class Example extends LitElement {
         theme="arrow no-padding"
         modal
         accessible-name-ref="notifications-heading"
-        content-width="300px"
+        width="300px"
         position="bottom"
         ${popoverRenderer(this.notificationsRenderer, [
           this.unreadNotifications,

@@ -81,7 +81,7 @@ function Example() {
       <Popover
         for="range-field"
         modal
-        contentWidth="340px"
+        width="340px"
         position="bottom-start"
         accessibleName="Select a date range"
         opened={opened.value}
