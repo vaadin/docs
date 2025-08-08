@@ -3,6 +3,7 @@ title: Configuration
 page-title: Spring Configuration for Vaadin Applications
 description: Configuring Spring properties in a Vaadin application.
 meta-description: Configure Spring applications with Vaadin for seamless integration.
+layout: tabbed-page
 order: 60
 ---
 
@@ -128,9 +129,12 @@ public class OverriddenServletConfiguration {
                 .isRootMapping(configurationProperties.getUrlMapping());
         // Calls default configuration for ServletRegistrationBean at
         // com.vaadin.flow.spring.SpringBootAutoConfiguration.configureServletRegistrationBean
-        return configureServletRegistrationBean(multipartConfig,
+        ServletRegistrationBean<SpringServlet> registrationBean = configureServletRegistrationBean(multipartConfig,
                 configurationProperties,
                 new OverriddenSpringServlet(context, rootMapping));
+        // Configure additional servlet settings if needed, e.g. init parameters
+        // registrationBean.addInitParameter("closeIdleSessions", "true");
+        return registrationBean;
     }
 
     public static class OverriddenSpringServlet extends SpringServlet {
@@ -211,6 +215,73 @@ FilterRegistrationBean<?> publicImagesAliasFilter(@Value("${vaadin.url-mapping}"
   return registrationBean;
 }
 ----
+
+== Configure Custom Vaadin Executor
+
+When running a Vaadin application in a Spring environment, the [classname]`SpringVaadinServletService` automatically selects an appropriate executor for asynchronous operations using the following process:
+
+. Look for [interfacename]`TaskExecutor` beans defined in the Spring application context
+. If no [interfacename]`TaskExecutor` beans are found, fall back to Vaadin's <<{articles}/flow/advanced/service-executor#, default executor>>
+. If [interfacename]`TaskExecutor` beans are found, apply specific selection rules to choose the most appropriate one
+
+When multiple [interfacename]`TaskExecutor` beans exist in your application, Vaadin follows these rules to select the appropriate one:
+
+. If any bean is annotated with [annotationname]`@VaadinTaskExecutor` or named `VaadinTaskExecutor`, it will be chosen
+. If multiple beans remain after this filtering, regular executors are preferred over schedulers
+. If Spring's default `applicationTaskExecutor` is among multiple candidates, it is discarded to prefer application-defined beans
+. If multiple candidates still remain, Vaadin will throw an [classname]`IllegalStateException` with suggestions to resolve the conflict
+
+There are several ways to customize the executor used by Vaadin in your Spring application.
+If you define a single [interfacename]`TaskExecutor` bean in your Spring application context, Vaadin will automatically use it.
+If you have multiple [interfacename]`TaskExecutor` beans in your application, you can specifically designate one for Vaadin using the `@VaadinTaskExecutor` annotation or you can name your bean `VaadinTaskExecutor`.
+
+[.example]
+--
+
+[source,java]
+----
+<source-info group="Single TaskExecutor Bean"></source-info>
+@Bean
+public TaskExecutor vaadinExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(50);
+    executor.setQueueCapacity(100);
+    executor.setThreadNamePrefix("vaadin-custom-executor-");
+    return executor;
+}
+----
+
+[source,java]
+----
+<source-info group="Annotated TaskExecutor Bean"></source-info>
+@Bean
+@VaadinTaskExecutor
+public TaskExecutor vaadinSpecificExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(50);
+    executor.setQueueCapacity(100);
+    executor.setThreadNamePrefix("vaadin-annotated-executor-");
+    return executor;
+}
+----
+
+[source,java]
+----
+<source-info group="Named TaskExecutor Bean"></source-info>
+@Bean("VaadinTaskExecutor")
+public TaskExecutor customVaadinExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(10);
+    executor.setMaxPoolSize(50);
+    executor.setQueueCapacity(100);
+    executor.setThreadNamePrefix("vaadin-named-executor-");
+    return executor;
+}
+----
+
+--
 
 
 == Configure Spring MVC Applications

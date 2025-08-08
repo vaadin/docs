@@ -1,7 +1,7 @@
 ---
 title: Hilla
 page-title: How to logout from a Vaadin Hilla application
-meta-description: Learn how to implement logout functionality in a Vaadin application with Hilla views using the useAuth hook. This guide covers logout handling, redirects, and best practices.
+meta-description: Learn to implement logout functionality with Hilla views using the useAuth hook. This guide covers logout handling, redirect, and best practices.
 order: 10
 ---
 
@@ -41,8 +41,36 @@ export default function LogoutView() {
 
 By default, users are redirected to the root URL (`/`) after logging out. To change this, *specify a custom logout success URL* in your security configuration:
 
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class) // <1>
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.loginView("/login", "/logged-out.html"); // <2>
+// end::snippet[]
+        });
+        return http.build();
+    }
+    ...
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 class SecurityConfig extends VaadinWebSecurity {
@@ -51,13 +79,16 @@ class SecurityConfig extends VaadinWebSecurity {
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
 // tag::snippet[]
-        setLoginView(http, "/login", "/logged-out.html"); // <1>
+        setLoginView(http, "/login", "/logged-out.html"); // <2>
 // end::snippet[]
     }
     ...
 }
 ----
-<1> Sets `/logged-out.html` as the *logout success URL*.
+
+--
+<1> Imports `VaadinAwareSecurityContextHolderStrategyConfiguration`, required for Vaadin security to work with Spring Security (auto-imported with `VaadinWebSecurity`).
+<2> Sets `/logged-out.html` as the *logout success URL*.
 
 If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
 
@@ -78,6 +109,9 @@ If your application is deployed at `\https://example.com/app`, the logout URL sh
 == Try It
 
 In this mini-tutorial, you'll add logout functionality to a real Vaadin application. It uses the project from the <<../add-login/hilla#try-it,Add Login>> guide. If you haven't completed that tutorial yet, do it now before proceeding.
+
+[IMPORTANT]
+This tutorial applies to skeletons generated for Vaadin 24.7. Skeletons generated for Vaadin 24.8 and newer already have a security configuration.
 
 
 .Import `useAuth`

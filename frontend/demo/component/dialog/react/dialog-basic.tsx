@@ -18,8 +18,8 @@ function Example() {
       <Dialog
         headerTitle="New employee"
         opened={dialogOpened.value}
-        onOpenedChanged={({ detail }) => {
-          dialogOpened.value = detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
         footer={
           <>

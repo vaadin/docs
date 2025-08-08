@@ -39,9 +39,9 @@ public class MenuBarIcons extends Div {
         Icon icon = new Icon(iconName);
 
         if (isChild) {
-            icon.getStyle().set("width", "var(--lumo-icon-size-s)");
-            icon.getStyle().set("height", "var(--lumo-icon-size-s)");
-            icon.getStyle().set("marginRight", "var(--lumo-space-s)");
+            icon.getStyle().setWidth("var(--lumo-icon-size-s)");
+            icon.getStyle().setHeight("var(--lumo-icon-size-s)");
+            icon.getStyle().setMarginRight("var(--lumo-space-s)");
         }
 
         MenuItem item = menu.addItem(icon, e -> {

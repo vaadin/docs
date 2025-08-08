@@ -1,0 +1,250 @@
+---
+title: Hilla
+page-title: How to validate a Hilla form | Vaadin
+meta-description: Learn how to validate forms in Vaadin Hilla using built-in and custom validators, the useFormPart hook, and client-side validation best practices.
+order: 10
+---
+
+
+= Validate a Form in Hilla
+:toclevels: 2
+
+This guide explains how to validate individual form fields and entire form data objects (FDOs) in Hilla. It covers client-side vs. server-side validation, built-in and custom validators, how to trigger validation, and how to handle validation errors.
+
+.Part of a Series
+[TIP]
+This is part 2 of the *Add a Form* series. It builds on the concepts introduced in the <<../fields-and-binding/hilla#,Fields & Binding>> guide. You should also read the <<.#,Overview>>.
+
+
+== Client Side vs. Server Side Validation
+
+In a Hilla application, you have to validate all input twice:
+
+1. In the user interface, to improve the user experience.
+2. In the server, to ensure application security.
+
+Always consider client-side validation as an *enhancement to the user experience*, not a substitute for secure data validation. *A malicious user can bypass the browser validation* using browser development tools.
+
+This guide only covers the client-side validation. For server-side validation, see the <<{articles}/building-apps/deep-dives/application-layer/consistency/validation#,Validation Deep Dive>>.
+
+.Jakarta Bean Validation
+[NOTE]
+If you are using Jakarta Bean Validation on the server side, Hilla can use the annotations to automatically apply corresponding validators on the client side. For details, see the <<{articles}/hilla/guides/forms/binder-validation#,Hilla Reference Guide>>.
+
+
+== Field Validators
+
+To add a validator to a specific field in Hilla, you first need to get a reference to that individual field using the `useFormPart` hook. This hook allows you to work with a single field separately from the rest of the form:
+
+[source,typescript]
+----
+const { model } = useForm(MyFormModel);
+const titleField = useFormPart(model.title); // <1>
+----
+<1> This creates a field reference for the "title" property of your form model.
+
+Next, you call the `addValidator()` method inside a React effect:
+
+[source,typescript]
+----
+useEffect(() => {
+    titleField.addValidator(new Size({
+        message: "Title must be between 1 and 100 characters",
+        min: 1,
+        max: 100
+    }));
+}, []); // <1>
+----
+<1> Always use an empty dependency array. Otherwise you'll add a new validator every time the component is rendered.
+
+You can add multiple validators to a field. They are evaluated in the order they were added. If one fails, validation for that field stops.
+
+
+=== Built-in Validators
+
+Vaadin provides a range of *built-in validators* to cover common validation needs:
+
+* *Numeric Range Validators* -- Ensure that a numeric value falls within a valid range.
+  - `Min`, `Max`, `DecimalMin`, `DecimalMax`, `Negative`, `NegativeOrZero`, `Positive`, `PositiveOrZero`
+
+* *Date Validators* -- Ensure that a date value falls within a valid range.
+  - `Past`, `Future`
+
+* *Boolean Validators* -- Ensure that a boolean value is `true` or `false`.
+  - `AssertTrue`, `AssertFalse`
+
+* *Required Field Validators* -- Ensure that a value is not `null` or empty.
+  - `NotNull`, `NotEmpty`, `NotBlank`
+
+* *Other Validators*
+  - `Digits` -- Ensures a numeric value has a specific number of digits.
+  - `Email` -- Ensures the value is a valid email address.
+  - `Null` -- Ensures the value is `null`.
+  - `Pattern` -- Ensures the value matches a specified regular expression.
+  - `Size` -- Ensures a string is within a valid length range.
+
+
+=== Custom Validators
+
+If the built-in validators do not meet your requirements, you can create a custom validator by implementing [interfacename]`Validator<T>`. The following example ensures an integer is positive:
+
+[source,typescript]
+----
+useEffect(() => {
+    numericField.addValidator({
+        message: "The number must be positive",
+        validate: num => num >= 0
+    });
+});
+----
+
+The `validate()` method can be asynchronous, allowing you to call browser-callable services from within custom validators:
+
+[source,typescript]
+----
+useEffect(() => {
+    bankAccountField.addValidator({
+        message: "Invalid bank account number",
+        validate: async (value) => {
+            const result = await BankAccountService.validateBankAccountNumber(value);
+            if (result == BankAccountNumberValidationResult.INVALID_NUMBER) {
+                return { // <1>
+                    property: bankAccountField.model,
+                    message: "Invalid bank account number",
+                };
+            } else if (result == BankAccountNumberValidationResult.DOES_NOT_EXIST) {
+                return {
+                    property: bankAccountField.model,
+                    message: "Bank account number does not exist",
+                };
+            }
+            return true; // No problems
+        }
+    });
+}, []);
+----
+<1> Instead of returning `false`, you can return a `ValidationResult` object that allows you to customize the error message.
+
+[IMPORTANT]
+Validators are triggered quite often. Keep this in mind if your custom validator involves a roundtrip to the server.
+
+
+=== Required Fields
+
+To mark a field as required in Hilla, use a validator with the `impliesRequired` property set to `true`. This makes the required indicator visible on the field component.
+
+The built-in validators `NotNull`, `NotEmpty`, and `NotBlank` all imply that the field is required. For example, here is how you would make a string field required:
+
+[source,typescript]
+----
+useEffect(() => {
+    stringField.addValidator(new NotBlank({
+        message: "Please enter value"
+    }));
+}, []);
+----
+
+You can also make custom validators mark the field as required:
+
+[source,typescript]
+----
+useEffect(() => {
+    numericField.addValidator({
+        message: "The number must be positive",
+        validate: num => num >= 0,
+// tag::snippet[]
+        impliesRequired: true
+// end::snippet[]
+    });
+}, []);
+----
+
+
+== Form Validators
+
+Whereas field validators validate values of individual fields, form validators *validate the entire FDO*. To add a form validator, use the `addValidator()` method returned by the `useForm` hook:
+
+[source,typescript]
+----
+const form = useForm(ChangePasswordFormModel);
+
+useEffect(() => {
+    form.addValidator({
+        message: "The passwords don't match",
+        validate: (fdo) => {
+            return fdo.newPassword === fdo.confirmPassword;
+        }
+    });
+}, []);
+----
+
+
+== Triggering Validation
+
+Hilla triggers validation automatically whenever a field is updated and when the form is submitted.
+
+Field validation behavior depends on the field's current value. Every field has a default value, which is the value that the field was initialized to. If the field value is equal to its default value, validation is triggered when the field is blurred. If the field value is different from its default value, validation is triggered on every value change even when the field has focus.
+
+
+=== Manual Validation
+
+Both the `useForm` and `useFormPart` hooks return an asynchronous `validate()` method. The method returns an array of validation errors if any validators fail. 
+
+The following example triggers validation of the entire form:
+
+[source,typescript]
+----
+const form = useForm(MyFormModel);
+
+const doSomethingThatNeedsValidation = async (): Promise<void> => {
+    const result = await form.validate();
+    if (result.length > 0) {
+        // Handle the errors
+        return;
+    }
+    // No validation errors, proceed with the operation    
+}
+----
+
+To validate an individual field, call the `validate()` method returned by the `useFormPart` hook.
+
+
+== Handling Validation Errors
+
+Hilla automatically shows field-level validation errors next to the field in question. However, form-level validation errors must be handled manually.
+
+To handle validation errors manually, the `useForm` and `useFormPart` hooks return several properties that you can use:
+
+`readonly invalid: boolean` :: Whether the form or field has any validation errors.
+`readonly ownErrors: ReadonlyArray<ValueError<T>>` :: The validation errors that are related to this particular field or form.
+`readonly errors: ReadonlyArray<ValueError<any>>` :: The validation errors that are related to this particular field or form, and all its children.
+
+This example renders all validation errors, regardless of whether they are field or form errors:
+
+[source,tsx]
+----
+const form = useForm(MyFormModel);
+...
+
+<ul>
+  {form.errors.map(error => (
+    <li>{error.message}</li>
+  ))}
+</ul>
+----
+
+To only render validation errors from form validators, use `ownErrors`:
+
+[source,tsx]
+----
+const form = useForm(MyFormModel);
+...
+
+<ul>
+  {form.ownErrors.map(error => (
+    <li>{error.message}</li>
+  ))}
+</ul>
+----
+
+
