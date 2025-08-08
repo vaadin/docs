@@ -94,6 +94,8 @@ Using <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> usually
 
 == Data Binding
 
+// TODO required indicator
+
 There are two primary ways to work with values in a Custom Field:
 
 * Direct interaction with the Custom Field instance
@@ -348,9 +350,6 @@ There might be some validation that you want to handle from the inside of your C
 Instead, you should use a different approach to indicate an error state. It's recommended that you limit internal validation to the default validators available through Vaadin components, such as, for `IntegerField` using `field.setMax(Integer)`.
 Alternatively you could have a method that an external binder could use to be aware of the error state. We will not cover such complex cases here.
 
-== Localization
-// TODO
-
 == Styling
 
 Styling a Custom Field works much like styling other Vaadin field components. However, because a Custom Field may include both built-in parts (like the label and error message) and your own internal elements, it's important to know how to target both effectively.
@@ -442,13 +441,16 @@ If the component doesn't directly implement the `HasStyle` interface, in most ca
 When using `HasStyle` API, its is recommended that you use <<{articles}/styling/lumo/lumo-style-properties#,Lumo Style Properties>> when possible, if you're using the Lumo theme (or your own defined CSS properties). For example use `"var(--lumo-space-xs)"` instead of "4px". This provides consistent styling, with the ability to make consistent changes, if, for example, sizing needs to be decreased.
 
 
+== Localization
+// TODO
+
 == Accessibility
 
 Explain how to make the custom field accessible.
 
 // TODO CustomField itself has a label, and in single input case, you usually do not need to introduce labels ... Although from accessibility perspective you should hack the CustomField integrated label to be linked to the wrapped input's input element. (Speaking of which, I have forgotten that in DecimalField, need to fix) And also by default the CustomField role is group, not field. If there is only one input, the group role is wrong.
 
-
+// TODO empty value?
 
 [.collapsible-list]
 == Try It
@@ -466,26 +468,20 @@ To start, generate a <<{articles}/getting-started/start#,walking skeleton with a
 [%collapsible]
 ====
 
-// TODO Duration custom field
-
-Step 3 - Setup Basics
-====
+Let's set up the bare minimum that we need for this field to function. We're going to initialize each component in a separate method so that we can add more component specific code to it later without cluttering the constructor.
 
 ```java
-package com.vaadin.cf.components;
-
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.time.Duration;
-import java.util.random.RandomGenerator;
 
 public class DurationField extends CustomField<Duration> {
 
-    private final RandomGenerator rand = RandomGenerator.getDefault();
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
 
     private final NativeLabel hoursLabel;
     private final NativeLabel minutesLabel;
@@ -494,69 +490,51 @@ public class DurationField extends CustomField<Duration> {
     private final Span and;
 
     public DurationField() {
-        hoursLabel = createHoursLabel(hoursId);
-        minutesLabel = createMinutesLabel(minutesId);
-        hours = createHoursField(hoursId);
-        minutes = createMinutesField(minutesId);
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
         and = createAndSpan();
 
         add(hours, hoursLabel, and, minutes, minutesLabel);
     }
 
-    private NativeLabel createHoursLabel(String id) {
-        var label = new NativeLabel(i18n.getHours());
-        label.setId(id);
-        label.addClassName(LumoUtility.Padding.Left.SMALL);
-        return label;
+    private NativeLabel createHoursLabel() {
+        return new NativeLabel("hours");
     }
 
-    private NativeLabel createMinutesLabel(String id) {
-        var label = new NativeLabel(i18n.getMinutes());
-        label.setId(id);
-        label.addClassName(LumoUtility.Padding.Left.SMALL);
-        return label;
+    private NativeLabel createMinutesLabel() {
+        return new NativeLabel("minutes");
     }
 
-    private IntegerField createHoursField(String ariaLabelledBy) {
+    private IntegerField createHoursField() {
         var hours = new IntegerField();
-        hours.setAriaLabelledBy(ariaLabelledBy);
-        hours.setMin(0);
         hours.setWidth("45px");
-
-        hours.addValueChangeListener(e -> {
-            updateAriaDescription();
-        });
 
         return hours;
     }
 
-    private IntegerField createMinutesField(String ariaLabelledBy) {
+    private IntegerField createMinutesField() {
         var minutes = new IntegerField();
-        minutes.setAriaLabelledBy(ariaLabelledBy);
-        minutes.setMax(59);
-        minutes.setMin(0);
         minutes.setWidth("45px");
-        minutes.setStep(15);
-
-        minutes.addValueChangeListener(e -> {
-            updateAriaDescription();
-        });
+        minutes.setStep(MINUTES_STEP_INTERVAL);
 
         return minutes;
     }
 
     private Span createAndSpan() {
-        var andSpan = new Span(i18n.getAnd());
-        andSpan.addClassName(LumoUtility.Padding.Left.SMALL);
-        andSpan.addClassName(LumoUtility.Padding.Right.SMALL);
-        return andSpan;
+        return new Span("and");
     }
 
     @Override
     protected Duration generateModelValue() {
-        return Duration.ofMinutes(60
-                * (hours.getValue() != null ? hours.getValue() : 0)
-                + (minutes.getValue() != null ? minutes.getValue() : 0));
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
     }
 
     @Override
@@ -575,12 +553,235 @@ public class DurationField extends CustomField<Duration> {
 }
 ```
 
-.Step 3
+At this point, if we test this component, we'll find that it's functioning, but it doesn't look good, as there are spacing issues. So lets fix that in the next step.
+====
+
+.Step 3 - Styling
+[%collapsible]
+====
+
+We do not need a lot of custom styling for our Custom Field, so lets use <<{articles}/styling/lumo/utility-classes#,Lumo Utility classes>> to fix some of the spacing issues we have.
+For hours and minutes labels, lets add some left padding:
+
+```java
+label.addClassName(LumoUtility.Padding.Left.SMALL);
+```
+
+For "and" Span element, lets add some left and right padding.
+```java
+andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+```
+
+So our resulting CustomField now looks like this:
+
+```java
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel("hours");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel("minutes");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span("and");
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+```
+
+The extra padding is sufficient for the Custom Field to look decent for our use case. Let's move to the next step.
+
+====
+
+.Step 4 - Validation
+[%collapsible]
+====
+
+We want to establish some restrictions on the field and make sure we provide sufficient feedback for user to work within these restrictions.
+Since we're using `IntegerField` we're already restricting the input to digits. Let's make sure the "hours" value is never a negative number.
+
+```java
+hours.setMin(0);
+```
+
+Let's also make sure that "minutes" are never negative, and never above 59.
+
+```java
+minutes.setMax(59);
+minutes.setMin(0);
+```
+
+That's all we need to for the internal validation. The browser will automatically indicate to the user that these fields are invalid and what the value expectations are.
+
+Let's also attach this field to a binder and add two validators. For this, we will first have to create an object to bind to.
+
+```java
+import java.time.Duration;
+
+public class DurationTutorialDTO {
+    private Duration duration;
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+}
+```
+
+Now let's create the binder, and bind our field to the duration value.
+
+``` java
+
+var durationField = new DurationField(); // Create our field
+durationField.setLabel("Duration");
+
+var binder = new Binder<DurationTutorialDTO>();
+binder.forField(durationField)
+        .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+We want to make sure that the user enters a value into this field, so let's indicate that this is a required field. For this we will use the `asRequired(..)` method with a custom error message. This will also add the required field indicator to the main label of our component.
+
+```java
+var binder = new Binder<DurationTutorialDTO>();
+binder.forField(durationField)
+    .asRequired("Please provide a valid duration.")
+    .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+
+Next we want to make sure that the entered hours are not more than a week. Depending on our use case, we might be more interested in calculating the minutes, but lets keep this simple.
+
+```java
+private final long HOURS_IN_A_WEEK = 24 * 7;
+//...
+binder.forField(duration4)
+       .asRequired("Please provide a valid duration.")
+       .withValidator((value, context) -> {
+           if (value.toHours() > HOURS_IN_A_WEEK) {
+               return ValidationResult.error("Duration cannot exceed " + HOURS_IN_A_WEEK + " hours");
+           }
+           return ValidationResult.ok();
+       })
+       .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+
+Lets also make sure that the invalid state is propagated to internal components, by overriding the `setInvalid(boolean)` method.
+
+```java
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+```
+
+Now lets modify the `generateModelValue()` method to not generate a value, if the internal fields are invalid.
+```java
+protected Duration generateModelValue() {
+    //...
+    if (hours.isInvalid() || minutes.isInvalid()) {
+        // If any of the fields are invalid, we can not use it to generate a value.
+        return null;
+    }
+    //...
+}
+```
+
+
+====
+
+.Step 5 - Localization
 [%collapsible]
 ====
 Step 2 goes here
 ====
 
+.Step 6 - Accessibility
+[%collapsible]
+====
+Step 2 goes here
+====
 
 .Final Thoughts
 [%collapsible]
