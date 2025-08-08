@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-picker';
-import dateFnsFormat from 'date-fns/format';
-import dateFnsParse from 'date-fns/parse';
+import { format as dateFnsFormat } from 'date-fns/format';
+import { parse as dateFnsParse } from 'date-fns/parse';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type { DatePicker, DatePickerChangeEvent, DatePickerDate } from '@vaadin/date-picker';

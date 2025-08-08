@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import dateFnsFormat from 'date-fns/format';
-import dateFnsParse from 'date-fns/parse';
+import { format as dateFnsFormat } from 'date-fns/format';
+import { parse as dateFnsParse } from 'date-fns/parse';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   DatePicker,
