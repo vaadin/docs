@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/combo-box';
 import '@vaadin/horizontal-layout';
-import getDaysInMonth from 'date-fns/getDaysInMonth';
+import { getDaysInMonth } from 'date-fns/getDaysInMonth';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxSelectedItemChangedEvent } from '@vaadin/combo-box';
