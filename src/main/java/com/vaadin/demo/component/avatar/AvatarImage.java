@@ -6,7 +6,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 @Route("avatar-image")
 public class AvatarImage extends HorizontalLayout {
@@ -22,10 +22,9 @@ public class AvatarImage extends HorizontalLayout {
         user.setImage(pictureUrl);
 
         Avatar company = new Avatar("Company Inc.");
-        StreamResource imageResource = new StreamResource("company-logo.png",
-                () -> getClass()
-                        .getResourceAsStream("/images/company-logo.png"));
-        company.setImageResource(imageResource);
+        DownloadHandler imageHandler = DownloadHandler.forClassResource(
+                getClass(), "/images/company-logo.png", "company-logo.png");
+        company.setImageHandler(imageHandler);
         // end::snippet[]
 
         add(user, company);

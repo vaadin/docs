@@ -143,10 +143,10 @@ In this tutorial, you'll add Flyway to a real Vaadin application.
 First, generate a <<{articles}/getting-started/start#,walking skeleton>> with either a Flow or a Hilla UI, and <<{articles}/getting-started/import#,open>> it in your IDE.
 ====
 
-.Add Maven Dependency
+.Add Maven Dependencies
 [%collapsible]
 ====
-Open `pom.xml` and add the following dependency:
+Open `pom.xml` and add the following dependencies:
 
 .pom.xml
 [source,xml]
@@ -154,6 +154,10 @@ Open `pom.xml` and add the following dependency:
 <dependency>
     <groupId>org.flywaydb</groupId>
     <artifactId>flyway-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
 </dependency>
 ----
 
@@ -167,11 +171,13 @@ Create a new directory `src/main/resources/db/migration`. In this directory, cre
 .V1__task_management.sql
 [source,sql]
 ----
+create sequence task_seq increment by 50;
+
 create table task
 (
-    task_id       bigint generated always as identity not null,
-    description   varchar(255)                        not null,
-    creation_date timestamp with time zone            not null,
+    task_id       bigint                   not null,
+    description   varchar(255)             not null,
+    creation_date timestamp with time zone not null,
     due_date      date,
     primary key (task_id)
 );
@@ -181,26 +187,26 @@ Open `[application package].taskmanagement.domain.Task` and compare the `@Entity
 
 ====
 
-.Disable deferred data source initialization
+.Disable Hibernate's Automatic DDL Generation
 [%collapsible]
 ====
-Open `src/main/resources/application.properties` and remove the line that sets `spring.jpa.defer-datasource-initialization` to `true`. This reverts the property to its default value, which is `false`.
+Open `src/main/resources/application.properties` and remove the line that sets `spring.jpa.hibernate.ddl-auto` to `update`.
 ====
 
 
 .Run the Integration Test
 [%collapsible]
 ====
-Run the `TaskServiceIT` integration test in your IDE. The test should pass, and in the log, you should see messages like the following:
+The walking skeleton uses Testcontainers for the integration tests. Make sure you have Docker installed and running on your machine. Then run the `TaskServiceIT` integration test in your IDE. The test should pass, and in the log, you should see messages like the following:
 
 [source]
 ----
-Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+Schema history table "public"."flyway_schema_history" does not exist yet
 Successfully validated 1 migration
-Creating Schema History table "PUBLIC"."flyway_schema_history" ...
-Current version of schema "PUBLIC": << Empty Schema >>
-Migrating schema "PUBLIC" to version "1 - task management"
-Successfully applied 1 migration to schema "PUBLIC", now at version v1
+Creating Schema History table "public"."flyway_schema_history" ...
+Current version of schema "public": << Empty Schema >>
+Migrating schema "public" to version "1 - task management"
+Successfully applied 1 migration to schema "public", now at version v1
 ----
 
 ====
@@ -215,6 +221,4 @@ Now <<{articles}/getting-started/run#,run>> the application. You should see simi
 [%collapsible]
 ====
 You've now implemented Flyway for schema management in a Vaadin application and replaced Hibernate's DDL auto-generation with a structured, version-controlled approach.
-
-Next, you should consider replacing H2 with a better database, such as PostgreSQL. For details, see the <<replace-h2#,Replace H2>> guide.
 ====

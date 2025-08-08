@@ -120,46 +120,48 @@ The `<executions>` part is needed to execute the plugin during the `integration-
 
 == Downloading WebDrivers Automatically
 
-The `driver-binary-downloader-maven-plugin` plugin downloads WebDrivers for a given browser and platform and makes them available for the TestBench tests.
+The `webdrivermanager` plugin downloads WebDrivers for a given browser and platform and makes them available for the TestBench tests.
 By downloading these as part of the build, you don't need to do any setup on the machine where you are running the tests.
 
 The plugin can be enabled as follows:
 [source,xml]
 ----
-<plugin>
-    <groupId>com.lazerycode.selenium</groupId>
-    <artifactId>driver-binary-downloader-maven-plugin</artifactId>
-    <version>1.0.17</version>
-    <configuration>
-        <downloadedZipFileDirectory>${project.basedir}/webdriver/zips</downloadedZipFileDirectory>
-        <rootStandaloneServerDirectory>${project.basedir}/webdriver</rootStandaloneServerDirectory>
-        <customRepositoryMap>${project.basedir}/webdrivers.xml</customRepositoryMap>
-    </configuration>
-    <executions>
-        <execution>
-            <goals>
-                <goal>selenium</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>6.1.0</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.docker-java</groupId>
+                    <artifactId>docker-java-transport-httpclient5</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna-platform</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 ----
 
-This downloads the WebDrivers defined in [filename]`webdrivers.xml` (i.e., a repository map) in the project root during the `test-compile` phase, before the integration tests start. The downloaded WebDrivers are placed in the `webdriver/zips` folder in the project and unpacked to the `webdriver` folder. The file [filename]`webdrivers.xml` defines which version of the various WebDrivers to download. An example can be found at https://github.com/vaadin/testbench-demo/blob/master/webdrivers.xml.
+WebDriverManager is convenient as it will detect the version of the installed browser in the system and then installs the correct version of the driver. This works both when running tests locally and CI/CD pipeline.
 
-[TIP]
-The https://github.com/Ardesco/selenium-standalone-server-plugin repository map is kept quite up-to-date.
+In addition to the dependency, the base class of the tests needs to setup the `WebDriverManager`, for example with Chrome it is done like below:
 
-In addition to downloading the WebDrivers, the location of the unpacked drivers must be passed to the `maven-failsafe-plugin` so that the TestBench tests can find them during execution. This can be done by defining system properties in the `<configuration>` section of the `maven-failsafe-plugin` like so:
-
+[source,java]
 ----
-<configuration>
-    <trimStackTrace>false</trimStackTrace>
-    <systemPropertyVariables>
-        <webdriver.chrome.driver>${webdriver.chrome.driver}</webdriver.chrome.driver>
-        <!-- Similarly for other browsers -->
-    </systemPropertyVariables>
-</configuration>
+    @BeforeAll
+    public static void setupClass() {
+        WebDriverManager.chromedriver().setup();
+    }
 ----
 
 

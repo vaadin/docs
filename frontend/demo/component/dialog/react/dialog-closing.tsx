@@ -23,8 +23,8 @@ function Example() {
       <Dialog
         aria-label="System maintenance notice"
         opened={dialogOpened.value}
-        onOpenedChanged={(event) => {
-          dialogOpened.value = event.detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
       >
         <VerticalLayout
