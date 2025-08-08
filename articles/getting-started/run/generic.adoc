@@ -1,0 +1,123 @@
+---
+title: Generic
+page-title: How to run a Vaadin application in any Java IDE
+meta-description: Run your Vaadin application in any Java IDE and set up hotswap with JetBrains Runtime and HotswapAgent.
+tab-title: Generic
+order: 400
+---
+
+
+= Generic
+:toclevels: 2
+
+You can run and debug your Vaadin application in any IDE or editor that supports Java. The `Application` class has a `main()` method, that you should run. The application starts up and you'll be able to access it at http://localhost:8080. Hot deploy of the frontend files is enabled automatically. However, to enable Java hotswap, you have to take some additional actions.
+
+== Enabling Hotswap Manually
+
+To manually enable hotswap support for a Vaadin application, complete the following steps:
+
+1. Install JetBrains Runtime (JBR)
+2. Install HotswapAgent into JBR
+3. Configure your IDE to launch your application with JBR and HotswapAgent
+
+
+===  Install JetBrains Runtime
+
+Download the latest _JetBrains Runtime with JCEF_ for your platform from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrainsRuntime GitHub Releases] page. Choose a variant appropriate for your system (e.g., osx-aarch64, linux-x64, windows-x64):
+
+* On macOS, use the `.pkg` installer, which installs JBR under:
+`/Library/Java/JavaVirtualMachines/jbr_jcef-[version and platform]/Contents/Home`
+* On Windows and Linux, download and extract the `.zip` or `.tar.gz` archive to a suitable location.
+
+[NOTE]
+The extracted directory contains a custom JVM with executables like `java` and `javac` inside the `bin/` folder. This is the JVM you'll use to run your application.
+
+
+===  Install HotswapAgent
+
+Download HotswapAgent (version 1.4.2 or later) from the https://github.com/HotswapProjects/HotswapAgent/releases[HotswapAgent GitHub Releases] page. Install it like this:
+
+1. Create a subdirectory inside the JetBrains Runtime folder: `[JBR]/lib/hotswap/`
+2. Rename the downloaded `.jar` file to `hotswap-agent.jar` and place it in that directory: `[JBR]/lib/hotswap/hotswap-agent.jar`
+
+.More info
+[NOTE]
+Visit https://hotswapagent.org/[hotswapagent.org] for details about supported features and integrations.
+
+
+=== Configure Application Launch with JetBrains Runtime and HotswapAgent
+
+To run your application with Hotswap support, launch it using the JetBrains Runtime and provide the required JVM arguments. Use the `java` executable from your installed JetBrains Runtime and add the necessary -XX options for class redefinition.
+
+.Example Command
+[source,terminal]
+----
+/path/to/jbr/bin/java \
+  -XX:+AllowEnhancedClassRedefinition \
+  -XX:+ClassUnloading \
+  -XX:HotswapAgent=fatjar \
+  -cp <classpath> \
+  com.example.application.Application
+----
+
+Replace:
+
+* `/path/to/jbr/bin/java` — with the full path to the java binary in your JetBrains Runtime installation.
+* `<classpath>` — with your application's full classpath (use : as a separator on macOS/Linux, ; on Windows).
+* `com.example.application.Application` — with the fully-qualified name of your application's main class.
+
+[NOTE]
+You may also set these VM arguments in your IDE's Run/Debug configuration, if it supports customizing the Java executable and arguments.
+
+
+==== Enable Automatic Hotswap
+
+If your IDE does not notify the hotswap agent of recompiled classes, you have to enable it manually. Create a new file `src/main/resources/hotswap-agent.properties` and put the following in it:
+
+[source,properties]
+----
+autoHotswap=true
+----
+
+
+==== Compute the classpath
+
+If you use a build script to run build and run your application, you can use the following to automatically generate the classpath on Linux/macOS:
+
+[source,bash]
+----
+CLASSPATH=$(mvn dependency:build-classpath -Dmdep.outputFile=/dev/stdout -q):target/classes
+----
+
+A complete build script on Linux/macOS could look like this:
+
+[source,bash]
+----
+#!/bin/bash
+JBR_PATH="/path/to/jbr"
+MAIN_CLASS="com.example.Application"
+CLASSPATH=$(mvn dependency:build-classpath -Dmdep.outputFile=/dev/stdout -q):target/classes
+
+$JBR_PATH/bin/java \
+  -XX:+AllowEnhancedClassRedefinition \
+  -XX:+ClassUnloading \
+  -XX:HotswapAgent=fatjar \
+  -cp "$CLASSPATH" \
+  "$MAIN_CLASS"
+----
+
+
+== Run and Verify Hotswap
+
+Once configured, run your application using the command or launch configuration you've set up. Then:
+
+1. Open the application in a browser.
+2. Make a small change in your Java source code (e.g., update a label or log message).
+3. Recompile the modified class (your editor or build tool *must support incremental compilation*).
+4. HotswapAgent should automatically reload the updated class without restarting the application.
+
+Check your application's logs — you should see messages from HotswapAgent confirming the class was reloaded. If nothing happens, verify that:
+
+* The JVM used is JetBrains Runtime
+* `hotswap-agent.jar` is correctly placed in `lib/hotswap/`
+* All required JVM arguments are included
