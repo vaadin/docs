@@ -728,7 +728,7 @@ binder.forField(durationField)
 ```
 
 
-Next we want to make sure that the entered hours are not more than a week. Depending on our use case, we might be more interested in calculating the minutes, but lets keep this simple.
+Next we want to make sure that the entered hours are not more than a week. Depending on our use case, we might be more interested in calculating the minutes, but let's keep this simple.
 
 ```java
 private final long HOURS_IN_A_WEEK = 24 * 7;
@@ -768,19 +768,412 @@ protected Duration generateModelValue() {
 }
 ```
 
+That's all for validation, our field now has some internal validation and some external validation through Binder. Here's our updated Custom Field:
+
+```java
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+import java.util.Optional;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel("hours");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel("minutes");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span("and");
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+
+```
 
 ====
 
 .Step 5 - Localization
 [%collapsible]
 ====
-Step 2 goes here
+
+If we have or plan to support multiple languages in our application and our Custom Field, we need provide the developer
+with a way to achieve this. The Vaadin Way of doing this is to create a class containing all the necessary localized texts.
+For our approach we will only be including all the necessary texts for the elements we have added and that we have not provided API
+that would allow us to update them (which would be an alternative approach).
+
+```java
+public class DurationFieldI18n implements Serializable {
+    private String hours = "hours";
+    private String minutes = "minutes";
+    private String and = "and";
+
+    public String getHours() {
+        return hours;
+    }
+
+    public void setHours(String hours) {
+        this.hours = hours;
+    }
+
+    public String getMinutes() {
+        return minutes;
+    }
+
+    public void setMinutes(String minutes) {
+        this.minutes = minutes;
+    }
+
+    public String getAnd() {
+        return and;
+    }
+
+    public void setAnd(String and) {
+        this.and = and;
+    }
+}
+```
+
+Here we provide a default value for each String property, so when this object is created and not modified, it will contain
+default values.
+This could also be a Java record instead, depending on how you're planning to update and construct this object.
+
+First lets add our object as constructor parameter, and add an no parameter construct that will just use the default values.
+
+```java
+private DurationFieldI18n i18n;
+
+public DurationField() {
+    this(new DurationFieldI18n());
+}
+
+public DurationField(DurationFieldI18n i18n) {
+    this.i18n = i18n;
+    //...
+}
+```
+
+Now let's add a method that updates all our relevant elements.
+
+```java
+private void updateLabels() {
+    hoursLabel.setText(i18n.getHours());
+    minutesLabel.setText(i18n.getMinutes());
+    and.setText(i18n.getAnd());
+}
+```
+
+Got to make sure we add a call to this method in our constructor, after all the elements have been initialized.
+
+```java
+public DurationField(DurationFieldI18n i18n) {
+    //...
+    updateLabels();
+}
+```
+
+Let's also add a way to update and receive our localization object at a later point.
+
+```java
+public DurationFieldI18n getI18n() {
+    return i18n;
+}
+
+public void setI18n(DurationFieldI18n i18n) {
+    this.i18n = i18n;
+    updateLabels();
+}
+```
+
+Now when constructing our Custom Field, or at a later point we can provide text in a different language.
+
+```java
+var duration = new DurationField(); // Uses default labels initially
+//...
+duration.setLabel("Ilgums"); // Localized label
+duration.setI18n(new DurationFieldI18n("stundas", "minūtes", "un")); // Localized to different language
+```
+
+
+Here's the updated Custom Field code:
+
+```java
+import com.vaadin.cf.components.DurationFieldI18n;
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    private DurationFieldI18n i18n;
+
+    public DurationField() {
+        this(new DurationFieldI18n());
+    }
+
+    public DurationField(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        updateLabels();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span();
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    public DurationFieldI18n getI18n() {
+        return i18n;
+    }
+
+    public void setI18n(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+        updateLabels();
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+
+    private void updateLabels() {
+        hoursLabel.setText(i18n.getHours());
+        minutesLabel.setText(i18n.getMinutes());
+        and.setText(i18n.getAnd());
+    }
+}
+```
+
 ====
 
 .Step 6 - Accessibility
 [%collapsible]
 ====
-Step 2 goes here
+
+Finally, lets make sure we handle all the accessibility issues that we have.
+
+First, lets generate a unique ID to set on our custom labels. You might have your own way of generating unique ids, but here
+we will rely on `RandomGenerator`. We need to use those to indicate that our input fields are labeled by them.
+
+```java
+private static final int ID_GEN_CHAR_COUNT = 5;
+private final RandomGenerator rand = RandomGenerator.getDefault();
+// ...
+public DurationField(DurationFieldI18n i18n) {
+    this.i18n = i18n;
+
+    var hoursId = randomId("hours", ID_GEN_CHAR_COUNT);
+    var minutesId = randomId("minutes", ID_GEN_CHAR_COUNT);
+
+    hoursLabel = createHoursLabel(hoursId);
+    minutesLabel = createMinutesLabel(minutesId);
+    hours = createHoursField(hoursId);
+    minutes = createMinutesField(minutesId);
+    //...
+}
+
+private NativeLabel createHoursLabel(String id) {
+    var label = new NativeLabel();
+    label.setId(id);
+    //...
+    return label;
+}
+
+private NativeLabel createMinutesLabel(String id) {
+    var label = new NativeLabel();
+    label.setId(id);
+    //...
+    return label;
+}
+
+private IntegerField createHoursField(String ariaLabelledBy) {
+    var hours = new IntegerField();
+    hours.setAriaLabelledBy(ariaLabelledBy);
+    //...
+    return hours;
+}
+
+private IntegerField createMinutesField(String ariaLabelledBy) {
+    var minutes = new IntegerField();
+    minutes.setAriaLabelledBy(ariaLabelledBy);
+    //...
+    return minutes;
+}
+
+private String randomId(String prefix, int chars) {
+    int limit = (int) (Math.pow(10, chars) - 1);
+    String key = "" + rand.nextInt(limit);
+    key = String.format("%" + chars + "s", key).replace(' ', '0');
+    return prefix + "-" + key;
+}
+```
+
+Next, we need to fix the `IntegerField`
+
 ====
 
 .Final Thoughts
