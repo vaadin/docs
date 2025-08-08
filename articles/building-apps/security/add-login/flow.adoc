@@ -1,7 +1,7 @@
 ---
 title: Flow
 page-title: How to add a Flow login view to a Vaadin application
-meta-description: Learn how to create a secure login view in Vaadin Flow using Spring Security. This guide covers authentication setup, in-memory authentication, and best practices.
+meta-description: Learn to create a secure login view in Vaadin Flow using Spring Security. This guide covers authentication setup, in-memory authentication, and best practices.
 order: 5
 ---
 
@@ -31,7 +31,7 @@ public class LoginView extends Main implements BeforeEnterObserver {
     private final LoginForm login;
 
     public LoginView() {
-        addClassNames(LumoUtility.Display.FLEX, LumoUtility.JustifyContent.CENTER, 
+        addClassNames(LumoUtility.Display.FLEX, LumoUtility.JustifyContent.CENTER,
             LumoUtility.AlignItems.CENTER);
         setSizeFull();
         login = new LoginForm();
@@ -65,9 +65,37 @@ If your application's root package is `com.example.application`, place the login
 
 To instruct Spring Security to use your login view, modify your security configuration:
 
-.SecurityConfig.java
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.loginView(LoginView.class);
+// end::snippet[]
+        });
+
+        return http.build();
+    }
+    ...
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 class SecurityConfig extends VaadinWebSecurity {
@@ -82,6 +110,8 @@ class SecurityConfig extends VaadinWebSecurity {
     ...
 }
 ----
+
+--
 
 Now, when a user tries to access the application, they'll be redirected to the login page.
 
@@ -130,9 +160,62 @@ Create a new package: [packagename]`[application package].security`
 
 Inside this package, create a [classname]`SecurityConfig` class:
 
-.SecurityConfig.class
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        });
+
+        return http.build();
+    }
+
+    @Bean
+    public UserDetailsManager userDetailsManager() {
+        LoggerFactory.getLogger(SecurityConfig.class)
+            .warn("Using in-memory user details manager!");
+        var user = User.withUsername("user")
+                .password("{noop}user")
+                .roles("USER")
+                .build();
+        var admin = User.withUsername("admin")
+                .password("{noop}admin")
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -168,6 +251,9 @@ class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
+
+--
+
 ====
 
 
@@ -198,8 +284,8 @@ public class LoginView extends Main implements BeforeEnterObserver {
     private final LoginForm login;
 
     public LoginView() {
-        addClassNames(LumoUtility.Display.FLEX, 
-            LumoUtility.JustifyContent.CENTER, 
+        addClassNames(LumoUtility.Display.FLEX,
+            LumoUtility.JustifyContent.CENTER,
             LumoUtility.AlignItems.CENTER);
         setSizeFull();
         login = new LoginForm();
@@ -226,9 +312,37 @@ public class LoginView extends Main implements BeforeEnterObserver {
 ====
 Modify [classname]`SecurityConfig` to reference the `LoginView`:
 
-.SecurityConfig.java
+[.example]
+--
+
+.`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.loginView(LoginView.class);
+// end::snippet[]
+        });
+
+        return http.build();
+    }
+    ...
+}
+----
+
+.`SecurityConfig.java`
+[source,java]
+----
+<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
 class SecurityConfig extends VaadinWebSecurity {
@@ -243,6 +357,8 @@ class SecurityConfig extends VaadinWebSecurity {
     ...
 }
 ----
+
+--
 ====
 
 
