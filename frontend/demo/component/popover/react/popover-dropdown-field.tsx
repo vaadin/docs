@@ -85,8 +85,8 @@ function Example() {
         position="bottom-start"
         accessibleName="Select a date range"
         opened={opened.value}
-        onOpenedChanged={(e) => {
-          opened.value = e.detail.value;
+        onClosed={() => {
+          opened.value = false;
         }}
       >
         <Select
