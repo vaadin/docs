@@ -28,10 +28,8 @@ function Example() {
         theme="success"
         position="middle"
         opened={openedNotifications.value.includes(0)}
-        onOpenedChanged={(e) => {
-          if (!e.detail.value) {
-            close(0);
-          }
+        onClosed={() => {
+          close(0);
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
@@ -50,10 +48,8 @@ function Example() {
         theme="error"
         position="middle"
         opened={openedNotifications.value.includes(1)}
-        onOpenedChanged={(e) => {
-          if (!e.detail.value) {
-            close(1);
-          }
+        onClosed={() => {
+          close(1);
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
@@ -71,10 +67,8 @@ function Example() {
       <Notification
         position="middle"
         opened={openedNotifications.value.includes(2)}
-        onOpenedChanged={(e) => {
-          if (!e.detail.value) {
-            close(2);
-          }
+        onClosed={() => {
+          close(2);
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
@@ -91,10 +85,8 @@ function Example() {
       <Notification
         position="middle"
         opened={openedNotifications.value.includes(3)}
-        onOpenedChanged={(e) => {
-          if (!e.detail.value) {
-            close(3);
-          }
+        onClosed={() => {
+          close(3);
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
