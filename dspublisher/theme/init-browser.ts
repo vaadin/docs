@@ -9,9 +9,6 @@ import '@vaadin/vaadin-lumo-styles/typography.js';
 import '@vaadin/vaadin-lumo-styles/sizing.js';
 import '@vaadin/vaadin-lumo-styles/spacing.js';
 import '@vaadin/vaadin-lumo-styles/style.js';
-// Import all Material CSS custom properties into the global style scope
-import '@vaadin/vaadin-material-styles/color';
-import '@vaadin/vaadin-material-styles/typography';
 
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
