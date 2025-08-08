@@ -44,7 +44,7 @@ public class GridContextMenuExample extends Div {
                 // System.out.printf("Delete: %s%n", person.getFullName());
             }));
 
-            add(new Hr());
+            addSeparator();
 
             GridMenuItem<Person> emailItem = addItem("Email",
                     e -> e.getItem().ifPresent(person -> {

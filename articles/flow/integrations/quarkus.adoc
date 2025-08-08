@@ -129,6 +129,50 @@ See these documentation pages for Vaadin CDI features:
 Quarkus attempts to remove by default all unused beans during the build. However, it can't detect the programmatic lookup performed by the [classname]`QuarkusInstantiator` class in Vaadin. Therefore, when implementing beans that are not referenced directly by the application code, you might need to add the [annotationname]`@Unremovable` annotation to the class. +
 [since:com.vaadin:vaadin@V24.8]##[annotationname]`@VaadinServiceEnabled` annotated beans are marked as unremovable by default.##
 
+== Configure Custom Vaadin Executor
+
+When a Vaadin application starts in a Quarkus environment, the [classname]`QuarkusVaadinServletService` overrides the `createDefaultExecutor()` method to use CDI capabilities for selecting an appropriate [interfacename]`Executor` for executing Vaadin's internal tasks. The selection process follows this order:
+
+1. Look for a custom [interfacename]`Executor` bean qualified with the [annotationname]`@VaadinServiceEnabled` annotation
+2. If no custom executor is found, try to use the container's [interfacename]`ManagedExecutor`
+3. If neither is available, fall back to Vaadin's <<{articles}/flow/advanced/service-executor#, default executor>> implementation
+
+To avoid ambiguity, the Quarkus extension enforces these rules:
+
+* There can be at most one [interfacename]`Executor` bean annotated with [annotationname]`@VaadinServiceEnabled`
+* If multiple [interfacename]`Executor` beans with [annotationname]`@VaadinServiceEnabled` annotation are found, the application deployment will fail with an appropriate error message
+
+
+You can provide your own task executor to customize how Vaadin executes server-side operations. This can be useful for implementing custom threading models, using specific thread pools, or integrating with other execution frameworks.
+To provide a custom executor, define a CDI bean that implements the [interfacename]`Executor` interface and annotate it with [annotationname]`@VaadinServiceEnabled`:
+
+[source,java]
+----
+@ApplicationScoped
+public class ExecutorConfiguration {
+
+    @Produces
+    @Singleton
+    @VaadinServiceEnabled
+    public Executor vaadinTaskExecutor() {
+        ThreadPoolExecutor customExecutor = new ThreadPoolExecutor(
+            16, // Core pool size
+            32, // Maximum pool size
+            120, // Keep-alive time
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            r -> {
+                Thread thread = new Thread(r, "CustomVaadinExecutor-" + r.hashCode());
+                thread.setDaemon(true);
+                return thread;
+            });
+        customExecutor.allowCoreThreadTimeOut(true);
+        return customExecutor;
+    }
+}
+----
+
+
 
 [[quarkus.vaadin.addons]]
 == Vaadin Add-Ons in Quarkus
