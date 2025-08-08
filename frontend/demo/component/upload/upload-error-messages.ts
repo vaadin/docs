@@ -2,11 +2,11 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/form-layout';
 import '@vaadin/upload';
 import { html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
-import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
-/* prettier-ignore */ import {createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB} from './upload-demo-mock-files'; // hidden-source-line
+/* prettier-ignore */
+import { createFakeFilesUploadErrorMessagesA, createFakeFilesUploadErrorMessagesB } from './upload-demo-mock-files'; // hidden-source-line
 
 const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1, labelsPosition: 'top' },
@@ -22,24 +22,22 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('#upload-caution')
-  private uploadCaution!: Upload;
-
-  @query('#upload-recommended')
-  private uploadRecommended!: Upload;
+  private cautionI18n = {
+    uploading: {
+      error: {
+        unexpectedServerError: 'Unexpected Server Error',
+      },
+    },
+  };
 
   // tag::snippet[]
-  protected override firstUpdated() {
-    // end::snippet[]
-    this.uploadCaution.setupMockErrorResponse(); // hidden-source-line
-    this.uploadRecommended.setupMockErrorResponse(); // hidden-source-line
-    this.uploadCaution.i18n.uploading.error.unexpectedServerError = 'Unexpected Server Error';
-    this.uploadCaution.i18n = { ...this.uploadCaution.i18n };
-    // tag::snippet[]
-    this.uploadRecommended.i18n.uploading.error.unexpectedServerError =
-      "File couldn't be uploaded, try again later";
-    this.uploadRecommended.i18n = { ...this.uploadRecommended.i18n };
-  }
+  private recommendedI18n = {
+    uploading: {
+      error: {
+        unexpectedServerError: "File couldn't be uploaded, try again later",
+      },
+    },
+  };
 
   protected override render() {
     return html`
@@ -50,6 +48,7 @@ export class Example extends LitElement {
           <vaadin-upload
             id="upload-caution"
             nodrop
+            .i18n="${this.cautionI18n}"
             .files="${createFakeFilesUploadErrorMessagesA() /* hidden-source-line */}"
           ></vaadin-upload>
         </div>
@@ -59,6 +58,7 @@ export class Example extends LitElement {
           <vaadin-upload
             id="upload-recommended"
             nodrop
+            .i18n="${this.recommendedI18n}"
             .files="${createFakeFilesUploadErrorMessagesB() /* hidden-source-line */}"
           ></vaadin-upload>
           <!-- end::snippet[] -->

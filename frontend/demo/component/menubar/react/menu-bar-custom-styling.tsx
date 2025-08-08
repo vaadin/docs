@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { MenuBar } from '@vaadin/react-components/MenuBar.js';
+import { MenuBar, type MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
   // tag::snippet[]
-  const items = [
+  const items: MenuBarItem[] = [
     { text: 'View', className: 'bg-primary text-primary-contrast' },
     { text: 'Edit' },
     {

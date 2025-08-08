@@ -29,7 +29,7 @@ public class ContextMenuHierarchical extends Div {
         });
         menu.addItem("Edit", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
 
         // tag::snippet[]
         GridMenuItem<File> export = menu.addItem("Export");
@@ -48,7 +48,7 @@ public class ContextMenuHierarchical extends Div {
         });
         shareSubMenu.addItem("Email", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
 
         menu.addItem("Delete", event -> {
         });

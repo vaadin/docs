@@ -10,7 +10,6 @@ import { formatISO, subMonths, subWeeks, subYears } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DatePickerChangeEvent } from '@vaadin/date-picker';
-import type { PopoverOpenedChangedEvent } from '@vaadin/popover';
 import { popoverRenderer } from '@vaadin/popover/lit.js';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -65,7 +64,7 @@ export class Example extends LitElement {
         position="bottom-start"
         accessible-name="Select a date range"
         .opened="${this.opened}"
-        @opened-changed="${this.onOpenedChanged}"
+        @closed="${this.onClosed}"
         ${popoverRenderer(this.popoverRenderer, [this.from, this.to])}
       ></vaadin-popover>
       <!-- end::snippet[] -->
@@ -118,8 +117,8 @@ export class Example extends LitElement {
     this.to = event.target.value;
   }
 
-  onOpenedChanged(event: PopoverOpenedChangedEvent) {
-    this.opened = event.detail.value;
+  onClosed() {
+    this.opened = false;
   }
 
   onRangeChange(event: SelectChangeEvent) {

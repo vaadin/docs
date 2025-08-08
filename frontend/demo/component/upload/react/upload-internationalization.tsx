@@ -1,10 +1,13 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Upload } from '@vaadin/react-components/Upload.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const i18n = {
+  const uploadI18n = useSignal({
     dropFiles: {
       one: 'Raahaa tiedosto tähän',
       many: 'Raahaa tiedostot tähän',
@@ -39,9 +42,9 @@ function Example() {
       size: ['t', 'kt', 'Mt', 'Gt', 'Tt', 'Pt', 'Et', 'ZB', 'YB'],
       sizeBase: 1000,
     },
-  };
+  });
 
-  return <Upload i18n={i18n} />;
+  return <Upload i18n={uploadI18n.value} />;
   // end::snippet[]
 }
 

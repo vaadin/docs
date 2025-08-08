@@ -5,7 +5,6 @@ import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -39,8 +38,8 @@ export class Example extends LitElement {
         theme="no-padding"
         header-title="Filter reports by users:"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(event: DialogOpenedChangedEvent) => {
-          this.dialogOpened = event.detail.value;
+        @closed="${() => {
+          this.dialogOpened = false;
         }}"
         ${dialogRenderer(
           () => html`

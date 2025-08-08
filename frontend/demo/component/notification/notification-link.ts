@@ -6,7 +6,6 @@ import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
 import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { notificationRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -35,8 +34,8 @@ export class Example extends LitElement {
         duration="0"
         position="middle"
         .opened="${this.notificationOpened}"
-        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
-          this.notificationOpened = e.detail.value;
+        @closed="${() => {
+          this.notificationOpened = false;
         }}"
         ${notificationRenderer(this.renderer, [])}
       ></vaadin-notification>

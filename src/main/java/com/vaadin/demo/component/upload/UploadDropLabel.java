@@ -10,14 +10,17 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.InMemoryUploadHandler;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-drop-label")
 public class UploadDropLabel extends Div {
 
     public UploadDropLabel() {
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
+        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
+                (metadata, data) -> {});
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryHandler);
 
         Span dropLabel = createDropLabel();
         Icon dropIcon = VaadinIcon.CLOUD_UPLOAD_O.create();

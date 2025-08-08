@@ -5,14 +5,17 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("upload-internationalization")
 public class UploadInternationalization extends Div {
 
     public UploadInternationalization() {
-        MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
+        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+                (uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
-        Upload upload = new Upload(buffer);
+        Upload upload = new Upload(inMemoryUploadHandler);
 
         // See the separate UploadFinnishI18N class / file
         // in this example for the I18N configuration

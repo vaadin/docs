@@ -3,13 +3,9 @@ import './upload-demo-helpers'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/upload';
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
-import type {
-  Upload,
-  UploadFileRejectEvent,
-  UploadMaxFilesReachedChangedEvent,
-} from '@vaadin/upload';
+import type { UploadFileRejectEvent, UploadMaxFilesReachedChangedEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-button-theme-variant')
@@ -21,16 +17,14 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-upload')
-  private upload!: Upload;
-
   @state()
   private maxFilesReached = false;
 
-  protected override firstUpdated() {
-    this.upload.i18n.dropFiles.one = 'Drop PDF here';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    dropFiles: {
+      one: 'Drop PDF here',
+    },
+  };
 
   protected override render() {
     return html`
@@ -38,6 +32,7 @@ export class Example extends LitElement {
       <vaadin-upload
         max-files="1"
         accept="application/pdf,.pdf"
+        .i18n="${this.uploadI18n}"
         @file-reject="${this.fileRejectHandler}"
         @max-files-reached-changed="${(event: UploadMaxFilesReachedChangedEvent) => {
           this.maxFilesReached = event.detail.value;

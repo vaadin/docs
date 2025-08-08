@@ -1,9 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Notification } from '@vaadin/react-components/Notification.js';
 import { Upload } from '@vaadin/react-components/Upload.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   const maxFileSizeInMB = 1;
   const maxFileSizeInBytes = maxFileSizeInMB * 1024 * 1024;
   const acceptedTypes = [
@@ -19,17 +22,17 @@ function Example() {
   ];
 
   // tag::snippet[]
-  const uploadRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (uploadRef.current) {
-      uploadRef.current.i18n.addFiles.one = 'Upload Spreadsheet...';
-      uploadRef.current.i18n.dropFiles.one = 'Drop spreadsheet here';
-      uploadRef.current.i18n.error.incorrectFileType =
-        'Provide the file in one of the supported formats (.xls, .xlsx, .csv).';
-      uploadRef.current.i18n = { ...uploadRef.current.i18n };
-    }
-  }, [uploadRef.current]);
+  const uploadI18n = useSignal({
+    addFiles: {
+      one: 'Upload Spreadsheet...',
+    },
+    dropFiles: {
+      one: 'Drop spreadsheet here',
+    },
+    error: {
+      incorrectFileType: 'Provide the file in one of the supported formats (.xls, .xlsx, .csv).',
+    },
+  });
 
   return (
     <>
@@ -43,7 +46,7 @@ function Example() {
         maxFiles={1}
         maxFileSize={maxFileSizeInBytes}
         accept={acceptedTypes.join(',')}
-        ref={uploadRef}
+        i18n={uploadI18n.value}
         onFileReject={(event) => {
           Notification.show(event.detail.error);
         }}

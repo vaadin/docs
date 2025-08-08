@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useComputed } from '@vaadin/hilla-react-signals';
+import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
 import { Upload, type UploadElement } from '@vaadin/react-components/Upload.js';
 import {
@@ -18,16 +18,12 @@ const Example = () => {
   const uploadCaution = useRef<UploadElement>(null);
   const uploadRecommended = useRef<UploadElement>(null);
 
-  // tag::snippet[]
   useEffect(() => {
     if (!uploadCaution.current) {
       return;
     }
 
     uploadCaution.current.setupMockErrorResponse();
-
-    uploadCaution.current.i18n.uploading.error.unexpectedServerError = 'Unexpected Server Error';
-    uploadCaution.current.i18n = { ...uploadCaution.current.i18n };
   }, [uploadCaution.current]);
 
   useEffect(() => {
@@ -36,25 +32,37 @@ const Example = () => {
     }
 
     uploadRecommended.current.setupMockErrorResponse();
-
-    uploadRecommended.current.i18n.uploading.error.unexpectedServerError =
-      "File couldn't be uploaded, try again later";
-    uploadRecommended.current.i18n = { ...uploadRecommended.current.i18n };
   }, [uploadRecommended.current]);
 
   const filesA = useComputed(createFakeFilesUploadErrorMessagesA);
   const filesB = useComputed(createFakeFilesUploadErrorMessagesB);
 
+  const cautionI18n = useSignal({
+    uploading: {
+      error: {
+        unexpectedServerError: 'Unexpected Server Error',
+      },
+    },
+  });
+  // tag::snippet[]
+  const recommendedI18n = useSignal({
+    uploading: {
+      error: {
+        unexpectedServerError: "File couldn't be uploaded, try again later",
+      },
+    },
+  });
+
   return (
     <FormLayout responsiveSteps={layoutSteps}>
       <div>
         <strong>Caution</strong>
-        <Upload ref={uploadCaution} nodrop files={filesA.value} />
+        <Upload ref={uploadCaution} nodrop files={filesA.value} i18n={cautionI18n.value} />
       </div>
 
       <div>
         <strong>Recommended</strong>
-        <Upload ref={uploadRecommended} nodrop files={filesB.value} />
+        <Upload ref={uploadRecommended} nodrop files={filesB.value} i18n={recommendedI18n.value} />
       </div>
     </FormLayout>
   );

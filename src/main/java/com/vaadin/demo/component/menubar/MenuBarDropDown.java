@@ -18,7 +18,7 @@ public class MenuBarDropDown extends Div {
         subMenu.addItem("Profile");
         subMenu.addItem("Account");
         subMenu.addItem("Preferences");
-        subMenu.add(new Hr());
+        subMenu.addSeparator();
         subMenu.addItem("Sign out");
         // end::snippet[]
 

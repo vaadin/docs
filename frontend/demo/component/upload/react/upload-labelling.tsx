@@ -1,5 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Notification } from '@vaadin/react-components/Notification.js';
 import type { UploadFileRejectEvent } from '@vaadin/react-components/Upload.js';
 import { Upload } from '@vaadin/react-components/Upload.js';
@@ -9,24 +11,25 @@ const fileRejectHandler = (event: UploadFileRejectEvent) => {
 };
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const uploadRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (uploadRef.current) {
-      uploadRef.current.i18n.addFiles.one = 'Upload PDF...';
-      uploadRef.current.i18n.dropFiles.one = 'Drop PDF here';
-      uploadRef.current.i18n.error.incorrectFileType =
-        'The provided file does not have the correct format (PDF document).';
-      uploadRef.current.i18n = { ...uploadRef.current.i18n };
-    }
-  }, [uploadRef.current]);
+  const uploadI18n = useSignal({
+    addFiles: {
+      one: 'Upload PDF...',
+    },
+    dropFiles: {
+      one: 'Drop PDF here',
+    },
+    error: {
+      incorrectFileType: 'The provided file does not have the correct format (PDF document).',
+    },
+  });
 
   return (
     <Upload
       maxFiles={1}
       accept="application/pdf,.pdf"
-      ref={uploadRef}
+      i18n={uploadI18n.value}
       onFileReject={fileRejectHandler}
     />
   );
