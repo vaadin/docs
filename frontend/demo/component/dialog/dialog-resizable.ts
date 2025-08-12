@@ -5,7 +5,6 @@ import '@vaadin/grid';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { dialogRenderer } from '@vaadin/dialog/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -39,8 +38,8 @@ export class Example extends LitElement {
         resizable
         draggable
         .opened="${this.dialogOpened}"
-        @opened-changed="${(event: DialogOpenedChangedEvent) => {
-          this.dialogOpened = event.detail.value;
+        @closed="${() => {
+          this.dialogOpened = false;
         }}"
         ${dialogRenderer(
           () => html`

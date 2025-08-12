@@ -29,7 +29,7 @@ public class ContextMenuDisabled extends Div {
         });
         menu.addItem("Edit", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
 
         // tag::snippet2[]
         GridMenuItem<File> export = menu.addItem("Export");
@@ -50,7 +50,7 @@ public class ContextMenuDisabled extends Div {
         });
         shareSubMenu.addItem("Email", event -> {
         });
-        menu.add(new Hr());
+        menu.addSeparator();
 
         // tag::snippet3[]
         GridMenuItem<File> delete = menu.addItem("Delete", event -> {
