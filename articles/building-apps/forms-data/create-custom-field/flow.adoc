@@ -1115,64 +1115,254 @@ public class DurationField extends CustomField<Duration> {
 ====
 
 Finally, lets make sure we handle all the accessibility issues that we have.
+The challenging part here, is that we have the main label ("Duration") and two inputs it should be linked to.
+In addition, we have individualized labels for each input ("hours" and "minutes").
+From accessibility perspective we want the labels to be read as "Duration hours" and "Duration minutes".
+We can achieve this by using `aria-labelledby` on the inputs and referencing both the main label the more specific label.
+But, we have to conform to HTML semantics as well, so the labels should still have `for` attributes pointing to related input.
+However, `for` attribute only allows for referencing one input, meaning we have to select which input specifically we will use.
+It's not important which one you chose as the screen reader will prioritize `aria-labelledby` for reading out input labels.
 
-First, lets generate a unique ID to set on our custom labels. You might have your own way of generating unique ids, but here
-we will rely on `RandomGenerator`. We need to use those to indicate that our input fields are labeled by them.
+Let's create method that does all that on JS side, since it will help us avoid generating a separate unique id for our inputs.
+It won't be pretty, but it will take care over everything needed.
 
 ```java
-private static final int ID_GEN_CHAR_COUNT = 5;
-private final RandomGenerator rand = RandomGenerator.getDefault();
-// ...
-public DurationField(DurationFieldI18n i18n) {
-    this.i18n = i18n;
+private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
+    field.getElement().executeJs("""
+            setTimeout(() => {
+              // Find the main label id
+              const originalLabelId = $0.getAttribute('aria-labelledby');
+              // Create a custom label, based on the original label, making it unique
+              const customLabelId = originalLabelId + '-' +  $3;
+              // Set the custom label id to our custom label
+              $2.id = customLabelId;
+              // Make sure our specific input is labeled by the main label and its specific label
+              $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
 
-    var hoursId = randomId("hours", ID_GEN_CHAR_COUNT);
-    var minutesId = randomId("minutes", ID_GEN_CHAR_COUNT);
+              const inputId = $1.inputElement.id;
 
-    hoursLabel = createHoursLabel(hoursId);
-    minutesLabel = createMinutesLabel(minutesId);
-    hours = createHoursField(hoursId);
-    minutes = createMinutesField(minutesId);
-    //...
-}
-
-private NativeLabel createHoursLabel(String id) {
-    var label = new NativeLabel();
-    label.setId(id);
-    //...
-    return label;
-}
-
-private NativeLabel createMinutesLabel(String id) {
-    var label = new NativeLabel();
-    label.setId(id);
-    //...
-    return label;
-}
-
-private IntegerField createHoursField(String ariaLabelledBy) {
-    var hours = new IntegerField();
-    hours.setAriaLabelledBy(ariaLabelledBy);
-    //...
-    return hours;
-}
-
-private IntegerField createMinutesField(String ariaLabelledBy) {
-    var minutes = new IntegerField();
-    minutes.setAriaLabelledBy(ariaLabelledBy);
-    //...
-    return minutes;
-}
-
-private String randomId(String prefix, int chars) {
-    int limit = (int) (Math.pow(10, chars) - 1);
-    String key = "" + rand.nextInt(limit);
-    key = String.format("%" + chars + "s", key).replace(' ', '0');
-    return prefix + "-" + key;
+              // Make sure main label is associated with some input
+              var mainLabel = document.getElementById(originalLabelId);
+              mainLabel.setAttribute('for', inputId);
+              // Make sure the 'for' attribute for the more specific label is associate with its input
+              $2.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
 }
 ```
 
-Next, we need to fix the `IntegerField`
+Let's also update the `aria-description` to provide a description of the full value.
+
+```java
+private void updateAriaDescription() {
+    getElement().setAttribute("aria-description", valueAsString());
+}
+
+private String valueAsString() {
+    if (hours.getValue() == null || minutes.getValue() == null) {
+        return "";
+    }
+
+    return String.format("%d %s %s %d %s", hours.getValue(),
+            i18n.getHours(), i18n.getAnd(), minutes.getValue(),
+            i18n.getMinutes());
+}
+```
+
+Next, we actually have to call these methods.
+In the constructor:
+
+```java
+updateAriaDescription();
+setFor(hours, hoursLabel, "hours");
+setFor(minutes, minutesLabel, "minutes");
+```
+
+We will also need to update the description when any of the values are updated.
+
+Our full code looks like this:
+
+```java
+package com.vaadin.cf.components.tutorial;
+
+import com.vaadin.cf.components.DurationFieldI18n;
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    private DurationFieldI18n i18n;
+
+    public DurationField() {
+        this(new DurationFieldI18n());
+    }
+
+    public DurationField(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        updateAriaDescription();
+        updateLabels();
+
+        setFor(hours, hoursLabel, "hours");
+        setFor(minutes, minutesLabel, "minutes");
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
+        field.getElement().executeJs("""
+                setTimeout(() => {
+                  // Find the main label id
+                  const originalLabelId = $0.getAttribute('aria-labelledby');
+                  // Create a custom label, based on the original label, making it unique
+                  const customLabelId = originalLabelId + '-' +  $3;
+                  // Set the custom label id to our custom label
+                  $2.id = customLabelId;
+                  // Make sure our specific input is labeled by the main label and its specific label
+                  $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
+
+                  const inputId = $1.inputElement.id;
+
+                  // Make sure main label is associated with some input
+                  var mainLabel = document.getElementById(originalLabelId);
+                  mainLabel.setAttribute('for', inputId);
+                  // Make sure the 'for' attribute for the more specific label is associate with its input
+                  $2.setAttribute('for', inputId);
+                }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        hours.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setMax(59);
+        minutes.setMin(0);
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        minutes.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span();
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+        updateAriaDescription();
+    }
+
+    public DurationFieldI18n getI18n() {
+        return i18n;
+    }
+
+    public void setI18n(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+        updateLabels();
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    private void updateAriaDescription() {
+        getElement().setAttribute("aria-description", valueAsString());
+    }
+
+    private String valueAsString() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            return "";
+        }
+
+        return String.format("%d %s %s %d %s", hours.getValue(),
+                i18n.getHours(), i18n.getAnd(), minutes.getValue(),
+                i18n.getMinutes());
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+
+    private void updateLabels() {
+        hoursLabel.setText(i18n.getHours());
+        minutesLabel.setText(i18n.getMinutes());
+        and.setText(i18n.getAnd());
+        updateAriaDescription();
+    }
+}
+```
 
 ====
 
