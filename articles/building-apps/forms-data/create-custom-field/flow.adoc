@@ -446,11 +446,50 @@ When using `HasStyle` API, its is recommended that you use <<{articles}/styling/
 
 == Accessibility
 
-Explain how to make the custom field accessible.
+There could be a lot of accessibility issues you will have to solve for your Custom Field, we can not cover all of them here,
+but we can address the most common ones.
 
-// TODO CustomField itself has a label, and in single input case, you usually do not need to introduce labels ... Although from accessibility perspective you should hack the CustomField integrated label to be linked to the wrapped input's input element. (Speaking of which, I have forgotten that in DecimalField, need to fix) And also by default the CustomField role is group, not field. If there is only one input, the group role is wrong.
+`CustomField` itself has a label, and in single input case, you usually do not need to introduce labels, however, that label should
+point to an input field. This does not occur by default, because the `CustomField` is not aware of which `input` should it point to, especially in fields with multiple inputs.
 
-// TODO empty value?
+Vaadin currently does not provide a simple way to do this, that covers all possible cases.
+Here's an example of doing it with JavaScript script call from your Custom Field code:
+
+```java
+private void setFor(TextField field) {
+    field.getElement().executeJs("""
+            setTimeout(() => {
+              const inputId = $1.inputElement.id;
+              const mainLabel = $0.querySelector(
+                '#'+$0.getAttribute('aria-labelledby'));
+              mainLabel.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement());
+}
+```
+
+The default role of the custom field is `group` If there's only a single input, appropriate role would `input`.
+Vaadin currently does not provide a straight forward way to do this, you will once again have to make a JS call.
+```java
+getElement().executeJs(
+                "setTimeout(() => $0.setAttribute('role', 'input'), 100);",
+                this);
+```
+
+You can combine these two calls into one and call it in the `onAttach` method, so that even if your field is attached and detached, the correct accessibility persists.
+
+```java
+@Override
+public void onAttach(AttachEvent event) {
+    getElement().executeJs("""
+            setTimeout(() => {
+              $0.setAttribute('role', 'input');
+              const inputId = $1.inputElement.id;
+              const mainLabel = $0.querySelector(
+                '#'+$0.getAttribute('aria-labelledby'));
+              mainLabel.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement());
+}
+```
 
 [.collapsible-list]
 == Try It
@@ -1369,5 +1408,7 @@ public class DurationField extends CustomField<Duration> {
 .Final Thoughts
 [%collapsible]
 ====
-Summarize the tutorial.
+Getting everything right when building a Custom Field is challenging. When you're starting to build it, start with the basics, make sure its working well for you and fits your use case, and leave the more challenging bits for later.
+Accessibility usually is the hardest to get right, so it's good to keep it in mind during the design phase.
+Hopefully this guide made you more comfortable implementing Custom Fields.
 ====
