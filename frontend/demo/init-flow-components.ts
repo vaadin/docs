@@ -29,5 +29,3 @@ import '@vaadin/flow-frontend/virtualListConnector.js';
 import '@vaadin/flow-frontend/tooltip.js';
 // Lit renderer
 import '@vaadin/flow-frontend/lit-renderer.js';
-// Legacy template renderer
-import '@vaadin/polymer-legacy-adapter/template-renderer.js';

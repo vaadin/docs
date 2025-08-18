@@ -60,7 +60,7 @@ export class Example extends LitElement {
       <vaadin-popover
         for="range-field"
         modal
-        content-width="340px"
+        width="340px"
         position="bottom-start"
         accessible-name="Select a date range"
         .opened="${this.opened}"

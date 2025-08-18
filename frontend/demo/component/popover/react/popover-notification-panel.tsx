@@ -67,7 +67,7 @@ function Example() {
         theme="arrow no-padding"
         modal
         position="bottom"
-        contentWidth="300px"
+        width="300px"
         accessibleNameRef="notifications-heading"
       >
         <HorizontalLayout
