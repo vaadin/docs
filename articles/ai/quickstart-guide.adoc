@@ -1,0 +1,247 @@
+---
+title: Quickguide-Start
+page-title: Quickguide-Start | AI Chatbot with Vaadin
+description: Hands-on tutorial - connect Vaadin to an LLM with Spring, build a streaming chat UI, and apply simple, reusable patterns for prompts, memory, and UX.
+order: 20
+---
+
+= Quick Guide: Add an AI Chat Bot to a Vaadin + Spring Boot App
+
+This guide shows how to connect a Large Language Model (LLM) into a Vaadin application using Spring Boot and Spring AI. We’ll build a minimal chat UI with Vaadin ready-made components **MessageList** and **MessageInput**, stream responses token-by-token, and keep a conversational tone.
+
+**Audience & style:** This quickguide is for Java Developers, written in a Spring-style tutorial for Vaadin Beginners and AI Rookies. Short, focused steps. Copy–paste ready.
+
+== Prerequisites
+* Java 17+
+* Spring Boot 3.5+ (or newer)
+* Vaadin 24.8+
+* An OpenAI API key (`OPENAI_API_KEY`)
+
+== 1. Start from a Vaadin Spring Skeleton
+
+Download a Vaadin Spring starter from `github.com/vaadin/skeleton-starter-flow-spring`[github.com/vaadin] import it in your IDE, and run it once to verify.
+
+Remove the default service `GreetService` and clear the existing view content—we’ll implement everything in `MainView`.
+
+== 2. Add Spring AI dependencies
+
+Use the Spring AI BOM and the OpenAI starter to import the necessary dependencies to your project.
+
+**Maven (`pom.xml`):**
+
+[source,xml]
+----
+<dependencyManagement>
+  ...
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.ai</groupId>
+      <artifactId>spring-ai-bom</artifactId>
+      <version>1.0.1</version><!-- use the latest stable -->
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+  ...
+</dependencyManagement>
+
+<dependencies>
+    ...
+    <!-- OpenAI LLM via Spring AI -->
+    <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-starter-model-openai</artifactId>
+    </dependency>
+    ...
+</dependencies>
+----
+
+*(Gradle users: import the Spring AI BOM and add the same starters.)*
+
+== 3. Configure your OpenAI credentials
+
+To access the API of Open AI we need to pass a license key. The preferred way is the environment variables to make the key available to other applications as well. In `application.properties` add:
+
+[source,properties]
+----
+spring.ai.openai.api-key=${OPENAI_API_KEY}
+# Optional: pick a model; adjust to what your account supports
+# spring.ai.openai.chat.options.model=gpt-5
+----
+
+Tip: use Spring profiles or your CI/CD’s secret store for the key.
+
+== 4. Enable Vaadin Push
+
+We’ll stream tokens asynchronously and update the UI live, so enable Push to make changes in existing UI objects:
+
+[source,java]
+----
+// src/main/java/org/vaadin/example/Application.java
+
+import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.Push;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.theme.Theme;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@Theme("my-theme")
+@PageTitle("AI in Vaadin")
+@SpringBootApplication
+@Push
+public class Application implements AppShellConfigurator {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+----
+
+== 5. Create the Chat service (Spring AI)
+
+This service builds a `ChatClient` with a **ChatMemory** advisor, then exposes a **reactive stream** of tokens.
+
+[source,java]
+----
+// src/main/java/org/vaadin/example/ChatService.java
+package org.vaadin.example;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+
+@Service
+public class ChatService {
+
+    private final ChatClient chatClient;
+
+    public ChatService(ChatClient.Builder chatClientBuilder,
+                       ChatMemory chatMemory) {
+        // Add a memory advisor to the chat client
+        var chatMemoryAdvisor = MessageChatMemoryAdvisor
+                .builder(chatMemory)
+                .build();
+
+        // Build the chat client
+        chatClient = chatClientBuilder
+                .defaultAdvisors(chatMemoryAdvisor)
+                .build();
+    }
+
+    public Flux<String> chatStream(String prompt) {
+        return chatClient.prompt()
+                .user(prompt)
+                .stream()
+                .content();
+    }
+}
+
+----
+
+Why a chat memory? **ChatMemory** keeps context so users don’t have to repeat themselves.
+
+== 6. Build the Chat UI with Vaadin
+
+Use `MessageList` to render the conversation (Markdown-enabled) and `MessageInput` to handle the user prompts. Wrap the list in a `Scroller` so long chats don’t grow the layout beyond the browser window.
+
+[source,java]
+----
+// src/main/java/org/vaadin/example/MainView.java
+package org.vaadin.example;
+
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+
+import java.time.Instant;
+
+@Route
+public class MainView extends VerticalLayout {
+
+    private final ChatService chatService;
+    private final MessageList messageList;
+    private final Scroller scroller;
+
+    public MainView(ChatService chatService) {
+        this.chatService = chatService;
+
+        messageList = new MessageList();
+        messageList.setMarkdown(true);
+        scroller = new Scroller(messageList);
+        addAndExpand(scroller);
+
+        var messageInput = new MessageInput();
+        messageInput.setWidthFull();
+        messageInput.addSubmitListener(this::onSubmit);
+        add(messageInput);
+    }
+
+    private void onSubmit(MessageInput.SubmitEvent submitEvent) {
+        var prompt = new MessageListItem(submitEvent.getValue(), Instant.now(), "User");
+        messageList.addItem(prompt);
+
+        var response = new MessageListItem("", Instant.now(), "Bot");
+        messageList.addItem(response);
+
+        var uiOptional = submitEvent.getSource().getUI();
+        //call the service to get the response
+        chatService.chatStream(submitEvent.getValue())
+                //subscribe to the stream
+                .subscribe(token -> {
+                    //if the UI object is present
+                    uiOptional.ifPresent(
+                            //access the UI object to update the UI
+                            ui -> ui.access(() -> {
+                                response.appendText(token);
+                                scroller.scrollToBottom();
+                            }));
+                });
+    }
+}
+
+----
+
+**Key UI patterns used here:**
+
+* **Streaming output:** show tokens as they arrive for perceived performance.
+* **Markdown rendering:** richer answers (lists, code blocks, emojis).
+* **Sticky scroll:** keep the latest answer in view.
+
+== 7. Run & iterate
+
+Start the app (DevTools / HotswapAgent recommended for hot reload), open the browser, and try your first prompts.
+
+== What you built
+
+* A production-grade **chat surface** using Vaadin components
+* **Token-by-token streaming** with Vaadin Push
+* **Conversation memory** via Spring AI advisors
+
+== Next possible steps
+
+* Add a **system prompt** field to steer the assistant (e.g., tone, persona).
+* Add **clear chat** and **export** actions.
+* Support **attachments** and **tool calls** (retrieval, functions).
+* Log prompts/responses for observability.
+
+== Troubleshooting
+
+* **No streaming updates?** Ensure `@Push` is present and check reverse proxy/WebSocket settings.
+* **401 Exception from OpenAI?** Verify `OPENAI_API_KEY` and environment injection in your run configuration.
+
+== Complete file list (recap)
+
+* `src/main/java/org/vaadin/example/Application.java` — Spring Boot + `@Push`
+* `src/main/java/org/vaadin/example/ChatService.java` — Spring AI client + memory
+* `src/main/java/org/vaadin/example/MainView.java` — Vaadin chat UI
+* `src/main/resources/application.properties` — OpenAI config
+* `pom.xml` — Vaadin + Spring AI deps
+
+That’s it—your Vaadin app now speaks AI. 🚀
