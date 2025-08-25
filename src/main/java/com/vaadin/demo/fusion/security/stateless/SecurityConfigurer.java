@@ -33,13 +33,12 @@ public class SecurityConfigurer {
         // end::stateless-configure[]
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin-only/**").hasAnyRole("admin")
-                .requestMatchers("/public/**").permitAll()
-        );
+                .requestMatchers("/public/**").permitAll());
 
         // tag::stateless-configure[]
         // Disable creating and using sessions in Spring Security
-        http.sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement((session) -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // Register your login view to the view access checker mechanism
         http.with(VaadinSecurityConfigurer.vaadin(),

@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.JwsAlgorithms;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
@@ -39,19 +39,23 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         // Configure your static resources with public access before calling
         // super.configure(HttpSecurity) as it adds final anyRequest matcher
-        http.authorizeHttpRequests()
-                .requestMatchers(new AntPathRequestMatcher("/admin-only/**"))
-                .hasAnyRole("admin");
-        http.authorizeHttpRequests()
-                .requestMatchers(new AntPathRequestMatcher("/public/**"))
-                .permitAll();
+        http.authorizeHttpRequests(
+                (requests) -> requests
+                        .requestMatchers(PathPatternRequestMatcher
+                                .withDefaults().matcher("/admin-only/**"))
+                        .hasAnyRole("admin"));
+        http.authorizeHttpRequests(
+                (requests) -> requests
+                        .requestMatchers(PathPatternRequestMatcher
+                                .withDefaults().matcher("/public/**"))
+                        .permitAll());
 
         // tag::stateless-configure[]
         super.configure(http);
 
         // Disable creating and using sessions in Spring Security
-        http.sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement((session) -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // Register your login view to the view access checker mechanism
         setLoginView(http, "/login");
