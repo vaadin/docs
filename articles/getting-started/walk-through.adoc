@@ -2,7 +2,7 @@
 title: Project Structure
 page-title: Walk-through of the Vaadin Walking Skeleton
 description: Learn about the building blocks of a Vaadin walking skeleton.
-meta-description: Explore the structure of a Vaadin walking skeleton project. Learn about its key components, including Java files, frontend files, and the Maven POM file. Understand how to organize your project for efficient development with Flow or Hilla.
+meta-description: Explore the structure of a Vaadin walking skeleton project. Learn about its key components, including Java files, frontend files, and the Maven POM file.
 order: 50
 ---
 
@@ -57,26 +57,33 @@ src
 │   │   ├── base                           <1>
 │   │   │   └── domain
 │   │   │       └── AbstractEntity.java
-│   │   └── taskmanagement                 <2>
+│   │   ├── security                       <2>
+│   │   │       └── ...
+│   │   └── taskmanagement                 <3>
 │   │       ├── domain
 │   │       │   ├── Task.java
 │   │       │   └── TaskRepository.java
 │   │       └── service
 │   │           └── TaskService.java
-│   └── Application.java                   <3>
+│   └── Application.java                   <4>
 │
 └── test/java
     └── [application package]
         ├── taskmanagement
         │   └── service
-        │       └── TaskServiceIT.java <4>
-        └── ArchitectureTest.java          <5>
+        │       └── TaskServiceIT.java     <5>
+        ├── ArchitectureTest.java          <6>
+        ├── TestApplication.java           <7>
+        └── TestcontainersConfiguration.java <8>
 ----
 <1> The `base` feature package.
-<2> The `taskmanagement` feature package.
-<3> Main entry point into the application.
-<4> Example integration test for the `TaskService`.
-<5> ArchUnit architecture test for the entire application.
+<2> A complete security configuration.
+<3> The `taskmanagement` feature package.
+<4> Main entry point into the application.
+<5> Example integration test for the `TaskService`.
+<6> ArchUnit architecture test for the entire application.
+<7> Test application that starts the application with Testcontainers enabled.
+<8> Configuration class for Testcontainers service connections.
 
 If you generated a Flow view, the project contains more Java files. You'll learn about those later.
 
@@ -94,15 +101,82 @@ You'll find `package-info.java` files in every package. These files add the `@Nu
 `ArchitectureTest.java` is an link:https://www.archunit.org[ArchUnit] test that guards against unintentional dependencies between classes. As your application grows, it helps keep your code base in shape.
 
 
+[role="since:com.vaadin:vaadin@V24.8"]
+=== Testcontainers for Development and Testing
+
+The skeleton includes support for https://testcontainers.com[Testcontainers] -- an open-source library that provides lightweight, disposable containers for databases and other services via Docker.
+
+The skeleton includes a `TestcontainersConfiguration.java` class that defines container-based service connections. By default, it configures a *PostgreSQL container*, ready for both testing and development use. For guidance on customizing this file, refer to the https://docs.spring.io/spring-boot/reference/testing/testcontainers.html[Spring Boot Testcontainers] documentation.
+
+Integration tests automatically use Testcontainers. You can also run the application itself with Testcontainers using the `TestApplication.java` class, which includes a `main()` method to start the Spring Boot application and initialize the configured containers. Run this class from your IDE or via Maven:
+
+[.example]
+--
+.Terminal
+[source,terminal,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+./mvnw spring-boot:test-run
+----
+
+.PowerShell
+[source,terminal,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+mvnw spring-boot:test-run
+----
+--
+
+
+[role="since:com.vaadin:vaadin@V24.8"]
+=== Built-in Security Configuration
+
+The skeleton also includes a production-grade Spring Security setup, featuring:
+
+- A custom API for accessing user details, independent of the identity provider.
+- A user ID domain primitive for type-safe identity modeling. See the <</building-apps/deep-dives/application-layer/domain-primitives#,Domain Primitives>> deep dive for details.
+- Method-level security for application services.
+- A development-mode configuration with in-memory users and a simple login screen.
+- A production-mode configuration compatible with Control Center's <</control-center/identity-management#,Identity Management>> feature.
+
+All components in the `security` package include detailed Javadoc comments. You can use them as-is or adapt them to fit your application's requirements.
+
+If you prefer to write your own security setup from scratch, simply delete the entire `security` package.
+
+// TODO Write a deep-dive that explains how the security package really works and the reasoning behind it
+
+
+[role="since:com.vaadin:vaadin@V24.8"]
+=== Database Configuration: H2 vs PostgreSQL
+
+By default, the skeleton supports both *H2* and *PostgreSQL*:
+
+* In *development mode*, it uses H2 for convenience -- no setup required.
+* In *production mode*, it uses PostgreSQL.
+
+This setup lets you get started quickly without Docker or PostgreSQL installed. However, for real-world applications, you should use the *same database* in all environments to avoid surprises. Testcontainers is an ideal solution, and the skeleton includes first-class support for it.
+
+To switch fully to PostgreSQL:
+
+1. Open `pom.xml`.
+2. Remove the `h2-local-development` profile.
+3. Set the `defaultGoal` to `spring-boot:test-run`.
+
+This ensures PostgreSQL is used consistently in both development and production.
+
+[CAUTION]
+The skeleton uses Hibernate's `update` DDL-auto mode to manage the database schema. While convenient for prototyping, it's not suitable for production use. Instead, use a proper migration tool like Flyway. See the <</building-apps/forms-data/add-flyway#,Add Flyway>> guide for setup instructions.
+
+
 === The Task Management Feature
 
 The `taskmanagement` feature consists of a JPA entity, a Spring Data JPA repository interface, and an application service.
 
-The repository stores and fetches entities from a relational database. The skeleton uses an in-memory H2 database. This is useful for prototyping, but soon you'll want to replace it with something else.
+The repository stores and fetches entities from a relational database.
 
 The application service acts as the API of the feature and is the boundary between the _presentation layer_ and the _application layer_. Its main purpose in the skeleton is to show how an application service interacts with the domain model in a Vaadin application.
 
-The task service has a sample integration test. It starts up the application and its embedded H2 database, and checks that the service works as expected. Its main purpose in the skeleton is to show how to write integration tests for application services.
+The task service has a sample integration test. It starts up the application and a PostgreSQL test container, and checks that the service works as expected. Its main purpose in the skeleton is to show how to write integration tests for application services.
 
 
 === Java Views [badge-flow]#Flow#
@@ -136,7 +210,7 @@ The `view` package contains view-related classes that cut across multiple views 
 
 The error handler receives all exceptions that reach the user interface, logs them, and shows an error notification to the user. You'll want to customize this as the application grows.
 
-Your application shows all the views inside the main layout by default. It contains the application's name, a navigation menu, and a mock user menu that doesn't do anything. You'll want to at least change the application name, and either remove or  implement the user menu.
+Your application shows all the views inside the main layout by default. It contains the application's name, a navigation menu, and a user menu that allows the user to log out. You'll want to at least change the application name.
 
 The `taskmanagement` feature package contains one UI-related package. It contains the view that allows users to create and list tasks to do.
 
@@ -170,27 +244,34 @@ src
 └── main/frontend
     ├── components
     │   └── ViewToolbar.tsx
-    └── views
-        ├── @index.tsx
-        ├── @layout.tsx
-        ├── _ErrorHandler.ts
-        └── task-list.tsx
+    ├── security
+    │   └── auth.ts 
+    ├── views
+    │   ├── @index.tsx
+    │   ├── @layout.tsx
+    │   ├── _ErrorHandler.ts
+    │   └── task-list.tsx
+    └── index.tsx
 ----
 
 The `components` directory contains custom UI components that can be reused throughout the entire application. The skeleton only contains one, but as your application grows, you'll add more components to this directory.
+
+The `security` directory contains an `auth.ts` file that sets up a React context to store authentication details and connects it to the server-side security configuration.
 
 The `views` directory contains a main view, a main layout, an error handler, and an example view. The file names in this directory all have special meaning. You'll learn about it later.
 
 The example view - `task-list.tsx` - allows users to add and list tasks to do.
 
-Your application shows all the views inside the main layout - `@layout.tsx` - by default. It contains the application's name, a navigation menu, and a mock user menu that doesn't do anything. You'll want to at least change the application name, and either remove or implement the user menu.
+Your application shows all the views inside the main layout - `@layout.tsx` - by default. It contains the application's name, a navigation menu, and a user menu that allows the user to logout. You'll want to at least change the application name.
 
 The error handler is a TypeScript function that logs the error to the console and shows a notification to the user. The error handler is _not_ a link:https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary[React error boundary]. It is designed to handle errors that occur when calling application services. Because of this, you have to manually catch the errors you want to handle, and call the error handler. The example view shows you how to do this.
+
+The `index.tsx` file enables the authentication context, and creates and renders the root application component.
 
 
 == The POM File
 
-The POM file is a typical Spring Boot, single-module Maven project file. It uses the `spring-boot-starter-parent`, so all the Spring Boot dependencies are available for use. It also brings in the Vaadin dependencies, and ArchUnit.
+The POM file is a typical Spring Boot, single-module Maven project file. It uses the `spring-boot-starter-parent`, so all the Spring Boot dependencies are available for use. It also brings in the Vaadin dependencies, Testcontainers, PostgreSQL, and ArchUnit.
 
 The `spring-boot-maven-plugin` is used to package the application into a single, executable JAR file.
 
@@ -198,8 +279,10 @@ The `spotless-maven-plugin` is used to format the Java and TypeScript source fil
 
 The `vaadin-maven-plugin` is used to prepare and build the frontend files. Under the hood it is using link:https://www.npmjs.com/[npm] and link:https://vite.dev/[Vite].
 
-The POM file defines two build profiles: `production`, and `integration-test`.
+The POM file defines three build profiles:
 
-The `production` profile triggers a production build, and is deactivated by default. You'll learn more about making a production build on the <<build#,Build a Project>> page.
+* The `h2-local-development` profile is automatically activated whenever no other profile has been activated. It configures the application to use the H2 database in local development mode, as discussed earlier in this guide.
+* The `production` profile triggers a production build, and is deactivated by default. You'll learn more about making a production build on the <<build#,Build a Project>> page.
+* The `integration-test` profile runs integration tests during the `verify` phase, and is deactivated by default.
 
-The `integration-test` profile runs integration tests during the `verify` phase, and is deactivated by default.
+// TODO Write a guide about integration testing

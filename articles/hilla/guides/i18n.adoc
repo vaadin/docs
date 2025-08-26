@@ -1,0 +1,192 @@
+---
+title: Internationalization (I18n)
+page-title: Adding Internationalization (I18n) to Hilla Applications
+description: Enable multilingual support in Hilla applications by configuring and using the Hilla i18n system.
+meta-description: Guide to setting up and using internationalization (i18n) with Hilla applications.
+order: 140
+---
+
+= [since:com.vaadin:vaadin@V24.6]#Internationalization (I18n) Support#
+
+You can add internationalization (i18n) support to your Hilla applications using the `@vaadin/hilla-react-i18n` package. This guide walks you through setting up and using the feature effectively to create multilingual user interfaces.
+
+== Add and Configure `i18n`
+
+First, import the `i18n` module and call the `configure` method during your application setup or in your main view initialization.
+
+[source,typescript]
+----
+import { effect } from '@vaadin/hilla-react-signals';
+import { i18n } from '@vaadin/hilla-react-i18n';
+
+effect(() => {
+  i18n.configure();
+});
+----
+
+=== Behavior Details
+
+By default, the system uses the browser's language (`navigator.language`). If a user has previously selected a language, it is remembered in a cookie. You can also explicitly configure the language during setup:
+
+[source,typescript]
+----
+i18n.configure({ language: 'de-DE' });
+----
+
+Configuration marks the system as initialized, allowing your UI to react accordingly.
+
+== Create and Place Translation Files
+
+Translation files must be placed in the following file:
+
+----
+src/main/resources/vaadin-i18n/translations.properties
+----
+
+These files follow the standard Java `.properties` file format, where each line contains a key-value pair separated by an equals sign (`=`). Keys represent the translation identifiers, and values are the corresponding translations.
+
+Example of a `translations.properties` file for English:
+
+----
+addresses.form.city.label=City
+addresses.form.street.label=Street
+----
+
+To add support for other languages, create additional `.properties` files with the language code appended to the filename. For example, to add German translations, create a file named `translations_de.properties`:
+
+----
+addresses.form.city.label=Stadt
+addresses.form.street.label=Straße
+----
+
+The system automatically selects the appropriate file based on the active language. Language codes are structured to represent the language and optional regional variations, such as `en` for English or `en-US` for American English.
+
+If a translation is missing in the most specific file (e.g., `translations_de_DE.properties`), the system gracefully falls back to a less specific file (e.g., `translations_de.properties`). If no match is found, it defaults to the base file (`translations.properties`), ensuring the application remains functional even when translations are incomplete.
+
+== Use the `translate` Function
+
+The `translate` function retrieves translated strings based on the active language. Those strings must be marked with the `key` tag, so that Hilla can identify them and include in the right chunk when building the application for production.
+
+[source,tsx]
+----
+import { key, translate } from '@vaadin/hilla-react-i18n';
+
+return <div>{translate(key`addresses.form.city.label`)}</div>;
+----
+
+If a translation is missing, the key is shown as-is.
+
+== React Integration
+
+i18n is deeply integrated into the reactive programming model of Hilla. Components automatically update when the language changes. Signal-based reactivity (`useSignalEffect`, `useComputed`) works seamlessly.
+
+Example using computed signals:
+
+[source,tsx]
+----
+import { useComputed } from '@vaadin/hilla-react-signals';
+import { key, translate } from '@vaadin/hilla-react-i18n';
+
+function OrderSummary({ itemCount }: { itemCount: number }) {
+  const orderMessage = useComputed(() => {
+    if (itemCount === 0) {
+      return translate(key`order.empty`);
+    } else {
+      return translate(key`order.details`, { count: itemCount });
+    }
+  });
+
+  return <div>{orderMessage.value}</div>;
+}
+----
+
+You can also show placeholders before i18n is initialized:
+
+[source,tsx]
+----
+{i18n.initialized.value ? <ActualContent /> : <LoadingSpinner />}
+----
+
+== File Router Integration
+
+The file router allows you to define a <<routing#customizing-routes,configuration>> for each view. This configuration contains elements that are good targets for translation, such as the page title and the menu link title.
+
+Because translation keys need to be discoverable by the build system, use the `key` tag to mark these elements:
+
+[source,tsx]
+.`src/main/frontend/views/about.tsx`
+----
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import { key } from '@vaadin/hilla-react-i18n';
+
+export default function AboutView() {
+  return (
+    /* ... */
+  );
+}
+
+export const config: ViewConfig = {
+  title: key`about.title`,
+  menu: {
+    title: key`about.menuTitle`,
+  },
+};
+----
+
+When creating the menu, use the `translateDynamic` function to retrieve translated values. Unlike `translate`, `translateDynamic` does not require the `key` tag and returns a `Signal` instead of a string.
+
+[source,tsx]
+----
+import { i18n } from '@vaadin/hilla-react-i18n';
+
+{createMenuItems().map(({ to, title, icon }) => (
+  <SideNavItem path={to} key={to}>
+    {icon ? <Icon src={icon} slot="prefix"></Icon> : <></>}
+    {i18n.translateDynamic(title)}
+  </SideNavItem>
+))}
+----
+
+A similar approach can be used for the page title.
+
+If the value passed to `translateDynamic` is not a translation key, a server call is made to retrieve the translation. To avoid performance issues, use `translateDynamic` only with known keys. If the received string is a key, `translateDynamic` behaves like `translate` and returns the translation efficiently.
+
+== Dynamically Changing the Language
+
+You can switch the language at runtime to adapt to user preferences.
+
+[source,typescript]
+----
+i18n.setLanguage('de-DE');
+----
+
+== ICU Message Format Support
+
+Hilla's i18n system supports the International Components for Unicode (ICU) Message Format, enabling advanced translation scenarios like pluralization, selection, and number/date formatting.
+
+Example in `translations.properties`:
+
+[source,properties]
+----
+messages.count=You have {count, plural, one {# message} other {# messages}}.
+----
+
+Usage example:
+
+[source,typescript]
+----
+translate(key`messages.count`, { count: 5 }); // Output: "You have 5 messages."
+----
+
+Supported ICU features include:
+
+- dynamic number and date formatting;
+- plural forms;
+- gender and value-based selections;
+- escaping special characters.
+
+== Hot Module Replacement (HMR) in Development
+
+During development, translation files update automatically through Hot Module Replacement (HMR). No manual reload is needed: when translations change, they are automatically fetched and applied.
+
+With these tools, building responsive and adaptable multilingual applications with Hilla becomes intuitive and efficient.

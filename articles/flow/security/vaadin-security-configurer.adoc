@@ -1,0 +1,395 @@
+---
+title: Vaadin Security Configurer
+page-title: How to use Vaadin Security Configurer
+description: How to use VaadinSecurityConfigurer to configure security in a Vaadin Flow application using built-in security helpers with Spring Boot.
+meta-description: Learn how to use VaadinSecurityConfigurer to configure security in a Vaadin Flow application with Spring Boot using built-in security helpers.
+order: 20
+---
+
+[#configurer]
+=== [since:com.vaadin:vaadin@V24.8]#VaadinSecurityConfigurer#
+
+==== Overview
+
+`VaadinSecurityConfigurer` is a Spring Security HTTP configurer specifically designed for Vaadin applications.
+It provides built-in customizers to configure security settings for Flow and Hilla by integrating with Spring Security and specialized methods to handle view access control and default security workflows in Vaadin applications.
+This configurer follows Spring Security's recommended patterns for security configuration and allows for modular, composable security customization.
+
+==== Usage
+
+The `VaadinSecurityConfigurer` can be used in a Spring Security configuration class to set up security for Vaadin applications:
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(MyLoginView.class);
+        }).build();
+    }
+}
+----
+
+The `VaadinAwareSecurityContextHolderStrategyConfiguration` is imported manually to ensure that the [classname]`VaadinSession`-based security context holder is initialized.
+
+==== Applied Configurers
+
+The `VaadinSecurityConfigurer` applies several other Spring Security configurers to set up the security filter chain:
+
+* `FormLoginConfigurer` — If a login view is set with `loginView(Class)` (or overloads)
+* `OAuth2LoginConfigurer` — If a login page for OAuth2 authentication is set with `oauth2LoginPage(String)` (or overloads)
+* `CsrfConfigurer` — To allow, internal framework requests (can be disabled)
+* `LogoutConfigurer` — To configure logout handlers for Vaadin applications (can be disabled)
+* `RequestCacheConfigurer` — To set a request cache designed for Vaadin applications (can be disabled)
+* `ExceptionHandlingConfigurer` — To configure proper exception handling for Vaadin applications (can be disabled)
+* `AuthorizeHttpRequestsConfigurer` — To permit internal framework requests and other public endpoints (can be disabled)
+
+==== Shared Objects
+
+The following beans are shared by this configurer (if not already shared):
+
+* `RequestUtil` — Utility class for request-based security checks
+* `AuthenticationContext` — Provides information about the current logged-in user and its roles
+* `NavigationAccessControl` — Entry point for navigation access control
+* `VaadinRolePrefixHolder` — Holds role prefix accessible outside an active request
+* `VaadinDefaultRequestCache` — A request cache implementation which ignores requests that are not for routes
+* `VaadinSavedRequestAwareAuthenticationSuccessHandler` — A strategy that uses an available VaadinSession for retrieving the security context
+
+==== Configuration Methods
+
+===== Login View Configuration
+
+[source,java]
+----
+public VaadinSecurityConfigurer loginView(Class<? extends Component> loginView)
+----
+
+Configures the login view for use in a Flow application. The provided login view class must be annotated with `@Route`.
+
+[source,java]
+----
+public VaadinSecurityConfigurer loginView(Class<? extends Component> loginView, String logoutSuccessUrl)
+----
+
+Configures the login view for use in a Flow application and the logout success URL.
+
+[source,java]
+----
+public VaadinSecurityConfigurer loginView(String loginView)
+----
+
+Configures the login view for use in a Hilla application. This is used when your application uses a Hilla-based login view that is available at the given path.
+
+[source,java]
+----
+public VaadinSecurityConfigurer loginView(String loginView, String logoutSuccessUrl)
+----
+
+Configures the login view for use in a Hilla application and the logout success URL.
+
+===== OAuth2 Configuration
+
+[source,java]
+----
+public VaadinSecurityConfigurer oauth2LoginPage(String oauth2LoginPage)
+----
+
+Configures the login page for OAuth2 authentication. If using Spring's OAuth2 client, this should be set to Spring's internal redirect endpoint `/oauth2/authorization/{registrationId}` where `{registrationId}` is the ID of the OAuth2 client registration.
+
+[source,java]
+----
+public VaadinSecurityConfigurer oauth2LoginPage(String oauth2LoginPage, String postLogoutRedirectUri)
+----
+
+Configures the login page for OAuth2 authentication and the post-logout redirect URI.
+
+===== Logout Configuration
+
+[source,java]
+----
+public VaadinSecurityConfigurer logoutSuccessHandler(LogoutSuccessHandler logoutSuccessHandler)
+----
+
+Configures the handler for a successful logout. This overrides the default handler configured automatically with either `loginView(Class)` or `oauth2LoginPage(String)` (and their overloads).
+
+[source,java]
+----
+public VaadinSecurityConfigurer addLogoutHandler(LogoutHandler logoutHandler)
+----
+
+Adds a `LogoutHandler` to the list of logout handlers.
+
+===== Feature Toggles
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableCsrfConfiguration(boolean enableCsrfConfiguration)
+----
+
+Enables or disables automatic CSRF configuration (enabled by default). This configurer will automatically configure Spring's CSRF filter to allow Vaadin internal framework requests to be properly processed.
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableLogoutConfiguration(boolean enableLogoutConfiguration)
+----
+
+Enables or disables automatic logout configuration (enabled by default). This configurer will automatically configure logout behavior to work properly with Flow and Hilla.
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableRequestCacheConfiguration(boolean enableRequestCacheConfiguration)
+----
+
+Enables or disables automatic configuration of the request cache (enabled by default). This configurer will automatically configure the request cache to work properly with Vaadin's internal framework requests.
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableExceptionHandlingConfiguration(boolean enableExceptionHandlingConfiguration)
+----
+
+Enables or disables automatic configuration of exception handling (enabled by default). This configurer will automatically configure exception handling to work properly with Flow and Hilla.
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableAuthorizedRequestsConfiguration(boolean enableAuthorizedRequestsConfiguration)
+----
+
+Enables or disables automatic configuration of authorized requests (enabled by default). This configurer will automatically configure authorized requests to permit requests to anonymous Flow and Hilla views, and static assets.
+
+[source,java]
+----
+public VaadinSecurityConfigurer enableNavigationAccessControl(boolean enableNavigationAccessControl)
+----
+
+Enables or disables configuration of `NavigationAccessControl`. `NavigationAccessControl` is enabled by default.
+
+===== Request Matchers
+
+[source,java]
+----
+public VaadinSecurityConfigurer anyRequest(Consumer<AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl> anyRequestAuthorizeRule)
+----
+
+Configures the access rule for any request not matching other configured rules. The default rule is to require authentication, which is the equivalent of passing `AuthorizedUrl::authenticated()` to this method.
+
+[source,java]
+----
+public RequestMatcher defaultPermitMatcher()
+----
+
+Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific matchers, including those for framework internal requests, anonymous endpoints, allowed Hilla views, anonymous routes, custom web icons, and default security configurations.
+
+==== Examples
+
+===== Basic Configuration
+
+[classname]`VaadinSecurityConfigurer` exposes a factory method [methodname]`vaadin` that creates a new instance of the `VaadinSecurityConfigurer`:
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        }).build();
+    }
+}
+----
+
+===== Multiple Filter Chains
+
+To configure multiple filter chains, use `@Order` annotation to specify the order of the filter chains. The lower the order value, the higher the priority of the filter chain.
+
+[classname]`VaadinSecurityConfigurer` should be used at most in one filter chain. Using it in multiple chains may behave in an unexpected ways, e.g. login view being overwritten in [classname]`NavigationAccessControl`.
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Order(1)
+    @Bean
+    SecurityFilterChain privateFilterChain(HttpSecurity http) throws Exception {
+        return http.securityMatcher("/private/**")
+                .with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+                    configurer.loginView(LoginView.class);
+                }).build();
+    }
+
+    @Order(0)
+    @Bean
+    SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+        return http.securityMatcher("/public/**")
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest(AuthorizedUrl::permitAll);
+                }).build();
+    }
+}
+----
+
+Example of two separate security filters: one for handling stateless Spring Boot APIs with token-based authentication, and another for a stateful Vaadin web application with login view.
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfigurationAPI {
+
+    private final UserDetailsService userDetailsService;
+    private final AuthTokenFilter authTokenFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    @Order(0)
+    public SecurityFilterChain securityFilterApi(HttpSecurity http) throws Exception {
+        HttpSecurity httpSecurity = http
+                .securityMatcher("/api/**")
+                .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/login").anonymous()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/**").authenticated());
+
+        http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return httpSecurity.build();
+    }
+}
+
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Order(1)
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        }).build();
+    }
+}
+----
+
+===== Custom Authorization Rules
+
+In Spring Security, *Custom Authorization Rules* are developer-defined rules that control who can access certain HTTP routes or resources. In Vaadin, they complement the access control already applied to views through annotations like `@PermitAll` or `@RolesAllowed`.
+
+====== Use Cases
+
+- Protect REST endpoints that are not part of Vaadin navigation.
+- Define public routes that don’t require authentication (`/public/**`).
+- Restrict specific areas based on roles (`/admin-only/**`).
+- Allow access to error pages without authentication (`/error`).
+
+====== How It Works With Vaadin
+
+Vaadin uses annotations to control access to views at the navigation level, while Spring Security applies these *Custom Authorization Rules* at the HTTP request level. Both layers work together to ensure a secure application.
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin-only/**").hasAnyRole("ADMIN")
+                .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/error").permitAll());
+
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class)
+                    .logoutSuccessHandler(this::onLogoutOnNonVaadinUrl)
+                    .addLogoutHandler((request, response, authentication) -> {
+                        // Custom logout logic
+                    });
+        });
+
+        return http.build();
+    }
+}
+----
+
+===== Disabling Features
+
+The `VaadinSecurityConfigurer` provides some security features enabled by
+default to ensure smooth integration between Vaadin and Spring Security.
+In certain scenarios, you may disable these defaults to apply your own
+custom security configuration.
+
+====== Features That Can Be Disabled
+
+- **CSRF Configuration** (`enableCsrfConfiguration(false)`):  
+  By default, the configurer automatically sets up Spring Security’s CSRF
+  filter so that Vaadin internal framework requests (such as UIDL, heartbeat,
+  and push) are processed without issues.  
+  Disabling this means you will need to handle CSRF configuration yourself,
+  ensuring that internal Vaadin requests are not blocked.
+
+- **Navigation Access Control** (`enableNavigationAccessControl(false)`):  
+  Vaadin enables `NavigationAccessControl` by default to check access
+  annotations (such as `@PermitAll` or `@RolesAllowed`) when navigating
+  between views.  
+  Disabling this means Vaadin will no longer enforce annotation-based
+  navigation security, and you will need to implement your own access control
+  logic for view navigation.
+
+====== When To Disable
+
+You should only disable these features if:
+
+- You have a clear, secure, and tested replacement for the default behavior.
+
+- You understand the implications of removing these protections.
+
+- Your application has special requirements that conflict with the defaults.
+
+In most applications, keeping these features enabled is the recommended and
+safest option.
+
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class)
+                    .enableCsrfConfiguration(false)
+                    .enableNavigationAccessControl(false);
+        }).build();
+    }
+}
+----

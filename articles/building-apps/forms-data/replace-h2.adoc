@@ -1,0 +1,311 @@
+---
+title: Replace H2
+page-title: How to replace H2 with PostgreSQL | Vaadin
+description: Learn how to replace the H2 database with PostgreSQL.
+meta-description: Learn how to replace the H2 database with PostgreSQL in your Vaadin application, using Testcontainers and proper configuration for development and testing.
+order: 40
+---
+
+
+= Replace H2
+:toclevels: 2
+
+Many Spring Boot applications start with H2 because it's lightweight and easy to configure. However, you typically don't run H2 in production. Switching to your production database early in development helps catch compatibility issues sooner and lets you leverage database-specific features for performance.
+
+This guide teaches you how to replace H2 with PostgreSQL, although the same principle can be applied to other databases such as MySQL, Oracle, and Microsoft SQL Server. A hands-on mini-tutorial at the end helps you apply these concepts in a real Vaadin application.
+
+
+== Replace Maven Dependencies
+
+Start by removing the H2 dependency from your Maven `pom.xml`, and replace it with the appropriate driver for your production database. For PostgreSQL, you should replace it with this:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+----
+
+If you are using <<add-flyway#,Flyway migrations>> -- which you should at this point -- you also need to add the correct Flyway database dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-database-postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+----
+
+This is needed because Flyway requires a separate module to understand how to handle vendor-specific features in PostgreSQL.
+
+
+== Add Testcontainers
+
+When using H2, integration tests typically connect to an in-memory database. After replacing H2 with a production-like database such as PostgreSQL, existing tests may fail because they no longer have a database to connect to. A robust solution to this is https://testcontainers.com/[Testcontainers].
+
+Testcontainers is an open-source library that provides temporary, disposable instances of databases and other infrastructure components using Docker containers. You can configure your tests to spin up a containerized PostgreSQL instance, connect to it, run the tests, and tear it down automatically.
+
+Spring Boot offers first-class support for Testcontainers. This guide covers using it with a PostgreSQL container. For other use cases, see the https://docs.spring.io/spring-boot/reference/testing/testcontainers.html[Spring Boot documentation].
+
+.Docker required
+[IMPORTANT]
+Testcontainers requires Docker. Ensure that Docker is installed and running before executing your tests.
+
+
+=== Add Maven Dependencies
+
+To use PostgreSQL with Testcontainers in your project, add the following test dependencies to your `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-testcontainers</artifactId> <!--1-->
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>junit-jupiter</artifactId> <!--2-->
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>postgresql</artifactId> <!--3-->
+    <scope>test</scope>
+</dependency>
+----
+<1> Spring Boot integration for Testcontainers. Automatically detects containers and configures service connections.
+<2> JUnit Jupiter support for Testcontainers.
+<3> PostgreSQL support for Testcontainers.
+
+
+=== Update Integration Tests
+
+To make your tests use Testcontainers, you need to configure a *service connection* to a PostgreSQL container. A service connection tells Spring Boot to automatically connect to a containerized service, like a database, instead of using a manually configured URL. It takes precedence over any connection-related configuration properties.
+
+Define the container in a separate `@TestConfiguration` class:
+
+[source,java]
+----
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+
+    @Bean // <1>
+    @ServiceConnection // <2>
+    public JdbcDatabaseContainer<?> postgresContainer() {
+        return new PostgreSQLContainer<>("postgres:17-alpine"); // <3>
+    }
+}
+----
+<1> Configures the container as a Spring bean.
+<2> Informs Spring Boot that this bean provides a service that can be connected to.
+<3> Specifies the PostgreSQL Docker image to use.
+
+Then, import this configuration in your test class:
+
+[source,java]
+----
+// tag::snippet[]
+@Import(TestcontainersConfiguration.class)
+// end::snippet[]
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+class MyDatabaseIT {
+    // (Test methods)
+}
+----
+
+When you run the integration test, Spring Boot starts up the necessary containers, connects to them, and automatically wires the required configuration into your `ApplicationContext`.
+
+
+=== Run the Application with Testcontainers
+
+You can run your entire application using Testcontainers to simulate external services. This is helpful during early development, when starting with a clean database on each run is beneficial.
+
+Create a new test application class in the root application package under `src/test/java`:
+
+[source,java]
+----
+package com.example.application;
+
+import org.springframework.boot.SpringApplication;
+
+public class TestApplication {
+
+    public static void main(String[] args) {
+        SpringApplication
+            .from(Application::main) // <1>
+            .with(TestcontainersConfiguration.class) // <2>
+            .run(args);
+    }
+}
+----
+<1> Delegates to the application's main method.
+<2> Registers `TestcontainersConfiguration` for service connections.
+
+You can run the test application from your IDE, just like the main application class.
+
+
+== Start a Development Database
+
+After getting integration tests to pass, you'll likely want to run the application itself against a persistent local PostgreSQL instance. While Testcontainers can also be used to run the application, using a standalone database allows data to persist across restarts and more closely resembles a production environment.
+
+To start a local PostgreSQL database using Docker, run the following command:
+
+[source,terminal]
+----
+docker run --name my-development-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres:17-alpine 
+----
+
+To reset the database, stop and remove the container:
+
+[source,terminal]
+----
+docker stop my-development-postgres 
+docker rm my-development-postgres
+----
+
+Then, recreate the container and restart your application.
+
+
+== Update Application Configuration
+
+To run your application without Testcontainers, you need to configure it to connect to the local development database. You typically do this in the `src/main/resources/application.properties` file. Because `application.properties` is often committed to source control, *it should not contain sensitive credentials or any unsafe production settings*, such as enabling Hibernate to drop and recreate the schema.
+
+The credentials of the local development database should never be used anywhere else than on the local machine. Therefore they can be checked into source control. Also, if the application accidentally starts up with them in production, it can't do any harm since the production database would use different credentials (and probably a different URL).
+
+In production, the real credentials would come from a different configuration file or a vault. Because of this, you can use `${..}` placeholders for the real credentials, and use the local development credentials as default values. For production, use Spring profiles or external configuration sources to override these default values:
+
+.application.properties
+[source,properties]
+----
+spring.datasource.url=${secrets.datasource.url:jdbc:postgresql://localhost/postgres}
+spring.datasource.username=${secrets.datasource.username:postgres}
+spring.datasource.password=${secrets.datasource.password:mysecretpassword}
+----
+
+In the example above, Spring would read the real database username from the `secrets.datasource.username` property. If that property does not exist, it reverts to `postgres`. The same pattern is used for the other properties.
+
+
+=== Update Flyway Configuration
+
+In production, it is good practice to use separate database user accounts for Data Definition Language (DDL) and Data Modification Language (DML) queries. In practice, this means Flyway should use a different account than the rest of the application. However, in development, it is often easier to use the same account for both. Again, you can use `${..}` placeholders to achieve this:
+
+.application.properties
+[source,properties]
+----
+spring.flyway.user=${secrets.flyway.user:${spring.datasource.username}}
+spring.flyway.password=${secrets.flyway.password:${spring.datasource.password}}
+----
+
+In this example, Spring would read the Flyway database username from the `secrets.flyway.user` property. If that property does not exist, it reverts to `spring.datasource.username`.
+
+
+[.collapsible-list]
+== Try It
+
+In this tutorial, you'll replace H2 with PostgreSQL in a real Vaadin application.
+
+.Set Up the Project
+[%collapsible]
+====
+Use the same project from the <<add-flyway#,Add Flyway>> mini-tutorial. Complete that tutorial before proceeding with this one.
+====
+
+.Update Database Dependencies
+[%collapsible]
+====
+The walking skeleton already comes with PostgreSQL configured. However, when run locally it still uses H2.
+
+In `pom.xml`, locate the `h2-local-development` profile:
+
+[source,xml]
+----
+<profile>
+    <!--
+    ...
+     -->
+    <activation>
+        <activeByDefault>true</activeByDefault>
+    </activation>
+    <id>h2-local-development</id>
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</profile>
+----
+
+Delete this profile. The application is now using PostgreSQL everywhere.
+====
+
+
+.Run the Test Application
+[%collapsible]
+====
+Open `TestApplication` in your IDE and run its `main()` method. The application should start up, using a PostgreSQL database managed by Testcontainers.
+
+Make sure everything works as before, then stop the application.
+====
+
+
+.Start Development Database
+[%collapsible]
+====
+Open a terminal and run the following command:
+
+[source,terminal]
+----
+docker run --name my-development-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres:17-alpine 
+----
+
+[NOTE]
+If you already have PostgreSQL running on your machine, this won't work as port 5432 is already in use. If port 5432 is in use, map it to a different host port -- such as `-p 5433:5432` -— to avoid conflicts.
+====
+
+.Update Application Configuration
+[%collapsible]
+====
+Open `application.properties` and add the following lines:
+
+[source,properties]
+----
+spring.datasource.url=${secrets.datasource.url:jdbc:postgresql://localhost/postgres}
+spring.datasource.username=${secrets.datasource.username:postgres}
+spring.datasource.password=${secrets.datasource.password:mysecretpassword}
+spring.flyway.user=${secrets.flyway.user:${spring.datasource.username}}
+spring.flyway.password=${secrets.flyway.password:${spring.datasource.password}}
+----
+
+[NOTE]
+If you mapped PostgreSQL to a different port than 5432, you have to update the URL accordingly (e.g., `jdbc:postgresql://localhost:5433/postgres`).
+====
+
+.Test the Application
+[%collapsible]
+====
+Now <<{articles}/getting-started/run#,run>> the application. It should start up normally. Add some tasks, then restart the application. The tasks should still be there.
+====
+
+.Final Thoughts
+[%collapsible]
+====
+You've now replaced the H2 database with PostgreSQL in a Vaadin application. In a real-world application, review your existing Flyway migrations to ensure all SQL statements are compatible with PostgreSQL.
+====

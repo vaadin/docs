@@ -1,8 +1,9 @@
 package com.vaadin.demo.component.formlayout;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -15,23 +16,20 @@ public class FormLayoutBasic extends Div {
         // tag::snippet[]
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
-        TextField username = new TextField("Username");
+        EmailField email = new EmailField("Email address");
         PasswordField password = new PasswordField("Password");
         PasswordField confirmPassword = new PasswordField("Confirm password");
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(firstName, lastName, username, password,
-                confirmPassword);
-        formLayout.setResponsiveSteps(
-                // Use one column by default
-                new ResponsiveStep("0", 1),
-                // Use two columns, if layout's width exceeds 500px
-                new ResponsiveStep("500px", 2));
-        // Stretch the username field over 2 columns
-        formLayout.setColspan(username, 2);
+        formLayout.setAutoResponsive(true);
+        formLayout.addFormRow(firstName, lastName);
+        formLayout.addFormRow(email);
+        formLayout.addFormRow(password, confirmPassword);
         // end::snippet[]
 
-        add(formLayout);
+        formLayout.setWidthFull();
+        SplitLayout splitLayout = new SplitLayout(formLayout, new Div());
+        add(splitLayout);
     }
 
     public static class Exporter extends DemoExporter<FormLayoutBasic> { // hidden-source-line
