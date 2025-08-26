@@ -11,7 +11,7 @@ function Example() {
         for="cvv-field"
         position="top"
         trigger={['hover', 'focus']}
-        accessibleNameRef="cvv-heading"
+        aria-labelledby="cvv-heading"
         theme="arrow"
       >
         <h3 id="cvv-heading" style={{ margin: 0, fontSize: '1rem' }}>

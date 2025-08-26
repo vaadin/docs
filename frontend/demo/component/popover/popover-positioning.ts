@@ -6,7 +6,6 @@ import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { PopoverPosition } from '@vaadin/popover';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -52,17 +51,9 @@ export class Example extends LitElement {
         ></vaadin-select>
       </vaadin-vertical-layout>
       <!-- tag::snippet[] -->
-      <vaadin-popover
-        for="target"
-        .position="${this.position}"
-        ${popoverRenderer(this.popoverRenderer)}
-      ></vaadin-popover>
+      <vaadin-popover for="target" .position="${this.position}"> Popover content </vaadin-popover>
       <!-- end::snippet[] -->
     `;
-  }
-
-  popoverRenderer() {
-    return html`Popover content`;
   }
 
   onPositionChange(event: SelectChangeEvent) {

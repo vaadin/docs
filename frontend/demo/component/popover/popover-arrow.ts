@@ -5,7 +5,6 @@ import '@vaadin/popover';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('popover-arrow')
@@ -23,16 +22,10 @@ export class Example extends LitElement {
         <vaadin-icon icon="lumo:bell"></vaadin-icon>
       </vaadin-button>
       <!-- tag::snippet[] -->
-      <vaadin-popover
-        for="target"
-        theme="arrow"
-        ${popoverRenderer(this.popoverRenderer)}
-      ></vaadin-popover>
+      <vaadin-popover for="target" theme="arrow">
+        <div>No new notifications</div>
+      </vaadin-popover>
       <!-- end::snippet[] -->
     `;
-  }
-
-  popoverRenderer() {
-    return html`<div>No new notifications</div>`;
   }
 }
