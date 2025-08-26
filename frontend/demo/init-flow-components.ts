@@ -11,7 +11,6 @@
 import '@vaadin/flow-frontend/dndConnector.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // Flow component specific modules
-import '@vaadin/flow-frontend/cookieConsentConnector.js';
 import '@vaadin/flow-frontend/comboBoxConnector.js';
 import '@vaadin/flow-frontend/contextMenuConnector.js';
 import '@vaadin/flow-frontend/contextMenuTargetConnector.js';
