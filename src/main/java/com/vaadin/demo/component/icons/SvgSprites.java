@@ -16,11 +16,8 @@ public class SvgSprites extends Div {
         layout.addClassName("items-center");
 
         // tag::snippet[]
-        DownloadHandler iconHandler = DownloadHandler.forClassResource(
-                getClass(), "/icons/solid.svg", "solid.svg");
-
-        SvgIcon codeBranchIcon = new SvgIcon(iconHandler, "code-branch");
-        SvgIcon userIcon = new SvgIcon(iconHandler, "user");
+        SvgIcon codeBranchIcon = new SvgIcon("/icons/solid.svg", "code-branch");
+        SvgIcon userIcon = new SvgIcon("/icons/solid.svg", "user");
         // end::snippet[]
 
         layout.add(codeBranchIcon, userIcon);
