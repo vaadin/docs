@@ -40,6 +40,15 @@ To create a custom field:
 These methods are invoked automatically when the value changes, either on the client side (`generateModelValue`)
 or on the server side (`setPresentationValue`).
 
+A Custom Field automatically tracks value changes from its internal input elements
+(whether attached directly or nested inside other components).
+This means you *usually* don't need to add additional listeners to synchronize the field value.
+You must ensure that `generateModelValue()` correctly gathers all relevant changes
+to compute the field's value.
+
+[WARNING]
+Be mindful that automatic tracking of value changes doesn't apply to all components, for example, `Grid` only provides selection change events.
+
 ==== Example: Dice Field
 
 The following example demonstrates a custom field consisting of a "Roll" button
@@ -89,8 +98,7 @@ This topic is outside the scope of this guide.
 See the article on <<{articles}/flow/binding-data/field#,Creating a Component that Has a Value>> for more details.
 
 [IMPORTANT]
-If your `AbstractField` uses client-side code imported with `@JsModule` and uses Vaadin components like `ComboBox` or even is wrapped in a client-side version of the `CustomField` (`vaadin-custom-field`), you may need add `@Uses({component}.class)` annotation (for example `@Uses(ComboBox.class)`, `@Uses(CustomField.class)` ).
-Without this, bundle optimization may exclude these components, causing your fields to fail to render.
+If your `AbstractField` is not displaying some Vaadin component properly, you may need add `@Uses({component}.class)` annotation (for example `@Uses(ComboBox.class)`, `@Uses(CustomField.class)` ), to prevent <<{articles}/flow/production/production-build#bundle-component-loading-optimizations,Bundle Optimization>> from not including their resources.
 
 == Choosing Internal Components
 
@@ -122,7 +130,7 @@ For example, if `invalid` state is irrelevant to your custom field, you don't ne
 
 == Data Binding
 
-Values in a Custom Field can be handled in two primary ways:
+Values in a Custom Field are usually handled in one of two ways:
 
 * Direct interaction with the Custom Field instance
 * Integration through Binder
@@ -133,13 +141,6 @@ For standalone use cases (e.g., filtering content in the UI), direct interaction
 
 Both approaches are described below.
 
-[WARNING]
-A Custom Field automatically tracks value changes from its internal input elements
-(whether attached directly or nested inside other components).
-This means you *usually* don't need to add additional listeners to synchronize the field value.
-You must ensure that `generateModelValue()` correctly gathers all relevant changes
-to compute the field's value.
-Be mindful that this behavior doesn't apply to all components, for example, `Grid` only provides selection change events.
 
 === Direct Interaction
 
@@ -174,9 +175,14 @@ myCustomField.addValueChangeListener(event -> {
 });
 ```
 
+In the example above, whenever the value of `myCustomField` changes, the listener first checks whether the change originated from the client.
+This ensures that server-side updates (such as `myCustomField.setValue(..)`) are ignored, since in most cases only user-initiated changes are relevant.
+
+If the change is from the client, the new value from the event is used to update `fullNameDiv`, indicating that the name has been updated.
+
 === Using Binder
 
-Binding a Custom Field works the same way as with built-in components like `TextField` or `ComboBox`. If you're familiar with Binder setup and validation, the process should feel identical.
+Binding a Custom Field works the same way as with built-in components like `TextField` or `ComboBox`. If you're familiar with <<{articles}/building-apps/forms-data/add-form/fields-and-binding#,binding>> and <<{articles}/building-apps/forms-data/add-form/validation#,form validation>>, the process should feel identical.
 
 Example binding:
 ```java
@@ -213,15 +219,20 @@ To implement this, you should:
   ** `label.setFor(Component)` (direct reference)
   ** `label.setFor(String)` (by ID)
 
-Inputs should have a unique ID set via input.setId(String).
+You should use `input.setId(String)` to assign a unique ID to your input element.
+The ID must be unique across the entire page and is required to properly link a label to its input.
+A common approach is to use a string prefix combined with a random number generator to ensure uniqueness.
 
 If your Custom Field contains multiple inputs, you have two options:
 
 * Provide an individual `NativeLabel` for each input.
-* Or assign a shared label, using the `aria-labelledby` attribute on each input
+* Or assign a shared label, using the https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA[ARIA] `aria-labelledby` attribute on each input
 to reference a common label ID.
 
 ==== Example: Custom Label Handling
+
+The following example demonstrates how to create a Custom Field with a custom label and a simple input field.
+It also shows how the label is linked to the input.
 ```java
 public class MyCustomField extends CustomField<Integer> {
     // ...
@@ -274,10 +285,17 @@ If you need a completely custom indicator, override the methods mentioned above.
 When overriding `setRequiredIndicatorVisible(..)`, make sure to also call `super.setRequiredIndicatorVisible(..)`.
 This ensures that accessibility related features remain intact.
 
-Additionally, add `aria-hidden="true"` to your custom indicator so that it isn't announced twice by screen readers.
-
+Additionally, when creating the custom indicator, add `aria-hidden="true"` so that screen readers do not announce it twice.
+You should also mark it as invisible by default, since the required indicator should only become visible after calling `myCustomField.setRequiredIndicatorVisible(true)`.
 
 ```java
+private Div createRequiredIndicator() {
+    var indicator = new Div("R");
+    indicator.setVisible(false); // Initially should be invisible
+    indicator.getElement().setAttribute("aria-hidden", "true");
+    return indicator;
+}
+
 @Override
 public void setRequiredIndicatorVisible(boolean requiredIndicatorVisible) {
     super.setRequiredIndicatorVisible(requiredIndicatorVisible);
@@ -328,6 +346,9 @@ Override the following methods:
 * `setInvalid(boolean)` — to set both the outer and internal states,
 * `getErrorMessage()` — to return the internal field's error message,
 * `setErrorMessage(String)` — to set the internal field's error message.
+
+The following example demonstrates a Custom Field that includes a button and a text field.
+In this case, the invalid state and error message are redirected to the text field.
 
 ```java
 public class ButtonTextFieldCustomField extends CustomField<String> {
@@ -383,7 +404,8 @@ To implement this:
 
 * Use a component (typically a `Div`) to display the error message.
 * Assign it a unique `id` (for example, `"my-custom-field-error-42"`).
- ** You may need to generate a part of it.
+** If the Custom Field is used multiple times on the same page, you will likely need to generate a unique identifier for each instance.
+Otherwise, screen readers may announce the field incorrectly, since the label would point to multiple inputs at once.
 * Link the input to the error element using the `aria-describedby` attribute.
 * Control visibility by overriding `setInvalid(boolean)` to show or hide the message.
 * Always hide the element when valid, and remove the `aria-describedby` attribute.
@@ -433,6 +455,7 @@ Always remove the `aria-describedby` attribute (or error message element referen
 === Internal Validation
 
 Sometimes you may want to perform validation directly inside your Custom Field instead of relying only on external validation.
+For example, if a Custom Field contains multiple inputs and one of them has a value below 0, you may need to display an error directly on that field.
 
 However, this can cause problems if not handled carefully:
 
@@ -630,7 +653,7 @@ For more details on localization in Vaadin, see the <<{articles}/flow/advanced/i
 
 == Accessibility
 
-Ensuring accessibility of a Custom Field can involve addressing multiple issues.
+Ensuring https://developer.mozilla.org/en-US/docs/Web/Accessibility[accessibility] of a Custom Field can involve addressing multiple issues.
 This section highlights the most common cases you may encounter.
 
 === Labels and Input Association
@@ -721,7 +744,11 @@ Now, set up the minimum structure needed for the field to work.
 Each component is initialized in a separate method so that later enhancements
 (such as validation or styling) can be added without cluttering the constructor.
 
+Place it under `src/main/java/<your package>/ui/component`, for example `src/main/java/com/mydomain/myproject/ui/component`.
+
 ```java
+package com.mydomain.myproject.ui.component;
+
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
@@ -804,7 +831,29 @@ public class DurationField extends CustomField<Duration> {
 }
 ```
 
-At this point, if you test the component, you'll find that it works functionally but does not look polished.
+At this point, you can test the field by adding it to an existing view or by creating a new view specifically for it.
+
+In the following example, it is added to the view that was <<{articles}/getting-started/start#generate-a-skeleton,generated>> when the project was created.
+
+```java
+package com.mydomain.myproject.ui.view;
+
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
+
+@Route
+@PermitAll
+public final class MainView extends Main {
+    MainView() {
+        var duration = new DurationField("Duration");
+        add(duration);
+    }
+}
+
+```
+
+If you test the component by entering some valid values in the input fields, you'll find that it works functionally but does not look polished.
 There are some obvious spacing issues, which are addressed in the next step.
 
 ====
@@ -831,6 +880,8 @@ andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.
 Here's the updated version of the DurationField:
 
 ```java
+package com.mydomain.myproject.ui.components;
+
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
@@ -950,15 +1001,19 @@ minutes.setMin(0);
 ```
 
 This covers the internal validation.
-The browser should automatically indicate invalid values and inform the user of the expectations for these inputs.
+The browser automatically indicates invalid values and informs the user of the expected input.
+You can verify this by opening the view containing the `DurationField` in your browser and entering an invalid value in the hours field (for example, `-1`) or the minutes field (for example, `60`).
 
 *Binding with Validators*
 
 The Custom Field can be attached to a Binder to define additional validators.
 
-First, create a DTO class for binding:
+First, create a DTO class for binding.
+DTOs classes usually are separately from the UI code. Place it under `src/main/java/<your package>/data`, for example `src/main/java/com/mydomain/myproject/ui/component`.
 
 ```java
+package com.mydomain.myproject.ui.components;
+
 import java.time.Duration;
 
 public class DurationTutorialDTO {
@@ -974,7 +1029,7 @@ public class DurationTutorialDTO {
 }
 ```
 
-Next, create the binder and bind the field:
+Next, create the binder in the view with the `DurationField` and bind the field:
 
 ``` java
 
@@ -1014,7 +1069,7 @@ binder.forField(duration4)
        .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
 ```
 
-To ensure the invalid state is reflected in the internal fields, override the `setInvalid(boolean)` method:
+To ensure the invalid state is reflected in the internal fields, override the `setInvalid(boolean)` method in the `DurationField`:
 
 ```java
     @Override
@@ -1146,6 +1201,8 @@ public class DurationField extends CustomField<Duration> {
 
 With these changes, the field now supports both internal validation (min/max checks on inputs) and external validation through Binder.
 
+You can verify this by opening the view in your browser and entering an invalid value in the hours field (for example, `-1`) or the minutes field (for example, `60`).
+
 ====
 
 .Step 5 - Localization
@@ -1158,6 +1215,9 @@ The Vaadin way is to create a dedicated class that contains all translatable str
 Start by only including the texts for the components added
 and which don't already have a public API for updating them
 (an alternative approach would be to expose setters directly).
+
+This class can be part of the existing `DurationField` class, or as a separate class.
+For this example, place it under `src/main/java/<your package>/ui/component/i18n`, for example `src/main/java/com/mydomain/myproject/ui/component/i18n`.
 
 ```java
 public class DurationFieldI18n implements Serializable {
