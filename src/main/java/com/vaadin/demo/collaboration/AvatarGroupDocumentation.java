@@ -1,6 +1,8 @@
 package com.vaadin.demo.collaboration;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.UserInfo;
@@ -8,8 +10,6 @@ import com.vaadin.demo.domain.User;
 import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
 
 /**
  * Code snippets used in CollaborationAvatarGroup's reference documentation.
@@ -45,15 +45,18 @@ public class AvatarGroupDocumentation extends VerticalLayout {
     private void imageHandler() {
         // tag::avatar-group-images[]
         avatarGroup.setImageHandler(userInfo ->
-            DownloadHandler.fromInputStream(
-                    event -> {
-                        User userEntity = userService
-                                .findById(userInfo.getId());
-                        byte[] imageBytes = userEntity.getImage();
-                        return new DownloadResponse(new ByteArrayInputStream(imageBytes),
-                                "avatar_" + userInfo.getId() + ".png",
-                                "image/png", imageBytes.length);
-                    })
+            event -> {
+                try {
+                    String url = "https://i.pravatar.cc/40?u=" + userInfo.getId();
+                    event.setFileName("avatar_" + userInfo.getId() + ".jpg");
+                    event.setContentType("image/jpeg");
+                    try (InputStream in = new URL(url).openStream()) {
+                        in.transferTo(event.getOutputStream());
+                    }
+                } catch (IOException e) {
+                    event.getResponse().setStatus(500);
+                }
+            }
         );
         // end::avatar-group-images[]
     }
