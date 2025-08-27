@@ -10,7 +10,6 @@ import { format, subMinutes } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { MessageListItem } from '@vaadin/message-list';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -73,19 +72,17 @@ export class Example extends LitElement {
         for="show-notifications"
         theme="arrow no-padding"
         modal
-        accessible-name-ref="notifications-heading"
+        aria-labelledby="notifications-heading"
         width="300px"
         position="bottom"
-        ${popoverRenderer(this.notificationsRenderer, [
-          this.unreadNotifications,
-          this.allNotifications,
-        ])}
-      ></vaadin-popover>
+      >
+        ${this.renderNotifications(this.unreadNotifications, this.allNotifications)}
+      </vaadin-popover>
       <!-- end::snippet[] -->
     `;
   }
 
-  notificationsRenderer() {
+  renderNotifications(unread: MessageListItem[], all: MessageListItem[]) {
     return html`
       <vaadin-horizontal-layout
         style="align-items: center; padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)"
@@ -101,14 +98,12 @@ export class Example extends LitElement {
           <vaadin-tab id="all-tab">All</vaadin-tab>
         </vaadin-tabs>
         <div tab="unread-tab">
-          ${this.unreadNotifications.length
-            ? html`
-                <vaadin-message-list .items="${this.unreadNotifications}"></vaadin-message-list>
-              `
+          ${unread.length
+            ? html`<vaadin-message-list .items="${unread}"></vaadin-message-list>`
             : html`<div class="no-notifications-msg">No unread notifications</div>`}
         </div>
         <div tab="all-tab">
-          <vaadin-message-list .items="${this.allNotifications}"></vaadin-message-list>
+          <vaadin-message-list .items="${all}"></vaadin-message-list>
         </div>
       </vaadin-tabsheet>
     `;

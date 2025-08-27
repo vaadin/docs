@@ -83,7 +83,7 @@ function Example() {
         modal
         width="340px"
         position="bottom-start"
-        accessibleName="Select a date range"
+        aria-label="Select a date range"
         opened={opened.value}
         onClosed={() => {
           opened.value = false;

@@ -10,7 +10,6 @@ import { formatISO, subMonths, subWeeks, subYears } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DatePickerChangeEvent } from '@vaadin/date-picker';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/generated/theme';
 
@@ -62,44 +61,37 @@ export class Example extends LitElement {
         modal
         width="340px"
         position="bottom-start"
-        accessible-name="Select a date range"
+        aria-label="Select a date range"
         .opened="${this.opened}"
         @closed="${this.onClosed}"
-        ${popoverRenderer(this.popoverRenderer, [this.from, this.to])}
-      ></vaadin-popover>
+      >
+        <vaadin-select
+          label="Common ranges"
+          .items="${this.presets}"
+          placeholder="Select preset"
+          style="width: 100%"
+          .value="${this.range}"
+          @change="${this.onRangeChange}"
+        ></vaadin-select>
+        <vaadin-horizontal-layout theme="spacing-s" style="align-items: baseline">
+          <vaadin-date-picker
+            label="From"
+            style="width: 150px"
+            .value="${this.from}"
+            @change="${this.onFromChange}"
+          ></vaadin-date-picker>
+          <div>−</div>
+          <vaadin-date-picker
+            label="To"
+            style="width: 150px"
+            .value="${this.to}"
+            @change="${this.onToChange}"
+          ></vaadin-date-picker>
+        </vaadin-horizontal-layout>
+      </vaadin-popover>
       <!-- end::snippet[] -->
     `;
   }
-
-  // tag::snippet[]
-  popoverRenderer() {
-    return html`
-      <vaadin-select
-        label="Common ranges"
-        .items="${this.presets}"
-        placeholder="Select preset"
-        style="width: 100%"
-        .value="${this.range}"
-        @change="${this.onRangeChange}"
-      ></vaadin-select>
-      <vaadin-horizontal-layout theme="spacing-s" style="align-items: baseline">
-        <vaadin-date-picker
-          label="From"
-          style="width: 150px"
-          .value="${this.from}"
-          @change="${this.onFromChange}"
-        ></vaadin-date-picker>
-        <div>−</div>
-        <vaadin-date-picker
-          label="To"
-          style="width: 150px"
-          .value="${this.to}"
-          @change="${this.onToChange}"
-        ></vaadin-date-picker>
-      </vaadin-horizontal-layout>
-    `;
-  }
-  // end::snippet[]
 
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'ArrowDown') {
