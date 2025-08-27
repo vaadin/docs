@@ -38,9 +38,6 @@ To implement your own security configuration, create a new configuration class t
 
 [classname]`VaadinSecurityConfigurer` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
@@ -75,45 +72,6 @@ public class SecurityConfig {
 }
 ----
 
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurity {
-
-  private final RouteUtil routeUtil;
-
-  public SecurityConfig(RouteUtil routeUtil) {
-    this.routeUtil = routeUtil;
-  }
-
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    // Set default security policy that permits Hilla internal requests and
-    // denies all other
-    http.authorizeHttpRequests(registry -> registry.requestMatchers(
-            routeUtil::isRouteAllowed).permitAll());
-    super.configure(http);
-    // use a custom login view and redirect to root on logout
-    setLoginView(http, "/login", "/");
-  }
-
-  @Bean
-  public UserDetailsManager userDetailsService() {
-    // Configure users and roles in memory
-    return new InMemoryUserDetailsManager(
-      // the {noop} prefix tells Spring that the password is not encoded
-      User.withUsername("user").password("{noop}user").roles("USER").build(),
-      User.withUsername("admin").password("{noop}admin").roles("ADMIN", "USER").build()
-    );
-  }
-}
-----
-
---
-
 .Never Hard-Coded Credentials
 [WARNING]
 You should never hard-code credentials in an application. The <<{articles}/hilla/lit/guides/security/spring-login#appendix-production-data-sources,Security>> documentation has examples of setting up LDAP or SQL-based user management.
@@ -122,9 +80,6 @@ You should never hard-code credentials in an application. The <<{articles}/hilla
 === Public Views & Resources
 
 Public views need to be added to the configuration in [methodname]`securityFilterChain`. Here's an example of this:
-
-[.example]
---
 
 .`SecurityConfig.java`
 [source,java]
@@ -139,21 +94,6 @@ Public views need to be added to the configuration in [methodname]`securityFilte
     return http.build();
   }
 ----
-
-.`SecurityConfig.java`
-[source,java]
-----
-  <source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(registry -> {
-        registry.requestMatchers(new AntPathRequestMatcher("/public-view")).permitAll(); // custom matcher
-    });
-    super.configure(http);
-  }
-----
-
---
 
 Public resources can be added to the configuration in [methodname]`securityFilterChain` like so:
 
@@ -557,9 +497,6 @@ The example given here of managing users in memory is valid for test application
 The following example demonstrates how to access an SQL database with tables for users and authorities.
 
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
@@ -588,41 +525,9 @@ public class SecurityConfig {
 }
 ----
 
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurity {
-  //...
-
-  @Autowired
-  private DataSource dataSource;
-
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    // Configure users and roles in a JDBC database
-    auth.jdbcAuthentication()
-      .dataSource(dataSource)
-      .usersByUsernameQuery(
-          "SELECT username, password, enabled FROM users WHERE username=?")
-      .authoritiesByUsernameQuery(
-          "SELECT username, authority FROM from authorities WHERE username=?")
-      .passwordEncoder(new BCryptPasswordEncoder());
-  }
-}
-----
-
---
-
-
 === LDAP Authentication
 
 This next example shows how to configure authentication by using an LDAP repository:
-
-[.example]
---
 
 .`SecurityConfig.java`
 [source,java]
@@ -661,32 +566,6 @@ public class SecurityConfig {
 }
 ----
 
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-@Configuration
-public class SecurityConfig extends VaadinWebSecurity {
-  //...
-
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    // Obtain users and roles from an LDAP service
-    auth.ldapAuthentication()
-      .userDnPatterns("uid={0},ou=people")
-      .userSearchBase("ou=people")
-      .groupSearchBase("ou=groups")
-      .contextSource()
-      .url("ldap://localhost:8389/dc=example,dc=com")
-      .and()
-      .passwordCompare()
-      .passwordAttribute("userPassword");
-  }
-}
-----
-
---
 <1> `VaadinSecurityConfigurer` example here configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-embedded[embedded UnboundID LDAP server]. You can also configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-contextsource[LDAP ContextSource] to connect to other LDAP server.
 
 Remember to add the corresponding LDAP client dependency to the project:
