@@ -51,7 +51,7 @@ export class Example extends LitElement {
         ></vaadin-select>
       </vaadin-vertical-layout>
       <!-- tag::snippet[] -->
-      <vaadin-popover for="target" .position="${this.position}"> Popover content </vaadin-popover>
+      <vaadin-popover for="target" .position="${this.position}">Popover content</vaadin-popover>
       <!-- end::snippet[] -->
     `;
   }
