@@ -1,0 +1,1757 @@
+---
+title: Add a Custom Field
+page-title: Create a Custom Field in Flow
+description: Learn how to create a Custom Field in Vaadin Flow.
+meta-description: Guide on how to create a Custom Field in Vaadin Flow.
+section-nav: badge-flow
+order: 6
+---
+
+
+= Creating a Custom Field [badge-flow]#Flow# 
+:toclevels: 2
+
+This page explains the essentials for creating a production-ready custom field,
+along with a step-by-step example that you can follow to build your own.
+
+
+== Custom Fields in Flow
+
+A Custom Field is useful when you want multiple components to behave as a single form field,
+or when you have a component that doesn't support integration with Binder, labels, or helper text.
+In these cases, you can encapsulate the components inside a Custom Field.
+
+Several approaches are available depending on the level of customization required.
+The simplest is to extend the `CustomField` class,
+while more advanced cases may require extending `AbstractField`, `AbstractSinglePropertyField`, or `AbstractCompositeField`.
+
+=== Extending `CustomField`
+
+By extending `CustomField`, you gain built-in support for labels, helper text, error messages,
+and validation state control. These behave consistently with other Vaadin field components.
+
+To create a custom field:
+
+1. Define a class that extends `CustomField` and specify the value type for the combined value of the internal components.
+2. Implement the following key methods:
+* `generateModelValue()`: Computes the field's value from its internal components.
+* `setPresentationValue(T value)`: Updates the internal components with the given value.
+
+These methods are invoked automatically when the value changes, either on the client side (`generateModelValue`)
+or on the server side (`setPresentationValue`).
+
+A Custom Field automatically tracks value changes from its internal input elements
+(whether attached directly or nested inside other components).
+This means you *usually* don't need to add additional listeners to synchronize the field value.
+You must ensure that `generateModelValue()` correctly gathers all relevant changes
+to compute the field's value.
+
+[WARNING]
+Be mindful that automatic tracking of value changes doesn't apply to all components, for example, `Grid` only provides selection change events.
+
+==== Example: Dice Field
+
+The following example demonstrates a custom field consisting of a "Roll" button
+and an `IntegerField` to display and modify the value. Each time the button is clicked,
+a new random value is generated.
+
+```java
+public class SingleDiceCustomField extends CustomField<Integer> {
+    private static final int MIN_VALUE = 1;
+    private static final int MAX_VALUE = 6;
+
+    private final Button button;
+    private final IntegerField input;
+
+    public SingleDiceCustomField() {
+        addClassName("single-dice-custom-field");
+
+        button = new Button("Roll");
+        button.addClickListener(clickEvent -> {
+            setValue(RandomGenerator.getDefault().nextInt(MIN_VALUE, MAX_VALUE + 1));
+        });
+
+        input = new IntegerField();
+        input.setMin(MIN_VALUE);
+        input.setMax(MAX_VALUE);
+
+        var layout = new HorizontalLayout(button, input);
+        add(layout);
+    }
+
+    @Override
+    protected Integer generateModelValue() {
+        return input.getValue();
+    }
+
+    @Override
+    protected void setPresentationValue(Integer value) {
+        input.setValue(value);
+    }
+}
+```
+
+=== Extending `AbstractField`
+
+For finer control than `CustomField` provides, you can extend `AbstractField` or one of its helper classes.
+This topic is outside the scope of this guide.
+See the article on <<{articles}/flow/binding-data/field#,Creating a Component that Has a Value>> for more details.
+
+[IMPORTANT]
+If your `AbstractField` is not displaying some Vaadin component properly, you may need add `@Uses({component}.class)` annotation (for example `@Uses(ComboBox.class)`, `@Uses(CustomField.class)` ), to prevent <<{articles}/flow/production/production-build#bundle-component-loading-optimizations,Bundle Optimization>> from not including their resources.
+
+== Choosing Internal Components
+
+The internal components of a custom field can be any class that extends the `Component` class.
+This includes (but is not limited to):
+
+* <<{articles}/components#,Vaadin components>> such as `TextField`, `DatePicker`, or `Grid`
+* <<{articles}/flow/create-ui/standard-html#,HTML element wrappers>> such as `Input`, `Div`, or `NativeButton`
+* Third-party components from https://vaadin.com/directory[Vaadin Directory] add-ons
+
+=== Using Components
+
+Vaadin components are usually the simplest choice.
+They come with built-in styles and behaviors for form fields, which makes it straightforward to:
+
+* Propagate states such as `invalid`, `readonly`, and `disabled`
+* Pass through text values such as helper text and error messages
+
+This ensures your custom field behaves consistently with other Vaadin form fields.
+
+=== Using HTML Element Wrappers
+
+HTML element wrappers (like `Input` or `Div`) give you more flexibility, but they require more careful design.
+Unlike Vaadin components, these elements don't automatically handle states or styles.
+You may need to manually implement how your custom field supports states such as `invalid` or `readonly`.
+
+That said, depending on your application design, not all states need to be supported.
+For example, if `invalid` state is irrelevant to your custom field, you don't need to add logic for handling that state.
+
+== Data Binding
+
+Values in a Custom Field are usually handled in one of two ways:
+
+* Direct interaction with the Custom Field instance
+* Integration through Binder
+
+The best approach depends on your use case.
+If the Custom Field is part of a form that maps to a data object, you should bind it using `Binder`.
+For standalone use cases (e.g., filtering content in the UI), direct interaction is often preferred.
+
+Both approaches are described below.
+
+
+=== Direct Interaction
+
+Since `CustomField` implements the `HasValue` interface, it provides the same API as other Vaadin field components.
+
+You can get and set values:
+```java
+myCustomField.getValue();      // Retrieve current value
+myCustomField.setValue(value); // Update value
+```
+
+To react to value changes, you can register a listener:
+```java
+myCustomField.addValueChangeListener(listener);
+```
+
+Use lambda expressions or method references to keep your code concise.
+
+The ValueChangeEvent provides:
+
+* `event.getValue()` – the new value
+* `event.getOldValue()` – the previous value
+* `event.getSource()` – the source component (your Custom Field)
+* `event.isFromClient()` – whether the change originated on the client side
+
+```java
+myCustomField.addValueChangeListener(event -> {
+    if (event.isFromClient()) {
+        var value = event.getValue();
+        fullNameDiv.setText("Updated name: %s %s".formatted(value.getFirstName(), value.getLastName()));
+    }
+});
+```
+
+In the example above, whenever the value of `myCustomField` changes, the listener first checks whether the change originated from the client.
+This ensures that server-side updates (such as `myCustomField.setValue(..)`) are ignored, since in most cases only user-initiated changes are relevant.
+
+If the change is from the client, the new value from the event is used to update `fullNameDiv`, indicating that the name has been updated.
+
+=== Using Binder
+
+Binding a Custom Field works the same way as with built-in components like `TextField` or `ComboBox`. If you're familiar with <<{articles}/building-apps/forms-data/add-form/fields-and-binding#,binding>> and <<{articles}/building-apps/forms-data/add-form/validation#,form validation>>, the process should feel identical.
+
+Example binding:
+```java
+binder.forField(myCustomField)
+    .withValidator(new MyValidator())
+    .bind(MyBinderObject::getName, MyBinderObject::setName);
+```
+
+Here, the value type of the Custom Field must match the getter and setter on the bound object.
+For example, if your Custom Field extends `CustomField<MyNameObject>`,
+then `MyBinderObject.getName()` should return a `MyNameObject`,
+and `setName(..)` should accept a `MyNameObject`.
+
+Once configured, calling `binder.setBean(myObject)` or `binder.readBean(myObject)`
+automatically populates the Custom Field with values from the data object.
+
+== Label
+
+When you extend `CustomField`, it includes built-in support for labels, like other standard Vaadin field components.
+This means you can call `customField.setLabel("My Field");` to assign a label.
+The label behaves and appears consistently with other Vaadin input components, ensuring a uniform design across your forms.
+
+
+=== Custom Labels for Internal Inputs
+
+In some cases, a Custom Field may require more advanced label handling
+than what can be achieved by styling the default label.
+
+To implement this, you should:
+
+* Use the `NativeLabel` component for accessible, styled labels.
+* Override the `getLabel()` and `setLabel(String)` methods in your Custom Field to interact with your custom label.
+* Associate each label with its input using:
+  ** `label.setFor(Component)` (direct reference)
+  ** `label.setFor(String)` (by ID)
+
+You should use `input.setId(String)` to assign a unique ID to your input element.
+The ID must be unique across the entire page and is required to properly link a label to its input.
+A common approach is to use a string prefix combined with a random number generator to ensure uniqueness.
+
+If your Custom Field contains multiple inputs, you have two options:
+
+* Provide an individual `NativeLabel` for each input.
+* Or assign a shared label, using the https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA[ARIA] `aria-labelledby` attribute on each input
+to reference a common label ID.
+
+==== Example: Custom Label Handling
+
+The following example demonstrates how to create a Custom Field with a custom label and a simple input field.
+It also shows how the label is linked to the input.
+```java
+public class MyCustomField extends CustomField<Integer> {
+    // ...
+    private final NativeLabel label;
+    private final Input input;
+
+    public MyCustomField(String label) {
+        input = createInput();
+        label = new NativeLabel(label);
+        label.setFor(input);
+
+        var layout = new Div(label, input);
+        add(layout);
+    }
+
+    @Override
+    public String getLabel() {
+        return label.getText();
+    }
+
+    @Override
+    public void setLabel(String labelText) {
+        label.setText(labelText);
+    }
+
+    private Input createInput() {
+        var input = new Input();
+        // Generate a (very likely) unique field id
+        input.setId("my-custom-field-" + RandomGenerator.getDefault().nextInt(1, 100_000));
+        return input;
+    }
+}
+```
+
+== "Required" Indicator
+
+Custom Fields support the familiar "required" indicator feature out of the box.
+You can use the following methods:
+
+* `field.isRequiredIndicatorVisible()` - check whether the indicator is visible,
+* `field.setRequiredIndicatorVisible(Boolean)` - toggle the indicator's visibility
+
+By default, the standard Vaadin indicator is used.
+If you want to change its appearance, you can override it with CSS.
+
+
+=== Using a Custom Indicator
+
+If you need a completely custom indicator, override the methods mentioned above.
+When overriding `setRequiredIndicatorVisible(..)`, make sure to also call `super.setRequiredIndicatorVisible(..)`.
+This ensures that accessibility related features remain intact.
+
+Additionally, when creating the custom indicator, add `aria-hidden="true"` so that screen readers do not announce it twice.
+You should also mark it as invisible by default, since the required indicator should only become visible after calling `myCustomField.setRequiredIndicatorVisible(true)`.
+
+```java
+private Div createRequiredIndicator() {
+    var indicator = new Div("R");
+    indicator.setVisible(false); // Initially should be invisible
+    indicator.getElement().setAttribute("aria-hidden", "true");
+    return indicator;
+}
+
+@Override
+public void setRequiredIndicatorVisible(boolean requiredIndicatorVisible) {
+    super.setRequiredIndicatorVisible(requiredIndicatorVisible);
+    customIndicator.setVisible(requiredIndicatorVisible);
+}
+```
+
+Then hide the original indicator with CSS:
+```css
+vaadin-custom-field::part(required-indicator) {
+    display: none;
+}
+```
+
+[IMPORTANT]
+If you're using a binder, calling `binder.asRequired()` on your field automatically enables the required indicator.
+
+== Validation
+
+When extending `CustomField`, you get built-in support for marking the field as invalid and displaying error messages. This ensures your Custom Field behaves consistently with other Vaadin field components in terms of styling and accessibility.
+
+[IMPORTANT]
+If you're extending `AbstractField`, you must implement the `HasValidationProperties` interface and provide elements that use the `invalid` and `errorMessage` properties.
+
+You can manually set an error message and invalid state:
+
+```java
+myCustomField.setErrorMessage("This field is required");
+myCustomField.setInvalid(true);
+```
+
+This displays the error message below the field and applies Vaadin's standard "invalid" styling.
+
+When using a Binder with validators, Vaadin automatically manages the error state and message visibility for you.
+
+=== Using the Internal Component's Error Handling
+
+Sometimes you may want the error message to appear under a specific internal component
+instead of under the entire Custom Field. To achieve this, override the relevant methods
+and delegate validation to the internal component.
+
+For example, consider a Custom Field that combines a `TextField` and a `Button`.
+You want validation messages to appear only under the Text Field.
+
+Override the following methods:
+
+* `isInvalid()` — to reflect both the outer and internal component's invalid states,
+* `setInvalid(boolean)` — to set both the outer and internal states,
+* `getErrorMessage()` — to return the internal field's error message,
+* `setErrorMessage(String)` — to set the internal field's error message.
+
+The following example demonstrates a Custom Field that includes a button and a text field.
+In this case, the invalid state and error message are redirected to the text field.
+
+```java
+public class ButtonTextFieldCustomField extends CustomField<String> {
+
+    private final Button button = new Button("My button");
+    private final TextField textField = new TextField();
+
+    public ButtonTextFieldCustomField() {
+        var layout = new HorizontalLayout(button, textField);
+        add(layout);
+    }
+
+    @Override
+    public boolean isInvalid() {
+        return super.isInvalid() || textField.isInvalid();
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        textField.setInvalid(invalid);
+    }
+
+    @Override
+    public String getErrorMessage() {
+        return textField.getErrorMessage();
+    }
+
+    @Override
+    public void setErrorMessage(String errorMessage) {
+        textField.setErrorMessage(errorMessage);
+    }
+
+    @Override
+    protected String generateModelValue() {
+        return textField.getValue();
+    }
+
+    @Override
+    protected void setPresentationValue(String s) {
+        textField.setValue(s);
+    }
+}
+
+```
+
+=== Using a Custom Element for Error Messages
+
+In advanced scenarios, you may want validation messages to appear in a custom location
+or in a custom format.
+
+To implement this:
+
+* Use a component (typically a `Div`) to display the error message.
+* Assign it a unique `id` (for example, `"my-custom-field-error-42"`).
+** If the Custom Field is used multiple times on the same page, you will likely need to generate a unique identifier for each instance.
+Otherwise, screen readers may announce the field incorrectly, since the label would point to multiple inputs at once.
+* Link the input to the error element using the `aria-describedby` attribute.
+* Control visibility by overriding `setInvalid(boolean)` to show or hide the message.
+* Always hide the element when valid, and remove the `aria-describedby` attribute.
+
+==== Example:
+
+```java
+private final Div errorDiv = new Div();
+
+public MyCustomField() {
+    errorDiv.setId("my-custom-field-error-" + uniqueFieldNumber);
+
+    Input input = createInput();
+
+    var layout = new Div(label, errorDiv, input);
+
+    add(layout);
+}
+
+@Override
+public String getErrorMessage() {
+    return errorDiv.getText();
+}
+
+@Override
+public void setErrorMessage(String errorMessage) {
+    errorDiv.setText(errorMessage);
+}
+
+@Override
+public void setInvalid(boolean invalid) {
+    super.setInvalid(invalid);
+    if (invalid) {
+        errorDiv.setVisible(true);
+        input.getElement().setAttribute("aria-describedby", errorDiv.getId().orElse(""));
+    } else {
+        errorDiv.setVisible(false);
+        input.getElement().removeAttribute("aria-describedby");
+    }
+}
+
+```
+
+[IMPORTANT]
+Always remove the `aria-describedby` attribute (or error message element reference) when hiding the error element to avoid confusing screen readers.
+
+=== Internal Validation
+
+Sometimes you may want to perform validation directly inside your Custom Field instead of relying only on external validation.
+For example, if a Custom Field contains multiple inputs and one of them has a value below 0, you may need to display an error directly on that field.
+
+However, this can cause problems if not handled carefully:
+
+* Do not rely on the same `invalid` and `errorMessage` properties for internal validation.
+Otherwise, when bound to a Binder, external validation is likely to override or ignore the internal state.
+* It's recommended that you limit internal validation to built-in validators in Vaadin components.
+  ** For example, use `field.setMax(Integer)` on an `IntegerField`.
+* For advanced cases, you may provide a method that allows external validation
+frameworks (like Binder) to query the internal validation state.
+
+This guide does not cover such advanced integrations.
+
+== Styling
+
+Styling a Custom Field works much like styling other Vaadin field components.
+However, since a Custom Field may include both built-in parts (such as the label and error message)
+and your own internal elements, it's important to know how to target both effectively.
+
+Before proceeding, review:
+
+* <<{articles}/styling#,Styling>>
+* <<{articles}/components/custom-field/styling#,Custom Field Styling reference>>
+
+These explain available selectors and theming options in detail.
+
+=== Styling Default Custom Field Elements
+
+To style the built-in parts of `CustomField` (such as its label), use the `vaadin-custom-field` selector.
+
+Example: change the label color to the error color when the field is invalid:
+
+```css
+vaadin-custom-field[invalid]::part(label) {
+    color: var(--lumo-error-text-color);
+}
+```
+
+This rule applies to all `CustomField` instances.
+
+If you want to style only a specific type of custom field, add a custom class name.
+
+Assign a class name in Java:
+
+```java
+public MyCustomField() {
+    addClassName("my-custom-field");
+    // ...
+}
+```
+
+Then target it in CSS:
+
+```css
+vaadin-custom-field.my-custom-field[invalid]::part(label) {
+    color: var(--lumo-error-text-color);
+}
+```
+
+.Best practice
+[TIP]
+Combine `vaadin-custom-field` with a custom class name in your selectors.
+This prevents accidentally applying styles to unrelated components.
+
+
+=== Styling Custom Internal Elements
+
+To style internal elements (such as input fields, layout wrappers, or buttons),
+assign class names both to the outer Custom Field and the individual internal elements.
+
+Example:
+
+```java
+public MyCustomField() {
+    addClassName("my-custom-field");
+
+    var contentWrapper = new Div();
+    contentWrapper.addClassName("my-custom-field-wrapper");
+
+    var input = new Input();
+
+    contentWrapper.add(input);
+    add(contentWrapper);
+}
+```
+
+Then target both the wrapper and the internal input in CSS:
+
+```css
+/* Style the wrapper */
+.my-custom-field-wrapper {
+    padding: var(--lumo-space-m);
+    border: 1px solid var(--lumo-contrast-40pct);
+}
+
+/* Style the internal input */
+vaadin-custom-field.my-custom-field input {
+    border: 1px dashed var(--lumo-success-color);
+}
+```
+
+=== Styling Directly in Java
+
+You can also apply styles programmatically in Java. Options include:
+
+* Using <<{articles}/styling/lumo/utility-classes#,Lumo Utility classes>>, e.g., `label.addClassName(LumoUtility.Padding.Left.SMALL);`
+* Using `HasStyle` API:
+** With predefined methods, e.g. `label.getStyle().setPaddingLeft("var(--lumo-space-xs)")`
+** With generic property setters, e.g. `label.getStyle().set("padding-left", "var(--lumo-space-xs)"`
+
+[TIP]
+If a component does not implement `HasStyle`, you can usually access the same API through `component.getElement().getStyle()`.
+
+[IMPORTANT]
+When using `HasStyle` API, prefer <<{articles}/styling/lumo/lumo-style-properties#,Lumo Style Properties>> when working with the Lumo theme, or use your own CSS properties. For example use `"var(--lumo-space-xs)"` instead of `"4px"`. This ensures consistency across your application and makes it easier to adjust global styling later.
+
+
+== Localization / Internationalization
+
+If your application supports multiple languages, you may also need to localize your Custom Field.
+Some Vaadin components, such as `DateTimePicker`, accept a dedicated localization object.
+For example, `DateTimePicker` uses `DateTimePicker.DateTimePickerI18n`, which contains all translatable texts
+for different parts of the component.
+
+You can follow a similar approach for your own Custom Field:
+
+=== Step 1: Define a Localization Class
+
+Create a class that holds all the translatable texts.
+
+```java
+ public static class DateTimePickerI18n implements Serializable {
+        private String dateLabel;
+        private String timeLabel;
+        private String badInputErrorMessage;
+        private String incompleteInputErrorMessage;
+        private String requiredErrorMessage;
+        private String minErrorMessage;
+        private String maxErrorMessage;
+
+        public String getDateLabel() {
+            return this.dateLabel;
+        }
+
+        public DateTimePickerI18n setDateLabel(String dateLabel) {
+            this.dateLabel = dateLabel;
+            return this;
+        }
+
+        public String getTimeLabel() {
+            return this.timeLabel;
+        }
+
+        // .. and so on
+    }
+```
+
+
+=== Step 2: Expose Getters and Setters in Your Custom Field
+
+Your Custom Field should provide accessors for the localization object.
+
+```java
+public DateTimePickerI18n getI18n() {
+    return this.i18n;
+}
+
+public void setI18n(DateTimePickerI18n i18n) {
+    Objects.requireNonNull(i18n, "The i18n properties object should not be null");
+    this.i18n = i18n;
+    this.updateI18n();
+}
+```
+
+=== Step 3: Update Components When Localization Changes
+
+Implement a method that updates internal elements whenever a new localization object is applied.
+The exact code for this in `DateTimePicker` is a bit too complex to show as an example, since it's based on a web-component.
+
+A simplified version would look like this:
+
+```java
+private void updateI18n() {
+    DateTimePickerI18n i18nObject = this.i18n != null ? this.i18n : new DateTimePickerI18n();
+    dateField.setLabel(i18nObject.getDateLabel());
+    timeField.setLabel(i18nObject.getTimeLabel());
+    // .. and so on
+}
+```
+
+Always call `updateI18n()` whenever texts should be refreshed, for example, inside `setI18n(..)`.
+
+=== Further Reading
+
+For more details on localization in Vaadin, see the <<{articles}/flow/advanced/i18n-localization#,Localization>> article.
+
+== Accessibility
+
+Ensuring https://developer.mozilla.org/en-US/docs/Web/Accessibility[accessibility] of a Custom Field can involve addressing multiple issues.
+This section highlights the most common cases you may encounter.
+
+=== Labels and Input Association
+
+A `CustomField` provides a built-in label.
+For single-input cases, you typically don't need to create an additional label.
+However, the built-in label should be associated with the input element.
+
+By default, this association does not exist because `CustomField` doesn't know
+which input the label should point to, especially in cases with multiple inputs.
+
+Vaadin does not currently provide a built-in solution for this,
+but you can handle it with a JavaScript call from your Custom Field:
+
+```java
+private void setFor(TextField field) {
+    field.getElement().executeJs("""
+            setTimeout(() => {
+              const inputId = $1.inputElement.id;
+              const mainLabel = $0.querySelector(
+                '#'+$0.getAttribute('aria-labelledby'));
+              mainLabel.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement());
+}
+```
+
+This ensures the main label correctly points to the input element.
+
+=== Role Attribute
+
+By default, a Custom Field has the ARIA role `group`.
+If your field only contains a single input, a more appropriate role is `input`.
+
+Currently, Vaadin does not provide a built-in way to change this.
+You can set it with another JavaScript call:
+
+```java
+getElement().executeJs(
+                "setTimeout(() => $0.setAttribute('role', 'input'), 100);",
+                this);
+```
+
+=== Combining Label and Role Updates
+
+You can combine the label association and role updates into one script,
+and call it inside the `onAttach` method.
+This ensures the accessibility adjustments persist even if the field is detached and reattached.
+
+```java
+@Override
+public void onAttach(AttachEvent event) {
+    getElement().executeJs("""
+            setTimeout(() => {
+              $0.setAttribute('role', 'input');
+              const inputId = $1.inputElement.id;
+              const mainLabel = $0.querySelector(
+                '#'+$0.getAttribute('aria-labelledby'));
+              mainLabel.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement());
+}
+```
+
+[.collapsible-list]
+== Try It
+
+This step-by-step example, shows the creation a duration field.
+The field consists of two input fields: hours and minutes.
+It includes custom labels so that the full value can be read as, for example, “2 hours and 30 minutes”.
+
+The input fields are implemented using `IntegerField` components.
+The field also supports localization and follows accessibility best practices.
+
+.Set Up the Project
+[%collapsible]
+====
+To begin, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>,
+Next, <<{articles}/getting-started/import#,open>> the project in your IDE,
+and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
+====
+
+
+.Step 2 - Basic Setup
+[%collapsible]
+====
+
+Now, set up the minimum structure needed for the field to work.
+
+Each component is initialized in a separate method so that later enhancements
+(such as validation or styling) can be added without cluttering the constructor.
+
+Place it under `src/main/java/<your package>/ui/component`, for example `src/main/java/com/mydomain/myproject/ui/component`.
+
+```java
+package com.mydomain.myproject.ui.component;
+
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        return new NativeLabel("hours");
+    }
+
+    private NativeLabel createMinutesLabel() {
+        return new NativeLabel("minutes");
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        return new Span("and");
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+```
+
+At this point, you can test the field by adding it to an existing view or by creating a new view specifically for it.
+
+In the following example, it is added to the view that was <<{articles}/getting-started/start#generate-a-skeleton,generated>> when the project was created.
+
+```java
+package com.mydomain.myproject.ui.view;
+
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
+
+@Route
+@PermitAll
+public final class MainView extends Main {
+    MainView() {
+        var duration = new DurationField("Duration");
+        add(duration);
+    }
+}
+
+```
+
+If you test the component by entering some valid values in the input fields, you'll find that it works functionally but does not look polished.
+There are some obvious spacing issues, which are addressed in the next step.
+
+====
+
+.Step 3 - Styling
+[%collapsible]
+====
+
+This Custom Field doesn't require extensive custom styling.
+<<{articles}/styling/lumo/utility-classes#,Lumo Utility Classes>> can be used to quickly address the spacing issues.
+
+For the "hours" and "minutes" labels, add some left padding:
+
+```java
+label.addClassName(LumoUtility.Padding.Left.SMALL);
+```
+
+For the "and" span element, add both left and right padding:
+
+```java
+andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+```
+
+Here's the updated version of the DurationField:
+
+```java
+package com.mydomain.myproject.ui.components;
+
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel("hours");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel("minutes");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span("and");
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+```
+
+With a bit of extra padding, the Custom Field now looks clean and usable.
+This styling is sufficient for this use case.
+
+====
+
+.Step 4 - Validation
+[%collapsible]
+====
+
+Next, validation needs to be added to this field to ensure users enter values within the correct range
+and receive appropriate feedback.
+
+Since the Custom Field is using `IntegerField`, input is already limited to digits.
+
+Add more restrictions:
+
+* "Hours" should never be negative:
+
+```java
+hours.setMin(0);
+```
+
+* Minutes should be between 0 and 59:
+
+```java
+minutes.setMax(59);
+minutes.setMin(0);
+```
+
+This covers the internal validation.
+The browser automatically indicates invalid values and informs the user of the expected input.
+You can verify this by opening the view containing the `DurationField` in your browser and entering an invalid value in the hours field (for example, `-1`) or the minutes field (for example, `60`).
+
+*Binding with Validators*
+
+The Custom Field can be attached to a Binder to define additional validators.
+
+First, create a DTO class for binding.
+DTOs classes usually are separately from the UI code. Place it under `src/main/java/<your package>/data`, for example `src/main/java/com/mydomain/myproject/ui/component`.
+
+```java
+package com.mydomain.myproject.ui.components;
+
+import java.time.Duration;
+
+public class DurationTutorialDTO {
+    private Duration duration;
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+}
+```
+
+Next, create the binder in the view with the `DurationField` and bind the field:
+
+``` java
+
+var durationField = new DurationField(); // Create our field
+durationField.setLabel("Duration");
+
+var binder = new Binder<DurationTutorialDTO>();
+binder.forField(durationField)
+        .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+To ensure a value is always entered, mark the field as required with a custom error message.
+This also triggers the visibility of the required field indicator on the label:
+
+```java
+var binder = new Binder<DurationTutorialDTO>();
+binder.forField(durationField)
+    .asRequired("Please provide a valid duration.")
+    .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+
+A custom validator also can be added.
+For example, add a validator to ensure that the entered duration does not exceed one week:
+
+```java
+private final long HOURS_IN_A_WEEK = 24 * 7;
+//...
+binder.forField(duration4)
+       .asRequired("Please provide a valid duration.")
+       .withValidator((value, context) -> {
+           if (value.toHours() > HOURS_IN_A_WEEK) {
+               return ValidationResult.error("Duration cannot exceed " + HOURS_IN_A_WEEK + " hours");
+           }
+           return ValidationResult.ok();
+       })
+       .bind(DurationTutorialDTO::getDuration, DurationTutorialDTO::setDuration);
+```
+
+To ensure the invalid state is reflected in the internal fields, override the `setInvalid(boolean)` method in the `DurationField`:
+
+```java
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+```
+
+Finally, update `generateModelValue()` so that no value is generated if internal fields are invalid:
+
+```java
+protected Duration generateModelValue() {
+    //...
+    if (hours.isInvalid() || minutes.isInvalid()) {
+        // If any of the fields are invalid, we can not use it to generate a value.
+        return null;
+    }
+    //...
+}
+```
+
+Here's the updated DurationField with validation included:
+
+```java
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+import java.util.Optional;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    public DurationField() {
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel("hours");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel("minutes");
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span("and");
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+}
+
+```
+
+With these changes, the field now supports both internal validation (min/max checks on inputs) and external validation through Binder.
+
+You can verify this by opening the view in your browser and entering an invalid value in the hours field (for example, `-1`) or the minutes field (for example, `60`).
+
+====
+
+.Step 5 - Localization
+[%collapsible]
+====
+
+If your application supports multiple languages, your Custom Field should also provide a way to localize its texts.
+The Vaadin way is to create a dedicated class that contains all translatable strings.
+
+Start by only including the texts for the components added
+and which don't already have a public API for updating them
+(an alternative approach would be to expose setters directly).
+
+This class can be part of the existing `DurationField` class, or as a separate class.
+For this example, place it under `src/main/java/<your package>/ui/component/i18n`, for example `src/main/java/com/mydomain/myproject/ui/component/i18n`.
+
+```java
+public class DurationFieldI18n implements Serializable {
+    private String hours = "hours";
+    private String minutes = "minutes";
+    private String and = "and";
+
+    public String getHours() {
+        return hours;
+    }
+
+    public void setHours(String hours) {
+        this.hours = hours;
+    }
+
+    public String getMinutes() {
+        return minutes;
+    }
+
+    public void setMinutes(String minutes) {
+        this.minutes = minutes;
+    }
+
+    public String getAnd() {
+        return and;
+    }
+
+    public void setAnd(String and) {
+        this.and = and;
+    }
+}
+```
+
+
+Each property has a default value, to ensure that when the object is created without any changes,
+it uses defaults as a fallback.
+
+Add the localization object as a constructor parameter,
+and provide a no-argument constructor that uses default values:
+
+```java
+private DurationFieldI18n i18n;
+
+public DurationField() {
+    this(new DurationFieldI18n());
+}
+
+public DurationField(DurationFieldI18n i18n) {
+    this.i18n = i18n;
+    //...
+}
+```
+
+Add a method that updates all relevant elements from the i18n object:
+
+```java
+private void updateLabels() {
+    hoursLabel.setText(i18n.getHours());
+    minutesLabel.setText(i18n.getMinutes());
+    and.setText(i18n.getAnd());
+}
+```
+
+Call this method in the constructor after initializing all elements:
+
+```java
+public DurationField(DurationFieldI18n i18n) {
+    //...
+    updateLabels();
+}
+```
+
+Provide public methods to get and set the localization object at a later point:
+
+```java
+public DurationFieldI18n getI18n() {
+    return i18n;
+}
+
+public void setI18n(DurationFieldI18n i18n) {
+    this.i18n = i18n;
+    updateLabels();
+}
+```
+
+You can now provide localized text either when constructing the field or at a later point:
+
+```java
+var duration = new DurationField(); // Uses default labels initially
+//...
+duration.setLabel("Ilgums"); // Localized label
+duration.setI18n(new DurationFieldI18n("stundas", "minūtes", "un")); // Localized to different language
+```
+
+
+Here's the updated `DurationField` with localization support:
+
+```java
+import com.vaadin.cf.components.DurationFieldI18n;
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    private DurationFieldI18n i18n;
+
+    public DurationField() {
+        this(new DurationFieldI18n());
+    }
+
+    public DurationField(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        updateLabels();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span();
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+    }
+
+    public DurationFieldI18n getI18n() {
+        return i18n;
+    }
+
+    public void setI18n(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+        updateLabels();
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+
+    private void updateLabels() {
+        hoursLabel.setText(i18n.getHours());
+        minutesLabel.setText(i18n.getMinutes());
+        and.setText(i18n.getAnd());
+    }
+}
+```
+
+====
+
+.Step 6 - Accessibility
+[%collapsible]
+====
+
+Finally, you'll address the accessibility requirements of this Custom Field.
+
+The challenge is that there is a main label (“Duration”)
+and two inputs ("hours" and "minutes"), each with its own label.
+From an accessibility perspective, it is desired that screen readers announce these as:
+
+* “Duration hours”
+* “Duration minutes”
+
+To achieve this:
+
+1. Use `aria-labelledby` on the inputs to reference both the main label and their specific label.
+2. Ensure that labels also conform to HTML semantics by using the `for` attribute to point to their related input.
+
+Since the `for` attribute can reference only one input, a single target must be selected.
+This is acceptable since screen readers prioritize `aria-labelledby` when reading input labels.
+
+Such changes can be handled through JavaScript, avoiding the need to manually generate unique input IDs.
+You'll create a method that does all that on JS side, since it helps to avoid generating separate unique ids for the inputs.
+It's not pretty, but it takes care of everything needed.
+
+```java
+private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
+    field.getElement().executeJs("""
+            setTimeout(() => {
+              // Find the main label id
+              const originalLabelId = $0.getAttribute('aria-labelledby');
+              // Create a custom label, based on the original label, making it unique
+              const customLabelId = originalLabelId + '-' +  $3;
+              // Set the custom label id to our custom label
+              $2.id = customLabelId;
+              // Make sure our specific input is labeled by the main label and its specific label
+              $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
+
+              const inputId = $1.inputElement.id;
+
+              // Make sure main label is associated with some input
+              var mainLabel = document.getElementById(originalLabelId);
+              mainLabel.setAttribute('for', inputId);
+              // Make sure the 'for' attribute for the more specific label is associate with its input
+              $2.setAttribute('for', inputId);
+            }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
+}
+```
+
+Now, update the `aria-description` to provide a description of the full value.
+A full description of the field's value should also be provided.
+This can be done using aria-description.
+
+```java
+private void updateAriaDescription() {
+    getElement().setAttribute("aria-description", valueAsString());
+}
+
+private String valueAsString() {
+    if (hours.getValue() == null || minutes.getValue() == null) {
+        return "";
+    }
+
+    return String.format("%d %s %s %d %s", hours.getValue(),
+            i18n.getHours(), i18n.getAnd(), minutes.getValue(),
+            i18n.getMinutes());
+}
+```
+
+Call the `updateAriaDescription()` method in the constructor:
+
+```java
+public DurationField(DurationFieldI18n i18n) {
+    //...
+    updateAriaDescription();
+}
+```
+
+Make sure the description is also updated whenever the values change:
+
+```java
+@Override
+protected void setPresentationValue(Duration newPresentationValue) {
+    //..
+    updateAriaDescription();
+}
+```
+
+Finally, label references need to be fixed.
+However when a field is detached and later reattached, label references are reset.
+To fix this, override the `onAttach` method and call `setFor` for both inputs:
+
+```java
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    super.onAttach(attachEvent);
+    setFor(hours, hoursLabel, "hours");
+    setFor(minutes, minutesLabel, "minutes");
+}
+```
+
+This ensures that accessibility links between labels and inputs are restored each time
+the field is attached to the UI.
+
+Here's the updated DurationField with accessibility support included:
+
+```java
+package com.vaadin.cf.components.tutorial;
+
+import com.vaadin.cf.components.DurationFieldI18n;
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.NativeLabel;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import java.time.Duration;
+
+public class DurationField extends CustomField<Duration> {
+
+    private static final long MINUTES_IN_HOUR = 60;
+    private static final int MINUTES_STEP_INTERVAL = 15;
+
+    private final NativeLabel hoursLabel;
+    private final NativeLabel minutesLabel;
+    private final IntegerField hours;
+    private final IntegerField minutes;
+    private final Span and;
+
+    private DurationFieldI18n i18n;
+
+    public DurationField() {
+        this(new DurationFieldI18n());
+    }
+
+    public DurationField(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+
+        hoursLabel = createHoursLabel();
+        minutesLabel = createMinutesLabel();
+        hours = createHoursField();
+        minutes = createMinutesField();
+        and = createAndSpan();
+
+        updateAriaDescription();
+        updateLabels();
+
+        add(hours, hoursLabel, and, minutes, minutesLabel);
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        setFor(hours, hoursLabel, "hours");
+        setFor(minutes, minutesLabel, "minutes");
+    }
+
+    private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
+        field.getElement().executeJs("""
+                setTimeout(() => {
+                  // Find the main label id
+                  const originalLabelId = $0.getAttribute('aria-labelledby');
+                  // Create a custom label, based on the original label, making it unique
+                  const customLabelId = originalLabelId + '-' +  $3;
+                  // Set the custom label id to our custom label
+                  $2.id = customLabelId;
+                  // Make sure our specific input is labeled by the main label and its specific label
+                  $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
+
+                  const inputId = $1.inputElement.id;
+
+                  // Make sure main label is associated with some input
+                  var mainLabel = document.getElementById(originalLabelId);
+                  mainLabel.setAttribute('for', inputId);
+                  // Make sure the 'for' attribute for the more specific label is associate with its input
+                  $2.setAttribute('for', inputId);
+                }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
+    }
+
+    private NativeLabel createHoursLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private NativeLabel createMinutesLabel() {
+        var label = new NativeLabel();
+        label.addClassName(LumoUtility.Padding.Left.SMALL);
+        return label;
+    }
+
+    private IntegerField createHoursField() {
+        var hours = new IntegerField();
+        hours.setMin(0);
+        hours.setWidth("45px");
+
+        hours.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return hours;
+    }
+
+    private IntegerField createMinutesField() {
+        var minutes = new IntegerField();
+        minutes.setMax(59);
+        minutes.setMin(0);
+        minutes.setWidth("45px");
+        minutes.setStep(MINUTES_STEP_INTERVAL);
+
+        minutes.addValueChangeListener(e -> {
+            updateAriaDescription();
+        });
+
+        return minutes;
+    }
+
+    private Span createAndSpan() {
+        var andSpan = new Span();
+        andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.SMALL);
+        return andSpan;
+    }
+
+    @Override
+    protected Duration generateModelValue() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            // If any of the fields are empty, we do not have enough to generate a value.
+            return null;
+        }
+
+        if (hours.isInvalid() || minutes.isInvalid()) {
+            // If any of the fields are invalid, we can not use it to generate a value.
+            return null;
+        }
+
+        var hourMinutes = MINUTES_IN_HOUR * hours.getValue();
+        return Duration.ofMinutes(hourMinutes + minutes.getValue());
+    }
+
+    @Override
+    protected void setPresentationValue(Duration newPresentationValue) {
+        var h = (int) newPresentationValue.toHours();
+        var m = newPresentationValue.toMinutesPart();
+        hours.setValue(h);
+        minutes.setValue(m);
+        updateAriaDescription();
+    }
+
+    public DurationFieldI18n getI18n() {
+        return i18n;
+    }
+
+    public void setI18n(DurationFieldI18n i18n) {
+        this.i18n = i18n;
+        updateLabels();
+    }
+
+    @Override
+    public void setInvalid(boolean invalid) {
+        super.setInvalid(invalid);
+        hours.setInvalid(invalid);
+        minutes.setInvalid(invalid);
+    }
+
+    private void updateAriaDescription() {
+        getElement().setAttribute("aria-description", valueAsString());
+    }
+
+    private String valueAsString() {
+        if (hours.getValue() == null || minutes.getValue() == null) {
+            return "";
+        }
+
+        return String.format("%d %s %s %d %s", hours.getValue(),
+                i18n.getHours(), i18n.getAnd(), minutes.getValue(),
+                i18n.getMinutes());
+    }
+
+    @Override
+    public void focus() {
+        // Make sure component focus targets the hours field.
+        hours.focus();
+    }
+
+    private void updateLabels() {
+        hoursLabel.setText(i18n.getHours());
+        minutesLabel.setText(i18n.getMinutes());
+        and.setText(i18n.getAnd());
+        updateAriaDescription();
+    }
+}
+```
+
+====
+
+.Final Thoughts
+[%collapsible]
+====
+
+In this tutorial, a fully functional `CustomField` was built through a guided tutorial,
+covering not only the basics but also important production-level considerations.
+
+By following these steps, you've seen how to move from a minimal implementation to a robust, production-ready custom field.
+The final component supports data binding, validation, localization, theming, and accessibility
+all while remaining consistent with Vaadin's design system and best practices.
+
+This pattern can be reused to create other composite fields that behave like built-in Vaadin components,
+helping you extend the framework without sacrificing consistency or usability.
+
+====
