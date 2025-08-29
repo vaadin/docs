@@ -3,10 +3,7 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
-import {
-  ConfirmDialog,
-  type ConfirmDialogOpenedChangedEvent,
-} from '@vaadin/react-components/ConfirmDialog.js';
+import { ConfirmDialog } from '@vaadin/react-components/ConfirmDialog.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
@@ -14,15 +11,13 @@ function Example() {
   const dialogOpened = useSignal(false);
   const status = useSignal('');
 
-  function openedChanged(e: ConfirmDialogOpenedChangedEvent) {
-    dialogOpened.value = e.detail.value;
-    if (e.detail.value) {
-      status.value = '';
-    }
+  function open() {
+    status.value = '';
+    dialogOpened.value = true;
   }
 
-  function open() {
-    dialogOpened.value = true;
+  function onClosed() {
+    dialogOpened.value = false;
   }
 
   return (
@@ -34,7 +29,7 @@ function Example() {
         header="Export failed"
         confirmText="OK"
         opened={dialogOpened.value}
-        onOpenedChanged={openedChanged}
+        onClosed={onClosed}
         onConfirm={() => {
           status.value = 'Acknowledged';
         }}

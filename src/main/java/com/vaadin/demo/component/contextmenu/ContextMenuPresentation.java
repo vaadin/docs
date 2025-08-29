@@ -56,7 +56,7 @@ public class ContextMenuPresentation extends Div {
             });
         });
         // end::snippet2[]
-        menu.add(new Hr());
+        menu.addSeparator();
 
         GridMenuItem<Person> delete = menu.addItem("Delete", event -> {
         });
