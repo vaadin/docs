@@ -4,11 +4,8 @@ import './init-flow-components';
 import '../generated/activate-vaadin-featureflags.js';
 import '../generated/vaadin-featureflags';
 import '../generated/theme-docs.global.generated.js';
+import '@vaadin/vaadin-lumo-styles/lumo.css';
 import client from 'Frontend/generated/connect-client.default';
-import { applyTheme } from 'Frontend/generated/theme';
-
-// Apply the theme, so that overlay elements styles and custom property overrides work as expected
-applyTheme(document);
 
 // @ts-expect-error Inserted by DS Publisher
 client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
