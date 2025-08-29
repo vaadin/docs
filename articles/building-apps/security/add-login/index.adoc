@@ -56,16 +56,12 @@ It's best practice to create a dedicated package for security-related classes. I
 
 This is a minimal implementation of a security configuration class:
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
-<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class  // <1>
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class) // <1>
 class SecurityConfig {
 
     @Bean
@@ -93,52 +89,15 @@ class SecurityConfig {
     }
 }
 ----
-
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-@Configuration
-class SecurityConfig extends VaadinWebSecurity {
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http); // <4>
-        // TODO Configure the login view
-    }
-
-    @Bean
-    public UserDetailsManager userDetailsManager() {
-        LoggerFactory.getLogger(SecurityConfig.class)
-            .warn("NOT FOR PRODUCITON: Using in-memory user details manager!"); // <3>
-        var user = User.withUsername("user")
-                .password("{noop}user")
-                .roles("USER")
-                .build();
-        var admin = User.withUsername("admin")
-                .password("{noop}admin")
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
-    }
-}
-----
-
---
-<1> Imports `VaadinAwareSecurityContextHolderStrategyConfiguration`, required for Vaadin security to work with Spring Security (auto-imported with `VaadinWebSecurity`).
+<1> Imports `VaadinAwareSecurityContextHolderStrategyConfiguration`, required for Vaadin security to work with Spring Security.
 <2> Always call with `VaadinSecurityConfigurer.vaadin()` -- this ensures that the application is properly configured.
 <3> *Tip:* Log a warning message whenever using a configuration that shouldn't end up in production.
-<4> Always call `super.configure()` -- this ensures that the application is properly configured.
 
 The [classname]`VaadinSecurityConfigurer` class provides essential security configurations out of the box, including:
 
 * CSRF protection
 * Default request caching
 * Access restriction to Vaadin views and services
-
-[NOTE]
-To customize security rules—such as allowing anonymous access to static resources—in either [classname]`VaadinSecurityConfigurer` or [classname]`VaadinWebSecurity`, adjust the configuration where appropriate: use [method]`securityFilterChain` for `VaadinSecurityConfigurer`, or configure `VaadinWebSecurity` _before_ calling `super.configure()`. Both classes apply a *catch-all rule* requiring authentication for _all_ requests, but when using `VaadinSecurityConfigurer` this rule can be customized or disabled (passing `null`) via `VaadinSecurityConfigurer.anyRequest(...)`.
 
 
 == Create a Login View
