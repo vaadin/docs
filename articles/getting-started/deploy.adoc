@@ -1,0 +1,144 @@
+---
+title: Deploy a Project
+page-title: How to deploy your Vaadin application to Fly.io
+description: Deploy your Vaadin application to Fly.io and connect it to a database.
+meta-description: Step-by-step guide to deploying a Vaadin Starter application on Fly.io. Set up hosting, attach a PostgreSQL database, and make your application accessible to users.
+order: 45
+---
+
+
+= Deploy a Project
+
+After building your Vaadin walking skeleton locally, you'll probably want to deploy it so others -- friends, colleagues, or customers -- can try it out.
+
+Deploying a Vaadin application is no different than deploying any other Spring Boot application. Most Vaadin applications run on a single server, but you can also run them on clusters as long as the runtime environment supports *session affinity*.
+
+.What is Session Affinity?
+[NOTE]
+====
+In a cluster, session affinity ensures that all requests from the same user session always go to the same server. This avoids the need for session replication, which can improve performance. The trade-off is that if a server fails, all sessions stored on it are lost.
+====
+
+You'll now learn how to deploy your walking skeleton to https://fly.io[Fly.io]. The purpose is to get your application up and running quickly, not to prepare it for production.
+
+Before you begin:
+
+* Sign up for a https://fly.io/[Fly.io] account.
+* Install the Fly.io CLI
+* Login with your account. 
+
+For details, see the https://fly.io/docs/flyctl/[Fly.io documentation].
+
+[IMPORTANT]
+====
+Fly.io isn't completely free, but it does offer a free trial for new users.
+====
+
+
+== Deploy the Skeleton
+
+In the project root, run:
+
+[source,bash]
+----
+fly launch --ha=false
+----
+
+When prompted, you can press Enter to accept the default settings.
+
+The `--ha=false` flag prevents Fly.io from starting multiple machines. This matters because Vaadin applications are *stateful*, and without session affinity, running multiple instances will cause session issues. *Fly.io does not provide session affinity out of the box.*
+
+After deployment, the CLI will display the URL where your application is available.
+
+
+== Add a Database
+
+By default, a new walking skeleton uses an in-memory H2 database. This is fine for testing, but all data is lost when the application restarts. For a more realistic deployment, you'll want to connect it to a persistent PostgreSQL database.
+
+
+=== Create a Database
+
+Run:
+
+[source,bash]
+----
+fly postgres create
+----
+
+When prompted, select *Development - Single node* and accept the defaults.
+
+Then attach the database to your application:
+
+[source,bash]
+----
+fly postgres attach <postgres-app-name> --app <app-name>
+----
+
+This adds a `DATABASE_URL` secret to the application. The CLI will also print it to the terminal. It looks like this:
+
+[source,properties]
+----
+DATABASE_URL=postgres://<username>:<password>@<hostname>:5432/<database>?sslmode=disable
+----
+
+Java applications need a JDBC URL, username, and password instead of this URL. To provide them, set new secrets:
+
+[source,bash]
+----
+fly secrets set \
+  DATABASE_JDBC_URL="jdbc:postgresql://<hostname>:5432/<database>?sslmode=disable" \
+  DATABASE_USER=[username] \
+  DATABASE_PASSWORD=[password]
+----
+
+Replace the placeholders with values from the `DATABASE_URL`.
+
+
+=== Update Your Application
+
+Add the PostgreSQL JDBC driver to your project. In `pom.xml`, include:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+----
+
+Then, create a new file `src/main/resources/application-prod.properties` with the following content:
+
+[source,properties]
+----
+spring.datasource.url=${DATABASE_JDBC_URL}
+spring.datasource.username=${DATABASE_USER}
+spring.datasource.password=${DATABASE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+----
+
+Redeploy the application with:
+
+[source,bash]
+----
+fly deploy
+----
+
+Your walking skeleton now uses PostgreSQL instead of H2, while Hibernate manages the schema.
+
+For a production-ready setup, see the guides: <</building-apps/forms-data/add-flyway#,Add Flyway>> and <</building-apps/forms-data/replace-h2#,Replace H2>>.
+
+
+== Clean Up
+
+To avoid unwanted charges, remove the deployed resources when you're done:
+
+[source,bash]
+----
+fly apps destroy <app-name> <postgres-app-name>
+----
+
+This permanently deletes both the application and the database.
+
+// TODO Building and deploying with commercial components
+// TODO Add links to a guide about deploying to IaaS vs PaaS alternatives
