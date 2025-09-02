@@ -25,7 +25,7 @@ public class AvatarGroupDocumentation extends VerticalLayout {
         UserInfo userInfo = new UserInfo(userEntity.getId());
 
         CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
-                userInfo, "ensuranceClaims");
+                userInfo, "insuranceClaims");
         add(avatarGroup);
         // end::avatar-group-new[]
 
