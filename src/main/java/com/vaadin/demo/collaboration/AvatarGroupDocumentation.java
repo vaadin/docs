@@ -1,6 +1,8 @@
 package com.vaadin.demo.collaboration;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.UserInfo;
@@ -8,7 +10,6 @@ import com.vaadin.demo.domain.User;
 import com.vaadin.demo.domain.User.UserService;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.server.StreamResource;
 
 /**
  * Code snippets used in CollaborationAvatarGroup's reference documentation.
@@ -24,7 +25,7 @@ public class AvatarGroupDocumentation extends VerticalLayout {
         UserInfo userInfo = new UserInfo(userEntity.getId());
 
         CollaborationAvatarGroup avatarGroup = new CollaborationAvatarGroup(
-                userInfo, "ensuranceClaims");
+                userInfo, "insuranceClaims");
         add(avatarGroup);
         // end::avatar-group-new[]
 
@@ -41,19 +42,22 @@ public class AvatarGroupDocumentation extends VerticalLayout {
         // end::avatar-group-own[]
     }
 
-    private void imageProvider() {
+    private void imageHandler() {
         // tag::avatar-group-images[]
-        avatarGroup.setImageProvider(userInfo -> {
-            StreamResource streamResource = new StreamResource(
-                    "avatar_" + userInfo.getId(), () -> {
-                        User userEntity = userService
-                                .findById(userInfo.getId());
-                        byte[] imageBytes = userEntity.getImage();
-                        return new ByteArrayInputStream(imageBytes);
-                    });
-            streamResource.setContentType("image/png");
-            return streamResource;
-        });
+        avatarGroup.setImageHandler(userInfo ->
+            event -> {
+                try {
+                    String url = "https://i.pravatar.cc/40?u=" + userInfo.getId();
+                    event.setFileName("avatar_" + userInfo.getId() + ".jpg");
+                    event.setContentType("image/jpeg");
+                    try (InputStream in = new URL(url).openStream()) {
+                        in.transferTo(event.getOutputStream());
+                    }
+                } catch (IOException e) {
+                    event.getResponse().setStatus(500);
+                }
+            }
+        );
         // end::avatar-group-images[]
     }
 
