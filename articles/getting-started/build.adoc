@@ -18,15 +18,13 @@ In the walking skeleton, you use the Vaadin Maven plugin to make a production bu
 
 [.example]
 --
-.Terminal
-[source,terminal,subs="+attributes"]
+[source,bash,subs="+attributes"]
 ----
 <source-info group="macOS / Linux"></source-info>
 ./mvnw clean package -Pproduction
 ----
 
-.PowerShell
-[source,terminal,subs="+attributes"]
+[source,powershell,subs="+attributes"]
 ----
 <source-info group="Windows"></source-info>
 mvnw clean package -Pproduction
@@ -35,47 +33,127 @@ mvnw clean package -Pproduction
 
 Once the build has finished, check the `target` directory. If your skeleton was named `my-application`, you should find a file called `my-application-1.0-SNAPSHOT.jar`.
 
-[IMPORTANT]
-Running this JAR directly will fail due to a missing production database. The skeleton uses H2 or PostgreSQL Testcontainers in development mode but expects PostgreSQL in production. You'll learn how to address this later in this guide.
-
 The `production` profile not only builds the frontend, but also excludes the development server bundle since it contains features that aren't used in production. 
 
 
-[role="since:com.vaadin:vaadin@V24.8"]
 == Build a Docker Image
 
 The walking skeleton includes a `Dockerfile` that allows you to package your application as a Docker image.
 
 .Install Docker
-[NOTE]
+[IMPORTANT]
 You must install Docker on your system before you can build an image.
 
-After creating a production build, run the following command from your project root:
+Run the following command from your project root to build the image:
 
 [source,terminal]
 ----
 docker build -t my-application:latest .
 ----
 
-This command produces a Docker image tagged `my-application:latest`, including the JAR file from the `target` directory.
+This command builds your application in production mode and produces a Docker image tagged `my-application:latest`.
 
 
-[role="since:com.vaadin:vaadin@V24.8"]
-== Deploy with Control Center
+=== Building with Commercial Components
 
-Once the Docker image is built, you can deploy it using <</control-center#,Control Center>>, a tool designed to simplify managing Vaadin applications on Kubernetes clusters.
+If your application uses commercial components, you need a <<flow/configuration/licenses#,licence key>>.
 
-.Install Control Center
+When building locally with Maven, the Vaadin Maven plugin detects the license automatically. For Docker builds, you must pass the key explicitly:
+
+[source,terminal]
+----
+docker build -t my-application:latest --build-arg VAADIN_PRO_KEY="<your-key>"
+----
+
+.A Peek Under the Hood
 [NOTE]
-You must first install Control Center into a Kubernetes cluster. This cluster can be local or cloud-based. For installation instructions, see the <</control-center/getting-started#,Getting Started>> guide.
+====
+The `--build-arg` option works because the provided `Dockerfile` in the walking skeleton already defines and forwards the `VAADIN_PRPO_KEY` argument:
 
-The walking skeleton is preconfigured to work with Control Center. Specifically, it *requires* the following features to be enabled for the application to run in production without modification:
+[source,docker]
+----
+ARG VAADIN_PRO_KEY
+ENV VAADIN_PRO_KEY=${VAADIN_PRO_KEY}
+----
 
-* *Identity Management* via <</control-center/identity-management#,Keycloak>> for authentication and user management.
-* *PostgreSQL Database* provisioned through the <</control-center/database#,Control Center UI>>.
+The `ARG` instruction declares a build-time argument, while the `ENV` instruction makes it available as an environment variable inside the container during the build.
+====
 
-If you choose not to use these features, you'll need to manually adjust the application's configuration to work with a different authentication mechanism or database setup.
+==== Create a Script
 
-// TODO Write a guide or deep-dive about removing Control Center.
+Manually copying the key each time can be inconvenient. You can automate this by creating a shell or PowerShell script that retrieves the key from `$HOME/.vaadin/proKey`:
 
-For full deployment instructions, see the <</control-center/application-deployment#,Application Deployment>> guide.
+[.example]
+--
+.build.sh
+[source,bash,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+#!/usr/bin/env bash
+VAADIN_PRO_KEY=""
+PRO_KEY_FILE="$HOME/.vaadin/proKey"
+DOCKER_TAG=""
+
+if [ $# -gt 0 ]; then
+  DOCKER_TAG="$1"
+else
+  echo "Usage: ./build.sh <tag-name>"
+  exit 1
+fi
+
+if [ -f "$PRO_KEY_FILE" ]; then
+    if VAADIN_PRO_KEY=$(jq -r '.proKey // empty' "$PRO_KEY_FILE" 2>/dev/null) && [ -n "$VAADIN_PRO_KEY" ]; then
+        echo "Found Vaadin Pro key"
+    else
+        echo "Could not parse Vaadin Pro key from $PRO_KEY_FILE" >&2
+    fi
+else
+    echo "No Vaadin Pro key found at $PRO_KEY_FILE (continuing without it)"
+fi
+
+docker build -t "$DOCKER_TAG" ${VAADIN_PRO_KEY:+--build-arg VAADIN_PRO_KEY="$VAADIN_PRO_KEY"} .
+----
+
+.build.ps1
+[source,powershell,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+param([Parameter(Mandatory)][string]$DockerTag)
+
+$ErrorActionPreference = "Stop"
+$ProKeyPath = Join-Path $env:USERPROFILE ".vaadin" "proKey"
+$VaadinProKey = ""
+
+if (Test-Path $ProKeyPath) {
+    $JsonObject = Get-Content $ProKeyPath -Raw | ConvertFrom-Json
+    $VaadinProKey = $JsonObject.proKey
+    if ($VaadinProKey) {
+        Write-Host "Found Vaadin Pro key"
+    } else {
+        Write-Host "Could not parse Vaadin Pro key from $ProKeyPath"
+    }
+} else {
+    Write-Host "No Vaadin Pro key found at $ProKeyPath (continuing without it)"
+}
+
+docker build -t "$DockerTag" @(if ($VaadinProKey) { "--build-arg", "VAADIN_PRO_KEY=$VaadinProKey" }) .
+----
+--
+
+Run the script with the desired Docker tag:
+
+[.example]
+--
+[source,bash,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+./build.sh my-application:latest
+----
+
+[source,powershell,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+./build.ps1 my-application:latest
+----
+--
+
