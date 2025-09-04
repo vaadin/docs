@@ -56,104 +56,35 @@ This command builds your application in production mode and produces a Docker im
 
 === Building with Commercial Components
 
-If your application uses commercial components, you need a <<flow/configuration/licenses#,licence key>>.
+If your application uses commercial components, you need a <</flow/configuration/licenses#,licence key>>.
 
-When building locally with Maven, the Vaadin Maven plugin detects the license automatically. For Docker builds, you must pass the key explicitly:
+When building locally with Maven, the Vaadin Maven plugin detects the license automatically. For Docker builds, you must pass the key explicitly as a secret:
 
 [source,terminal]
 ----
-docker build -t my-application:latest --build-arg VAADIN_PRO_KEY="<your-key>"
+docker build -t my-application:latest --secret id=proKey,src=$HOME/.vaadin/proKey .
+----
+
+If you need to use an offline key, you can pass it like this:
+
+[source,terminal]
+----
+docker build -t my-application:latest --secret id=offlineKey,src=$HOME/.vaadin/offlineKey .
 ----
 
 .A Peek Under the Hood
 [NOTE]
 ====
-The `--build-arg` option works because the provided `Dockerfile` in the walking skeleton already defines and forwards the `VAADIN_PRPO_KEY` argument:
+The `--secret` option works because the provided `Dockerfile` in the walking skeleton mounts the files, parses them and passes them on to Maven:
 
 [source,docker]
 ----
-ARG VAADIN_PRO_KEY
-ENV VAADIN_PRO_KEY=${VAADIN_PRO_KEY}
-----
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=secret,id=proKey \
+    --mount=type=secret,id=offlineKey \
+    sh -c 'PRO_KEY=$(jq -r ".proKey // empty" /run/secrets/proKey 2>/dev/null || echo "") && \
+    OFFLINE_KEY=$(cat /run/secrets/offlineKey 2>/dev/null || echo "") && \
+    ./mvnw clean package -Pproduction -DskipTests -Dvaadin.proKey=${PRO_KEY} -Dvaadin.offlineKey=${OFFLINE_KEY}'
+----    
 
-The `ARG` instruction declares a build-time argument, while the `ENV` instruction makes it available as an environment variable inside the container during the build.
 ====
-
-==== Create a Script
-
-Manually copying the key each time can be inconvenient. You can automate this by creating a shell or PowerShell script that retrieves the key from `$HOME/.vaadin/proKey`:
-
-[.example]
---
-.build.sh
-[source,bash,subs="+attributes"]
-----
-<source-info group="macOS / Linux"></source-info>
-#!/usr/bin/env bash
-VAADIN_PRO_KEY=""
-PRO_KEY_FILE="$HOME/.vaadin/proKey"
-DOCKER_TAG=""
-
-if [ $# -gt 0 ]; then
-  DOCKER_TAG="$1"
-else
-  echo "Usage: ./build.sh <tag-name>"
-  exit 1
-fi
-
-if [ -f "$PRO_KEY_FILE" ]; then
-    if VAADIN_PRO_KEY=$(jq -r '.proKey // empty' "$PRO_KEY_FILE" 2>/dev/null) && [ -n "$VAADIN_PRO_KEY" ]; then
-        echo "Found Vaadin Pro key"
-    else
-        echo "Could not parse Vaadin Pro key from $PRO_KEY_FILE" >&2
-    fi
-else
-    echo "No Vaadin Pro key found at $PRO_KEY_FILE (continuing without it)"
-fi
-
-docker build -t "$DOCKER_TAG" ${VAADIN_PRO_KEY:+--build-arg VAADIN_PRO_KEY="$VAADIN_PRO_KEY"} .
-----
-
-.build.ps1
-[source,powershell,subs="+attributes"]
-----
-<source-info group="Windows"></source-info>
-param([Parameter(Mandatory)][string]$DockerTag)
-
-$ErrorActionPreference = "Stop"
-$ProKeyPath = Join-Path $env:USERPROFILE ".vaadin" "proKey"
-$VaadinProKey = ""
-
-if (Test-Path $ProKeyPath) {
-    $JsonObject = Get-Content $ProKeyPath -Raw | ConvertFrom-Json
-    $VaadinProKey = $JsonObject.proKey
-    if ($VaadinProKey) {
-        Write-Host "Found Vaadin Pro key"
-    } else {
-        Write-Host "Could not parse Vaadin Pro key from $ProKeyPath"
-    }
-} else {
-    Write-Host "No Vaadin Pro key found at $ProKeyPath (continuing without it)"
-}
-
-docker build -t "$DockerTag" @(if ($VaadinProKey) { "--build-arg", "VAADIN_PRO_KEY=$VaadinProKey" }) .
-----
---
-
-Run the script with the desired Docker tag:
-
-[.example]
---
-[source,bash,subs="+attributes"]
-----
-<source-info group="macOS / Linux"></source-info>
-./build.sh my-application:latest
-----
-
-[source,powershell,subs="+attributes"]
-----
-<source-info group="Windows"></source-info>
-./build.ps1 my-application:latest
-----
---
-
