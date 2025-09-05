@@ -10,7 +10,7 @@ import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColum
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-function Example(): JSX.Element {
+function Example(): React.JSX.Element {
   useSignals(); // hidden-source-line
   const dialogOpened = useSignal(false);
   const people = useSignal<Person[]>([]);

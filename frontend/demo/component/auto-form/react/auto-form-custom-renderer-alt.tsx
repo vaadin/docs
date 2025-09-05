@@ -9,7 +9,7 @@ import { EmployeeService } from 'Frontend/generated/endpoints.js';
 
 // tag::snippet[]
 function GroupingLayoutRenderer({ children }: AutoFormLayoutRendererProps<EmployeeModel>) {
-  const fieldsMapping = new Map<string, JSX.Element>();
+  const fieldsMapping = new Map<string, React.JSX.Element>();
   children.forEach((field) => fieldsMapping.set(field.props?.propertyInfo?.name, field));
   return (
     <VerticalLayout>
