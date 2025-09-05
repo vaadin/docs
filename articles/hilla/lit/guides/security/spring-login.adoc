@@ -41,7 +41,6 @@ To implement your own security configuration, create a new configuration class t
 .`SecurityConfig.java`
 [source,java]
 ----
-<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
 @Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
@@ -84,7 +83,6 @@ Public views need to be added to the configuration in [methodname]`securityFilte
 .`SecurityConfig.java`
 [source,java]
 ----
-  <source-info group="VaadinSecurityConfigurer"></source-info>
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(registry -> {
@@ -328,37 +326,45 @@ The `getRoles` function is still expected to return an array of strings. As a re
 endif::hilla-react[]
 
 
-=== [deprecated:com.vaadin:vaadin@V24.9]#Configuration Helper Alternatives#
+=== Configuration Helper Alternatives
 
-[methodname]`VaadinWebSecurity.configure(http)` configures HTTP security to bypass framework internal resources. If you prefer to make your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`VaadinWebSecurity.getDefaultHttpSecurityPermitMatcher()`.
+[methodname]`VaadinSecurityConfigurer` configures HTTP security to bypass framework internal resources. If you prefer to make your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher()`.
 
-For example, [methodname]`VaadinWebSecurity.configure(http)` requires all requests to be authenticated, except the Hilla internal ones. If you want to allow public access to certain views, you can configure it as follows:
+For example, if you want to allow public access to certain views and require authentication for all other requests, you can configure it as follows:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests()
-        .requestMatchers(
-          VaadinWebSecurity.getDefaultHttpSecurityPermitMatcher()
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry ->
+        registry.requestMatchers(
+           VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher()
         ).permitAll()
         .requestMatchers("/public-view").permitAll() // custom matcher
-        .anyRequest().authenticated();
-        ...
+        .anyRequest().authenticated()
+    );
+    ...
+    return http.build();
 }
 ----
 
-Similarly, the matcher for static resources to be ignored is available as [methodname]`VaadinWebSecurity.getDefaultWebSecurityIgnoreMatcher()`:
+Similarly, the matcher for static resources to be ignored is available as [methodname]`VaadinSecurityConfigurer.getDefaultWebSecurityIgnoreMatcher()`:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(WebSecurity web) throws Exception {
-    web.ignoring()
-       .requestMatchers(
-         VaadinWebSecurity.getDefaultWebSecurityIgnoreMatcher())
-       .requestMatchers(antMatcher("static/**")) // custom matcher
-       ...
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry ->
+        registry.requestMatchers(
+           VaadinSecurityConfigurer.getDefaultWebSecurityIgnoreMatcher()
+        ).permitAll()
+        .requestMatchers("static/**").permitAll() // custom matcher
+        .anyRequest().authenticated()
+    );
+    ...
+    return http.build();
 }
 ----
 
