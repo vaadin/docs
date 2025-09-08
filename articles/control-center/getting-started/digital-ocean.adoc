@@ -1,0 +1,126 @@
+---
+title: Kubernetes on Digital Ocean
+page-title: Installing Vaadin Control Center on Digital Ocean
+description: Learn how to set up a Control Center on Kubernetes running on Digital Ocean.
+meta-description: Vaadin Control Center simplifies the management of Vaadin applications on Kubernetes Clusters.
+order: 60
+---
+
+
+= Kubernetes on Digital Ocean
+
+Digital Ocean is a cloud service provider headquartered in New York City, New York, USA.
+It provides cloud computing services including, but not limited to:
+
+* *Droplets*: on-demand Linux virtual machines.
+* *Kubernetes*: an easy-to-use managed Kubernetes service.
+* *Spaces Object Storage*: an S3-compatible service for storing and serving large amounts of data.
+
+Here is a step-by-step guide on how to set up a Kubernetes cluster on Digital Ocean for deploying Vaadin Control Center.
+
+
+== Prerequisites
+
+* If you have not yet installed Kubernetes CLI `kubectl`, install it from https://kubernetes.io/docs/tasks/tools/.
+
+* If you have not yet installed Digital Ocean CLI `doctl`, install it from https://docs.digitalocean.com/reference/doctl/.
+
+
+== Creating a Kubernetes cluster on Digital Ocean
+
+* Sign up to Digital Ocean if you do not have an account yet at https://cloud.digitalocean.com/registrations/new.
+* Log in to https://cloud.digitalocean.com.
+* Create a new project or select an existing one.
+* Under the _Manage_ section in the left-hand side menu, click on _Kubernetes_.
+* Click on [guibutton]*Create a Kubernetes Cluster*.
+* When creating a new Kubernetes cluster, select the following values:
+** Choose the recommended version for Kubernetes.
+** Choose the datacenter region closest to your potential customers.
+** Choose either to size network subnets yourself or let Digital Ocean size them for you.
+** Configure the cluster capacity as needed. You can set the node pool to autoscale as well.
+** Choose a unique name for your Kubernetes cluster.
+** Select a project for your cluster to be a part of.
+** [Optional] Add any tags you want.
+** Click on [guibutton]*Create Kubernetes Cluster*.
+
+Once the cluster is created and finished provisioning, follow the instructions to connect to the cluster. 
+We recommend using the https://kubernetes.io/docs/tasks/tools/[Kubernetes official client] as well as Digital Ocean's command-line tool, https://docs.digitalocean.com/reference/doctl/how-to/install/[doctl], to connect and manage clusters.
+Instructions on how to connect to the Digital Ocean cluster can be found https://docs.digitalocean.com/products/kubernetes/how-to/connect-to-cluster/[here].
+
+.Verify connectivity to the cluster 
+|===
+|Command |Description
+
+|`kubectl config get-contexts` |Lists your cluster name, user, and namespace
+|`kubectl cluster-info` |Display addresses of the control plane and cluster services
+|`kubectl version` |Display de client and server k8s version
+|`kubectl get nodes` |List all nodes created in the cluster
+|`kubectl help` |Displays commands that help manage your cluster
+|===
+
+
+== Spaces Object Storage for Database Backups using Barman Object Store
+
+You can create a Spaces Bucket to enable database backups using Barman Object Store, or to have somewhere where https://www.postgresql.org/docs/current/wal-intro.html[Write-Ahead Log (WAL) files archive] can be stored.
+See Digital Ocean's official documentation on https://docs.digitalocean.com/products/spaces/how-to/create/[how to create a Spaces Bucket].
+
+Follow the instructions on xref:/control-center/database/backups#s3-compatible-buckets[setting up S3 compatible buckets] in the backups section.
+Find the *Digital Ocean Spaces* example.
+
+
+== Deploying Vaadin Control Center
+
+Make sure your `kubectl` is in the context of the Digital Ocean cluster.
+
+[source,bash]
+----
+# list contexts
+kubectl config get-contexts
+# change to Digital Ocean's context
+kubectl config use-context <your_digital_ocean_cluster_context_name>
+----
+
+The run the following command after replacing the example values with your specifics:
+
+[source,bash]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+--set app.image.tag=1.3.1 \ # optional, latest tag is used if this value is omitted
+-n example-namespace --create-namespace \
+--set user.email=your@email.address.com \
+--set domain=example.com
+----
+
+[NOTE]
+You can check the status of the Control Center deployment with a few different commands outlined in our xref:../troubleshooting#checking-control-center-status[troubleshooting] section.
+
+
+=== Setting Up DNS Records
+
+To make Control Center accessible, there must exist a couple of DNS records associated with its domain.
+Refer to the xref:/control-center/getting-started/automatic-dns-and-cert#setting-up-with-digitalocean[Automatic DNS Records and Certificates] section to do this automatically.
+The following instructions are for setting up DNS records manually.
+
+[NOTE]
+See Digital Ocean's official instructions on https://docs.digitalocean.com/products/networking/dns/how-to/add-domains/[how to add domains]
+
+Assuming a domain already exists in your Digital Ocean project, you must create one DNS record for the Control Center's host address, and one DNS record for the Keycloak's host address.
+These DNS records are used to access the Control Center application itself, and the Keycloak instance related to the Control Center installation.
+Both records must map to the IP address of the load balancer created during the installation of Control Center.
+The load balancer should appear as an option in the "_Will direct to_" field when creating a record.
+
+[NOTE]
+See Digital Ocean's official instructions on https://docs.digitalocean.com/products/networking/dns/how-to/manage-records/[how to manage DNS records].
+
+
+== Accessing Control Center
+
+Get your temporary password for the Control Center.
+
+[source,bash]
+----
+kubectl get secret control-center-user -n example-namespace -o go-template="{{ .data.password | base64decode | println }}"
+----
+
+Once Control Center has finished installing, the load balancer is ready and accepting connections, as well as DNS has propagated, you can type Control Center's address in a browser search bar and
+Sign in to Vaadin Control Center with the email address you provided during the installation and the temporary password you retrieved in the previous step.
