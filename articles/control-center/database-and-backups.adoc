@@ -1,0 +1,140 @@
+---
+title: Database and Backups
+page-title: Configure database and backups for Control Center
+description: Learn how to configure database storage and backup snapshots for the managed Postgres cluster used by Control Center.
+meta-description: Learn how to configure database storage and backup snapshots for the Postgres cluster provisioned by Control Center.
+order: 30
+---
+
+= Database and Volume Configuration
+
+Control Center provisions a managed Postgres cluster to provide databases for deployed Vaadin applications. It is essential to configure reliable storage and snapshot capabilities for this database to ensure data durability and safe backups.
+
+== Why It Matters
+
+All application data managed by Control Center is persisted in Kubernetes volumes. How these volumes are created, stored, and backed up depends on the link:https://kubernetes.io/docs/concepts/storage/storage-classes/[storage class,window=read-later] and link:https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/[volume-snapshot class,window=read-later] used in the cluster. Choosing the right class is critical for:
+
+* Ensuring high availability and data durability
+* Supporting volume snapshots for scheduled backups
+* Avoiding data loss in case of node failure or cluster issues
+
+== Recommended Configuration
+
+When installing Control Center, explicitly specify the storage and snapshot classes along with the size to allocate for the volume, using these Helm values:
+
+.my-values.yaml
+[source,yaml]
+----
+postgres:
+  size: 1Gi
+  storageClass: ...
+  volumeSnapshotClass: ...
+----
+
+The correct class names depend on your cluster provider. To see the available options:
+
+.Terminal
+[source,shell]
+----
+kubectl get storageclass
+----
+
+.Terminal
+[source,shell]
+----
+kubectl get volumesnapshotclass
+----
+
+The default size of the volume allocated for Postgres data is `1Gi`. To allocate a different size, set the `postgres.size` value when installing Control Center. The value must use Go-style quantity syntax, refer to the link:https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity[Go documentation,window=read-later] for details.
+
+[IMPORTANT]
+Once the volume size is set and the Postgres cluster is deployed, the size can be increased but not reduced. Shrinking a volume is not supported by most Kubernetes storage providers and would require manual intervention or data migration.
+
+== Cloud Provider Configuration
+
+When deploying Control Center on a managed Kubernetes service, it's important to configure the appropriate StorageClass and VolumeSnapshotClass to ensure reliable data persistence and backup capabilities. Below are the recommended settings for common cloud providers.
+
+=== DigitalOcean Kubernetes
+
+link:https://docs.digitalocean.com/products/kubernetes/[DigitalOcean Kubernetes,window=read-later] provides built-in support for persistent block storage and CSI-based volume snapshots, both of which are required for Control Center’s database provisioning and backup features.
+
+The platform defines a single class for both purposes:
+
+* StorageClass: `do-block-storage`
+* VolumeSnapshotClass: `do-block-storage`
+
+This class provisions DigitalOcean volumes backed by SSDs and supports volume snapshots, making it suitable for production use.
+
+To confirm that the correct classes are available in your cluster:
+
+.Terminal
+[source,shell]
+----
+kubectl get storageclass
+kubectl get volumesnapshotclass
+----
+
+To install Control Center with these settings, add the following to the values:
+
+.my-values.yaml
+[source,yaml]
+----
+postgres:
+  storageClass: do-block-storage
+  volumeSnapshotClass: do-block-storage
+----
+
+== Local Development
+
+Control Center also supports database provisioning and backup snapshots in local clusters such as Minikube.Volume snapshot support must be enabled explicitly, and the correct storage and snapshot classes configured.
+
+To learn how to enable this and install Control Center locally with the right values, refer to xref:local-environment.adoc#_database_storage_and_backup_for_local_clusters[Data Storage and Backup for Local Clusters].
+
+[#_restoring_from_a_backup]
+== Restoring from a Backup
+
+Control Center can be installed by restoring the Postgres cluster from a previously created backup.This allows all application databases and their data to be recovered and reused in a new or clean cluster.
+
+To list the available backups:
+
+.Terminal
+[source,shell]
+----
+kubectl get backups -n vaadin
+----
+
+This will show output like:
+
+----
+NAME                           AGE     CLUSTER                   METHOD           PHASE
+hourly-backup-20250417200000   90m     control-center-postgres   volumeSnapshot   completed
+hourly-backup-20250417210000   30m     control-center-postgres   volumeSnapshot   completed
+----
+
+To restore from an existing backup, specify the name of the backup resource using the Helm value:
+
+.my-values.yaml
+[source,yaml]
+----
+postgres:
+  storageClass: ...
+  volumeSnapshotClass: ...
+  restoreFromBackup: "hourly-backup-20250417210000"
+----
+
+Then install Control Center with the desired backup:
+
+.Terminal
+[source,shell]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+  --namespace vaadin --create-namespace \
+  --values my-values.yaml
+----
+
+This performs a full restore of the Postgres cluster, including all managed databases, users, and data present at the time the backup was created.
+
+[IMPORTANT]
+====
+Restoring from a backup replaces the contents of the Postgres cluster. Only use this option when setting up a new Control Center instance or when intentionally recovering an existing one.
+====

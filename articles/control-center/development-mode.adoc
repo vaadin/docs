@@ -1,0 +1,184 @@
+---
+title: "Development Mode"
+page-title: "How to use development mode with Control Center"
+description: "Run an application in development mode with Control Center using Telepresence."
+meta-description: "Learn how to run your application in development mode with Control Center using Telepresence."
+order: 60
+---
+
+= Local Development Mode with Telepresence
+
+Control Center is intended for production environments, where applications rely on cluster-managed resources such as databases and identity providers. For development workflows, replicating these dependencies locally can be challenging.
+
+To enable faster iteration and debugging, Control Center supports local development using link:https://www.telepresence.io/[Telepresence,window=read-later], an open-source tool that allows running an application on a developer machine while accessing live resources inside a Kubernetes cluster.
+
+== How Telepresence Works
+
+Telepresence creates a network proxy between the local machine and the Kubernetes cluster. It intercepts traffic destined for a pod and forwards it to a process running locally. This allows development tools like debuggers, link:https://vaadin.com/copilot[Vaadin Copilot,window=read-later], link:https://docs.spring.io/spring-boot/reference/using/devtools.html[Spring DevTools,window=read-later], and link:https://www.jrebel.com/products/jrebel[JRebel,window=read-later], to be used while the application runs against real cluster services.
+
+[WARNING]
+====
+Telepresence replaces a pod in the cluster with a local proxy. This can affect services and users depending on that deployment. For this reason, Telepresence should only be used in a local or non-production environment. See xref:local-environment.adoc[Local Environment Setup] for more information.
+====
+
+== Prerequisites
+
+Before starting, ensure the following:
+
+* Control Center is installed and running
+(see xref:getting-started.adoc[Getting Started])
+
+* The application is deployed as a production build in the cluster
+(see xref:application-deployment.adoc[Application Deployment])
+
+* Access is available to the cluster where Control Center is running
+
+* A working local development environment is set up for the application
+
+== Installing Telepresence
+
+Telepresence must be installed both locally and in the cluster.
+
+[TIP]
+====
+IntelliJ IDEA has built-in support for installing and configuring Telepresence. This integration simplifies traffic interception and cluster connectivity directly from the IDE. See link:https://www.jetbrains.com/help/idea/telepresence.html[Remote debugging using Telepresence,window=read-later].
+====
+
+=== Install the Client Locally
+
+Follow the official instructions for link:https://www.telepresence.io/docs/install/client[client installation,window=read-later] on your platform.
+
+[NOTE]
+====
+For macOS 10.15 and later, additional configuration may be required due to system security settings. Refer to the link:https://www.telepresence.io/docs/latest/troubleshooting/#macos[macOS troubleshooting guide,window=read-later].
+====
+
+=== Install the Traffic Manager in the Cluster
+
+To install the cluster-side component (Traffic Manager):
+
+.Terminal
+[source,shell]
+----
+telepresence helm install
+----
+
+More details and configuration options are available at link:https://www.telepresence.io/docs/install/manager[Install/Uninstall the Traffic Manager,window=read-later].
+
+== Configuring the Application
+
+Development-specific configuration should be placed in a profile-scoped configuration file to prevent it from leaking into production builds. The following example shows how to scope the properties file to the Spring `dev` profile.
+
+[.example]
+--
+.application-dev.properties
+[source,properties]
+----
+<source-info group="Properties"></source-info>
+spring.application.name=my-vaadin-app
+spring.main.cloud-platform=kubernetes
+spring.cloud.kubernetes.client.namespace=vaadin
+----
+
+.application-dev.yaml
+[source,yaml]
+----
+<source-info group="YAML"></source-info>
+spring:
+  application:
+    name: my-vaadin-app
+  main:
+    cloud-platform: kubernetes
+  cloud:
+    kubernetes:
+      client:
+        namespace: vaadin
+----
+--
+
+Replace `my-vaadin-app` with the actual name of the application and `vaadin` with the namespace where the app is deployed.
+
+[NOTE]
+====
+The profile will only be active during local development by explicitly enabling it when running the application.
+====
+
+== Intercepting Application Traffic
+
+To route cluster traffic to a local instance of the application:
+
+. Connect Telepresence to the cluster namespace:
++
+.Terminal
+[source,shell]
+----
+telepresence connect -n vaadin
+----
+
+. Intercept the application and forward traffic to the local port (e.g., 8080):
++
+.Terminal
+[source,shell]
+----
+telepresence intercept my-vaadin-app --port 8080
+----
+
+Telepresence will replace the application’s pod with a proxy that redirects requests to the local machine.
+
+== Running in Development Mode
+
+With interception in place, the application can be launched locally from the IDE or terminal. Development tools such as debuggers or live reload will function normally while the application connects to live services in the cluster.
+
+Use the appropriate command depending on the build tool:
+
+[.example]
+--
+.Terminal
+[source,shell]
+----
+<source-info group="Gradle"></source-info>
+./gradlew bootRun --args='--spring.profiles.active=dev'
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="Maven"></source-info>
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+----
+--
+
+[TIP]
+====
+In IntelliJ IDEA and other IDEs, the active profile can be set in the *Run/Debug Configuration* for the application. Open the run configuration, locate the *Spring Boot* section, and enter `dev` in the *Active profiles* field. This automatically enables the development-specific configuration when running from the IDE.
+====
+
+== Cleaning Up
+
+To restore the cluster state and remove the local proxy:
+
+. Leave the interception:
++
+.Terminal
+[source,shell]
+----
+telepresence leave my-vaadin-app
+----
+
+. Disconnect from the cluster:
++
+.Terminal
+[source,shell]
+----
+telepresence quit
+----
+
+These steps restore the original deployment and prevent traffic from being redirected.
+
+== Troubleshooting and Resources
+
+For help with common issues, see the official Telepresence documentation:
+
+* link:https://www.telepresence.io/docs/quick-start[Quick Start,window=read-later]
+* link:https://www.telepresence.io/docs/troubleshooting/[Troubleshooting,window=read-later]
+* link:https://telepresence.io/docs/concepts/intercepts[Understanding Intercepts,window=read-later]

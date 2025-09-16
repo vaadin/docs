@@ -1,0 +1,133 @@
+---
+title: "DNS and Certificates"
+page-title: "Automatic DNS and Certificate Management"
+description: "Learn how to configure Control Center to automatically create DNS records and certificates for your applications."
+meta-description: "Learn how to configure Control Center to automatically create DNS records and certificates for your applications."
+order: 40
+---
+
+= Automatic DNS and Certificate Management
+
+Control Center supports automatic DNS record creation and TLS certificate issuance for deployed applications. This enables immediate and secure access to each application by its hostname, with valid HTTPS certificates issued by link:https://letsencrypt.org/[Let's Encrypt,window=read-later].
+
+== Overview
+
+When DNS automation is enabled, Control Center deploys and configures the link:https://github.com/kubernetes-sigs/external-dns[ExternalDNS,window=read-later] operator. This operator manages DNS records for applications using supported DNS providers. Certificate management is handled via link:https://cert-manager.io/[cert-manager,window=read-later] and an link:https://letsencrypt.org/docs/client-options/[ACME issuer,window=read-later] preconfigured for Let's Encrypt.
+
+== Supported DNS Providers
+
+Any provider supported by ExternalDNS can be used. Common options include:
+
+* link:https://docs.digitalocean.com/products/networking/dns/[DigitalOcean,window=read-later]
+* link:https://cloud.google.com/dns[Google Cloud DNS,window=read-later]
+* link:https://azure.microsoft.com/products/dns[Azure DNS,window=read-later]
+* link:https://www.cloudflare.com/[Cloudflare,window=read-later]
+* link:https://aws.amazon.com/route53/[AWS Route 53,window=read-later]
+
+The full list of supported services is maintained in the link:https://kubernetes-sigs.github.io/external-dns/[ExternalDNS documentation,window=read-later].
+
+== DigitalOcean Example Setup
+
+This example demonstrates how to configure automatic DNS and certificate management using DigitalOcean DNS.
+
+[NOTE]
+====
+For other DNS providers, refer to the link:https://kubernetes-sigs.github.io/external-dns/latest/docs/tutorials/akamai-edgedns/[ExternalDNS tutorials,window=read-later].
+====
+
+=== Adding a Domain in DigitalOcean
+
+Before DNS records can be created automatically, the domain must be managed by DigitalOcean. This involves configuring the domain’s authoritative nameservers to point to DigitalOcean and adding the domain in the control panel.
+
+To add a domain:
+
+. Log in to the DigitalOcean control panel.
+. Navigate to *Networking > Domains*.
+. Click *Add Domain* and enter the domain name (for example, `example.com`).
+. Update the domain’s nameservers at the domain registrar to the following DigitalOcean nameservers:
+
+* `ns1.digitalocean.com`
+* `ns2.digitalocean.com`
+* `ns3.digitalocean.com`
+
+Once DNS propagation is complete, DigitalOcean becomes the authoritative DNS provider for the domain.
+
+For full instructions, refer to the official guide: link:https://docs.digitalocean.com/products/networking/dns/how-to/add-domains/[How to Add Domains,window=read-later].
+
+[IMPORTANT]
+====
+Automatic DNS record creation will only work if the domain is correctly added to DigitalOcean and its nameservers are in use.
+====
+
+=== Create a DigitalOcean API Token
+
+Create a link:https://docs.digitalocean.com/reference/api/create-personal-access-token[Personal Access Token,window=read-later] in the DigitalOcean control panel with access to manage domains. The token needs full-access permissions to the `domain` scope.
+
+=== Store the Token in a Kubernetes Secret
+
+Save the token as a secret in the namespace where Control Center is installed:
+
+.Terminal
+[source,shell]
+----
+kubectl create namespace vaadin
+kubectl create secret -n vaadin generic digitalocean-dns --from-literal=token=YOUR_DIGITALOCEAN_TOKEN
+----
+
+=== Configure Control Center
+
+Create a `my-values.yaml` file with the following configuration:
+
+.my-values.yaml
+[source,yaml]
+----
+user:
+  email: me@example.com
+app:
+  host: control.example.com
+dns:
+  enabled: true
+  provider:
+    name: digitalocean
+  txtOwnerId: control-center
+  domainFilters:
+    - example.com
+  env:
+    - name: DO_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: digitalocean-dns
+          key: token
+----
+
+This configuration enables DNS automation and instructs ExternalDNS to manage records under `example.com` using the specified token.
+
+=== Install or Upgrade Control Center
+
+Apply the configuration using Helm:
+
+.Terminal
+[source,shell]
+----
+helm upgrade -i control-center oci://docker.io/vaadin/control-center \
+  --namespace vaadin \
+  -f my-values.yaml
+----
+
+Once installed, Control Center automatically:
+
+* Creates the DNS record for `control.example.com`
+* Issues a valid TLS certificate from Let's Encrypt
+* Keeps both DNS and certificates updated
+
+== Use Cases and Benefits
+
+* *Zero manual DNS setup*: Application hostnames are automatically registered.
+* *Secure by default*: Valid TLS certificates are issued and renewed automatically.
+* *Minimal configuration effort*: DNS and certificate management are provisioned by enabling a single feature in Helm values.
+
+== Additional Resources
+
+* link:https://kubernetes-sigs.github.io/external-dns/latest/[ExternalDNS Documentation,window=read-later]
+* link:https://letsencrypt.org/docs/[Let's Encrypt Documentation,window=read-later]
+* link:https://docs.digitalocean.com/products/networking/dns/[DigitalOcean DNS Documentation,window=read-later]
