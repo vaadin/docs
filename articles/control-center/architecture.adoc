@@ -1,0 +1,66 @@
+---
+title: "Architecture"
+page-title: "Architecture of Control Center"
+description: "Understand the architecture and internal components of Control Center."
+meta-description: "Overview of how Control Center is built and operates inside a Kubernetes cluster."
+order: 70
+---
+
+= Architecture
+
+Control Center is a Kubernetes-native platform for deploying, managing, and monitoring Vaadin applications. It simplifies production operations by combining an opinionated link:https://kubernetes.io/docs/concepts/extend-kubernetes/operator/[Kubernetes Operator,window=read-later] with a Vaadin-based management UI.
+
+Control Center introduces a custom Kubernetes resource called `App`, which represents a Vaadin application. When an `App` resource is created, Control Center automatically provisions the necessary components—such as deployments, services, config maps, and ingress routing.
+
+The platform integrates with link:https://www.keycloak.org/[Keycloak,window=read-later] for authentication and authorization, and configures the application with access to a link:https://www.postgresql.org/[PostgreSQL,window=read-later] database for persistence when needed.
+
+== Components
+
+The architecture includes the following key components:
+
+* **Control Center App** – A Vaadin-based UI used to configure and manage Vaadin applications.
+* **Control Center Operator** – A Kubernetes Operator that watches `App` resources and reconciles their desired state.
+* **PostgreSQL** – Used internally by Control Center and optionally provisioned for managed applications.
+* **Keycloak** – Acts as the centralized identity provider for both Control Center and the applications it manages.
+
+Managed applications expose:
+
+* A **public HTTPS endpoint** for the Vaadin user interface
+* An **internal Actuator endpoint** for health checks and metrics, queried by Control Center
+
+External access is routed through a central link:https://kubernetes.github.io/ingress-nginx/[Ingress NGINX,window=read-later] load balancer.
+
+[#_the_app_custom_resource]
+== The `App` Custom Resource
+
+Control Center introduces a Kubernetes link:https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/[Custom Resource Definition (CRD),window=read-later] named `App`.This resource abstracts away the complexity of deploying and configuring a production-ready Vaadin application.
+
+.Example: Minimal `App` Manifest
+[source,yaml]
+----
+apiVersion: vaadin.com/v1alpha1
+kind: App
+metadata:
+  name: foo
+spec:
+  host: foo.example.com
+  image: foo
+  version: 1.0
+  replicas: 3
+----
+
+When this manifest is applied, the Control Center Operator performs the following steps:
+
+. **Deployment Creation**
+Creates a Kubernetes `Deployment` using the specified container image and number of replicas to run the Vaadin application.
+
+. **Service Exposure**
+Creates a Kubernetes `Service` to expose the application via HTTP. A separate internal service may also be created for exposing Spring Boot Actuator endpoints.
+
+. **Ingress Configuration**
+Generates an `Ingress` resource to route traffic from the specified hostname (e.g., `foo.example.com`) to the application’s HTTP service.
+
+. **Configuration Management**
+Generates a `ConfigMap` containing runtime configuration such as environment variables, database credentials, and Keycloak integration details.
+
+This process allows a complete Vaadin application, with secure networking and infrastructure integration, to be deployed using a single Kubernetes manifest. All supporting components are automatically created and maintained by Control Center.
