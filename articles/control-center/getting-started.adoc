@@ -1,0 +1,197 @@
+---
+title: "Getting Started"
+page-title: "How to get started with Control Center"
+description: "Initial setup instructions for installing Control Center on a Kubernetes cluster using Helm."
+meta-description: "Initial setup instructions for installing Control Center on a Kubernetes cluster using Helm."
+order: 10
+---
+
+= Getting Started
+
+Control Center provides a streamlined way to manage Vaadin applications running on Kubernetes. This guide describes the required setup and explains how to deploy Control Center using Helm.
+
+== Prerequisites
+
+Before installing Control Center, ensure the following requirements are met:
+
+=== Kubernetes Cluster
+
+A Kubernetes cluster must be available and reachable from the local development environment. This may be:
+
+* A cloud-hosted cluster, such as:
+** link:https://www.digitalocean.com/[DigitalOcean Kubernetes,window=read-later]
+** link:https://azure.microsoft.com/en-us/products/kubernetes-service[Azure Kubernetes Service (AKS),window=read-later]
+** link:https://cloud.google.com/kubernetes-engine[Google Kubernetes Engine (GKE),window=read-later]
+** link:https://aws.amazon.com/eks[Amazon Elastic Kubernetes Service (EKS),window=read-later]
+pass:[<!-- vale Vaadin.Units = YES -->]
+* A locally hosted cluster (for example, with link:https://www.docker.com/products/docker-desktop/[Docker Desktop,window=read-later], link:https://minikube.sigs.k8s.io/docs/[Minikube,window=read-later], or link:https://k3d.io/stable/[k3d,window=read-later]).
+pass:[<!-- vale Vaadin.Units = NO -->]
+
+[NOTE]
+====
+This guide assumes deployment to a cloud-based Kubernetes environment. For local environments, refer to the xref:local-environment.adoc[Local Environment Setup] documentation.
+====
+
+=== DNS Hostname
+
+A DNS hostname must be available and resolvable to the cluster’s ingress or load balancer to access the Control Center UI.
+
+Examples:
+
+* `control.example.com` → points to the cluster's public IP address or load balancer.
+* `control.local.gd` → for local clusters; any `*.local.gd` domain resolves to `127.0.0.1`.
+
+Control Center can also be configured to automatically create DNS records for supported providers (for example, Google Cloud DNS), if appropriate credentials are provided. See xref:automatic-dns-and-cert.adoc[Automatic DNS and Certificate Management] for more details.
+
+=== Helm
+
+link:https://helm.sh/[Helm,window=read-later] must be installed and configured to communicate with the Kubernetes cluster.
+
+Installation and usage instructions are available at link:https://helm.sh/docs/intro/install[Installing Helm,window=read-later].
+
+== Installation
+
+Control Center is installed via a Helm chart. The following command installs the latest version, enables automatic TLS certificate management via Let's Encrypt, and registers an initial user.
+
+.Terminal
+[source,shell]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+  --namespace vaadin --create-namespace \
+  --set app.host=control.example.com \
+  --set user.email=me@example.com
+----
+
+This command includes the following parameters:
+
+- `control-center`: the Helm release name (customizable).
+- `oci://docker.io/vaadin/control-center`: the location of the Control Center Helm chart.
+- `--namespace vaadin`: installs the chart in the `vaadin` namespace, recommended to separate Control Center and its components from other workloads.
+- `--create-namespace`: creates the namespace if it doesn't already exist.
+- `--set app.host=...`: sets the hostname for accessing Control Center.
+- `--set user.email=...`: sets the email address for the initial administrative user.
+
+[TIP]
+====
+For a full list of available configuration values when installing Control Center, refer to the chart link:https://github.com/vaadin/control-center/blob/gradle/charts/control-center/README.md[README,window=read-later] on GitHub.
+====
+
+=== DNS and Certificates
+
+Control Center uses HTTPS by default. link:https://letsencrypt.org/[Let's Encrypt,window=read-later] integration is enabled automatically and issues certificates for the hostname provided in `app.host`. This requires that the DNS record is already pointing to the cluster load balancer external IP address or that configuration for automatic DNS record creation is provided. Once the installation is complete, the load balancer external IP address can be found with this command:
+
+.Terminal
+[source,shell]
+----
+kubectl get svc -n vaadin control-center-ingress-nginx-controller
+----
+
+To use self-signed certificates instead (recommended for local clusters), the following override disables Let's Encrypt and configures Control Center to use a built-in issuer:
+
+.Terminal
+[source,shell]
+----
+--set issuer.acme.enabled=false
+----
+
+After installation, the self-signed certificate authority used by Control Center can be extracted with:
+
+.Terminal
+[source,shell]
+----
+kubectl get secret control-center-ca -n vaadin -o go-template='{{ index .data "tls.crt" | base64decode }}' > control-center-ca.crt
+----
+
+To trust this certificate authority locally, use the appropriate method for the operating system:
+
+[.example]
+--
+.Terminal
+[source,shell]
+----
+<source-info group="macOS"></source-info>
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain control-center-ca.crt
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="Linux"></source-info>
+sudo cp control-center-ca.crt /usr/local/share/ca-certificates/control-center-ca.crt
+sudo update-ca-certificates
+----
+
+.PowerShell
+[source,powershell]
+----
+<source-info group="Windows"></source-info>
+Import-Certificate -FilePath "control-center-ca.crt" -CertStoreLocation "Cert:\LocalMachine\Root"
+----
+--
+
+==== Using an Existing TLS Certificate
+
+Control Center can also be configured to use a pre-existing certificate—for example, a wildcard certificate managed externally. To use a custom certificate, create a Kubernetes `Secret` of type `tls` containing the certificate and private key:
+
+.Terminal
+[source,shell]
+----
+kubectl create secret tls my-custom-cert -n vaadin --cert=fullchain.pem --key=privkey.pem
+----
+
+The `--cert` and `--key` flags reference the public certificate and private key files, respectively. For more details on this command, refer to the official documentation: link:https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets[Using TLS Secrets,window=read-later].
+
+To instruct Control Center to use this certificate instead of generating one, set the `app.tlsSecret` value during installation:
+
+.Terminal
+[source,shell]
+----
+--set app.tlsSecret=my-custom-cert
+----
+
+[IMPORTANT]
+====
+When using a custom certificate, Control Center does not manage its renewal or rotation.
+Certificate validity and lifecycle management remain the responsibility of the administrator.
+====
+
+=== Persistent Storage and Database Configuration
+
+Control Center provisions a Postgres cluster to host application databases and perform scheduled backups. It is critical to ensure that persistent data is stored on reliable and secure volumes, and that the cluster supports snapshot-based backups.
+
+By default, Kubernetes uses the cluster’s default StorageClass and VolumeSnapshotClass to manage data persistence and backups. However, these defaults may not be optimized for durability, snapshot support, or security. It is strongly recommended to explicitly configure these values using the following Helm settings:
+
+- `--set postgres.storageClass=...`
+- `--set postgres.volumeSnapshotClass=...`
+
+For details on how storage and backups are managed, and how to choose appropriate settings for your environment, refer to xref:database-and-backups.adoc[Database and Backups].
+
+[NOTE]
+====
+To install Control Center by restoring a previous database backup, see the instructions in xref:database-and-backups.adoc#_restoring_from_a_backup[Restoring from a Backup].
+====
+
+[#_accessing_control_center]
+== Accessing Control Center
+
+After installation completes, Control Center is available at:
+
+----
+https://control.example.com
+----
+
+The initial login requires a temporary password. This can be retrieved with:
+
+.Terminal
+[source,shell]
+----
+kubectl get secret control-center-initial-user -n vaadin -o go-template="{{ .data.password | base64decode | println }}"
+----
+
+Log in using the configured email address and the retrieved password. A password reset and profile setup are required on the first login.
+
+== Dashboard Overview
+
+Once authenticated, the Control Center dashboard becomes available. At first launch, no applications are registered. The dashboard provides insights into application deployments, status, and health, and offers management tools for deploying and monitoring Vaadin applications.
+
+To proceed with deploying Vaadin applications into the cluster, continue to the xref:application-deployment.adoc[Application Deployment] documentation.
