@@ -31,7 +31,7 @@ public class UploadButtonThemeVariant extends Div {
         upload.getElement()
                 .addEventListener("max-files-reached-changed", event -> {
                     boolean maxFilesReached = event.getEventData()
-                            .getBoolean("event.detail.value");
+                            .get("event.detail").get("value").asBoolean();
                     uploadButton.setEnabled(!maxFilesReached);
                 }).addEventData("event.detail.value");
         // end::snippet[]
