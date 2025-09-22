@@ -1,0 +1,216 @@
+---
+title: Validation
+page-title: How to validate your data in your Vaadin apps
+description: Learn how to validate your data.
+meta-description: Learn about data validation - principles, semantics, sanitization and more.
+order: 15
+---
+
+
+= Validation
+
+An important part of data consistency and integrity is to make sure no bad data enters the database. To do this, you have to validate all incoming data before you do anything with it.
+
+In a Vaadin application, data is typically validated both in the UI layer and in the application layer. Validation in the user interface is primarily about providing a good user experience, and preventing the user from entering bad data in the first place. However, although validation can happen in the browser, you should never trust it to be correct.
+
+The most important validation takes place at the application layer boundary. This is typically inside an <</building-apps/architecture/application-services#,application service>>, but it could also be in some other system component that communicates with an external system.
+
+In a Vaadin application, you would typically implement application-layer validation in two ways: by using Jakarta Bean Validation; or with domain primitives. Incidentally, you can use both at the same time.
+
+
+== Bean Validation
+
+To use Bean Validation, you need to add the `spring-boot-starter-validation` dependency to your Maven project. Add this to your POM file:
+
+[source,xml]
+----
+<dependency> 
+    <groupId>org.springframework.boot</groupId> 
+    <artifactId>spring-boot-starter-validation</artifactId> 
+</dependency>
+----
+
+When using Bean Validation, you would add constraints to your class by using annotations. You can choose from several built-in annotations, or create your own. This example specifies that the `email` field must contain a valid email address:
+
+[source,java]
+----
+public class User {
+
+    @NotNull
+    @Email
+    private String email;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+----
+
+The annotations themselves don't perform any validation. When you have an instance of a `User` object, you can't tell whether it's valid without running it through a validator. In a Spring application, you can do this declaratively or programmatically.
+
+To validate an input object declaratively, you first need to add the `@Validated` annotation to the service. Next, you need to add the `@Valid` annotation to the parameter that you want to validate. During runtime, Spring turns your service into a proxy, and validates the input for you inside a method interceptor. 
+
+The following code makes sure the `User` object is always valid when `saveUser()` is called: 
+
+[source,java]
+----
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@Service
+public class UserService {
+
+    public void saveUser(@Valid User user) {
+        ...
+    }
+}
+----
+
+Declarative validation has the same limitations as Spring's other declarative services. Therefore, you can also do it, programmatically. In this case, you'd inject an instance of `Validator` and directly invoke it. 
+
+The following example also makes sure that the `User` object is valid, but does so programmatically:
+
+[source,java]
+----
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+
+public class UserService {
+    private final Validator validator;
+
+    UserService(Validator validator) {
+        this.validator = validator;
+    }
+
+    public void saveUser(User user) {
+        var validationErrors = validator.validate(user);
+        if (!validationErrors.isEmpty()) {
+            throw new ConstraintViolationException(validationErrors);
+        }
+        ...
+    }
+}
+----
+
+Bean Validation annotations have the added benefit of being supported by both Flow and Hilla, for use in user interface validation. For more information about this, see the relevant <<{articles}/flow/binding-data/components-binder-beans#using-jsr-303-bean-validation,Flow>> and <<{articles}/hilla/guides/forms/binder-validation#,Hilla>> documentation pages.
+
+For more information about Jakarta Bean Validation, visit the https://beanvalidation.org/[Bean Validation website]. For more information about using Bean Validation in Spring, see the https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html[Spring documentation].
+
+
+== Domain Primitives
+
+Whereas Bean Validation requires the data to be passed through a validator, domain primitives have validation built into their constructors. The fact that a domain primitive object exists, means that it's valid -- at least to some extent. Using domain primitives, the earlier `User` example could look like this:
+
+[source,java]
+----
+public class User {
+
+    private EmailAddress email; // <1>
+
+    public User(EmailAddress email) {
+        this.email = requireNonNull(email); // <2>
+    }
+
+    public EmailAddress getEmail() {
+        return email;
+    }
+
+    public void setEmail(EmailAddress email) {
+        this.email = requireNonNull(email); // <3>
+    }
+}
+----
+<1> The `EmailAddress` class has validation built in.
+<2> Instead of `@NonNull`, the `User` class is built in such a way that the `email` field can never be null.
+<3> It's still possible to change the email address, but not set it to `null`.
+
+Semantic validation isn't always easy to build into a domain primitive if the validation requires access to an external resource. You may, for example, have to check that something exists in a database. Making a custom Bean Validation constraint, though, that does this is easy since Spring supports injecting services into your constraint validators. Therefore, you could let the domain primitive validate its own size, lexical content, and syntax, while handing semantic validation over to Bean Validation.
+
+For more information about domain primitives, see the <</building-apps/architecture/domain-primitives#,Domain Primitives>> documentation page.
+
+
+== Validation Principles
+
+Regardless of whether you're using Bean Validation or domain primitives, the validation should follow the same general principles. Data validation is a multi-step process that goes from the cheaper and faster steps, to the expensive and slower steps. If one step fails, the validation stops immediately, and the validated value is rejected. All steps aren't always needed.
+
+Allowing the validation to continue not only wastes computing resources, but can be a security risk. For instance, the semantic validation step might try to parse the value, or use it as a database query argument. In the worst case, this can turn your validation into a vector for injection attacks, or attacks like https://en.wikipedia.org/wiki/Billion_laughs_attack[a billion laughs].
+
+
+=== Origin
+
+Whenever the source of the data is relevant, you should validate that it's legitimate. How you do this depends on both the data itself, and how it enters your application. For instance, you could require a valid API-key, or you could check the client's IP-address against an allowlist or a denylist, or maybe use digital signatures.
+
+You're probably not going to build this type of validation into a custom constraint validator, or a domain primitive constructor. Rather, this is something that is handled at the edges of your system, like by a servlet filter or a firewall.
+
+
+=== Size
+
+Whenever the size of the data is variable (e.g., strings and files), you should validate that it's within reasonable limits. When the data is too big or too small, there is no point in validating it further. You can save computing resources by rejecting it early and freeing the memory -- especially if the data is too large.
+
+Here are some examples of size constraints:
+
+- A valid email address must be between 3 and 254 characters. 
+- A 10-digit International Standard Book Number (ISBN) must be between 10 and 11 characters, depending on whether you include a hyphen before the check digit or not. 
+- An International Bank Account Number (IBAN) must be between 15 and 34 characters.
+- A profile image may have a maximum size of 3 megabytes.
+- A `VARCHAR(100)` database column cannot store a string that is longer than 100 characters.
+
+Bean Validation has built-in annotations for this type of validation: `@Size`, `@Min`, and `@Max`.
+
+
+=== Lexical Content
+
+Whenever the data is text, you should check its lexical content. This means checking that it's correctly encoded, and contains the correct characters. It's best to do such a check before would parse the string. When it contains illegal characters, there is no point in proceeding.
+
+Here are some examples of lexical content constraints:
+
+- A UUID can contain the letters `a` to `f`, the digits `0` to `9`, and hyphens.
+- An ISBN can contain the digits `0` to `9`, and hyphens.
+- Strings requiring ASCII encoding must not contain Unicode characters. 
+
+You can use regular expressions for this, as long as you avoid ones that would be susceptible to denial-of-service attacks. For more information about this, see the OWASP page about https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS[Regular expression Denial of Service].
+
+
+=== Syntax
+
+Whenever the data is text, or structured binary, you should check its syntax. This means checking that the format is correct, that the required information is present, that check digits or checksums are valid, and so on.
+
+Here are some examples of syntax constraints:
+
+- A 10 digit ISBN consists of 9 digits, a hyphen, and a check digit calculated from the first 9 digits.
+- A UUID has the form `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`, where some digit have extra meaning.
+- An ISO 8601 formatted date has the form `yyyy-mm-dd`, where the year has to be between 0000 and 9999, the month between 01 and 12, and the day between 01 and 31.
+
+If you're using regular expressions to validate the input, you can merge the lexical content and the syntax validation into a single step. However, if a check digit is involved, you have to do some parsing on your own.
+
+
+=== Semantics
+
+The final validation step is semantic validation. This means making sure that the data makes sense, even though it's syntactically correct. This almost always involves comparing the input to something like a standard, another input, or even an external data source.
+
+Here are some examples of semantic constraints:
+
+- The new password and the confirmed password must be equal.
+- A temperature in °K cannot be lower than 0.
+- A latitude coordinate must be between -90° and 90°.
+- A bank account number must exist, otherwise you cannot pay to it.
+- A personal identification number, or a social security number, must correspond to an actual person, otherwise you cannot do business with them.
+
+
+== Sanitization
+
+Sometimes, it makes sense to sanitize input before you validate it. People tend to enter certain data, like telephone numbers and addresses, in different ways. Nagging them about this results in a bad user experience. It's unnecessary when your application can sanitize the input itself.
+
+Here are some examples of automatic sanitization:
+
+- Remove trailing and leading whitespace.
+- Remove whitespace, `-`, `.`, `(`, and `)` from telephone numbers.
+- Allow users to enter decimals using both `.` and `,` -- be careful if they're also used as thousand dividers.
+- Replace `<` and `>` with `&amp;lt;` and `&amp;gt;`.
+
+Sanitization, though, is never a substitute for validation. You should always run the sanitized value through the complete validation chain. A sanitized value can be safe in one context, and unsafe in another. For example, if you escape HTML formatting characters in a string, although you can safely print it on a webpage, it may still contain an SQL injection attack.

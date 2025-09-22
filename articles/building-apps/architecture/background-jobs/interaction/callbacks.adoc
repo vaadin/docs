@@ -1,0 +1,196 @@
+---
+title: Callbacks
+page-title: How to use callbacks to interact with your UI | Vaadin 
+description: How to use callbacks to interact with the user interface.
+meta-description: When using a Flow user interface, the simplest way of allowing background jobs to interact with it is through callbacks. Learn more here.
+order: 10
+section-nav: badge-flow
+---
+
+
+= Callbacks [badge-flow]#Flow# 
+
+When using a Flow user interface, the simplest way of allowing background jobs to interact with it is through callbacks. You can use `Consumer`, `Runnable`, and `Supplier` as callback interfaces, depending on how you want to interact with the background job.
+
+[cols="1,1"]
+|===
+|Event |Callback
+
+|Completed without a result.
+|`Runnable`
+
+|Completed with a result of type `T`.
+|`Consumer<T>`
+
+|Completed with an exception.
+|`Consumer<Exception>`
+
+|Reported percentage done.
+|`Consumer<Double>`
+
+|Cancelled by user.
+|`Supplier<Boolean>`
+
+|===
+
+
+== Returning a Result
+
+A background job that returns a string or an exception could be implemented like this:
+
+[source,java]
+----
+@Async
+public void startBackgroundJob(Consumer<String> onComplete, 
+                               Consumer<Exception> onError) {
+    try {
+        var result = doSomethingThatTakesALongTime();
+        onComplete.accept(result);
+    } catch (Exception ex) {
+        onError.accept(result);
+    }
+}
+----
+
+
+== Reporting Progress
+
+When the background job is also reporting its progress, for instance as a percentage number, it could look like this:
+
+[source,java]
+----
+@Async
+public void startBackgroundJob(Consumer<String> onComplete, 
+                               Consumer<Double> onProgress, 
+                               Consumer<Exception> onError) {
+    try {
+        onProgress.apply(0.0);
+
+        var step1Result = performStep1();
+        onProgress.apply(0.25);
+
+        var step2Result = performStep2(step1Result);
+        onProgress.apply(0.50);
+
+        var step3Result = performStep3(step2Result);
+        onProgress.apply(0.75);
+
+        var result = performStep4(step3Result);
+        onProgress.apply(1.0);
+
+        onComplete.accept(result);
+    } catch (Exception ex) {
+        onError.accept(ex);
+    }
+}
+----
+
+
+== Cancelling
+
+A job can be cancelled. To do that, it would look like this:
+
+[source,java]
+----
+@Async
+public void startBackgroundJob(Consumer<String> onComplete, 
+                               Consumer<Double> onProgress, 
+                               Consumer<Exception> onError,
+                               Supplier<Boolean> isCancelled) {
+    try {
+        onProgress.apply(0.0);
+
+        if (isCancelled.get()) {
+            return;
+        }
+        var step1Result = performStep1();
+        onProgress.apply(0.25);
+
+        if (isCancelled.get()) {
+            return;
+        }
+        var step2Result = performStep2(step1Result);
+        onProgress.apply(0.50);
+
+        if (isCancelled.get()) {
+            return;
+        }
+        var step3Result = performStep3(step2Result);
+        onProgress.apply(0.75);
+
+        if (isCancelled.get()) {
+            return;
+        }
+        var result = performStep4(step3Result);
+        onProgress.apply(1.0);
+
+        onComplete.accept(result);
+    } catch (Exception ex) {
+        onError.accept(ex);
+    }
+}
+----
+
+All callbacks have to be thread-safe since they're called from the background thread, but owned and created by the user interface. For more information about how to implement these callbacks, see the <</building-apps/architecture/server-push/callbacks#,Implementing Callbacks>> documentation page.
+
+
+=== Improving Cancel API
+
+To make the cancelling API nicer, you can replace the callback with a handle. First, create a handle interface that the user interface can use to cancel the job:
+
+[source,java]
+----
+@FunctionalInterface
+public interface CancellableJob {
+    void cancel();
+}
+----
+
+Next, implement the service method like this:
+
+[source,java]
+----
+public CancellableJob startBackgroundJob(Consumer<String> onComplete, 
+                                         Consumer<Double> onProgress
+                                         Consumer<Exception> onError) {
+    var cancelled = new AtomicBoolean(false);
+    taskExecutor.execute(() -> {
+        try {
+            onProgress.apply(0.0);
+
+            if (cancelled.get()) {
+                return;
+            }
+            var step1Result = performStep1();
+            onProgress.apply(0.25);
+
+            if (cancelled.get()) {
+                return;
+            }
+            var step2Result = performStep2(step1Result);
+            onProgress.apply(0.50);
+
+            if (cancelled.get()) {
+                return;
+            }
+            var step3Result = performStep3(step2Result);
+            onProgress.apply(0.75);
+
+            if (cancelled.get()) {
+                return;
+            }
+            var result = performStep4(step3Result);
+            onProgress.apply(1.0);
+
+            onComplete.accept(result);
+        } catch (Exception ex) {
+            onError.accept(result);
+        }
+    });
+    return () -> cancelled.set(true);
+}
+----
+
+The user interface would have to store the handle while the job is running, and call the `cancel()` method to cancel it. However, you can't use the `@Async` annotation in this case. It's because `@Async` methods can only return `void` or future-like types. In this case, you may want to return neither.
+
+The handle itself is thread safe because you're using an `AtomicBoolean`. You don't need to take any special precautions to call it from the user interface.
