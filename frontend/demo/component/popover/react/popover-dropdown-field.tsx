@@ -85,6 +85,11 @@ function Example() {
         position="bottom-start"
         accessibleName="Select a date range"
         opened={opened.value}
+        onOpenedChanged={(e) => {
+          if (e.detail.value) {
+            opened.value = true;
+          }
+        }}
         onClosed={() => {
           opened.value = false;
         }}
