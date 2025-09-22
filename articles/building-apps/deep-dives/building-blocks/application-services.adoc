@@ -9,11 +9,7 @@ order: 10
 
 = Application Services
 
-The application layer API consists of _application services_. In a simple Vaadin application, the application services reside inside a single <<{articles}/building-apps/deep-dives/architecture/components#,system component>>, as illustrated on the following diagram:
-
-image::images/application-services.png[UI Layer Calls Three Application Services]
-
-In code, the services are Spring Beans, and the components Java packages.
+The <<../architecture/layers#,application layer>> API consists of _application services_, implemented in code as Spring Beans.
 
 Services should have _high cohesion_. This means that all of the methods in your service should relate to the same thing. For example, all methods in this `PaymentService` are directly related to the business activity of handling payments:
 
@@ -66,7 +62,7 @@ The advantage of this approach is that you have one less Java file to maintain. 
 
 == Input & Output
 
-Application services often need to communicate with <<{articles}/building-apps/deep-dives/application-layer/persistence/repositories#,repositories>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
+Application services often need to communicate with <<repositories#,repositories>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
 
 
 === Entities
@@ -116,7 +112,7 @@ In this case, the application services should accept DTO:s as input, and return 
 
 This adds another responsibility to the application service: mapping between entities and DTO:s.
 
-When using <<{articles}/building-apps/deep-dives/application-layer/persistence/repositories#query-objects,query objects>>, you can do the mapping in them by returning their DTO:s, directly. The query object DTO:s become part of the application layer API.
+When using <<repositories#query-classes,query classes>>, you can do the mapping in them by returning their DTO:s, directly. The query DTO:s become part of the application layer API.
 
 For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
 
@@ -154,14 +150,14 @@ When using DTO:s, you have more code to maintain. Some changes, like adding a ne
 
 === Domain Payload Objects
 
-When using <<{articles}/building-apps/deep-dives/application-layer/domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
+When using <<domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
 
 
 === Validation
 
 All input should be validated by the application services before they do anything else with it. This is important for security, integrity, and consistency. Even if you use input validation in your user interface, you should still validate the data in the application services.
 
-You can validate the input in different ways. For more information, see the <<{articles}/building-apps/deep-dives/application-layer/consistency/validation#,Validation>> documentation page.
+You can validate the input in different ways. For more information, see the <</building-apps/deep-dives/concepts/consistency/validation#,Validation>> documentation page.
 
 
 == Cross-Cutting Concerns
@@ -212,18 +208,12 @@ See the https://docs.spring.io/spring-framework/reference/core/aop.html[Spring D
 
 === Security
 
-All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your user interface views are protected. Even methods that don't require authentication, should be declared explicitly to permit anonymous users.
-
-To protect application services, you have to enable _method security_. To do that, you need to add the `@EnableMethodSecurity` annotation to your security class. After that, you can use annotations to secure your application services. Spring Boot recommends the use of the `@PreAuthorize` annotation.
-
-See the https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html[Spring Security Documentation] for more information about method security.
-
-// TODO Add a link to a separate page about security once written.
+All application services in your Vaadin application should be protected by Spring Security. You should do this regardless of how your user interface views are protected. Even methods that don't require authentication, should be declared explicitly to permit anonymous users. See the <</building-apps/security/protect-services#,Protect Services>> guide for more information.
 
 
 === Transactions
 
-All application service methods that interact with the database should always run inside their own transactions. You should use the `REQUIRES_NEW` transaction propagation.
+All application service methods that interact with the database should always run inside their own transactions. You should use the `REQUIRED` or `REQUIRES_NEW` transaction propagation.
 
 See the <<consistency/transactions#,Transactions>> documentation page for more information about transaction management.
 
@@ -237,60 +227,3 @@ To observe what your application services are doing from the outside, you can us
 See the https://docs.spring.io/spring-boot/reference/actuator/observability.html[Spring Boot Documentation] for more information about observability.
 
 // TODO Add a link to a separate page about observability
-
-
-== Vaadin Integration
-
-Application services can be integrated in both Vaadin Flow and Vaadin Hilla applications. For Flow user interfaces, you would inject the application services directly into your views, like this:
-
-[source,java]
-----
-@Route("payment")
-public class PaymentView extends VerticalLayout {
-
-    private final PaymentService paymentService;
-
-    public PaymentView(PaymentService paymentService) {
-        this.paymentService = paymentService;
-        ...
-    }
-}
-----
-
-For Hilla, you should make the application services _browser callable_. You'd do this by adding the `@BrowserCallable` annotation to your service, like this:
-
-[source,java]
-----
-@Service
-@BrowserCallable
-public class PaymentService {
-    ...
-}
-----
-
-See the <<{articles}/hilla/guides/endpoints#,Hilla endpoints documentation page>> for more information.
-
-
-== Scaling
-
-As your application grows, it makes sense to split the application services component into smaller parts. Split the services according to which _bounded context_ they belong.
-
-A bounded context is a term from domain-driven design. It's a clear, consistent boundary within a system where a specific domain model is defined. It ensures that within this context, terms and concepts have precise meanings that won't be confused or conflict with other contexts in the system. This separation helps to manage complexity by allowing different parts of the system to evolve independently.
-
-// TODO Consider adding a separate page about bounded contexts only.
-
-For example, in this diagram, the UI layer interacts with three different bounded contexts through their service components: Quotation Management; Order Management; and Customer Relations Management:
-
-image::images/domain-application-services.png[UI calls Three Application Service Components]
-
-Bounded contexts are often associated with <<{articles}/building-apps/deep-dives/architecture/microservices#,microservices>>. However, you can also use them when you're building <<{articles}/building-apps/deep-dives/architecture/monoliths#,modular monoliths>>. This is recommended in Vaadin applications.
-
-In <<{articles}/building-apps/deep-dives/project-structure/single-module#,single-module projects>>, you should place the bounded contexts in their own packages. The three contexts from the example above would correspond to the following Java packages:
-
-- `com.example.application.qm.services` (Quotation Management)
-- `com.example.application.om.services` (Order Management)
-- `com.example.application.crm.services` (Customer Relations Management)
-
-In <<{articles}/building-apps/deep-dives/project-structure/multi-module#,multi-module projects>>, you should place the bounded contexts into their own Maven modules.
-
-You may even want to split a single bounded context into multiple Maven modules. For instance, you might want to have the application services and the domain model in two separate modules.
