@@ -2,14 +2,6 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
-// Import all Lumo CSS custom properties into the global style scope
-import '@vaadin/vaadin-lumo-styles/color.js';
-import '@vaadin/vaadin-lumo-styles/color-global.js';
-import '@vaadin/vaadin-lumo-styles/typography.js';
-import '@vaadin/vaadin-lumo-styles/sizing.js';
-import '@vaadin/vaadin-lumo-styles/spacing.js';
-import '@vaadin/vaadin-lumo-styles/style.js';
-
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
@@ -165,7 +157,7 @@ class TocFooter extends LitElement {
             }
 
             .toc-footer--img img {
-              margin-top: 1rem; 
+              margin-top: 1rem;
               width: 100%;
               height: auto;
               border-radius: 0.25rem;
@@ -181,11 +173,11 @@ class TocFooter extends LitElement {
               font-weight: 600;
               color: var(--docs-heading-text-color) !important;
             }
-           
+
             .toc-footer > a::after {
               content: none !important;
             }
-            
+
             /* Hide the footer on mobile when the TOC is closed */
             @media screen and (max-width: 65rem) {
               .toctoggle:not([open]) + .toc > dspublisher-toc-footer {
@@ -197,13 +189,13 @@ class TocFooter extends LitElement {
                 display: flex;
                 flex-direction: row-reverse;
                 align-items: flex-start;
-                gap: 1rem; 
+                gap: 1rem;
                 justify-content: flex-end;
               }
 
               .toc-footer--img {
-                flex-shrink: 0; 
-                width: 4rem; 
+                flex-shrink: 0;
+                width: 4rem;
               }
 
               .toc-footer--img img {
@@ -215,7 +207,7 @@ class TocFooter extends LitElement {
 
               .toc-footer--content {
                 flex: 1;
-                padding-top: 0.25rem; 
+                padding-top: 0.25rem;
               }
             }
           </style>
