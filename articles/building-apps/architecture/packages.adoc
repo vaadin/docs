@@ -1,0 +1,145 @@
+---
+title: Package Structure
+page-title: How to structure Java packages in Vaadin applications
+description: Different ways of structuring the Java packages in Vaadin projects.
+meta-description: Learn when to use package-by-layer vs package-by-feature in Vaadin applications. Practical guide covering trade-offs, team considerations, and migration strategies for better code organization.
+order: 6
+---
+
+= Package Structure
+:toclevels: 2
+
+When it comes to structuring the packages of a Java business application, there are two common paradigms: *package by layer* and *package by feature*. Both have their own pros and cons. In this article, you'll learn what they mean and how you can combine them to get the best of both worlds in your Vaadin applications.
+
+== Package by Layer
+
+When you package by layer, you put all classes that belong to the same architectural layer in the same package. You then end up with packages like `ui`, `service`, and `domain`, as illustrated in this example:
+
+[source]
+----
+├── com.example.application.domain
+│   ├── Customer
+│   └── CustomerRepository
+├── com.example.application.persistence
+│   └── JooqCustomerRepository
+├── com.example.application.service
+│   ├── CustomerDTO
+│   └── CustomerService
+├── com.example.application.ui
+│   ├── CustomerForm
+│   └── CustomerView
+├── com.example.application.util
+│   └── StringUtils
+└── com.example.application
+    └── Application
+----
+
+This paradigm groups classes with similar responsibilities together. This leads to a *clear separation of concerns*. A class with too many responsibilities doesn't fit into any of the packages. This gives a natural inclination to split the class into smaller parts.
+
+One drawback of this approach is that most classes need to be public. This means classes across layers can directly access each other, potentially violating architectural boundaries. However, the architectural style often dictates a specific dependency flow, such as `ui` -> `service` -> `domain`. You'd have to use something like https://www.archunit.org/[ArchUnit] to ensure the dependencies between classes are according to your architectural style, or put each layer into a <<project-structure/multi-module#,separate JAR file>>. Public visibility also makes it more difficult to separate <<api-spi#,APIs and SPIs>> from internal classes. 
+
+Another drawback is that feature cohesion suffers. In the example above, all Customer-related code is spread across multiple packages, making it harder to understand the complete feature. This also has an impact on testing: you can't easily mock or isolate a complete feature. You often end up testing dependencies across multiple layers rather than testing a cohesive feature in isolation.
+
+From an evolutionary perspective, this approach makes it more difficult to split a <<monoliths#,monolith>> into modules or <<microservices#,microservices>> if it grows too large.
+
+That said, this is a useful approach for *small applications and teams organized by technical expertise*.
+
+
+== Package by Feature
+
+When you package by feature, you put all classes that implement the same feature in the same package. You end up with packages like `customer`, `quotation`, and `order`, as illustrated in this example. Public classes are marked with `+` and private classes with `-`:
+
+[source]
+----
+├── com.example.application.customer
+│   ├── - Customer
+│   ├── - CustomerRepository
+│   ├── - JooqCustomerRepository
+│   ├── + CustomerDTO
+│   ├── + CustomerService
+│   ├── - CustomerForm
+│   └── - CustomerView
+├── com.example.application.order
+│   └── ...
+├── com.example.application.quotation
+│   └── ...
+├── com.example.application.util
+│   └── + StringUtils
+└── com.example.application
+    └── + Application    
+----
+
+Compared to package by layer, this leads to higher feature cohesion and modularity. The classes that implement the same feature or functionality are grouped together. If you need to make a change to a feature, you only need to touch one package. Your tests can focus on one feature and test it in isolation. And if you need to split your application into modules or microservices, you can do that.
+
+Furthermore, classes that constitute the <<api-spi#,API and SPI>> of the feature are public, whereas the rest are package private. *The Java compiler now ensures only the public API can be called from other packages.*
+
+The biggest issues with this approach are to decide _what a feature is_, and how to avoid making a mess _inside_ the feature package.
+
+
+=== What's a Feature?
+
+The term _feature_ is both inflated and vague in the software industry. Because of this the answer to the question depends on the nature and requirements of your application. If you are building a large application, it makes sense to package the application by _bounded context_.
+
+.What's a Bounded Context?
+[NOTE]
+====
+A _bounded context_ is a central pattern in Domain-Driven Design. It draws a clear boundary around a specific part of a software system. The concepts, rules, and language used inside that boundary are consistent and don't conflict with other parts of the system.
+
+Think of it as a "context bubble" where terms have a specific meaning. For example, the word _order_ might mean a customer's purchase in the *Sales* context but represent a stock replenishment request in the *Inventory* context. Because of this, the relationships between bounded contexts are explicit. In practice, this means explicitly defined APIs and SPIs.
+====
+
+In smaller applications, a feature might be a particular *workflow* (e.g., "Customer Onboarding") or even a very complex *UI view* (e.g., "Dashboard"). In an e-commerce application, "Product Catalog", "Shopping Cart", and "Order Processing" might each be separate features. In CRUD-oriented applications, each *entity* that has its own CRUD view might be considered a feature.
+
+Very small applications might only contain a single feature. In this case, there is no point in introducing a separate feature package. You can instead put all classes in the root package, as illustrated in this example:
+
+[source]
+----
+com.example.application
+├── Application
+├── CustomerDTO
+├── CustomerRestClient
+└── CustomerView 
+----
+
+=== Layers Inside Features
+
+Features can grow quite big, which introduces the risk of the code inside the feature turning into a mess. To address this, you can package some of your classes by layer _inside_ the feature. In Vaadin applications -- and Flow applications in particular -- a first step is to split the <<layers#,application layer and UI layer>> into separate packages, like this:
+
+[source]
+----
+├── com.example.application.customer
+│   ├── - Customer
+│   ├── - CustomerRepository
+│   ├── - JooqCustomerRepository
+│   ├── + CustomerDTO
+│   └── + CustomerService
+├── com.example.application.customer.ui
+│   ├── - CustomerForm
+│   └── - CustomerView
+└── com.example.application
+    └── + Application    
+----
+
+Now, the UI-related classes is in a separate `ui` package. The classes can have package visibility since they are only called by the web browser, not by other feature packages. They call the API of the root feature package, which has public visibility.
+
+You may want to introduce other layers as well, such as `service` and `domain`, but then you'll again run into the problem of forced public visibility and unintended coupling. To address that, you can use ArchUnit or https://spring.io/projects/spring-modulith[Spring Modulith].
+
+
+=== Beware of Database Coupling
+
+A monolithic Vaadin application often uses a single database even though its code may be packaged by feature. If you are not careful, this can cause problems with _shared tables_ and _JPA inheritance_.
+
+If one of your features changes the schema of a shared table, it may end up *breaking other features even though your code looks fine*. An integration test that uses the database should detect this, though.
+
+If you use JPA inheritance and end up moving some entities into a separate application, you have to remember to also clean up the database. Otherwise your JPA implementation may find records in the database with an unknown discriminator column value. *This results in a runtime exception and may render your application unusable even though your code looks fine.* Even an integration test may not be able to find this, if the features are tested in isolation and the database cleared between tests. For more information about JPA inheritance, see the https://docs.jboss.org/hibernate/stable/orm/userguide/html_single/Hibernate_User_Guide.html#entity-inheritance[Hibernate User Guide].
+
+
+== Final Thoughts
+
+Package structure plays a big role in the readability and maintainability of your application. You know your package structure is right when you find classes where you expected them to be, and have no problems deciding where to put new classes. 
+
+When you package by layer, classes that belong to the same architectural layer (like "UI", "Service", "Domain") end up in the same package. When you package by feature, classes that belong to the same feature (like "Customer Onboarding", "Dashboard", "Order Processing") end up in the same package.
+
+If your application is small or you are unsure which paradigm to pick, *start by putting all classes in the same package*. As the application grows, *move the UI-related classes to their own sub-package*. If no obvious feature boundaries start to crystallize and the UI-application package split is not enough to keep the code structured, *go for package by layer*. If your team consists of technical specialists, they may also work better with the package by layer paradigm.
+
+However, if you start to see clear feature boundaries, *switch to package by feature*. Clear feature boundaries emerge when you can identify distinct business capabilities that change *independently of each other*. If your team is cross-functional, they naturally align with this paradigm. If needed, you can still have some levels of package by layer within each feature.
