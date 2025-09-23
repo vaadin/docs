@@ -1,0 +1,153 @@
+---
+title: Pessimistic Locking
+page-title: How to use pessimistic locking in your apps | Vaadin
+description: Learn about pessimistic locking and when to use it.
+meta-description: Learn more about pessimistic locking and when you could or should use it in your applications.
+order: 30
+---
+
+
+= Pessimistic Locking
+
+Pessimistic locking assumes that an update is going to fail because of a conflict. To prevent this, the application locks the record before it starts to write. Once the transaction is committed, the lock is released. If the record is already locked, the transaction waits until the lock is released and then proceeds with the update. You have to be careful, though, to avoid <<transactions#deadlocks,deadlocks>>.
+
+Converse to <<optimistic-locking#,optimistic locking>>, pessimistic locking doesn't require a version number to be stored in every table. It uses the database to perform the lock. This requires the database to have programmer controllable write locks, which modern relational databases have.
+
+The following SQL example illustrates how to use pessimistic locking. It locks a record, updates it, and then commits the transaction:
+
+[source,sql]
+----
+SELECT * FROM foo WHERE id = 1234 FOR UPDATE
+UPDATE foo SET bar = 'hello world' WHERE id = 1234
+COMMIT
+----
+
+Both <</building-apps/forms-data/repositories/jpa#,JPA>> and <</building-apps/forms-data/repositories/jooq#,jOOQ>> have built-in support for pessimistic locking.
+
+Whether pessimistic locking is faster than optimistic locking depends on the convention of the system. When you have many conflicts and use optimistic locking, you'll discard many transactions. This could be avoided with pessimistic locking, resulting in better throughput. When the contention is low, though, optimistic locking is faster.
+
+Furthermore, different databases may implement pessimistic locking in different ways. You should check how your database handles pessimistic locking, so that you can make informed decisions about when and how to use it.
+
+Generally, you should use pessimistic locking in situations where optimistic locking is not good enough. One such situation is the Time-Of-Check to Time-Of-Use (TOCTOU) problem. This is explained later on this page.
+
+
+== Resolving Conflicts
+
+When you use pessimistic locking, you're avoiding conflicts rather than detecting them. However, there are still situations where Spring may throw a `PessimisticLockingFailureException`. The most typical ones are timeouts and deadlocks.
+
+A timeout occurs if a transaction cannot acquire a lock within a certain amount of time. This happens because another transaction already holds the lock, and is not finished with it.
+
+A deadlock occurs when one transaction is waiting for a lock held by another, or vice versa. When the database detects this, it designates one of the transactions as the victim, and rolls it back.
+
+You can recover from pessimistic locking failures in different ways. You could retry the transaction after some time, or adjust the timeout. You might be able to prevent the failure from occurring by adjusting the isolation level of your transaction. However, if you do this, you should be aware of the negative side effects that using a lower isolation level could cause. This is covered on the <<transactions#transaction-isolation,Transactions>> documentation page.
+
+To catch and handle a `PessimisticLockingFailureException`, you should always do it outside of the transaction. The following example uses <<transactions/programmatic#,programmatic transactions>> to do this:
+
+[source,java]
+----
+@Service
+public class MyApplicationService {
+    ...
+        
+    public void myMethod() {
+        try {
+            transactionTemplate.executeWithoutResult(tx -> {
+                // Code that uses pessimistic locking
+            });
+        } catch (PessimisticLockingFailureException ex) {
+            // Handle the exception
+        }
+    }
+}
+----
+
+Pessimistic locking doesn't prevent one user from overwriting another's data in two consecutive transactions. For this, you should use <<optimistic-locking#,optimistic locking>>. Incidentally, it's possible to combine both mechanisms, since optimistic locking happens in the application and pessimistic locking in the database.
+
+
+== TOCTOU
+
+Time-of-Check to Time-of-Use (TOCTOU) is a problem that occurs when a critical piece of data is changed after it has been retrieved, but before it has been used. To understand this better, consider a bank account. Every deposit and withdrawal is inserted into a table of monetary transactions. The balance is calculated dynamically by summing the records in the transactions table. The following account has two deposits and one withdrawal:
+
+[cols="1,>1",options="footer"]
+|===
+|Transaction |Amount
+
+|Deposit
+|$100
+
+|Deposit
+|$20
+
+|Withdrawal
+|- $50
+
+|Balance
+|$ 70
+
+|===
+
+Suppose the business rules state that you're not allowed to overdraw the account. Therefore, you check the balance before any withdrawal and refuse the transaction if there aren't enough funds in the account. However, if you perform two withdrawals almost simultaneously, you may run into a TOCTOU problem. Although both transactions check the balance before inserting the withdrawals into the transactions table, you may inadvertently overdraw the account. This is illustrated in the following table:
+
+[cols="2,2,>1"]
+|===
+|Transaction A |Transaction B|Account Balance
+
+|_Wants to withdraw $70_
+|_Wants to withdraw $50_
+|$100
+
+|Balance is > $70
+|Balance is > $50
+|$100
+
+|Withdraw $70
+|
+|$30
+
+|
+|Withdraw $50
+|-$20
+
+|===
+
+To solve this problem, you have to ensure that all transactions involving an individual account execute serially, one after the other. If your database supports the _serializable_ <<transactions#transaction-isolation,isolation level>>, you could use that. However, you can also use pessimistic locking to do this, as illustrated in the following table:
+
+[cols="2,2,>1"]
+|===
+|Transaction A |Transaction B|Account Balance
+
+|_Wants to withdraw $70_
+|_Wants to withdraw $50_
+|$100
+
+|Lock row in `ACCOUNTS` table
+|Lock row in `ACCOUNTS` table
+|$100
+
+>|*Lock acquired*
+>|_Waiting for transaction A_
+|$100
+
+|Balance is > $70
+>|...
+|$100
+
+|Withdraw $70
+>|...
+|$30
+
+|Release `ACCOUNTS` lock
+>|*Lock acquired*
+|$30
+
+|
+|Balance is < $50, cannot proceed with transaction
+|$30
+
+|
+|Release `ACCOUNTS` lock
+|$30
+
+|===
+
+You don't have to update a row to lock it. In this example, the application locked a row in the accounts table even though it was inserting records into the transactions table.

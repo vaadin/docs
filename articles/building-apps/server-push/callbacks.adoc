@@ -1,0 +1,55 @@
+---
+title: Callbacks
+page-title: How to use server push with callbacks | Vaadin
+description: How to use server push with callbacks.
+meta-description: Learn how to  use server push with callbacks when building the UI layer of your Vaadin application.
+order: 20
+section-nav: badge-flow
+---
+
+
+= Implementing Callbacks [badge-flow]#Flow#
+
+When building the user interface with Vaadin Flow, the easiest way of allowing a background job to update the user interface is through callbacks. This is explained in more detail in the <</building-apps/business-logic/background-jobs/interaction/callbacks#,Callbacks>> documentation page.
+
+Whenever you implement a callback, you have remember that the callback is called by the background thread. This means that any updates to the user interface must happen inside a call to `UI.access()`.
+
+[NOTE]
+The examples on this page only work with push enabled. For information about how to do that, see the <<.#enabling-push-flow,Server Push>> documentation page.
+
+For every callback, you should create a private method in your user interface. The method is called inside `UI.access()`, so you can safely update the user interface inside it.
+
+For example, a method for handling successful completion could look like this:
+
+[source,java]
+----
+private void onJobCompleted(String result) {
+    Notification.show("Job completed: " + result);
+}
+----
+
+Likewise, a method for handling errors might be done like this:
+
+[source,java]
+----
+private void onJobFailed(Exception error) {
+    Notification.show("Job failed: " + error.getMessage());
+}
+----
+
+For reporting progress, you can use a <<{articles}/components/progress-bar#,progress bar>>. If the background jobs reports the progress as a floating point value between 0.0 and 1.0, you can pass it directly to the `setValue` method of the progress bar.
+
+Here is an example of a button click listener that starts a background job, and uses the private methods, and the progress bar, to update the user interface:
+
+[source,java]
+----
+button.addClickListener(clickEvent -> {
+    var ui = UI.getCurrent();
+    service.startBackgroundJob(
+        ui.accessLater(this::onJobCompleted, null), // <1>
+        ui.accessLater(progressBar::setValue, null),
+        ui.accessLater(this::onJobFailed, null)
+    );
+});
+----
+<1> The `UI.accessLater()` method is explained on the <<updates#access-later,Pushing UI Updates>> documentation page.
