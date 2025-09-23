@@ -11,7 +11,7 @@ order: 5
 
 = Add an Application Service
 
-In a Vaadin application, the _application layer_ contains the business, the data, and any integrations to external systems. The application layer exposes an API that the _UI layer_ (i.e., the views) can call:
+In a Vaadin application, the _application layer_ contains the business, the data, and any integrations to external systems. The application layer exposes an <<../../architecture/api-spi#,API>> that the _UI layer_ (i.e., the views) can call:
 
 image::images/application-layer-api.png[A diagram of the UI layer calling the application layer through an API]
 
@@ -22,9 +22,10 @@ This API is implemented by _application services_. In practice, application serv
 
 You can design application services according to your preferred architectural style, but following these best practices helps prevent common issues:
  
+* The application services should have *high cohesion*. This means that all the methods in your service should relate to the same thing.
 * The application services should be *stateless*.
-* Application services should *initiate and complete database transactions* before returning results.
-* The application services should be *secure*.
+* Application services should *initiate and complete <<../../forms-data/consistency/transactions#,database transactions>>* before returning results.
+* The application services should be *<<../../security/protect-services#,secure>>*.
 * Views should invoke application services, but application services *should not have dependencies on views*.
 
 [NOTE]
@@ -70,10 +71,8 @@ public class OrderCreationService {
 }
 ----
 <1> Makes the service into a Spring bean.
-<2> Protects the service from unauthorized access. See <<../../security/protect-services#,Protect Services>> for details.
+<2> Protects the service from unauthorized access.
 <3> Runs the method inside a database transaction.
-
-If you want to read more about application service design the Vaadin Way, see the <</building-apps/architecture/application-services#,Application Services Deep Dive>>.
 
 
 == Service Naming
@@ -87,13 +86,115 @@ Vaadin does not enforce a specific naming convention for application services. W
 * *Verb-based names*: If noun-based names feel awkward, use verbs (e.g., `CreatingCustomersService`, `PayingSalariesService`)
 
 
+== Input & Output
+
+Application services often need to communicate with <<../../forms-data/repositories#,repositories>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
+
+
+=== Entities
+
+When the application service passes the entities directly to the UI layer, they become part of the application layer API. Many service methods delegate to the corresponding repository methods. Here's an example of this:
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+
+    private final CustomerRepository repository;
+
+    CustomerCrudService(CustomerRepository repository) {
+        this.repository = repository;
+    }
+
+    public Page<Customer> findAll(Specification<Customer> specification, Pageable pageable) {
+        return repository.findAll(specification, pageable);
+    }
+
+    public Customer save(Customer customer) {
+        return repository.saveAndFlush(customer);
+    }
+}
+----
+
+[CAUTION]
+When most of your service methods delegate to a repository, it may be tempting to skip the service and have the UI layer communicate directly with the repository. However, this isn't a good idea because of the cross-cutting concerns that the application service has to handle. This is explained later on this page.
+
+Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
+
+Your entities should be _anemic_, which means that they only contain data and little to no business logic.
+
+In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
+
+
+=== Data Transfer Objects
+
+Sometimes, application services shouldn't return the entities themselves. For instance, the domain model may contain business logic that must be called within some context that isn't available in the UI layer. It might require access to other services, or run inside a transaction.
+
+In other cases, the user interface may need only a subset of the data stored inside a single entity, or a combination of data from multiple entities. Fetching and returning the full entities would be a waste of resources.
+
+You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains about the same.
+
+In this case, the application services should accept DTO:s as input, and return DTO:s as output. The entities should no longer be part of the application layer API.
+
+This adds another responsibility to the application service: mapping between entities and DTO:s.
+
+When using <<../../forms-data/repositories#query-classes,query classes>>, you can do the mapping in them by returning their DTO:s, directly. The query DTO:s become part of the application layer API.
+
+For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+
+    private final CustomerRepository repository;
+
+    CustomerCrudService(CustomerRepository repository) {
+        this.repository = repository;
+    }
+
+    // In this example, CustomerForm is a Java record.
+
+    public CustomerForm save(CustomerForm customerForm) {
+        var entity = Optional.ofNullable(customerForm.getId())
+            .flatMap(repository::findById)
+            .orElseGet(Customer::new);
+        entity.setName(customerForm.name());
+        entity.setEmail(customerForm.email());
+        ...
+        return toCustomerForm(repository.saveAndFlush(entity));
+    }
+
+    private CustomerForm toCustomerForm(Customer entity) {
+        return new CustomerForm(entity.getId(), entity.getName(), entity.getEmail(), ...);
+    }
+}
+----
+
+When using DTO:s, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
+
+
+=== Domain Payload Objects
+
+When using <</building-apps/forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
+
+
+=== Validation
+
+All input should be validated by the application services before they do anything else with it. This is important for security, integrity, and consistency. Even if you use input validation in your user interface, you should still validate the data in the application services.
+
+You can validate the input in different ways. For more information, see the <</building-apps/forms-data/consistency/validation#,Validation>> documentation page.
+
+
 == Package Naming
 
-For Java packages containing services, the recommended naming convention is `[feature].service`, where `[feature]` represents the full-stack feature the service belongs to.
+For Java packages containing services, the recommended naming convention is `[feature].service`, where `[feature]` represents the full-stack feature the service belongs to. If the feature package is very small, you can simplify the structure and put the service directly in `[feature]`.
 
 For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm.service`
 
 This structure keeps services well-organized, easy to find, and clearly associated with their purpose.
+
+See the <<../../architecture/packages#,Package Structure>> documentation page for more information.
 
 
 == Calling from Views
