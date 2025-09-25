@@ -1,0 +1,181 @@
+---
+title: "Local Environment Setup"
+page-title: "How to Setup a Local Environment for Control Center"
+description: "Understand how to set up Control Center in a local environment for testing and evaluation."
+meta-description: "Understand how to set up Control Center in a local environment for testing and evaluation."
+order: 50
+---
+
+= Local Environment Setup
+
+Control Center is designed for production environments running in the cloud, but it can also be installed locally for testing and evaluation purposes. Setting it up in a local environment is a useful way to explore its features before deploying it to a live cluster.
+
+== Choosing a Local Kubernetes Environment
+
+Several tools are available for running Kubernetes locally. The most common options are listed below.
+
+=== Docker Desktop (Recommended)
+
+link:https://www.docker.com/products/docker-desktop/[Docker Desktop,window=read-later] is the easiest way to run Kubernetes locally, especially for new users. It includes both Docker and Kubernetes in a single package.
+
+Kubernetes is not enabled by default in Docker Desktop. To enable it:
+
+1. Open Docker Desktop preferences
+2. Navigate to *Kubernetes*
+3. Enable *Kubernetes* and apply the changes
+
+Once Kubernetes has started, the cluster is ready to use and Control Center can be installed.
+
+=== Minikube
+
+link:https://minikube.sigs.k8s.io/[Minikube,window=read-later] is another popular tool for running Kubernetes on a local machine. It supports various drivers (Docker, HyperKit, VirtualBox, etc.) and provides flexibility for advanced usage.
+
+[NOTE]
+====
+Ensure the Minikube tunnel is running before installing Control Center so that LoadBalancer services can be accessed properly (see link:https://minikube.sigs.k8s.io/docs/handbook/accessing/#loadbalancer-access[LoadBalancer access,window=read-later]).
+====
+
+=== K3d
+
+link:https://k3d.io/[K3d,window=read-later] runs K3s (a lightweight Kubernetes distribution) in Docker containers. It is more advanced and is especially useful for managing multiple isolated clusters locally. However, it requires more setup and is recommended for experienced users.
+
+== Hostnames for Local Clusters
+
+Even though applications in a local Kubernetes cluster are accessible via `127.0.0.1`, proper DNS hostnames are still required for Control Center and the deployed applications.
+
+The simplest approach is to use subdomains of `local.gd`, a wildcard domain that resolves all subdomains to `127.0.0.1`.
+
+For example:
+
+* `control.local.gd` for Control Center
+* `app.local.gd` for a deployed application
+
+These can be used directly without any additional DNS setup.
+
+[CAUTION]
+====
+Alternatively, hostnames can be configured by editing the system hosts file:
+
+* [filename]`/etc/hosts` on macOS and Linux
+* [filename]`C:\Windows\System32\drivers\etc\hosts` on Windows
+
+This approach is less convenient, may cause conflicts with existing entries, and can introduce security issues if misconfigured.
+====
+
+== Certificates in Local Environments
+
+By default, Control Center uses a Let's Encrypt link:https://letsencrypt.org/[ACME issuer,window=read-later] to automatically issue and renew TLS certificates for applications.
+
+Let's Encrypt does not support issuing certificates for loopback addresses such as `127.0.0.1` (see: link:https://letsencrypt.org/docs/certificates-for-localhost/[Certificates for localhost,window=read-later]).
+
+To disable Let's Encrypt certificate management for local environments, pass the following value to Helm:
+
+.Terminal
+[source,shell]
+----
+--set issuer.acme.enabled=false
+----
+
+=== Trusting the Self-Signed CA
+
+When the ACME issuer is disabled, Control Center generates a self-signed certificate authority to issue certificates.
+
+The CA certificate can be extracted with:
+
+.Terminal
+[source,shell]
+----
+kubectl get secret control-center-ca -n vaadin -o go-template='{{ index .data "tls.crt" | base64decode }}' > control-center-ca.crt
+----
+
+To trust the CA locally:
+
+[.example]
+--
+.Terminal
+[source,shell]
+----
+<source-info group="macOS"></source-info>
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain control-center-ca.crt
+----
+
+.Terminal
+[source,shell]
+----
+<source-info group="Linux"></source-info>
+sudo cp control-center-ca.crt /usr/local/share/ca-certificates/control-center-ca.crt
+sudo update-ca-certificates
+----
+
+.PowerShell
+[source,powershell]
+----
+<source-info group="Windows"></source-info>
+Import-Certificate -FilePath "control-center-ca.crt" -CertStoreLocation "Cert:\LocalMachine\Root"
+----
+--
+
+[TIP]
+====
+Trusting the CA allows the browser to accept the certificates issued by Control Center without warnings.
+This improves the developer experience by enabling secure HTTPS access without security errors or unsafe site prompts.
+====
+
+[#_database_storage_and_backup_for_local_clusters]
+== Database Storage and Backup for Local Clusters
+
+To support backups in a local development environment, volume snapshot functionality must be available.
+Minikube provides built-in StorageClass and VolumeSnapshotClass implementations that are compatible with Control Center and can be easily enabled using add-ons.
+
+Enable both required add-ons with:
+
+.Terminal
+[source,shell]
+----
+minikube start
+minikube addons enable csi-hostpath-driver
+minikube addons enable volumesnapshots
+----
+
+Once enabled, the following classes are available:
+
+* StorageClass: `csi-hostpath-sc`
+* VolumeSnapshotClass: `csi-hostpath-snapclass`
+
+To confirm they are available:
+
+.Terminal
+[source,shell]
+----
+kubectl get storageclass
+kubectl get volumesnapshotclass
+----
+
+To configure Control Center to use these classes, set the following Helm values:
+
+.Terminal
+[source,shell]
+----
+--set postgres.storageClass=csi-hostpath-sc
+--set postgres.volumeSnapshotClass=csi-hostpath-snapclass
+----
+
+This configuration ensures that Postgres data volumes and scheduled snapshot backups use Minikube’s CSI-based local drivers.
+
+== Installing Control Center Locally
+
+To install Control Center in a local environment using a trusted hostname and self-signed certificate:
+
+.Terminal
+[source,shell]
+----
+helm install control-center oci://docker.io/vaadin/control-center \
+  --namespace vaadin --create-namespace \
+  --set app.host=control.local.gd \
+  --set user.email=me@example.com \
+  --set issuer.acme.enabled=false
+----
+
+== Next Steps
+
+Once installation is complete, continue with the xref:getting-started.adoc#_accessing_control_center[Accessing Control Center] section in the main Getting Started guide.
