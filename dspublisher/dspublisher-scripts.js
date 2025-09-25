@@ -121,7 +121,7 @@ const SCRIPTS = {
       },
       {
         func: () => {
-          const generatedPath = path.resolve(projectRootPath, 'frontend', 'generated');
+          const generatedPath = path.resolve(projectRootPath, 'src', 'main', 'frontend', 'generated');
           if (fs.existsSync(generatedPath)) {
             fs.rmSync(generatedPath, { recursive: true });
           }

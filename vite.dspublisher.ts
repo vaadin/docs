@@ -6,7 +6,7 @@ import type { UserConfig } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
+const allFlowImportsPath = resolve(__dirname, 'src/main/frontend/generated/flow/generated-flow-imports.js');
 
 // vite.generated.ts accesses __dirname without declaring it.
 // Workaround the error by setting it on the global object.
@@ -21,7 +21,7 @@ const vaadin = vaadinConfig({
 // Get the theme plugin from vaadinConfig
 const themePlugin = vaadin.plugins?.find((plugin: any) => plugin.name === 'vaadin:theme');
 
-const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
+const endpointMocks = resolve(__dirname, 'src', 'main', 'frontend', 'demo', 'services', 'mocks.js');
 
 // Use newer target to support top-level await in Hilla dependencies
 const target = ['safari15', 'es2022'];

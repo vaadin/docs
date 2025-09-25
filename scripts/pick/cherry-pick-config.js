@@ -9,7 +9,7 @@ const config = {
       "articles",
       "src",
       "dspublisher",
-      "frontend",
+      "src/main/frontend",
       // files
       "pom.xml",
       ".eslintrc.js",
@@ -74,11 +74,11 @@ const config = {
       "articles/flow/components/index.asciiidoc",
       "articles/flow/compatibility.adoc",
 
-      "frontend/demo/fusion",
-      "frontend/demo/upgrade-tool",
-      "frontend/demo/tools",
-      "frontend/demo/flow",
-      "frontend/demo/pwa",
+      "src/main/frontend/demo/fusion",
+      "src/main/frontend/demo/upgrade-tool",
+      "src/main/frontend/demo/tools",
+      "src/main/frontend/demo/flow",
+      "src/main/frontend/demo/pwa",
 
       "src/main/java/com/vaadin/demo/flow",
       "src/main/java/com/vaadin/demo/pwa",
@@ -95,12 +95,12 @@ const config = {
 
       ".gitattributes",
 
-      "frontend/demo/component/upload/upload-demo-mock-files.ts",
-      "frontend/demo/react-example.ts",
-      "frontend/demo/render-banner.ts",
+      "src/main/frontend/demo/component/upload/upload-demo-mock-files.ts",
+      "src/main/frontend/demo/react-example.ts",
+      "src/main/frontend/demo/render-banner.ts",
 
       // Ignore all React examples
-      /frontend\/demo\/component\/.*\/react.*/,
+      /src\/main\/frontend\/demo\/component\/.*\/react.*/,
     ],
   },
   rename: {
@@ -121,7 +121,7 @@ const config = {
       "dspublisher/.env",
       "dspublisher/docs-theme",
       "dspublisher/config/default.json",
-      "frontend/demo/component/upload/upload-demo-mock-files.ts",
+      "src/main/frontend/demo/component/upload/upload-demo-mock-files.ts",
     ]
   },
   // callbacks for changing the content of certain files
