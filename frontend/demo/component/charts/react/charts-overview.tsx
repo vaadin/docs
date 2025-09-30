@@ -1,7 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
+import type {
+  Options,
+  PointOptionsObject,
+  SeriesOptionsType,
+} from '@vaadin/charts/node_modules/highcharts';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
