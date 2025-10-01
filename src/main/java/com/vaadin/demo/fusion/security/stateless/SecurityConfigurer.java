@@ -38,8 +38,8 @@ public class SecurityConfigurer {
 
         // tag::stateless-configure[]
         // Disable creating and using sessions in Spring Security
-        http.sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement(sessionManagement -> sessionManagement
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // Register your login view to the view access checker mechanism
         http.with(VaadinSecurityConfigurer.vaadin(),

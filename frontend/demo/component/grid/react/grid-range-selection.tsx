@@ -13,7 +13,7 @@ function Example() {
   // tag::snippet[]
   const items = useSignal<Person[]>([]);
   const selectedItems = useSignal<Person[]>([]);
-  const rangeStartItem = useRef<Person>();
+  const rangeStartItem = useRef<Person>(null);
 
   useEffect(() => {
     getPeople().then(({ people }) => {

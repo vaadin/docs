@@ -68,7 +68,7 @@ function Example() {
         modal
         position="bottom"
         width="300px"
-        accessibleNameRef="notifications-heading"
+        aria-labelledby="notifications-heading"
       >
         <HorizontalLayout
           style={{

@@ -18,15 +18,13 @@ In the walking skeleton, you use the Vaadin Maven plugin to make a production bu
 
 [.example]
 --
-.Terminal
-[source,terminal,subs="+attributes"]
+[source,bash,subs="+attributes"]
 ----
 <source-info group="macOS / Linux"></source-info>
 ./mvnw clean package -Pproduction
 ----
 
-.PowerShell
-[source,terminal,subs="+attributes"]
+[source,powershell,subs="+attributes"]
 ----
 <source-info group="Windows"></source-info>
 mvnw clean package -Pproduction
@@ -35,47 +33,82 @@ mvnw clean package -Pproduction
 
 Once the build has finished, check the `target` directory. If your skeleton was named `my-application`, you should find a file called `my-application-1.0-SNAPSHOT.jar`.
 
-[IMPORTANT]
-Running this JAR directly will fail due to a missing production database. The skeleton uses H2 or PostgreSQL Testcontainers in development mode but expects PostgreSQL in production. You'll learn how to address this later in this guide.
-
 The `production` profile not only builds the frontend, but also excludes the development server bundle since it contains features that aren't used in production. 
 
 
-[role="since:com.vaadin:vaadin@V24.8"]
 == Build a Docker Image
 
 The walking skeleton includes a `Dockerfile` that allows you to package your application as a Docker image.
 
 .Install Docker
-[NOTE]
+[IMPORTANT]
 You must install Docker on your system before you can build an image.
 
-After creating a production build, run the following command from your project root:
+Run the following command from your project root to build the image:
 
 [source,terminal]
 ----
 docker build -t my-application:latest .
 ----
 
-This command produces a Docker image tagged `my-application:latest`, including the JAR file from the `target` directory.
+This command builds your application in production mode and produces a Docker image tagged `my-application:latest`.
 
 
-[role="since:com.vaadin:vaadin@V24.8"]
-== Deploy with Control Center
+=== Building with Commercial Components
 
-Once the Docker image is built, you can deploy it using <</control-center#,Control Center>>, a tool designed to simplify managing Vaadin applications on Kubernetes clusters.
+If your application uses commercial components, you need a <</flow/configuration/licenses#,licence key>>.
 
-.Install Control Center
+When building locally with Maven, the Vaadin Maven plugin detects the license automatically. For Docker builds, you must pass the key explicitly as a secret:
+
+[.example]
+--
+[source,bash,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+docker build -t my-application:latest --secret id=proKey,src=$HOME/.vaadin/proKey .
+----
+
+[source,powershell,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+docker build -t my-application:latest --secret "id=proKey,src=$($env:USERPROFILE)\.vaadin\proKey" .
+----
+--
+
+If you need to use an offline key, you can pass it like this:
+
+[.example]
+--
+[source,bash,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+docker build -t my-application:latest --secret id=offlineKey,src=$HOME/.vaadin/offlineKey .
+----
+
+[source,powershell,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+docker build -t my-application:latest --secret "id=offlineKey,src=$($env:USERPROFILE)\.vaadin\offlineKey" .
+----
+--
+
+.A Peek Under the Hood
 [NOTE]
-You must first install Control Center into a Kubernetes cluster. This cluster can be local or cloud-based. For installation instructions, see the <</control-center/getting-started#,Getting Started>> guide.
+====
+The `--secret` option works because the provided `Dockerfile` in the walking skeleton mounts the files, parses them and passes them on to Maven:
 
-The walking skeleton is preconfigured to work with Control Center. Specifically, it *requires* the following features to be enabled for the application to run in production without modification:
+[source,docker]
+----
+# (Previous build steps omitted for brevity)
+# ...
 
-* *Identity Management* via <</control-center/identity-management#,Keycloak>> for authentication and user management.
-* *PostgreSQL Database* provisioned through the <</control-center/database#,Control Center UI>>.
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=secret,id=proKey \
+    --mount=type=secret,id=offlineKey \
+    sh -c 'PRO_KEY=$(jq -r ".proKey // empty" /run/secrets/proKey 2>/dev/null || echo "") && \
+    OFFLINE_KEY=$(cat /run/secrets/offlineKey 2>/dev/null || echo "") && \
+    ./mvnw clean package -Pproduction -DskipTests -Dvaadin.proKey=${PRO_KEY} -Dvaadin.offlineKey=${OFFLINE_KEY}'
+----    
 
-If you choose not to use these features, you'll need to manually adjust the application's configuration to work with a different authentication mechanism or database setup.
-
-// TODO Write a guide or deep-dive about removing Control Center.
-
-For full deployment instructions, see the <</control-center/application-deployment#,Application Deployment>> guide.
+For more information about build secrets in Docker, see the https://docs.docker.com/build/building/secrets/[Docker documentation].
+====

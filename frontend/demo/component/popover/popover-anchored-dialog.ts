@@ -9,10 +9,11 @@ import '@vaadin/popover';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { CheckboxChangeEvent } from '@vaadin/checkbox';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
+
+type ColumnConfig = { label: string; key: string; visible: boolean };
 
 const DEFAULT_COLUMNS = [
   { label: 'First name', key: 'firstName', visible: true },
@@ -36,7 +37,7 @@ export class Example extends LitElement {
   private items: Person[] = [];
 
   @state()
-  private gridColumns = [...DEFAULT_COLUMNS];
+  private gridColumns: ColumnConfig[] = [...DEFAULT_COLUMNS];
 
   protected override async firstUpdated() {
     const { people } = await getPeople();
@@ -53,13 +54,9 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-horizontal-layout>
 
-      <vaadin-popover
-        for="toggle-columns"
-        modal
-        with-backdrop
-        position="bottom-end"
-        ${popoverRenderer(this.popoverRenderer, [this.gridColumns])}
-      ></vaadin-popover>
+      <vaadin-popover for="toggle-columns" modal with-backdrop position="bottom-end">
+        ${this.renderPopover(this.gridColumns)}
+      </vaadin-popover>
       <!-- end::snippet[] -->
 
       <!-- tag::gridsnippet[] -->
@@ -78,15 +75,13 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  popoverRenderer() {
-    const visibleColumns = this.gridColumns
-      .filter((column) => column.visible)
-      .map((column) => column.key);
+  renderPopover(columns: ColumnConfig[]) {
+    const visibleColumns = columns.filter((column) => column.visible).map((column) => column.key);
 
     return html`
       <div style="font-weight: 600; padding: var(--lumo-space-xs);">Configure columns</div>
       <vaadin-checkbox-group theme="vertical" .value="${visibleColumns}">
-        ${this.gridColumns.map(
+        ${columns.map(
           (column) => html`
             <vaadin-checkbox
               .label="${column.label}"

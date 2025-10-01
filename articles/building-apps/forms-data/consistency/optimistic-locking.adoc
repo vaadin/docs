@@ -1,0 +1,37 @@
+---
+title: Optimistic Locking
+page-title: How to use optimistic locking in your application
+description: Learn about optimistic locking and when to use it.
+meta-description: Learn about optimistic locking and when you should use it in your application.
+order: 20
+---
+
+
+= Optimistic Locking
+
+In all multi-user applications that change data, there is always a risk that two users might try to update the same data at the same time. To avoid data consistency conflicts, it's important that the application detects when this happens -- and handles it. One way of doing this is through optimistic locking.
+
+Optimistic locking assumes that no conflict is going to happen. Therefore, the application doesn't initially perform any data locking, as opposed to <<pessimistic-locking#,pessimistic locking>>. However, if a conflict does occur, the application detects it and throws an exception, often rolling back the transaction. Spring has an `OptimisticLockingFailureException` that you can use for this. 
+
+Optimistic locking failures are always detected by the application, not by the database. To detect conflicts, optimistic locking uses a version number. Every record that's to be updated should contain a version column with an integer. For every update, this version is incremented by one. Update operations compare the current version number with the last known version number. If these numbers are different, it means another user has updated the record after it was retrieved from the database. This is illustrated in the following pseudo-SQL example:
+
+[source,sql]
+----
+UPDATE myTable 
+    SET myField = 'my new value', 
+        _version = :oldVersion + 1 
+    WHERE id = :id AND _version = :oldVersion
+----
+
+An application executing this SQL script would then have to check the number of records that were actually updated based on the `WHERE` clause. If this number was 0, it means that either the primary keys didn't matched in the database, or the version numbers didn't match. Both cases would be optimistic locking failures. 
+
+Both <</building-apps/forms-data/repositories/jpa#,JPA>> and <</building-apps/forms-data/repositories/jooq#,jOOQ>> have built-in support for optimistic locking. It's easy to implement them. However, you'll need both the primary key and the version number whenever you make an update.
+
+Generally, you should use optimistic locking for all updates that don't risk causing the Time-Of-Check to Time-Of-Use (TOCTOU) problem. For that, you should use <<pessimistic-locking#toctou,pessimistic locking>> instead.
+
+
+== Resolving Conflicts
+
+When an optimistic locking failure occurs, it means that another user has either updated or deleted the data you're trying to update. The easiest way of resolving this is to inform the user of the conflict, ask them to refresh and try again. In applications where conflicts are rare, this solution is often good enough.
+
+If update conflicts are more frequent, you'll need to implement a mechanism for automatically merging changes, or use a Conflict-free Replicated Data Type (CRDT). However, this is outside the scope of this documentation page.

@@ -6,7 +6,6 @@ import '@vaadin/popover';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -49,11 +48,12 @@ export class Example extends LitElement {
         for="avatar"
         position="bottom-end"
         modal
-        overlay-role="menu"
-        accessible-name="User menu"
+        role="menu"
+        aria-label="User menu"
         theme="no-padding"
-        ${popoverRenderer(this.userMenuRenderer, [this.person])}
-      ></vaadin-popover>
+      >
+        ${this.renderUserMenu(this.person)}
+      </vaadin-popover>
       <!-- end::snippet[] -->
     `;
   }
@@ -62,8 +62,8 @@ export class Example extends LitElement {
   // We are using inline styles here to keep the example simple.
   // We recommend placing CSS in a separate style sheet and
   // encapsulating the styling in a new component.
-  userMenuRenderer() {
-    const { firstName, lastName, pictureUrl } = this.person ?? {};
+  renderUserMenu(person?: Person) {
+    const { firstName, lastName, pictureUrl } = person ?? {};
     const nickName = `@${firstName}${lastName}`.toLowerCase();
 
     return html`
