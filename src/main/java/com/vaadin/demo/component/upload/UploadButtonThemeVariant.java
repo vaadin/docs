@@ -5,7 +5,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.UploadHandler;
 
@@ -31,7 +30,7 @@ public class UploadButtonThemeVariant extends Div {
         upload.getElement()
                 .addEventListener("max-files-reached-changed", event -> {
                     boolean maxFilesReached = event.getEventData()
-                            .getBoolean("event.detail.value");
+                            .get("event.detail.value").asBoolean();
                     uploadButton.setEnabled(!maxFilesReached);
                 }).addEventData("event.detail.value");
         // end::snippet[]
