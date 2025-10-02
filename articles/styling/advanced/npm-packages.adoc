@@ -1,131 +1,74 @@
 ---
-title: Loading Theme Resources from npm Packages
-page-title: Using advanced npm packages in Vaadin styling
-description: Describes how to load theme resources from npm packages.
-meta-description: Learn how to integrate and use advanced npm packages for custom styling in Vaadin applications.
+title: Importing Resources from npm Packages
+page-title: Using static resources like fonts, icons, and stylesheets from npm packages in Vaadin
+description: Describes how to use resources like fonts, icons, and stylesheets from npm packages.
+meta-description: Learn how to use static resources like fonts, icons, and stylesheets from npm packages in Vaadin applications.
 order: 50
 ---
 
 
 = Loading Styles, Fonts & Images from npm Packages
 
-Stylesheets and other theme-related resources like font and image files can be loaded from npm packages through the theme configuration file `theme.json`.
+Before you can import stylesheets and other styling-related resources like fonts and icons from npm packages, you need to add the package dependency with the `@NpmPackage` annotation. Define both the package name and version number:
 
+.Adding an npm package dependency
+[source,java]
+----
+// tag::package[]
+@NpmPackage(value = "@fortawesome/fontawesome-free", version = "7.1.0")
+// end::package[]
+public class AppShell implements AppShellConfigurator {
+}
+----
+
+Once you have added an npm package dependency, you can import resources from that package.
 
 [#styles-from-npm]
-== Loading Stylesheets from npm Packages
+== Importing Stylesheets from npm Packages
 
-You can configure a custom theme to import style sheets from npm packages included as dependencies in the project by defining them in an `importCss` array in [filename]`theme.json`. Below is an example of a [filename]`theme.json` for importing CSS from npm packages:
+Use the [annotation]`@CssImport` annotation to import stylesheets from an npm package. For example, to load `all.min.css` from `@fortawesome/fontawesome-free`:
 
-[source,json]
+.Importing a stylesheet from an npm package
+[source,java]
 ----
-{
-  "importCss": [
-    "@fortawesome/fontawesome-free/css/regular.css",
-    "@fortawesome/fontawesome-free/css/all.min.css"
-  ]
+@NpmPackage(value = "@fortawesome/fontawesome-free", version = "7.1.0")
+// tag::import[]
+@CssImport("@fortawesome/fontawesome-free/css/all.min.css")
+// end::import[]
+public class AppShell implements AppShellConfigurator {
 }
-----
 
-This loads the external style sheets as if they were imported as local style sheets through [filename]`styles.css`.
-
-[NOTE]
-The npm packages must be added to the project. The `importCss` configuration doesn't import the npm packages themselves to the project. You need to do that by using the [annotationname]`@NpmPackage` annotation.
-
-Similar to the document root style sheet, style sheets can be forced to the document root for <<{articles}/flow/integrations/embedding#, embedded Flow application or component>> use cases through a corresponding `documentCss` array, which can be useful for font-face declarations in npm packages:
-
-The following example [filename]`theme.json` defines importing of CSS from npm packages into doc root:
-
-.[filename]`theme.json`
-[source,json]
-----
-{
-  "documentCss": ["@fortawesome/fontawesome-free/css/all.min.css"]
-}
-----
-
-
-[#fonts-and-images-from-npm]
-== Loading Fonts and Images from npm Packages
-
-In addition to style sheets, other assets like fonts, images, and icons can also be included from npm packages added to the project, by mapping them from the dependency to local URIs in an assets block in [filename]`theme.json`.
-
-Syntax for mapping assets from npm package to local URIs goes as follows:
-
-.[filename]`theme.json`
-[source,json]
-----
-{
-  "assets": {
-    "package-name": {
-      "asset/glob/pattern": "local/target/path"
+@Tag("my-component")
+public class MyComponent implements Component {
+    public MyComponent() {
+        Span userIcon = new Span();
+        userIcon.addClassNames("fa-sharp", "fa-solid", "fa-user");
+        userIcon.getStyle().set("font-family", "'Font Awesome 7 Free'");
+        add(userIcon);
     }
-  }
 }
 ----
 
-For example, to use SVG icons from `@fortawesome/fontawesome-free` npm package, the SVG files should be mapped to some local path as follows:
-
-.Sample [filename]`theme.json` for mapping assets from npm packages.
-[source,json]
-----
-{
-  "assets": {
-    "@fortawesome/fontawesome-free": {
-      "svgs/regular/**": "fontawesome/icons"
-    }
-  }
-}
-----
-
-
-[NOTE]
-The npm packages must be added to the project. The assets configuration doesn't import the npm packages themselves to the project. You need to do that by using the [annotationname]`@NpmPackage` annotation.
-
-The SVG images mapped by the example above are now available on the path `fontawesome/icons` relative to the theme's root folder, so they can be referenced in [filename]`styles.css` as follows:
-
-[source,css]
-----
-.icon-snowflake {
-  background-image: url('./fontawesome/icons/snowflake.svg');
-}
-----
-
-The assets block supports multiple packages and multiple mappings per package. Below is an example of [filename]`theme.json` mapping multiple packages and assets per package:
-
-[source,json]
-----
-{
-  "assets": {
-    "@fortawesome/fontawesome-free": {
-      "svgs/regular/**": "fontawesome/icons",
-      "webfonts/**": "webfonts"
-    },
-    "@fortawesome/free-solid-svg-icons": {
-      "*.js": "solids"
-    }
-  }
-}
-----
 
 [since:com.vaadin:vaadin@V24.9]
-[#fonts-and-images-from-npm-with-npmpackage-annotation]
-== Loading Fonts and Images from npm Packages Using the NpmPackage Annotation
+[#fonts-and-images-from-npm]
+== Using Static Resources from npm Packages
 
-The `assets` field in the [annotationname]`NpmPackage` annotation allows you to copy assets from npm packages into the static resource folder, allowing you to references them from Java source code and from the browser.
+The `assets` field in the [annotationname]`@NpmPackage` annotation allows you to copy assets from npm packages into the static resource folder (i.e., the `VAADIN/static` folder), allowing you to references them from Java source code and from the browser.
 
 The `assets` field syntax looks like this in general: `"asset/glob/pattern:local/target/path"`. The first part defines which files from the npm package should be copied, and it can be a “glob” pattern. 
-The second part, after the colon, defines where matching resources are copied under the resources folder (i.e., the `VAADIN/static` folder). You can define multiple asset mappings for a single package annotation, separated with a comma.
+The second part, after the colon, defines where matching resources are copied under the resources folder. You can define multiple asset mappings for a single package annotation.
 
-.Sample asset mapping with `NpmPackage` annotation
+.Using icons from an npm package
 [source,java]
 ----
 // tag::annotation[]
-@NpmPackage(value = "@fortawesome/fontawesome-free", version = "5.15.1",
+@NpmPackage(value = "@fortawesome/fontawesome-free", version = "7.1.0",
     assets = {
         "svgs/regular/**:fontawesome/icons"
     })
 // end::annotation[]
+
 @Tag("my-component")
 public class MyComponent implements Component {
     public MyComponent() {
@@ -138,30 +81,5 @@ public class MyComponent implements Component {
 ----
 
 In the previous example, the `fortawesome` file `svgs/regular/snowflake.svg` is copied to `VAADIN/static/fontawesome/icons/snowflake.svg` and can be accessed with that path in the application code and CSS stylesheets.
-
-== Loading Stylesheets from npm Packages Using the CssImport Annotation
-
-You can use the [annotation]`CssImport` annotation to import stylesheets from an npm package. For example, to load `all.min.css` from `@fortawesome/fontawesome-free`:
-
-.Sample asset mapping with `NpmPackage` annotation
-[source,java]
-----
-@NpmPackage(value = "@fortawesome/fontawesome-free", version = "5.15.1")
-// tag::import[]
-@CssImport("@fortawesome/fontawesome-free/css/all.min.css")
-// end::import[]
-public class AppShell implements AppShellConfigurator {
-}
-
-@Tag("my-component")
-public class MyComponent implements Component {
-    public MyComponent() {
-        Span userIcon = new Span();
-        userIcon.addClassNames("fa-sharp", "fa-solid", "fa-user");
-        userIcon.getStyle().set("font-family", "'Font Awesome 5 Free'");
-        add(userIcon);
-    }
-}
-----
 
 [discussion-id]`3e46fe3b-00d6-4cf7-908c-342a364210db`
