@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/charts';
+import type { Options, PointOptionsObject } from 'highcharts';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { Options, PointOptionsObject } from '@vaadin/charts/node_modules/highcharts';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('charts-overview')

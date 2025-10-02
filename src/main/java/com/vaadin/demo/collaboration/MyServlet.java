@@ -43,7 +43,7 @@ public class MyServlet extends HttpServlet {
         SystemConnectionContext systemConnectionContext = ce.getSystemContext();
 
         MessageManager messageManager = new MessageManager(
-                systemConnectionContext, systemUser, topicId, ce);
+                systemConnectionContext, systemUser, topicId, () -> ce);
 
         messageManager.submit(message) // Send message to topic
                 .whenComplete((a, t) -> {
