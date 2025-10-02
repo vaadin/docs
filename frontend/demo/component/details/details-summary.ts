@@ -6,8 +6,6 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/text-field';
-import '@vaadin/vaadin-lumo-styles/sizing';
-import '@vaadin/vaadin-lumo-styles/color';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
