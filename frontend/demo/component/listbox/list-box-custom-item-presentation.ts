@@ -3,7 +3,6 @@ import '@vaadin/avatar';
 import '@vaadin/horizontal-layout';
 import '@vaadin/item';
 import '@vaadin/list-box';
-import '@vaadin/vaadin-lumo-styles/typography';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
