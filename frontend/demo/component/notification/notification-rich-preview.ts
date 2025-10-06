@@ -7,13 +7,12 @@ import '@vaadin/notification';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('notification-rich-preview')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

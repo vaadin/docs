@@ -6,7 +6,7 @@ import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { contextMenuRenderer } from '@vaadin/context-menu/lit.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('notification-popup')
 export class Example2 extends LitElement {
@@ -26,7 +26,6 @@ export class Example2 extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

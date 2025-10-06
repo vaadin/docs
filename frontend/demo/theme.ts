@@ -13,8 +13,11 @@ function createStylesheet(css: CSSResultGroup | string): CSSStyleSheet {
 
 const docsStylesheet = createStylesheet(docsCss);
 
-export function applyTheme(root: DocumentOrShadowRoot) {
-  if (!root.adoptedStyleSheets.includes(docsStylesheet)) {
+export function applyTheme(root: DocumentFragment | DocumentOrShadowRoot | HTMLElement) {
+  // The root parameter type is very broad to handle the default return type of
+  // LitElement.createRenderRoot. In general, we expect this to either be a document or a shadow
+  // root. The adoptedStyleSheets check below makes Typescript accept the parameter type.
+  if ('adoptedStyleSheets' in root && !root.adoptedStyleSheets.includes(docsStylesheet)) {
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, docsStylesheet];
   }
 }
