@@ -1,11 +1,10 @@
 import propsStyles from '@vaadin/vaadin-lumo-styles/props.css?inline';
 import colorScheme from '@vaadin/vaadin-lumo-styles/src/global/color-scheme.css?inline';
 import utilityStyles from '@vaadin/vaadin-lumo-styles/utility.css?inline';
-import { includeModule } from './include-module';
+import { addStylesheet } from 'Frontend/demo/theme';
 
-// Extract dark theme properties
-// Exclude non-custom properties, so that we don't override docs styles (color, background) with
-// Lumo styles.
+// Extract dark theme properties. Exclude non-custom properties, so that we don't override docs
+// styles (color, background) with Lumo styles.
 // eslint-disable-next-line @typescript-eslint/no-base-to-string
 const darkThemeProps = colorScheme
   .toString()
@@ -18,11 +17,9 @@ ${darkThemeProps.join('\n')}
 `;
 
 // Include styles in the page
-// eslint-disable-next-line @typescript-eslint/no-base-to-string
-includeModule(propsStyles.toString());
-// eslint-disable-next-line @typescript-eslint/no-base-to-string
-includeModule(utilityStyles.toString());
-includeModule(darkThemeStyles);
+addStylesheet(propsStyles);
+addStylesheet(utilityStyles);
+addStylesheet(darkThemeStyles);
 
 // Notify DSP CustomPropertyPreview React component after custom properties have been loaded
 window.dispatchEvent(new CustomEvent('custom-properties-changed'));
