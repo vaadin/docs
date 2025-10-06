@@ -1,6 +1,5 @@
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import MagicString from 'magic-string';
 import type { UserConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,27 +49,6 @@ const config: UserConfig = {
       target,
     },
   },
-  plugins: [
-    {
-      name: 'vite-plugin-rewrite-polymer-global',
-      transform(code, id) {
-        // Workaround esbuild issue with chunked code running in wrong order
-        // See https://github.com/vitejs/vite/issues/5142
-        if (id.includes('.js') && code.includes('JSCompiler_renameProperty')) {
-          const ms = new MagicString(code);
-          ms.replaceAll(/JSCompiler_renameProperty\(([^,]+),[^)]+\)/g, '$1');
-
-          return {
-            code: ms.toString(),
-            map: ms.generateMap({
-              file: id,
-              includeContent: true,
-            }),
-          };
-        }
-      },
-    },
-  ],
 };
 
 export default config;
