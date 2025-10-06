@@ -5,13 +5,12 @@ import '@vaadin/dashboard/vaadin-dashboard-section.js';
 import '@vaadin/dashboard/vaadin-dashboard-widget.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('dashboard-sections')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

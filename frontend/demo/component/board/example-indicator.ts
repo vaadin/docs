@@ -3,7 +3,7 @@ import '@vaadin/icons';
 import '@vaadin/vertical-layout';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('example-indicator')
 export class ExampleIndicator extends LitElement {
@@ -60,7 +60,6 @@ export class ExampleIndicator extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

@@ -30,7 +30,6 @@ const config: UserConfig = {
   resolve: {
     alias: {
       'Frontend/generated/endpoints': endpointMocks,
-      'Frontend/generated/theme': resolve(__dirname, 'frontend', 'demo', 'theme.js'),
       ...vaadin.resolve?.alias,
       'all-flow-imports-or-empty':
         process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true' ? allFlowImportsPath : 'lit',

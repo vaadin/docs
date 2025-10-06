@@ -5,7 +5,7 @@ import { formatISO } from 'date-fns/formatISO';
 import { startOfMonth } from 'date-fns/startOfMonth';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 const startOfNextMonth = startOfMonth(addMonths(new Date(), 1));
 const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 'date' });
@@ -14,7 +14,6 @@ const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

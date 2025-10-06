@@ -7,13 +7,12 @@ import '@vaadin/email-field';
 import '@vaadin/split-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('form-layout-expand-columns')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

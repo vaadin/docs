@@ -15,7 +15,7 @@ import type {
 } from '@vaadin/dashboard';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 // Define a mapping from widget types to human-readable titles
 const widgetTitles: Record<WidgetType, string> = {
@@ -49,7 +49,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
