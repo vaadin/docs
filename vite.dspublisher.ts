@@ -18,9 +18,6 @@ const vaadin = vaadinConfig({
   command: 'build',
 }) as UserConfig;
 
-// Get the theme plugin from vaadinConfig
-const themePlugin = vaadin.plugins?.find((plugin: any) => plugin.name === 'vaadin:theme');
-
 const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
 
 // Use newer target to support top-level await in Hilla dependencies
@@ -54,7 +51,6 @@ const config: UserConfig = {
     },
   },
   plugins: [
-    themePlugin,
     {
       name: 'vite-plugin-rewrite-polymer-global',
       transform(code, id) {
