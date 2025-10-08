@@ -8,7 +8,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import template from './dashboard-template.json';
 
 @customElement('new-relic-dashboard-generator')
@@ -28,7 +28,6 @@ export class DashboardGenerator extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

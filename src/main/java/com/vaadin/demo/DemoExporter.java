@@ -6,11 +6,9 @@ import com.vaadin.flow.component.WebComponentExporter;
 import com.vaadin.flow.component.webcomponent.WebComponent;
 import com.vaadin.flow.internal.ReflectTools;
 import com.vaadin.flow.server.VaadinSession;
-import com.vaadin.flow.theme.Theme;
 
 import java.time.Duration;
 
-@Theme("docs")
 public abstract class DemoExporter<T extends Component>
         extends WebComponentExporter<T> {
 

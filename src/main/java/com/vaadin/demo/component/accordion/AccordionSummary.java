@@ -97,7 +97,7 @@ public class AccordionSummary extends Div {
         Button customDetailsButton = new Button("Continue",
                 (e) -> billingAddressPanel.setOpened(true));
         customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        customDetailsPanel.addContent(customDetailsButton);
+        customDetailsPanel.add(customDetailsButton);
 
         // Billing address fields
 
@@ -175,7 +175,7 @@ public class AccordionSummary extends Div {
         Button billingAddressButton = new Button("Continue",
                 (e) -> paymentPanel.setOpened(true));
         billingAddressButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        billingAddressPanel.addContent(billingAddressButton);
+        billingAddressPanel.add(billingAddressButton);
 
         // Payment fields
         TextField accountNumber = new TextField("Card number");
@@ -204,7 +204,7 @@ public class AccordionSummary extends Div {
         Button paymentButton = new Button("Finish",
                 (e) -> paymentPanel.setOpened(false));
         paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        paymentPanel.addContent(paymentButton);
+        paymentPanel.add(paymentButton);
 
         add(accordion);
     }

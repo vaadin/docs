@@ -6,7 +6,7 @@ import '@vaadin/select';
 import '@vaadin/checkbox';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import { SelectChangeEvent } from '@vaadin/select';
 import { CheckboxChangeEvent } from '@vaadin/checkbox';
 
@@ -14,7 +14,6 @@ import { CheckboxChangeEvent } from '@vaadin/checkbox';
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
