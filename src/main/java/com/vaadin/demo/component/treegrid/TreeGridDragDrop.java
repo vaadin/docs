@@ -26,7 +26,7 @@ public class TreeGridDragDrop extends Div {
     public TreeGridDragDrop() {
         List<Person> people = DataService.getPeople();
         managers = people.stream().filter(Person::isManager)
-                .collect(Collectors.toList());
+                .toList();
         staffGroupedByMangers = people.stream()
                 .filter(person -> person.getManagerId() != null)
                 .collect(Collectors.groupingBy(Person::getManagerId,
@@ -52,7 +52,7 @@ public class TreeGridDragDrop extends Div {
         // Only allow dragging staff
         treeGrid.setDragFilter(person -> !person.isManager());
         // Only allow dropping on managers
-        treeGrid.setDropFilter(person -> person.isManager());
+        treeGrid.setDropFilter(Person::isManager);
 
         treeGrid.addDragStartListener(e -> {
             treeGrid.setDropMode(GridDropMode.ON_TOP);
