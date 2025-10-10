@@ -13,8 +13,8 @@ import type {
   GridItemModel,
 } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 @customElement('tree-grid-drag-drop')
