@@ -8,13 +8,12 @@ import type {
 } from '@vaadin/react-components';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { ComboBoxCountryService } from 'Frontend/generated/endpoints';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('combo-box-lazy-loading')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

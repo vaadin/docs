@@ -12,7 +12,7 @@ import { repeat } from 'lit/directives/repeat.js';
 import type { Button } from '@vaadin/button';
 import type { ComboBoxChangeEvent } from '@vaadin/combo-box';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 type Profession = string;
 
@@ -26,7 +26,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

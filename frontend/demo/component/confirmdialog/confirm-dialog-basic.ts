@@ -4,7 +4,7 @@ import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('confirm-dialog-basic')
 export class Example extends LitElement {
@@ -24,7 +24,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

@@ -1,0 +1,76 @@
+---
+title: Futures
+page-title: How to use CompletableFuture to interact with your app's UI
+description: How to use CompletableFuture to interact with the user interface.
+meta-description: Learn to use standard Java `CompletableFuture` with your user interface in your application.
+order: 20
+section-nav: badge-flow
+---
+
+
+= Returning Futures [badge-flow]#Flow#
+
+When using a Flow user interface, you can use a standard Java `CompletableFuture` to report results and errors to it, and to cancel the job. For reporting progress, however, you still need to use a callback.
+
+Compared to <<callbacks#,callbacks>>, this approach is easier to implement in the application layer, but more difficult to implement in the UI layer. You should only use it if you've previously used `CompletableFuture`, and you need other features that it offers, like chaining completion stages together.
+
+
+== Returning a Result
+
+Spring has built-in support for `CompletableFuture` when using the `@Async` annotation. 
+
+The following example shows a background job that completes with either a string or an exception. If the method throws an exception, Spring returns a `CompletableFuture` with the exception in question:
+
+[source,java]
+----
+@Async
+public CompletableFuture<String> startBackgroundJob() {
+    return CompletableFuture.completedFuture(doSomethingThatTakesALongTime());
+}
+----
+
+To update the user interface, you have to add special completion stages that execute after the `CompletableFuture` completes. For more information about how to add these, see the <</building-apps/server-push/futures#,Consuming Futures>> documentation page.
+
+
+== Cancelling
+
+You can cancel a Java `Future` by calling its `cancel()` method. The method has a `boolean` parameter that indicates whether the thread should be interrupted or not. However, `CompletableFuture`, which implements `Future`, doesn't use this parameter. It doesn't therefore make a difference whether you pass `true` or `false`.
+
+When you cancel a `CompletableFuture`, it completes with a `CompletionException` caused by a `CancellationException`. However, the job continues to run silently in the background until it's finished. If you want to notify the job itself that it has been cancelled, and it should stop running at the next suitable moment, you'll have to make some changes.
+
+`CompletableFuture` has an `isCancelled()` method that you can use to query whether the job has been cancelled or not. Therefore, you can no longer use the `@Async` annotation. Instead, you have to execute manually the job with the `TaskExecutor`, and manage the state of the returned `CompletableFuture`. The principle is the same as when using callbacks or handles.
+
+The earlier example would look like this when implemented using a `CompletableFuture`:
+
+[source,java]
+----
+public CompletableFuture<String> startBackgroundJob() {
+    var future = new CompletableFuture<String>();
+    taskExecutor.execute(() -> {
+        try {
+            var step1Result = performStep1();
+
+            if (future.isCancelled()) {
+                return;
+            }
+            var step2Result = performStep2(step1Result);
+
+            if (future.isCancelled()) {
+                return;
+            }
+            var step3Result = performStep3(step2Result);
+
+            if (future.isCancelled()) {
+                return;
+            }
+            var result = performStep4(step3Result);
+            future.complete(result);
+        } catch (Exception ex) {
+            future.completeExceptionally(ex);
+        }
+    });
+    return future;
+}
+----
+
+You don't need to do anything with the `future` after it has been cancelled, as it has already been completed. Returning is enough.

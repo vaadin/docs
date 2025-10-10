@@ -7,7 +7,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
 import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -22,7 +22,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
