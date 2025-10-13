@@ -6,6 +6,7 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
@@ -44,7 +45,7 @@ public class TreeGridDragDrop extends Div {
         // scroll jumps that can otherwise occur with HierarchyFormat.NESTED (default)
         // which requires each hierarchy level to be requested separately, on demand.
         TreeDataProvider<Person> treeDataProvider = new TreeDataProvider<>(
-                treeData/* , HierarchyFormat.FLATTENED */);
+                treeData , HierarchicalDataProvider.HierarchyFormat.FLATTENED);
         treeGrid.setDataProvider(treeDataProvider);
 
         // Enable drag-and-drop
