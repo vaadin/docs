@@ -11,13 +11,14 @@ import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Route("tree-grid-scroll-to-item")
 public class TreeGridScrollToItem extends Div {
     private final TreeGrid<Person> treeGrid = new TreeGrid<>();
 
     public TreeGridScrollToItem() {
-        var treeData = new TreeData<Person>();
+        TreeData<Person> treeData = new TreeData<>();
         treeData.addItems(DataService.getManagers(),
                 manager -> DataService.getPeople(manager.getId()));
         treeGrid.setDataProvider(new TreeDataProvider<>(treeData));
@@ -27,14 +28,14 @@ public class TreeGridScrollToItem extends Div {
 
         add(treeGrid);
 
-        var scrollToItem = new Select<Person>();
+        Select<Person> scrollToItem = new Select<>();
         scrollToItem.setLabel("Scroll to item");
         scrollToItem.setItemLabelGenerator(Person::getFullName);
         scrollToItem.setItems(getItemsToScrollTo());
         scrollToItem.setWidth("200px");
         scrollToItem.addValueChangeListener(
                 event -> {
-                    var item = event.getValue();
+                    Person item = event.getValue();
                     // tag::snippet[]
                     treeGrid.scrollToItem(item);
                     // end::snippet[]
@@ -42,14 +43,14 @@ public class TreeGridScrollToItem extends Div {
         add(scrollToItem);
     }
 
-    private ArrayList<Person> getItemsToScrollTo() {
-        var itemsToScrollTo = new ArrayList<Person>();
-        var managers = DataService.getManagers();
-        var middleRootItem = managers.get(managers.size() / 2);
+    private List<Person> getItemsToScrollTo() {
+        List<Person> itemsToScrollTo = new ArrayList<>();
+        List<Person> managers = DataService.getManagers();
+        Person middleRootItem = managers.get(managers.size() / 2);
         itemsToScrollTo.add(middleRootItem);
-        var children = DataService.getPeople(middleRootItem.getId());
+        List<Person> children = DataService.getPeople(middleRootItem.getId());
         while (!children.isEmpty()) {
-            var middleChild = children.get(children.size() / 2);
+            Person middleChild = children.get(children.size() / 2);
             itemsToScrollTo.add(middleChild);
             children = DataService.getPeople(middleChild.getId());
         }
