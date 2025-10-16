@@ -38,7 +38,7 @@ public class MapClusters extends Div {
 
         // Zoom to cluster contents on click
         map.addClusterClickListener(event -> {
-            List<Feature> features = event.getFeatures().stream().map(FeatureEventDetails::getFeature).toList();
+            List<Feature> features = event.getFeatures();
             map.zoomToFit(features);
         });
         // end::snippet[]
