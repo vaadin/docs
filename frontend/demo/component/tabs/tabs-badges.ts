@@ -2,12 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { badge } from '@vaadin/vaadin-lumo-styles/badge.js';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
   static override styles = [
-    badge,
     css`
       span[theme~='badge'] {
         margin-inline-start: var(--lumo-space-xs);

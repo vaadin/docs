@@ -28,7 +28,7 @@ public class AccordionContent extends Div {
         AccordionPanel financesPanel = new AccordionPanel();
         financesPanel.setSummaryText("Finances");
         financesPanel
-                .addContent(createContent(createStyledAnchor("#", "Invoices"),
+                .add(createContent(createStyledAnchor("#", "Invoices"),
                         createStyledAnchor("#", "Transactions"),
                         createStyledAnchor("#", "Statements")));
         accordion.add(financesPanel);

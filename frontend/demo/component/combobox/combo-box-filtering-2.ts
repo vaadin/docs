@@ -5,14 +5,13 @@ import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-2')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

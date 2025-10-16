@@ -2,19 +2,44 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
-// Import all Lumo CSS custom properties into the global style scope
-import '@vaadin/vaadin-lumo-styles/color.js';
-import '@vaadin/vaadin-lumo-styles/color-global.js';
-import '@vaadin/vaadin-lumo-styles/typography.js';
-import '@vaadin/vaadin-lumo-styles/sizing.js';
-import '@vaadin/vaadin-lumo-styles/spacing.js';
-import '@vaadin/vaadin-lumo-styles/style.js';
-
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
+}
+
+// Add stylesheet links to document head once
+if (process.env.NODE_ENV !== 'development') {
+  const stylesheets = [
+    {
+      rel: 'stylesheet',
+      href: 'https://cdn.vaadin.com/website/antlers/v2/assets/fonts/nbinternationalpro/stylesheet.css',
+    },
+    {
+      rel: 'preload',
+      as: 'style',
+      href: 'https://cdn.vaadin.com/website/antlers/v2/assets/icons/css/line-awesome.min.css',
+    },
+    {
+      rel: 'preload',
+      as: 'style',
+      href: 'https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css',
+    },
+  ];
+
+  stylesheets.forEach(({ rel, href, as }) => {
+    // Check if link already exists to prevent duplicates
+    if (!document.head.querySelector(`link[href="${href}"]`)) {
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.href = href;
+      if (as) {
+        link.setAttribute('as', as);
+      }
+      document.head.appendChild(link);
+    }
+  });
 }
 
 class Header extends LitElement {
@@ -40,21 +65,6 @@ class Header extends LitElement {
     }
 
     return html`
-      <link
-        rel="stylesheet"
-        href="https://cdn.vaadin.com/website/antlers/v2/assets/fonts/nbinternationalpro/stylesheet.css"
-      />
-      <link
-        rel="preload"
-        as="style"
-        href="https://cdn.vaadin.com/website/antlers/v2/assets/icons/css/line-awesome.min.css"
-      />
-      <link
-        rel="preload"
-        as="style"
-        href="https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css"
-      />
-
       <div id="haas-container"></div>
       ${this.haasImportScript()}
     `;
