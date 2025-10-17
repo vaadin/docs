@@ -83,6 +83,49 @@ vaadinVersion={vaadin-version}
 
 See the link:https://github.com/vaadin/platform/releases[list of releases on GitHub] for the latest one.
 
+== Java Version
+
+Java 21 or later is required. Below is an example of how to use this version:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<properties>
+    <java.version>21</java.version>
+    <!-- OR: -->
+    <maven.compiler.source>21/maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+</properties>
+----
+[source,kotlin]
+----
+<source-info group="Gradle (Kotlin DSL)"></source-info>
+plugins {
+    java
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+----
+[source,groovy]
+----
+<source-info group="Gradle (Groovy DSL)"></source-info>
+plugins {
+    id 'java'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+----
+--
 
 == Spring Upgrade Instructions
 
@@ -104,8 +147,70 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 </parent>
 ----
 
+== Application Servers
 
-=== Security Configuration Changes
+Before migrating, find the corresponding version of the Jakarta EE 11-compatible application server used in your project. See link:https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
+
+== Maven & Gradle Plugins
+
+Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
+A safe choice: Maven 3.9.11 (or the latest in the 3.9 line) or Maven 4.0.x (once stable) if you are comfortable with that.
+
+To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the link:https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.0.0.
+
+If you're using a Gradle wrapper, update it to version 8.14 by executing the following from the command line:
+
+[source,terminal]
+----
+./gradlew wrapper --gradle-version 8.14
+----
+
+For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
+
+== Quarkus
+
+Vaadin Quarkus extension is changed to build production package by default. No need for production profile with exclusions for development tools in Maven configurations because Vaadin Quarkus extension has build-in Vaadin plugin handling production packaging.
+
+To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
+
+== Changes In Theming System
+
+Vaadin 25 simplifies the theme/styling system to bring it closer to normal/native web development, and minimizes Vaadin-specific peculiarities, while keeping migration from earlier versions as painless as possible.
+
+Below are the main highlights of the changes and more detailed instructions are described in link:https://github.com/vaadin/platform/issues/7453[Theming System Renewal].
+
+
+The special `frontend/themes` folder, and the `components` sub-folder for CSS shadow-DOM injection, is deprecated (but still supported).
+
+The [classname]`@Theme` annotation is deprecated. Instead, [classname]`StyleSheet` annotation to be used for loading one or more stylesheets from public static resources locations (e.g. `META-INF/resources/`), whereas [classname]`CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
+
+`StyleSheet` annotation is now a recommended way to load Vaadin theme for the application — to be placed on the application class implementing [classname]`AppShellConfigurator`. Below are some examples of how to use it:
+
+[source,java]
+----
+// theme selection
+@StyleSheet(Aura.STYLESHEET) // or Lumo.STYLESHEET
+public class Application implements AppShellConfigurator {}
+
+// or loading custom styles and theme:
+
+@StyleSheet("styles.css")
+public class Application implements AppShellConfigurator {}
+
+// then using @import in the src/main/resources/META-INF/resources/styles.css:
+
+@import '@vaadin/aura/aura.css';
+// your custom styles go here ...
+
+----
+
+The [filename]`theme.json` configuration file is deprecated (but still supported, except the `lumoImports` property).
+
+The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
+
+The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
+
+== Security Configuration Changes
 
 The deprecated [classname]`VaadinWebSecurity` class has been removed from Vaadin 25. Use instead the [classname]`VaadinSecurityConfigurer` base class for your security configuration. Below is an example of this:
 
@@ -325,84 +430,14 @@ public class SecurityConfiguration {
 ==== Restrict Access By Default For Url-Based Security
 URLs not explicitly specified in security configuration changed from being allowed for authenticated users to restricted by default. This requires extra security rules (path matchers) for URLs that were allowed only for authentication users.
 
-==== Deny Access Ff Flow Layout Has No Security Annotation
+==== Deny Access If Flow Layout Has No Security Annotation
 Vaadin Flow layouts now require access annotation (e.g. [classname]`RolesAllowed`) on layout classes. This was added to align with auto-layout default security rules.
-
-== Java Version
-
-Java 21 or later is required. Below is an example of how to use this version:
-
-[.example]
---
-[source,xml]
-----
-<source-info group="Maven"></source-info>
-<properties>
-    <java.version>21</java.version>
-    <!-- OR: -->
-    <maven.compiler.source>21/maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
-</properties>
-----
-[source,kotlin]
-----
-<source-info group="Gradle (Kotlin DSL)"></source-info>
-plugins {
-    java
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-----
-[source,groovy]
-----
-<source-info group="Gradle (Groovy DSL)"></source-info>
-plugins {
-    id 'java'
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-----
---
-
-== Application Servers
-
-Before migrating, find the corresponding version of the Jakarta EE 11-compatible application server used in your project. See link:https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
-
-== Maven & Gradle Plugins
-
-Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
-A safe choice: Maven 3.9.11 (or the latest in the 3.9 line) or Maven 4.0.x (once stable) if you are comfortable with that.
-
-To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the link:https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.0.0.
-
-If you're using a Gradle wrapper, update it to version 8.14 by executing the following from the command line:
-
-[source,terminal]
-----
-./gradlew wrapper --gradle-version 8.14
-----
-
-For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
 
 == TestBench
 
 [classname]`ComponentTester` in UI Unit test has been updated to prove a common [methodname]`void click()` method. However, the new method clashes with a similar existing method in [classname]`AnchorTester` and [classname]`RouterLinkTester` that returns an [classname]`HasElement` instance as a result of the navigation. Existing tests that rely on the return type have to migrate to the new [methodname]`navigate()` method; if the return value is not used, there is no need for changes.
 
 Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.ClickHandler` class has been removed. The interface, meant to be used with [classname]`ComponentTester` subclasses, should not be needed anymore. In this case, [classname]`com.vaadin.testbench.unit.Clickable` is a valid substitute.
-
-== Quarkus
-
-Vaadin Quarkus extension is changed to build production package by default. No need for production profile with exclusions for development tools in Maven configurations because Vaadin Quarkus extension has build-in Vaadin plugin handling production packaging.
-
-To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
 
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
@@ -430,9 +465,4 @@ Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as 
 
 == Removed Deprecations
 
-APIs deprecated earlier have now been removed. The following linked GitHub issue lists these removals — link:https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 25.0]
-
-== Side Navigation Replaces AppNav and AppNavItem
-
-Some starter projects previously used the `AppNav` and `AppNavItem` components, which relied on the Vaadin Component Factory components, vcf-nav and vcf-nav-item. These Component Factory components are no longer supported and you should replace `AppNav` and `AppNavItem` with their successor, <</components/side-nav#,Side Navigation>>.
-
+APIs deprecated earlier have now been removed. The following linked GitHub issue lists these removals — link:https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 25.0].
