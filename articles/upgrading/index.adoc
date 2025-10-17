@@ -21,7 +21,7 @@ Java 21::
 Vaadin 25 requires Java 21 or later. Java 21 is the latest LTS version of Java. Upgrading to Java 21 might require you to upgrade other dependencies in your application.
 
 Spring Boot 4::
-Vaadin 25 uses the latest Spring Boot 4 and Spring Framework 7 versions. This leads to making breaking changes in Spring-based features, compared to earlier Spring Boot 3.5 and Spring Framework 6 versions.
+Vaadin 25 uses the latest Spring Boot 4 and Spring Framework 7 versions. This leads to making breaking changes in Spring-based features, compared to earlier Spring Boot 3.5 and Spring Framework 6 versions. Details can be found in link:https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide[Spring Boot 4 Migration Guide].
 
 Servlet 6.1::
 Vaadin 25 is based on link:https://jakarta.ee/specifications/servlet/6.1/[Servlet 6.1] specification, which is compatible with link:https://jakarta.ee/specifications/platform/11/[Jakarta EE 11]. When upgrading from Vaadin 24 (Servlet 6 and Jakarta EE10), changes are typically not needed.
@@ -30,7 +30,13 @@ Gradle 8/9::
 Gradle 8 (8.14 and later) and Gradle 9 releases are supported.
 
 Jackson 3::
-Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if the your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
+Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
+
+Node.js 24::
+Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active LTS before Vaadin 25.0.0 - guaranteeing the longest possible support.
+
+React 19::
+Vaadin 25 uses React 19 for the React-based components and views. Details about the changes in React 19 can be found in link:https://react.dev/blog/2024/04/25/react-19-upgrade-guide[React 19 Upgrade Guide].
 
 
 == Overview
@@ -53,11 +59,6 @@ Verify & Test::
 Ensure your application is not using deprecated code fragments.
 +
 Make sure your application runs well on Java 21 runtime.
-
-
-== Limitations
-
-Portlet and OSGi integrations are not included for two reasons: First, the latest Portlet 3 specification corresponds to Servlet 3, and it doesn't work with Servlet 6.1. Second, a Jakarta EE 10 compatible version of OSGi core runtime https://felix.apache.org/documentation/index.html[Apache Felix 8] is under development. The https://karaf.apache.org/[Apache Karaf] container is based on Apache Felix and doesn't have a Jakarta-compatible version.
 
 
 == Preparation
@@ -85,10 +86,9 @@ See the link:https://github.com/vaadin/platform/releases[list of releases on Git
 
 == Spring Upgrade Instructions
 
-To browse a full list of changes, see the https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0.0-M3-Release-Notes[Spring-boot 4.0 Release Notes] and the https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-7.0-Release-Notes[What's New in Spring Framework 7.x] page.
+To browse a full list of changes, see the link:https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0.0-M3-Release-Notes[Spring-boot 4.0 Release Notes] and the https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-7.0-Release-Notes[What's New in Spring Framework 7.x] page.
 
 The following sections provide a general overview of the changes needed for Spring-based Vaadin applications.
-
 
 === Upgrade Spring to Latest
 
@@ -105,79 +105,9 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 ----
 
 
-=== Deprecation
+=== Security Configuration Changes
 
-The deprecated `VaadinWebSecurity` class was removed. Use instead the `VaadinSecurityConfigurer` class for your security configuration. Below is an example of this:
-
-[.example]
---
-
-[source,java]
-----
-<source-info group="VaadinSecurityConfigurer"></source-info>
-@EnableWebSecurity
-@Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
-public class SecurityConfig {
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        /**
-         * Delegating the responsibility of general configuration
-         * of HTTP security to the VaadinSecurityConfigurer.
-         *
-         * It's configuring the following:
-         * - Vaadin's CSRF protection by ignoring internal framework requests,
-         * - default request cache,
-         * - ignoring public views annotated with @AnonymousAllowed,
-         * - restricting access to other views/endpoints, and
-         * - enabling ViewAccessChecker authorization.
-         */
-
-        // You can add any possible extra configurations of your own
-        // here - the following is just an example:
-        http.rememberMe(customizer -> customizer.alwaysRemember(false));
-
-        // Configure your static resources with public access before calling
-        // VaadinSecurityConfigurer.vaadin() as it adds final anyRequest matcher
-        http.authorizeHttpRequests(auth -> {
-            auth.requestMatchers("/admin-only/**").hasAnyRole("admin")
-            .requestMatchers("/public/**").permitAll();
-        });
-
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            // This is important to register your login view to the
-            // view access checker mechanism:
-            configurer.loginView(LoginView.class);
-        });
-
-        return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Demo UserDetailsManager which only provides two hardcoded
-     * in-memory users and their roles.
-     * This shouldn't be used in real-world applications.
-     */
-    @Bean
-    public UserDetailsService userDetailsService(
-            PasswordEncoder passwordEncoder) {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager.createUser(User.withUsername("user")
-                .password(passwordEncoder.encode("userPass"))
-                .roles("USER").build());
-        manager.createUser(User.withUsername("admin")
-                .password(passwordEncoder.encode("adminPass"))
-                .roles("USER", "ADMIN").build());
-        return manager;
-    }
-}
-----
+The deprecated [classname]`VaadinWebSecurity` class has been removed from Vaadin 25. Use instead the [classname]`VaadinSecurityConfigurer` base class for your security configuration. Below is an example of this:
 
 [source,java]
 ----
@@ -246,6 +176,157 @@ public class SecurityConfig {
 }
 ----
 
+==== Upgrade To VaadinSecurityConfigurer From VaadinWebSecurity
+
+. Add a new method to the security configuration class to provide the security filter chain bean
+
++
+[source,java]
+----
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    return http.with(VaadinSecurityConfigurer.vaadin(), vaadin -> {
+        ...
+    }).build();
+}
+----
++
+
+**Hint**: you can use a static import for `VaadinSecurityConfigurer.vaadin()`.
+
+. Move and adapt the code of the `configure(HttpSecurity)` method into `vaadinSecurityFilterChain()`.
+.. customizations of [classname]`HttpSecurity` placed before `super.configure()` can be moved before the `with(vaadin(), vaadin -> {})` instruction.
+.. calls to [classname]`VaadinWebSecurity` methods have related methods in the [classname]`VaadinSecurityConfigurer`.
+
++
+--
+.Before
+[source,java]
+----
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry -> {
+        registry.requestMatchers("/assets/**").permitAll();
+    });
+    super.configure(http);
+    setLoginView(http, "/login", "/");
+}
+----
+
+
+.After
+[source,java]
+----
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry -> {
+        registry.requestMatchers("/assets/**").permitAll();
+    });
+    http.with(vaadin(), vaadin -> vaadin.loginView("/login", "/"));
+    return http.build();
+}
+----
+--
+
+. If `configure(WebSecurity web)` is overridden you might:
+
+.. Move the rules in the security filter chain bean definition using `HttpSecurity.authorizeRequests()` and remove the original method (recommended by Spring, to prevent skipping all other filters in the chain):
+
++
+--
+.Before
+[source,java]
+----
+@Override
+protected void configure(WebSecurity web) throws Exception {
+    web.ignoring().requestMatchers("/images/**");
+}
+----
+
+.After
+[source,java]
+----
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry -> {
+        registry.requestMatchers("/assets/**", "/images/**").permitAll();
+    });
+    http.with(vaadin(), vaadin -> vaadin.loginView("/login", "/"));
+    return http.build();
+}
+----
+--
+
+.. OR, expose a [classname]`WebSecurityCustomizer` bean by your own and remove the original method
+
++
+--
+.Before
+[source,java]
+----
+@Override
+protected void configure(WebSecurity web) throws Exception {
+web.ignoring().requestMatchers("/images/**");
+}
+----
+
+.After
+[source,java]
+----
+@Bean
+public WebSecurityCustomizer webSecurityCustomizer() {
+return (web) -> web.ignoring().requestMatchers("/images/**");
+}
+----
+--
+
+. If stateless authentication is configured (`setStatelessAuthentication(...)`), replace the call using `VaadinStatelessSecurityConfigurer`
+
++
+--
+.Before
+[source,java]
+----
+@Override
+protected void configure(HttpSecurity web) throws Exception {
+    //...
+    setStatelessAuthentication(http, new SecretKeySpec(Base64.getDecoder().decode(authSecret), JwsAlgorithms.HS256), "com.example.application");
+    //...
+}
+----
+
+.After
+[source,java]
+----
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    //...
+    http.with(new VaadinStatelessSecurityConfigurer<>(), stateless -> stateless.issuer("com.example.application")
+        .withSecretKey()
+        .secretKey(new SecretKeySpec(Base64.getDecoder().decode(authSecret), JwsAlgorithms.HS256))
+    );
+    //...
+}
+----
+--
+
+. Remove `extends VaadinWebSecurity` and import the Vaadin security context holder strategy
+
+[source,java]
+----
+@EnableWebSecurity // should be already present
+@Configuration     // should be already present
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfiguration {
+}
+----
+
+
+==== Restrict Access By Default For Url-Based Security
+URLs not explicitly specified in security configuration changed from being allowed for authenticated users to restricted by default. This requires extra security rules (path matchers) for URLs that were allowed only for authentication users.
+
+==== Deny Access Ff Flow Layout Has No Security Annotation
+Vaadin Flow layouts now require access annotation (e.g. [classname]`RolesAllowed`) on layout classes. This was added to align with auto-layout default security rules.
 
 == Java Version
 
@@ -291,28 +372,16 @@ java {
 ----
 --
 
-
 == Application Servers
 
 Before migrating, find the corresponding version of the Jakarta EE 11-compatible application server used in your project. See link:https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
 
-
-
-[role="since:com.vaadin:vaadin@V24.4"]
-== Frontend Sources Directory
-Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as the default location for frontend sources. Legacy location [filename]`{project directory}/frontend/` is no longer supported or used automatically [filename]`{project directory}/src/main/frontend/` directory doesn't exist, a warning will be output instead. If you're using the legacy location, you should move your files to the new location, or add the `frontendDirectory` parameter and point it to the legacy location for it to function correctly.
-
-
-== Polymer Support
-
-In Vaadin 25, the `@polymer/polymer` dependency in default `package.json` is removed by default, if polymer-template module is not found from the project. If the application uses Polymer in add-ons may require to add `@NpmPackage(value = "@polymer/polymer", version = "3.5.2")` or add an import to `package.json` explicitly. Details can be found in link:https://github.com/vaadin/flow/issues/21421[Ensure Flow works without Polymer in v25]
-
-
 == Maven & Gradle Plugins
 
-Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21. <TODO: any specific versions to mention?>
+Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
+A safe choice: Maven 3.9.11 (or the latest in the 3.9 line) or Maven 4.0.x (once stable) if you are comfortable with that.
 
-To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.0.0.
+To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the link:https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.0.0.
 
 If you're using a Gradle wrapper, update it to version 8.14 by executing the following from the command line:
 
@@ -323,17 +392,45 @@ If you're using a Gradle wrapper, update it to version 8.14 by executing the fol
 
 For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
 
+== TestBench
+
+[classname]`ComponentTester` in UI Unit test has been updated to prove a common [methodname]`void click()` method. However, the new method clashes with a similar existing method in [classname]`AnchorTester` and [classname]`RouterLinkTester` that returns an [classname]`HasElement` instance as a result of the navigation. Existing tests that rely on the return type have to migrate to the new [methodname]`navigate()` method; if the return value is not used, there is no need for changes.
+
+Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.ClickHandler` class has been removed. The interface, meant to be used with [classname]`ComponentTester` subclasses, should not be needed anymore. In this case, [classname]`com.vaadin.testbench.unit.Clickable` is a valid substitute.
+
 == Quarkus
 
 Vaadin Quarkus extension is changed to build production package by default. No need for production profile with exclusions for development tools in Maven configurations because Vaadin Quarkus extension has build-in Vaadin plugin handling production packaging.
 
-To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behaviour. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
+To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
+
+== Binder
+[methodname]`Binder.validate()` implementation has been changed to behave as its javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
+
+== Server-Side Modality
+[classname]`Dialog` has become less strict and allows background requests to server. Vaadin Flow allows to change this behavior if needed through [methodname]`Dialog.setModality(ModalityMode)` method.
+
+== TreeGrid And Hierarchical Data Providers
+Vaadin Flow added support for flat hierarchy in [classname]`TreeGrid` and hierarchical data providers.
+This required some API removal in Vaadin Flow.
+
+[classname]`HierarchyMapper` and [classname]`HierarchicalCommunicationController` have been replaced with the new concept - `Cache`. This new class provides a system for storing data in a hierarchical structure while enabling access in a flattened format for client-side consumption. [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` have been replaced with a single [methodname]`setViewportRange` which spans all hierarchy levels.
+
+See link:https://github.com/vaadin/platform/issues/7843[TreeGrid Flat Hierarchy Support] and link:https://github.com/vaadin/flow-components/issues/7269[Improving user and developer experience in TreeGrid] for more details.
+
+== Form Filler Add-on
+The link:https://github.com/vaadin/form-filler-addon/issues[Form Filler add-on] has been removed from the Vaadin 25 platform. If your project uses it, you can add it as a separate dependency or get the same functionality with much less code using Spring AI to have the LLM directly populate a Java object that you can then use with e.g. [methodname]`binder.readBean()`.
+
+== Polymer Support
+
+In Vaadin 25, the `@polymer/polymer` dependency in default `package.json` is removed by default, if polymer-template module is not found from the project. If the application uses Polymer in add-ons may require to add `@NpmPackage(value = "@polymer/polymer", version = "3.5.2")` or add an import to `package.json` explicitly. Details can be found in link:https://github.com/vaadin/flow/issues/21421[Ensure Flow works without Polymer in v25].
+
+== Frontend Sources Directory
+Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as the default location for frontend sources. Legacy location [filename]`{project directory}/frontend/` is deprecated and a warning will be output if it's used. If you're using the legacy location, please move your files to the new location, or add the `frontendDirectory` parameter and point it to the legacy location. Legacy location support will be removed in a future release.
 
 == Removed Deprecations
 
-APIs that were deprecated earlier have now been removed. The following linked GitHub issue lists these removals:
-
-- https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 22.0]
+APIs deprecated earlier have now been removed. The following linked GitHub issue lists these removals — link:https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 25.0]
 
 == Side Navigation Replaces AppNav and AppNavItem
 
