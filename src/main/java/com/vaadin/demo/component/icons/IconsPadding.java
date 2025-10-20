@@ -1,11 +1,10 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.router.Route;
 
 @Route("icons-padding")
 public class IconsPadding extends Div {
@@ -15,15 +14,13 @@ public class IconsPadding extends Div {
         layout.setSpacing(true);
         layout.addClassName("items-end");
 
-        DownloadHandler codeBranch = DownloadHandler.forClassResource(
-                getClass(), "/icons/code-branch.svg", "svg-branch.svg");
         // tag::snippet[]
-        SvgIcon iconDefaultSize = new SvgIcon(codeBranch);
+        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg");
 
-        SvgIcon iconSmallPadding = new SvgIcon(codeBranch);
+        SvgIcon iconSmallPadding = new SvgIcon("/icons/code-branch.svg");
         iconSmallPadding.getStyle().set("padding", "0.25em");
 
-        SvgIcon iconLargePadding = new SvgIcon(codeBranch);
+        SvgIcon iconLargePadding = new SvgIcon("/icons/code-branch.svg");
         iconLargePadding.getStyle().set("padding", "0.5em");
 
         layout.add(iconDefaultSize, iconSmallPadding, iconLargePadding);
