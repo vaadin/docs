@@ -1,7 +1,7 @@
 ---
 title: Flow
 page-title: How to logout from a Vaadin Flow application
-meta-description: Learn how to implement logout functionality in a Vaadin Flow application using AuthenticationContext. This guide covers logout handling, custom redirects, and best practices.
+meta-description: Learn to implement logout functionality in a Flow application using AuthenticationContext. This guide covers logout, custom redirects and best practices.
 order: 5
 ---
 
@@ -40,16 +40,12 @@ public class LogoutView extends Main {
 
 By default, users are redirected to the root URL (`/`) after logging out. To change this, *specify a custom logout success URL* in your security configuration:
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
-<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class) // <1>
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 class SecurityConfig {
 
     @Bean
@@ -57,7 +53,7 @@ class SecurityConfig {
         // Configure Vaadin's security using VaadinSecurityConfigurer
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-            configurer.loginView(LoginView.class, "/logged-out.html"); // <2>
+            configurer.loginView(LoginView.class, "/logged-out.html"); // <1>
 // end::snippet[]
         });
         return http.build();
@@ -65,29 +61,7 @@ class SecurityConfig {
     ...
 }
 ----
-
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-@Configuration
-class SecurityConfig extends VaadinWebSecurity {
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
-// tag::snippet[]
-        setLoginView(http, LoginView.class, "/logged-out.html"); // <2>
-// end::snippet[]
-    }
-    ...
-}
-----
-
---
-<1> Imports `VaadinAwareSecurityContextHolderStrategyConfiguration`, required for Vaadin security to work with Spring Security (auto-imported with `VaadinWebSecurity`).
-<2> Sets `/logged-out.html` as the *logout success URL*.
+<1> Sets `/logged-out.html` as the *logout success URL*.
 
 If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
 
@@ -108,9 +82,6 @@ If your application is deployed at `\https://example.com/app`, the logout URL sh
 == Try It
 
 In this mini-tutorial, you'll add logout functionality to a real Vaadin application. It uses the project from the <<../add-login/flow#try-it,Add Login>> guide. If you haven't completed that tutorial yet, do it now before proceeding.
-
-[IMPORTANT]
-This tutorial applies to skeletons generated for Vaadin 24.7. Skeletons generated for Vaadin 24.8 and newer already have a security configuration.
 
 
 .Inject AutheticationContext
@@ -134,7 +105,7 @@ public final class MainLayout extends AppLayout {
         this.authenticationContext = authenticationContext;
 // end::snippet[]
         setPrimarySection(Section.DRAWER);
-        addToDrawer(createHeader(), new Scroller(createSideNav()), createUserMenu());
+        addToDrawer(createHeader(), new Scroller(createSideNav()));
     }
     ...
 }
@@ -144,10 +115,10 @@ public final class MainLayout extends AppLayout {
 ====
 
 
-.Implement Logout in the User Menu
+.Add Logout Button
 [%collapsible]
 ====
-The *user menu* in [classname]`MainLayout` already contains a *logout item*, but it does nothing. Modify it to call [methodname]`logout()` when clicked:
+Add a logout button to the [classname]`MainLayout` class:
 
 .MainLayout.java
 [source,java]
@@ -155,32 +126,31 @@ The *user menu* in [classname]`MainLayout` already contains a *logout item*, but
 @Layout
 @PermitAll
 public final class MainLayout extends AppLayout {
-    ...
-    private Component createUserMenu() {
-        // TODO Replace with real user information and actions
-        var avatar = new Avatar("John Smith");
-        avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
-        avatar.addClassNames(Margin.Right.SMALL);
-        avatar.setColorIndex(5);
 
-        var userMenu = new MenuBar();
-        userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
-        userMenu.addClassNames(Margin.MEDIUM);
+    private final AuthenticationContext authenticationContext;
 
-        var userMenuItem = userMenu.addItem(avatar);
-        userMenuItem.add("John Smith");
-        userMenuItem.getSubMenu().addItem("View Profile");
-        userMenuItem.getSubMenu().addItem("Manage Settings");
+    MainLayout(AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
+        setPrimarySection(Section.DRAWER);
+        addToDrawer(createHeader(), new Scroller(createSideNav()), 
 // tag::snippet[]
-        userMenuItem.getSubMenu().addItem("Logout",
-            event -> authenticationContext.logout()); // <1>
+            createLogout());
 // end::snippet[]
-
-        return userMenu;
     }
+
+// tag::snippet[]
+    private Button createLogout() {
+        var logout = new Button("Logout", VaadinIcon.POWER_OFF.create());
+        logout.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        logout.addClickListener(e -> authenticationContext.logout()); // <1>
+        return logout;
+    }
+// end::snippet[]
+    ...
 }
+
 ----
-<1> Calls [methodname]`authenticationContext.logout()` when the *Logout* menu item is clicked.
+<1> Calls [methodname]`authenticationContext.logout()` when the [guibutton]*Logout* button is clicked.
 ====
 
 
@@ -191,7 +161,7 @@ Restart the application. Navigate to: http://localhost:8080
 
 Log in if you haven't already.
 
-Click the user menu (lower-left corner) and select *Logout*. You should be redirected to the login screen.
+Click the [guibutton]*Logout* button. You should be redirected to the login screen.
 ====
 
 

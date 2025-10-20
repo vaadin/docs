@@ -1,7 +1,7 @@
 ---
 title: Flow
 page-title: How to protect Flow services in a Vaadin application
-meta-description: Learn how to protect Vaadin Flow services using Spring method security. This guide covers enabling method security, securing service methods, and best practices for access control.
+meta-description: Protect Flow services using Spring method security. This guide covers enabling method security, securing service methods, and best practices for access control.
 order: 5
 ---
 
@@ -29,13 +29,9 @@ In this guide, you'll only learn the minimum to get started with Spring method s
 
 To enable method security, add [annotationname]`@EnableMethodSecurity` to your security configuration class:
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
-<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 // tag::snippet[]
 @EnableMethodSecurity
@@ -55,27 +51,6 @@ class SecurityConfig {
 }
 ----
 
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-// tag::snippet[]
-@EnableMethodSecurity
-// end::snippet[]
-@Configuration
-class SecurityConfig extends VaadinWebSecurity {
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
-        setLoginView(http, LoginView.class);
-    }
-    ...
-}
-----
-
---
 .Test the method security
 [CAUTION]
 Without [annotationname]`@EnableMethodSecurity`, *all services remain unprotected* -- even if you annotate methods with security rules! Always verify that method security is enabled with automatic tests.  _A guide showing you how to do this in a Vaadin application is planned, but not yet written. In the meantime, refer to the https://docs.spring.io/spring-security/reference/servlet/test/method.html[Spring Reference Manual]._
@@ -124,22 +99,15 @@ public class ProtectedService {
 
 In this mini-tutorial, you'll learn how to use Spring method security in a real Vaadin application. The tutorial uses the project from the <<../protect-views/flow#try-it,Protect Views>> guide. If you haven't completed that tutorial yet, do it now before proceeding.
 
-[IMPORTANT]
-This tutorial applies to skeletons generated for Vaadin 24.7. Skeletons generated for Vaadin 24.8 and newer already have a security configuration.
-
 
 .Enable Method Security
 [%collapsible]
 ====
 Add [annotationname]`@EnableMethodSecurity` to [classname]`SecurityConfig`:
 
-[.example]
---
-
 .`SecurityConfig.java`
 [source,java]
 ----
-<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 // tag::snippet[]
 @EnableMethodSecurity
@@ -150,22 +118,6 @@ class SecurityConfig {
     ...
 }
 ----
-
-.`SecurityConfig.java`
-[source,java]
-----
-<source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
-@EnableWebSecurity
-// tag::snippet[]
-@EnableMethodSecurity
-// end::snippet[]
-@Configuration
-class SecurityConfig extends VaadinWebSecurity {
-    ...
-}
-----
-
---
 ====
 
 
@@ -183,17 +135,18 @@ Open [classname]`TaskService` and add [annotationname]`@PreAuthorize` annotation
 // tag::snippet[]
 @PreAuthorize("isAuthenticated()")
 // end::snippet[]
-@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class TaskService {
     ...
 
 // tag::snippet[]
     @PreAuthorize("hasRole('" + Roles.ADMIN + "')")
 // end::snippet[]
+    @Transactional
     public void createTask(String description, @Nullable LocalDate dueDate) {
         // ...
     }
 
+    @Transactional(readOnly = true)
     public List<Task> list(Pageable pageable) {
         // ...
     }
@@ -214,7 +167,7 @@ To see that the service is actually protected, you're going to break the task li
 .TaskListView.java
 [source,java]
 ----
-@Route("task-list")
+@Route("")
 @PageTitle("Task List")
 @Menu(order = 0, icon = "vaadin:clipboard-check", title = "Task List")
 @PermitAll
@@ -246,6 +199,59 @@ Now change `TaskListView()` back again by removing the comments.
 // TODO This should be replaced with an integration test that checks the security.
 ====
 
+.Fix Integration Test
+[%collapsible]
+====
+If you now try to run `TaskServiceTest` it fails. This is because the service is secured, but the test calls it without a valid security context. To fix this, first add the `spring-security-test` dependency to your `pom.xml`:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Next, add the `@WithMockUser` annotation to all test methods in `TaskServiceTest`:
+
+.TaskServiceTest.java
+[source,java]
+----
+// tag::snippet[]
+import org.springframework.security.test.context.support.WithMockUser;
+// end::snippet[]
+
+@Import(TestcontainersConfiguration.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@Transactional
+class TaskServiceTest {
+
+    @Autowired
+    TaskService taskService;
+
+    @Test
+// tag::snippet[]
+    @WithMockUser(roles = Roles.ADMIN)
+// end::snippet[]
+    public void tasks_are_stored_in_the_database_with_the_current_timestamp() {
+        // ...
+    }
+
+    @Test
+// tag::snippet[]
+    @WithMockUser(roles = Roles.ADMIN)
+// end::snippet[]
+    public void tasks_are_validated_before_they_are_stored() {
+        // ...
+    }
+}
+----
+
+This instructs the test to call your service as a user with the `ADMIN` role. If you run it now, it passes.
+
+====
 
 .Final Thoughts
 [%collapsible]
