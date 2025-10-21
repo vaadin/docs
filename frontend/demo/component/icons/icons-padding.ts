@@ -4,7 +4,7 @@ import '@vaadin/icon';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
-import codeBranch from '../../../../src/main/resources/icons/code-branch.svg?url';
+import codeBranch from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
 @customElement('icons-padding')
 export class Example extends LitElement {
