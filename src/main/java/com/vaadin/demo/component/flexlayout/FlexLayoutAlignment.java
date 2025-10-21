@@ -6,13 +6,13 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("flex-layout-direction")
-public class FlexLayoutDirection extends Div {
+@Route("flex-layout-alignment")
+public class FlexLayoutAlignment extends Div {
 
-    public FlexLayoutDirection() {
+    public FlexLayoutAlignment() {
         // tag::snippet[]
         FlexLayout layout = new FlexLayout();
-        layout.setFlexDirection(FlexLayout.FlexDirection.COLUMN);
+        layout.setAlignContent(FlexLayout.ContentAlignment.CENTER);
         // end::snippet[]
 
         Div item1 = new Div("Item 1");
@@ -26,13 +26,15 @@ public class FlexLayoutDirection extends Div {
 
         layout.add(item1, item2, item3);
 
+        layout.setWidthFull();
         layout.getStyle().setGap("5px");
+        layout.setClassName("height-4xl");
 
         this.setClassName("basic-layouts-example");
         this.add(layout);
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<FlexLayoutDirection> { // hidden-source-line
+            DemoExporter<FlexLayoutAlignment> { // hidden-source-line
     } // hidden-source-line
 }
