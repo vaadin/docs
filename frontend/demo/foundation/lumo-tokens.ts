@@ -1,4 +1,4 @@
-import propsStyles from '@vaadin/vaadin-lumo-styles/props.css?inline';
+import propsStyles from '@vaadin/vaadin-lumo-styles/src/props/index.css?inline';
 import colorScheme from '@vaadin/vaadin-lumo-styles/src/global/color-scheme.css?inline';
 import utilityStyles from '@vaadin/vaadin-lumo-styles/utility.css?inline';
 import { addStylesheet } from 'Frontend/demo/theme';
