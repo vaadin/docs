@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import codeBranch from '../../../../../src/main/resources/icons/code-branch.svg?url';
+import codeBranch from '../../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
 function Example() {
   return (
