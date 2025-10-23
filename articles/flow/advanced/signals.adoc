@@ -173,7 +173,7 @@ The [classname]`SignalFactory` interface is the extension point for creating cus
 === Simple Counter Example
 
 This example demonstrates how to bind a counter signal (state) to a button (UI) — the button's text is updated reactively based on the counter value.
-The binding between state and UI is done using a [classname]`ComponentEffect.format` helper. This creates an effect that uses a format string and the values of the defined signals to create a new string that is passed to the method reference whenever the value of any used signal changes.
+The binding between state and UI is done using a [classname]`ComponentEffect.effect` helper. In this case, it creates an effect that uses the value from `counter` signal to update button text whenever the signal changes.
 
 [source,java]
 ----
@@ -190,17 +190,12 @@ public class SimpleCounter extends VerticalLayout {
         add(button);
 
         // Effect that updates the button's text whenever the counter changes
-        ComponentEffect.format(button, Button::setText, "Clicked %.0f times", counter);
+        ComponentEffect.effect(button,
+            () -> button.setText(String.format("Clicked %.0f times", counter.value())));
     }
 }
 ----
 
-[classname]`ComponentEffect.format` is a helper function that does the same as this explicitly defined effect:
-[source,java]
-----
-ComponentEffect.effect(button,
-    () -> button.setText(String.format("Clicked %.0f times", counter.value())));
-----
 
 === Text Field Example
 
@@ -234,7 +229,7 @@ ComponentEffect.effect(field,
     () -> field.setValue(value.value()));
 ----
 
-Note that you need to enable push for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
 
 === List Example
 
@@ -292,7 +287,7 @@ u.setAge(u.getAge() + 1); // This won't trigger reactivity!
 
 === Use Component Effects for UI Updates
 
-Variuos helper methods simplify binding of signals to components:
+Various helper methods simplify binding of signals to components:
 
 [source,java]
 ----
@@ -305,12 +300,6 @@ ComponentEffect.effect(myComponent, () -> {
 ComponentEffect.bind(label, user.map(u -> u.getName()), Span::setText);
 ComponentEffect.bind(label, stringSignal, Span::setText);
 ComponentEffect.bind(label, stringSignal.map(value -> !value.isEmpty()), Span::setVisible);
-
-// Bind a formatted string to a component based on 1..n signals:
-ComponentEffect.format(label, Span::setText, "The price of %s is %.2f", nameSignal, priceSignal);
-
-// Bind a formatted string to a component based on 1..n signals using a given locale:
-ComponentEffect.format(label, Span::setText, Locale.US, "The price of %s is %.2f", nameSignal, priceSignal);
 ----
 
 === Use Transactions for Atomic Updates
