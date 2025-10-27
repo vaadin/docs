@@ -1,7 +1,7 @@
 ---
 title: Hilla
 page-title: How to logout from a Vaadin Hilla application
-meta-description: Learn how to implement logout functionality in a Vaadin application with Hilla views using the useAuth hook. This guide covers logout handling, redirects, and best practices.
+meta-description: Learn to implement logout functionality with Hilla views using the useAuth hook. This guide covers logout handling, redirect, and best practices.
 order: 10
 ---
 
@@ -41,22 +41,28 @@ export default function LogoutView() {
 
 By default, users are redirected to the root URL (`/`) after logging out. To change this, *specify a custom logout success URL* in your security configuration:
 
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-        setLoginView(http, "/login", "/logged-out.html"); // <1>
+            configurer.loginView("/login", "/logged-out.html"); // <1>
 // end::snippet[]
+        });
+        return http.build();
     }
     ...
 }
 ----
+
 <1> Sets `/logged-out.html` as the *logout success URL*.
 
 If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
@@ -94,49 +100,38 @@ import {useAuth} from "Frontend/security/auth";
 ====
 
 
-.Implement Logout in the User Menu
+.Add Logout Button
 [%collapsible]
 ====
-The *user menu* in `@layout.tsx` already contains a *logout item*, but it does nothing. Modify it to call `logout()` when clicked:
+Add a logout button to the main layout:
 
 .frontend/views/@layout.tsx
 [source,tsx]
 ----
-...
-function UserMenu() {
-    // TODO Replace with real user information and actions
+// ...
+
+export default function MainLayout() {
 // tag::snippet[]
     const { logout } = useAuth();
 // end::snippet[]
-    const items = [
-        {
-            component: (
-                <>
-                    <Avatar theme="xsmall" name="John Smith" colorIndex={5} className="mr-s"/> John Smith
-                </>
-            ),
-            children: [
-                {text: 'View Profile', action: () => console.log("View Profile")},
-                {text: 'Manage Settings', action: () => console.log("Manage Settings")},
-// tag::snippet[]
-                {text: 'Logout', action: () => (async () => await logout())()},
-// end::snippet[]
-            ],
-        },
-    ];
-    const onItemSelected = (event: MenuBarItemSelectedEvent) => {
-        const action = ((event.detail.value as any)).action;
-        if (action) {
-            action();
-        }
-    }
-    return <MenuBar theme="tertiary-inline"
-                    items={items}
-                    onItemSelected={onItemSelected}
-                    className="m-m"
-                    slot="drawer"/>;
+    return (
+        <AppLayout primarySection="drawer">
+            <Header />
+            <Scroller slot="drawer">
+                <MainMenu />
+            </Scroller>
+{/* tag::snippet[] */}
+            <Button slot="drawer" theme="tertiary" onClick={logout}>
+                <Icon icon="vaadin:power-off" slot="prefix"/>
+                Logout
+            </Button>
+{/* end::snippet[] */}
+            <Suspense fallback={<ProgressBar indeterminate={true} className="m-0" />}>
+            <Outlet />
+        </Suspense>
+        </AppLayout>
+    );
 }
-...
 ----
 
 ====
@@ -149,7 +144,7 @@ Restart the application. Navigate to: http://localhost:8080
 
 Log in if you haven't already.
 
-Click the user menu (lower-left corner) and select *Logout*. You should be redirected to the login screen.
+Click the [guibutton]*Logout* button. You should be redirected to the login screen.
 ====
 
 

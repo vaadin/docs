@@ -233,6 +233,56 @@ endif::[]
 --
 
 
+== Hiding the Detail Area
+
+The detail area is automatically shown or hidden when content is added or removed from it. There is no explicit property to control the visibility of the detail area.
+
+Master-Detail Layout exposes the following events that can be used to hide the detail area by removing the content from it:
+
+- `backdrop-click`: Fired when the user clicks on the backdrop of the detail overlay when it is in drawer mode.
+- `detail-escape-press`: Fired when the user presses kbd:[Escape] within the detail area.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+layout.addBackdropClickListener(event -> {
+    // Hide the detail area by removing the content
+    layout.setDetail(null);
+});
+
+layout.addDetailEscapePressListener(event -> {
+    // Hide the detail area by removing the content
+    layout.setDetail(null);
+});
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+const selectedPerson = useSignal<Person | null>(null);
+
+const closeDetail = () => {
+  // Clear selected person to not render the detail content
+  selectedPerson.value = null;
+};
+
+<MasterDetailLayout onBackdropClick={closeDetail} onDetailEscapePress={closeDetail}>
+  <MasterDetailLayout.Master>
+    <PersonList onSelect={(person) => { selectedPerson.value = person}} />
+  </MasterDetailLayout.Master>
+  <MasterDetailLayout.Detail>
+    {selectedPerson.value && <PersonDetail person={selectedPerson.value} />}
+  </MasterDetailLayout.Detail>
+</MasterDetailLayout>
+----
+endif::[]
+--
+
 == Router Integration
 
 Master-Detail Layout can be used as a router layout (see <<{articles}/flow/routing/layout#, Flow>>/<<{articles}/hilla/guides/routing#adding-layout-routes, Hilla>>), so that nested views are automatically rendered in the details area of the component. This allows showing nested views without having to manage the contents of the details area manually when the route changes, while providing the same benefits such as responsive behavior that the component normally provides.
@@ -259,7 +309,7 @@ public class ProductDetailView extends VerticalLayout { ... }
 
 The `MasterDetailLayout` React component can be integrated with Hilla's routing mechanism, so that any nested views automatically show up in the details area of the component.
 
-The example below shows how to set up a master and a detail view. The master view is `ProductListView`, which would show a list of products, and the detail view is `ProductDetailView`, which shows information about a specific product. `ProductListView` is a layout component that renders a `MasterDetailLayout` component. The layout component retrieves the nested child view using `useOutlet` and renders it into the details area. Depending on whether a nested child view is present, `MasterDetailLayout` will automatically show or hide the details area. `ProductDetailView` is just a regular component, there is no specific configuration necessary to make it work.
+The example below shows how to set up a master and a detail view. The master view is `ProductListView`, which would show a list of products, and the detail view is `ProductDetailView`, which shows information about a specific product. `ProductListView` is a layout component that renders a `MasterDetailLayout` component. The layout component retrieves the nested child view using `useOutlet` and renders it into the details area. Depending on whether a nested child view is present, `MasterDetailLayout` will automatically show or hide the details area. `ProductDetailView` is just a regular component, there is no specific configuration necessary to make it work. `EmptyProductDetailView` returns `null` so that the detail area is closed by default.
 
 With this setup, when navigating to `/products`, the layout would only show the product list. When navigating to a product detail, for example `/products/1`, it would then also show the product details next to, or on top of, the product list.
 
@@ -282,6 +332,11 @@ export default function ProductListView() {
       </MasterDetailLayout.Detail>
     </MasterDetailLayout>
   );
+}
+
+// frontend/views/products/@index.tsx
+export default function EmptyProductDetailView() {
+  return null
 }
 
 // frontend/views/products/{productId}/@index.tsx

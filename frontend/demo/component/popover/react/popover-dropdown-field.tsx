@@ -86,7 +86,12 @@ function Example() {
         accessibleName="Select a date range"
         opened={opened.value}
         onOpenedChanged={(e) => {
-          opened.value = e.detail.value;
+          if (e.detail.value) {
+            opened.value = true;
+          }
+        }}
+        onClosed={() => {
+          opened.value = false;
         }}
       >
         <Select

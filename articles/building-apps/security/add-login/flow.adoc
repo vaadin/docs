@@ -1,7 +1,7 @@
 ---
 title: Flow
 page-title: How to add a Flow login view to a Vaadin application
-meta-description: Learn how to create a secure login view in Vaadin Flow using Spring Security. This guide covers authentication setup, in-memory authentication, and best practices.
+meta-description: Learn to create a secure login view in Vaadin Flow using Spring Security. This guide covers authentication setup, in-memory authentication, and best practices.
 order: 5
 ---
 
@@ -31,7 +31,7 @@ public class LoginView extends Main implements BeforeEnterObserver {
     private final LoginForm login;
 
     public LoginView() {
-        addClassNames(LumoUtility.Display.FLEX, LumoUtility.JustifyContent.CENTER, 
+        addClassNames(LumoUtility.Display.FLEX, LumoUtility.JustifyContent.CENTER,
             LumoUtility.AlignItems.CENTER);
         setSizeFull();
         login = new LoginForm();
@@ -65,19 +65,24 @@ If your application's root package is `com.example.application`, place the login
 
 To instruct Spring Security to use your login view, modify your security configuration:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-        setLoginView(http, LoginView.class);
+            configurer.loginView(LoginView.class);
 // end::snippet[]
+        });
+
+        return http.build();
     }
     ...
 }
@@ -128,26 +133,34 @@ Create a new package: [packagename]`[application package].security`
 
 Inside this package, create a [classname]`SecurityConfig` class:
 
-.SecurityConfig.class
+.`SecurityConfig.java`
 [source,java]
 ----
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+        });
+
+        return http.build();
     }
 
     @Bean
@@ -166,13 +179,14 @@ class SecurityConfig extends VaadinWebSecurity {
     }
 }
 ----
+
 ====
 
 
 .Create the Login View
 [%collapsible]
 ====
-Create a new package: [packagename]`[application package].security.ui.view`
+Create a new package: [packagename]`[application package].security.ui`
 
 Inside this package, create a [classname]`LoginView` class:
 
@@ -196,8 +210,8 @@ public class LoginView extends Main implements BeforeEnterObserver {
     private final LoginForm login;
 
     public LoginView() {
-        addClassNames(LumoUtility.Display.FLEX, 
-            LumoUtility.JustifyContent.CENTER, 
+        addClassNames(LumoUtility.Display.FLEX,
+            LumoUtility.JustifyContent.CENTER,
             LumoUtility.AlignItems.CENTER);
         setSizeFull();
         login = new LoginForm();
@@ -224,19 +238,24 @@ public class LoginView extends Main implements BeforeEnterObserver {
 ====
 Modify [classname]`SecurityConfig` to reference the `LoginView`:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-        setLoginView(http, LoginView.class);
+            configurer.loginView(LoginView.class);
 // end::snippet[]
+        });
+
+        return http.build();
     }
     ...
 }
@@ -282,7 +301,7 @@ public final class MainView extends Main {
 ----
 import jakarta.annotation.security.PermitAll;
 
-@Route("task-list")
+@Route("")
 @PageTitle("Task List")
 @Menu(order = 0, icon = "vaadin:clipboard-check", title = "Task List")
 // tag::snippet[]
@@ -306,7 +325,7 @@ Restart your application to make sure all your changes have been applied. Naviga
 
 You should now see the login screen. Login with one of the following credentials:
 
-* *User:* user / *Password:* password
+* *User:* user / *Password:* user
 * *Admin:* admin / *Password:* admin
 
 After logging in, you should be able to access the task list view.

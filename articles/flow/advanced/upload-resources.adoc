@@ -1,0 +1,120 @@
+---
+title: Uploads
+page-title: Uploading files from client to server
+description: Using UploadHandler to receive an incoming data stream.
+meta-description: Learn to receive content using UploadHandler API in Vaadin Flow.
+order: 130
+---
+
+= Using UploadHandler to Receive an Incoming Data Stream
+
+To receive an upload from the client, you need to register an [classname]`UploadHandler` that accepts a URL to handle receiving an upload stream.
+The recommended way to upload files is to use the <<{articles}/components/upload/file-handling#,Upload component>>, where as this documentation shows use of more customized components.
+
+To create an [classname]`UploadHandler`, you need implement the [methodname]`handleUploadRequest` to handle the upload or use one of the provided UploadHandlers.
+The existing [classname]`UploadHandler` implementations are accessible through the static methods in [classname]`UploadHandler`, e.g. `UploadHandler.toTempFile(SerializableBiConsumer<UploadMetadata, File> successHandler)`
+
+[NOTE]
+When receiving a multipart upload the [methodname]`handleUploadRequest` will be called separately for each file in the upload.
+
+Then the handler can be registered through the [classname]`Element` API by setting it as an attribute.
+
+[source,java]
+----
+List<File> outputFiles = new ArrayList<>(1);
+UploadHandler uploadHandler = UploadHandler.toTempFile((uploadMetadata, file) -> outputFiles.add(file));
+
+getElement().setAttribute("target", uploadHandler);
+----
+
+The Upload element can be composed from an [classname]`Input` of type `file` and a [classname]`Button` that sends the file to the server using JavaScript.
+
+[source,java]
+----
+Span container = new Span();
+Input input = new Input();
+input.setType("file");
+
+Button uploadButton = new Button("Upload",
+    (event) -> event.getSource().getElement().executeJs("""
+        const file = $0.files[0];
+        if (!file) {
+          alert("No file selected");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        fetch(this.getAttribute("endpoint"), {
+          method: "POST",
+          body: formData
+        }).then(response => {
+          if (response.ok) {
+            alert("Upload successful");
+          } else {
+            alert("Upload failed");
+          }
+        });
+        """, input.getElement()));
+
+InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+    (uploadMetadata, bytes) -> {
+        // handle Uploaded data here
+    });
+
+uploadButton.getElement()
+    .setAttribute("endpoint", inMemoryUploadHandler);
+
+container.add(input, uploadButton);
+----
+
+Another possibility is to do a form action to upload the data to the server.
+
+This could be done as:
+
+[source,html]
+----
+<iframe name="dummyFrame" id="dummyFrame" display="none"/>
+<form method="post" enctype="multipart/form-data" action="Element.getAttribute('target')" target="dummyFrame">
+  <input type="file" name="file"/>
+  <input type="submit"/>
+</form>
+----
+
+[NOTE]
+The dummyFrame iframe is to keep the post from navigating to the action url on submit.
+
+[NOTE]
+For multiple files add the attribute `multiple` to the file type input e.g. `<input type="file" name="file" multiple/>`.
+
+Using the element API this could be done as:
+
+[source,java]
+----
+InMemoryUploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
+    (uploadMetadata, bytes) -> {
+        // handle Uploaded data here
+    });
+
+// Generate dummy iframe for navigation on submit action
+IFrame dummy = new IFrame();
+dummy.setName("dummy");
+dummy.setId("dummy");
+dummy.getStyle().set("display", "none");
+
+// Setup the form using the element api
+Element formElement = new Element("form").setAttribute("method", "post")
+    .setAttribute("enctype", "multipart/form-data")
+    .setAttribute("action", inMemoryUploadHandler)
+    .setAttribute("target", "dummy");
+Element files = new Element("input").setAttribute("type", "file")
+    .setAttribute("name", "file");
+Element submit = new Element("input").setAttribute("type", "submit");
+formElement.appendChild(files).appendChild(submit);
+
+add(dummy);
+getElement().appendChild(formElement);
+----
+
+
+
+[discussion-id]`4482D0BF-E742-4FEA-A888-854B758FE576`

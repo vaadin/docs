@@ -56,7 +56,7 @@ Vaadin does not provide a built-in user information type, so you need to define 
 [source,java]
 ----
 public record UserInfo(
-    @NonNull String name, 
+    @NonNull String name,
     @NonNull Collection<String> authorities
 ) {
 }
@@ -155,19 +155,24 @@ Spring Security's *form login* mechanism automatically processes authentication 
 
 To instruct Spring Security to use your login view, modify your security configuration:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-        setLoginView(http, "/login");
+            configurer.loginView("/login");
 // end::snippet[]
+        });
+
+        return http.build();
     }
     ...
 }
@@ -183,6 +188,7 @@ By default, Vaadin *permits access to Hilla views and router layouts*, and *deni
 == Try It
 
 In this mini-tutorial, you'll enable security and add a login form to a real Vaadin application. This serves as a foundation for future *security-related mini-tutorials*.
+
 
 .Set Up the Project
 [%collapsible]
@@ -216,26 +222,34 @@ Create a new package: [packagename]`[application package].security`
 
 Inside this package, create a [classname]`SecurityConfig` class:
 
-.SecurityConfig.class
+.`SecurityConfig.java`
 [source,java]
 ----
-import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+        });
+
+        return http.build();
     }
 
     @Bean
@@ -260,9 +274,8 @@ class SecurityConfig extends VaadinWebSecurity {
 .Create the User Information Endpoint
 [%collapsible]
 ====
-Create a new package: `com.example.application.security.service`
 
-Inside this package, create a [recordname]`UserInfo` record:
+Inside the [packagename]`[application package].security` package, create a [recordname]`UserInfo` record:
 
 .UserInfo.java
 [source,java]
@@ -270,7 +283,7 @@ Inside this package, create a [recordname]`UserInfo` record:
 import org.jspecify.annotations.NonNull;
 import java.util.Collection;
 
-public record UserInfo(@NonNull String name, 
+public record UserInfo(@NonNull String name,
                        @NonNull Collection<String> authorities) {
 }
 
@@ -386,19 +399,24 @@ export default function LoginView() {
 ====
 Modify [classname]`SecurityConfig` to reference the new login view:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-        setLoginView(http, "/login");
+            configurer.loginView("/login");
 // end::snippet[]
+        });
+
+        return http.build();
     }
     ...
 }
@@ -439,7 +457,7 @@ Restart your application to make sure all your changes have been applied. Naviga
 
 You should now see the login screen. Login with one of the following credentials:
 
-* *User:* user / *Password:* password
+* *User:* user / *Password:* user
 * *Admin:* admin / *Password:* admin
 
 After logging in, you should be able to access the task list view.

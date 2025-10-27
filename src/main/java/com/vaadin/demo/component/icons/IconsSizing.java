@@ -1,11 +1,10 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.server.StreamResource;
-import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.router.Route;
 
 @Route("icons-sizing")
 public class IconsSizing extends Div {
@@ -15,15 +14,13 @@ public class IconsSizing extends Div {
         layout.setSpacing(true);
         layout.addClassName("items-end");
 
-        StreamResource codeBranch = new StreamResource("svg-branch.svg",
-                () -> getClass().getResourceAsStream("/icons/code-branch.svg"));
         // tag::snippet[]
-        SvgIcon iconDefaultSize = new SvgIcon(codeBranch);
+        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
 
-        SvgIcon iconLumoSize = new SvgIcon(codeBranch);
+        SvgIcon iconLumoSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
         iconLumoSize.setSize("var(--lumo-icon-size-l)");
 
-        SvgIcon iconPxSize = new SvgIcon(codeBranch);
+        SvgIcon iconPxSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
         iconPxSize.setSize("48px");
 
         layout.add(iconDefaultSize, iconLumoSize, iconPxSize);

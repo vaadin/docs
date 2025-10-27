@@ -10,7 +10,7 @@ order: 40
 = Replace H2
 :toclevels: 2
 
-Many Spring Boot applications start with H2 because it's lightweight and easy to configure. For instance, Vaadin's <</getting-started/walk-through#,Walking Skeleton>> uses H2. However, you typically don't run H2 in production. Switching to your production database early in development helps catch compatibility issues sooner and lets you leverage database-specific features for performance.
+Many Spring Boot applications start with H2 because it's lightweight and easy to configure. However, you typically don't run H2 in production. Switching to your production database early in development helps catch compatibility issues sooner and lets you leverage database-specific features for performance.
 
 This guide teaches you how to replace H2 with PostgreSQL, although the same principle can be applied to other databases such as MySQL, Oracle, and Microsoft SQL Server. A hands-on mini-tutorial at the end helps you apply these concepts in a real Vaadin application.
 
@@ -219,10 +219,6 @@ In this tutorial, you'll replace H2 with PostgreSQL in a real Vaadin application
 [%collapsible]
 ====
 Use the same project from the <<add-flyway#,Add Flyway>> mini-tutorial. Complete that tutorial before proceeding with this one.
-
-[NOTE]
-Older versions of the walking skeleton did not include Testcontainers support, whereas newer versions do. If the necessary dependencies and configuration classes are not present in your project, start over with a new <<{articles}/getting-started/start#,walking skeleton>>.
-
 ====
 
 .Update Database Dependencies
@@ -233,7 +229,6 @@ In `pom.xml`, locate the H2 dependency:
 [source,xml]
 ----
 <dependency>
-    <!-- Replace with the database you will be using in production -->
     <groupId>com.h2database</groupId>
     <artifactId>h2</artifactId>
 </dependency>
@@ -250,7 +245,7 @@ Replace it with the PostgreSQL dependency:
 </dependency>
 ----
 
-Also add the Flyway and Testcontainers PostgreSQL dependencies:
+Also add the Flyway PostgreSQL dependency:
 
 [source,xml]
 ----
@@ -260,82 +255,105 @@ Also add the Flyway and Testcontainers PostgreSQL dependencies:
     <scope>runtime</scope>
 </dependency>
 ----
+====
+
+.Add Testcontainers Dependency
+[%collapsible]
+====
+Still in `pom.xml`, add the following test dependencies:
 
 [source,xml]
 ----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-testcontainers</artifactId> 
+    <scope>test</scope>
+</dependency>
 <dependency>
     <groupId>org.testcontainers</groupId>
     <artifactId>postgresql</artifactId>
     <scope>test</scope>
 </dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
 ----
 ====
 
-
-.Add PostgreSQL Service Connection
+.Create a Testcontainers Configuration
 [%collapsible]
 ====
-Add the following code to the `TestcontainersConfiguration` class:
+In `src/test/java/[application package]`, create a new class `TestcontainersConfiguration`:
 
 .TestcontainersConfiguration.java
 [source,java]
 ----
-@Bean
-@ServiceConnection
-public JdbcDatabaseContainer<?> postgresContainer() {
-    return new PostgreSQLContainer<>("postgres:17-alpine");
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Bean;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+
+@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+
+    @Bean
+    @ServiceConnection
+    public JdbcDatabaseContainer<?> postgresContainer() {
+        return new PostgreSQLContainer<>("postgres:17-alpine");
+    }
 }
 ----
 
-Now run the integration test. Remember that you must have Docker running for everything to work.
 ====
 
-
-.Run the Test Application
+.Create a Test Application
 [%collapsible]
 ====
-Open `TestApplication` in your IDE and run its `main()` method. The application should start up, using a PostgreSQL database managed by Testcontainers.
+In `src/test/java/[application package]`, create a new class `TestApplication`:
+
+.TestApplication.java
+[source,java]
+----
+import org.springframework.boot.SpringApplication;
+
+public class TestApplication {
+
+    public static void main(String[] args) {
+        SpringApplication
+            .from(Application::main) 
+            .with(TestcontainersConfiguration.class) 
+            .run(args);
+    }
+}
+----
+
+Next, run the test application's `main()` method. The application should start up, using a PostgreSQL database managed by Testcontainers.
 
 Make sure everything works as before, then stop the application.
 ====
 
-
-.Start Development Database
+.Update Integration Test
 [%collapsible]
 ====
-Open a terminal and run the following command:
+Open `TaskServiceTest` in your IDE and import the new `TestcontainersConfiguration`:
 
-[source,terminal]
+.TaskServiceTest.java
+[source,java]
 ----
-docker run --name my-development-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres:17-alpine 
-----
-
-[NOTE]
-If you already have PostgreSQL running on your machine, this won't work as port 5432 is already in use. If port 5432 is in use, map it to a different host port -- such as `-p 5433:5432` -— to avoid conflicts.
-====
-
-.Update Application Configuration
-[%collapsible]
-====
-Open `application.properties` and add the following lines:
-
-[source,properties]
-----
-spring.datasource.url=${secrets.datasource.url:jdbc:postgresql://localhost/postgres}
-spring.datasource.username=${secrets.datasource.username:postgres}
-spring.datasource.password=${secrets.datasource.password:mysecretpassword}
-spring.flyway.user=${secrets.flyway.user:${spring.datasource.username}}
-spring.flyway.password=${secrets.flyway.password:${spring.datasource.password}}
+// tag::snippet[]
+@Import(TestcontainersConfiguration.class)
+// end::snippet[]
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@Transactional
+class TaskServiceTest {
+    // The rest of the class
+}
 ----
 
-[NOTE]
-If you mapped PostgreSQL to a different port than 5432, you have to update the URL accordingly (e.g., `jdbc:postgresql://localhost:5433/postgres`).
-====
-
-.Test the Application
-[%collapsible]
-====
-Now <<{articles}/getting-started/run#,run>> the application. It should start up normally. Add some tasks, then restart the application. The tasks should still be there.
+Run the test in your IDE. Everything should work as before.
 ====
 
 .Final Thoughts

@@ -121,7 +121,7 @@ class CustomAccessChecker implements NavigationAccessChecker {
 ----
 <1> Registers the navigation access checker as a singleton Spring bean.
 
-The [classname]`NavigationContext` object contains information about where you're trying to navigate, such as the view class, route parameters, and query parameters. It also contains the principal of the current user. 
+The [classname]`NavigationContext` object contains information about where you're trying to navigate, such as the view class, route parameters, and query parameters. It also contains the principal of the current user.
 
 Since the access checker is a Spring bean, you inject other beans into it. For example, you may want to lookup additional information in order to make the access decision.
 
@@ -140,13 +140,14 @@ The security annotations are actually enforced by a built-in access checker.
 
 To enable a custom [interfacename]`NavigationAccessChecker`, create a new [classname]`NavigationAccessControlConfigurer` Spring bean:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
-    
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
+
     @Bean
     static NavigationAccessControlConfigurer navigationAccessControlConfigurer( // <1>
             CustomAccessChecker customAccessChecker) {
@@ -159,7 +160,7 @@ class SecurityConfig extends VaadinWebSecurity {
 <1> The [annotationname]`@Bean` method must be `static` to prevent bootstrap errors caused by circular dependencies in bean definitions.
 <2> [classname]`CustomAccessChecker` is now *the only enabled access checker*.
 
-You can have multiple access checkers active at the same time. When you navigate to a view, they will all be consulted. 
+You can have multiple access checkers active at the same time. When you navigate to a view, they will all be consulted.
 
 [NOTE]
 To enable the built-in annotated view access checker, call `NavigationAccessControlConfigurer.withAnnotatedViewAccessChecker()`.
@@ -286,12 +287,13 @@ public final class Roles {
 
 Then update the [methodname]`userDetailsManager()` method of the [classname]`SecurityConfig` class to use the new constants:
 
-.SecurityConfig.java
+.`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-class SecurityConfig extends VaadinWebSecurity {
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+class SecurityConfig {
     ...
 
     @Bean
@@ -320,7 +322,7 @@ class SecurityConfig extends VaadinWebSecurity {
 .Create Admin View
 [%collapsible]
 ====
-Create a new class [classname]`AdminView` in the [packagename]`[application package].taskmanagement.ui.view` package:
+Create a new class [classname]`AdminView` in the [packagename]`[application package].examplefeature.ui` package:
 
 .AdminView.java
 [source,java]
@@ -364,22 +366,22 @@ So far all authenticated users have been able to add tasks to [classname]`TaskLi
 .TaskListView.java
 [source,java]
 ----
-@Route("task-list")
+@Route("")
 @PageTitle("Task List")
 @Menu(order = 0, icon = "vaadin:clipboard-check", title = "Task List")
 @PermitAll
 public class TaskListView extends Main {
 
-    public TaskListView(TaskService taskService, Clock clock, 
+    public TaskListView(TaskService taskService,
 // tag::snippet[]
             AuthenticationContext authenticationContext) {
 // end::snippet[]
-        
+
         // The rest of the constructor omitted
 
 // tag::snippet[]
         if (authenticationContext.hasRole(Roles.ADMIN)) {
-            add(new ViewToolbar("Task List", 
+            add(new ViewToolbar("Task List",
                 ViewToolbar.group(description, dueDate, createBtn))); // <1>
         } else {
             add(new ViewToolbar("Task List")); // <2>
