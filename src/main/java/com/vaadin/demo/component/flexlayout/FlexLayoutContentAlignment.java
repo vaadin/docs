@@ -3,13 +3,12 @@ package com.vaadin.demo.component.flexlayout;
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("flex-layout-alignment")
-public class FlexLayoutAlignment extends Div {
+@Route("flex-layout-content-alignment")
+public class FlexLayoutContentAlignment extends Div {
 
-    public FlexLayoutAlignment() {
+    public FlexLayoutContentAlignment() {
         // tag::snippet[]
         FlexLayout layout = new FlexLayout();
         layout.setAlignContent(FlexLayout.ContentAlignment.CENTER);
@@ -35,6 +34,6 @@ public class FlexLayoutAlignment extends Div {
     }
 
     public static class Exporter extends // hidden-source-line
-            DemoExporter<FlexLayoutAlignment> { // hidden-source-line
+            DemoExporter<FlexLayoutContentAlignment> { // hidden-source-line
     } // hidden-source-line
 }
