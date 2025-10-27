@@ -312,17 +312,18 @@ crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 ----
 
 ==== Grid & Tree Grid
-Tree Grid’s client-side approach to data loading has been refactored. Instead of requesting each hierarchy level separately, it now sends a single request to the server and receives all visible data in a flat list. This results in two important changes:
+Tree Grid's client-side approach to data loading has been refactored. Instead of requesting each hierarchy level separately, it now sends a single request to the server and receives all visible data in a flat list. This resulted in several breaking changes that are explained below.
 
-* [propertyname]`pageSize` now applies to the entire flattened hierarchy rather than each level individually as before
-* [propertyname]`expandedItems` are no longer exposed to the client side as a full array; only the depth of visible items is provided
+The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than each level individually as before.
 
-The [classname]`TreeGridElement#isLoadingExpandedRows` TestBench API has been removed. You no longer need to wait for expanded rows specifically since they are loaded in the same request with other rows.
+Expanded items are no longer exposed to the client side as a plain array. Instead, the web component receives each item’s depth information and uses it to display the data as a tree structure.
 
-The [classname]`TreeGridElement#getNumberOfExpandedRows` TestBench API has been removed. Use unit tests instead to verify that exact items are expanded.
+As a result, the [methodname]`TreeGridElement#isLoadingExpandedRows` TestBench API has been removed. You no longer need to wait for expanded rows specifically since they are loaded in the same request with other rows.
 
-.Before (integration test)
-[source,java]
+The [methodname]`TreeGridElement#getNumberOfExpandedRows` TestBench API has also been removed. Use unit tests instead to verify that exact items are expanded:
+
+[source,java,role="before"]
+.integration test
 ----
 private TreeGridElement treeGridElement;
 
@@ -331,9 +332,8 @@ public void shouldHaveSomeRowsExpanded() {
     Assert.assertEquals(2, treeGridElement.getNumberOfExpandedItems());
 }
 ----
-
-.After (unit test)
-[source,java]
+[source,java,role="after"]
+.unit test
 ----
 private TreeGrid<String> treeGrid;
 
@@ -344,42 +344,82 @@ public void shouldHaveSomeRowsExpanded() {
 }
 ----
 
-The section below is relevant if your code extends Grid or Tree Grid, or uses low-level API like [classname]`HierarchicalDataCommunicator`.
+The following section is relevant if your code extends [classname]`Grid` or [classname]`TreeGrid`, or uses low-level APIs like [classname]`HierarchicalDataCommunicator`.
 
-===== Low-Level API Changes
+.Low-Level API Changes
+[%collapsible]
+====
 The [classname]`GridArrayUpdater.UpdateQueueData` class has been removed, along with related API:
 
 * The [methodname]`setUpdateQueueData` method in [classname]`GridArrayUpdater` has been removed
 * The [methodname]`getUpdateQueueData` method in [classname]`GridArrayUpdater` has been removed
-* Parameters that included [classname]`UpdateQueueData` in their type have been removed from all constructors and methods
+* Parameters that included [classname]`UpdateQueueData` in their type have been removed from all [classname]`Grid` and [classname]`TreeGrid` constructors and methods:
 
-.Before
-[source,java]
+[source,java,role="before"]
 ----
 protected <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid(
-Class<T> beanType,
-SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
-B dataCommunicatorBuilder)
+    Class<T> beanType,
+    SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
+    B dataCommunicatorBuilder)
+----
+[source,java,role="after"]
+----
+protected <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid(
+    Class<T> beanType,
+    B dataCommunicatorBuilder)
+----
 
-...
-
+[source,java,role="before"]
+----
 protected GridArrayUpdater createDefaultArrayUpdater(
-SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueFactory)
+    SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueFactory)
 ----
-
-.After
-[source,java]
+[source,java,role="after"]
 ----
-protected <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid(
-Class<T> beanType,
-B dataCommunicatorBuilder)
-
-...
-
 protected GridArrayUpdater createDefaultArrayUpdater()
 ----
 
-The [classname]`TreeGridArrayUpdater` interface has been removed. The [classname]`GridArrayUpdater` interface should be used instead.
+The [classname]`TreeGridArrayUpdater` interface has also been removed. The [classname]`GridArrayUpdater` interface now handles both hierarchical and non-hierarchical updates.
+
+The [classname]`HierarchicalDataCommunicator` class in Flow has been fully refactored to use a flat list structure for representing hierarchical data on the client side. Although it still extends the [classname]`DataCommunicator` class, its internal implementation has been completely redesigned to optimize hierarchy rendering and address various bugs. This caused the following breaking changes:
+
+* The [propertyname]`arrayUpdater` parameter has been removed from all [classname]`HierarchicalDataCommunicator` constructors. It now re-renders modified items by making granular [methodname]`Update#set(int index, List items)` calls.
+* The protected [methodname]`createHierarchyMapper` and [methodname]`getHierarchyMapper` methods, as well as the [classname]`HierarchyMapper`` concept itself, have been removed.
+* The protected [methodname]`doUnregister` method has been removed.
+* The protected [methodname]`getPassivatedKeys` method has been removed.
+* The protected [methodname]`setFilter` method has been removed. Use the returned consumer of the [methodname]`setDataProvider(HierarchicalDataProvider, Object)` method instead.
+* The protected [methodname]`collapse(T item, boolean syncClient)` method has been removed. Use the [methodname]`collapse(T item)` method instead.
+* The protected [methodname]`expand(T item, boolean syncClient)` method has been removed. Use the [methodname]`expand(T item)` method instead.
+* The public [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` methods have been merged into a single method [methodname]`setViewportRange(int start, int length)`. Instead of setting ranges separately for each level, this method sets a single range that operates on the flat list of items from all levels.
+* The public [methodname]`confirmUpdate(int id, String parentKey)` method has been removed. The [methodname]`confirmUpdate(int id)` method is now called instead.
+* The public [methodname]`getParentItem(T item)` method has been removed because it returned inconsistent results. Use the [classname]`HierarchicalDataProvider#getParent` method instead to get an item's parent reliably.
+* The public [methodname]`getIndex(T item)` and [methodname]`getParentIndex(T item)` methods have been removed for the same reason. To find an item's index reliably, use a combination of the [classname]`HierarchicalDataProvider#getItemIndex`, [classname]`HierarchicalDataProvider#getParent`, [classname]`HierarchicalDataCommunicator#buildQuery` methods as shown in the example below:
+
+[.example]
+[source,java]
+----
+// If your data provider implements HierarchyFormat.NESTED:
+
+public List<Integer> getIndexPath(T item) {
+    List<Integer> path = new LinkedList<>();
+    do {
+        var parent = dataCommunicator.getDataProvider().getParent(item);
+        var query = dataCommunicator.buildQuery(parent, 0, Integer.MAX_VALUE);
+        var index = dataCommunicator.getDataProvider().getItemIndex(item, query);
+        path.addFirst(index);
+        item = parent;
+    } while (item != null);
+    return path;
+}
+
+// If your data provider implements HierarchyFormat.FLATTENED:
+
+public int getFlatIndex(T item) {
+    var query = dataCommunicator.buildQuery(0, Integer.MAX_VALUE);
+    return dataCommunicator.getDataProvider().getItemIndex(item, query);
+}
+----
+====
 
 ==== Charts
 The [methodname]`setWidthAdjust` / [methodname]`getWidthAdjust` methods of the [classname]`Title` class have been removed because it was removed from the underlying Highcharts library.
@@ -397,7 +437,7 @@ The following changes have been made to the internal DOM structure of the Date P
 * The `overlay-header` part has been removed.
 
 ==== Date Time Picker
-In the Flow [classname]`DateTimePicker` component, validation is no longer triggered on blur if the value remains unchanged after user interaction, making this behavior consistent with the rest of the field components, which already received a similar update in V24.
+In the Flow [classname]`DateTimePicker` component, validation is no longer triggered on blur if the value has remained unchanged after user interaction, making this behavior consistent with the rest of the field components, which already received a similar update in V24.
 
 Incomplete input, where only a date or only a time is entered, is now treated as invalid. The corresponding error message can be configured via [classname]`DateTimePickerI18n`:
 
@@ -405,7 +445,7 @@ Incomplete input, where only a date or only a time is entered, is now treated as
 [source,java]
 ----
 dateTimePicker.setI18n(new DateTimePickerI18n()
-.setIncompleteInputErrorMessage("Please enter both date and time"));
+    .setIncompleteInputErrorMessage("Please enter both date and time"));
 ----
 
 ==== Time Picker
@@ -463,10 +503,10 @@ opened.value = false;
 const ref = useRef<DialogElement>(null);
 const opened = useSignal(true);
 
-{ 
-  opened 
-  ? <Dialog opened={true} ref={ref} onClosed={() => opened.value = false}/> 
-  : null 
+{
+  opened
+  ? <Dialog opened={true} ref={ref} onClosed={() => opened.value = false}/>
+  : null
 }
 
 // When dialog is not needed anymore
@@ -782,14 +822,6 @@ Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.
 
 == Server-Side Modality
 [classname]`Dialog` has become less strict and allows background requests to server. Vaadin Flow allows to change this behavior if needed through [methodname]`Dialog.setModality(ModalityMode)` method.
-
-== Tree Grid And Hierarchical Data Providers
-Vaadin Flow added support for flat hierarchy in [classname]`TreeGrid` and hierarchical data providers.
-This required some API removal in Vaadin Flow.
-
-[classname]`HierarchyMapper` and [classname]`HierarchicalCommunicationController` have been replaced with the new concept - `Cache`. This new class provides a system for storing data in a hierarchical structure while enabling access in a flattened format for client-side consumption. [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` have been replaced with a single [methodname]`setViewportRange` which spans all hierarchy levels.
-
-See link:https://github.com/vaadin/platform/issues/7843[Tree Grid Flat Hierarchy Support] and link:https://github.com/vaadin/flow-components/issues/7269[Improving user and developer experience in Tree Grid] for more details.
 
 == Form Filler Add-On
 The link:https://github.com/vaadin/form-filler-addon[Form Filler add-on] has been removed from the Vaadin 25 platform. If your project uses it, you can add it as a separate dependency or get the same functionality with much less code using Spring AI to have the LLM directly populate a Java object that you can then use with e.g. [methodname]`binder.readBean()`.
