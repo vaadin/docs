@@ -13,7 +13,6 @@ public class FlexLayoutBasic extends Div {
         // tag::snippet[]
         FlexLayout layout = new FlexLayout();
 
-
         Div item1 = new Div("Item 1");
         item1.setClassName("example-item");
 
@@ -42,7 +41,6 @@ public class FlexLayoutBasic extends Div {
         add(splitLayout);
 
         this.setClassName("basic-layouts-example");
-        this.add(splitLayout);
     }
 
     public static class Exporter extends // hidden-source-line
