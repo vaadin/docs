@@ -3,7 +3,7 @@ import '@vaadin/icon';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/generated/theme';
-import codeBranchIcon from '../../../../src/main/resources/icons/code-branch.svg?url';
+import codeBranchIcon from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
 @customElement('svg-standalone')
 export class Example extends LitElement {
