@@ -309,11 +309,11 @@ crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 ----
 
 ==== Grid & Tree Grid
-Tree Grid's client-side approach to data loading has been refactored. Instead of requesting each hierarchy level separately, it now sends a single request to the server and receives all visible data in a flat list. This resulted in several breaking changes that are explained below.
+Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, it now sends a single request for the visible range, and the server returns the corresponding items as a flat list. This results in several breaking changes that are explained below.
 
-The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than each level individually as before.
+The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than to each level individually as before.
 
-Expanded items are no longer exposed to the client side as a plain array. Instead, the web component receives each item’s depth information and uses it to display the data as a tree structure.
+Expanded items are no longer exposed to the client side as a plain array. Instead, the web component receives depth information for each item and uses it to display the data as a tree structure.
 
 As a result, the [methodname]`TreeGridElement#isLoadingExpandedRows` TestBench API has been removed. You no longer need to wait for expanded rows specifically since they are loaded in the same request with other rows.
 
@@ -384,17 +384,16 @@ The [classname]`TreeGridArrayUpdater` interface has also been removed. The [clas
 
 The [classname]`HierarchicalDataCommunicator` class in Flow has been fully refactored to use a flat list structure for representing hierarchical data on the client side. Although it still extends the [classname]`DataCommunicator` class, its internal implementation has been completely redesigned to optimize hierarchy rendering and address various bugs. This caused the following breaking changes:
 
-* The [propertyname]`arrayUpdater` parameter has been removed from all [classname]`HierarchicalDataCommunicator` constructors. It now re-renders modified items by making granular [methodname]`Update#set(int index, List items)` calls.
-* The protected [methodname]`createHierarchyMapper` and [methodname]`getHierarchyMapper` methods, as well as the [classname]`HierarchyMapper`` concept itself, have been removed.
-* The protected [methodname]`doUnregister` method has been removed.
-* The protected [methodname]`getPassivatedKeys` method has been removed.
+* Both the [classname]`HierarchicalCommunicationController` and [classname]`HierarchyMapper` concepts have been retired, and all related protected APIs in [classname]`HierarchicalDataCommunicator` have been removed, including such methods as [methodname]`createHierarchyMapper` and [methodname]`getHierarchyMapper`.
+* The [propertyname]`arrayUpdater` parameter has been removed from all [classname]`HierarchicalDataCommunicator` constructors. The data communicator now re-renders modified items by making granular [methodname]`Update#set(int index, List items)` calls.
+* The protected [methodname]`doUnregister` and [methodname]`getPassivatedKeys` methods have been removed.
 * The protected [methodname]`setFilter` method has been removed. Use the returned consumer of the [methodname]`setDataProvider(HierarchicalDataProvider, Object)` method instead.
 * The protected [methodname]`collapse(T item, boolean syncClient)` method has been removed. Use the [methodname]`collapse(T item)` method instead.
 * The protected [methodname]`expand(T item, boolean syncClient)` method has been removed. Use the [methodname]`expand(T item)` method instead.
 * The public [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` methods have been merged into a single method [methodname]`setViewportRange(int start, int length)`. Instead of setting ranges separately for each level, this method sets a single range that operates on the flat list of items from all levels.
 * The public [methodname]`confirmUpdate(int id, String parentKey)` method has been removed. The [methodname]`confirmUpdate(int id)` method is now called instead.
-* The public [methodname]`getParentItem(T item)` method has been removed because it didn't handle all cases correctly. Use the [classname]`HierarchicalDataProvider#getParent` method instead to get an item's parent reliably.
-* The public [methodname]`getIndex(T item)` and [methodname]`getParentIndex(T item)` methods have been removed for the same reason. To find an item's index reliably, use a combination of the [classname]`HierarchicalDataProvider#getItemIndex`, [classname]`HierarchicalDataProvider#getParent`, [classname]`HierarchicalDataCommunicator#buildQuery` methods as shown in the example below:
+* The public [methodname]`getParentItem(T item)` method has been removed. Use the [classname]`HierarchicalDataProvider#getParent` method instead to get an item's parent reliably.
+* The public [methodname]`getIndex(T item)` and [methodname]`getParentIndex(T item)` methods have been removed. To find an item's index reliably, use a combination of the [classname]`HierarchicalDataProvider#getItemIndex`, [classname]`HierarchicalDataProvider#getParent`, [classname]`HierarchicalDataCommunicator#buildQuery` methods as shown in the example below:
 +
 [.example]
 --
