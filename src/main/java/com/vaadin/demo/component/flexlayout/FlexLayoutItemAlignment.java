@@ -2,16 +2,17 @@ package com.vaadin.demo.component.flexlayout;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("flex-layout-content-alignment")
+@Route("flex-layout-item-alignment")
 public class FlexLayoutItemAlignment extends Div {
 
     public FlexLayoutItemAlignment() {
         // tag::snippet[]
         FlexLayout layout = new FlexLayout();
-        layout.setAlignContent(FlexLayout.ContentAlignment.CENTER);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
         // end::snippet[]
 
         Div item1 = new Div("Item 1");
@@ -23,7 +24,14 @@ public class FlexLayoutItemAlignment extends Div {
         Div item3 = new Div("Item 3");
         item3.setClassName("example-item");
 
-        layout.add(item1, item2, item3);
+        Div item4 = new Div("Item 4");
+        item4.setClassName("example-item");
+
+        // tag::snippet[]
+        layout.setAlignSelf(FlexComponent.Alignment.END, item4);
+        // end::snippet[]
+
+        layout.add(item1, item2, item3, item4);
 
         layout.setWidthFull();
         layout.getStyle().setGap("5px");
