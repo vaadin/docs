@@ -30,8 +30,8 @@ public class FlexLayoutBasis extends Div {
         // end::snippet[]
 
         layout.setWidthFull();
-        layout.getStyle().setGap("5px");
-        layout.setClassName("height-4xl");
+        layout.getStyle().setGap("5px").setPadding("5px");
+        layout.addClassNames("flex-layout");
 
         this.setClassName("basic-layouts-example");
         this.add(layout);

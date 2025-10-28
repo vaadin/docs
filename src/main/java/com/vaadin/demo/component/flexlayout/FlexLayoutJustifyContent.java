@@ -30,8 +30,8 @@ public class FlexLayoutJustifyContent extends Div {
         layout.add(item1, item2, item3, item4);
 
         layout.setWidthFull();
-        layout.getStyle().setGap("5px");
-        layout.setClassName("height-4xl");
+        layout.getStyle().setGap("5px").setPadding("5px");
+        layout.addClassNames("flex-layout");
 
         this.setClassName("basic-layouts-example");
         this.add(layout);
