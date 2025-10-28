@@ -34,9 +34,9 @@ public class FlexLayoutWrap extends Div {
         item6.setClassName("example-item");
 
         layout.add(item1, item2, item3, item4, item5, item6);
-
+        layout.addClassNames("flex-layout");
         layout.setWidthFull();
-        layout.getStyle().setGap("5px");
+        layout.getStyle().setGap("5px").setPadding("5px");
 
         SplitLayout splitLayout = new SplitLayout(layout, new Div());
         add(splitLayout);

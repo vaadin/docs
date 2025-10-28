@@ -24,8 +24,8 @@ public class FlexLayoutDirection extends Div {
         item3.setClassName("example-item");
 
         layout.add(item1, item2, item3);
-
-        layout.getStyle().setGap("5px");
+        layout.addClassNames("flex-layout");
+        layout.getStyle().setGap("5px").setPadding("5px");
 
         this.setClassName("basic-layouts-example");
         this.add(layout);

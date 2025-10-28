@@ -35,12 +35,14 @@ public class FlexLayoutBasic extends Div {
         // end::snippet[]
 
         layout.setWidthFull();
-        layout.getStyle().setGap("5px");
+        layout.getStyle().setGap("5px").setPadding("5px");
 
         SplitLayout splitLayout = new SplitLayout(layout, new Div());
         add(splitLayout);
 
-        this.setClassName("basic-layouts-example");
+        layout.addClassNames("flex-layout");
+
+        this.addClassNames("basic-layouts-example");
     }
 
     public static class Exporter extends // hidden-source-line
