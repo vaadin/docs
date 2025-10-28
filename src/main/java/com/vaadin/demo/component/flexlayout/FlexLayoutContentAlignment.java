@@ -11,6 +11,7 @@ public class FlexLayoutContentAlignment extends Div {
     public FlexLayoutContentAlignment() {
         // tag::snippet[]
         FlexLayout layout = new FlexLayout();
+        layout.setFlexWrap(FlexLayout.FlexWrap.WRAP);
         layout.setAlignContent(FlexLayout.ContentAlignment.CENTER);
         // end::snippet[]
 
@@ -23,9 +24,18 @@ public class FlexLayoutContentAlignment extends Div {
         Div item3 = new Div("Item 3");
         item3.setClassName("example-item");
 
-        layout.add(item1, item2, item3);
+        Div item4 = new Div("Item 4");
+        item4.setClassName("example-item");
 
-        layout.setWidthFull();
+        Div item5 = new Div("Item 5");
+        item5.setClassName("example-item");
+
+        Div item6 = new Div("Item 6");
+        item6.setClassName("example-item");
+
+        layout.add(item1, item2, item3, item4, item5, item6);
+
+        layout.setWidth("400px");
         layout.getStyle().setGap("5px");
         layout.setClassName("height-4xl");
 
