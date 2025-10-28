@@ -305,9 +305,6 @@ Methods that allowed passing an [classname]`Element` instance have been removed.
 === Context Menu
 The [methodname]`add` method has been removed from the Flow [classname]`ContextMenu`. Instead, use [methodname]`addItem` to add menu items, or [methodname]`addComponent` to add generic components without wrapping them into a menu item.
 
-=== Popover
-The Lit/React component’s `contentWidth` and `contentHeight` properties have been replaced by `width` and `height`.
-
 === CRUD
 The “New Item” button in the CRUD component no longer uses the primary style variant by default. To get the old default back:
 
@@ -316,6 +313,153 @@ The “New Item” button in the CRUD component no longer uses the primary style
 ----
 crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 ----
+
+=== Charts
+The [methodname]`setWidthAdjust` / [methodname]`getWidthAdjust` methods of the [classname]`Title` class have been removed because it was removed from the underlying Highcharts library.
+
+The [classname]`DrillUpButton` class has been removed from the codebase and all of its related API, e.g., [methodname]`setDrillUpButton` / [methodname]`getDrillUpButton` from the [classname]`Drilldown` class. Use Breadcrumbs instead. Likewise, the [methodname]`setDrillUpText` / [methodname]`getDrillUpText` has been removed from the [classname]`Lang` class.
+
+All methods that accept [classname]`Date` as parameter that were previously marked as deprecated have been removed.
+
+Chart configurations are now serialized using Jackson 3. The [methodname]`ChartSerialization.setObjectMapperInstance` method that can be used to customize serialization behavior now expects a [classname]`tools.jackson.databind.ObjectWriter` instance.
+
+==== Date Picker and Date Time Picker
+The following changes have been made to the internal DOM structure of the Date Picker overlay, which may affect custom styling:
+
+* The `vaadin-date-picker-overlay-content` element is now a CSS grid layout instead of a flexbox.
+* The `overlay-header` part has been removed.
+
+==== Date Time Picker
+In the Flow [classname]`DateTimePicker` component, validation is no longer triggered on blur if the value has remained unchanged after user interaction, making this behavior consistent with the rest of the field components, which already received a similar update in V24.
+
+Incomplete input, where only a date or only a time is entered, is now treated as invalid. The corresponding error message can be configured via [classname]`DateTimePickerI18n`:
+
+[.example]
+[source,java]
+----
+dateTimePicker.setI18n(new DateTimePickerI18n()
+    .setIncompleteInputErrorMessage("Please enter both date and time"));
+----
+
+=== Details
+The [methodname]`setContent` and [methodname]`addContent` methods have been removed from the Flow [classname]`Details` component. Use regular methods from [classname]`HasComponents` such as [methodname]`add`, [methodname]`remove`, [methodname]`removeAll` instead.
+
+=== Dialog and Confirm Dialog
+[classname]`Dialog` and [classname]`ConfirmDialog` do not show a closing animation anymore when removing the component from the UI / DOM. Instead, the dialog should be closed and the `closed` event needs to be used to wait for the closing animation to finish before removing the component.
+
+For Flow this is relevant when manually adding / removing the dialog from the UI. The event is not needed when calling [methodname]`dialog.open()` without adding the dialog to the UI.
+
+[source,java,role="before"]
+----
+var dialog = new Dialog();
+add(dialog);
+dialog.open();
+
+// When dialog is not needed anymore
+remove(dialog);
+----
+[source,java,role="after"]
+----
+var dialog = new Dialog();
+dialog.addClosedListener(e -> remove(dialog));
+add(dialog);
+dialog.open();
+
+// When dialog is not needed anymore
+dialog.close();
+----
+
+For Hilla / React this is relevant when rendering dialogs conditionally.
+
+[source,typescript,role="before"]
+----
+const opened = useSignal(true);
+
+{ opened ? <Dialog opened={true}/> : null }
+
+// When dialog is not needed anymore
+opened.value = false;
+----
+[source,typescript,role="after"]
+----
+const ref = useRef<DialogElement>(null);
+const opened = useSignal(true);
+
+{
+  opened
+  ? <Dialog opened={true} ref={ref} onClosed={() => opened.value = false}/>
+  : null
+}
+
+// When dialog is not needed anymore
+ref.current?.close();
+----
+
+=== Form Layout
+The following custom CSS properties have been removed from `vaadin-form-item`:
+
+* `--vaadin-form-item-label-width`
+* `--vaadin-form-item-label-spacing`
+* `--vaadin-form-item-row-spacing`
+
+Use the following CSS properties on `vaadin-form-layout` instead:
+
+* `--vaadin-form-layout-label-width`
+* `--vaadin-form-layout-label-spacing`
+* `--vaadin-form-layout-row-spacing`
+
+=== Map
+The Map component’s `borderless` / `BORDERLESS` style variant has been renamed `no-border` / `NO_BORDER` for consistency with other components.
+
+=== Menu Bar
+The TestBench API `MenuBarElement.OVERLAY_TAG` has been removed. To get a reference to a sub-menu, instead use [methodname]`MenuBarButtonElement.openSubMenu` which returns a reference.
+
+=== Message Input
+The send button no longer uses the Primary style variant by default. To revert this change you can style the button with CSS:
+
+[.example]
+[source,css]
+----
+vaadin-message-input > vaadin-message-input-button {
+  background-color: var(--lumo-primary-color);
+  color: var(--lumo-primary-contrast-color);
+}
+----
+
+Also, the send button now is a `vaadin-message-input-button` instead of `vaadin-button`.
+
+=== Multi-Select Combo Box
+The Multi-Select Combo Box no longer uses `vaadin-multi-select-combo-box-internal` internally. This may affect custom shadow DOM styling of the component.
+
+=== Popover
+The Lit/React component’s `contentWidth` and `contentHeight` properties have been replaced by `width` and `height`.
+
+=== Rich Text Editor
+The `on` attribute was removed and can no longer be used to target toggled-on buttons. Instead, use the selector `::part(toolbar-button-pressed)` to target them with CSS.
+
+=== Split Layout
+The Split Layout component no longer sets `overflow:auto` on its two child elements. The link:https://vaadin.com/docs/latest/components/scroller[Scroller] component is recommended to make them scrollable on overflow. Alternatively, you can apply it manually with CSS:
+
+[.example]
+[source,css]
+----
+vaadin-split-layout > * {
+  overflow: auto;
+}
+----
+
+The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
+
+=== Tabs / Tab Sheet
+The [classname]`TabsVariant.LUMO_ICON_ON_TOP` and [classname]`TabSheetVariant.LUMO_ICON_ON_TOP` theme variants have been removed. Apply the [classname]`TabVariant.LUMO_ICON_ON_TOP` to individual tabs instead.
+
+=== Text Field
+The [classname]`HasPrefixAndSuffix` interface has been removed from the Flow [classname]`TextField` and related components. The components now implement [classname]`HasPrefix` and [classname]`HasSuffix` instead.
+
+=== Time Picker
+The Time Picker no longer uses `vaadin-time-picker-combo-box` internally. This may affect custom shadow DOM styling of the component.
+
+The [classname]`TimePickerOverlayElement` TestBench element has been removed as the component now uses the native HTML popover mechanism for its drop-down. The [methodname]`getItem` and [methodname]`getLastItem` methods are now available on [classname]`TimePickerElement` itself.
 
 === Tree Grid
 Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, it now sends a single request for the visible range, and the server returns the corresponding items as a flat list. On the server side, in turn, it's now possible to choose how the data provider returns hierarchical data: `HierarchyFormat.NESTED` (default, each expanded level separately) or `HierarchyFormat.FLATTENED` (all expanded levels as a flat list). These updates introduce breaking changes, which are described below.
@@ -445,150 +589,6 @@ public int getFlatIndex(T item) {
 ----
 --
 ====
-
-=== Charts
-The [methodname]`setWidthAdjust` / [methodname]`getWidthAdjust` methods of the [classname]`Title` class have been removed because it was removed from the underlying Highcharts library.
-
-The [classname]`DrillUpButton` class has been removed from the codebase and all of its related API, e.g., [methodname]`setDrillUpButton` / [methodname]`getDrillUpButton` from the [classname]`Drilldown` class. Use Breadcrumbs instead. Likewise, the [methodname]`setDrillUpText` / [methodname]`getDrillUpText` has been removed from the [classname]`Lang` class.
-
-All methods that accept [classname]`Date` as parameter that were previously marked as deprecated have been removed.
-
-Chart configurations are now serialized using Jackson 3. The [methodname]`ChartSerialization.setObjectMapperInstance` method that can be used to customize serialization behavior now expects a [classname]`tools.jackson.databind.ObjectWriter` instance.
-
-==== Date Picker and Date Time Picker
-The following changes have been made to the internal DOM structure of the Date Picker overlay, which may affect custom styling:
-
-* The `vaadin-date-picker-overlay-content` element is now a CSS grid layout instead of a flexbox.
-* The `overlay-header` part has been removed.
-
-==== Date Time Picker
-In the Flow [classname]`DateTimePicker` component, validation is no longer triggered on blur if the value has remained unchanged after user interaction, making this behavior consistent with the rest of the field components, which already received a similar update in V24.
-
-Incomplete input, where only a date or only a time is entered, is now treated as invalid. The corresponding error message can be configured via [classname]`DateTimePickerI18n`:
-
-[.example]
-[source,java]
-----
-dateTimePicker.setI18n(new DateTimePickerI18n()
-    .setIncompleteInputErrorMessage("Please enter both date and time"));
-----
-
-=== Time Picker
-The Time Picker no longer uses `vaadin-time-picker-combo-box` internally. This may affect custom shadow DOM styling of the component.
-
-The [classname]`TimePickerOverlayElement` TestBench element has been removed as the component now uses the native HTML popover mechanism for its drop-down. The [methodname]`getItem` and [methodname]`getLastItem` methods are now available on [classname]`TimePickerElement` itself.
-
-=== Details
-The [methodname]`setContent` and [methodname]`addContent` methods have been removed from the Flow [classname]`Details` component. Use regular methods from [classname]`HasComponents` such as [methodname]`add`, [methodname]`remove`, [methodname]`removeAll` instead.
-
-=== Dialog and Confirm Dialog
-[classname]`Dialog` and [classname]`ConfirmDialog` do not show a closing animation anymore when removing the component from the UI / DOM. Instead, the dialog should be closed and the `closed` event needs to be used to wait for the closing animation to finish before removing the component.
-
-For Flow this is relevant when manually adding / removing the dialog from the UI. The event is not needed when calling [methodname]`dialog.open()` without adding the dialog to the UI.
-
-[source,java,role="before"]
-----
-var dialog = new Dialog();
-add(dialog);
-dialog.open();
-
-// When dialog is not needed anymore
-remove(dialog);
-----
-[source,java,role="after"]
-----
-var dialog = new Dialog();
-dialog.addClosedListener(e -> remove(dialog));
-add(dialog);
-dialog.open();
-
-// When dialog is not needed anymore
-dialog.close();
-----
-
-For Hilla / React this is relevant when rendering dialogs conditionally.
-
-[source,typescript,role="before"]
-----
-const opened = useSignal(true);
-
-{ opened ? <Dialog opened={true}/> : null }
-
-// When dialog is not needed anymore
-opened.value = false;
-----
-[source,typescript,role="after"]
-----
-const ref = useRef<DialogElement>(null);
-const opened = useSignal(true);
-
-{
-  opened
-  ? <Dialog opened={true} ref={ref} onClosed={() => opened.value = false}/>
-  : null
-}
-
-// When dialog is not needed anymore
-ref.current?.close();
-----
-
-=== Form Layout
-The following custom CSS properties have been removed from `vaadin-form-item`:
-
-* `--vaadin-form-item-label-width`
-* `--vaadin-form-item-label-spacing`
-* `--vaadin-form-item-row-spacing`
-
-Use the following CSS properties on `vaadin-form-layout` instead:
-
-* `--vaadin-form-layout-label-width`
-* `--vaadin-form-layout-label-spacing`
-* `--vaadin-form-layout-row-spacing`
-
-=== Map
-The Map component’s `borderless` / `BORDERLESS` style variant has been renamed `no-border` / `NO_BORDER` for consistency with other components.
-
-=== Menu Bar
-The TestBench API `MenuBarElement.OVERLAY_TAG` has been removed. To get a reference to a sub-menu, instead use [methodname]`MenuBarButtonElement.openSubMenu` which returns a reference.
-
-=== Message Input
-The send button no longer uses the Primary style variant by default. To revert this change you can style the button with CSS:
-
-[.example]
-[source,css]
-----
-vaadin-message-input > vaadin-message-input-button {
-  background-color: var(--lumo-primary-color);
-  color: var(--lumo-primary-contrast-color);
-}
-----
-
-Also, the send button now is a `vaadin-message-input-button` instead of `vaadin-button`.
-
-=== Multi-Select Combo Box
-The Multi-Select Combo Box no longer uses `vaadin-multi-select-combo-box-internal` internally. This may affect custom shadow DOM styling of the component.
-
-=== Rich Text Editor
-The `on` attribute was removed and can no longer be used to target toggled-on buttons. Instead, use the selector `::part(toolbar-button-pressed)` to target them with CSS.
-
-=== Split Layout
-The Split Layout component no longer sets `overflow:auto` on its two child elements. The link:https://vaadin.com/docs/latest/components/scroller[Scroller] component is recommended to make them scrollable on overflow. Alternatively, you can apply it manually with CSS:
-
-[.example]
-[source,css]
-----
-vaadin-split-layout > * {
-  overflow: auto;
-}
-----
-
-The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
-
-=== Tabs / Tab Sheet
-The [classname]`TabsVariant.LUMO_ICON_ON_TOP` and [classname]`TabSheetVariant.LUMO_ICON_ON_TOP` theme variants have been removed. Apply the [classname]`TabVariant.LUMO_ICON_ON_TOP` to individual tabs instead.
-
-=== Text Field
-The [classname]`HasPrefixAndSuffix` interface has been removed from the Flow [classname]`TextField` and related components. The components now implement [classname]`HasPrefix` and [classname]`HasSuffix` instead.
 
 === Upload
 The `vaadin-upload-file` elements representing files in the list now use CSS grid layout instead of flexbox. This may affect custom styling of the element.
