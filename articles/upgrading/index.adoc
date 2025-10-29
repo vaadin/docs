@@ -872,3 +872,125 @@ Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as 
 == Removed Deprecations
 
 APIs deprecated earlier have now been removed. The following linked GitHub issue lists these removals — link:https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 25.0].
+
+== Upgrading Add-ons
+
+Some add-ons may require updates to work with Vaadin 25. This section gives an overview of the most common required changes.
+
+=== Java-based Add-ons
+
+This section covers add-ons that provide Flow components implemented in Java.
+
+==== JSON RPC Changes
+
+Flow's RPC mechanism now uses Jackson 3 instead of Elemental JSON. Using `elemental.json.JsonObject` or `elemental.json.JsonArray` types in the following places is no longer supported:
+
+- Passing parameters to `Element.executeJs` or `Element.callJsFunction`
+- Handling parameters from client-side RPC calls in `@ClientCallable` methods
+- Mapping data from custom events using `@EventData`
+
+Use the respective Jackson 3 types, such as `ObjectNode` and `ArrayNode`, instead.
+
+=== Frontend-based Add-ons
+
+This section covers add-ons that provide custom web components implemented in TypeScript or JavaScript.
+
+==== Lumo Javascript Modules
+
+The Lumo Javascript modules have been removed, as such imports such as the following no longer work and should be removed:
+
+[source,js]
+----
+import '@vaadin/vaadin-lumo-styles/color.js';
+import '@vaadin/vaadin-lumo-styles/sizing.js';
+import '@vaadin/vaadin-lumo-styles/spacing.js';
+import '@vaadin/vaadin-lumo-styles/style.js';
+import '@vaadin/vaadin-lumo-styles/typography.js';
+----
+
+In general these imports were used to ensure Lumo custom CSS properties were defined globally. However, this should not be done by add-ons, but rather by the application that uses the add-on. As such, there is no alternative import to use in add-ons.
+
+If the add-on provides a demo HTML page, the Lumo theme can be imported there using a link tag for example:
+[source,html]
+----
+<!-- Assuming the demo HTML page is in a folder such as `demo` in the project root -->
+<link rel="stylesheet" href="../node_modules/@vaadin/vaadin-lumo-styles/lumo.css">
+----
+
+Lumo Javascript mixins have not been removed and can still be used to inject common styles into custom components:
+[source,js]
+----
+import { inputField } from '@vaadin/vaadin-lumo-styles/mixins/input-field-shared.js';
+
+class MyInputField extends LitElement {
+  static get styles() {
+    return [
+      inputField,
+      css`...`
+    ];
+  }
+}
+----
+
+==== Lumo Global Typography
+
+Previously you could apply the Lumo global typography styles to a custom component's shadow root like so:
+
+[source,js]
+----
+import { typography } from "@vaadin/vaadin-lumo-styles";
+
+class MyComponent extends LitElement {
+  static get styles() {
+    return [
+      typography,
+      css`...`
+    ];
+  }
+}
+----
+
+This would result in Lumo styles being applied to text nodes and basic HTML elements (headings, links) in the component’s shadow root.
+
+This is not possible anymore in v25, as the respective Typography module has been converted into a CSS file. If you need to apply Lumo typography styles to basic HTML elements in your component’s shadow root then you can copy the relevant styles into your component’s styles.
+
+==== Material Theme
+
+The Material theme has been removed from Vaadin 25. If the add-on provides Material styles, it is suggested to remove them.
+
+==== Theme Structure
+
+Previously, theme-specific component styles and entry-points were located in `theme/lumo` / `theme/material` folders. In Vaadin 24 an import for a component was then resolved to either folder, depending on which theme was applied using the `@Theme` annotation. In Vaadin 25 this mechanism does not work anymore. 
+
+If the add-on does not support multiple themes, then all styles can be put into the component's source file.
+
+If the add-on wants to support the two official Vaadin themes (Aura or Lumo), then the component can implement `ThemeDetectionMixin`, which automatically adds an attribute to the component based on the active theme. This attribute can then be used to target theme-specific styles rules:
+
+[source,js]
+----
+import { ThemeDetectionMixin } from '@vaadin/vaadin-themable-mixin/theme-detection-mixin.js';
+
+class MyComponent extends ThemeDetectionMixin(LitElement) {
+  static get styles() {
+    return css`
+      :host {
+        /* Common / functional styles */
+      }
+      :host([data-application-theme="aura"]) {
+        /* Aura-specific styles */
+      }
+      :host([data-application-theme="lumo"]) {
+        /* Lumo-specific styles */
+      }
+    `;
+  }
+}
+----
+
+If the add-on supports custom themes, then styles for those themes can be provided as separate CSS files that an application using the add-on can import.
+
+==== Mixins
+
+`ThemableMixin` and `registerStyles` will likely be removed in Vaadin 26. Consider migrating add-on components to Lit and use the `get styles() { ... }` API to define styles instead.
+
+`ControllerMixin` has been removed. If an add-on component relies on controllers it should be converted to Lit which provides the same API natively.
