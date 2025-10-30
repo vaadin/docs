@@ -7,7 +7,7 @@ order: 7
 ---
 
 
-= REST API
+= REST API alongside Vaadin
 
 Typically, when building a Vaadin application, you don’t need to expose any REST endpoints, since all required data can be exchanged directly through the view layer. However, if you need to share data with an external or third-party service, you’ll likely need to create a REST API to allow that service to access your application’s data.
 
@@ -44,9 +44,62 @@ Here are some common pitfalls to be aware of:
 For example, if your main view (using `HasUrlParameter`) is mapped to the root path (`/`), it may intercept all HTTP requests intended for a JAX-RS or Spring REST endpoint, and vice versa.
 * When using Spring Boot, the default security configuration is intentionally strict (which is good practice), but it can inadvertently block requests to your REST endpoints if not configured properly.
 
-To mitigate these issues, consider assigning a separate context path for your Vaadin UI.
-You can do this by adjusting the <<{articles}/integrations/spring/configuration#spring-boot-properties,`vaadin.url-mapping` property>> to point to a dedicated path, such as `/ui/*`. However, it may be sufficient to define a separate security configuration.
-You can see an example of this approach in the "Try me" guide below.
+To mitigate these issues, you can assign a separate context path for your Vaadin UI by adjusting the
+<<{articles}/flow/integrations/spring/configuration#spring-boot-properties,`vaadin.url-mapping` property>>
+to point to a dedicated path, such as `/ui/*`.
+
+However, in many cases, it may be sufficient to use a separate context path for your REST API (for example, prefixed with `/api/`) and to define a separate security configuration specifically for your REST API paths.
+
+=== Updating Security Configuration
+
+To ensure that Vaadin's strict security configuration does not interfere with your REST API endpoints,
+you can define a separate `SecurityFilterChain` for your REST API.
+Each REST API configuration should have a larger order (`@Order`) value than the default `SecurityFilterChain` used for Vaadin.
+
+The example below demonstrates how to define two additional `SecurityFilterChain` beans:
+one for a private REST API and another for a public REST API.
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Bean
+@Order(1)
+SecurityFilterChain configurePrivateApi(HttpSecurity http) throws Exception {
+    return http.securityMatcher("/api/private/**")
+            // Ignore CSRF for private API calls, typically used by other services, not browsers
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/private/**"))
+            //.. your advanced configuration
+            .build();
+}
+
+@Order(2)
+@Bean
+SecurityFilterChain configurePublicApi(HttpSecurity http) throws Exception {
+    http.securityMatcher("/api/public/**")
+        .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+    return http.build();
+}
+----
+
+In some cases, for example, when adding Swagger UI support, you may need to modify the `SecurityFilterChain`
+defined for the Vaadin UI. This can be done by adding the required paths to the request matcher that ends with `permitAll()`,
+as shown below:
+
+.SecurityConfiguration.java
+[source,java]
+----
+http.authorizeHttpRequests(authorize ->
+    authorize.requestMatchers(
+        "/images/*.png",
+        "/icons/*.png",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/v3/api-docs/**"
+    ).permitAll()
+);
+----
+
+You can see a more detailed example of the full configuration in the <<#try-it,Try it>> guide below.
 
 [NOTE]
 ====
@@ -125,8 +178,7 @@ public class SecurityConfiguration {
     SecurityFilterChain configurePrivateApi(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/private/**")
-                // Ignoring CSRF for the private API, expected to be used by other services, not
-                // directly by browser clients
+                // Ignore CSRF for private API calls, typically used by other services, not browsers
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/private/**"))
                 .authorizeHttpRequests(auth -> {
                     auth.anyRequest().authenticated();
