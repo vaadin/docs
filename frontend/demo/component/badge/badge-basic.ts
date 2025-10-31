@@ -19,6 +19,7 @@ export class Example extends LitElement {
         <!-- tag::snippet[] -->
         <span theme="badge">Pending</span>
         <span theme="badge success">Confirmed</span>
+        <span theme="badge warning">Warning</span>
         <span theme="badge error">Denied</span>
         <span theme="badge contrast">On hold</span>
         <!-- end::snippet[] -->
