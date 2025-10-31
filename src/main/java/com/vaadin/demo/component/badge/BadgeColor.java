@@ -19,6 +19,9 @@ public class BadgeColor extends VerticalLayout {
         Span confirmed = new Span("Confirmed");
         confirmed.getElement().getThemeList().add("badge success");
 
+        Span warning = new Span("Warning");
+        warning.getElement().getThemeList().add("badge warning");
+
         Span denied = new Span("Denied");
         denied.getElement().getThemeList().add("badge error");
 
@@ -35,14 +38,17 @@ public class BadgeColor extends VerticalLayout {
         confirmedPrimary.getElement().getThemeList()
                 .add("badge success primary");
 
+        Span warningPrimary = new Span("Warning");
+        warningPrimary.getElement().getThemeList().add("badge warning primary");
+
         Span deniedPrimary = new Span("Denied");
         deniedPrimary.getElement().getThemeList().add("badge error primary");
 
         Span onHoldPrimary = new Span("On hold");
         onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
 
-        add(new HorizontalLayout(pending, confirmed, denied, onHold),
-                new HorizontalLayout(pendingPrimary, confirmedPrimary,
+        add(new HorizontalLayout(pending, confirmed, warning, denied, onHold),
+                new HorizontalLayout(pendingPrimary, confirmedPrimary, warningPrimary,
                         deniedPrimary, onHoldPrimary));
         setPadding(false);
         setSizeUndefined();

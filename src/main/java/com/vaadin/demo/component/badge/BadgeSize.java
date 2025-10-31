@@ -16,6 +16,9 @@ public class BadgeSize extends HorizontalLayout {
         Span confirmed = new Span("Confirmed");
         confirmed.getElement().getThemeList().add("badge success small");
 
+        Span warning = new Span("Warning");
+        warning.getElement().getThemeList().add("badge warning small");
+
         Span denied = new Span("Denied");
         denied.getElement().getThemeList().add("badge error small");
 
@@ -23,7 +26,7 @@ public class BadgeSize extends HorizontalLayout {
         onHold.getElement().getThemeList().add("badge contrast small");
         // end::snippet[]
 
-        add(pending, confirmed, denied, onHold);
+        add(pending, confirmed, warning, denied, onHold);
     }
 
     public static class Exporter extends DemoExporter<BadgeSize> { // hidden-source-line
