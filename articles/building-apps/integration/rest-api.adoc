@@ -1,0 +1,367 @@
+---
+title: REST API
+page-title: Integrating REST API alongside Vaadin
+description: Integration of REST API within the Vaadin application.
+meta-description: Learn how to implement REST API that's available through the same host/port as your Vaadin application.
+order: 7
+---
+
+
+= REST API Alongside Vaadin
+
+Typically, when building a Vaadin application, you don’t need to expose any REST endpoints, since all required data can be exchanged directly through the view layer. However, if you need to share data with an external or third-party service, you’ll likely need to create a REST API to allow that service to access your application’s data.
+
+In this article, two common approaches to implementing REST services in Vaadin applications are explored:
+
+1. Using a separate artifact dedicated to REST endpoints.
+2. Exposing REST endpoints within the same module as your Vaadin UI.
+
+Each approach has distinct advantages and trade-offs, which are described in the following sections.
+
+[NOTE]
+This guide assumes you are using Vaadin with the Spring Boot framework. If you’re using another framework (such as Quarkus, CDI, or others), the concepts should still apply, but you’ll need to adapt the examples to your specific environment.
+
+== Separate Artifact for REST Services
+
+In highly modular architectures, such as microservice-based systems, the most natural approach is to define REST endpoints in a separate artifact (for example, a dedicated REST module or microservice).
+
+With this approach, your Vaadin application remains focused solely on the UI layer, while REST functionality is isolated in its own service. You can follow the Spring guide for https://spring.io/guides/tutorials/rest[Building REST services] to set up a standalone module or artifact for your REST endpoints.
+
+Typically, REST services are hosted on a different domain or port than the Vaadin application. This separation ensures there are no conflicts between Vaadin route handling and REST API requests.
+
+While this approach keeps your Vaadin application simpler and more maintainable, it usually requires architectural adjustments. For example, you may need to separate other parts of your system, such as authentication and authorization, into independent services shared between the REST API and the Vaadin UI. In many cases, this also means adopting a more complex hosting or deployment setup to manage multiple artifacts or services.
+
+
+== Exposing REST Endpoints from the Same Module
+
+In small to medium-sized applications, or in "monolithic" systems, it can be tempting to include both the Vaadin UI and REST endpoints within the same module. This may seem convenient, especially if your REST API is small and straightforward, and doesn't feel substantial enough to justify a separate module.
+
+This approach can be perfectly valid in certain cases, particularly when the data resides in JVM memory and is shared between the Vaadin UI and the REST endpoints. It also provides excellent performance when you need to display live or frequently updated data in the UI, since no inter-service communication is required.
+
+Here are some common pitfalls to be aware of:
+
+* Vaadin UI and REST endpoints often compete for similar URL mappings.
+For example, if your main view (using `HasUrlParameter`) is mapped to the root path (`/`), it may intercept all HTTP requests intended for a REST endpoint, and vice versa.
+* When using Spring Boot, the default security configuration is intentionally strict (which is good practice), but it can inadvertently block requests to your REST endpoints if not configured properly.
+
+To mitigate these issues, you can assign a separate context path for your Vaadin UI by adjusting the
+<<{articles}/flow/integrations/spring/configuration#spring-boot-properties,`vaadin.url-mapping` property>>
+to point to a dedicated path, such as `/ui/*`.
+
+However, in many cases, it may be sufficient to use a separate context path for your REST API (for example, prefixed with `/api/`) and to define a separate security configuration specifically for your REST API paths.
+
+=== Updating Security Configuration
+
+To ensure that Vaadin's strict security configuration does not interfere with your REST API endpoints,
+you can define a separate `SecurityFilterChain` for your REST API.
+Each REST API configuration should have a larger order (`@Order`) value than the default `SecurityFilterChain` used for Vaadin.
+
+The example below demonstrates how to define two additional `SecurityFilterChain` beans:
+one for a private REST API and another for a public REST API.
+
+.SecurityConfiguration.java
+[source,java]
+----
+@Bean
+@Order(1)
+SecurityFilterChain configurePrivateApi(HttpSecurity http) throws Exception {
+    return http.securityMatcher("/api/private/**")
+            // Ignore CSRF for private API calls, typically used by other services, not browsers
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/private/**"))
+            //.. your advanced configuration
+            .build();
+}
+
+@Order(2)
+@Bean
+SecurityFilterChain configurePublicApi(HttpSecurity http) throws Exception {
+    http.securityMatcher("/api/public/**")
+        // Ignore CSRF for public API calls, typically used by other services, not browsers
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/public/**"))
+        .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+    return http.build();
+}
+----
+
+In some cases, for example, when adding Swagger UI support, you may need to modify the `SecurityFilterChain`
+defined for the Vaadin UI. This can be done by adding the required paths to the request matcher that ends with `permitAll()`,
+as shown below:
+
+.SecurityConfiguration.java
+[source,java]
+----
+http.authorizeHttpRequests(authorize ->
+    authorize.requestMatchers(
+        "/images/*.png",
+        "/icons/*.png",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/v3/api-docs/**"
+    ).permitAll()
+);
+----
+
+You can see a more detailed example of the full configuration in the <<#try-it,Try it>> guide below.
+
+[NOTE]
+====
+Customizing Vaadin URL mapping comes with some <<{articles}/flow/integrations/spring/configuration#vaadin-url-mapping,caveats related to static resources>>, so make sure to review those before finalizing your configuration.
+====
+
+[.collapsible-list]
+=== Try It
+
+.Set Up the Project
+[%collapsible]
+====
+
+. Create a new project using the Playground at http://start.vaadin.com[start.vaadin.com].
+. Add a view and set its view access to anything other than "public".
+. Download the project and open it in the IDE of your choice.
+
+====
+
+.Step 2: Update the Security Configuration
+[%collapsible]
+====
+Open the `SecurityConfiguration.java` file and add two additional security configurations — one for the public REST API and another for the private REST API.
+
+
+.SecurityConfiguration.java
+[source,java]
+----
+import static com.vaadin.flow.spring.security.VaadinSecurityConfigurer.vaadin;
+
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+
+@EnableWebSecurity
+@Configuration
+@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
+public class SecurityConfiguration {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    // Default Vaadin UI security configuration
+    @Bean
+    public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        http.authorizeHttpRequests(authorize -> authorize.requestMatchers("/images/*.png").permitAll());
+
+        // Icons from the line-awesome addon
+        http.authorizeHttpRequests(authorize -> authorize.requestMatchers("/line-awesome/**").permitAll());
+
+        http.with(vaadin(), vaadin -> {
+            vaadin.loginView(LoginView.class);
+        });
+
+        return http.build();
+    }
+
+    // Additional security configuration for the "private" REST API
+    @Bean
+    @Order(1)
+    SecurityFilterChain configurePrivateApi(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/api/private/**")
+                // Ignore CSRF for private API calls, typically used by other services, not browsers
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/private/**"))
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().authenticated();
+                })
+                // so session management/cookie is not needed
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // HttpStatusEntryPoint only sets status code, Location header to login page makes no sense here
+                .httpBasic(cfg -> cfg.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .build();
+    }
+
+    // Additional security configuration for the "public" REST API
+    @Order(2)
+    @Bean
+    SecurityFilterChain configurePublicApi(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/public/**")
+                // Ignore CSRF for public API calls, typically used by other services, not browsers
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/public/**"))
+                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+        return http.build();
+    }
+}
+----
+
+The `configurePublicApi(..)` method ensures that URL paths starting with `/api/public` are accessible to anyone.
+The `configurePrivateApi(..)` method restricts access to `/api/private` to authenticated users only (via basic authentication).
+
+====
+
+.Step 3: Create the Data Class and Service
+[%collapsible]
+====
+
+Create a simple `Message` data class and a corresponding `MessageService` that stores and retrieves messages in memory.
+
+
+.Message.java
+[source,java]
+----
+public record Message(String user, String message) {
+}
+----
+
+
+.MessageService.java
+[source,java]
+----
+@Service
+public class MessageService {
+    private List<Message> msgs = new ArrayList<>();
+
+    public List<Message> getMessages() {
+        return new ArrayList<>(msgs);
+    }
+
+    public void addMessage(Message msg) {
+        msgs.add(msg);
+    }
+
+}
+----
+====
+
+.Step 4: Create a Public REST Endpoint
+[%collapsible]
+====
+
+Create a public REST endpoint class called `ExportApi`.
+It exposes a single endpoint at `/api/public/export`, which returns all messages from the `MessageService`.
+
+
+.ExportApi.java
+[source,java]
+----
+@RestController
+@RequestMapping("/api/public")
+public class ExportApi {
+
+    private final MessageService messageService;
+
+    public ExportApi(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    @GetMapping("export")
+    public List<Message> exportMessages() {
+        return messageService.getMessages();
+    }
+}
+----
+
+====
+
+.Step 5: Create a Private REST Endpoint
+[%collapsible]
+====
+
+Create a private REST endpoint class called `ImportApi`.
+It defines a single endpoint at `/api/private/import`, which allows adding new messages to the `MessageService` list.
+
+
+.ImportApi.java
+[source,java]
+----
+@RestController
+@RequestMapping("/api/private")
+public class ImportApi {
+
+    private final MessageService messageService;
+
+    public ImportApi(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    @PostMapping("import")
+    public String importData(@RequestBody Message msg) {
+        messageService.addMessage(msg);
+        return "Message added\n";
+    }
+
+}
+----
+
+====
+
+
+.Step 6 (Optional): Move UI to a separate context path
+[%collapsible]
+====
+
+If you prefer to serve your Vaadin UI from a different context path (for example, `/ui`),
+you can modify the `vaadin.urlMapping` property in your application configuration.
+
+Be aware that there are some <<{articles}/flow/integrations/spring/configuration#vaadin-url-mapping,caveats with static resources>> to consider when changing the mapping.
+Solutions for these are not implemented as part of this tutorial.
+
+
+.application.properties
+[source,properties]
+----
+vaadin.urlMapping=/ui/*
+----
+
+====
+
+
+.Step 7: Test it
+[%collapsible]
+====
+
+Now you can verify that your application behaves as expected.
+
+. Verify that you can access the UI part of the application.
+If you didn’t change the `vaadin.urlMapping` property, the UI is available at:
+`http://localhost:8080`
+(unless your application is running on a different port).
+If you modified the `vaadin.urlMapping` to `/ui`, then the UI can be accessed at:
+`http://localhost:8080/ui`
+
+. Verify that you can access the private REST API endpoint at:
+`http://localhost:8080/api/private/import`
+Use a dedicated tool such as Postman, SoapUI, or Bruno to test the REST API calls, or use the REST client features provided by your IDE (for example, Spring Tools).
+
+. Verify that you can access the public REST API endpoint at:
+`http://localhost:8080/api/public/export`
+This is a simple `GET` request, so you can open the URL directly in your browser or use the same testing tools mentioned above.
+
+====
+
+.Final thoughts
+[%collapsible]
+====
+
+In this tutorial, you created REST endpoints alongside a Vaadin application.
+The guide covered how to update the security configuration to support REST endpoints,
+how to create a data class and service for handling messages,
+and how to implement both public and private REST endpoints.
+
+By following these steps, you’ve seen how to evolve a Vaadin application from one without REST endpoints
+to one that supports multiple REST APIs with appropriate access controls.
+
+This pattern can be applied to implement your own REST endpoints
+and to configure dedicated security settings for both the REST APIs and the Vaadin UI.
+
+====
