@@ -231,7 +231,7 @@ public class MainView extends VerticalLayout {
         var nameField = new TextField("What is your name?");
         add(nameField);
         add(new Button("Say Hello", event -> 
-            Notification.show("Hello, %s!".formatted(nameField.getValue())) // <2>
+            Notification.show("Hello, %s!".formatted(nameField.getValue()))
         ));
 // tag::snippet[]
         var qrImage = new Image();
@@ -244,18 +244,16 @@ public class MainView extends VerticalLayout {
 
 // tag::snippet[]
     private DownloadHandler generateQrCode(String text) {
-        try {
-            var qrWriter = new QRCodeWriter();
-            var bitMatrix = qrWriter.encode(text, BarcodeFormat.QR_CODE, 300, 300);
-            return downloadEvent -> {
+        return downloadEvent -> {
+            try (var out = downloadEvent.getOutputStream()) {
+                var qrWriter = new QRCodeWriter();
+                var bitMatrix = qrWriter.encode(text, BarcodeFormat.QR_CODE, 300, 300);
                 downloadEvent.setContentType("image/png");
-                try (var out = downloadEvent.getOutputStream()) {
-                    MatrixToImageWriter.writeToStream(bitMatrix, "PNG", out); // <2>
-                }
-            };
-        } catch (WriterException e) {
-            throw new RuntimeException(e);
-        }
+                MatrixToImageWriter.writeToStream(bitMatrix, "PNG", out); // <2>
+            } catch (WriterException e) {
+                throw new IOException(e);
+            }
+        };
     }
 // end::snippet[]
 }
