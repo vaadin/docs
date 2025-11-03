@@ -28,6 +28,10 @@ export class Example extends LitElement {
             <vaadin-icon icon="vaadin:check" style="padding: var(--lumo-space-xs)"></vaadin-icon>
             <span>Confirmed</span>
           </span>
+          <span theme="badge warning">
+            <vaadin-icon icon="vaadin:warning" style="padding: var(--lumo-space-xs)"></vaadin-icon>
+            <span>Warning</span>
+          </span>
           <span theme="badge error">
             <vaadin-icon
               icon="vaadin:exclamation-circle-o"
@@ -48,6 +52,10 @@ export class Example extends LitElement {
           <span theme="badge success">
             <span>Confirmed</span>
             <vaadin-icon icon="vaadin:check" style="padding: var(--lumo-space-xs)"></vaadin-icon>
+          </span>
+          <span theme="badge warning">
+            <span>Warning</span>
+            <vaadin-icon icon="vaadin:warning" style="padding: var(--lumo-space-xs)"></vaadin-icon>
           </span>
           <span theme="badge error">
             <span>Denied</span>
