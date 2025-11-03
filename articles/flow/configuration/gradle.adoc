@@ -1,0 +1,323 @@
+---
+title: Gradle
+page-title: How to configure Gradle for Vaadin projects
+description: Configuring the Vaadin Gradle plugin.
+meta-description: Learn how to set up and use Gradle for building and managing Vaadin applications.
+order: 130
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+= Gradle Configuration Properties
+
+--
+--
+
+[.introText]
+
+This page describes how to configure a Vaadin application using the Vaadin Gradle plugin.
+
+See <<{articles}/getting-started/start/alternatives/gradle#,Alternatives - Gradle>> page for a guide on creating a Vaadin project with Gradle.
+
+For information about using Gradle, see the link:https://docs.gradle.org/current/userguide/userguide.html[Gradle User Manual].
+
+.Requirements
+[NOTE]
+The Vaadin Gradle plugin requires Java SDK 17 or later, Gradle 8.7 or later.
+It installs Node.js and npm automatically when running the build for the first time if they are missing or the installed version is below the minimum required.
+If you plan to use Vaadin's Gradle-based starter projects, there's no need to install Gradle on your machine. A Gradle Wrapper script is included in starter projects. It manages locally the download and execution of Gradle for your project. For more information on using Gradle Wrapper, see the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentation].
+
+
+[[build-file.vaadin-options]]
+=== Vaadin Plugin Configuration
+
+Vaadin Gradle plugin options are configured in a `vaadin` block. An example configuration could be like this:
+
+----
+vaadin {
+    frontendHotdeploy = true
+}
+----
+
+If the parameter is `true`, it enables development using the frontend development server instead of an application bundle. This applies only to development mode.
+
+
+[[build-file.repositories]]
+=== Configuring Repositories
+
+The `repositories` section defines the locations to search for packages. The repository that contains the Vaadin libraries is required at a minimum.
+
+----
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = "https://maven.vaadin.com/vaadin-addons" }
+    maven { url "https://maven.vaadin.com/vaadin-prereleases" }
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+----
+
+The example above shows configured repositories in the following order:
+
+ * *Maven local* - Repository which looks in the local Maven cache for dependencies.
+ * *Maven central* (required) - contains Vaadin and a lot of other public libraries
+ * repository for *Vaadin add-ons*
+ * repository for *Vaadin pre-releases* - not recommended for production environments
+ * *Gradle plugin repository* - only necessary when using Gradle community plugins, which are not available through Maven central
+
+You can use any Gradle repository definitions in the block. See https://docs.gradle.org/current/userguide/declaring_repositories.html[Declaring Repositories] in the Gradle documentation for more information.
+
+
+[[build-file.dependencies]]
+=== Configuring Dependencies
+
+You'll need to add the `vaadin-core` or `vaadin` library as a Java dependency. You would do that like so:
+
+[source,subs="+attributes"]
+----
+dependencies {
+    implementation "com.vaadin:vaadin-core:{vaadin-version}"
+}
+----
+
+
+[[compiling.tasks]]
+=== Vaadin Tasks
+
+The Vaadin-related tasks handled by the plugin are as follows:
+
+`vaadinPrepareFrontend`::
+This step verifies that Node.js and `npm` are installed, copies the frontend resources, and, if needed, creates or updates the [filename]`package.json` file and Vite configuration files (i.e., [filename]`vite.config.ts` and [filename]`vite.generated.ts`). The frontend resources are located within `.jar` dependencies and are copied to `src/main/frontend/generated/jar-resources`.
+
+`vaadinBuildFrontend`::
+This builds the frontend bundle with the `Vite` utility. Vaadin frontend resources (e.g., HTML, JavaScript, CSS, and images) are bundled to optimize loading the frontend. This task isn't executed automatically on the `build` and other targets, so you'll need to run it, explicitly.
+
+`vaadinClean`::
+This cleans the project and removes [filename]`node_modules`, [filename]`package-lock.json`, [filename]`vite.generated.ts`, [filename]`tsconfig.json`, [filename]`types.d.ts`, [filename]`pnpm-lock.yaml` and [filename]`pnpmfile.js`. You'll need to run this task if you upgrade the Vaadin version, and in other similar situations.
+
+To get the complete list of tasks handled by the configured plugins, execute the following:
+
+[source,terminal]
+----
+./gradlew tasks
+----
+(`gradlew tasks` on Windows)
+
+[since:com.vaadin:vaadin@V24.2]
+[[incremental.builds]]
+=== Incremental Builds
+
+Vaadin uses https://docs.gradle.org/current/userguide/incremental_build.html[Gradle Incremental Builds feature] for `vaadinPrepareFrontend` task to prevent it from running when the project's configuration hasn't been changed and the necessary frontend files have already been generated and haven't changed since the previous build. This saves time when building and running applications in development mode.
+
+If none of these items have been changed since the previous build, Gradle skips the prepare frontend task, giving an `UP-TO-DATE` state:
+
+
+==== Inputs
+
+- Installed `Node.js` and `npm/pnpm` versions; and
+- Configuration parameters (see <<all-options,plugin configuration options>>).
+
+
+==== Outputs
+
+- `package.json`, `package-lock.json`, `vite.config.js` and other frontend files generated by Vaadin.
+
+The incremental build feature can be turned off with the following configuration parameter in the [filename]`gradle.build` file:
+
+----
+vaadin {
+   alwaysExecutePrepareFrontend = true
+}
+----
+
+This allows you to force the `vaadinPrepareFrontend` task execution as a fallback in case of issues in input or output definitions, while it's being fixed.
+
+
+[[production]]
+== Production
+
+To build a web application as a WAR package, you need the `war` plugin. You also need to enable it.
+
+In [filename]`build.gradle`, include the plugin and enable WAR build:
+
+----
+plugins {
+  ...
+  id 'war'
+}
+
+war {
+    enabled = true
+}
+----
+
+When doing a production-ready build, the Vaadin Gradle plugin bundles and optimizes the client-side dependencies, as described in <<{articles}/flow/production#,Deploying to Production>>. You enable this by either setting it in [filename]`build.gradle` or at the command line when invoking Gradle.
+
+In [filename]`build.gradle`:
+
+.Enabling Vaadin Production Mode through the `build.gradle` file
+----
+vaadin {
+   productionMode = true
+}
+----
+
+At the command-line, execute the following:
+
+.Enable Vaadin Production Mode from Command-Line
+[source,terminal]
+----
+./gradlew -Pvaadin.productionMode=true war
+----
+(or `gradlew -Pvaadin.productionMode=true war` on Windows)
+
+If you're using Vaadin with Spring Boot, the default packaging for production would normally be the `jar`. However, if you intend to package a Spring Boot application as a WAR to be deployed on a standalone container (e.g., `tomcat`), there are two additional steps you'll need to perform.
+
+First, your application class that's annotated with `@SpringBootApplication` should extend [classname]`SpringBootServletInitializer` and override the [methodname]`configure()` method:
+
+.Enabling SpringBootServletInitializer example
+[source,java]
+----
+@SpringBootApplication
+public class DemoApplication extends SpringBootServletInitializer {
+    @Override
+    protected SpringApplicationBuilder configure(
+	                     SpringApplicationBuilder application) {
+        return application.sources(DemoApplication.class);
+    }
+}
+----
+
+Second, add the following dependency:
+
+.The `build.gradle` file dependency
+----
+dependencies {
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+}
+----
+
+
+[[pre-release]]
+== Using Gradle plugin Snapshot Versions
+
+To use the pre-release version of the Vaadin Gradle plugin, add the `vaadin-prereleases` repository to the project [filename]`settings.gradle` file. This file is mostly used within multi-module projects, but it's useful for other configurations. Thus, if you don't already have it in your project, create a plain text file called [filename]`settings.gradle` next to your [filename]`build.gradle` file, which is normally in the project root folder.
+
+.Plugin repository in the `settings.gradle` file
+----
+pluginManagement {
+  repositories {
+      maven { url = 'https://maven.vaadin.com/vaadin-prereleases' }
+      gradlePluginPortal()
+  }
+  plugins {
+      id 'com.vaadin' version "24.9-SNAPSHOT"
+  }
+}
+----
+
+The plugin then needs to be defined and applied in the [filename]`build.gradle` file.
+
+.Define the snapshot plugin
+----
+plugins {
+    ...
+	id 'com.vaadin'
+}
+
+----
+
+.Use Stable Release Versions
+[NOTE]
+To avoid any inconsistencies, don't use pre-release versions in your production environment, especially snapshots. Vaadin recommends using the latest stable version.
+
+[[all-options]]
+== Plugin Configuration Options
+
+Here are all of the configuration options with their default values:
+
+`productionMode: Boolean = false`::
+Indicates that the application is running in production mode. Defaults to `false`. For production, the frontend is bundled and optimized, as described in <<{articles}/flow/production#,Deploying to Production>>. Running the `vaadinBuildFrontend` task automatically switches this to `true`, so there's no need to configure anything.
+
+`forceProductionBuild: Boolean = false`::
+Whether to generate a production bundle even if an existing pre-compiled bundle could be used. A value of 'true' forces bundle generation without validating if there is a usable production bundle already.
+
+`frontendOutputDirectory: File = null`::
+The folder where Vite should output [filename]`index.js` and other generated files. Defaults to `null`, which uses the automatically detected value of the main SourceSet, usually `build/resources/main/META-INF/VAADIN/webapp/`.
+
+`npmFolder: File = project.projectDir`::
+The folder where the [filename]`package.json` file is located. Defaults to the project root directory.
+
+`frontendDirectory: File(project.projectDir, "src/main/frontend")`::
+The directory with the frontend source files of the project. The legacy location `"${project.basedir}/frontend"` is used if the default location doesn't exist and this parameter isn't set.
+
+`generateBundle: Boolean = true`::
+Set to `true` to generate a bundle from the project frontend sources.
+
+`runNpmInstall: Boolean = true`::
+Run `npm install` after updating dependencies.
+
+`generateEmbeddableWebComponents: Boolean = true`::
+Generate web components from [classname]`WebComponentExporter` inheritors.
+
+`frontendResourcesDirectory: File = File(project.projectDir, Constants.LOCAL_FRONTEND_RESOURCES_PATH)`::
+Identifies the project frontend directory from where resources should be copied for use with Vite.
+
+`optimizeBundle: Boolean = true`::
+Use byte code scanner strategy to discover frontend components.
+
+`pnpmEnable: Boolean = false`::
+Use `pnpm` for installing `npm` frontend resources. Defaults to `false`.
+
+`useGlobalPnpm: Boolean = false`::
+Use the globally installed `pnpm` tool or the default supported `pnpm` version. Defaults to `false`.
+
+`bunEnable: Boolean = false`::
+Use `bun` for installing `npm` frontend resources. Defaults to `false`.
+
+`requireHomeNodeExec: Boolean = false`::
+Force use of Vaadin home node executable. If it's set to `true`, Vaadin home node is checked, and installed if absent. This is then be used instead of the globally or locally installed node.
+
+`useDeprecatedV14Bootstrapping: Boolean = false`::
+Run the application in legacy V14 bootstrap mode. Defaults to `false`.
+
+`eagerServerLoad: Boolean = false`::
+Add the initial User Interface Definition Language (UIDL) object to the bootstrap [filename]`index.html`. Defaults to `false`.
+
+`applicationProperties: File = File(project.projectDir, "src/main/resources/application.properties")`::
+Application properties file in a Spring project.
+
+`openApiJsonFile: File = File(project.buildDir, "generated-resources/openapi.json")`::
+Generated path of the OpenAPI JSON.
+
+`javaSourceFolder: File = File(project.projectDir, "src/main/java")`::
+Java source folders for connect scanning.
+
+`generatedTsFolder: File = File(project.projectDir, "src/main/frontend/generated")`::
+The folder where Flow puts TS API files for client projects. The legacy location `"${project.basedir}/frontend/generated"` is used if the default location doesn't exist and this parameter isn't set.
+
+`nodeVersion: String = "v18.17.1"`::
+The Node.js version to be used when Node.js is installed automatically by Vaadin, for example `"v18.17.1"`. Defaults to `[FrontendTools.DEFAULT_NODE_VERSION]`.
+
+`nodeDownloadRoot: String = "https://nodejs.org/dist/"`::
+URL to download Node.js from. This can be needed in corporate environments where the Node.js download is provided from an intranet mirror. Defaults to `[NodeInstaller.DEFAULT_NODEJS_DOWNLOAD_ROOT]`.
+
+`nodeAutoUpdate: Boolean = false`::
+Flag to enable automatic update of the Node.js version installed in `~/.vaadin`, if it's older than the default or defined `nodeVersion`.
+
+`resourceOutputDirectory: File = File(project.buildDir, "vaadin-generated")`::
+The output directory for generated non-served resources, such as the token file. Defaults to `build/vaadin-generated`.
+
+`reactEnable: Boolean = true`::
+Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (`@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false`.
+
+`filterClasspath: Action<ClasspathFilter>`::
+Use the `include` and `exclude` functions to specify the scanned classpath. Supports glob patterns, e.g., `include("com.vaadin:*")` (all artifacts under the `com.vaadin` group).
+
+[[known-issues]]
+== Known Issues
+
+When the list of dependencies causes the classpath to go over a set limit on Windows, the build automatically generates a JAR containing a manifest with the classpath. Sometimes, when running a Spring Boot application, the resource loader doesn't load the classpath packages correctly from the manifest. The failed annotation scanning makes the required `npm` packages unavailable.
+
+You can fix this in two ways: add the repository `mavenLocal()` to <<#build-file.repositories,build file repositories>>; or specify the `vaadin.allowed-packages` property, see <<{articles}/flow/integrations/spring/configuration#,Vaadin Spring Configuration>>.
+

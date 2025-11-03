@@ -178,14 +178,15 @@ Vaadin Quarkus extension is changed to build production package by default. No n
 
 To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
 
-== Changes in Theming System
+== Themes and Styling
 
 Vaadin 25 simplifies the theme/styling system to bring it closer to normal/native web development, and minimizes Vaadin-specific peculiarities, while keeping migration from earlier versions as painless as possible.
 
 Below are the main highlights of the changes and more detailed instructions are described in link:https://github.com/vaadin/platform/issues/7453[Theming System Renewal].
 
-
 The special `frontend/themes` folder, and the `components` sub-folder for CSS shadow-DOM injection, is deprecated (but still supported).
+
+Injecting CSS into Vaadin components’ shadow DOM through the components sub-folder in your theme folder is disabled by default. Shadow DOM styling is no longer recommended (as of V24), but if you still need to use it, it can be enabled with the feature flag `themeComponentStyles`.
 
 The [classname]`@Theme` annotation is deprecated. Instead, [classname]`StyleSheet` annotation to be used for loading one or more stylesheets from public static resources locations (e.g. `META-INF/resources/`), whereas [classname]`CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
 
@@ -209,11 +210,436 @@ public class Application implements AppShellConfigurator {}
 
 ----
 
-The [filename]`theme.json` configuration file is deprecated (but still supported).
+The [filename]`theme.json` configuration file is deprecated (but still supported, except the `lumoImports` property).
 
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
+
+=== Lumo Theme
+
+The Lumo theme is no longer loaded by default, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. If you’re not using [classname]`@Theme`, then add a [classname]`@StyleSheet` annotation to either your application class or a root layout to load the Lumo theme:
+
+[source,java]
+----
+@StyleSheet(Lumo.STYLESHEET);
+public class Application implements AppShellConfigurator {}
+----
+
+All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. To load the utility classes, add a separate [classname]`@StyleSheet` annotation:
+
+[source,java]
+----
+@StyleSheet(Lumo.STYLESHEET);
+@StyleSheet(Lumo.UTILITY_STYLESHEET);
+public class Application implements AppShellConfigurator {}
+----
+
+NOTE: The way the Lumo theme is injected into Vaadin components has been refactored to not use the `registerStyles()` helper. This should not cause any breaking changes in applications; please report issues at link:https://github.com/vaadin/web-components/issues[vaadin/web-components] if you find otherwise.
+
+=== Material Theme
+
+The Material theme is no longer supported in Vaadin 25. You can migrate your application to the Lumo or Aura theme or implement your own Material Design theme on top of the new component base styles.
+
+=== Component Base Styles
+
+The un-themed base styles in Vaadin components have changed significantly in Vaadin 25. They are now much less bare-bones and actually provide a better starting point for custom themes. This does mean that custom themes built on top of the Vaadin 25 component base styles need to be heavily refactored. The components’ Styling pages provide lists of style properties (CSS custom properties) that make them easier to customize.
+
+=== WebComponentExporter
+
+The [classname]`WebComponentExporter` feature in Flow allows you to export Flow components as Web Components for embedding into non-Vaadin user interfaces. In Vaadin 25, stylesheets loaded into exported components using the [classname]`@CssImport` annotation only load those styles into the exported component’s shadow DOM, not the surrounding page as before. To load the same styles into the surrounding page, import the stylesheet to it separately.
+
+=== React Components
+
+The Lumo CSS files have been removed from the `@vaadin/react-components` package. As mentioned above, the Lumo theme should be imported from `@vaadin/vaadin-lumo-styles` instead.
+
+[source,typescript,role="before"]
+----
+/* If imported through a CSS file */
+@import '@vaadin/react-components/css/Lumo.css';
+
+/* If imported through Typescript */
+import '@vaadin/react-components/css/Lumo.css';
+----
+[source,typescript,role="after"]
+----
+/* If imported through a CSS file */
+@import '@vaadin/vaadin-lumo-styles/lumo.css';
+
+/* If imported through Typescript */
+import '@vaadin/vaadin-lumo-styles/lumo.css';
+----
+
+One exception is the `@vaadin/react-components/css/lumo/Utility.module.css` CSS module, which has been preserved for backward compatibility as the Lumo package does not expose utilities as a CSS module.
+
+=== Optional Changes
+
+These changes are optional, as old approaches still work (with the exceptions listed in the Breaking Changes section), but recommended to get your application to the new best practices in Vaadin 25, and to avoid breaking changes in later major versions.
+
+* Refactor component styles from shadow DOM styles to normal CSS (this was the recommended approach already in V24)
+* Load custom styles through a master stylesheet with [classname]`@StyleSheet` instead of [classname]`@Theme` or multiple [classname]`@CssImport`-s
+* Load additional custom stylesheets through master stylesheet with `@import`
+* Move stylesheets from `frontend/themes/<mytheme>` to `src/main/resources/META-INF/resources`
+
+== Components
+
+=== App Layout
+The `bottom` attribute was removed and can no longer be used to target the bottom navbar. Instead, use the selector `::part(navbar-bottom)` to target it with CSS.
+
+=== Cookie Consent
+The Cookie Consent component has been removed. Vaadin does not provide any replacement, but several third party options exist, such as link:https://github.com/orestbida/cookieconsent[orestbida/cookieconsent].
+
+=== Confirm Dialog
+The Flow [classname]`ConfirmDialog` now only implements [classname]`HasComponents` instead of [classname]`HasOrderedComponents`. The following methods are not available anymore: [methodname]`replace`, [methodname]`indexOf`, [methodname]`getComponentCount`, [methodname]`getComponentAt`, [methodname]`getChildren`.
+
+Methods that allowed passing an [classname]`Element` instance have been removed. Use the corresponding alternatives that allow passing a [classname]`Component` instance instead.
+
+=== Context Menu
+The [methodname]`add` method has been removed from the Flow [classname]`ContextMenu`. Instead, use [methodname]`addItem` to add menu items, or [methodname]`addComponent` to add generic components without wrapping them into a menu item.
+
+=== CRUD
+The “New Item” button in the CRUD component no longer uses the primary style variant by default. To get the old default back:
+
+[.example]
+[source,java]
+----
+crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+----
+
+=== Charts
+The [methodname]`setWidthAdjust` / [methodname]`getWidthAdjust` methods of the [classname]`Title` class have been removed because it was removed from the underlying Highcharts library.
+
+The [classname]`DrillUpButton` class has been removed from the codebase and all of its related API, e.g., [methodname]`setDrillUpButton` / [methodname]`getDrillUpButton` from the [classname]`Drilldown` class. Use Breadcrumbs instead. Likewise, the [methodname]`setDrillUpText` / [methodname]`getDrillUpText` has been removed from the [classname]`Lang` class.
+
+All methods that accept [classname]`Date` as parameter that were previously marked as deprecated have been removed.
+
+Chart configurations are now serialized using Jackson 3. The [methodname]`ChartSerialization.setObjectMapperInstance` method that can be used to customize serialization behavior now expects a [classname]`tools.jackson.databind.ObjectWriter` instance.
+
+=== Date Picker and Date Time Picker
+The following changes have been made to the internal DOM structure of the Date Picker overlay, which may affect custom styling:
+
+* The `vaadin-date-picker-overlay-content` element is now a CSS grid layout instead of a flexbox.
+* The `overlay-header` part has been removed.
+
+=== Date Time Picker
+In the Flow [classname]`DateTimePicker` component, validation is no longer triggered on blur if the value has remained unchanged after user interaction, making this behavior consistent with the rest of the field components, which already received a similar update in V24.
+
+Incomplete input, where only a date or only a time is entered, is now treated as invalid. The corresponding error message can be configured via [classname]`DateTimePickerI18n`:
+
+[.example]
+[source,java]
+----
+dateTimePicker.setI18n(new DateTimePickerI18n()
+    .setIncompleteInputErrorMessage("Please enter both date and time"));
+----
+
+=== Details
+The [methodname]`setContent` and [methodname]`addContent` methods have been removed from the Flow [classname]`Details` component. Use regular methods from [classname]`HasComponents` such as [methodname]`add`, [methodname]`remove`, [methodname]`removeAll` instead.
+
+=== Dialog and Confirm Dialog
+[classname]`Dialog` and [classname]`ConfirmDialog` do not show a closing animation anymore when removing the component from the UI / DOM. Instead, the dialog should be closed and the `closed` event needs to be used to wait for the closing animation to finish before removing the component.
+
+For Flow this is relevant when manually adding / removing the dialog from the UI. The event is not needed when calling [methodname]`dialog.open()` without adding the dialog to the UI.
+
+[source,java,role="before"]
+----
+var dialog = new Dialog();
+add(dialog);
+dialog.open();
+
+// When dialog is not needed anymore
+remove(dialog);
+----
+[source,java,role="after"]
+----
+var dialog = new Dialog();
+dialog.addClosedListener(e -> remove(dialog));
+add(dialog);
+dialog.open();
+
+// When dialog is not needed anymore
+dialog.close();
+----
+
+For Hilla / React this is relevant when rendering dialogs conditionally.
+
+[source,typescript,role="before"]
+----
+const opened = useSignal(true);
+
+{ opened ? <Dialog opened={true}/> : null }
+
+// When dialog is not needed anymore
+opened.value = false;
+----
+[source,typescript,role="after"]
+----
+const ref = useRef<DialogElement>(null);
+const opened = useSignal(true);
+
+{
+  opened
+  ? <Dialog opened={true} ref={ref} onClosed={() => opened.value = false}/>
+  : null
+}
+
+// When dialog is not needed anymore
+ref.current?.close();
+----
+
+=== Form Layout
+The following custom CSS properties have been removed from `vaadin-form-item`:
+
+* `--vaadin-form-item-label-width`
+* `--vaadin-form-item-label-spacing`
+* `--vaadin-form-item-row-spacing`
+
+Use the following CSS properties on `vaadin-form-layout` instead:
+
+* `--vaadin-form-layout-label-width`
+* `--vaadin-form-layout-label-spacing`
+* `--vaadin-form-layout-row-spacing`
+
+=== Map
+The Map component’s `borderless` / `BORDERLESS` style variant has been renamed `no-border` / `NO_BORDER` for consistency with other components.
+
+=== Menu Bar
+The TestBench API `MenuBarElement.OVERLAY_TAG` has been removed. To get a reference to a sub-menu, instead use [methodname]`MenuBarButtonElement.openSubMenu` which returns a reference.
+
+=== Message Input
+The send button no longer uses the Primary style variant by default. To revert this change you can style the button with CSS:
+
+[.example]
+[source,css]
+----
+vaadin-message-input > vaadin-message-input-button {
+  background-color: var(--lumo-primary-color);
+  color: var(--lumo-primary-contrast-color);
+}
+----
+
+Also, the send button now is a `vaadin-message-input-button` instead of `vaadin-button`.
+
+=== Multi-Select Combo Box
+The Multi-Select Combo Box no longer uses `vaadin-multi-select-combo-box-internal` internally. This may affect custom shadow DOM styling of the component.
+
+=== Overlays
+
+Component overlays (like Dialog or the Combo Box drop-down) are no longer rendered outside of the component itself. This causes the following breaking changes to overlay styling:
+
+* The `overlayClass` property and the [methodname]`setOverlayClassName` method in Flow are gone. Apply a normal class name to the component instead.
+* The `vaadin-xyz-overlay` (such as `vaadin-dialog-overlay`) elements can not be targeted with CSS anymore. Refactor any CSS targeting these elements to target the component itself instead (e.g. `vaadin-dialog` instead of `vaadin-dialog-overlay`), using the same part names as before. Other CSS selectors are unaffected by this change.
+
+[source,css,role="before"]
+----
+vaadin-dialog-overlay::part(content) {}
+----
+[source,css,role="after"]
+----
+vaadin-dialog::part(content) {}
+----
+
+You’ll find the appropriate selector in the component’s Styling page.
+
+=== Popover
+The Lit/React component’s `contentWidth` and `contentHeight` properties have been replaced by `width` and `height`.
+
+=== Rich Text Editor
+The `on` attribute was removed and can no longer be used to target toggled-on buttons. Instead, use the selector `::part(toolbar-button-pressed)` to target them with CSS.
+
+=== Split Layout
+The Split Layout component no longer sets `overflow:auto` on its two child elements. The link:https://vaadin.com/docs/latest/components/scroller[Scroller] component is recommended to make them scrollable on overflow. Alternatively, you can apply it manually with CSS:
+
+[.example]
+[source,css]
+----
+vaadin-split-layout > * {
+  overflow: auto;
+}
+----
+
+The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
+
+=== Tabs / Tab Sheet
+The [classname]`TabsVariant.LUMO_ICON_ON_TOP` and [classname]`TabSheetVariant.LUMO_ICON_ON_TOP` theme variants have been removed. Apply the [classname]`TabVariant.LUMO_ICON_ON_TOP` to individual tabs instead.
+
+=== Text Field
+The [classname]`HasPrefixAndSuffix` interface has been removed from the Flow [classname]`TextField` and related components. The components now implement [classname]`HasPrefix` and [classname]`HasSuffix` instead.
+
+=== Time Picker
+The Time Picker no longer uses `vaadin-time-picker-combo-box` internally. This may affect custom shadow DOM styling of the component.
+
+The [classname]`TimePickerOverlayElement` TestBench element has been removed as the component now uses the native HTML popover mechanism for its drop-down. The [methodname]`getItem` and [methodname]`getLastItem` methods are now available on [classname]`TimePickerElement` itself.
+
+=== Tree Grid
+Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, it now sends a single request for the visible range, and the server returns the corresponding items as a flat list. On the server side, in turn, it's now possible to choose how the data provider returns hierarchical data: `HierarchyFormat.NESTED` (default, each expanded level separately) or `HierarchyFormat.FLATTENED` (all expanded levels as a flat list). These updates introduce breaking changes, which are described below.
+
+The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than to each level individually as before.
+
+Expanded items are no longer exposed to the client side as a plain array. Instead, the web component receives depth information for each item and uses it to display the data as a tree structure.
+
+As a result, the [methodname]`TreeGridElement#isLoadingExpandedRows` TestBench API has been removed. You no longer need to wait for expanded rows specifically since they are loaded in the same request with other rows.
+
+The [methodname]`TreeGridElement#getNumberOfExpandedRows` TestBench API has also been removed. Use unit tests instead to verify that exact items are expanded:
+
+[source,java,role="before"]
+.integration test
+----
+private TreeGridElement treeGridElement;
+
+@Test
+public void shouldHaveSomeRowsExpanded() {
+    Assert.assertEquals(2, treeGridElement.getNumberOfExpandedItems());
+}
+----
+[source,java,role="after"]
+.unit test
+----
+private TreeGrid<String> treeGrid;
+
+@Test
+public void shouldHaveSomeRowsExpanded() {
+    Assert.assertTrue(treeGrid.isExpanded("Item 0"));
+    Assert.assertTrue(treeGrid.isExpanded("Item 0-1"));
+}
+----
+
+The following section is relevant if your code extends [classname]`Grid` or [classname]`TreeGrid`, or accesses low-level Flow APIs like [classname]`HierarchicalDataCommunicator`.
+
+.Low-Level API Changes
+[%collapsible]
+====
+The [classname]`GridArrayUpdater.UpdateQueueData` class has been removed, along with related API:
+
+* The [methodname]`setUpdateQueueData` method in [classname]`GridArrayUpdater` has been removed
+* The [methodname]`getUpdateQueueData` method in [classname]`GridArrayUpdater` has been removed
+* Parameters that included [classname]`UpdateQueueData` in their type have been removed from all [classname]`Grid` and [classname]`TreeGrid` constructors and methods:
++
+--
+[source,java,role="before"]
+----
+protected <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid(
+    Class<T> beanType,
+    SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueBuilder,
+    B dataCommunicatorBuilder)
+----
+[source,java,role="after"]
+----
+protected <U extends GridArrayUpdater, B extends DataCommunicatorBuilder<T, U>> Grid(
+    Class<T> beanType,
+    B dataCommunicatorBuilder)
+----
+--
++
+--
+[source,java,role="before"]
+----
+protected GridArrayUpdater createDefaultArrayUpdater(
+    SerializableBiFunction<UpdateQueueData, Integer, UpdateQueue> updateQueueFactory)
+----
+[source,java,role="after"]
+----
+protected GridArrayUpdater createDefaultArrayUpdater()
+----
+--
+
+The [classname]`TreeGridArrayUpdater` interface has also been removed. The [classname]`GridArrayUpdater` interface is now used for both hierarchical and non-hierarchical updates.
+
+The [classname]`HierarchicalDataCommunicator` class in Flow has been fully refactored to use a flat list structure for representing hierarchical data on the client side. Although it still extends the [classname]`DataCommunicator` class, its internal implementation has been completely redesigned to optimize hierarchy rendering and address various bugs. This caused the following breaking changes:
+
+* Both the [classname]`HierarchicalCommunicationController` and [classname]`HierarchyMapper` concepts have been retired, and all related protected APIs in [classname]`HierarchicalDataCommunicator` have been removed, including such methods as [methodname]`createHierarchyMapper` and [methodname]`getHierarchyMapper`.
+* The [propertyname]`arrayUpdater` parameter has been removed from all [classname]`HierarchicalDataCommunicator` constructors. The data communicator now re-renders modified items by making granular [methodname]`Update#set(int index, List items)` calls.
+* The protected [methodname]`doUnregister` and [methodname]`getPassivatedKeys` methods have been removed.
+* The protected [methodname]`setFilter` method has been removed. Use the returned consumer of the [methodname]`setDataProvider(HierarchicalDataProvider, Object)` method instead.
+* The protected [methodname]`collapse(T item, boolean syncClient)` method has been removed. Use the [methodname]`collapse(T item)` method instead.
+* The protected [methodname]`expand(T item, boolean syncClient)` method has been removed. Use the [methodname]`expand(T item)` method instead.
+* The public [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` methods have been merged into a single method [methodname]`setViewportRange(int start, int length)`. Instead of setting ranges separately for each level, this method sets a single range that operates on the flat list of items from all levels.
+* The public [methodname]`confirmUpdate(int id, String parentKey)` method has been removed. The [methodname]`confirmUpdate(int id)` method is now called instead.
+* The public [methodname]`getParentItem(T item)` method has been removed. Use the [classname]`HierarchicalDataProvider#getParent` method instead to get an item's parent reliably.
+* The public [methodname]`getIndex(T item)` and [methodname]`getParentIndex(T item)` methods have been removed. To find an item's index reliably, use a combination of the [classname]`HierarchicalDataProvider#getItemIndex`, [classname]`HierarchicalDataProvider#getParent`, [classname]`HierarchicalDataCommunicator#buildQuery` methods as shown in the example below:
++
+[.example]
+--
+[source,java]
+.HierarchyFormat.NESTED
+----
+// By default, the data provider implements HierarchyFormat.NESTED,
+// meaning each request returns only the direct children of a parent.
+// In this format, items are identified by their hierarchical path,
+// a list of indexes from the root to the item. This path can then
+// be passed to `TreeGrid#scrollToIndex` to scroll to that item, for
+// example.
+
+public List<Integer> getIndexPath(T item) {
+    List<Integer> path = new LinkedList<>();
+    do {
+        var parent = dataCommunicator.getDataProvider().getParent(item);
+        var query = dataCommunicator.buildQuery(parent, 0, Integer.MAX_VALUE);
+        var index = dataCommunicator.getDataProvider().getItemIndex(item, query);
+        path.addFirst(index);
+        item = parent;
+    } while (item != null);
+    return path;
+}
+----
+[source,java]
+.HierarchyFormat.FLATTENED
+----
+// When the data provider implements HierarchyFormat.FLATTENED,
+// each request returns all descendants of a parent item in a
+// single flat list. In this format, items are identified by
+// their index in that list, which is called "flat index".
+// This index can then be passed to `TreeGrid#scrollToIndex`
+// to scroll to that item, for example.
+
+public int getFlatIndex(T item) {
+    var query = dataCommunicator.buildQuery(0, Integer.MAX_VALUE);
+    return dataCommunicator.getDataProvider().getItemIndex(item, query);
+}
+----
+--
+====
+
+Tree Grid now supports scrolling to a specific item using [methodname]`scrollToItem(T)`. Unlike [methodname]`scrollToIndex(int...)`, this method automatically expands any collapsed parent items before scrolling to the target item.
+
+This feature relies on the [methodname]`getParent(T)` and [methodname]`getItemIndex(T, HierarchicalQuery)` methods of the [classname]`HierarchicalDataProvider` interface. To use [methodname]`scrollToItem(T)`, your data provider must implement these methods. The built-in `TreeDataProvider` already provides full support out of the box.
+
+The following table shows which methods need to be implemented, depending on the data provider type and whether it is in-memory or not:
+
+[cols="3,2,4,2"]
+|===
+| `HierarchicalDataProvider` | `isInMemory()` | `getItemIndex(T, HierarchicalQuery)` | `getParent(T)`
+
+.2+|`HierarchyFormat.NESTED`
+|`true`
+|Not required
+|Required
+|`false`
+|Required
+|Required
+
+.2+|`HierarchyFormat.FLATTENED`
+|`true`
+|Not required
+|Required
+|`false`
+|Required
+|Required
+
+
+|`TreeDataProvider`
+|`true`
+|Not required
+|Not required
+|===
+
+=== Upload
+The `vaadin-upload-file` elements representing files in the list now use CSS grid layout instead of flexbox. This may affect custom styling of the element.
+
+The `row` and `info` parts have been removed from the `vaadin-upload-file` element.
+
+=== Validation
+Flow components using validation do not implement [classname]`HasClientValidation` anymore, as such the [methodname]`addClientValidatedEventListener` method has been removed. Consider using [classname]`ValidationStatusChangeEvent` to get notified when users enter input that can not be parsed.
 
 == Security Configuration Changes
 
@@ -307,11 +733,9 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 . Move and adapt the code of the `configure(HttpSecurity)` method into `vaadinSecurityFilterChain()`.
 .. customizations of [classname]`HttpSecurity` placed before `super.configure()` can be moved before the `with(vaadin(), vaadin -> {})` instruction.
 .. calls to [classname]`VaadinWebSecurity` methods have related methods in the [classname]`VaadinSecurityConfigurer`.
-
 +
 --
-.Before
-[source,java]
+[source,java,role="before"]
 ----
 @Override
 protected void configure(HttpSecurity http) throws Exception {
@@ -322,10 +746,7 @@ protected void configure(HttpSecurity http) throws Exception {
     setLoginView(http, "/login", "/");
 }
 ----
-
-
-.After
-[source,java]
+[source,java,role="after"]
 ----
 @Bean
 public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -341,20 +762,16 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 . If `configure(WebSecurity web)` is overridden you might:
 
 .. Move the rules in the security filter chain bean definition using `HttpSecurity.authorizeRequests()` and remove the original method (recommended by Spring, to prevent skipping all other filters in the chain):
-
 +
 --
-.Before
-[source,java]
+[source,java,role="before"]
 ----
 @Override
 protected void configure(WebSecurity web) throws Exception {
     web.ignoring().requestMatchers("/images/**");
 }
 ----
-
-.After
-[source,java]
+[source,java,role="after"]
 ----
 @Bean
 public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -368,34 +785,28 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 --
 
 .. OR, expose a [classname]`WebSecurityCustomizer` bean by your own and remove the original method
-
 +
 --
-.Before
-[source,java]
+[source,java,role="before"]
 ----
 @Override
 protected void configure(WebSecurity web) throws Exception {
-web.ignoring().requestMatchers("/images/**");
+    web.ignoring().requestMatchers("/images/**");
 }
 ----
-
-.After
-[source,java]
+[source,java,role="after"]
 ----
 @Bean
 public WebSecurityCustomizer webSecurityCustomizer() {
-return (web) -> web.ignoring().requestMatchers("/images/**");
+    return (web) -> web.ignoring().requestMatchers("/images/**");
 }
 ----
 --
 
 . If stateless authentication is configured (`setStatelessAuthentication(...)`), replace the call using `VaadinStatelessSecurityConfigurer`
-
 +
 --
-.Before
-[source,java]
+[source,java,role="before"]
 ----
 @Override
 protected void configure(HttpSecurity web) throws Exception {
@@ -404,9 +815,7 @@ protected void configure(HttpSecurity web) throws Exception {
     //...
 }
 ----
-
-.After
-[source,java]
+[source,java,role="after"]
 ----
 @Bean
 public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -421,7 +830,7 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 --
 
 . Remove `extends VaadinWebSecurity` and import the Vaadin security context holder strategy
-
++
 [source,java]
 ----
 @EnableWebSecurity // should be already present
@@ -450,14 +859,6 @@ Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.
 == Server-Side Modality
 [classname]`Dialog` has become less strict and allows background requests to server. Vaadin Flow allows to change this behavior if needed through [methodname]`Dialog.setModality(ModalityMode)` method.
 
-== Tree Grid And Hierarchical Data Providers
-Vaadin Flow added support for flat hierarchy in [classname]`TreeGrid` and hierarchical data providers.
-This required some API removal in Vaadin Flow.
-
-[classname]`HierarchyMapper` and [classname]`HierarchicalCommunicationController` have been replaced with the new concept - `Cache`. This new class provides a system for storing data in a hierarchical structure while enabling access in a flattened format for client-side consumption. [methodname]`setRequestedRange` and [methodname]`setParentRequestedRange` have been replaced with a single [methodname]`setViewportRange` which spans all hierarchy levels.
-
-See link:https://github.com/vaadin/platform/issues/7843[Tree Grid Flat Hierarchy Support] and link:https://github.com/vaadin/flow-components/issues/7269[Improving user and developer experience in Tree Grid] for more details.
-
 == Form Filler Add-On
 The link:https://github.com/vaadin/form-filler-addon[Form Filler add-on] has been removed from the Vaadin 25 platform. If your project uses it, you can add it as a separate dependency or get the same functionality with much less code using Spring AI to have the LLM directly populate a Java object that you can then use with e.g. [methodname]`binder.readBean()`.
 
@@ -471,3 +872,122 @@ Vaadin uses the [filename]`{project directory}/src/main/frontend/` directory as 
 == Removed Deprecations
 
 APIs deprecated earlier have now been removed. The following linked GitHub issue lists these removals — link:https://github.com/vaadin/flow/issues/21396[Remove deprecated API in Flow 25.0].
+
+== Upgrading Add-ons
+
+Some add-ons may require updates to work with Vaadin 25. This section gives an overview of the most common required changes.
+
+=== Java-based Add-ons
+
+This section covers add-ons that provide Flow components implemented in Java.
+
+==== JSON RPC Changes
+
+Flow's RPC mechanism now uses Jackson 3 instead of Elemental JSON. Using `elemental.json.JsonObject` or `elemental.json.JsonArray` types in the following places is no longer supported:
+
+- Passing parameters to `Element.executeJs` or `Element.callJsFunction`
+- Handling parameters from client-side RPC calls in `@ClientCallable` methods
+- Mapping data from custom events using `@EventData`
+
+Use the respective Jackson 3 types, such as `ObjectNode` and `ArrayNode`, instead.
+
+=== Frontend-based Add-ons
+
+This section covers add-ons that provide custom web components implemented in TypeScript or JavaScript.
+
+==== Lumo Javascript Modules
+
+The Lumo Javascript modules have been removed, as such imports such as the following no longer work and should be removed:
+
+[source,js]
+----
+import '@vaadin/vaadin-lumo-styles/color.js';
+import '@vaadin/vaadin-lumo-styles/font-icons.js';
+import '@vaadin/vaadin-lumo-styles/sizing.js';
+import '@vaadin/vaadin-lumo-styles/spacing.js';
+import '@vaadin/vaadin-lumo-styles/style.js';
+import '@vaadin/vaadin-lumo-styles/typography.js';
+----
+
+In general these imports were used to ensure Lumo custom CSS properties were defined globally. However, this should not be done by add-ons, but rather by the application that uses the add-on. As such, there is no alternative import to use in add-ons.
+
+If the add-on provides a demo HTML page, the Lumo theme can be imported there using a link tag for example:
+[source,html]
+----
+<!-- Assuming the demo HTML page is in a folder such as `demo` in the project root -->
+<link rel="stylesheet" href="../node_modules/@vaadin/vaadin-lumo-styles/lumo.css">
+----
+
+Lumo Javascript mixins have not been removed and can still be used to inject common styles into custom components:
+[source,js]
+----
+import { inputField } from '@vaadin/vaadin-lumo-styles/mixins/input-field-shared.js';
+
+class MyInputField extends LitElement {
+  static get styles() {
+    return [
+      inputField,
+      css`...`
+    ];
+  }
+}
+----
+
+==== Lumo Global Typography
+
+Previously you could apply the Lumo global typography styles to a custom component's shadow root like so:
+
+[source,js]
+----
+import { typography } from "@vaadin/vaadin-lumo-styles";
+
+class MyComponent extends LitElement {
+  static get styles() {
+    return [
+      typography,
+      css`...`
+    ];
+  }
+}
+----
+
+This would result in Lumo styles being applied to text nodes and basic HTML elements (headings, links) in the component’s shadow root.
+
+This is not possible anymore in v25, as the respective Typography module has been converted into a CSS file. If you need to apply Lumo typography styles to basic HTML elements in your component’s shadow root then you can copy the relevant styles into your component’s styles.
+
+==== Theme Structure
+
+Previously, theme-specific component styles and entry-points were located in `theme/lumo` / `theme/material` folders. In Vaadin 24 an import for a component was then resolved to either folder, depending on which theme was applied using the `@Theme` annotation. In Vaadin 25 this mechanism does not work anymore.
+
+Regardless of whether the add-on supports multiple themes or not, all styles should be placed in the component's source file by using the `static get styles()` Lit API.
+
+If the add-on wants to support the two official Vaadin themes (Aura or Lumo), then the component can implement `ThemeDetectionMixin`, which automatically adds an attribute to the component based on the active theme. This attribute can then be used to target theme-specific styles rules:
+
+[source,js]
+----
+import { ThemeDetectionMixin } from '@vaadin/vaadin-themable-mixin/theme-detection-mixin.js';
+
+class MyComponent extends ThemeDetectionMixin(LitElement) {
+  static get styles() {
+    return css`
+      :host {
+        /* Common / functional styles */
+      }
+      :host([data-application-theme="aura"]) {
+        /* Aura-specific styles */
+      }
+      :host([data-application-theme="lumo"]) {
+        /* Lumo-specific styles */
+      }
+    `;
+  }
+}
+----
+
+If the add-on supports custom themes, then styles for those themes can be provided as separate CSS files that an application using the add-on can import.
+
+==== Mixins
+
+`ThemableMixin` and `registerStyles` are planned to be removed in a future Vaadin version. Consider migrating add-on components to Lit and use the `get styles() { ... }` API to define styles instead.
+
+`ControllerMixin` has been removed. If an add-on component relies on controllers it should be converted to Lit which provides the same API natively.
