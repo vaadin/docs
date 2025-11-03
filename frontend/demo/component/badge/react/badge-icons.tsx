@@ -16,6 +16,10 @@ function Example() {
           <Icon icon="vaadin:check" style={{ padding: 'var(--lumo-space-xs)' }} />
           <span>Confirmed</span>
         </span>
+        <span {...{ theme: 'badge warning' }}>
+          <Icon icon="vaadin:warning" style={{ padding: 'var(--lumo-space-xs)' }} />
+          <span>Warning</span>
+        </span>
         <span {...{ theme: 'badge error' }}>
           <Icon icon="vaadin:exclamation-circle-o" style={{ padding: 'var(--lumo-space-xs)' }} />
           <span>Denied</span>
@@ -33,6 +37,10 @@ function Example() {
         <span {...{ theme: 'badge success' }}>
           <span>Confirmed</span>
           <Icon icon="vaadin:check" style={{ padding: 'var(--lumo-space-xs)' }} />
+        </span>
+        <span {...{ theme: 'badge warning' }}>
+          <span>Warning</span>
+          <Icon icon="vaadin:warning" style={{ padding: 'var(--lumo-space-xs)' }} />
         </span>
         <span {...{ theme: 'badge error' }}>
           <span>Denied</span>
