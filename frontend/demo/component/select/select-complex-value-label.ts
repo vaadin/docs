@@ -4,13 +4,12 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { SelectItem } from '@vaadin/select';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('select-complex-value-label')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

@@ -1,6 +1,5 @@
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import MagicString from 'magic-string';
 import type { UserConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,9 +16,6 @@ const vaadin = vaadinConfig({
   mode: process.env.NODE_ENV ?? 'development',
   command: 'build',
 }) as UserConfig;
-
-// Get the theme plugin from vaadinConfig
-const themePlugin = vaadin.plugins?.find((plugin: any) => plugin.name === 'vaadin:theme');
 
 const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
 
@@ -53,28 +49,6 @@ const config: UserConfig = {
       target,
     },
   },
-  plugins: [
-    themePlugin,
-    {
-      name: 'vite-plugin-rewrite-polymer-global',
-      transform(code, id) {
-        // Workaround esbuild issue with chunked code running in wrong order
-        // See https://github.com/vitejs/vite/issues/5142
-        if (id.includes('.js') && code.includes('JSCompiler_renameProperty')) {
-          const ms = new MagicString(code);
-          ms.replaceAll(/JSCompiler_renameProperty\(([^,]+),[^)]+\)/g, '$1');
-
-          return {
-            code: ms.toString(),
-            map: ms.generateMap({
-              file: id,
-              includeContent: true,
-            }),
-          };
-        }
-      },
-    },
-  ],
 };
 
 export default config;

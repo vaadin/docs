@@ -16,7 +16,7 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: 0, columns: 1 },
@@ -41,7 +41,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

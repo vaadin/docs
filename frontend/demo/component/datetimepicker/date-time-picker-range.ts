@@ -3,7 +3,7 @@ import '@vaadin/date-time-picker';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
@@ -12,7 +12,6 @@ const initialEndValue = '2020-09-01T20:00';
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

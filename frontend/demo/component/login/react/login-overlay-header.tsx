@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
-import { applyTheme } from 'Frontend/generated/theme';
 
 function Example() {
   return (
@@ -11,4 +10,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example, applyTheme); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

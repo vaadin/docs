@@ -17,6 +17,7 @@ import '@vaadin/flow-frontend/contextMenuTargetConnector.js';
 import '@vaadin/flow-frontend/datepickerConnector.js';
 import '@vaadin/flow-frontend/disableOnClickFunctions.js';
 import '@vaadin/flow-frontend/gridConnector.js';
+import '@vaadin/flow-frontend/treeGridConnector.js';
 import '@vaadin/flow-frontend/vaadin-grid-flow-selection-column.js';
 import '@vaadin/flow-frontend/gridProConnector.js';
 import '@vaadin/flow-frontend/vaadin-map/mapConnector.js';

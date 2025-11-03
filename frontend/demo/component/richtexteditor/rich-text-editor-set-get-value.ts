@@ -9,13 +9,12 @@ import type {
   RichTextEditorValueChangedEvent,
 } from '@vaadin/rich-text-editor';
 import type { TextAreaChangeEvent } from '@vaadin/text-area';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
