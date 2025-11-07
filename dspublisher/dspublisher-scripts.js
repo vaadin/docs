@@ -407,6 +407,14 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
         phase.done = true;
       }
     });
+
+    ps.stderr.on('data', (data) => {
+      if (ignoredLogSignals.every((signal) => !data.toString().includes(signal))) {
+        const redColor = '\x1b[31m';
+        const defaultColor = '\x1b[0m';
+        logProgress(progressState, `${redColor}${data.toString()}${defaultColor}`);
+      }
+    });
   });
 }
 
