@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { css, html, LitElement } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
-import { Notification } from '@vaadin/notification';
 import '@vaadin/upload';
-import type { Upload, UploadFileRejectEvent } from '@vaadin/upload';
+import { css, html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { Notification } from '@vaadin/notification';
+import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('upload-file-size')
@@ -26,13 +26,11 @@ export class Example extends LitElement {
     return root;
   }
 
-  @query('vaadin-upload')
-  private upload!: Upload;
-
-  protected override firstUpdated() {
-    this.upload.i18n.error.fileIsTooBig = 'The file exceeds the maximum allowed size of 10MB.';
-    this.upload.i18n = { ...this.upload.i18n };
-  }
+  private uploadI18n = {
+    error: {
+      fileIsTooBig: 'The file exceeds the maximum allowed size of 10MB.',
+    },
+  };
 
   // tag::snippet[]
   protected override render() {
@@ -44,6 +42,7 @@ export class Example extends LitElement {
       <vaadin-upload
         max-files="1"
         .maxFileSize="${maxFileSizeInBytes}"
+        .i18n="${this.uploadI18n}"
         @file-reject="${(event: UploadFileRejectEvent) => {
           Notification.show(event.detail.error);
         }}"

@@ -1,9 +1,9 @@
-import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 import { Upload } from '@vaadin/upload';
+import { createFakeUploadFiles, mockErrorXhrGenerator } from './upload-demo-helpers';
 
 declare module '@vaadin/upload' {
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  class Upload {
+  interface Upload {
     createFakeFilesUploadBasic(): void;
     createFakeFilesUploadAutoUploadDisabled(): void;
     createFakeFilesUploadAllFiles(): void;

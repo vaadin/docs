@@ -14,7 +14,7 @@ import type { AccordionOpenedChangedEvent } from '@vaadin/accordion';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import { Binder, field } from '@hilla/form';
+import { Binder, field } from '@vaadin/hilla-lit-form';
 import PersonModel from 'Frontend/generated/com/vaadin/demo/domain/PersonModel';
 import CardModel from 'Frontend/generated/com/vaadin/demo/domain/CardModel';
 import { applyTheme } from 'Frontend/generated/theme';
@@ -120,10 +120,8 @@ export class Example extends LitElement {
                 </span>
 
                 <span>
-                  ${
-                    // @ts-expect-error Workaround a Binder issue
-                    this.personBinder.value.address?.country?.name
-                  }
+                  ${// @ts-expect-error Workaround a Binder issue
+                  this.personBinder.value.address?.country?.name}
                 </span>
               </vaadin-vertical-layout>
             </vaadin-horizontal-layout>

@@ -1,10 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
-import { createFakeFilesUploadBasic } from './upload-demo-mock-files'; // hidden-source-line
+import '@vaadin/upload';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@vaadin/upload';
 import { applyTheme } from 'Frontend/generated/theme';
+import { createFakeFilesUploadBasic } from './upload-demo-mock-files'; // hidden-source-line
 
 @customElement('upload-basic')
 export class Example extends LitElement {

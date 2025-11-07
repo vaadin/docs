@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-undef */
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import * as readline from 'readline';
 
-const DSP_VERSION = '2.2.0-rc.1';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DSP_VERSION = '3.0.0-alpha.10';
 
 async function checkPreConditions() {
   try {
@@ -64,12 +69,14 @@ async function checkPreConditions() {
   }
 }
 
-const firstLaunch = !fs.existsSync(path.resolve(__dirname, '..', 'node_modules'));
+const projectRootPath = path.resolve(__dirname, '..');
+const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
+const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
 // License check helper command
 const hasLicenseChecker = (() => {
-  const pomFilePath = path.resolve(__dirname, '..', 'pom.xml');
+  const pomFilePath = path.resolve(projectRootPath, 'pom.xml');
   const pomFile = fs.readFileSync(pomFilePath, 'utf8');
   return pomFile.includes('dspublisher-license-check');
 })();
@@ -93,7 +100,7 @@ const SCRIPTS = {
     name: `dsp@${DSP_VERSION}:clean`,
     commands: [
       {
-        shell: `npx @vaadin/dspublisher@${DSP_VERSION} --clean`,
+        shell: `npx -y @vaadin/dspublisher@${DSP_VERSION} --clean`,
         phases: [
           {
             text: `Cleaning up dspublisher cache${firstLaunchMessage}`,
@@ -108,8 +115,35 @@ const SCRIPTS = {
           {
             text: `Cleaning up project${firstLaunchMessage}`,
             readySignal: 'BUILD SUCCESS',
-            doneText: 'Ready. Caches cleaned up',
             weight: 5,
+          },
+        ],
+      },
+      {
+        func: () => {
+          const generatedPath = path.resolve(projectRootPath, 'frontend', 'generated');
+          if (fs.existsSync(generatedPath)) {
+            fs.rmSync(generatedPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing generated frontend files',
+            weight: 1,
+          },
+        ],
+      },
+      {
+        func: () => {
+          if (fs.existsSync(nodeModulesPath)) {
+            fs.rmSync(nodeModulesPath, { recursive: true });
+          }
+        },
+        phases: [
+          {
+            text: 'Removing node_modules',
+            weight: 3,
+            doneText: 'Ready. Caches cleaned up',
           },
         ],
       },
@@ -123,32 +157,28 @@ const SCRIPTS = {
       {
         shell: [
           'npx',
+          '-y',
           'concurrently',
           '--kill-others',
           '--raw',
-          `"npx @vaadin/dspublisher@${DSP_VERSION} --develop"`,
+          `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
           '"mvn -C"',
         ],
         phases: [
           {
             text: `Initializing${firstLaunchMessage}`,
-            readySignal: 'success building schema',
+            readySignal: 'Application running at',
             weight: 30,
           },
           {
-            text: `Creating pages${firstLaunchMessage}`,
-            readySignal: 'success createPages',
-            weight: 15,
-          },
-          {
-            text: 'Building development bundle',
-            readySignal: 'You can now view',
+            text: 'Starting up DSP',
+            readySignal: ['watching for file changes'],
             doneText: 'Ready at http://localhost:8000. Stop the server with Ctrl+C',
-            weight: 95,
+            weight: 5,
             lastPhase: true,
           },
         ],
-        ignoredLogSignals: ['ERR_REQUIRE_ESM'],
+        ignoredLogSignals: ['New version of Astro available'],
       },
     ].filter((p) => !!p),
   },
@@ -181,35 +211,45 @@ const SCRIPTS = {
         ],
       },
       {
-        shell: `npx @vaadin/dspublisher@${DSP_VERSION} --build`,
+        shell: `npx -y @vaadin/dspublisher@${DSP_VERSION} --build`,
         phases: [
           {
-            text: 'Building static pages',
-            readySignal: 'success createPages',
-            weight: 35,
+            text: 'Initializing build',
+            readySignal: 'Getting diagnostics',
+            weight: 40,
           },
           {
             text: 'Building production JavaScript and CSS bundles',
-            readySignal: 'success Building production JavaScript and CSS bundles',
-            weight: 180,
+            readySignal: 'generating static routes',
+            weight: 30,
           },
           {
-            text: 'Generating image thumbnails',
-            readySignal: 'Done building',
+            text: 'Building static pages',
+            readySignal: 'generating optimized images',
             weight: 60,
           },
+          {
+            text: 'Optimizing images',
+            readySignal: 'sitemap-index.xml',
+            weight: 70,
+          },
+          {
+            text: 'Building sitemap and search index',
+            readySignal: 'Finished in',
+            weight: 10,
+          },
         ],
-        ignoredLogSignals: ['ERR_REQUIRE_ESM'],
+        ignoredLogSignals: ['Could not find a declaration file for module'],
       },
       {
         func: () => {
           // Copy the jar file from ../target/*.jar to ../dspublisher/out/docs.jar
           const jarFile = fs
-            .readdirSync(path.resolve(__dirname, '..', 'target'))
+            .readdirSync(path.resolve(projectRootPath, 'target'))
             .find((fn) => fn.endsWith('.jar'));
 
           fs.copyFileSync(
-            path.resolve(__dirname, '..', 'target', jarFile),
+            path.resolve(projectRootPath, 'target', jarFile),
             path.resolve(__dirname, 'out', 'docs.jar')
           );
         },
@@ -250,22 +290,23 @@ const progressState = {
 function clearLines(n) {
   for (let i = 0; i < n; i++) {
     const y = i === 0 ? null : -1;
-    process.stdout.moveCursor(0, y);
-    process.stdout.clearLine(i);
+    readline.moveCursor(process.stdout, 0, y);
+    readline.clearLine(process.stdout, i);
     process.stdout.line;
   }
-  process.stdout.cursorTo(0);
+  readline.cursorTo(process.stdout, 0);
 }
 
 /**
  * Logs to console and renders the progress bar.
  */
+let progressLogged = false;
 function logProgress(state, output) {
-  if (this.progressLogged && !process.env.NO_PROGRESS_LOG) {
+  if (progressLogged && !process.env.NO_PROGRESS_LOG) {
     // Clear the progress bar
     clearLines(2);
   }
-  this.progressLogged = true;
+  progressLogged = true;
 
   // Log the output
   if (output) {
@@ -337,7 +378,10 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
       }
 
       // Find if the output includes the ready signal for one of the phases.
-      const phase = phases.find((p) => data.includes(p.readySignal));
+      const phase = phases.find((p) => {
+        const readySignals = Array.isArray(p.readySignal) ? p.readySignal : [p.readySignal];
+        return readySignals.some((signal) => data.includes(signal));
+      });
 
       if (phase && !phase.done) {
         // A phase was found and it wasn't marked as done yet
@@ -348,6 +392,8 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
         } else {
           // Update the progress
           progressState.progress += phase.weight;
+          // Make sure progress doesn't exceed total weight
+          progressState.progress = Math.min(progressState.progress, totalWeight);
 
           const nextPhase = phases[phases.indexOf(phase) + 1];
           if (nextPhase) {
