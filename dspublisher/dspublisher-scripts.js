@@ -44,13 +44,13 @@ async function checkPreConditions() {
           resolve();
         } else {
           reject(
-            new Error('Maven is not installed. Plase make sure it is installed and in your PATH.')
+            new Error('Maven is not installed. Please make sure it is installed and in your PATH.')
           );
         }
       });
 
       ps.on('error', () => {
-        new Error('Maven is not installed. Plase make sure it is installed and in your PATH.');
+        new Error('Maven is not installed. Please make sure it is installed and in your PATH.');
       });
     });
 
