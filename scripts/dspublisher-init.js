@@ -1,9 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const fs = require('fs');
+const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -23,7 +19,7 @@ function appendFrontMatter(articlePath, frontMatter) {
   fs.writeFileSync(articlePath, tokens.join('---'));
 }
 
-export default async function (config) {
+module.exports = async function (config) {
   // The config file for dspublisher
   updateTemplate(path.resolve(ROOT, 'dspublisher/config/default.json'), {
     title: config.dsName || 'Design System',
@@ -42,7 +38,10 @@ export default async function (config) {
   // Have components / lumo expanded by default
   appendFrontMatter(
     path.resolve(ROOT, 'articles/components/index.adoc'),
-    'section-nav: expanded\n',
+    'section-nav: expanded\n'
   );
-  appendFrontMatter(path.resolve(ROOT, 'articles/lumo/index.adoc'), 'section-nav: expanded\n');
-}
+  appendFrontMatter(
+    path.resolve(ROOT, 'articles/lumo/index.adoc'),
+    'section-nav: expanded\n'
+  );
+};
