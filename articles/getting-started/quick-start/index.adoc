@@ -25,7 +25,7 @@ After downloading the project, unzip it and <<../dev-environment/import#,open it
 
 == Create Your First View
 
-In Vaadin, a "view" is a Java class that defines the user interface and behavior of a specific screen in your application. It is associated with a URL route, allowing users to navigate to it via a web browser.
+In Vaadin, a "view" is a Java class that defines the user interface and behavior of a specific screen in your application. It is associated with a URL _route_, allowing users to navigate to it via a web browser.
 
 Create a new Java class named `MainView` in the `com.example` package, next to the `Application` class:
 
@@ -92,7 +92,7 @@ The [guilabel]*}>* button in the bottom-right corner is the *Copilot menu*, whic
 
 == Add Functionality
 
-You'll now enhance the view by adding a Button that shows a notification when clicked. Update the `MainView` class as follows:
+You'll now enhance the view by adding a Button that adds some text to the view when clicked. Update the `MainView` class as follows:
 
 .MainView.java
 [source,java]
@@ -104,7 +104,7 @@ import com.vaadin.flow.component.button.Button;
 // end::snippet[]
 import com.vaadin.flow.component.html.H1;
 // tag::snippet[]
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.html.Span;
 // end::snippet[]
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
@@ -116,21 +116,21 @@ public class MainView extends VerticalLayout {
     public MainView() {
         add(new H1("Hello, Vaadin!"));
 // tag::snippet[]
-        add(new Button("Say Hello", event -> Notification.show("Hello, Vaadin!"))); // <1>
+        add(new Button("Say Hello", event -> add(new Span("Hello, Vaadin!")))); // <1>
 // end::snippet[]
     }
 }
 ----
-<1> This line creates a new Button with the label "Say Hello". When clicked, it triggers a lambda function that shows a Notification with the message "Hello, Vaadin!".
+<1> This line creates a new Button with the label "Say Hello". When clicked, it triggers a lambda function that adds a new `Span` with the message "Hello, Vaadin!" to the view. A span corresponds to the HTML `<span>` element, which is an inline container for text.
 
 This programming model is typical for Vaadin applications. You construct the UI from components, and define behavior using event listeners. If you have used Swing or JavaFX before, this should feel familiar.
 
-If you started the application from your IDE with <<../dev-environment/run#,hotswap (automatic code reload) enabled>>, the changes should be reflected automatically. If not, restart the application and refresh the browser. Click the button to see the notification in action:
+If you started the application from your IDE with <<../dev-environment/run#,hotswap (automatic code reload) enabled>>, the changes should be reflected automatically. If not, restart the application and refresh the browser. Click the button to see what happens:
 
 [.device]
-image::images/second-view.png[The updated Vaadin view with a button and notification]
+image::images/second-view.png[The updated Vaadin view with a button and a text span]
 
-The notification appears at the bottom of the screen when you click the button, disappearing after a short time. If you click multiple times, new notifications stack above the previous ones.
+The text is added to the end of the view, below the button. If you click multiple times, new texts are added each time.
 
 
 == Add Input
@@ -144,7 +144,7 @@ package com.example;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 // tag::snippet[]
 import com.vaadin.flow.component.textfield.TextField;
@@ -163,25 +163,111 @@ public class MainView extends VerticalLayout {
 // end::snippet[]
         add(new Button("Say Hello", event -> 
 // tag::snippet[]
-            Notification.show("Hello, %s!".formatted(nameField.getValue())) // <2>
+            add(new Span("Hello, %s!".formatted(nameField.getValue()))) // <2>
 // end::snippet[]
         ));
     }
 }
 ----
 <1> Creates a `TextField` component with a label prompting the user for their name.
-<2> Displays a notification with a personalized greeting message.
+<2> Adds a new `Span` with a personalized greeting message to the view.
 
 Now the browser view should look like this:
 
 [.device]
 image::images/third-view.png[The Vaadin view with an input field and personalized greeting]
 
-Enter your name in the text field and click the button. The notification will greet you using the name you provided.
+Enter your name in the text field and click the button. The added paragraph greets you using the name you provided.
 
 .What about input sanitization and escaping?
 [IMPORTANT]
 Vaadin takes care of input sanitization and escaping to prevent security vulnerabilities like script injection. Try to enter HTML or JavaScript code in the text field and observe that it is treated as plain text in the notification.
+
+
+== Update a Component
+
+The problem with the current implementation is that each time you click the button, a new text is added. Instead, you want to add a single `Span` and update its content on every click. Modify the `MainView` class as follows:
+
+.MainView.java
+[source,java]
+----
+package com.example;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route
+@PageTitle("Hello, Vaadin!")
+public class MainView extends VerticalLayout {
+    public MainView() {
+        add(new H1("Hello, Vaadin!"));
+        var nameField = new TextField("What is your name?");
+        add(nameField);
+// tag::snippet[]
+        var greeting = new Span(); // <1>
+        add(greeting);
+// end::snippet[]
+        add(new Button("Say Hello", event -> 
+// tag::snippet[]
+            greeting.setText("Hello, %s!".formatted(nameField.getValue())) // <2>
+// end::snippet[]
+        ));
+    }
+}
+----
+<1> Creates a `Span` component to hold the greeting message and adds it to the view above the button.
+<2> Updates the text of the existing `Span` instead of adding a new one.
+
+If you now try the application again, you'll see that there is some extra space between the text field and the button:
+
+[.device]
+image::images/fourth-view.png[The Vaadin view with a button to generate a QR code]
+
+This is because the `Span` component is initially empty but still occupies space in the layout. You can fix that by hiding the `Span` when it has no content. Update the code as follows:
+
+.MainView.java
+[source,java]
+----
+package com.example;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route
+@PageTitle("Hello, Vaadin!")
+public class MainView extends VerticalLayout {
+    public MainView() {
+        add(new H1("Hello, Vaadin!"));
+        var nameField = new TextField("What is your name?");
+        add(nameField);
+        var greeting = new Span();
+// tag::snippet[]        
+        greeting.setVisible(false); // <1>
+// end::snippet[]
+        add(greeting);
+// tag::snippet[]
+        add(new Button("Say Hello", event -> {
+            greeting.setText("Hello, %s!".formatted(nameField.getValue()));
+            greeting.setVisible(!nameField.isEmpty()); // <2>
+        }));
+// end::snippet[]
+    }
+}
+----
+<1> Hides the `Span` component initially since it has no content.
+<2> Sets the visibility of the `Span` based on whether the `TextField` is empty or not.
+
+If you now enter your name and click the button, you'll see that the greeting message updates in place each time you click the button. If you clear the text field and click the button, the greeting message disappears and no extra space is occupied.
 
 
 == Call a Java Library
@@ -217,7 +303,7 @@ import com.vaadin.flow.component.html.H1;
 // tag::snippet[]
 import com.vaadin.flow.component.html.Image;
 // end::snippet[]
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
@@ -234,9 +320,13 @@ public class MainView extends VerticalLayout {
         add(new H1("Hello, Vaadin!"));
         var nameField = new TextField("What is your name?");
         add(nameField);
-        add(new Button("Say Hello", event -> 
-            Notification.show("Hello, %s!".formatted(nameField.getValue()))
-        ));
+        var greeting = new Span();
+        greeting.setVisible(false);
+        add(greeting);
+        add(new Button("Say Hello", event -> {
+            greeting.setText("Hello, %s!".formatted(nameField.getValue()));
+            greeting.setVisible(!nameField.isEmpty());
+        }));
 // tag::snippet[]
         var qrImage = new Image();
         add(new Button("Generate QR Code", event -> 
@@ -268,7 +358,7 @@ public class MainView extends VerticalLayout {
 Because you have added new dependencies to the project, you have to restart the application for the changes to take effect. After restarting, enter a name and click the [guibutton]*Generate QR Code* button. A QR code representing the entered name will be displayed below the button:
 
 [.device]
-image::images/fourth-view.png[The Vaadin view with a button to generate a QR code]
+image::images/fifth-view.png[The Vaadin view with a button to generate a QR code]
 
 Having access to the entire Java ecosystem allows you to leverage existing libraries and tools in your Vaadin applications, making development faster and easier.
 
