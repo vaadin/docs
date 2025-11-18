@@ -1,0 +1,332 @@
+---
+title: Basic Features
+page-title: How to implement basic UI features in Vaadin
+description: Common features available in all Vaadin components.
+meta-description: Learn the essentials of creating and managing basic UI features in Vaadin applications.
+order: 10
+---
+
+
+= Basic Component Features
+:toclevels: 2
+
+All Vaadin components extend the [classname]`com.vaadin.flow.component.Component` base class. It provides the following basic features:
+
+
+== Setting Id
+
+You can set an `Id` for any component. The `Id` is passed to the client side as the `id` of the corresponding element. However, an `Id` must be unique within the page, as it can be used to select the element in JavaScript code or CSS rules.
+
+*Example*: Setting a component `Id`:
+
+[source,java]
+----
+component.setId("my-component");
+----
+
+
+== Element
+
+Every component is associated with a root `Element`, which is accessible from the [methodname]`component.getElement()` method. 
+
+You can use the Element API to access low-level functionality, such as manipulating attributes, properties, styles, and event listeners. See the <<element-api/#,Element API>> for more information.
+
+
+== Visibility
+
+Invisible components are no longer displayed in the UI, nor do they receive updates from the client side. You make a component invisible by calling [methodname]`component.setVisible(false)`. Transmission of server-side updates resumes when you make the component visible again.
+
+*Example*: Making a component invisible, and visible again:
+
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+// this isn't transmitted to the client side
+label.setText("Changed my label");
+
+Button makeVisible = new Button("Make visible", evt -> {
+    // makes the label visible - only now is the
+    // "Changed my label" text transmitted
+    label.setVisible(true);
+});
+----
+
+If you make a container with child components invisible (e.g., a `Div` or `Vertical/HorizontalLayout`), the child components are also made invisible. No server-side updates are sent to them, and no client updates are received from them. When the container becomes visible again, updates to the children also resume.
+
+
+=== Hiding before Rendering
+
+If you make a component invisible before it's rendered for the first time, the corresponding element in the DOM won't be created. However, the component still exists on the server-side. When you make the component visible again, the corresponding DOM element is created.
+
+*Example*: Making a component invisible before it's rendered:
+
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+
+Div container = new Div();
+// the label isn't transmitted to the client side.
+// The corresponding element is created in the
+// DOM only when it becomes visible.
+container.add(label);
+
+// prints 1 - the server-side structure is preserved
+// regardless of whether the component is visible or not
+System.out.println("Number of children: "
+        + container.getChildren().collect(
+                Collectors.counting()));
+----
+
+
+=== Hiding after Rendering
+
+If you make an already rendered component invisible, the corresponding element is not removed from the DOM. Instead, it is marked with the `hidden` attribute. Furthermore, the element won't receive any updates from the server. Likewise, the server will ignore any RPCs (Remote Procedure Calls) made from the element.
+
+
+
+== Enabled State
+
+Components that allow user interaction, such as `TextField` or `Button`, can have three different enabled states:
+
+* *Enabled*: An enabled component allows the user to interact with it.
+This is the default state.
+
+* *Explicitly disabled*: A component is explicitly disabled when [methodname]`setEnabled(false)` is called directly on it.
+The user can't interact with the component, and communication from the client to the server is blocked.
+
+* *Implicitly disabled*: A component is implicitly disabled when *it's a child of an explicitly disabled container*.
+The component behaves exactly like an explicitly disabled component, except that it's automatically enabled again as soon as it detaches from the disabled container.
+
+=== Explicitly Enabling and Disabling Components
+
+Any component that implements the [interfacename]`HasEnabled` interface can be explicitly enabled or disabled.
+
+*Example*: Disabling a component using the [methodname]`component.setEnabled()` method.
+
+[source,java]
+----
+TextField name = new TextField("Name");
+name.setEnabled(false);
+----
+
+* This disables the `name` field:
+** users can't interact with it, and
+** events from the client to the server are blocked.
+* The server doesn't handle status updates from the component, even if the component is changed manually on the browser, for example by a client-side script or via a developer console.
+
+
+*Example*: Disabling all components in a container by using the same API:
+
+[source,java]
+----
+FormLayout form = new FormLayout();
+
+TextField name = new TextField("Name");
+TextField email = new TextField("E-mail");
+Button submit = new Button("Submit");
+
+form.add(name, email, submit);
+// all children are implicitly disabled
+form.setEnabled(false);
+System.out.println(name.isEnabled()); // prints false
+----
+
+[IMPORTANT]
+There are restrictions when using the enabled state and Lit templates. See <<templates/limitations#,Template Limitations>> for details.
+
+
+=== Implicitly Enabled and Disabled Components
+
+When an implicitly disabled component is detached from a disabled container, it's automatically enabled again.
+Similarly, if an enabled component is attached to a disabled container, it's automatically implicitly disabled.
+
+*Examples*: Implicitly enabled and disabled components
+
+[source,java]
+----
+FormLayout form = new FormLayout();
+form.setEnabled(false); // the entire form is disabled
+
+TextField name = new TextField("Name");
+// prints true, since it isn't attached yet
+System.out.println(name.isEnabled());
+
+Button submit = new Button("Submit");
+// the submit button is explicitly disabled
+submit.setEnabled(false);
+System.out.println(submit.isEnabled()); // prints false
+
+form.add(name, submit); // attaches children
+
+System.out.println(name.isEnabled()); // prints false
+System.out.println(submit.isEnabled()); // prints false
+
+form.remove(name); // the name field gets detached
+System.out.println(name.isEnabled()); // prints true
+
+form.remove(submit); // the submit button gets detached
+
+// prints false, since it was explicitly disabled
+System.out.println(submit.isEnabled());
+----
+
+=== Overriding Default Disabled Behavior
+
+// TODO Edit this section and remove the deprecated Polymer example. Any template-related examples should go into the Templates guide, not here. Keep things as simple as possible.
+
+By default, disabled components don't allow user interaction from the client side.
+However, it's sometimes necessary for complex (composite) components to remain partially functional, even in the disabled state.
+For example, you may want to fully enable a registration form only after a user selects a checkbox to accept a license agreement.
+
+=== Enabling Property Changes
+
+You can override the default disabled behavior by enabling certain client-side Remote Procedure Calls (RPC) that would normally be blocked for disabled components.
+
+The first way to do this is by providing the property that should be synchronized to the server in the [methodname]`addPropertyChangeListener()` call.
+
+*Example*: This Polymer template component controls its own enabled state via the checkbox.
+The checkbox is never disabled, and it enables and disables the component.
+
+[source,java]
+----
+@Tag("registration-form")
+@JsModule("./src/registration-form.js")
+public class RegistrationForm
+        extends PolymerTemplate<TemplateModel>
+        implements HasEnabled {
+
+    @Id
+    private TextField name;
+
+    @Id
+    private TextField email;
+
+    @Id
+    private Button submit;
+
+    @Id
+    private Element enable;
+
+    public RegistrationForm() {
+        enable.addPropertyChangeListener("checked", "checked-changed",
+                this::handleEnabled);
+        setEnabled(false);
+    }
+
+    private void handleEnabled(
+            PropertyChangeEvent event) {
+        setEnabled((Boolean) event.getValue());
+    }
+
+    @EventHandler
+    private void register() {
+        String userName = name.getValue();
+        String userEmail = email.getValue();
+        System.out.println("Register user with name='"
+                + userName
+                + "' and email='" + userEmail + "'");
+    }
+}
+----
+
+Here is its template file:
+
+[source,javascript]
+----
+class RegistrationForm extends PolymerElement {
+
+  static get template() {
+    return html`
+      <vaadin-text-field id="name" value="{{name}}"></vaadin-text-field>
+      <vaadin-text-field id="email" value="{{email}}"></vaadin-text-field>
+      <vaadin-button id="submit" on-click="register">Register</vaadin-button>
+      <vaadin-checkbox
+        id="enable"
+        label="Accept License Agreement"
+      ></vaadin-checkbox>
+    `;
+  }
+
+  static get is() {
+    return 'registration-form';
+  }
+}
+
+customElements.define(RegistrationForm.is, RegistrationForm);
+----
+
+* The checkbox is implicitly disabled if the template (which is its parent) is disabled.
+As a result, no RPC is allowed for the checkbox.
+* The [methodname]`addPropertyChangeListener()` method (with the extra "checked-changed" argument) is used to synchronize the `checked` property.
+
+* The following RPC communications are blocked for the disabled element:
+** Property changes
+** DOM events
+** Event handler methods (annotated with `@EventHandler`).
+For example, the [methodname]`register()` method is an event handler method that's blocked when the component is disabled.
+** Client delegate methods (annotated with `@ClientCallable`)
+
+
+As an alternative, you can use the `@Synchronize` annotation with the `DisabledUpdateMode.ALWAYS` argument value.
+
+*Example*: Using the `@Synchronize` annotation for the property getter in your component.
+
+[source,java]
+----
+@Synchronize(property = "prop", value = "prop-changed",
+             allowUpdates = DisabledUpdateMode.ALWAYS)
+public String getProp() {
+    return getElement().getProperty("prop");
+}
+----
+
+=== Enabling DOM Events
+
+You can enable DOM events in two ways:
+
+. with an [methodname]`addEventListener()` overload method in the `Element` API, or
+. with the `@DomEvent` annotation.
+
+*Example*: Unblocking a DOM event for a disabled element using the [methodname]`addEventListener()` overload method that accepts the `DisabledUpdateMode.ALWAYS` parameter.
+
+[source,java]
+----
+public Notification() {
+    getElement().addEventListener("opened-changed",
+            event -> System.out.println("Opened"))
+      .setDisabledUpdateMode(DisabledUpdateMode.ALWAYS);
+}
+----
+
+*Example*: Unblocking a DOM event for a disabled component using the `@DomEvent` annotation with the parameter value `allowUpdates = DisabledUpdateMode.ALWAYS`:
+
+[source,java]
+----
+@DomEvent(value = "click",
+          allowUpdates = DisabledUpdateMode.ALWAYS)
+public class CustomEvent
+        extends ComponentEvent<Component> {
+}
+----
+
+=== Enabling Server-Handler Methods
+
+If there are server-handler methods annotated with `@ClientCallable` or `@EventHandler`, you can unblock them for disabled components by specifying `DisabledUpdateMode.ALWAYS` as a value.
+
+*Example*: Specifying `DisabledUpdateMode.ALWAYS`
+
+[source,java]
+----
+@EventHandler(DisabledUpdateMode.ALWAYS)
+private void eventHandler() {
+}
+
+@ClientCallable(DisabledUpdateMode.ALWAYS)
+private void clientRequest() {
+}
+----
+
+
+[discussion-id]`4DE87AF2-2DFA-49FE-81FD-EAFF02FD5644`
