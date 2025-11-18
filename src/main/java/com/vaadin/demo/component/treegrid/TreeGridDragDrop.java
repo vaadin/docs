@@ -6,9 +6,9 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.treegrid.TreeGrid;
-import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider.HierarchyFormat;
 import com.vaadin.flow.router.Route;
 
 import java.util.Collections;
@@ -39,13 +39,12 @@ public class TreeGridDragDrop extends Div {
         TreeData<Person> treeData = new TreeData<>();
         treeData.addItems(managers, this::getStaff);
 
-        // For drag-and-drop use cases, it is recommended to use data providers that
-        // return hierarchical data in HierarchyFormat.FLATTENED. This format allows
-        // TreeGrid to maintain the scroll position after refreshAll(), avoiding the
-        // scroll jumps that can otherwise occur with HierarchyFormat.NESTED (default)
-        // which requires each hierarchy level to be requested separately, on demand.
+        // To preserve scroll position after refreshAll(), configure TreeDataProvider
+        // to return data in HierarchyFormat.FLATTENED – it supports this format out
+        // of the box. For custom data providers, you will need to implement this format
+        // manually, see the HierarchyFormat enum JavaDoc for guidance.
         TreeDataProvider<Person> treeDataProvider = new TreeDataProvider<>(
-                treeData , HierarchicalDataProvider.HierarchyFormat.FLATTENED);
+                treeData, HierarchyFormat.FLATTENED);
         treeGrid.setDataProvider(treeDataProvider);
 
         // Enable drag-and-drop

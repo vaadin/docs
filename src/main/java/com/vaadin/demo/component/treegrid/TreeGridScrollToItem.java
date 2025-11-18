@@ -6,7 +6,6 @@ import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.treegrid.TreeGrid;
-import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
@@ -22,8 +21,7 @@ public class TreeGridScrollToItem extends Div {
         TreeData<Person> treeData = new TreeData<>();
         treeData.addItems(DataService.getManagers(),
                 manager -> DataService.getPeople(manager.getId()));
-        treeGrid.setDataProvider(new TreeDataProvider<>(treeData,
-                HierarchicalDataProvider.HierarchyFormat.FLATTENED));
+        treeGrid.setDataProvider(new TreeDataProvider<>(treeData));
         treeGrid.addHierarchyColumn(Person::getFullName).setWidth("300px")
                 .setFlexGrow(0).setHeader("Full name");
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
