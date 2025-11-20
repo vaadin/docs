@@ -35,7 +35,7 @@ public class TextField extends Component {
 You can use predefined constants in the `@Tag` annotation. For example, the `@Tag("input")` annotation is equivalent to `@Tag(Tag.INPUT)`. Most tag names have a constant, but not all.
 
 
-=== Multiple Elements
+=== Using Multiple Elements
 
 A component can consist of multiple elements in the DOM tree. In this case, the root element is still defined using the `@Tag` annotation, and other elements are created and appended to the root element using the Element API.
 
@@ -53,6 +53,76 @@ public class TextField extends Component {
         getElement().appendChild(labelElement, inputElement);
     }
 }
+----
+
+This generates the following DOM-tree structure in the browser:
+
+[source,html]
+----
+<div>
+    <label></label>
+    <input>
+</div>
+----
+
+
+=== Extending a Component
+
+If you extend an existing component, the root element is inherited from the parent component class. You can still use the Element API to manipulate the root element or create and append child elements. However, you don't need to use the `@Tag` annotation in this case.
+
+*Example*: Extending the `TextField` component created above:
+
+[source,java]
+----
+public class CustomTextField extends TextField {
+
+    private final Element errorElement = new Element("span");
+
+    public CustomTextField() {
+        super();
+        getElement().appendChild(errorElement);
+    }
+}
+----
+
+This generates the following DOM-tree structure in the browser:
+
+[source,html]
+----
+<div>
+    <label></label>
+    <input>
+    <span></span>
+</div>
+----
+
+
+=== Composite Components
+
+When you create a new component by combining existing components, you should extend the `Composite<T>` class, where `T` is the type of the root component. This does not affect the DOM structure, but prevents users of your component from accessing the API of the root component directly.
+
+*Example*: Creating a `TextField` component with `Input` and `NativeLabel` components inside a `Div` root component:
+
+[source,java]
+----
+public class TextField extends Composite<Div> {
+
+    private final NativeLabel label;
+    private final Input input;
+
+    public TextField(String labelText, String value) {
+        label = new NativeLabel();
+        label.setText(labelText);
+        input = new Input();
+        input.setValue(value);
+
+        getContent().add(label, input);
+    }
+}
+
+// In later code:
+TextField textField = new TextField("Name", "John Doe");
+// textField does not expose any of the methods of Div.
 ----
 
 This generates the following DOM-tree structure in the browser:
@@ -97,6 +167,73 @@ public Registration addValueChangeListener(
 }
 
 ----
+
+
+== Lifecycle Callbacks
+
+The topmost component in any component hierarchy is the `UI` instance. The `UI` may represent an entire browser window (or tab), or some part of an HTML page where a Vaadin application is embedded.
+
+=== Attach to UI
+
+Whenever a component is added to a `UI`, either directly or indirectly through another component, it is considered to be *attached* to the `UI`. When a component is removed from the `UI`, it is considered to be *detached* from the `UI`. 
+
+The `Component` class provides an `onAttach()` method that is called when the component has been attached to a `UI`. Override this method to perform initialization that requires the component to be attached. The default implementation is empty, so you don't need to call `super.onAttach()` unless you are extending another component class that requires it.
+
+*Example*: Getting a session attribute in the [methodname]`onAttach()` method:
+
+[source,java]
+----
+@Tag("div")
+public class UserNameLabel extends Component {
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        // This assumes the username has been stored in the session after login
+        String userName = (String) attachEvent.getSession().getAttribute("username");
+        getElement().setText("Hello %s, weclome back!".formatted(userName));
+    }
+}
+----
+
+You can also use the `component.addAttachListener()` method to register an attach listener instead of overriding the [methodname]`onAttach()` method. The listener is invoked after the [methodname]`onAttach()` method. This is useful when you want to add attach behavior to an existing component without creating a subclass.
+
+
+=== Detach from UI
+
+The `Component` class also provides a [methodname]`onDetach()` method that is called right before the component is detached from the `UI`. Override this method to perform cleanup, for example to release resources that were acquired in the [methodname]`onAttach()` method. The default implementation is empty, so you don't need to call [methodname]`super.onDetach()` unless you are extending another component class that requires it.
+
+*Example*: Subscribing to an event bus in the [methodname]`onAttach()` method and unsubscribing in the [methodname]`onDetach()` method:
+[source,java]
+----
+@Tag("div")
+public class ShoppingCartSummaryLabel extends Component {
+
+    private final Consumer<EventObject> eventHandler = this::onCartSummaryUpdate;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var eventBus = attachEvent.getSession().getAttribute(ShopEventBus.class);
+        eventBus.register(eventHandler);
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        var eventBus = detachEvent.getSession().getAttribute(ShopEventBus.class);
+        eventBus.unregister(eventHandler);
+    }
+
+    private void onCartSummaryUpdate(EventObject event) {
+        // update cart summary ...
+    }
+}
+
+interface ShopEventBus {
+    void register(Consumer<EventObject> eventHandler);
+    void unregister(Consumer<EventObject> eventHandler);
+}
+----
+
+You can also use the `component.addDetachListener()` method to register a detach listener instead of overriding the [methodname]`onDetach()` method. The listener is invoked after the [methodname]`onDetach()` method. This is useful when you want to add detach behavior to an existing component without creating a subclass.
 
 
 == Setting Id
