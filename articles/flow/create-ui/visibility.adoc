@@ -1,0 +1,62 @@
+---
+title: Visibility
+page-title: Component Visibility in Vaadin
+description: How component visibility works in Vaadin.
+meta-description: Learn how to manage component visibility in Vaadin applications and its effects on UI rendering and updates.
+order: 21
+---
+
+
+= Component Visibility
+
+Invisible components are no longer displayed in the UI, nor do they receive updates from the client side. You make a component invisible by calling [methodname]`Component.setVisible(false)`. Transmission of server-side updates resumes when you make the component visible again.
+
+*Example*: Making a component invisible, and visible again:
+
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+// this isn't transmitted to the client side
+label.setText("Changed my label");
+
+Button makeVisible = new Button("Make visible", evt -> {
+    // makes the label visible - only now is the
+    // "Changed my label" text transmitted
+    label.setVisible(true);
+});
+----
+
+If you make a container with child components invisible (e.g., a `Div` or `Vertical/HorizontalLayout`), the child components are also made invisible. No server-side updates are sent to them, and no client updates are received from them. When the container becomes visible again, updates to the children also resume.
+
+
+== Hiding before Rendering
+
+If you make a component invisible before it's rendered for the first time, the corresponding element in the DOM won't be created. However, the component still exists on the server-side. When you make the component visible again, the corresponding DOM element is created.
+
+*Example*: Making a component invisible before it's rendered:
+
+[source,java]
+----
+Span label = new Span("My label");
+label.setVisible(false);
+
+Div container = new Div();
+// the label isn't transmitted to the client side.
+// The corresponding element is created in the
+// DOM only when it becomes visible.
+container.add(label);
+
+// prints 1 - the server-side structure is preserved
+// regardless of whether the component is visible or not
+System.out.println("Number of children: "
+        + container.getChildren().collect(
+                Collectors.counting()));
+----
+
+
+== Hiding after Rendering
+
+If you make an already rendered component invisible, the corresponding element is not removed from the DOM. Instead, it is marked with the `hidden` attribute. Furthermore, the element won't receive any updates from the server. Likewise, the server will ignore any RPCs (Remote Procedure Calls) made from the element.
+
+
