@@ -1,8 +1,8 @@
 ---
-title: Properties pass:[&] attributes
-page-title: How to manage properties and attributes in Vaadin components
+title: Properties pass:[&] Attributes
+page-title: Managing DOM properties and attributes in Vaadin components
 description: Get and set DOM properties and attributes.
-meta-description: Learn how to use element APIs for managing properties and attributes in Vaadin components.
+meta-description: Learn how to use the Element API to manage client-side properties and attributes from a Vaadin component.
 order: 1
 ---
 
@@ -11,9 +11,6 @@ order: 1
 
 The Element API contains methods to update and query parts of an element. You can use the Element API to change property and attribute values for server-side elements.
 
-.Transferring data to the server
-[NOTE]
-By default, values updated in the browser aren't sent to the server. See <<user-input#,Retrieving User Input>> for how to transfer data to the server.
 
 == About Attributes
 
@@ -21,7 +18,7 @@ Attributes are used mainly for the initial configuration of elements.
 
 Attribute values are always stored as strings.
 
-*Example*: Setting attributes for the `nameField` element.
+*Example*: Setting attributes for the `nameField` element:
 
 [source,java]
 ----
@@ -44,8 +41,7 @@ You can also retrieve and manipulate attributes after they have been set.
 [source,java]
 ----
 // "John Doe"
-String placeholder = nameField
-        .getAttribute("placeholder");
+String placeholder = nameField.getAttribute("placeholder");
 
 // true
 nameField.hasAttribute("autofocus");
@@ -62,28 +58,29 @@ Properties are used mainly to dynamically change the settings of an element afte
 
 Any JavaScript value can be used as a property value in the browser.
 
-You can use different variations of the [methodname]`setProperty()` method to set a property value as a `String`, `boolean`, `double` or `JsonValue`.
+You can use different variations of the [methodname]`element.setProperty()` method to set a property value as a `String`, `boolean`, `double` or `JsonValue`.
 
-*Example*: Setting a property value as a `double`.
+*Example*: Setting a property value as a `double`:
 [source,java]
 ----
 Element element = ElementFactory.createInput();
-element.setProperty("value", "42.2");
+element.setProperty("value", 42.2);
 ----
 
-Similarly, you can use different variations of the [methodname]`getProperty()` method to retrieve the value of a property as a `String`, `boolean`, `double` or `JsonValue`.
+Similarly, you can use different variations of the [methodname]`element.getProperty()` method to retrieve the value of a property as a `String`, `boolean`, `double` or `JsonValue`.
 
 If you retrieve the value of a property as a different type from that used to set it, JavaScript type coercion rules are used to convert the value.
 For example, a property set as a non-empty `String` results as `true` if fetched as a `boolean`.
 
-*Example*: Converting retrieved value types.
+*Example*: Converting retrieved value types:
 
 [source,java]
 ----
+// Assuming the "value" property is 42.2:
+
 // true, since any non-empty string is
 // true in JavaScript
-boolean helloBoolean =
-        element.getProperty("value", true);
+boolean helloBoolean = element.getProperty("value", true);
 
 // 42, string is parsed to a JS number and
 // truncated to an int
@@ -109,18 +106,17 @@ pass:[<!-- vale Vale.Spelling = NO -->]
 pass:[<!-- vale Vale.Spelling = YES -->]
 pass:[<!-- vale Vaadin.HeadingCase = YES -->]
 
-You can set an element's `textContent` property using the [methodname]`setText()` method.
+You can set an element's `textContent` property using the [methodname]`element.setText()` method.
 This removes all the children of the element and replaces them with a single text node with the given value.
 
 The [interfacename]`ElementFactory` interface provides helpers that you can use to create an element with a given text content.
 
-*Example*: Using the [methodname]`createSpan()` and [methodname]`createDiv()` helper methods with the [methodname]`setText()` method.
+*Example*: Using the [methodname]`createSpan()` and [methodname]`createDiv()` helper methods with the [methodname]`setText()` method:
 
 [source,java]
 ----
 // <div>Hello world</div>
-Element element = ElementFactory
-        .createDiv("Hello world");
+Element element = ElementFactory.createDiv("Hello world");
 
 // <div>Hello world<span></span></div>
 element.appendChild(ElementFactory.createSpan());
@@ -131,17 +127,16 @@ element.setText("Replacement text");
 
 To retrieve the text of an element, you can use the:
 
-* [methodname]`getText()` method to return the text in the element itself. Text in child elements is ignored.
-* [methodname]`getTextRecursively()` method to return the text of the entire element tree, by recursively concatenating the text from all child elements.
+* [methodname]`element.getText()` method to return the text in the element itself. Text in child elements is ignored.
+* [methodname]`element.getTextRecursively()` method to return the text of the entire element tree, by recursively concatenating the text from all child elements.
 
-*Example*: Using the [methodname]`getText()` and [methodname]`getTextRecursively()` methods.
+*Example*: Using the [methodname]`getText()` and [methodname]`getTextRecursively()` methods:
 
 [source,java]
 ----
 element.setText("Welcome back ");
 
-Element name = ElementFactory
-        .createStrong("Rudolph Reindeer");
+Element name = ElementFactory.createStrong("Rudolph Reindeer");
 // <div>Welcome back <strong>Rudolph
 // Reindeer</strong></div>
 element.appendChild(name);
@@ -153,5 +148,59 @@ element.getText();
 
 ----
 
+
+== Synchronizing Properties to the Server
+
+By default, values updated in the browser aren't sent to the server. To synchronize a property, use the [methodname]`element.addPropertyChangeListener()` method. The method takes three parameters:
+
+. the name of the property to synchronize;
+. the name of the DOM event that triggers the synchronization; and
+. a listener that is invoked when the property value changes.
+
+After the property has been synchronized to the server, you can retrieve its value using the [methodname]`getProperty()` method. If you don't need to react to the property change directly when it occurs, you can use a NO-OP listener.
+
+*Example:* Using a NO-OP listener to synchronize the `value` property of a text input element whenever the `change` event occurs:
+
+[source,java]
+----
+textInput.addPropertyChangeListener("value", "change", e -> {});
+----
+
+[NOTE]
+As an alternative, you can use the [methodname]`addEventData()` method to transfer the value from the input to the server.
+See <<event-listener#,Listening to Element Events>> for more information.
+
+=== Example: Retrieving User Input
+
+This example demonstrates how to use the Element API to retrieve user input. The example adds a text input field that allows the user to enter their name.
+
+. Create a text input element:
++
+[source,java]
+----
+Element textInput = ElementFactory.createInput();
+textInput.setAttribute("placeholder", "Enter your name");
+----
+
+. Transfer the value to the server by asking the client to update the server-side input element every time the value changes in the browser:
++
+[source,java]
+----
+textInput.addPropertyChangeListener("value", "change", e -> {});
+----
+
+. Retrieve the synchronized properties using [methodname]`element.getProperty()`:
++
+[source,java]
+----
+button.addEventListener("click", e -> {
+    String responseText = "Hello " + textInput.getProperty("value");
+    Element response = ElementFactory.createDiv(responseText);
+    getElement().appendChild(response);
+});
+----
+
+[NOTE]
+The `value` property of the `TextInput` element returns `null` if the property wasn't previously set and the user hasn't typed text into the field.
 
 [discussion-id]`867075C4-D3EB-4AE2-B369-51E678673A7A`
