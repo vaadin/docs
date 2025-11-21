@@ -43,7 +43,7 @@ public class SelectPresentation extends Div {
 
             Div profession = new Div();
             profession.setText(person.getProfession());
-            profession.getStyle().set("font-size", "var(--lumo-font-size-s)");
+            profession.getStyle().set("font-size", "0.875rem");
             profession.getStyle().set("color",
                     "var(--lumo-secondary-text-color)");
             info.add(profession);

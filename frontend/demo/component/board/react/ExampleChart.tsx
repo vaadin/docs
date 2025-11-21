@@ -7,7 +7,7 @@ import { getViewEvents } from 'Frontend/demo/domain/DataService';
 import type ViewEvent from 'Frontend/generated/com/vaadin/demo/domain/ViewEvent';
 
 const titleStyle = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   fontWeight: 700,
   marginBlockEnd: 'var(--lumo-space-m)',
 };

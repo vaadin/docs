@@ -56,7 +56,7 @@ public class SelectCustomRendererLabel extends Div {
             profession.setText(person.getProfession());
             profession.getStyle()
                     .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "var(--lumo-font-size-s)");
+                    .set("font-size", "0.875rem");
             info.add(profession);
 
             wrapper.add(image, info);
