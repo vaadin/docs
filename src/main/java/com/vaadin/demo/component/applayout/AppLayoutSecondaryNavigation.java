@@ -14,7 +14,6 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-secondary-navigation")
 // tag::snippet[]
@@ -30,7 +29,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(views);
-        scroller.setClassName(LumoUtility.Padding.SMALL);
+        scroller.getStyle().set("padding", "0.5rem");
 
         DrawerToggle toggle = new DrawerToggle();
 

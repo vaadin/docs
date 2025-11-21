@@ -50,7 +50,7 @@ function Example() {
       <h1 style={h1Style} slot="drawer">
         MyApp
       </h1>
-      <Scroller slot="drawer" className="p-s">
+      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem>
             <Icon icon="vaadin:dashboard" slot="prefix" />
