@@ -108,7 +108,7 @@ export class Example extends LitElement {
               Billing address
               <vaadin-vertical-layout
                 .hidden="${this.openedPanelIndex === 1}"
-                style="font-size: 0.875rem;; margin-left: auto"
+                style="font-size: 0.875rem; margin-left: auto"
               >
                 <span>${this.personBinder.value.address?.street}</span>
                 <span>
