@@ -35,7 +35,7 @@ function Example() {
         MyApp
       </h1>
 
-      <Scroller slot="drawer" className="p-s">
+      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />
