@@ -1,13 +1,14 @@
 ---
 title: Enabled State
-page-title: How to manage the enabled state of UI elements | Vaadin
-description: Components that allow user interaction can have three different enabled states.
+page-title: How to manage the enabled state of UI components | Vaadin
+description: How enabling and disabling UI components affects user interaction and server communication in Vaadin applications.
 meta-description: Manage the enabled state of user interface components in Vaadin applications for better interactivity.
 order: 20
 ---
 
 
 = Component Enabled State
+:toclevels: 2
 
 Components that allow user interaction, such as `TextField` or `Button`, can have three different enabled states:
 
@@ -17,26 +18,48 @@ This is the default state.
 * *Explicitly disabled*: A component is explicitly disabled when [methodname]`setEnabled(false)` is called directly on it.
 The user can't interact with the component, and communication from the client to the server is blocked.
 
-* *Implicitly disabled*: A component is implicitly disabled when it's a child of an explicitly disabled container.
+* *Implicitly disabled*: A component is implicitly disabled when *it's a child of an explicitly disabled container*.
 The component behaves exactly like an explicitly disabled component, except that it's automatically enabled again as soon as it detaches from the disabled container.
+
 
 == Explicitly Enabling and Disabling Components
 
 Any component that implements the [interfacename]`HasEnabled` interface can be explicitly enabled or disabled.
 
-*Example*: Disabling a component using the [methodname]`component.setEnabled()` method.
+*Example*: Disabling a component using the [methodname]`component.setEnabled()` method:
 
 [source,java]
 ----
 TextField name = new TextField("Name");
 name.setEnabled(false);
+// Users can no longer interact with the name field.
+// The server doesn't handle status updates or events from the component, 
+// even if the component is changed manually in the browser 
+// (for example by a client-side script or via a developer console).
 ----
 
-* This disables the `name` field:
-** users can't interact with it, and
-** events from the client to the server are blocked.
-* The server doesn't handle status updates from the component, even if the component is changed manually on the browser, for example by a client-side script or via a developer console.
+[IMPORTANT]
+There are restrictions when using the enabled state and Lit templates. See <<templates/limitations#,Template Limitations>> for details.
 
+By default, disabling a component adds a `disabled` property to the client HTML element. You can change this behavior by overriding the [methodname]`Component:onEnabledStateChanged(boolean)` method.
+
+*Example*: Overriding the default disabled behavior:
+
+[source,java]
+----
+@Override
+public void onEnabledStateChanged(boolean enabled) {
+    setDisabled(!enabled); // <1>
+    refreshButtons(); // <2>
+}
+----
+<1> Calls a custom method that marks the component as disabled in a different way.
+<2> Calls a custom method that refreshes the buttons in the component.
+
+
+=== Component Container Children
+
+When you disable a container component, all child components are automatically implicitly disabled.
 
 *Example*: Disabling all components in a container by using the same API:
 
@@ -54,21 +77,29 @@ form.setEnabled(false);
 System.out.println(name.isEnabled()); // prints false
 ----
 
-[NOTE]
-Server-side components mapped via `@Id` don't inherit the template element hierarchy.
-As a consequence, disabling a mapped component doesn't disable other mapped components whose elements are children of the disabled component's element in the template.
-See <<{articles}/flow/create-ui/templates/limitations#, Mapped Components Limitations>> for details.
+If a child component doesn't implement `HasEnabled`, it is still disabled from the server's point of view. However, visually, it does not appear disabled. Fix this by overriding the [methodname]`Component.onEnabledStateChanged()` method. In this case, it is important to call [methodname]`super.onEnabledStateChanged(enabled)` as it contains common logic that applies to all components.
 
-[NOTE]
-LitTemplate doesn't support the `disabled` attribute on `@Id` mapped components.
-See <<{articles}/flow/create-ui/templates/limitations#, Mapped Components Limitations>> for details.
+*Example*: Setting a child component as `disabled` by overriding the [methodname]`onEnabledStateChanged()` method.
+
+[source,java]
+----
+@Override
+public void onEnabledStateChanged(boolean enabled) {
+    super.onEnabledStateChanged(enabled);
+    if (enabled) {
+        childElement.removeAttribute("disabled");
+    } else {
+        childElement.setAttribute("disabled", true);
+    }
+}
+----
 
 == Implicitly Enabled and Disabled Components
 
 When an implicitly disabled component is detached from a disabled container, it's automatically enabled again.
 Similarly, if an enabled component is attached to a disabled container, it's automatically implicitly disabled.
 
-*Examples*: Implicitly enabled and disabled components
+*Example*: Implicitly enabled and disabled components
 
 [source,java]
 ----
@@ -100,105 +131,32 @@ System.out.println(submit.isEnabled());
 
 == Overriding Default Disabled Behavior
 
-By default, disabled components don't allow user interaction from the client side.
-However, it's sometimes necessary for complex (composite) components to remain partially functional, even in the disabled state.
-For example, you may want to fully enable a registration form only after a user selects a checkbox to accept a license agreement.
+By default, disabled components are effectively unusable: no user interaction is allowed on the client side, and server-side communication is blocked. However, it's sometimes necessary for complex components to remain partially functional, even in the disabled state.
 
-=== Enabling Property Changes
+=== Allowing Property Changes
 
-You can override the default disabled behavior by enabling certain client-side Remote Procedure Calls (RPC) that would normally be blocked for disabled components.
+By default, the server ignores property change events from disabled components. You can override this behavior in two ways:
 
-The first way to do this is by providing the property that should be synchronized to the server in the [methodname]`addPropertyChangeListener()` call.
+1. with a call to [methodname]`addPropertyChangeListener()` on the disabled `Element`, or
+2. with the `@Synchronize` annotation.
 
-*Example*: This Polymer template component controls its own enabled state via the checkbox.
-The checkbox is never disabled, and it enables and disables the component.
+*Example*: Using `addPropertyChangeListener()` to synchronize the `prop` property of a disabled component:
 
 [source,java]
 ----
-@Tag("registration-form")
-@JsModule("./src/registration-form.js")
-public class RegistrationForm
-        extends PolymerTemplate<TemplateModel>
-        implements HasEnabled {
-
-    @Id
-    private TextField name;
-
-    @Id
-    private TextField email;
-
-    @Id
-    private Button submit;
-
-    @Id
-    private Element enable;
-
-    public RegistrationForm() {
-        enable.addPropertyChangeListener("checked", "checked-changed",
-                this::handleEnabled);
-        setEnabled(false);
-    }
-
-    private void handleEnabled(
-            PropertyChangeEvent event) {
-        setEnabled((Boolean) event.getValue());
-    }
-
-    @EventHandler
-    private void register() {
-        String userName = name.getValue();
-        String userEmail = email.getValue();
-        System.out.println("Register user with name='"
-                + userName
-                + "' and email='" + userEmail + "'");
-    }
-}
+Element element = myDisabledComponent.getElement();
+element.addPropertyChangeListener("prop", "prop-changed", e -> {
+    // This code is executed when the 'prop-changed' event occurs, even if the
+    // component is disabled.
+});
 ----
 
-Here is its template file:
-
-[source,javascript]
-----
-class RegistrationForm extends PolymerElement {
-
-  static get template() {
-    return html`
-      <vaadin-text-field id="name" value="{{name}}"></vaadin-text-field>
-      <vaadin-text-field id="email" value="{{email}}"></vaadin-text-field>
-      <vaadin-button id="submit" on-click="register">Register</vaadin-button>
-      <vaadin-checkbox
-        id="enable"
-        label="Accept License Agreement"
-      ></vaadin-checkbox>
-    `;
-  }
-
-  static get is() {
-    return 'registration-form';
-  }
-}
-
-customElements.define(RegistrationForm.is, RegistrationForm);
-----
-
-* The checkbox is implicitly disabled if the template (which is its parent) is disabled.
-As a result, no RPC is allowed for the checkbox.
-* The [methodname]`addPropertyChangeListener()` method (with the extra "checked-changed" argument) is used to synchronize the `checked` property.
-
-* The following RPC communications are blocked for the disabled element:
-** Property changes
-** DOM events
-** Event handler methods (annotated with `@EventHandler`).
-For example, the [methodname]`register()` method is an event handler method that's blocked when the component is disabled.
-** Client delegate methods (annotated with `@ClientCallable`)
-
-
-As an alternative, you can use the `@Synchronize` annotation with the `DisabledUpdateMode.ALWAYS` argument value.
-
-*Example*: Using the `@Synchronize` annotation for the property getter in your component.
+*Example*: Using the `@Synchronize` annotation to synchronize the `prop` property of a disabled component:
 
 [source,java]
 ----
+// Inside the disabled component class:
+
 @Synchronize(property = "prop", value = "prop-changed",
              allowUpdates = DisabledUpdateMode.ALWAYS)
 public String getProp() {
@@ -206,14 +164,15 @@ public String getProp() {
 }
 ----
 
-=== Enabling DOM Events
 
-You can enable DOM events in two ways:
+=== Allowing DOM Events
 
-. with an [methodname]`addEventListener()` overload method in the `Element` API, or
+You can enable DOM events from disabled components in two ways:
+
+. by specifying the `disabledUpdateMode` of the [classname]`DomListenerRegistration` returned by a call to [methodname]`addEventListener()` on the disabled `Element`, or
 . with the `@DomEvent` annotation.
 
-*Example*: Unblocking a DOM event for a disabled element using the [methodname]`addEventListener()` overload method that accepts the `DisabledUpdateMode.ALWAYS` parameter.
+*Example*: Unblocking a DOM event for a disabled element using the [methodname]`addEventListener()` method:
 
 [source,java]
 ----
@@ -224,7 +183,7 @@ public Notification() {
 }
 ----
 
-*Example*: Unblocking a DOM event for a disabled component using the `@DomEvent` annotation with the parameter value `allowUpdates = DisabledUpdateMode.ALWAYS`:
+*Example*: Unblocking a DOM event for a disabled component using the `@DomEvent` annotation:
 
 [source,java]
 ----
@@ -235,9 +194,9 @@ public class CustomEvent
 }
 ----
 
-=== Enabling Server-Handler Methods
+=== Allowing Remote Procedure Calls
 
-If there are server-handler methods annotated with `@ClientCallable` or `@EventHandler`, you can unblock them for disabled components by specifying `DisabledUpdateMode.ALWAYS` as a value.
+If there are Java methods annotated with `@ClientCallable` or `@EventHandler`, you can unblock them for disabled components by specifying `DisabledUpdateMode.ALWAYS` as a value.
 
 *Example*: Specifying `DisabledUpdateMode.ALWAYS`
 
