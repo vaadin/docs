@@ -42,7 +42,7 @@ export class Example extends LitElement {
                       <img
                         src="${person.pictureUrl}"
                         alt="Portrait of ${formatPersonFullName(person)}"
-                        style="width: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+                        style="width: 2.25rem; margin-right: var(--lumo-space-s);"
                       />
                       <div>
                         ${formatPersonFullName(person)}

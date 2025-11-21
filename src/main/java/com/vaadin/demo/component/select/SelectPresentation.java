@@ -35,7 +35,7 @@ public class SelectPresentation extends Div {
             image.setSrc(person.getPictureUrl());
             image.setAlt("Portrait of " + person.getFirstName() + " "
                     + person.getLastName());
-            image.setWidth("var(--lumo-size-m)");
+            image.setWidth("2.25rem");
             image.getStyle().set("margin-right", "var(--lumo-space-s)");
 
             Div info = new Div();

@@ -26,7 +26,7 @@ export class DetailContent extends LitElement {
     label {
       width: 6rem;
       background: currentColor;
-      border-radius: calc(var(--lumo-size-m) / 2);
+      border-radius: calc(2.25rem / 2);
       height: var(--lumo-font-size-xxs);
     }
 

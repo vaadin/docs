@@ -18,7 +18,7 @@ export class Example extends LitElement {
   static override styles = css`
     h1 {
       font-size: 1.125rem;
-      line-height: var(--lumo-size-l);
+      line-height: 2.75rem;
       margin: 0 var(--lumo-space-m);
     }
 
