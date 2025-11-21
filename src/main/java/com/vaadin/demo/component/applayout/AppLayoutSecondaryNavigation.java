@@ -22,7 +22,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
     public AppLayoutSecondaryNavigation() {
         H1 appTitle = new H1("MyApp");
         appTitle.getStyle().set("font-size", "1.125rem")
-                .set("line-height", "var(--lumo-size-l)")
+                .set("line-height", "2.75rem")
                 .set("margin", "0 var(--lumo-space-m)");
 
         SideNav views = getPrimaryNavigation();
