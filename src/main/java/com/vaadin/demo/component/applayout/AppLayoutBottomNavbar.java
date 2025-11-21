@@ -44,7 +44,6 @@ public class AppLayoutBottomNavbar extends AppLayout {
         navigation.setWidthFull();
         navigation
                 .setJustifyContentMode(FlexComponent.JustifyContentMode.EVENLY);
-        navigation.setAlignSelf(FlexComponent.Alignment.STRETCH);
         navigation.setPadding(false);
         navigation.setSpacing(false);
         navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),

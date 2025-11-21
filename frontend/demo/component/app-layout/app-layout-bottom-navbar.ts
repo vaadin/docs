@@ -41,7 +41,7 @@ export class Example extends LitElement {
         <h1 slot="navbar">MyApp</h1>
         <vaadin-horizontal-layout
           slot="navbar touch-optimized"
-          style="width: 100%; justify-content: space-evenly; align-self: stretch"
+          style="width: 100%; justify-content: space-evenly;"
         >
           <a
             href="/dashboard"

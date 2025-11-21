@@ -49,7 +49,7 @@ function Example() {
 
       <HorizontalLayout
         slot="navbar touch-optimized"
-        style={{ width: '100%', justifyContent: 'space-evenly', alignSelf: 'stretch' }}
+        style={{ width: '100%', justifyContent: 'space-evenly' }}
         ref={horizontalLayoutRef}
       >
         <a href="/dashboard" aria-label="Dashboard" style={linkStyle}>
