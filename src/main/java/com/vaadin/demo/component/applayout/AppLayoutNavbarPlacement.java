@@ -9,7 +9,6 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-navbar-placement")
 // tag::snippet[]
@@ -25,7 +24,7 @@ public class AppLayoutNavbarPlacement extends AppLayout {
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(nav);
-        scroller.setClassName(LumoUtility.Padding.SMALL);
+        scroller.getStyle().set("padding", "0.5rem");
 
         addToDrawer(scroller);
         addToNavbar(toggle, title);
