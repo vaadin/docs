@@ -16,13 +16,13 @@ import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   lineHeight: 'var(--lumo-size-l)',
   margin: '0 var(--lumo-space-m)',
 };
 
 const h2Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 0,
 };
 

@@ -22,7 +22,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     public AppLayoutSecondaryNavigation() {
         H1 appTitle = new H1("MyApp");
-        appTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
+        appTitle.getStyle().set("font-size", "1.125rem")
                 .set("line-height", "var(--lumo-size-l)")
                 .set("margin", "0 var(--lumo-space-m)");
 
@@ -35,8 +35,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         DrawerToggle toggle = new DrawerToggle();
 
         H2 viewTitle = new H2("Orders");
-        viewTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "0");
+        viewTitle.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         HorizontalLayout subViews = getSecondaryNavigation();
         subViews.getElement() // hidden-source-line

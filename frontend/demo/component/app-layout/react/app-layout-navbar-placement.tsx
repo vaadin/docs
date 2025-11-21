@@ -13,7 +13,7 @@ import {
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 0,
 };
 

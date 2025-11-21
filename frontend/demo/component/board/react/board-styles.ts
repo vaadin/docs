@@ -373,7 +373,7 @@ vaadin-board-row.small > .cell {
   }
 
   .statistics .title {
-    font-size: var(--lumo-font-size-l);
+    font-size: 1.125rem;
     font-weight: 700;
   }
 

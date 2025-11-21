@@ -60,7 +60,7 @@ export class Example extends LitElement {
               Customer details
               <vaadin-vertical-layout
                 .hidden="${this.openedPanelIndex === 0}"
-                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+                style="font-size: 0.875rem; margin-left: auto"
               >
                 <span>
                   ${this.personBinder.value.firstName} ${this.personBinder.value.lastName}
@@ -108,7 +108,7 @@ export class Example extends LitElement {
               Billing address
               <vaadin-vertical-layout
                 .hidden="${this.openedPanelIndex === 1}"
-                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+                style="font-size: 0.875rem;; margin-left: auto"
               >
                 <span>${this.personBinder.value.address?.street}</span>
                 <span>
@@ -158,7 +158,7 @@ export class Example extends LitElement {
               Payment
               <vaadin-vertical-layout
                 .hidden="${this.openedPanelIndex === 2}"
-                style="font-size: var(--lumo-font-size-s); margin-left: auto"
+                style="font-size: 0.875rem; margin-left: auto"
               >
                 <span>${this.cardBinder.value.accountNumber}</span>
                 <span>${this.cardBinder.value.expiryDate}</span>

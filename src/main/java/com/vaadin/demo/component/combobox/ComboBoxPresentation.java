@@ -44,7 +44,7 @@ public class ComboBoxPresentation extends Div {
         tpl.append("  <div>");
         tpl.append("    ${item.firstName} ${item.lastName}");
         tpl.append(
-                "    <div style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">${item.profession}</div>");
+                "    <div style=\"font-size: 0.875rem; color: var(--lumo-secondary-text-color);\">${item.profession}</div>");
         tpl.append("  </div>");
         tpl.append("</div>");
 
