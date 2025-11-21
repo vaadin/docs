@@ -9,7 +9,6 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-navbar-placement-side")
 // tag::snippet[]
@@ -19,14 +18,13 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
         DrawerToggle toggle = new DrawerToggle();
 
         H1 title = new H1("Dashboard");
-        title.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "0");
+        title.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         SideNav nav = getSideNav();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(nav);
-        scroller.setClassName(LumoUtility.Padding.SMALL);
+        scroller.getStyle().set("padding", "0.5rem");
 
         addToDrawer(scroller);
         addToNavbar(toggle, title);

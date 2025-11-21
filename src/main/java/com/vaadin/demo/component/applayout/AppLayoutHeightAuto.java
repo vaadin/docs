@@ -16,8 +16,8 @@ public class AppLayoutHeightAuto extends AppLayout {
 
     public AppLayoutHeightAuto() {
         H1 title = new H1("MyApp");
-        title.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "var(--lumo-space-m)");
+        title.getStyle().set("font-size", "1.125rem").set("margin",
+                "var(--lumo-space-m)");
         addToNavbar(title);
 
         Grid<Person> grid = new Grid<>(Person.class, false);
