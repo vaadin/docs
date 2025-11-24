@@ -14,7 +14,7 @@ export class Example extends LitElement {
   static override styles = css`
     #container {
       align-items: stretch;
-      border: 1px solid var(--lumo-contrast-20pct);
+      border: 1px solid var(--vaadin-border-color);
       max-width: 100%;
       height: 400px;
       width: 360px;
@@ -30,10 +30,10 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-vertical-layout id="container">
-        <h2 class="text-xl px-m py-m">Create your account</h2>
+        <h2 style="padding: 1rem; font-size: 1.375rem">Create your account</h2>
         <!-- tag::snippet[] -->
         <vaadin-scroller scroll-direction="vertical" theme="overflow-indicators">
-          <div class="flex flex-col pb-m px-m">
+          <div style="display: flex; flex-direction: column; padding: 0 1rem 1rem">
             <vaadin-text-field label="First name"></vaadin-text-field>
             <vaadin-text-field label="Last name"></vaadin-text-field>
             <vaadin-email-field label="Email"></vaadin-email-field>
@@ -47,7 +47,7 @@ export class Example extends LitElement {
           </div>
         </vaadin-scroller>
         <!-- end::snippet[] -->
-        <footer class="flex gap-s px-m py-s">
+        <footer style="display: flex; gap: 0.5rem; padding: 0.5rem 1rem">
           <vaadin-button theme="primary">Next</vaadin-button>
           <vaadin-button theme="tertiary">Cancel</vaadin-button>
         </footer>

@@ -12,6 +12,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = css`
     section {
+      border: solid 1px var(--vaadin-border-color);
+      max-width: 100%
       width: 360px;
     }
   `;
@@ -24,12 +26,12 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <section class="border border-contrast-20 max-w-full" id="container">
-        <h2 class="pt-m px-m text-xl">Create new...</h2>
+      <section id="container">
+        <h2 style="padding: 1rem 1rem 0; font-size: 1.375rem">Create new...</h2>
 
         <!-- tag::snippet[] -->
         <vaadin-scroller scroll-direction="horizontal">
-          <vaadin-horizontal-layout class="inline-flex" theme="padding spacing">
+          <vaadin-horizontal-layout style="display: inline-flex" theme="padding spacing">
             <vaadin-button style="height: 100px;">
               <vaadin-icon icon="vaadin:clipboard-check" slot="prefix"></vaadin-icon>
               Audit
