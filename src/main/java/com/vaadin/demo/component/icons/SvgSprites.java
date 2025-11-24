@@ -2,6 +2,7 @@ package com.vaadin.demo.component.icons;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.SvgIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.DownloadHandler;
@@ -13,7 +14,7 @@ public class SvgSprites extends Div {
     public SvgSprites() {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        layout.addClassName("items-center");
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // tag::snippet[]
         SvgIcon codeBranchIcon = new SvgIcon("/icons/solid.svg", "code-branch");
