@@ -6,7 +6,7 @@ import codeBranch from '../../../../../src/main/resources/META-INF/resources/ico
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing" className="items-center">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
       {/* tag::snippet[] */}
       <Icon src={codeBranch} style={{ color: 'red' }} />
       <Icon iconClass="fa fa-user" style={{ color: 'red' }} />

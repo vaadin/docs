@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" className="items-center">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: center">
         <!-- tag::snippet[] -->
         <vaadin-icon src=${solidSprite} symbol="code-branch"></vaadin-icon>
         <vaadin-icon src=${solidSprite} symbol="user"></vaadin-icon>
