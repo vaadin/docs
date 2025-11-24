@@ -8,8 +8,16 @@ order: 20
 
 
 = Creating a Drag Source
+:toclevels: 2
 
-With the [classname]`DragSource` class, you can make any component draggable by the user, and configure the drag operation for it. By default, the entire component is made draggable, instead of a small part of it. The [classname]`DragSource` class is a configuration object for the dragged item and contains static methods for configuring the given component instance.
+With the [classname]`DragSource` class, you can make any component draggable by the user, and configure the drag operation for it. By default, the entire component is made draggable. You can also make only a portion of the component draggable, this is covered later. 
+
+
+== Making a Component Draggable
+
+The [classname]`DragSource` class is a configuration object for the dragged item and contains static methods for configuring the given component instance.
+
+*Example*: Making two [classname]`Div` components draggable in different ways:
 
 [source,java]
 ----
@@ -32,6 +40,8 @@ The [classname]`DragSource` configuration object doesn't itself store any data, 
 
 When a component is set as draggable on the server side, the `draggable` attribute is assigned to its topmost element on the browser, thus making it draggable. When the user starts to drag the component, the root element of the component gets the [classname]`v-dragged` class name in the browser. This can be used to highlight the dragged component to the user.
 
+*Example*: Painting a dotted outline around the dragged component with some transparency:
+
 [source,css]
 ----
 .v-dragged {
@@ -43,7 +53,9 @@ When a component is set as draggable on the server side, the `draggable` attribu
 
 == Exposing Drag Source API to a Component
 
-As the [interfacename]`DragSource` is an interface, it can also be used as a "mix-in interface". It provides an easy way to add its API to your custom component. This is convenient when you want to reuse the component in many places for drag operation.
+As the [interfacename]`DragSource` is an interface, it can also be used as a mixin interface. It provides an easy way to add its API to your custom component. This is convenient when you want to reuse the component in many places for drag operation.
+
+*Example*: Making a custom `CardComponent` draggable by default:
 
 [source,java]
 ----
@@ -56,12 +68,15 @@ public class CardComponent extends Div implements DragSource<CardComponent>, Has
 }
 ----
 
+See <<../mixins#,Using Vaadin Mixin Interfaces>> reference guide for more information about mixin interfaces.
+
 
 [drag.data]
 == Assigning Server-Side Data to Drag Source
 
-It's possible to set any Java object as the server-side drag data for the drag
-source. This data is provided on the [classname]`DropEvent` when the drop occurs on a valid drop target -- if it's inside the same UI (i.e., browser window or tab) as the drag source component.
+You can set any Java object as the server-side drag data for the drag source. When a drop occurs on a valid drop target *within the same UI* (browser window or tab) as the drag source component, this data is available from the `DropEvent`.
+
+*Example*: Setting different types of drag data on two draggable `CardComponent` instances:
 
 [source,java]
 ----
@@ -82,6 +97,8 @@ It isn't possible to configure the client-side drag data, the `dataTransfer` obj
 
 The [interfacename]`DragSource` provides a way to react when the user starts and stops dragging a component. The [classname]`DragStartEvent` is fired when the drag starts in the browser, which means that you can't cancel the drag. You should avoid doing any heavy synchronous processing there, since this blocks the user from dragging the component further in the browser. That would have a negative effect on the UX.
 
+*Example*: Highlighting suitable drop targets when dragging starts:
+
 [source,java]
 ----
 // Continuing from the previous example with CardComponent.
@@ -97,7 +114,7 @@ card1.addDragStartListener(event -> {
 });
 ----
 
-When the user stops dragging the component by either dropping it or by canceling the drag with, for example, the escape key, the [classname]`DragEndEvent` is fired. The [methodname]`isSuccessful()` method returns `true` if the drop occurred on a drop target that accepted the drop, but only for Chrome and Firefox (see the note after the example below).
+When the user stops dragging the component by either dropping it or by canceling the drag with, for example, the escape key, the [classname]`DragEndEvent` is fired. The [methodname]`isSuccessful()` method returns `true` if the drop occurred on a drop target that accepted the drop, *but only for Chrome and Firefox* (see the note after the example below).
 
 [source,java]
 ----
@@ -112,26 +129,31 @@ card1.addDragEndListener(event -> {
 ----
 
 .Handling Drag End in Edge & Safari
-[NOTE]
-Edge and Safari don't report whether the drop occurred successfully in the [classname]`DragEnd` event. You'll need to take this into account if your users are using any of these browsers, and do any logic in the [classname]`DropEvent` handler of the [classname]`DropTarget`, instead. For Chrome and Firefox, it works correctly.
+[IMPORTANT]
+Edge and Safari don't report whether the drop occurred successfully in the [classname]`DragEnd` event. You'll need to take this into account if your users are using any of these browsers, and do any logic in the [classname]`DropEvent` handler of the [classname]`DropTarget`, instead. For Chrome and Firefox, it works correctly. See the <<drop-target#,Creating a Drop Target>> reference guide for more information about handling drop events.
 
 
 === Effect Allowed & Drop Effect
 
-It's possible to customize the `effectAllowed` for the drag source. This has an effect on what the browser visually presents to the user and should match what's set in the drop target as the `dropEffect`. The [classname]`DragEndEvent` reports the `dropEffect` for the drop event.
+The drag source's `effectAllowed` property defines which drop operations (copy, move, link) are permitted for that element. The drop target's `dropEffect` property specifies which single operation it wants to perform. These properties work together to control both the visual cursor feedback during dragging and the final operation performed.
 
-The value is determined in priority order by:
+The browser determines the final `dropEffect` through this process:
 
-- the desired action `dropEffect` set by the drop target;
-- the `effectAllowed` set for the drag source; and
-- the modifier keys the user presses and holds when dropping.
+1. The drop target requests a specific `dropEffect` (copy, move, or link)
+2. The browser checks if this effect is permitted by the drag source's `effectAllowed`
+3. The user can override using modifier keys (such as kbd:[Ctrl] for copy, kbd:[Shift] for move, etc.)
+4. If there's no match, the `dropEffect` becomes `NONE` and the drop is cancelled
 
-When the drop effect is `MOVE`, you should move or remove the drag source component from its original location. When the drop effect is `NONE`, the drop didn't occur and [methodname]`dropEvent.isSuccessful()` returns `false`.
+The [classname]`DragEndEvent` reports the final `dropEffect` that was applied.
+
+When the drop effect is `MOVE`, you should remove or relocate the drag source component from its original location. When the drop effect is `NONE`, the drop was cancelled and [methodname]`dropEvent.isSuccessful()` returns `false`.
 
 
-=== Customizing the Draggable Element
+== Customizing the Draggable Element
 
 You can customize the element that is made draggable by overriding the [methodname]`getDraggableElement()` method in the [interfacename]`DragSource` interface. This is useful if it's not the whole component that's to be draggable, but only a part of it.
+
+*Example*: Making only an icon within a custom `RouteItem` component draggable:
 
 [source,java]
 ----
@@ -156,45 +178,63 @@ public class DraggableRouteItem extends RouteItem implements DragSource<RouteIte
 Changing the draggable element also changes the drag image that the browser shows under the cursor.
 
 
-=== [since:com.vaadin:vaadin@V24.6]#Drag-Image#
+== Customizing the Drag Image
 
-With the [interfacename]`DragSource` interface's [methodname]`setDragImage` methods, it's possible to customize a drag-image that the browser shows under the cursor when dragging a component.
+The [interfacename]`DragSource` interface provides [methodname]`setDragImage()` methods to customize the drag image shown under the cursor during dragging.
 
-<<../../application/resources#the-image-component, [classname]`Image`>> is applied in the next drag start event in the browser. The [classname]`Image` component is fully supported as a drag image.
+=== Using Image
+
+The <<../../application/resources#the-image-component, [classname]`Image`>> component is the recommended and fully supported option for drag images.
+
+*Example*: Setting an image of the Ace of Spades as the drag image:
 
 [source,java]
 ----
-// Continuing from the previous example.
+// Continuing from the previous example
 CardComponent card = new CardComponent();
-
 card.setDragImage(new Image("/cards/ace_of_spades.png", "Ace of Spades"));
 ----
 
-The [classname]`Image` component supports <<../../advanced/downloads#download-content-from-inputstream, DownloadHandler>> to generate the image, dynamically.
+The [classname]`Image` component supports <<../../advanced/downloads#download-content-from-inputstream, DownloadHandler>> for dynamic image generation.
 
-Any optional coordinates define the offset of the pointer location from the top left corner of the image. The following example sets the `x` offset to 20 pixels and the `y` offset to 0 pixels:
+You can specify the cursor's position relative to the drag image by providing x and y offsets from the image's top-left corner:
+
+*Example*: Positioning the cursor 20 pixels from left edge, aligned with top edge:
 
 [source,java]
 ----
 card.setDragImage(new Image("/cards/queen_of_hearts.png", "Queen of Hearts"), 20, 0);
 ----
 
-Other components can be used as well, but support may vary between browsers. If a given component is a visible element in the viewport, the browser can show it as a drag image. Otherwise, the component must be added to the DOM as an off-screen element specifically for this purpose. Vaadin handles this if the component is not already attached before being set as a drag image. If the default behavior doesn't meet your requirements, you can override it by adding the component to the DOM and applying your desired styling before invoking the [methodname]`setDragImage()` method.
 
-The following example demonstrates the addition of an off-screen component as a drag image:
+=== Using Other Components
+
+Components other than [classname]`Image` can be used as drag images, with these considerations:
+
+* **Visible components**: If the component is already visible in the viewport, the browser uses it directly as the drag image
+* **Off-screen components**: Components not in the viewport must be added to the DOM as off-screen elements. Vaadin handles this automatically when you call [methodname]`setDragImage()` with an unattached component
+
+To customize the positioning or styling of an off-screen drag image component, add it to the DOM manually before calling [methodname]`setDragImage()`.
+
+*Example*: Using a [classname]`Span` as a drag image by adding it off-screen:
 
 [source,java]
 ----
 Span dragImage = new Span("Drag Image Component");
 Style dragImageStyle = dragImage.getElement().getStyle();
 dragImageStyle.setPosition(Style.Position.ABSOLUTE);
-dragImageStyle.setTop("-100px");
+dragImageStyle.setTop("-100px"); // <1>
 dragImageStyle.setLeft("-100px");
-dragImageStyle.setDisplay(Style.Display.NONE);
+dragImageStyle.setDisplay(Style.Display.NONE); // <2>
 add(dragImage);
 dragSource.setDragImage(dragImage);
 ----
+<1> Positioning the component off-screen prevents it from being visible to the user.
+<2> Setting `display: none` ensures the component doesn't affect layout or visibility.
 
-For more information about the drag image, see link:https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage[HTML5 Drag & Drop API].
+NOTE: Browser support for non-Image components as drag images varies. Test your implementation across target browsers.
+
+For more information, see the link:https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/setDragImage[HTML5 Drag & Drop API].
+
 
 [discussion-id]`4FFD51BA-4736-44BD-8FCF-0E534A19FB8D`
