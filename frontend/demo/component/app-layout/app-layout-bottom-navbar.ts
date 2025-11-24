@@ -41,19 +41,35 @@ export class Example extends LitElement {
         <h1 slot="navbar">MyApp</h1>
         <vaadin-horizontal-layout
           slot="navbar touch-optimized"
-          class="w-full justify-evenly self-stretch"
+          style="width: 100%; justify-content: space-evenly;"
         >
-          <a href="/dashboard" aria-label="Dashboard" class="text-secondary px-l flex items-center">
+          <a
+            href="/dashboard"
+            aria-label="Dashboard"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
           </a>
-          <a href="/orders" aria-label="Orders" class="text-secondary px-l flex items-center">
+          <a
+            href="/orders"
+            aria-label="Orders"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:cart"></vaadin-icon>
           </a>
           <!-- end::snippet[] -->
-          <a href="/customers" aria-label="Customers" class="text-secondary px-l flex items-center">
+          <a
+            href="/customers"
+            aria-label="Customers"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
           </a>
-          <a href="/products" aria-label="Products" class="text-secondary px-l flex items-center">
+          <a
+            href="/products"
+            aria-label="Products"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:package"></vaadin-icon>
           </a>
           <!-- tag::snippet[] -->
