@@ -10,305 +10,163 @@ section-nav: flat
 
 = Styling Overview
 
-This section contains a brief overview of the main aspects of styling Vaadin applications: how to customize the styling of Vaadin components; how to style other UI elements; and where to place your CSS code.
+Vaadin applications are primarily styled with CSS in style sheets, just like any other web UI. You can also apply inline styles to elements, and use utility classes.
 
-The other pages in the Styling section provide further details on these methods and other related topics.
-
-
-== Customizing Component Styles
-
-The look and feel of Vaadin components is highly customizable in several ways.
+.Vaadin 24 way of applying styles is deprecated but supported
+[NOTE]
+The Vaadin 24 way of loading styles through the [annotationname]`@Theme` annotation and a theme folder in `frontend/themes` has been deprecated in Vaadin 25, but is still supported. Please see the link:/docs/v24/styling[Vaadin 24 Styling documentation] for details on this usage.
 
 
-=== Built-in Style Variants
+== Stylesheets
 
-Many Vaadin components come with built-in *style variants* that can be used to change the color, size, or other visual aspects of individual component instances through the `addThemeVariants` Java API.
+<<{articles}/styling/stylesheets#, Stylesheets>>, placed in the `src/main/resources/META-INF/resources` folder, are loaded with the [annotationname]`@StyleSheet` annotation.
 
-[.fill.white]
-image::_images/button-variants.png[Built-in style variants of the Button component, 400]
-
-[.example]
---
+In most cases you should apply [annotationname]`@StyleSheet` annotations to the main application class that implements the [interfacename]`AppShellConfigurator` interface. This ensures that the CSS in it is applied globally, up-front, when the application UI is loaded into the browser.
 
 [source,java]
 ----
-<source-info group="Flow"></source-info>
-Button btn = new Button("Save");
-btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+@StyleSheet("styles.css")
+public class Application implements AppShellConfigurator {
+ ...
+}
 ----
 
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<Button theme="primary">Save</Button>
-----
+You can split your CSS over multiple stylesheets, and load them either with separate [annotationname]`@StyleSheet` annotations, or load additional stylesheets using the CSS `@import` rule.
 
-[source,html]
+.src/resources/META-INF/resources/styles.css
+[source,css]
 ----
-<source-info group="Lit"></source-info>
-<vaadin-button theme="primary">Save</vaadin-button>
+@import "additional-styles.css";
+
+/* your CSS goes here */
 ----
 
---
+More details are provided in the <<{articles}/styling/stylesheets#, Stylesheets>> section.
 
-See <<{articles}/components#, Browse Components>> for information on built-in style variants.
+== Themes
 
+// TODO: Link to Lumo and Aura reference pages
+By default, Vaadin components are rendered with their minimalistic built-in base styles, which are a good starting point if you want to customize the look and feel extensively. Vaadin also ships with two themes, Aura and Lumo, that provide a more polished look and feel for Vaadin components.
 
-=== Customizing Style Properties
+[cols="^.^1, ^.^1, ^.^1"]
+|===
+|Base|Aura|Lumo
 
-The default styling of Vaadin components is based on *style properties* -- customizable CSS values -- in the default Lumo theme. They can be used to tweak colors, fonts, sizing, and other properties without writing custom CSS.
+|image:_images/base-styles.png[Login form using base styles, width=100%]
 
-.Lumo Style Properties Example
-[.fill.white]
-image::_images/lumo-properties.png[A small sample of Lumo style properties and their use in Vaadin components, 400]
+|image:_images/aura-theme.png[Login form using the Aura theme, width=100%]
 
-Style properties can be customized by providing new values for them in a CSS stylesheet.
+|image:_images/lumo-theme.png[Login form using the Lumo theme, width=100%]
+|===
+
+Vaadin themes can be loaded with the [annotationname]`@StyleSheet` annotation or with a CSS `@import` rule in your own stylesheet. The [classname]`Aura` and [classname]`Lumo` Java classes provide constants for the stylesheet path that can be used with the [annotationname]`@StyleSheet` annotation.
+
+Note that themes should be imported before any other styles in your application.
+
+[source,java]
+----
+/* Aura theme loaded with @StyleSheet annotation */
+@StyleSheet(Aura.STYLESHEET)
+@StyleSheet("styles.css")
+public class Application implements AppShellConfigurator {
+ ...
+}
+----
+
+.src/resources/META-INF/resources/styles.css
+[source,css]
+----
+/* Aura theme loaded with @import rule in a stylesheet */
+@import "aura/aura.css";
+
+/* your CSS goes here */
+----
+
+Both themes provide a comprehensive set of style properties (CSS custom properties) that make them easily customizable without complex CSS selectors. These properties are listed on the Aura and Lumo reference pages.
 
 [source,css]
 ----
-/* Global style values */
 html {
   --lumo-primary-color: green;
-  --lumo-font-family: "Roboto";
-}
-
-/* Scoped to a type of component */
-vaadin-button {
-  --lumo-font-family: "Courier";
+  --lumo-font-family: Times;
 }
 ----
 
-.Effects of Above Customizations
-[.fill.white]
-image::_images/lumo-properties-tweaked.png[The effects of the above customizations, 400]
+You can choose to apply your own styling on top of either theme, or on top of the minimal “white label” base styles built into Vaadin components, depending on the look and feel you want to have in your UI.
 
-A style property value can have different scopes:
 
-- *Global*, which affects the entire application. It’s applied to the `html` selector.
-- *Component type* specific. It’s applied to the component’s root element selector
-- *Component instances* – specific to one or more – to which a particular *CSS class name* has been applied (as shown below)
+== Component Style Properties
 
-[.example]
---
+Vaadin components also provide their own component-specific style properties for customizing their styles. These properties are listed on the Styling sub-pages in the component documentation (see e.g. <<{articles}/components/text-field/styling#,Text Field>>), along with the most common CSS selectors you can use to target the parts and states of components with your own CSS.
 
-[source,java]
-----
-<source-info group="Flow"></source-info>
-Button specialButton = new Button("I'm special");
-specialButton.addClassName("special");
-----
+Component style properties differ from theme style properties in that they are specific to a particular component type.
 
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<Button className="special">I'm special!</Button>
-----
-
-[source,html]
-----
-<source-info group="Lit"></source-info>
-<vaadin-button class="special">I'm special!</vaadin-button>
-----
-
---
-
+.Customizing Vaadin component style properties
 [source,css]
 ----
-/* Scoped to instances with a particular CSS class name */
-vaadin-button.special {
-  --lumo-primary-color: cyan;
+html {
+  --vaadin-button-background: lightgray;
 }
 ----
 
-Style properties are recommended as the primary approach to both Vaadin component style customization and custom CSS. They make it easier to achieve a consistent look and feel across the application.
 
-See <<lumo/lumo-style-properties#, List of Lumo style properties>> and <<styling-components#styling-components-with-style-properties, Styling components through style properties>> for more information on these properties.
+== Applying CSS to Components
 
+The most common selectors needed to style Vaadin components are listed on the _Styling_ sub-pages in the component documentation (see e.g. <<{articles}/components/text-field/styling#,Text Field>>), along with the style properties built into the components.
 
-=== Applying CSS to Components
-
-If you need to customize a component in ways that cannot be achieved with Lumo style properties, you can apply custom CSS to the component in a stylesheet.
-
-Each component has a [guilabel]*Styling* documentation page that lists the CSS selectors to use for targeting the component, its parts, and its states.
-
-.Some of the stylable parts of a Text Field component
-[.fill.white]
-image::_images/text-field-parts.png[Some of the stylable parts of a Text Field component, 500]
-
-CSS is applied to components in regular CSS stylesheets, typically in the application theme folder.
-
-.`frontend/themes/my-theme/styles.css`
+.Applying custom CSS to a component's state and part
 [source,css]
 ----
-vaadin-text-field::part(input-field) {
-  border: 1px solid gray;
-}
-
-vaadin-text-field[focused]::part(input-field) {
-  border-color: blue;
+vaadin-button[disabled]::part(label) {
+  color: darkgray;
 }
 ----
 
-.Results of this CSS
-[.fill.white]
-image::_images/custom-styled-textfield.png[Effects of the above CSS]
 
-CSS can be scoped to specific component instances by applying *CSS class names* to them.
+== Component Style Variants
 
-[.example]
---
+Many Vaadin components also have style variants as built-in features. These can be found in the documentation for each component.
 
-[source,java]
-----
-<source-info group="Flow"></source-info>
-TextField specialTextField = new TextField("I'm special");
-specialTextField.addClassName("special");
-----
-
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<TextField className="special" label="I'm special!" />
-----
-
-[source,html]
-----
-<source-info group="Lit"></source-info>
-<vaadin-text-field class="special" label="I'm special!"></vaadin-text-field>
-----
-
---
-
-[source,css]
-----
-vaadin-text-field.special::part(input-field) {
-  border-color: orange;
-}
-----
-
-See <<styling-components#styling-components-with-css, Styling components with CSS>>, <<{articles}/components#, Browse components to see their CSS selectors>>, and <<styling-components/styling-component-instances#, Applying CSS to specific component instances# with CSS class names>> for more information.
+.Button component variants in Aura theme
+image::_images/component-variants.png[width=50%]
 
 
-== Styling Other UI Elements
+== Recommended Approach
 
-Although Vaadin application UIs are built primarily using Vaadin components, native HTML elements, like `<span>` and `<div>`, are also often used for layout and custom UI structures. These can be styled with custom CSS, and with utility classes that bundle predefined styles as easy-to-use constants.
+The recommended approach to styling Vaadin components is:
 
+*  *Theme*: choose the <<{articles}/styling/themes#,theme>> that is the best match to your desired look and feel for components, or stick to the components’ base styles if neither theme is a good match;
+*  *Variant*: check if the component provides a style variant that corresponds (at least partially) to what you’re after;
+*  *Style Properties*: customize the component using <<{articles}/styling/styling-components#theme-style-properties,theme>> and/or <<{articles}/styling/styling-components#component-style-properties,component style properties>>;
+*  *CSS style blocks*: <<{articles}/styling/styling-components#writing-css-for-vaadin-components,write your own CSS>> (using documented selectors) only once you can’t get further with the above approaches.
 
-=== Applying CSS to HTML Elements
-
-Custom CSS is applied to native HTML elements similarly to Vaadin components, by placing it in a stylesheet in the application theme folder. Styles can be scoped to individual instances of these elements by applying CSS class names to them.
-
-[.example]
---
-[source,java]
-----
-<source-info group="Flow"></source-info>
-Span warning = new Span("This is a warning");
-warning.addClassName("warning");
-----
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<span className="warning">This is a warning!</span>
-----
-[source,html]
-----
-<source-info group="Lit"></source-info>
-<span class="warning">I'm special!</span>
-----
---
-
-.styles.css
-[source,css]
-----
-span.warning {
-  color: orange;
-}
-----
-
-See <</components/html-elements#, Native HTML element classes in Flow>> and <<styling-other-elements#, Applying CSS to native HTML elements>> for more information.
-
-
-=== Applying Styles with Utility Classes
-
-The *Lumo Utility Classes* are a set of predefined CSS classes (similar to Tailwind CSS) that can be used to apply styling to HTML elements without writing your own CSS.
-
-.Small sample of Lumo Utility Classes
-[.fill.white]
-image::_images/utility-classes.png[Small sample of Lumo Utility Classes, 300]
-
-The `LumoUtility` collection in Flow provides constants for each utility class. They are applied the same way as other CSS classnames.
-
-[.example]
---
-[source,java]
-----
-<source-info group="Flow"></source-info>
-Span errorMsg = new Span("Error");
-errorMsg.addClassNames(
-  LumoUtility.TextColor.ERROR,
-  LumoUtility.Padding.SMALL,
-  LumoUtility.Background.BASE,
-  LumoUtility.BoxShadow.XSMALL,
-  LumoUtility.BorderRadius.LARGE
-);
-----
-[source,tsx]
-----
-<source-info group="React"></source-info>
-<span className="text-error p-s bg-base shadow-xs rounded-l">Error</span>
-----
-[source,html]
-----
-<source-info group="Lit"></source-info>
-<span class="text-error p-s bg-base shadow-xs rounded-l">Error</span>
-----
---
-
-
-.Effects Application of these Utility Classes
-[.fill.white]
-image::_images/utility-class-usage-example.png[Effects of the above application of utility classes, 300]
-
+.Shadow DOM Styling Not Recommended
 [NOTE]
-====
-The Lumo utility classes are primarily designed to be used with native HTML elements, Vaadin layout components, and custom UI structures. Although some of them do work as expected on some Vaadin components, this is not their intended use. They can't be used to style the inner parts of components.
-====
-
-See <<lumo/utility-classes#, Lumo Utility Classes>> for more information.
+In older versions of Vaadin, components were primarily styled by injecting CSS into their shadow DOM using the `themes/<theme-name>/components` folder or, in even older versions, the `themeFor` property of the [annotationname]`@CssImport` annotation. Although _still supported_, this approach is no longer recommended. All styling documentation, including the reference tables on components’ _Styling_ pages, is based on normal CSS applied to the document scope.
 
 
-== Locating & Loading Styles
+== Styling HTML Elements
 
-Style property customizations and custom CSS are both placed in CSS stylesheets, typically in the application's theme folder. The theme folder is specified using the `@Theme` annotation.
-
-A master stylesheet, named `styles.css`, is automatically loaded. If you wish to split your CSS into multiple stylesheets, these can be added via CSS `@import` directives in the master stylesheet.
-
-.Theme folder location and structure
-[source]
-----
-frontend
-└── themes
-    └── my-theme
-        ├── styles.css
-        └── theme.json
-----
+<<{articles}/styling/utility-classes#, Utility classes>> can be used to apply styles to HTML elements (like `<div>` and `<span>`), and (with some limitations) to Vaadin components. Vaadin supports Tailwind CSS, and the Lumo theme has its own set of Lumo Utility Classes.
 
 [source,java]
 ----
-@Theme("my-theme")
-public class Application implements AppShellConfigurator {
-  ...
-}
+var warningBox = new Div("Warning!");
+warningBox.addClassNames("bg-orange-400 p-20px");
 ----
 
-Note that application projects generated with *Vaadin Start* have a theme folder applied by default.
 
-.Flow @CssImport Annotation
-[NOTE]
-In older versions of Vaadin, stylesheets were loaded using `@CssImport` and `@Stylesheet` annotations (and in very old versions using the `@HtmlImport` annotation). While `@CssImport `and `@Stylesheet` still work, they are only recommended for loading stylesheets into custom standalone components, not as the primary way to load application styles.
+== Inline Styles
 
-See <<application-theme#, Application theme folder>> for more information.
+Inline CSS can also be applied to individual elements and components. These should be used sparingly to avoid hard-to-maintain spaghetti code, but can be useful e.g. for applying styles dynamically based on business logic.
+
+[source,java]
+----
+warningBox.getStyle().setBackground("#ff8904");
+
+saveButton.getStyle().set("--vaadin-button-background", "green");
+----
+
 
 == Topics
 

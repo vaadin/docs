@@ -16,14 +16,22 @@ import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
-  lineHeight: 'var(--lumo-size-l)',
+  fontSize: '1.125rem',
+  lineHeight: '2.75rem',
   margin: '0 var(--lumo-space-m)',
 };
 
 const h2Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 0,
+};
+
+const linkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 1rem',
+  fontWeight: '500',
+  textDecoration: 'none',
 };
 
 function Example() {
@@ -50,7 +58,7 @@ function Example() {
       <h1 style={h1Style} slot="drawer">
         MyApp
       </h1>
-      <Scroller slot="drawer" className="p-s">
+      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem>
             <Icon icon="vaadin:dashboard" slot="prefix" />
@@ -92,34 +100,21 @@ function Example() {
           <h2 style={h2Style}>Orders</h2>
         </div>
 
-        <HorizontalLayout ref={horizontalLayoutRef} className="h-m justify-center gap-s">
-          <a
-            href="/all"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+        <HorizontalLayout
+          ref={horizontalLayoutRef}
+          style={{ height: '2.25rem', justifyContent: 'center', gap: '0.5rem' }}
+        >
+          <a href="/all" style={linkStyle}>
             All
           </a>
-          <a
-            href="/open"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/open" style={linkStyle}>
             Open
           </a>
           {/* end::snippet[] */}
-          <a
-            href="/completed"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/completed" style={linkStyle}>
             Completed
           </a>
-          <a
-            href="/cancelled"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/cancelled" style={linkStyle}>
             Cancelled
           </a>
           {/* tag::snippet[] */}
