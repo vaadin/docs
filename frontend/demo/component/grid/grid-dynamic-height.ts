@@ -86,7 +86,7 @@ export class Example extends LitElement {
 
   private renderNoInvitationAlert = () => html`
     <div
-      style="padding: var(--lumo-size-l);text-align: center;font-style: italic; color: var(--lumo-contrast-70pct);"
+      style="padding: 2.75rem; text-align: center; font-style: italic; color: var(--lumo-contrast-70pct);"
     >
       No invitation has been sent
     </div>

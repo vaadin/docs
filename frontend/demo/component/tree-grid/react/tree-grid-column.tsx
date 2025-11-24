@@ -51,10 +51,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <HorizontalLayout
-        style={{ alignItems: 'center', height: 'var(--lumo-size-xl)' }}
-        theme="spacing"
-      >
+      <HorizontalLayout style={{ alignItems: 'center', height: '3.5rem' }} theme="spacing">
         <h3 style={{ flexGrow: 1, margin: 0 }}>Employee</h3>
         <Button onClick={expandAll}>Expand All</Button>
         <Button onClick={collapseAll}>Collapse All</Button>
