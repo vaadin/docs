@@ -7,10 +7,10 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-bottom-navbar")
 // tag::snippet[]
@@ -41,9 +41,9 @@ public class AppLayoutBottomNavbar extends AppLayout {
 
     private HorizontalLayout getNavigation() {
         HorizontalLayout navigation = new HorizontalLayout();
-        navigation.addClassNames(LumoUtility.Width.FULL,
-                LumoUtility.JustifyContent.EVENLY,
-                LumoUtility.AlignSelf.STRETCH);
+        navigation.setWidthFull();
+        navigation
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.EVENLY);
         navigation.setPadding(false);
         navigation.setSpacing(false);
         navigation.add(createLink(VaadinIcon.DASHBOARD, "Dashboard"),
@@ -58,10 +58,8 @@ public class AppLayoutBottomNavbar extends AppLayout {
         RouterLink link = new RouterLink();
         // Demo has no routes
         // link.setRoute(viewClass.java);
-        link.addClassNames(LumoUtility.Display.FLEX,
-                LumoUtility.AlignItems.CENTER,
-                LumoUtility.Padding.Horizontal.LARGE,
-                LumoUtility.TextColor.SECONDARY);
+        link.getStyle().set("display", "flex").set("align-items", "center")
+                .set("padding", "0 1.5rem");
         link.add(icon.create());
         // hidden-source-line: workaround to make text color work
         link.getElement().setAttribute("href", viewName); // hidden-source-line

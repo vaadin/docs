@@ -75,8 +75,10 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     private HorizontalLayout getSecondaryNavigation() {
         HorizontalLayout navigation = new HorizontalLayout();
-        navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
-                LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM);
+        navigation
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        navigation.setHeight("2.25rem");
+        navigation.getStyle().set("gap", "0.5rem");
         navigation.add(createLink("All"), createLink("Open"),
                 createLink("Completed"), createLink("Cancelled"));
         return navigation;
@@ -87,12 +89,9 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         link.add(viewName);
         // Demo has no routes
         // link.setRoute(viewClass.java);
-
-        link.addClassNames(LumoUtility.Display.FLEX,
-                LumoUtility.AlignItems.CENTER,
-                LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
-        link.getStyle().set("text-decoration", "none");
+        link.getStyle().set("display", "flex").set("align-items", "center")
+                .set("padding", "0 1rem").set("font-weight", "500")
+                .set("text-decoration", "none");
         // hidden-source-line: workaround to make text color work
         link.getElement().setAttribute("href", viewName); // hidden-source-line
 

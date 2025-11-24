@@ -15,6 +15,10 @@ const h1Style: React.CSSProperties = {
 };
 
 const linkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 1rem',
+  fontWeight: '500',
   textDecoration: 'none',
 };
 
@@ -37,34 +41,18 @@ function Example() {
       <HorizontalLayout
         ref={horizontalLayoutRef}
         slot="navbar"
-        className="h-m w-full justify-center gap-s"
+        style={{ width: '100%', height: '2.25rem', justifyContent: 'center', gap: '0.5rem' }}
       >
-        <a
-          href="/dashboard"
-          className="flex items-center px-m text-secondary font-medium"
-          style={linkStyle}
-        >
+        <a href="/dashboard" style={linkStyle}>
           Dashboard
         </a>
-        <a
-          href="/orders"
-          className="flex items-center px-m text-secondary font-medium"
-          style={linkStyle}
-        >
+        <a href="/orders" style={linkStyle}>
           Orders
         </a>
-        <a
-          href="/customers"
-          className="flex items-center px-m text-secondary font-medium"
-          style={linkStyle}
-        >
+        <a href="/customers" style={linkStyle}>
           Customers
         </a>
-        <a
-          href="/products"
-          className="flex items-center px-m text-secondary font-medium"
-          style={linkStyle}
-        >
+        <a href="/products" style={linkStyle}>
           Products
         </a>
       </HorizontalLayout>

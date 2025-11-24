@@ -15,10 +15,10 @@ const h1Style = {
   margin: 'var(--lumo-space-m) var(--lumo-space-l)',
 };
 
-const iconStyle = {
-  height: 'var(--lumo-icon-size-s)',
-  margin: 'auto',
-  width: 'var(--lumo-icon-size-s)',
+const linkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 1.5rem',
 };
 
 function Example() {
@@ -49,28 +49,20 @@ function Example() {
 
       <HorizontalLayout
         slot="navbar touch-optimized"
-        className="w-full justify-evenly self-stretch"
+        style={{ width: '100%', justifyContent: 'space-evenly' }}
         ref={horizontalLayoutRef}
       >
-        <a
-          href="/dashboard"
-          aria-label="Dashboard"
-          className="text-secondary px-l flex items-center"
-        >
-          <Icon icon="vaadin:dashboard" style={iconStyle} />
+        <a href="/dashboard" aria-label="Dashboard" style={linkStyle}>
+          <Icon icon="vaadin:dashboard" />
         </a>
-        <a href="/orders" aria-label="Orders" className="text-secondary px-l flex items-center">
-          <Icon icon="vaadin:cart" style={iconStyle} />
+        <a href="/orders" aria-label="Orders" style={linkStyle}>
+          <Icon icon="vaadin:cart" />
         </a>
-        <a
-          href="/customers"
-          aria-label="Customers"
-          className="text-secondary px-l flex items-center"
-        >
-          <Icon icon="vaadin:user-heart" style={iconStyle} />
+        <a href="/customers" aria-label="Customers" style={linkStyle}>
+          <Icon icon="vaadin:user-heart" />
         </a>
-        <a href="/products" aria-label="Products" className="text-secondary px-l flex items-center">
-          <Icon icon="vaadin:package" style={iconStyle} />
+        <a href="/products" aria-label="Products" style={linkStyle}>
+          <Icon icon="vaadin:package" />
         </a>
       </HorizontalLayout>
 

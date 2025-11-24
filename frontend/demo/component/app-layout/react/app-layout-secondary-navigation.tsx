@@ -26,6 +26,14 @@ const h2Style = {
   margin: 0,
 };
 
+const linkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 1rem',
+  fontWeight: '500',
+  textDecoration: 'none',
+};
+
 function Example() {
   const sideNavRef = useRef<SideNavElement>(null);
   const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
@@ -92,34 +100,21 @@ function Example() {
           <h2 style={h2Style}>Orders</h2>
         </div>
 
-        <HorizontalLayout ref={horizontalLayoutRef} className="h-m justify-center gap-s">
-          <a
-            href="/all"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+        <HorizontalLayout
+          ref={horizontalLayoutRef}
+          style={{ height: '2.25rem', justifyContent: 'center', gap: '0.5rem' }}
+        >
+          <a href="/all" style={linkStyle}>
             All
           </a>
-          <a
-            href="/open"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/open" style={linkStyle}>
             Open
           </a>
           {/* end::snippet[] */}
-          <a
-            href="/completed"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/completed" style={linkStyle}>
             Completed
           </a>
-          <a
-            href="/cancelled"
-            className="flex items-center px-m text-secondary font-medium"
-            style={{ textDecoration: 'none' }}
-          >
+          <a href="/cancelled" style={linkStyle}>
             Cancelled
           </a>
           {/* tag::snippet[] */}
