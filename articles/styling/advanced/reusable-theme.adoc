@@ -1,0 +1,158 @@
+---
+title: Creating Reusable Themes
+page-title: Creating Reusable Themes
+description: A guide on how to create reusable themes for Vaadin applications.
+meta-description: Learn how to create reusable themes to style your Vaadin applications consistently.
+order: 10
+---
+
+
+= Creating Reusable Themes
+
+A custom theme – essentially a collection of stylesheets and possibly fonts and images – can be packaged and reused in multiple applications as a JAR file. Application-specific styles can then be loaded on top of this shared theme.
+
+First, create a new Maven project and place the desired stylesheets and related assets in a subfolder within the `src/main/resources/META-INF/resources` folder. Note that the folder path must not conflict with a folder in any of the application in which the theme is to be used. In the example below, the reusable theme is placed in a folder called `acme-theme`.
+
+[source]
+----
+[project root]
+├── src
+│   └── main
+│       └── resources
+│           └── META-INF
+│               └── resources
+│                   └── acme-theme
+└── pom.xml
+----
+
+Typically, reusable themes have a master stylesheet (e.g. `styles.css`) that loads all other stylesheets using `@import` rules. This way, applications using the theme only need to load the master stylesheet.
+
+[source]
+----
+acme-theme
+├── styles.css
+├── components.css
+├── forms.css
+├── ...
+----
+
+.src/resources/META-INF/resources/acme-theme/styles.css
+[source,css]
+----
+@import 'components.css';
+@import 'forms.css';
+...
+----
+
+If the reusable theme should use the Aura or Lumo theme as its foundation, add an `@import` rule to the desired Vaadin theme at the beginning of the reusable theme’s master stylesheet.
+
+.src/resources/META-INF/resources/acme-theme/styles.css
+[source,css]
+----
+/* To load the Aura theme */
+@import '../aura/aura.css';
+
+/* To load the Lumo theme */
+@import '../lumo/lumo.css';
+
+/* Import custom theme stylesheets below */
+----
+
+Update the project’s `pom.xml` as follows:
+
+* Configure the theme library’s identifiers and packaging format.
+* Configure the Vaadin version.
+* Add dependency management.
+* Update dependencies to only contain the `com.vaadin.vaadin-core` artifact.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+    http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Identifiers -->
+    <groupId>com.example</groupId>
+    <artifactId>acme-theme</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <vaadin.version>25.0.0</vaadin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>
+----
+
+If the theme uses <<{articles}/styling/advanced/npm-assets#, npm assets>>, add a `Dependencies.java` class (1) with the corresponding [annotationname]`@NpmPackage` annotations:
+
+[source]
+----
+[project root]
+└── src
+    └── main
+        └── java
+            └── com
+                └── vaadin
+                    └── flow
+                        └── theme
+                            └── Dependencies.java  (1)
+----
+
+.Dependency Class Package
+[NOTE]
+====
+The package in which the java class is placed doesn't have to be [classname]`com.vaadin.flow.theme` package as in the example above, but it's recommended for themes that are going to be used in Vaadin Spring Boot applications, as it's always automatically scanned.
+
+Other recommended packages are [classname]`com.vaadin.flow.component` and [classname]`com.vaadin.shrinkwrap`. See Vaadin's <<{articles}/flow/integrations/spring/configuration#special-configuration-parameters, Spring package scanning documentation>> for using other custom packages.
+====
+
+To create a JAR file, run the command `mvn install` in the project root folder. The file is generated in the `target` sub-folder.
+
+To use the packaged theme in an application, add the JAR as a dependency in the application project's [filename]`pom.xml`, and apply the theme using the [annotationname]`@StyleSheet` annotation, making sure to place it _before_ the application's own stylesheets.
+
+[source,xml]
+----
+<dependencies>
+  ...
+  <dependency>
+    <groupId>com.example</groupId>
+    <artifactId>acme-theme</artifactId>
+    <version>1.0</version>
+  </dependency>
+</dependencies>
+----
+
+[source,java]
+----
+@StyleSheet("acme-theme/styles.css") // Load the reusable theme first
+@StyleSheet("styles.css")            // Load application-specific styles after
+public class Application implements AppShellConfigurator {
+ ...
+}
+----
