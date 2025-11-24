@@ -7,7 +7,7 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing" className="items-center">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
       {/* // tag::snippet[] */}
       <Icon icon="lumo:photo" />
       <Icon icon="lumo:calendar" />

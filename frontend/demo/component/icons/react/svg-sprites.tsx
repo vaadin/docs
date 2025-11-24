@@ -6,7 +6,7 @@ import spriteIcons from '../../../../../src/main/resources/META-INF/resources/ic
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing" className="items-center">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
       {/* tag::snippet[] */}
       <Icon src={spriteIcons} symbol="code-branch" />
       <Icon src={spriteIcons} symbol="user" />
