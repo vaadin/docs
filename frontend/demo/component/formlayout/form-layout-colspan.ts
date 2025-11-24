@@ -26,7 +26,7 @@ export class Example extends LitElement {
   private renderFormLayout() {
     // tag::snippet[]
     return html`
-      <vaadin-form-layout class="w-full" auto-responsive column-width="8em" expand-fields>
+      <vaadin-form-layout style="width: 100%" auto-responsive column-width="8em" expand-fields>
         <vaadin-form-row>
           <vaadin-text-field label="Street address" data-colspan="3"></vaadin-text-field>
         </vaadin-form-row>

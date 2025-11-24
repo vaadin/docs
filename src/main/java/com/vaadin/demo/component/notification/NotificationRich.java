@@ -129,14 +129,14 @@ public class NotificationRich extends HorizontalLayout {
                 .setColor("var(--lumo-success-text-color)");
 
         Span fileName = new Span("Financials.xlsx");
-        fileName.getStyle().set("font-size", "var(--lumo-font-size-s)")
+        fileName.getStyle().set("font-size", "0.875rem")
                 .set("font-weight", "600");
 
         Div info = new Div(uploadSuccessful,
                 new Div(fileName, new Text(" is now available in "),
                         new Anchor("#", "Documents")));
 
-        info.getStyle().set("font-size", "var(--lumo-font-size-s)")
+        info.getStyle().set("font-size", "0.875rem")
                 .setColor("var(--lumo-secondary-text-color)");
 
         var layout = new HorizontalLayout(icon, info,

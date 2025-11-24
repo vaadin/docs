@@ -6,7 +6,7 @@ function Example() {
   function renderFormLayout() {
     // tag::snippet[]
     return (
-      <FormLayout className="w-full" autoResponsive labelsAside>
+      <FormLayout style={{ width: '100%' }} autoResponsive labelsAside>
         <FormItem>
           <label slot="label">First name</label>
           <TextField />

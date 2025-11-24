@@ -17,13 +17,13 @@ import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
-      line-height: var(--lumo-size-l);
+      font-size: 1.125rem;
+      line-height: 2.75rem;
       margin: 0 var(--lumo-space-m);
     }
 
     h2 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: 0;
     }
   `;
@@ -44,7 +44,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">
         <h1 slot="drawer">MyApp</h1>
-        <vaadin-scroller slot="drawer" class="p-s">
+        <vaadin-scroller slot="drawer" style="padding: 0.5rem">
           <vaadin-side-nav>
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>

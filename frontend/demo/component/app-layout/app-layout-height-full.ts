@@ -15,7 +15,7 @@ export class Example extends LitElement {
     }
 
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: var(--lumo-space-m);
     }
   `;
