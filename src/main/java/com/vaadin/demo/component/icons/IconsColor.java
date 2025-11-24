@@ -1,12 +1,12 @@
 package com.vaadin.demo.component.icons;
 
-import com.vaadin.demo.DemoExporter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.FontIcon;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("icons-color")
 public class IconsColor extends Div {
