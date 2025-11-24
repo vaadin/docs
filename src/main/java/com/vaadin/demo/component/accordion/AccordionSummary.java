@@ -228,8 +228,7 @@ public class AccordionSummary extends Div {
             VerticalLayout detailsLayout = new VerticalLayout();
             detailsLayout.setSpacing(false);
             detailsLayout.setPadding(false);
-            detailsLayout.getStyle().set("font-size",
-                    "var(--lumo-font-size-s)");
+            detailsLayout.getStyle().set("font-size", "0.875rem");
 
             for (String detail : details) {
                 if (detail != null && !detail.isEmpty()) {
