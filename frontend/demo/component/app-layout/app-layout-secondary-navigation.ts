@@ -83,32 +83,35 @@ export class Example extends LitElement {
             <vaadin-drawer-toggle></vaadin-drawer-toggle>
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
-          <vaadin-horizontal-layout id="navigation" class="h-m justify-center gap-s">
+          <vaadin-horizontal-layout
+            id="navigation"
+            style="height: 2.25rem; justify-content: center; gap: 0.5rem"
+          >
             <a
               href="/all"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >All</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              All
+            </a>
             <a
               href="/open"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Open</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Open
+            </a>
             <!-- end::snippet[] -->
             <a
               href="/completed"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Completed</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Completed
+            </a>
             <a
               href="/cancelled"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Cancelled</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Cancelled
+            </a>
             <!-- tag::snippet[] -->
           </vaadin-horizontal-layout>
         </vaadin-vertical-layout>

@@ -39,33 +39,32 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-horizontal-layout slot="navbar" class="h-m w-full justify-center gap-s">
+        <vaadin-horizontal-layout
+          slot="navbar"
+          style="width: 100%; height: 2.25rem; justify-content: center; gap: 0.5rem"
+        >
           <a
             href="/dashboard"
-            class="flex items-center px-m text-secondary font-medium"
-            style="text-decoration: none"
+            style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
           >
             Dashboard
           </a>
           <a
             href="/orders"
-            class="flex items-center px-m text-secondary font-medium"
-            style="text-decoration: none"
+            style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
           >
             Orders
           </a>
           <!-- end::snippet[] -->
           <a
             href="/customers"
-            class="flex items-center px-m text-secondary font-medium"
-            style="text-decoration: none"
+            style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
           >
             Customers
           </a>
           <a
             href="/products"
-            class="flex items-center px-m text-secondary font-medium"
-            style="text-decoration: none"
+            style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
           >
             Products
           </a>
