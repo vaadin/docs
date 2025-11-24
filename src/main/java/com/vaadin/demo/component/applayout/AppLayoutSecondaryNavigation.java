@@ -14,7 +14,6 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-secondary-navigation")
 // tag::snippet[]
@@ -22,21 +21,20 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     public AppLayoutSecondaryNavigation() {
         H1 appTitle = new H1("MyApp");
-        appTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("line-height", "var(--lumo-size-l)")
+        appTitle.getStyle().set("font-size", "1.125rem")
+                .set("line-height", "2.75rem")
                 .set("margin", "0 var(--lumo-space-m)");
 
         SideNav views = getPrimaryNavigation();
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(views);
-        scroller.setClassName(LumoUtility.Padding.SMALL);
+        scroller.getStyle().set("padding", "0.5rem");
 
         DrawerToggle toggle = new DrawerToggle();
 
         H2 viewTitle = new H2("Orders");
-        viewTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "0");
+        viewTitle.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         HorizontalLayout subViews = getSecondaryNavigation();
         subViews.getElement() // hidden-source-line

@@ -16,13 +16,13 @@ import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
-  lineHeight: 'var(--lumo-size-l)',
+  fontSize: '1.125rem',
+  lineHeight: '2.75rem',
   margin: '0 var(--lumo-space-m)',
 };
 
 const h2Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 0,
 };
 
@@ -50,7 +50,7 @@ function Example() {
       <h1 style={h1Style} slot="drawer">
         MyApp
       </h1>
-      <Scroller slot="drawer" className="p-s">
+      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem>
             <Icon icon="vaadin:dashboard" slot="prefix" />

@@ -11,7 +11,7 @@ import {
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 'var(--lumo-space-m) var(--lumo-space-l)',
 };
 

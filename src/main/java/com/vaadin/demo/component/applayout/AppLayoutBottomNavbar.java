@@ -20,8 +20,8 @@ public class AppLayoutBottomNavbar extends AppLayout {
         getElement().getStyle().set("--vaadin-app-layout-touch-optimized", // hidden-source-line
                 "true"); // hidden-source-line
         H1 title = new H1("MyApp");
-        title.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "var(--lumo-space-m) var(--lumo-space-l)");
+        title.getStyle().set("font-size", "1.125rem").set("margin",
+                "var(--lumo-space-m) var(--lumo-space-l)");
 
         HorizontalLayout nav = getNavigation();
         nav.getElement().executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line

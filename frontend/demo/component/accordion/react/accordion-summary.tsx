@@ -54,7 +54,7 @@ function Example() {
             Customer details
             <VerticalLayout
               hidden={openedPanelIndex.value === 0}
-              style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
+              style={{ fontSize: '0.875rem', marginLeft: 'auto' }}
             >
               <span>
                 {person.value.firstName} {person.value.lastName}
@@ -98,7 +98,7 @@ function Example() {
             Billing address
             <VerticalLayout
               hidden={openedPanelIndex.value === 1}
-              style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
+              style={{ fontSize: '0.875rem', marginLeft: 'auto' }}
             >
               <span>{person.value.address?.street}</span>
               <span>
@@ -145,7 +145,7 @@ function Example() {
             Payment
             <VerticalLayout
               hidden={openedPanelIndex.value === 2}
-              style={{ fontSize: 'var(--lumo-font-size-s)', marginLeft: 'auto' }}
+              style={{ fontSize: '0.875rem', marginLeft: 'auto' }}
             >
               <span>{card.value.accountNumber}</span>
               <span>{card.value.expiryDate}</span>
