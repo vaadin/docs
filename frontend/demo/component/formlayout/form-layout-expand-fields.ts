@@ -30,7 +30,7 @@ export class Example extends LitElement {
     // tag::snippet[]
     return html`
       <vaadin-form-layout
-        class="w-full"
+        style="width: 100%"
         auto-responsive
         column-width="8em"
         expand-columns
