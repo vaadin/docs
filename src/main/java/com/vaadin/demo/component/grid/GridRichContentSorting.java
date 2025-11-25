@@ -39,7 +39,7 @@ public class GridRichContentSorting extends Div {
                         + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
                         + "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
                         + "    <span> ${item.fullName} </span>"
-                        + "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
+                        + "    <span style=\"font-size: 0.875rem; color: var(--lumo-secondary-text-color);\">"
                         + "      ${item.email}" + "    </span>"
                         + "  </vaadin-vertical-layout>"
                         + "</vaadin-horizontal-layout>")
@@ -52,7 +52,7 @@ public class GridRichContentSorting extends Div {
         return LitRenderer.<Person> of(
                 "<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
                         + "  <span>${item.birthday}</span>"
-                        + "  <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">Age: ${item.age}</span>"
+                        + "  <span style=\"font-size: 0.875rem; color: var(--lumo-secondary-text-color);\">Age: ${item.age}</span>"
                         + "</vaadin-vertical-layout>")
                 .withProperty("birthday",
                         GridRichContentSorting::getFormattedPersonBirthday)

@@ -7,7 +7,7 @@ import codeBranch from '../../../../../src/main/resources/META-INF/resources/ico
 function Example() {
   return (
     // tag::snippet[]
-    <HorizontalLayout theme="spacing" className="items-end">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end' }}>
       {/* tag::snippet[] */}
       <Icon src={codeBranch} />
       <Icon src={codeBranch} style={{ padding: '0.25em' }} />

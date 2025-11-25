@@ -53,7 +53,7 @@ export class ExampleStatistics extends LitElement {
     }
 
     .title {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       font-weight: 700;
     }
 

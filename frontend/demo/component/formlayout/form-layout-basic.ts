@@ -29,7 +29,7 @@ export class Example extends LitElement {
   private renderFormLayout() {
     // tag::snippet[]
     return html`
-      <vaadin-form-layout class="w-full" auto-responsive>
+      <vaadin-form-layout style="width: 100%" auto-responsive>
         <vaadin-form-row>
           <vaadin-text-field label="First name"></vaadin-text-field>
           <vaadin-text-field label="Last name"></vaadin-text-field>
