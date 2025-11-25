@@ -71,7 +71,7 @@ const GridPaginationControls = ({
   return (
     <HorizontalLayout style={{ alignItems: 'center', gap: '0.3rem', width: '100%' }}>
       <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing-s">
-        <span id="page-size-label" className="text-s">
+        <span id="page-size-label" style={{ fontSize: '0.875rem' }}>
           Page size
         </span>
         <Select
@@ -79,7 +79,7 @@ const GridPaginationControls = ({
           aria-labelledby="page-size-label"
           style={{
             width: '4.8rem',
-            '--vaadin-input-field-value-font-size': 'var(--lumo-font-size-s)',
+            '--vaadin-input-field-value-font-size': '0.875rem',
           }}
           items={['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}
           value={pageSize.value.toString()}
@@ -100,7 +100,7 @@ const GridPaginationControls = ({
         () => onCurrentPageChanged(currentPage.value - 1),
         currentPage.value === 1
       )}
-      <span className="text-s px-s" slot="end">
+      <span style={{ fontSize: '0.875rem', padding: '0 0.5rem' }} slot="end">
         Page {currentPage.value} of {pageCount.value}
       </span>
       {smallIconButton(
