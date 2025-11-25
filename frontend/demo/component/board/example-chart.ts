@@ -29,7 +29,7 @@ const chartOptions = {
 export class Example extends LitElement {
   static override styles = css`
     .title {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       font-weight: 700;
       margin-block-end: var(--lumo-space-m);
     }

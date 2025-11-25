@@ -28,7 +28,7 @@ export class LoginOverlayMockupElement extends LitElement {
       max-width: 100%;
       overflow: hidden;
       height: max-content;
-      width: calc(var(--lumo-size-m) * 10);
+      width: calc(2.25rem * 10);
     }
 
     [part='brand'] {
@@ -40,7 +40,7 @@ export class LoginOverlayMockupElement extends LitElement {
       flex-grow: 1;
       flex-shrink: 0;
       justify-content: flex-end;
-      min-height: calc(var(--lumo-size-m) * 5);
+      min-height: calc(2.25rem * 5);
       overflow: hidden;
       padding: var(--lumo-space-l) var(--lumo-space-xl) var(--lumo-space-l) var(--lumo-space-l);
     }
