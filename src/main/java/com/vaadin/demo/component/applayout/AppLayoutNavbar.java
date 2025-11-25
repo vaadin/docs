@@ -3,10 +3,10 @@ package com.vaadin.demo.component.applayout;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-navbar")
 // tag::snippet[]
@@ -14,7 +14,7 @@ public class AppLayoutNavbar extends AppLayout {
 
     public AppLayoutNavbar() {
         H1 title = new H1("MyApp");
-        title.getStyle().set("font-size", "var(--lumo-font-size-l)")
+        title.getStyle().set("font-size", "1.125rem")
                 .set("left", "var(--lumo-space-l)").set("margin", "0")
                 .set("position", "absolute");
 
@@ -28,9 +28,11 @@ public class AppLayoutNavbar extends AppLayout {
 
     private HorizontalLayout getNavigation() {
         HorizontalLayout navigation = new HorizontalLayout();
-        navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
-                LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM,
-                LumoUtility.Width.FULL);
+        navigation.setWidthFull();
+        navigation
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        navigation.setHeight("2.25rem");
+        navigation.getStyle().set("gap", "0.5rem");
         navigation.add(createLink("Dashboard"), createLink("Orders"),
                 createLink("Customers"), createLink("Products"));
         return navigation;
@@ -41,12 +43,9 @@ public class AppLayoutNavbar extends AppLayout {
         link.add(viewName);
         // Demo has no routes
         // link.setRoute(viewClass.java);
-
-        link.addClassNames(LumoUtility.Display.FLEX,
-                LumoUtility.AlignItems.CENTER,
-                LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
-        link.getStyle().set("text-decoration", "none");
+        link.getStyle().set("display", "flex").set("align-items", "center")
+                .set("padding", "0 1rem").set("font-weight", "500")
+                .set("text-decoration", "none");
         // hidden-source-line: workaround to make text color work
         link.getElement().setAttribute("href", viewName); // hidden-source-line
 

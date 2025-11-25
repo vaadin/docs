@@ -4,6 +4,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -14,7 +15,7 @@ public class LumoIcons extends Div {
     public LumoIcons() {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        layout.addClassName("items-center");
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // tag::snippet[]
         Icon phoneIcon = LumoIcon.PHOTO.create();

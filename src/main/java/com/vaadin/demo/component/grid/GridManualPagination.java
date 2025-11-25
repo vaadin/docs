@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.grid;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.Component;
@@ -20,7 +20,6 @@ import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -152,7 +151,7 @@ public class GridManualPagination extends VerticalLayout {
         private Component createPageSizeField() {
             Select<Integer> select = new Select<>();
             select.addThemeVariants(SelectVariant.LUMO_SMALL);
-            select.getStyle().set("--vaadin-input-field-value-font-size", "var(--lumo-font-size-s)");
+            select.getStyle().set("--vaadin-input-field-value-font-size", "0.875rem");
             select.setWidth("4.8rem");
             select.setItems(10, 15, 25, 50, 100);
             select.setValue(pageSize);
@@ -162,7 +161,7 @@ public class GridManualPagination extends VerticalLayout {
             });
             var label = new Span("Page size");
             label.setId("page-size-label");
-            label.addClassName(LumoUtility.FontSize.SMALL);
+            label.getStyle().set("font-size", "0.875rem");
             select.setAriaLabelledBy("page-size-label");
             final HorizontalLayout layout = new HorizontalLayout(Alignment.CENTER, label, select);
             layout.setSpacing(false);
@@ -233,7 +232,7 @@ public class GridManualPagination extends VerticalLayout {
 
         private Span currentPageLabel() {
             var label = new Span();
-            label.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.Padding.Horizontal.SMALL);
+            label.getStyle().set("font-size", "0.875rem").set("padding", "0 0.5rem");
             return label;
         }
 

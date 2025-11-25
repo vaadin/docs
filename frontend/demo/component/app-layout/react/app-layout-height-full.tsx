@@ -8,7 +8,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 const h1Style = {
-  fontSize: 'var(--lumo-font-size-l)',
+  fontSize: '1.125rem',
   margin: 'var(--lumo-space-m)',
 };
 

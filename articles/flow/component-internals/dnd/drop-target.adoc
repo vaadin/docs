@@ -1,0 +1,156 @@
+---
+title: Drop Target
+page-title: How to create a drop target in Vaadin
+description: Make any component a drop target that the user can drop things on to.
+meta-description: Learn how to implement drag-and-drop functionality by setting up a drop target in Vaadin applications.
+order: 30
+---
+
+
+= Creating a Drop Target
+
+With the [classname]`DropTarget` class, you can make any component a drop target that the user can drop things on to. When the drop occurs, you get an event on the server side and get the data related to the drag operation when the drag originates from the same UI (browser window/tab).
+
+
+== Making a Component a Drop Target
+
+The [classname]`DropTarget` class is a configuration object for the drop target and contains static methods for configuring the given component as a drop target instance.
+
+.Making two [classname]`VerticalLayout` components drop targets in different ways
+[example]
+====
+[source,java]
+----
+VerticalLayout first = new VerticalLayout();
+VerticalLayout second = new VerticalLayout();
+
+// Make the first layout an active drop target
+DropTarget<VerticalLayout> dropTarget = DropTarget.create(first);
+
+// Provide access to drop target API for second layout,
+// without setting it as an active drop target.
+DropTarget<VerticalLayout> dropTarget2 = DropTarget.configure(second);
+
+// Make the second layout an active drop target
+dropTarget2.setActive(true);
+----
+====
+
+The [classname]`DropTarget` configuration object doesn't itself store any data, as it's a convenience proxy that facilitates making a component a drop target. Creating a new [classname]`DropTarget` instance of a component doesn't reset any previous configuration, but any changes override the previous configuration.
+
+
+== Exposing Drop Target API to a Component
+
+Similarly to the [interfacename]`DragSource`, the [interfacename]`DropTarget` is a mixin interface that can be added to any custom component to expose the drop target API for it.
+
+.Making a custom `Column` component an active drop target by default
+[example]
+====
+[source,java]
+----
+public class Column extends VerticalLayout implements DropTarget<VerticalLayout> {
+
+    public Column() {
+        // Allow drops by default
+        setActive(true);
+    }
+
+    // All drop target methods have default implementations
+}
+----
+====
+
+See <<../mixins#,Using Vaadin Mixin Interfaces>> reference guide for more information about mixin interfaces.
+
+
+== Reacting to Drops
+
+When the user performs a valid drop on the browser, the [classname]`DropEvent` is fired.
+You can listen to the event with a [classname]`DropListener`.
+If the drag originated from within the same Vaadin UI, you can retrieve the dragged component or the assigned server-side drag data from the [classname]`DropEvent`.
+
+.Listening to drop events and moving the dragged component inside the drop target
+[example]
+====
+[source,java]
+----
+Div box = new Div();
+box.setWidth("300px");
+box.setHeight("300px");
+
+DropTarget<Div> dropTarget = DropTarget.create(box);
+
+dropTarget.addDropListener(event -> {
+    // move the dragged component to inside the drop target component
+    if (event.getDropEffect() == DropEffect.MOVE) {
+        // the drag source is available only if the dragged component is from
+        // the same UI as the drop target
+        event.getDragSourceComponent().ifPresent(box::add);
+
+        event.getDragData().ifPresent(data -> {
+            // the server side drag data is available if it has been set and the
+            // component was dragged from the same UI as the drop target
+        });
+    }
+});
+----
+====
+
+See the <<drag-source#,Creating a Drag Source>> reference guide for information about setting server-side drag data. At the moment, there is no way to retrieve any client-side drag data from the drop event.
+
+
+== Controlling the Drop with Drop Effect
+
+The [classname]`DropEffect` property determines which operation (copy, move, link) the drop target wants to perform. For a drop to succeed, this must be compatible with the drag source's `effectAllowed` property.
+
+The drop effect is one of the following values:
+
+* `COPY` - Data should be copied to the drop target
+* `MOVE` - Data should be moved to the drop target  
+* `LINK` - A link/reference should be created
+* `NONE` - Drop is not allowed (no [classname]`DropEvent` fires)
+
+The browser determines the final drop effect through these steps:
+
+1. If the drop target sets a `dropEffect`, the browser checks if it's allowed by the drag source's `effectAllowed`
+2. If no `dropEffect` is set, the browser uses the drag source's `effectAllowed` or user's modifier keys (such as kbd:[Ctrl]for copy, kbd:[Shift] for move, etc.)
+3. If there's no valid match, the effect becomes `NONE`
+
+.Browser Compatibility
+[IMPORTANT]
+====
+**Chrome/Firefox**: Blocks drops when `dropEffect` doesn't match `effectAllowed`
+
+**Safari/Edge**: Allows drops regardless of mismatch. The mismatch is only reported in the [classname]`DragEndEvent` but doesn't prevent the drop from occurring.
+
+Always validate the drop effect in your drop handler when supporting Safari/Edge.
+====
+
+
+== Drop Target Styling
+
+When a draggable element hovers over a valid drop target, Vaadin automatically applies the `v-drag-over-target` class to the drop target element.
+
+This class is removed when:
+
+* The drop completes
+* The drag operation is canceled
+* The dragged element leaves the drop target area
+
+.Painting a light green outline around the drop target when a draggable element hovers over it
+[example]
+====
+[source,css]
+----
+.v-drag-over-target {
+    outline: 1px solid lightgreen;
+}
+----
+====
+
+For better user experience, you can highlight all valid drop targets when a drag starts, not just the one being hovered over. This helps users identify where they can drop the dragged item.
+
+Implement this by adding a custom class during the [classname]`DragStartEvent` and removing it on [classname]`DragEndEvent`. See the <<drag-source#drag-start-end-events,Creating a Drag Source>> reference guide for implementation details.
+
+
+[discussion-id]`B1B0660B-88EE-401D-B94C-F03FE4A60D9A`

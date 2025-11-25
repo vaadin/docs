@@ -22,7 +22,7 @@ const styles = css`
     display: inline-block;
     width: 8rem;
     background: currentColor;
-    border-radius: calc(var(--lumo-size-m) / 2);
+    border-radius: calc(2.25rem / 2);
     font-size: var(--lumo-font-size-xxs);
   }
 
@@ -52,7 +52,7 @@ const styles = css`
   label {
     width: 6rem;
     background: currentColor;
-    border-radius: calc(var(--lumo-size-m) / 2);
+    border-radius: calc(2.25rem / 2);
     height: var(--lumo-font-size-xxs);
   }
 
