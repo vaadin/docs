@@ -1,8 +1,8 @@
 package com.vaadin.demo.domain;
 
-import javax.annotation.Nonnull;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
+
+import jakarta.annotation.Nonnull;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // hidden-source-line
 // tag::snippet[]
