@@ -1,0 +1,262 @@
+---
+title: Events
+page-title: Declaring and Firing Vaadin Component Events
+description: Declaring, listening to, and firing events in Vaadin components.
+meta-description: Understand how to Vaadin components handle events, including defining custom events and listeners.
+order: 10
+---
+
+
+= Declaring and Firing Component Events
+:toclevels: 2
+
+The [classname]`Component` base class provides an event bus for firing and listening to events. It supports event classes that extend [classname]`ComponentEvent`, and listeners that implement [interfacename]`ComponentEventListener`.
+
+
+== Defining an Event
+
+To use the event bus, your event should extend [classname]`ComponentEvent`. This class is parameterized with the type of the component firing the event, so that the [methodname]`ComponentEvent.getSource()` method automatically returns the correct type.
+
+Events can be fired either from the client side (in response to a DOM event) or from the server side (in response to server-side API calls). You indicate the origin of the event with the `fromClient` parameter in the event constructor.
+
+.Creating an event by extending [classname]`ComponentEvent` to be published by a `TextField`
+[example]
+====
+[source,java]
+----
+public class ChangeEvent extends ComponentEvent<TextField> {
+
+    public ChangeEvent(TextField source, boolean fromClient) {
+        super(source, fromClient);
+    }
+}
+----
+====
+
+
+== Defining an Event Listener
+
+For each event type, you define a method in your component class to add event listeners. This method takes a parameterized `ComponentEventListener` as an argument, and returns a `Registration` handle for removing the listener.
+
+.Declaring an [methodname]`addChangeListener()` method for adding listeners to the `ChangeEvent` defined earlier
+[example]
+====
+[source,java]
+----
+@Tag("input")
+public class TextField extends Component {
+
+    public Registration addChangeListener(
+            ComponentEventListener<ChangeEvent> listener) {
+        return addListener(ChangeEvent.class, listener);
+    }
+
+    // Other component methods omitted
+}
+----
+====
+
+.Adding and removing event listeners
+[example]
+====
+[source,java]
+----
+TextField textField = new TextField();
+Registration registration = textField
+        .addChangeListener(e -> System.out.println("Event fired"));
+
+// In some other part of the code
+registration.remove();
+----
+====
+
+
+== Firing Events from the Server
+
+You fire an event from the server by creating the event instance and passing it to the [methodname]`Component.fireEvent()` method.
+Use `false` as the `fromClient` constructor parameter to specify that the event doesn't come from the client.
+
+.Using the [methodname]`fireEvent()` method to fire an event from the server
+[example]
+====
+[source,java]
+----
+@Tag("input")
+public class TextField extends Component {
+
+    public void setValue(String value) {
+        getElement().setAttribute("value", value);
+        fireEvent(new ChangeEvent(this, false));
+    }
+
+    // Other component methods omitted
+}
+----
+====
+
+
+== Firing Events from the Client
+
+You can connect a component event to a client-side DOM event by using the `@DomEvent` annotation on your event class. Vaadin will automatically fire the server-side event when the specified DOM event occurs in the browser.
+
+.Using the `@DomEvent` annotation to fire a server-side `ChangeEvent` when the client-side `change` DOM event occurs
+[example]
+====
+[source,java]
+----
+@DomEvent("change")
+public class ChangeEvent extends ComponentEvent<TextField> {
+
+    public ChangeEvent(TextField source, boolean fromClient) {
+        super(source, fromClient);
+    }
+}
+----
+====
+
+.Hidden and Disabled Components
+[IMPORTANT]
+If a component is hidden or disabled, client-side events are automatically blocked. See the <<enabled-state#,Component Enabled State>> and <<visibility#,Component Visibility>> reference guides for more information.
+
+
+=== Adding Event Data
+
+An event can include additional information, such as the mouse button used in a click event. Use the `@EventData` annotation to specify which DOM event property to include in the server-side event. 
+
+This annotation takes a single parameter: a JavaScript expression that is evaluated in the browser to extract the desired value. In the expression, the DOM event is available as `event`. The element firing the DOM event is available as `element`.
+
+Place the `@EventData` annotation on the constructor parameter that should receive the value. For multiple values, add multiple parameters with the annotation.
+
+.Using the `@EventData` annotation to include the client-side `event.button` property in a server-side `ClickEvent`
+[example]
+====
+[source,java]
+----
+@DomEvent("click")
+public class ClickEvent extends ComponentEvent<NativeButton> {
+    
+    private final int button;
+
+    public ClickEvent(NativeButton source, boolean fromClient,
+            @EventData("event.button") int button) {
+        super(source, fromClient);
+        this.button = button;
+    }
+
+    public int getButton() {
+        return button;
+    }
+}
+----
+====
+
+See https://vaadin.com/api/platform/com/vaadin/flow/dom/DomListenerRegistration.html[`DomListenerRegistration.addEventData`] in the Javadoc for more about how event data is collected and sent to the server.
+
+.Overview of standard DOM events and properties
+[TIP]
+See https://developer.mozilla.org/en-US/docs/Web/API/Event[Event] in the MDN web docs for an overview of standard DOM events and properties.
+
+
+=== Filtering Events
+
+Instead of sending all DOM events to the server, you can filter events by defining a `filter` in the `@DomEvent` annotation.
+
+The filter is a JavaScript expression that is evaluated in the browser. If it returns `true`, the event is sent to the server; if it returns `false`, the event is ignored. In the expression, the DOM event is available as `event`. The element firing the DOM event is available as `element`.
+
+.Firing a server-side `EnterPressEvent` only when the `Enter` key is pressed on the client side
+[example]
+====
+[source,java]
+----
+@DomEvent(value = "keypress",
+          filter = "event.key == 'Enter'")
+public class EnterPressEvent extends ComponentEvent<TextField> {
+
+    public EnterPressEvent(TextField source, boolean fromClient) {
+        super(source, fromClient);
+    }
+}
+----
+====
+
+See https://vaadin.com/api/platform/com/vaadin/flow/dom/DomListenerRegistration.html[`DomListenerRegistration.setFilter`] in the Javadoc for more about how the filter is used.
+
+
+=== Limiting Event Frequency
+
+Certain events can fire very frequently when users interact with a component. For example, multiple text input events are triggered as the user types. These rapid sequences of events are called _bursts_. _Debouncing_ controls which events in that burst get sent to the server.
+
+You can configure debounce settings in the `@DomEvent` annotation. Debouncing always requires two parameters: a `timeout` (in milliseconds) and a burst `phase`.
+
+There are three available burst phases:
+
+* `LEADING` - Sends only the first event at the start of a burst, then ignores the rest while waiting for the burst to end. The burst has ended when a timeout period has passed with no new events.
+This is useful for scenarios such as button clicks, where you want to prevent accidental double submissions.
+* `INTERMEDIATE` - Sends events periodically during the burst by splitting it into intervals defined by the timeout period. The last event in each interval gets sent to the server.
+This phase is well-suited for text input fields when you want to react continuously as the user types.
+* `TRAILING` - Waits for the burst to end and then sends only the last event, ignoring all the others. The burst has ended when a timeout period has passed with no new events.
+This is often used for text input fields when you only want to react after the user has finished typing.
+
+.Configuring an `input` event to be sent to the server half a second after the user's last input
+[example]
+====
+[source,java]
+----
+@DomEvent(value = "input",
+          debounce = @DebounceSettings(
+              timeout = 500,
+              phases = DebouncePhase.TRAILING))
+public class InputEvent extends ComponentEvent<TextField> {
+
+    private final String value;
+
+    public InputEvent(TextField source, boolean fromClient,
+            @EventData("element.value") String value) {
+        super(source, fromClient);
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+----
+====
+
+You can configure more than one phase for an event. However, combining the `INTERMEDIATE` and `TRAILING` phases results in the final event being sent twice: once as the last intermediate event and once as the trailing event.
+
+.Configuring an event for both the `LEADING` phase (immediately when the burst starts) and the `INTERMEDIATE` phase (while the burst is ongoing)
+[example]
+====
+[source,java]
+----
+@DomEvent(value = "input",
+          debounce = @DebounceSettings(
+              timeout = 500,
+              phases = {DebouncePhase.LEADING,
+                        DebouncePhase.INTERMEDIATE }))
+public class ContinuousInputEvent extends ComponentEvent<TextField> {
+
+    private String value;
+
+    public ContinuousInputEvent(TextField source, boolean fromClient,
+            @EventData("element.value") String value) {
+        super(source, fromClient);
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+}
+----
+====
+
+See https://vaadin.com/api/platform/com/vaadin/flow/dom/DomListenerRegistration.html[`DomListenerRegistration.debounce`] in the Javadoc for more about debouncing events.
+
+
+[NOTE]
+If you configure both a `filter` and `debounce` settings, only events that pass the filter are included in a burst.
+
+
+[discussion-id]`34A83237-00CD-4EEE-A791-29AA776AD293`
