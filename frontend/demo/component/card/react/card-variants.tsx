@@ -5,17 +5,17 @@ import { Card } from '@vaadin/react-components/Card.js';
 function Example() {
   return (
     <>
-      <div className='card-variant-layout'>
+      <div className="card-variant-layout">
         {/* tag::snippet[] */}
         <Card cardTitle="Default">
           <div>This is the default card style.</div>
         </Card>
 
-        <Card  cardTitle="Outlined" theme="outlined">
+        <Card cardTitle="Outlined" theme="outlined">
           <div>Adds a solid outline around the card.</div>
         </Card>
 
-        <Card  cardTitle="Elevated" theme="elevated">
+        <Card cardTitle="Elevated" theme="elevated">
           <div>This variant works better on a shaded background.</div>
         </Card>
         {/* end::snippet[] */}

@@ -10,12 +10,10 @@ function Example() {
         {/* tag::[] */}
         <div
           slot="header"
-          className="leading-xs flex flex-col"
+          style={{ display: 'flex', flexDirection: 'column-reverse', lineHeight: '1.25' }}
         >
           <h2>Lapland</h2>
-          <div className="uppercase text-xs text-secondary" style={{ order: -1 }}>
-            The Exotic North
-          </div>
+          <div style={{ fontSize: '0.8125rem', textTransform: 'uppercase' }}>The Exotic North</div>
         </div>
         {/* end::[] */}
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>

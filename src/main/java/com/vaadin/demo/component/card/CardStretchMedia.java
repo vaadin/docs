@@ -37,9 +37,7 @@ public class CardStretchMedia extends Div {
         iconCard.addThemeVariants(CardVariant.LUMO_STRETCH_MEDIA);
 
         Icon icon = LumoIcon.PHOTO.create();
-        icon.getStyle()
-                .setColor("var(--lumo-primary-color)")
-                .setBackgroundColor("var(--lumo-primary-color-10pct)");
+        icon.getStyle().setBackgroundColor("rgba(0, 0, 0, 0.2)");
         iconCard.setMedia(icon);
 
         iconCard.setTitle(new Div("Lapland"));
