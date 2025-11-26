@@ -10,12 +10,12 @@ import exampleStyles from './scroller-basic-styles'; // hidden-source-line
 
 function Example() {
   return (
-    <VerticalLayout className="border border-contrast-20 items-stretch max-w-full" id="container">
-      <h2 className="text-xl px-m py-m">Create your account</h2>
+    <VerticalLayout id="container">
+      <h2 style={{ fontSize: '1.375rem', padding: '1rem' }}>Create your account</h2>
 
       {/* tag::snippet[] */}
       <Scroller scrollDirection="vertical" theme="overflow-indicators">
-        <div className="flex flex-col pb-m px-m">
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem' }}>
           <TextField className="w-full" label="First name"></TextField>
           <TextField className="w-full" label="Last name"></TextField>
           <TextField className="w-full" label="Email"></TextField>
@@ -30,7 +30,7 @@ function Example() {
       </Scroller>
       {/* end::snippet[] */}
 
-      <footer className="flex gap-s px-m py-s">
+      <footer style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem' }}>
         <Button theme="primary">Next</Button>
         <Button theme="tertiary">Cancel</Button>
       </footer>
