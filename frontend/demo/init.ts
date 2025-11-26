@@ -8,9 +8,10 @@ import client from 'Frontend/generated/connect-client.default';
 // @ts-expect-error Inserted by DS Publisher
 client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
 
-document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
-document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
-document.body.style.setProperty('--docs-example-render-background-color', 'var(--lumo-base-color)');
+// TODO: These props are not defined in global scope and we don't want to load the whole theme into
+// the global styles. Needs checking whether / when these are actually needed.
+// document.body.style.setProperty('--docs-example-render-font-family', 'var(--aura-font-family)');
+// document.body.style.setProperty('--docs-example-render-color', 'var(--vaadin-text-color)');
 
 // Ensures standalone UI sample pags have a lang attribute
 document.documentElement.setAttribute('lang', 'en');
