@@ -54,9 +54,9 @@ public class DashboardAnnouncements extends Div {
         // Live region for screen reader announcements. Changing its text
         // content will result in a new announcement. This element is only
         // visible for demonstration purposes. In your application you should
-        // visually hide it using CSS, for example by using the sr-only Lumo
-        // utility class:
-        // liveRegion.addClassName(LumoUtility.Accessibility.SCREEN_READER_ONLY)
+        // visually hide it using CSS by applying a corresponding class name,
+        // like "screen-reader-only", as shown in the attached CSS example file:
+        // liveRegion.addClassName("screen-reader-only");
         Div liveRegion = new Div();
         liveRegion.getElement().setAttribute("aria-live", "polite");
         add(liveRegion);
