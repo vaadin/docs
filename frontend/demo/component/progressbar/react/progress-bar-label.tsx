@@ -8,11 +8,11 @@ function Example() {
     <div>
       {/* tag::snippet[] */}
       <HorizontalLayout style={{ justifyContent: 'space-between' }}>
-        <label className="text-secondary" id="pblabel">
+        <label id="pblabel">
           Processing Financials.xlsx
         </label>
 
-        <span className="text-secondary">50%</span>
+        <span>50%</span>
       </HorizontalLayout>
 
       <ProgressBar aria-labelledby="pblabel" value={0.5} />

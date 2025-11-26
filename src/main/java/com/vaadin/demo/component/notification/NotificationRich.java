@@ -16,7 +16,6 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.util.function.Supplier;
 

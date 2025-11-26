@@ -16,15 +16,15 @@ function Example() {
       {/* tag::snippet[] */}
       <Scroller scrollDirection="vertical" theme="overflow-indicators">
         <div style={{ display: 'flex', flexDirection: 'column', padding: '0 1rem 1rem' }}>
-          <TextField className="w-full" label="First name"></TextField>
-          <TextField className="w-full" label="Last name"></TextField>
-          <TextField className="w-full" label="Email"></TextField>
-          <TextField className="w-full" label="Phone number"></TextField>
-          <TextField className="w-full" label="Address"></TextField>
-          <TextField className="w-full" label="City"></TextField>
-          <TextField className="w-full" label="State"></TextField>
-          <TextField className="w-full" label="Zip code"></TextField>
-          <TextField className="w-full" label="Country"></TextField>
+          <TextField style={{ width: '100%' }} label="First name"></TextField>
+          <TextField style={{ width: '100%' }} label="Last name"></TextField>
+          <TextField style={{ width: '100%' }} label="Email"></TextField>
+          <TextField style={{ width: '100%' }} label="Phone number"></TextField>
+          <TextField style={{ width: '100%' }} label="Address"></TextField>
+          <TextField style={{ width: '100%' }} label="City"></TextField>
+          <TextField style={{ width: '100%' }} label="State"></TextField>
+          <TextField style={{ width: '100%' }} label="Zip code"></TextField>
+          <TextField style={{ width: '100%' }} label="Country"></TextField>
           <Checkbox label="Agree to terms and conditions" />
         </div>
       </Scroller>
