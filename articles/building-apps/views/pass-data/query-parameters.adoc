@@ -1,0 +1,149 @@
+---
+title: Query Parameters
+page-title: How to use query parameters in a Vaadin application 
+description: Learn how to manage state with query parameters in Vaadin.
+meta-description: Learn how to use query parameters in Vaadin to store view state, manage sorting and filtering, and enhance navigation.
+order: 30
+---
+
+
+= Query Parameters
+:toclevels: 2
+
+In this guide, you'll learn how to access and set query parameters in a Vaadin view.
+
+.Copy-Paste into Your Project
+[TIP]
+====
+If you want to quickly try out query parameters in your Vaadin application, copy-paste the following code into a new Java class named [classname]`QueryParameterView` in your project's main package:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/QueryParameterView.java[tags=snippet,indent=0]
+----
+
+For more detailed instructions on how to use route parameters, continue reading below.
+====
+
+
+== What Are Query Parameters?
+
+Query parameters are key-value pairs appended to the end of a URL after a `?` character. Multiple parameters are separated by `&`.
+
+For example, this URL: `/orders?sort=date&filter=shipped`
+
+Contains the following query parameters:
+
+* `sort` -> `"date"`
+* `filter` -> `"shipped"`
+
+Query parameters are commonly used to store view-related state, such as a grid's sort order or a search field's value. Since they are optional, always provide default values when a parameter is missing.
+
+[TIP]
+If you need required parameters, consider using <<route-parameters#,route parameters>> instead.
+
+
+== Accessing Query Parameter Values
+
+You access query parameters similarly to <<route-templates#accessing-route-parameter-values,multiple route parameters>>. Your view must implement the [interfacename]`BeforeEnterObserver` interface, which defines the [methodname]`beforeEnter()` method. Inside this method, you can retrieve query parameters:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort"; // <1>
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        event.getLocation().getQueryParameters().getSingleParameter(QUERY_PARAM_SORT)
+            .ifPresent(sort -> {
+                // Process the sort parameter
+            });
+        event.getLocation().getQueryParameters().getSingleParameter(QUERY_PARAM_FILTER)
+            .ifPresent(filter -> {
+                // Process the filter parameter
+            });
+    }
+    ...
+}
+----
+<1> *Tip:* To improve readability and maintainability, declare query parameter names as constants.
+
+Now, if you navigate to `/orders?sort=date&filter=shipped`, the query parameter values will be:
+
+* `sort` -> `"date"`
+* `filter` -> `"shipped"`
+
+The [classname]`QueryParameters` class provides methods for accessing query parameter values. Familiarize yourself with its API if you frequently use query parameters in your application.
+
+[NOTE]
+You can also retrieve query parameters using [methodname]`UI.getCurrent().getActiveViewLocation().getQueryParameters()`.
+
+Since query parameters are always strings and optional, they may be empty or contain invalid data. To handle this, you can provide default values, redirect users to a different view, or display an error message.
+
+
+== Setting Query Parameters
+
+The [classname]`QueryParameters` class is immutable, meaning you can't modify existing query parameters. Instead, you must create a new [classname]`QueryParameters` object and pass it to [methodname]`UI.navigate()`. Query parameters are set when navigating to a view.
+
+In the following example, [classname]`OrdersView` provides a <<../navigate#your-own-api,custom API>> for navigating to itself while setting the `filter` query parameter:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort";
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+// tag::snippet[]
+    public static void showOrders(@Nullable String filter) {
+        var queryParameters = filter == null ? QueryParameters.empty() 
+            : QueryParameters.of(QUERY_PARAM_FILTER, filter);
+        UI.getCurrent().navigate(OrdersView.class, queryParameters);
+    }
+// end::snippet[]
+    ...
+}
+----
+
+[IMPORTANT]
+You _cannot_ set query parameters to `null`. To clear a query parameter, exclude it from the [classname]`QueryParameters` object.
+
+
+=== Updating Query Parameters Dynamically
+
+Query parameters are often set dynamically, such as when users apply filters or change sort options. In such cases, the view must navigate to itself while updating query parameters.
+
+When navigating to the _same_ view, the existing view instance is reused. The browser URL updates, and [methodname]`beforeEnter()` is invoked again.
+
+The following example updates the `filter` query parameter when a user types in a text field:
+
+[source,java]
+----
+@Route
+public class OrdersView extends Main implements BeforeEnterObserver {
+
+    private static final String QUERY_PARAM_SORT = "sort";
+    private static final String QUERY_PARAM_FILTER = "filter";
+
+// tag::snippet[]
+    public OrdersView() {
+        var filterField = new TextField();
+        add(filterField);
+
+        filterField.addValueChangeListener(event -> {
+            var queryParameters = UI.getCurrent().getActiveViewLocation()
+                .getQueryParameters()
+                .merging(QUERY_PARAM_FILTER, event.getValue());
+            UI.getCurrent().navigate(OrdersView.class, queryParameters);
+        });
+    }
+// end::snippet[]
+    ...
+}
+----
+
+If the original URL was `/orders?sort=date&filter=shipped`, and the user enters "foobar" in the text field, the URL updates to `/orders?sort=date&filter=foobar`.
