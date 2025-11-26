@@ -13,7 +13,7 @@ export class Example extends LitElement {
   static override styles = css`
     section {
       border: solid 1px var(--vaadin-border-color);
-      max-width: 100%
+      max-width: 100%;
       width: 360px;
     }
   `;
