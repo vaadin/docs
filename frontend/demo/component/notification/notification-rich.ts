@@ -20,26 +20,25 @@ export class Example extends LitElement {
     return root;
   }
 
+  protected override firstUpdated() {
+    this.renderRoot
+      .querySelectorAll<Notification>('vaadin-notification')
+      .forEach((notification) => notification.open());
+  }
+
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
+      <!-- The duration is set to 0-sec to prevent the notification from auto-close. -->
       <vaadin-notification
+        duration="0"
         ${notificationRenderer(
           (notification) => html`
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
               <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
               <div>Application submitted!</div>
-              <vaadin-button
-                style="margin: 0 0 0 var(--lumo-space-l)"
-                @click="${() => notification.close()}"
-              >
-                View
-              </vaadin-button>
-              <vaadin-button
-                theme="tertiary-inline"
-                @click="${() => notification.close()}"
-                aria-label="Close"
-              >
+              <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)"> View </vaadin-button>
+              <vaadin-button theme="tertiary-inline" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -51,22 +50,14 @@ export class Example extends LitElement {
       ></vaadin-notification>
 
       <vaadin-notification
+        duration="0"
         ${notificationRenderer(
           (notification) => html`
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
               <vaadin-icon icon="vaadin:warning"></vaadin-icon>
               <div>Failed to generate report</div>
-              <vaadin-button
-                style="margin: 0 0 0 var(--lumo-space-l)"
-                @click="${() => notification.close()}"
-              >
-                Retry
-              </vaadin-button>
-              <vaadin-button
-                theme="tertiary-inline"
-                @click="${() => notification.close()}"
-                aria-label="Close"
-              >
+              <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)"> Retry </vaadin-button>
+              <vaadin-button theme="tertiary-inline" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -78,16 +69,13 @@ export class Example extends LitElement {
       ></vaadin-notification>
 
       <vaadin-notification
+        duration="0"
         ${notificationRenderer(
           (notification) => html`
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
               <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
               <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
-              <vaadin-button
-                theme="tertiary-inline"
-                @click="${() => notification.close()}"
-                aria-label="Close"
-              >
+              <vaadin-button theme="tertiary-inline" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -98,6 +86,7 @@ export class Example extends LitElement {
       ></vaadin-notification>
 
       <vaadin-notification
+        duration="0"
         ${notificationRenderer(
           (notification) => html`
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
@@ -113,11 +102,7 @@ export class Example extends LitElement {
                   <b>Financials.xlsx</b> is now available in <a href="#">Documents</a>
                 </div>
               </div>
-              <vaadin-button
-                theme="tertiary-inline"
-                @click="${() => notification.close()}"
-                aria-label="Close"
-              >
+              <vaadin-button theme="tertiary-inline" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -127,24 +112,6 @@ export class Example extends LitElement {
         position="middle"
       ></vaadin-notification>
       <!-- end::snippet[] -->
-      <vaadin-horizontal-layout theme="spacing" style="justify-content: center">
-        <vaadin-button @click="${this.open}" data-which="1" theme="success primary">
-          Try it
-        </vaadin-button>
-        <vaadin-button @click="${this.open}" data-which="2" theme="error primary">
-          Try it
-        </vaadin-button>
-        <vaadin-button @click="${this.open}" data-which="3" theme="contrast">Try it</vaadin-button>
-        <vaadin-button @click="${this.open}" data-which="4" theme="success">Try it</vaadin-button>
-      </vaadin-horizontal-layout>
     `;
-  }
-
-  open(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    const notification = this.renderRoot.querySelector<Notification>(
-      `vaadin-notification:nth-child(${target.dataset.which})`
-    );
-    notification?.open();
   }
 }
