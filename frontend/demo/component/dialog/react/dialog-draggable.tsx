@@ -40,7 +40,7 @@ function Example() {
               margin: 0,
               fontSize: '1.5em',
               fontWeight: 'bold',
-              padding: 'var(--lumo-space-m) 0',
+              padding: '1rem 0',
             }}
           >
             Add note

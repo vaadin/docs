@@ -40,7 +40,7 @@ public class DialogDraggable extends Div {
         // end::snippet2[]
         headline.getStyle().set("margin", "0").set("font-size", "1.5em")
                 .set("font-weight", "bold").set("cursor", "move")
-                .set("padding", "var(--lumo-space-m) 0").set("flex", "1");
+                .set("padding", "1rem 0").set("flex", "1");
 
         return headline;
     }

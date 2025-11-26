@@ -27,7 +27,7 @@ public class DialogClosing extends Div {
 
     private static VerticalLayout createDialogLayout(Dialog dialog) {
         H2 headline = new H2("System maintenance");
-        headline.getStyle().set("margin", "var(--lumo-space-m) 0")
+        headline.getStyle().set("margin", "1rem 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
 
         Paragraph paragraph = new Paragraph(

@@ -60,7 +60,7 @@ function Example() {
               data-profession={profession}
               theme="contrast tertiary-inline"
               title={`Clear filter: ${profession}`}
-              style={{ marginInlineStart: 'var(--lumo-space-xs)' }}
+              style={{ marginInlineStart: '0.25rem' }}
               onClick={onClick}
             >
               <Icon icon="vaadin:close-small" />

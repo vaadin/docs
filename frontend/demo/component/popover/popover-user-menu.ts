@@ -32,7 +32,7 @@ export class Example extends LitElement {
         <vaadin-button
           id="avatar"
           theme="icon tertiary-inline"
-          style="margin: var(--lumo-space-s); margin-inline-start: auto; border-radius: 50%;"
+          style="margin: 0.5rem; margin-inline-start: auto; border-radius: 50%;"
         >
           <vaadin-avatar
             tabindex="-1"

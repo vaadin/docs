@@ -52,7 +52,7 @@ function Example() {
 
       {/* tag::snippet[] */}
       <Popover for="toggle-columns" modal withBackdrop position="bottom-end">
-        <div style={{ fontWeight: '600', padding: 'var(--lumo-space-xs)' }}>Configure columns</div>
+        <div style={{ fontWeight: '600', padding: '0.25rem' }}>Configure columns</div>
         <CheckboxGroup theme="vertical" value={visibleColumns.value}>
           {columns.value.map((item) => (
             <Checkbox

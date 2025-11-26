@@ -26,7 +26,7 @@ const layoutExampleStyles = css`
     background: var(--lumo-primary-color);
     color: var(--lumo-primary-contrast-color);
     border-radius: var(--lumo-border-radius-m);
-    padding: var(--lumo-space-s) var(--lumo-space-l);
+    padding: 0.5rem 1.5rem;
     white-space: nowrap;
   }
 `;

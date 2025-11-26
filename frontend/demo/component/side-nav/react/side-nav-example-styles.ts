@@ -9,7 +9,7 @@ const styles = css`
   .side-nav-sample > * {
     background: var(--lumo-base-color);
     box-shadow: var(--lumo-box-shadow-s);
-    padding: var(--lumo-space-m);
+    padding: 1rem;
     width: 15em;
   }
 `;

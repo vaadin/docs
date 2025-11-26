@@ -56,7 +56,7 @@ export class Example extends LitElement {
                   data-profession="${profession}"
                   theme="contrast tertiary-inline"
                   title="Clear filter: ${profession}"
-                  style="margin-inline-start: var(--lumo-space-xs)"
+                  style="margin-inline-start: 0.25rem"
                   @click="${this.onClick}"
                 >
                   <vaadin-icon icon="vaadin:close-small"></vaadin-icon>

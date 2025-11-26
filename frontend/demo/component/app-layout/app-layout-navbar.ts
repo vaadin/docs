@@ -14,7 +14,7 @@ export class Example extends LitElement {
   static override styles = css`
     h1 {
       font-size: 1.125rem;
-      left: var(--lumo-space-l);
+      left: 1.5rem;
       margin: 0;
       position: absolute;
     }

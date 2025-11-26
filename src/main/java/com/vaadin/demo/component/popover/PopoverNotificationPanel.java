@@ -103,7 +103,7 @@ public class PopoverNotificationPanel extends Div {
         layout.setSpacing(false);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.getStyle().set("padding",
-                "var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)");
+                "1rem 1rem 0.25rem");
 
         popover.add(layout, tabSheet);
 

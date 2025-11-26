@@ -78,7 +78,7 @@ export class Example extends LitElement {
     const visibleColumns = columns.filter((column) => column.visible).map((column) => column.key);
 
     return html`
-      <div style="font-weight: 600; padding: var(--lumo-space-xs);">Configure columns</div>
+      <div style="font-weight: 600; padding: 0.25rem;">Configure columns</div>
       <vaadin-checkbox-group theme="vertical" .value="${visibleColumns}">
         ${columns.map(
           (column) => html`

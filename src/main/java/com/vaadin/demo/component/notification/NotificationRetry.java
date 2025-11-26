@@ -59,7 +59,7 @@ public class NotificationRetry extends Div {
         public RetryButton() {
             super("Retry");
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
+            getElement().getStyle().set("margin-left", "2.5rem");
             addClickListener(e -> findAncestor(Notification.class).close());
         }
     }

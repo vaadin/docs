@@ -33,9 +33,9 @@ export class DetailContent extends LitElement {
     input {
       background: var(--lumo-contrast-10pct);
       border-radius: var(--lumo-border-radius-s);
-      padding: var(--lumo-space-s) 0;
+      padding: 0.5rem 0;
       border: none;
-      margin-top: var(--lumo-space-s);
+      margin-top: 0.5rem;
     }
   `;
 

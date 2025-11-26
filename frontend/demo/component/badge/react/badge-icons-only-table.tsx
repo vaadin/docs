@@ -43,7 +43,7 @@ function Example() {
       <Icon
         aria-label={title}
         icon={icon}
-        style={{ padding: 'var(--lumo-space-xs)' }}
+        style={{ padding: '0.25rem' }}
         theme={`badge ${theme}`}
         title={title}
       />

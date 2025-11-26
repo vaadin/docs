@@ -83,9 +83,7 @@ export class Example extends LitElement {
 
   renderNotifications(unread: MessageListItem[], all: MessageListItem[]) {
     return html`
-      <vaadin-horizontal-layout
-        style="align-items: center; padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)"
-      >
+      <vaadin-horizontal-layout style="align-items: center; padding: 1rem 1rem 0.25rem">
         <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
         <vaadin-button theme="small" style="margin: 0 0 0 auto;" @click="${this.markAllRead}">
           Mark all read

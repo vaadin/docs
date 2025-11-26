@@ -23,7 +23,7 @@ export class Example extends LitElement {
         <vaadin-horizontal-layout theme="spacing" style="align-items: center">
           <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
           <div>Application submitted!</div>
-          <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)">View</vaadin-button>
+          <vaadin-button style="margin: 0 0 0 1.5rem">View</vaadin-button>
           <vaadin-button theme="tertiary-inline">
             <vaadin-icon icon="lumo:cross"></vaadin-icon>
           </vaadin-button>
@@ -34,7 +34,7 @@ export class Example extends LitElement {
         <vaadin-horizontal-layout theme="spacing" style="align-items: center">
           <vaadin-icon icon="vaadin:warning"></vaadin-icon>
           <div>Failed to generate report</div>
-          <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)">Retry</vaadin-button>
+          <vaadin-button style="margin: 0 0 0 1.5rem">Retry</vaadin-button>
           <vaadin-button theme="tertiary-inline">
             <vaadin-icon icon="lumo:cross"></vaadin-icon>
           </vaadin-button>

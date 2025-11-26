@@ -24,7 +24,7 @@ public class BadgeCounter extends Div {
         Span label = new Span(labelText);
         Span counter = new Span(String.valueOf(messageCount));
         counter.getElement().getThemeList().add("badge pill small contrast");
-        counter.getStyle().set("margin-inline-start", "var(--lumo-space-s)");
+        counter.getStyle().set("margin-inline-start", "0.5rem");
         // Accessible badge label
         String counterLabel = String.format("%d unread messages", messageCount);
         counter.getElement().setAttribute("aria-label", counterLabel);

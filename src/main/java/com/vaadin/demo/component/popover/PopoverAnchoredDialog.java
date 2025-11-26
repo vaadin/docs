@@ -67,12 +67,12 @@ public class PopoverAnchoredDialog extends Div {
 
         Div heading = new Div("Configure columns");
         heading.getStyle().set("font-weight", "600");
-        heading.getStyle().set("padding", "var(--lumo-space-xs)");
+        heading.getStyle().set("padding", "0.25rem");
 
         List<String> columns = List.of("firstName", "lastName", "email",
                 "phone", "birthday", "profession");
         // tag::gridsnippet[]
-        
+
         CheckboxGroup<String> group = new CheckboxGroup<>();
         group.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         group.setItems(columns);

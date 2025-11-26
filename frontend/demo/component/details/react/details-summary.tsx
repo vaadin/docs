@@ -35,15 +35,13 @@ function Example() {
         <HorizontalLayout style={{ justifyContent: 'space-between', width: '100%' }}>
           <span>Contact information</span>
 
-          <HorizontalLayout
-            style={{ color: 'var(--lumo-error-text-color)', marginLeft: 'var(--lumo-space-s)' }}
-          >
+          <HorizontalLayout style={{ color: 'var(--lumo-error-text-color)', marginLeft: '0.5rem' }}>
             <Icon
               icon="vaadin:exclamation-circle"
               style={{
                 width: 'var(--lumo-icon-size-s)',
                 height: 'var(--lumo-icon-size-s)',
-                marginRight: 'var(--lumo-space-xs)',
+                marginRight: '0.25rem',
               }}
             />
             <span>2 errors</span>

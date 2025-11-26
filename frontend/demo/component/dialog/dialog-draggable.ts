@@ -35,7 +35,7 @@ export class Example extends LitElement {
           () => html`
             <h2
               class="draggable"
-              style="flex: 1; cursor: move; margin: 0; font-size: 1.5em; font-weight: bold; padding: var(--lumo-space-m) 0;"
+              style="flex: 1; cursor: move; margin: 0; font-size: 1.5em; font-weight: bold; padding: 1rem 0;"
             >
               Add note
             </h2>

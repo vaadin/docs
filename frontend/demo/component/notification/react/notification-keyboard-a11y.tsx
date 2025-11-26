@@ -52,7 +52,7 @@ function Example() {
       >
         <HorizontalLayout style={{ alignItems: 'center' }}>
           <div>5 tasks deleted</div>
-          <Button style={{ marginLeft: 'var(--lumo-space-xl)' }} theme="primary" onClick={close}>
+          <Button style={{ marginLeft: '2.5rem' }} theme="primary" onClick={close}>
             Undo
             {isMac ? '⌘' : 'Ctrl-'}Z
           </Button>

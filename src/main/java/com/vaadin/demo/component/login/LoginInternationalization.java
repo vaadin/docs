@@ -13,7 +13,7 @@ public class LoginInternationalization extends Div {
         // Demo purposes only
         getStyle().set("background-color", "var(--lumo-contrast-5pct)")
                 .set("display", "flex").set("justify-content", "center")
-                .set("padding", "var(--lumo-space-l)");
+                .set("padding", "1.5rem");
 
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();

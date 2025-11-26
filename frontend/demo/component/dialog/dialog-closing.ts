@@ -33,7 +33,7 @@ export class Example extends LitElement {
               theme="spacing"
               style="width: 300px; max-width: 100%; align-items: stretch;"
             >
-              <h2 style="margin: var(--lumo-space-m) 0; font-size: 1.5em; font-weight: bold;">
+              <h2 style="margin: 1rem 0; font-size: 1.5em; font-weight: bold;">
                 System maintenance
               </h2>
               <p>

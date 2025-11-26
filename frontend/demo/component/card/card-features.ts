@@ -56,7 +56,7 @@ export class Example extends LitElement {
 
     .wrapper {
       display: flex;
-      max-height: calc(100svh - var(--docs-header-height, 0px) * 2.5 - var(--lumo-space-l) * 2);
+      max-height: calc(100svh - var(--docs-header-height, 0px) * 2.5 - 1.5rem * 2);
       min-height: 400px;
       container-type: inline-size;
       position: relative;
@@ -94,8 +94,8 @@ export class Example extends LitElement {
     .options {
       overflow: auto;
       width: min-content;
-      padding: var(--lumo-space-m) var(--lumo-space-l);
-      padding-top: var(--lumo-space-s);
+      padding: 1rem 1.5rem;
+      padding-top: 0.5rem;
       box-sizing: border-box;
     }
 
@@ -140,14 +140,14 @@ export class Example extends LitElement {
       justify-content: center;
       flex: 1;
       overflow: auto;
-      padding: var(--lumo-space-l);
+      padding: 1.5rem;
       box-sizing: border-box;
     }
 
     @container (max-width: 600px) {
       .options {
         position: absolute;
-        inset: var(--lumo-space-s);
+        inset: 0.5rem;
         inset-inline-start: auto;
         background: var(--lumo-base-color)
           linear-gradient(var(--lumo-tint-5pct), var(--lumo-tint-5pct));

@@ -38,11 +38,7 @@ function Example() {
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
           <div>5 tasks deleted</div>
-          <Button
-            theme="tertiary-inline"
-            style={{ marginLeft: 'var(--lumo-space-xl)' }}
-            onClick={close}
-          >
+          <Button theme="tertiary-inline" style={{ marginLeft: '2.5rem' }} onClick={close}>
             Undo
           </Button>
 

@@ -46,7 +46,7 @@ export class Example extends LitElement {
         <vaadin-icon
           aria-label="${title}"
           icon="${icon}"
-          style="padding: var(--lumo-space-xs)"
+          style="padding: 0.25rem"
           theme="badge ${theme}"
           title="${title}"
         ></vaadin-icon>

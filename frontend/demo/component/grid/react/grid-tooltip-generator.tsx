@@ -16,11 +16,7 @@ const statusRenderer = ({ item: { status } }: { item: Person }) => {
   const theme = status === 'Available' ? 'success' : 'error';
 
   return (
-    <Icon
-      icon={`vaadin:${icon}`}
-      style={{ padding: 'var(--lumo-space-xs)' }}
-      {...{ theme: `badge ${theme}` }}
-    />
+    <Icon icon={`vaadin:${icon}`} style={{ padding: '0.25rem' }} {...{ theme: `badge ${theme}` }} />
   );
 };
 

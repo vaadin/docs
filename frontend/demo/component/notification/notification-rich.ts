@@ -29,10 +29,7 @@ export class Example extends LitElement {
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
               <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
               <div>Application submitted!</div>
-              <vaadin-button
-                style="margin: 0 0 0 var(--lumo-space-l)"
-                @click="${() => notification.close()}"
-              >
+              <vaadin-button style="margin: 0 0 0 1.5rem" @click="${() => notification.close()}">
                 View
               </vaadin-button>
               <vaadin-button
@@ -56,10 +53,7 @@ export class Example extends LitElement {
             <vaadin-horizontal-layout theme="spacing" style="align-items: center">
               <vaadin-icon icon="vaadin:warning"></vaadin-icon>
               <div>Failed to generate report</div>
-              <vaadin-button
-                style="margin: 0 0 0 var(--lumo-space-l)"
-                @click="${() => notification.close()}"
-              >
+              <vaadin-button style="margin: 0 0 0 1.5rem" @click="${() => notification.close()}">
                 Retry
               </vaadin-button>
               <vaadin-button

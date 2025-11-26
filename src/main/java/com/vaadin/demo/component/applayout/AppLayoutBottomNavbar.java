@@ -21,7 +21,7 @@ public class AppLayoutBottomNavbar extends AppLayout {
                 "true"); // hidden-source-line
         H1 title = new H1("MyApp");
         title.getStyle().set("font-size", "1.125rem").set("margin",
-                "var(--lumo-space-m) var(--lumo-space-l)");
+                "1rem 1.5rem");
 
         HorizontalLayout nav = getNavigation();
         nav.getElement().executeJs("window.patchAppLayoutNavigation(this);"); // hidden-source-line

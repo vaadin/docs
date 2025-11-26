@@ -31,7 +31,7 @@ function Example() {
           theme="spacing"
           style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
         >
-          <h2 style={{ margin: 'var(--lumo-space-m) 0', fontSize: '1.5em', fontWeight: 'bold' }}>
+          <h2 style={{ margin: '1rem 0', fontSize: '1.5em', fontWeight: 'bold' }}>
             System maintenance
           </h2>
           <p>

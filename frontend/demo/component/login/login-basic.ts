@@ -11,7 +11,7 @@ export class Example extends LitElement {
       background-color: var(--lumo-contrast-5pct);
       display: flex !important;
       justify-content: center;
-      padding: var(--lumo-space-l);
+      padding: 1.5rem;
     }
   `;
 

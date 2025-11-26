@@ -43,11 +43,11 @@ export class Example extends LitElement {
             <span>Contact information</span>
 
             <vaadin-horizontal-layout
-              style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
+              style="color: var(--lumo-error-text-color); margin-left: 0.5rem"
             >
               <vaadin-icon
                 icon="vaadin:exclamation-circle"
-                style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-xs)"
+                style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: 0.25rem"
               ></vaadin-icon>
               <span>2 errors</span>
             </vaadin-horizontal-layout>

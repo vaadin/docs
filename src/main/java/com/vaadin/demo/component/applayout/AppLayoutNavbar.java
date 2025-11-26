@@ -15,7 +15,7 @@ public class AppLayoutNavbar extends AppLayout {
     public AppLayoutNavbar() {
         H1 title = new H1("MyApp");
         title.getStyle().set("font-size", "1.125rem")
-                .set("left", "var(--lumo-space-l)").set("margin", "0")
+                .set("left", "1.5rem").set("margin", "0")
                 .set("position", "absolute");
 
         HorizontalLayout navigation = getNavigation();

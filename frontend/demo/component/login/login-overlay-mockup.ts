@@ -13,7 +13,7 @@ export class LoginOverlayMockupElement extends LitElement {
         linear-gradient(var(--lumo-shade-5pct), var(--lumo-shade-5pct));
       display: flex;
       justify-content: center;
-      padding: var(--lumo-space-m);
+      padding: 1rem;
     }
 
     [part='card'] {
@@ -24,7 +24,7 @@ export class LoginOverlayMockupElement extends LitElement {
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      margin: var(--lumo-space-s);
+      margin: 0.5rem;
       max-width: 100%;
       overflow: hidden;
       height: max-content;
@@ -42,7 +42,7 @@ export class LoginOverlayMockupElement extends LitElement {
       justify-content: flex-end;
       min-height: calc(2.25rem * 5);
       overflow: hidden;
-      padding: var(--lumo-space-l) var(--lumo-space-xl) var(--lumo-space-l) var(--lumo-space-l);
+      padding: 1.5rem 2.5rem 1.5rem 1.5rem;
     }
 
     [part='brand'] h1 {

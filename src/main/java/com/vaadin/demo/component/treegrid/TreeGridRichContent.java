@@ -83,7 +83,7 @@ public class TreeGridRichContent extends Div {
 
     private Icon createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("margin-inline-end", "var(--lumo-space-s)");
+        icon.getStyle().set("margin-inline-end", "0.5rem");
         icon.setSize("var(--lumo-icon-size-s)");
         return icon;
     }

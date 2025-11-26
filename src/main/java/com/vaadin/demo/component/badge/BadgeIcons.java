@@ -67,7 +67,7 @@ public class BadgeIcons extends VerticalLayout {
     // tag::snippet3[]
     private Icon createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("padding", "var(--lumo-space-xs)");
+        icon.getStyle().set("padding", "0.25rem");
         return icon;
     }
 

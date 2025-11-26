@@ -40,7 +40,7 @@ public class TreeGridColumn extends Div {
         HorizontalLayout header = new HorizontalLayout(employees, expand,
                 collapse);
         header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setHeight("var(--lumo-space-xl)");
+        header.setHeight("2.5rem");
         header.setFlexGrow(1, employees);
 
         add(header, treeGrid);

@@ -39,11 +39,7 @@ function Example() {
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
           <div>Failed to generate report</div>
-          <Button
-            theme="tertiary-inline"
-            style={{ marginLeft: 'var(--lumo-space-xl)' }}
-            onClick={close}
-          >
+          <Button theme="tertiary-inline" style={{ marginLeft: '2.5rem' }} onClick={close}>
             Retry
           </Button>
 

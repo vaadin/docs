@@ -41,27 +41,25 @@ export class Example extends LitElement {
 
   render() {
     return html`
-      <div style="display:flex; align-items:baseline; gap:1rem; padding-inline:var(--lumo-space-m);">
+      <div style="display: flex; align-items: baseline; gap: 1rem; padding-inline: 1rem;">
         <vaadin-select
-            label="Widget variant"
-            .items="${this.items}"
-            value=" "
-            @change="${this.onWidgetVariantChange}"
+          label="Widget variant"
+          .items="${this.items}"
+          value=" "
+          @change="${this.onWidgetVariantChange}"
         ></vaadin-select>
         <vaadin-checkbox
-            label="Shaded board background"
-            @change="${this.onShadedBgChange}"
+          label="Shaded board background"
+          @change="${this.onShadedBgChange}"
         ></vaadin-checkbox>
       </div>
-      <vaadin-dashboard-layout theme="${this.widgetVariant} ${this.shadedBoard}"
+      <vaadin-dashboard-layout
+        theme="${this.widgetVariant} ${this.shadedBoard}"
         style=" width:100%; --vaadin-dashboard-row-min-height:200px; --vaadin-dashboard-col-min-width: 100px; --vaadin-dashboard-col-max-count: 3;"
       >
-        <vaadin-dashboard-widget widget-title="Visitors">
-        </vaadin-dashboard-widget>
-        <vaadin-dashboard-widget widget-title="Downloads">
-        </vaadin-dashboard-widget>
-        <vaadin-dashboard-widget widget-title="Conversions">
-        </vaadin-dashboard-widget>
+        <vaadin-dashboard-widget widget-title="Visitors"></vaadin-dashboard-widget>
+        <vaadin-dashboard-widget widget-title="Downloads"></vaadin-dashboard-widget>
+        <vaadin-dashboard-widget widget-title="Conversions"></vaadin-dashboard-widget>
       </vaadin-dashboard-layout>
     `;
   }

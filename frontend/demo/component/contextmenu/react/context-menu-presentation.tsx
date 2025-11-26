@@ -42,8 +42,8 @@ function createItem(iconName: string, text: string) {
         icon={iconName}
         style={{
           color: 'var(--lumo-secondary-text-color)',
-          marginInlineEnd: 'var(--lumo-space-s)',
-          padding: 'var(--lumo-space-xs)',
+          marginInlineEnd: '0.5rem',
+          padding: '0.25rem',
         }}
       />
       {text}

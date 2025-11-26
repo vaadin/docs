@@ -8,7 +8,7 @@ export class Example extends LitElement {
   static override styles = [
     css`
       span[theme~='badge'] {
-        margin-inline-start: var(--lumo-space-xs);
+        margin-inline-start: 0.25rem;
       }
     `,
   ];

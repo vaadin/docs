@@ -8,7 +8,7 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = css`
     span[theme~='badge'] {
-      margin-inline-start: var(--lumo-space-s);
+      margin-inline-start: 0.5rem;
     }
   `;
 

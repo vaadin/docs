@@ -38,7 +38,7 @@ export class Example extends LitElement {
               <vaadin-icon
                 icon="vaadin:bell"
                 theme="badge error pill"
-                style="padding:var(--lumo-space-xs)"
+                style="padding:0.25rem"
                 aria-label="Upcoming appointment"
                 slot="suffix"
               ></vaadin-icon>

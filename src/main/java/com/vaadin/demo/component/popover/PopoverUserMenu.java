@@ -39,7 +39,7 @@ public class PopoverUserMenu extends HorizontalLayout {
         Button button = new Button(avatar);
         button.addThemeVariants(ButtonVariant.LUMO_ICON,
                 ButtonVariant.LUMO_TERTIARY_INLINE);
-        button.getStyle().set("margin", "var(--lumo-space-s)");
+        button.getStyle().set("margin", "0.5rem");
         button.getStyle().set("margin-inline-start", "auto");
         button.getStyle().set("border-radius", "50%");
 

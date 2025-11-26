@@ -19,7 +19,7 @@ export class Example extends LitElement {
     h1 {
       font-size: 1.125rem;
       line-height: 2.75rem;
-      margin: 0 var(--lumo-space-m);
+      margin: 0 1rem;
     }
 
     h2 {

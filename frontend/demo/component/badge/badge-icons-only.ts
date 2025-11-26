@@ -21,14 +21,14 @@ export class Example extends LitElement {
         <vaadin-icon
           aria-label="Confirmed"
           icon="vaadin:check"
-          style="padding: var(--lumo-space-xs)"
+          style="padding: 0.25rem"
           theme="badge success"
           title="Confirmed"
         ></vaadin-icon>
         <vaadin-icon
           aria-label="Cancelled"
           icon="vaadin:close-small"
-          style="padding: var(--lumo-space-xs)"
+          style="padding: 0.25rem"
           theme="badge error"
           title="Cancelled"
         ></vaadin-icon>

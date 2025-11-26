@@ -67,7 +67,7 @@ public class NotificationRich extends HorizontalLayout {
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
 
         Button viewBtn = new Button("View", clickEvent -> notification.close());
-        viewBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
+        viewBtn.getStyle().setMargin("0 0 0 1.5rem");
 
         var layout = new HorizontalLayout(icon,
                 new Text("Application submitted!"), viewBtn,
@@ -86,7 +86,7 @@ public class NotificationRich extends HorizontalLayout {
         Icon icon = VaadinIcon.WARNING.create();
         Button retryBtn = new Button("Retry",
                 clickEvent -> notification.close());
-        retryBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
+        retryBtn.getStyle().setMargin("0 0 0 1.5rem");
 
         var layout = new HorizontalLayout(icon,
                 new Text("Failed to generate report!"), retryBtn,

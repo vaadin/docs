@@ -4,7 +4,7 @@ import { Tab } from '@vaadin/react-components/Tab.js';
 import { Tabs } from '@vaadin/react-components/Tabs.js';
 
 const badgeStyle = {
-  marginInlineStart: 'var(--lumo-space-xs)',
+  marginInlineStart: '0.25rem',
 };
 
 function Example() {

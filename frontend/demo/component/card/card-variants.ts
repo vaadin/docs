@@ -36,7 +36,7 @@ export class Example extends LitElement {
     .card-variant-layout {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(12ch, 1fr));
-      gap: var(--lumo-space-m);
+      gap: 1rem;
     }
   `;
 }

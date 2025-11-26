@@ -27,7 +27,7 @@ public class TabsBadges extends Div {
     private Span createBadge(int value) {
         Span badge = new Span(String.valueOf(value));
         badge.getElement().getThemeList().add("badge small contrast");
-        badge.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+        badge.getStyle().set("margin-inline-start", "0.25rem");
         return badge;
     }
 

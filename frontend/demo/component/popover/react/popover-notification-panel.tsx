@@ -73,7 +73,7 @@ function Example() {
         <HorizontalLayout
           style={{
             alignItems: 'baseline',
-            padding: 'var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)',
+            padding: '1rem 1rem 0.25rem',
           }}
         >
           <h4 style={{ margin: 0 }} id="notifications-heading">

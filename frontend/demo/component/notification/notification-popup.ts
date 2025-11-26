@@ -36,7 +36,7 @@ export class Example2 extends LitElement {
       <vaadin-context-menu
         open-on="click"
         ${contextMenuRenderer(
-          () => html`<div style="padding: var(--lumo-space-l);">Show notifications here</div>`,
+          () => html`<div style="padding: 1.5rem;">Show notifications here</div>`,
           []
         )}
       >

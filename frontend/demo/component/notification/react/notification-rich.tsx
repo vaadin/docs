@@ -35,7 +35,7 @@ function Example() {
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
           <Icon icon="vaadin:check-circle" />
           <div>Application submitted!</div>
-          <Button style={{ margin: '0 0 0 var(--lumo-space-l)' }} onClick={() => close(0)}>
+          <Button style={{ margin: '0 0 0 1.5rem' }} onClick={() => close(0)}>
             View
           </Button>
           <Button theme="tertiary-inline" onClick={() => close(0)} aria-label="Close">
@@ -55,7 +55,7 @@ function Example() {
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
           <Icon icon="vaadin:warning" />
           <div>Failed to generate report</div>
-          <Button style={{ margin: '0 0 0 var(--lumo-space-l)' }} onClick={() => close(1)}>
+          <Button style={{ margin: '0 0 0 1.5rem' }} onClick={() => close(1)}>
             Retry
           </Button>
           <Button theme="tertiary-inline" onClick={() => close(1)} aria-label="Close">

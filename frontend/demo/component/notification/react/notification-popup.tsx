@@ -10,7 +10,7 @@ function Example() {
     // tag::snippet[]
     <ContextMenu
       openOn="click"
-      renderer={() => <div style={{ padding: 'var(--lumo-space-l)' }}>Show notifications here</div>}
+      renderer={() => <div style={{ padding: '1.5rem' }}>Show notifications here</div>}
     >
       <Button aria-label="notifications" theme="tertiary">
         <Icon icon="vaadin:bell-o" />

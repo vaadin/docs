@@ -12,9 +12,11 @@ interface PersonListProps {
 function PersonList({ people, selectedPerson, onSelect }: PersonListProps) {
   return (
     <VerticalLayout style={{ height: '100%', border: '1px solid var(--lumo-contrast-20pct)' }}>
-      <div style={{padding:'var(--lumo-space-m)', fontWeight:'bold'}}>Select a person to view their details:</div>
+      <div style={{ padding: '1rem', fontWeight: 'bold' }}>
+        Select a person to view their details:
+      </div>
       <Grid
-        theme='no-border'
+        theme="no-border"
         items={people}
         style={{ height: '100%' }}
         selectedItems={selectedPerson ? [selectedPerson] : []}

@@ -58,7 +58,7 @@ public class NotificationKeyboardA11y extends Div {
 
         public CloseButtonWithShortcutHint() {
             addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            getStyle().set("margin-left", "var(--lumo-space-xl)");
+            getStyle().set("margin-left", "2.5rem");
             getElement().executeJs(
                     """
                             const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);

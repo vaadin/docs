@@ -8,7 +8,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 const h1Style = {
   fontSize: '1.125rem',
-  margin: 'var(--lumo-space-m)',
+  margin: '1rem',
 };
 
 function Example() {

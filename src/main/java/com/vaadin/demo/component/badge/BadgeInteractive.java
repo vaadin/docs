@@ -38,7 +38,7 @@ public class BadgeInteractive extends VerticalLayout {
         clearButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST,
                 ButtonVariant.LUMO_TERTIARY_INLINE);
         clearButton.getStyle().set("margin-inline-start",
-                "var(--lumo-space-xs)");
+                "0.25rem");
         // Accessible button name
         clearButton.getElement().setAttribute("aria-label",
                 "Clear filter: " + profession);

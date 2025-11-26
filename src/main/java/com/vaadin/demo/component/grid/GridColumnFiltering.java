@@ -54,7 +54,7 @@ public class GridColumnFiltering extends Div {
     private static Component createFilterHeader(String labelText,
             Consumer<String> filterChangeConsumer) {
         NativeLabel label = new NativeLabel(labelText);
-        label.getStyle().set("padding-top", "var(--lumo-space-m)")
+        label.getStyle().set("padding-top", "1rem")
                 .set("font-size", "var(--lumo-font-size-xs)");
         TextField textField = new TextField();
         textField.setValueChangeMode(ValueChangeMode.EAGER);

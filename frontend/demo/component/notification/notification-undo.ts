@@ -46,11 +46,7 @@ export class Example extends LitElement {
   renderer: NotificationLitRenderer = () => html`
     <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
       <div>5 tasks deleted</div>
-      <vaadin-button
-        theme="tertiary-inline"
-        style="margin-left: var(--lumo-space-xl);"
-        @click="${this.close}"
-      >
+      <vaadin-button theme="tertiary-inline" style="margin-left: 2.5rem;" @click="${this.close}">
         Undo
       </vaadin-button>
       <vaadin-button theme="tertiary-inline" aria-label="Close" @click="${this.close}">

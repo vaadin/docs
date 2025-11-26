@@ -79,14 +79,14 @@ export class Example extends LitElement {
       <a href="mailto:${person.email}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:envelope"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="height: var(--lumo-icon-size-s); margin-inline-end: 0.5rem; width: var(--lumo-icon-size-s);"
         ></vaadin-icon>
         <span>${person.email}</span>
       </a>
       <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:phone"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="height: var(--lumo-icon-size-s); margin-inline-end: 0.5rem; width: var(--lumo-icon-size-s);"
         ></vaadin-icon>
         <span>${person.address.phone}</span>
       </a>

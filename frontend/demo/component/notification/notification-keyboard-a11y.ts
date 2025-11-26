@@ -50,11 +50,7 @@ export class Example extends LitElement {
   renderer: NotificationLitRenderer = () => html`
     <vaadin-horizontal-layout style="align-items: center;">
       <div>5 tasks deleted</div>
-      <vaadin-button
-        style="margin-left: var(--lumo-space-xl);"
-        theme="primary"
-        @click="${this.close}"
-      >
+      <vaadin-button style="margin-left: 2.5rem;" theme="primary" @click="${this.close}">
         Undo
         <!-- Ideally, this should be hidden if the
                  device does not have a physical keyboard -->
