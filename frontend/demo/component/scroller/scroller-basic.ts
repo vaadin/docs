@@ -15,8 +15,19 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = css`
     #container {
+      align-items: stretch;
+      border: 1px solid var(--vaadin-border-color);
+      max-width: 100%;
       height: 400px;
       width: 360px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: solid 1px var(--vaadin-border-color);
     }
   `;
 
@@ -28,39 +39,44 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout class="border border-contrast-20 items-stretch max-w-full" id="container">
-        <header class="flex gap-m items-center border-b p-m">
+      <vaadin-vertical-layout id="container">
+        <header>
           <a href="#" aria-label="Go back">
             <vaadin-icon
-              class="box-border icon-m p-xs"
               icon="vaadin:arrow-left"
+              style="padding: 0.25rem"
               aria-hidden="true"
             ></vaadin-icon>
           </a>
-          <h2 class="text-xl">Edit employee</h2>
+          <h2 style="font-size: 1.375rem">Edit employee</h2>
         </header>
 
         <!-- tag::snippet[] -->
-        <vaadin-scroller class="border-b p-m" scroll-direction="vertical">
+        <vaadin-scroller
+          style="border-bottom: solid 1px var(--vaadin-border-color); padding: 1rem"
+          scroll-direction="vertical"
+        >
           <section aria-labelledby="personal-title">
-            <h3 class="text-l" id="personal-title">Personal information</h3>
-            <vaadin-text-field class="w-full" label="First name"></vaadin-text-field>
-            <vaadin-text-field class="w-full" label="Last name"></vaadin-text-field>
+            <h3 id="personal-title" style="font-size: 1.125rem">Personal information</h3>
+            <vaadin-text-field style="width: 100%" label="First name"></vaadin-text-field>
+            <vaadin-text-field style="width: 100%" label="Last name"></vaadin-text-field>
             <vaadin-date-picker
-              class="w-full"
+              style="width: 100%"
               initial-position="1990-01-01"
               label="Birthdate"
             ></vaadin-date-picker>
           </section>
           <section aria-labelledby="employment-title">
-            <h3 class="mt-l text-l" id="employment-title">Employment information</h3>
-            <vaadin-text-field class="w-full" label="Position"></vaadin-text-field>
-            <vaadin-text-area class="w-full" label="Additional information"></vaadin-text-area>
+            <h3 id="employment-title" style="font-size: 1.125rem; margin-top: 1.5rem">
+              Employment information
+            </h3>
+            <vaadin-text-field style="width: 100%" label="Position"></vaadin-text-field>
+            <vaadin-text-area style="width: 100%" label="Additional information"></vaadin-text-area>
           </section>
         </vaadin-scroller>
         <!-- end::snippet[] -->
 
-        <footer class="flex gap-s px-m py-s">
+        <footer style="display: flex; gap: 0.5rem; padding: 0.5rem 1rem">
           <vaadin-button theme="primary">Save</vaadin-button>
           <vaadin-button theme="tertiary">Reset</vaadin-button>
         </footer>
