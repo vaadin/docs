@@ -325,8 +325,8 @@ export class Example extends LitElement {
             </template>
 
             <template id="slot-options">
-              <div slot="header" class="leading-xs">
-                <b class="uppercase text-xs text-secondary">The Exotic North</b>
+              <div slot="header" style="line-height: 1.25">
+                <b style="font-size: 0.8125rem; text-transform: uppercase">The Exotic North</b>
                 <h2>Lapland</h2>
               </div>
               <vaadin-avatar slot="header-prefix" abbr="L"></vaadin-avatar>
