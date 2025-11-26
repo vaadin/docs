@@ -14,9 +14,15 @@ function createStylesheet(css: CSSResultGroup | string): CSSStyleSheet {
 const docsStylesheet = createStylesheet(docsCss);
 
 export function applyTheme(root: DocumentFragment | DocumentOrShadowRoot | HTMLElement) {
+  if (root === document) {
+    // Flow's frontend/generated/vaadin-web-component.ts tries to apply the theme to the document,
+    // which we want to avoid for the docs. None of the live examples should need the theme in the
+    // global styles, so we just return here.
+    return;
+  }
   // The root parameter type is very broad to handle the default return type of
-  // LitElement.createRenderRoot. In general, we expect this to either be a document or a shadow
-  // root. The adoptedStyleSheets check below makes Typescript accept the parameter type.
+  // LitElement.createRenderRoot. In general, we expect this to be a shadow root. The
+  // adoptedStyleSheets check below makes Typescript accept the parameter type.
   if ('adoptedStyleSheets' in root && !root.adoptedStyleSheets.includes(docsStylesheet)) {
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, docsStylesheet];
   }
