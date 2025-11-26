@@ -36,7 +36,7 @@ export class Example extends LitElement {
           <vaadin-icon
             slot="media"
             icon="lumo:photo"
-            class="bg-primary-10 text-primary"
+            style="background: rgba(0, 0, 0, 0.2)"
           ></vaadin-icon>
           <div slot="title">Lapland</div>
           <div slot="subtitle">The Exotic North</div>

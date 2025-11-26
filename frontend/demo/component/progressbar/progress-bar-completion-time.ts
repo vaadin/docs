@@ -16,13 +16,13 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <div>
-        <label class="text-secondary" id="pblbl">Generating report...</label>
+        <label id="pblbl">Generating report...</label>
         <vaadin-progress-bar
           indeterminate
           aria-labelledby="pblbl"
           aria-describedby="sublbl"
         ></vaadin-progress-bar>
-        <span class="text-secondary text-xs" id="sublbl">
+        <span id="sublbl" style="font-size: 0.8125rem">
           Process can take upwards of 10 minutes
         </span>
       </div>

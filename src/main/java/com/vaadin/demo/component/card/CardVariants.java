@@ -6,7 +6,6 @@ import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.dom.Style.Display;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("card-variants")
 public class CardVariants extends Div {
@@ -15,26 +14,28 @@ public class CardVariants extends Div {
         Card cardDefault = new Card();
 
         Card cardOutlined = new Card();
-        cardOutlined.addThemeVariants(CardVariant.LUMO_OUTLINED);        
+        cardOutlined.addThemeVariants(CardVariant.LUMO_OUTLINED);
 
         Card cardElevated = new Card();
         cardElevated.addThemeVariants(CardVariant.LUMO_ELEVATED);
-        
+
         // end::snippet[]
 
         cardDefault.setTitle("Default");
         cardDefault.add("This is the default card style.");
-        
+
         cardOutlined.setTitle("Outlined");
         cardOutlined.add("Adds a solid outline around the card.");
-        
+
         cardElevated.setTitle("Elevated");
         cardElevated.add("This variant works better on a shaded background.");
 
-        Div cardVariantsLayout = new Div(cardDefault, cardOutlined, cardElevated);
-        cardVariantsLayout.addClassNames(LumoUtility.Gap.MEDIUM, LumoUtility.Display.GRID);
-        cardVariantsLayout.getStyle().set("grid-template-columns", "repeat(auto-fit, minmax(12ch, 1fr))");
-        
+        Div cardVariantsLayout = new Div(cardDefault, cardOutlined,
+                cardElevated);
+        cardVariantsLayout.getStyle().set("display", "grid").set("gap", "1rem")
+                .set("grid-template-columns",
+                        "repeat(auto-fit, minmax(12ch, 1fr))");
+
         add(cardVariantsLayout);
     }
 
