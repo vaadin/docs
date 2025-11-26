@@ -1,7 +1,5 @@
 package com.vaadin.demo.component.notification;
 
-import com.vaadin.flow.component.ClickEvent;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Anchor;
@@ -30,8 +28,7 @@ public class NotificationRich extends HorizontalLayout {
         openNotification(this::createUploadSuccess);
     }
 
-    private void openNotification(
-            Supplier<Notification> notificationSupplier) {
+    private void openNotification(Supplier<Notification> notificationSupplier) {
         Notification notification = notificationSupplier.get();
         notification.setPosition(Notification.Position.MIDDLE);
         notification.setDuration(0);
@@ -49,8 +46,7 @@ public class NotificationRich extends HorizontalLayout {
         viewBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
         var layout = new HorizontalLayout(icon,
-                new Text("Application submitted!"), viewBtn,
-                createCloseBtn(notification));
+                new Text("Application submitted!"), viewBtn, createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
@@ -68,7 +64,7 @@ public class NotificationRich extends HorizontalLayout {
 
         var layout = new HorizontalLayout(icon,
                 new Text("Failed to generate report!"), retryBtn,
-                createCloseBtn(notification));
+                createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
@@ -88,7 +84,7 @@ public class NotificationRich extends HorizontalLayout {
                 new Anchor("#", "Project Q4"));
 
         HorizontalLayout layout = new HorizontalLayout(avatar, info,
-                createCloseBtn(notification));
+                createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
@@ -107,8 +103,8 @@ public class NotificationRich extends HorizontalLayout {
                 .setColor("var(--lumo-success-text-color)");
 
         Span fileName = new Span("Financials.xlsx");
-        fileName.getStyle().set("font-size", "0.875rem")
-                .set("font-weight", "600");
+        fileName.getStyle().set("font-size", "0.875rem").set("font-weight",
+                "600");
 
         Div info = new Div(uploadSuccessful,
                 new Div(fileName, new Text(" is now available in "),
@@ -117,8 +113,7 @@ public class NotificationRich extends HorizontalLayout {
         info.getStyle().set("font-size", "0.875rem")
                 .setColor("var(--lumo-secondary-text-color)");
 
-        var layout = new HorizontalLayout(icon, info,
-                createCloseBtn(notification));
+        var layout = new HorizontalLayout(icon, info, createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         notification.add(layout);
@@ -126,7 +121,7 @@ public class NotificationRich extends HorizontalLayout {
         return notification;
     }
 
-    public static Button createCloseBtn(Notification notification) {
+    public static Button createCloseBtn() {
         Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create());
         closeBtn.addThemeVariants(LUMO_TERTIARY_INLINE);
 
