@@ -6,7 +6,7 @@ function Example() {
   return (
     // tag::snippet[]
     <LoginOverlay>
-      <p slot="footer" className="text-center">
+      <p slot="footer" style={{ textAlign: 'center' }}>
         Never tell your password to anyone
       </p>
     </LoginOverlay>

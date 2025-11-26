@@ -14,13 +14,12 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("scroller-overflow-indicators")
 public class ScrollerOverflowIndicators extends VerticalLayout {
 
     public ScrollerOverflowIndicators() {
-        addClassNames(LumoUtility.Border.ALL, LumoUtility.BorderColor.CONTRAST_20);
+        getStyle().set("border", "solid 1px var(--vaadin-border-color)");
         setAlignItems(Alignment.STRETCH);
         setHeight(400, Unit.PIXELS);
         setMaxWidth(100, Unit.PERCENTAGE);
@@ -30,8 +29,8 @@ public class ScrollerOverflowIndicators extends VerticalLayout {
 
         // Header
         H2 createYourAccount = new H2("Create your account");
-        createYourAccount.addClassNames(LumoUtility.FontSize.XLARGE, LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.Padding.Vertical.MEDIUM);
+        createYourAccount.getStyle().set("padding", "1rem").set("font-size",
+                "1.375rem");
         add(createYourAccount);
 
         // tag::snippet[]
@@ -45,9 +44,10 @@ public class ScrollerOverflowIndicators extends VerticalLayout {
         TextField zipCode = new TextField("Zip code");
         ComboBox<String> country = new ComboBox<>("Country");
 
-        Div div = new Div(firstName, lastName, email, phoneNumber, address, city, state, zipCode, country);
-        div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN, LumoUtility.Padding.Bottom.MEDIUM,
-                LumoUtility.Padding.Horizontal.MEDIUM);
+        Div div = new Div(firstName, lastName, email, phoneNumber, address,
+                city, state, zipCode, country);
+        div.getStyle().set("display", "flex").set("flex-direction", "column")
+                .set("padding", "0 1rem 1rem");
 
         Scroller scroller = new Scroller(div);
         scroller.addThemeVariants(ScrollerVariant.LUMO_OVERFLOW_INDICATORS);
@@ -63,11 +63,12 @@ public class ScrollerOverflowIndicators extends VerticalLayout {
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         Footer footer = new Footer(next, cancel);
-        footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.Padding.Vertical.SMALL);
+        footer.getStyle().set("display", "flex").set("gap", "0.5rem")
+                .set("padding", "0.5rem 1rem");
         add(footer);
     }
 
-    public static class Exporter extends DemoExporter<ScrollerOverflowIndicators> { // hidden-source-line
+    public static class Exporter extends // hidden-source-line
+            DemoExporter<ScrollerOverflowIndicators> { // hidden-source-line
     } // hidden-source-line
 }
