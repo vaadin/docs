@@ -68,7 +68,7 @@ public class ContextMenuPresentation extends Div {
     private Component createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
         icon.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("margin-inline-end", "var(--lumo-space-s")
+                .set("margin-inline-end", "var(--vaadin-gap-s")
                 .set("padding", "var(--lumo-space-xs");
         return icon;
     }

@@ -65,7 +65,7 @@ export class Example extends LitElement {
   private renderer: ComboBoxLitRenderer<Person> = (person) => html`
     <div style="display: flex;">
       <img
-        style="height: 2.25rem; margin-right: var(--lumo-space-s);"
+        style="height: 2.25rem; margin-right: var(--vaadin-gap-s);"
         src="${person.pictureUrl}"
         alt="Portrait of ${person.firstName} ${person.lastName}"
       />

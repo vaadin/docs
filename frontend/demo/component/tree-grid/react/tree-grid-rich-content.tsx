@@ -43,7 +43,7 @@ function contactRenderer({ item: person }: { item: Person }) {
           icon="vaadin:envelope"
           style={{
             height: 'var(--lumo-icon-size-s)',
-            marginInlineEnd: 'var(--lumo-space-s)',
+            marginInlineEnd: 'var(--vaadin-gap-s)',
             width: 'var(--lumo-icon-size-s)',
           }}
         />
@@ -54,7 +54,7 @@ function contactRenderer({ item: person }: { item: Person }) {
           icon="vaadin:phone"
           style={{
             height: 'var(--lumo-icon-size-s)',
-            marginInlineEnd: 'var(--lumo-space-s)',
+            marginInlineEnd: 'var(--vaadin-gap-s)',
             width: 'var(--lumo-icon-size-s)',
           }}
         />

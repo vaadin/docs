@@ -31,7 +31,7 @@ function Example() {
         <Button
           id="avatar"
           theme="icon tertiary-inline"
-          style={{ margin: 'var(--lumo-space-s)', marginInlineStart: 'auto', borderRadius: '50%' }}
+          style={{ margin: 'var(--vaadin-gap-s)', marginInlineStart: 'auto', borderRadius: '50%' }}
         >
           <Avatar
             tabIndex={-1}

@@ -36,7 +36,7 @@ function Example() {
           <span>Contact information</span>
 
           <HorizontalLayout
-            style={{ color: 'var(--lumo-error-text-color)', marginLeft: 'var(--lumo-space-s)' }}
+            style={{ color: 'var(--lumo-error-text-color)', marginLeft: 'var(--vaadin-gap-s)' }}
           >
             <Icon
               icon="vaadin:exclamation-circle"

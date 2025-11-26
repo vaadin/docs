@@ -47,7 +47,7 @@ public class SelectCustomRendererLabel extends Div {
             image.setAlt("Portrait of " + person.getFirstName() + " "
                     + person.getLastName());
             image.setWidth("2.25rem");
-            image.getStyle().set("margin-right", "var(--lumo-space-s)");
+            image.getStyle().set("margin-right", "var(--vaadin-gap-s)");
 
             Div info = new Div();
             info.setText(person.getFirstName() + " " + person.getLastName());

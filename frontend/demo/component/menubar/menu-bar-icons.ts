@@ -45,7 +45,7 @@ export class Example extends LitElement {
     if (isChild) {
       icon.style.width = 'var(--lumo-icon-size-s)';
       icon.style.height = 'var(--lumo-icon-size-s)';
-      icon.style.marginRight = 'var(--lumo-space-s)';
+      icon.style.marginRight = 'var(--vaadin-gap-s)';
     }
 
     if (iconName === 'copy') {

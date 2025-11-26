@@ -115,7 +115,7 @@ export class Example extends LitElement {
     const icon = document.createElement('vaadin-icon');
 
     icon.style.color = 'var(--lumo-secondary-text-color)';
-    icon.style.marginInlineEnd = 'var(--lumo-space-s)';
+    icon.style.marginInlineEnd = 'var(--vaadin-gap-s)';
     icon.style.padding = 'var(--lumo-space-xs)';
 
     icon.setAttribute('icon', iconName);

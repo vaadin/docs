@@ -28,7 +28,7 @@ function Example() {
               <img
                 src={person.pictureUrl}
                 alt={`Portrait of ${person.firstName} ${person.lastName}`}
-                style={{ width: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
+                style={{ width: '2.25rem', marginRight: 'var(--vaadin-gap-s)' }}
               />
 
               <div>

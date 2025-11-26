@@ -31,7 +31,7 @@ public class DetailsSummary extends Div {
                 new Span(" 2 errors"));
         errorBadge.setSpacing(false);
         errorBadge.getStyle().set("color", "var(--lumo-error-text-color)");
-        errorBadge.getStyle().set("margin-left", "var(--lumo-space-s)");
+        errorBadge.getStyle().set("margin-left", "var(--vaadin-gap-s)");
 
         summary.add(new Text("Contact information"), errorBadge);
 

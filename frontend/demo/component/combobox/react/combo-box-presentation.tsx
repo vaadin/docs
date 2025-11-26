@@ -12,7 +12,7 @@ function renderPerson({ item: person }: { item: Person }) {
   return (
     <div style={{ display: 'flex' }}>
       <img
-        style={{ height: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
+        style={{ height: '2.25rem', marginRight: 'var(--vaadin-gap-s)' }}
         src={person.pictureUrl}
         alt={`Portrait of ${person.firstName} ${person.lastName}`}
       />
