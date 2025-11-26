@@ -9,6 +9,54 @@ order: 120
 
 = Configuring Kubernetes Kit
 
+== Commons Settings
+
+|===
+| Property | Description | Default Value
+
+| vaadin.kubernetes.auto-configure
+| Enables or disables the Kit autoconfiguration
+| `true`
+
+| vaadin.kubernetes.cluster-key-cookie-name
+| Sets the name of the distributed storage session key cookie.
+| `clusterKey`
+
+| vaadin.kubernetes.cluster-key-cookie-same-site
+| Sets the value of the distributed storage session key cookie's SameSite attribute.
+(`Strict`, `Lax`, `None`)
+| `Strict`
+
+| vaadin.kubernetes.backend-session-expiration-tolerance
+| Amount of time to be added to the HTTP session timeout to determine the expiration of the backend session. If not set, backend session never expires. See <<Backend Session Expiration Policy>> for details.
+|
+
+
+|===
+
+== Serialization Properties
+
+|===
+| Property | Description | Default Value
+
+| vaadin.serialization.timeout
+| Sets the timeout in milliseconds to wait for the serialization to be completed.
+| 30000 (30 seconds)
+
+| vaadin.serialization.optimistic-timeout
+| Sets the timeout in milliseconds to wait for the optimistic serialization to be completed.
+| 30000 (30 seconds)
+
+| vaadin.serialization.optimistic-delay
+| Sets the delay in milliseconds to wait between optimistic serialization attempts.
+| 10
+
+| vaadin.serialization.deserialization-lock-timeout
+| Sets the timeout in milliseconds to wait for the deserialization lock to be released if the deserialization is not completed.
+| 10000 (10 seconds)
+
+|===
+
 == Packages Inspected during Serialization
 
 When a session is serialized, Kubernetes Kit inspects classes for transient fields that can be injected during deserialization (see <<session-replication#,session replication>>).
@@ -39,7 +87,7 @@ vaadin:
 
 == Hazelcast for Session Replication
 
-The `service-name` property defines the name of the Hazelcast service deployment within a cluster.
+The `service-name` and `service-port` properties defines the endpoint of the Hazelcast service deployment within a cluster. The `service-port` defaults to `0`.
 
 The optional `namespace` property is used when the Hazelcast service is deployed in a namespace other than `default`.
 
@@ -63,6 +111,13 @@ vaadin:
 ----
 --
 
+[NOTE]
+====
+By default, Hazelcast installs a shutdown hook to stop the instance when the JVM shuts down.
+Kubernetes Kit requires the shutdown hook to be disabled to ensure that the latest session state can be persisted when the application stops.
+The Kit automatically applies the configuration; however, if the application provides a custom `HazelcastInstance` bean, it is important that it is configured with `hazelcast.shutdownhook.enabled=false`. A warning message is printed on the console at startup if the shutdown hook is enabled.
+Spring takes care of automatically gracefully stop the Hazelcast instance when the bean is destroyed.
+====
 
 == Redis for Session Replication
 
