@@ -35,7 +35,8 @@ public class MainLayout extends AppLayout {
         header.setAlignItems(FlexComponent.Alignment.CENTER);
         return header;
     }
-
+    
+// tag::navimenu[]
     private SideNav createSideNav() {
         var nav = new SideNav();
         MenuConfiguration.getMenuEntries()
@@ -51,5 +52,6 @@ public class MainLayout extends AppLayout {
         }
         return item;
     }
+// end::navimenu[]
 }
 // end::snippet[]
