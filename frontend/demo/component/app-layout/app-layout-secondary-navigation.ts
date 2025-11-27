@@ -17,14 +17,7 @@ import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: 1.125rem;
-      line-height: 2.75rem;
-      margin: 0 var(--lumo-space-m);
-    }
-
-    h2 {
-      font-size: 1.125rem;
-      margin: 0;
+      margin: 0 var(--vaadin-gap-m);
     }
   `;
 

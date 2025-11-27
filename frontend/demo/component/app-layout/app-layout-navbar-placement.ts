@@ -5,20 +5,13 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/scroller';
 import '@vaadin/side-nav';
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('app-layout-navbar-placement')
 export class Example extends LitElement {
-  static override styles = css`
-    h1 {
-      font-size: 1.125rem;
-      margin: 0;
-    }
-  `;
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

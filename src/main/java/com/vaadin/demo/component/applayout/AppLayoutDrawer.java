@@ -18,7 +18,6 @@ public class AppLayoutDrawer extends AppLayout {
         DrawerToggle toggle = new DrawerToggle();
 
         H1 title = new H1("Dashboard");
-        title.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         SideNav nav = getTabs();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line

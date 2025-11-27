@@ -12,11 +12,6 @@ import {
 } from '@vaadin/react-components';
 import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 
-const h1Style = {
-  fontSize: '1.125rem',
-  margin: 0,
-};
-
 function Example() {
   const sideNavRef = useRef<SideNavElement>(null);
 
@@ -31,7 +26,7 @@ function Example() {
     // tag::snippet[]
     <AppLayout>
       <DrawerToggle slot="navbar" />
-      <h1 slot="navbar" style={h1Style}>
+      <h1 slot="navbar">
         MyApp
       </h1>
       <Scroller slot="drawer" style={{ padding: '0.5rem' }}>

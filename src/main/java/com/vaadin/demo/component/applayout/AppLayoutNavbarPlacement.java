@@ -18,7 +18,6 @@ public class AppLayoutNavbarPlacement extends AppLayout {
         DrawerToggle toggle = new DrawerToggle();
 
         H1 title = new H1("MyApp");
-        title.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         SideNav nav = getSideNav();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line

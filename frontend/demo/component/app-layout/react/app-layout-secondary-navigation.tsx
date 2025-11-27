@@ -16,14 +16,7 @@ import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
 import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style = {
-  fontSize: '1.125rem',
-  lineHeight: '2.75rem',
-  margin: '0 var(--lumo-space-m)',
-};
-
-const h2Style = {
-  fontSize: '1.125rem',
-  margin: 0,
+  margin: '0 var(--vaadin-gap-m)',
 };
 
 const linkStyle = {
@@ -97,7 +90,7 @@ function Example() {
       <div slot="navbar">
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <DrawerToggle />
-          <h2 style={h2Style}>Orders</h2>
+          <h2>Orders</h2>
         </div>
 
         <HorizontalLayout

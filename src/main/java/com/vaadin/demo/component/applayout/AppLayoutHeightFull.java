@@ -17,8 +17,7 @@ public class AppLayoutHeightFull extends AppLayout {
 
     public AppLayoutHeightFull() {
         H1 title = new H1("MyApp");
-        title.getStyle().set("font-size", "1.125rem").set("margin",
-                "var(--lumo-space-m)");
+        title.getStyle().set("margin", "var(--vaadin-gap-m)");
         addToNavbar(title);
 
         Grid<Person> grid = new Grid<>(Person.class, false);
@@ -33,7 +32,7 @@ public class AppLayoutHeightFull extends AppLayout {
 
         getElement().getStyle().set("height", "100%");
         grid.setHeight("100%");
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        grid.addThemeVariants(GridVariant.AURA_NO_BORDER);
         // hidden-source-line - TODO: workaround to get the exported WC
         // hidden-source-line - height to take all the space within DSP
         getElement().executeJs("this.getRootNode().host.style.height='100vh'"); // hidden-source-line
