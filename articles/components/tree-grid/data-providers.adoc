@@ -22,8 +22,9 @@ Both are available out of the box in Flow and can be used with Tree Grid like th
 TreeData<Folder> treeData = new TreeData<>();
 
 // Create a TreeDataProvider backed by the TreeData instance
-TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(treeData,
-    HierarchicalDataProvider.HierarchyFormat.FLATTENED);
+TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(
+        treeData,
+        HierarchicalDataProvider.HierarchyFormat.FLATTENED);
 
 // Set the data provider to the Tree Grid
 treeGrid.setDataProvider(treeDataProvider);
@@ -110,18 +111,16 @@ To remove items from the tree, you can use the [methodname]`TreeData#removeItem(
 treeGrid.setSelectionMode(SelectionMode.SINGLE);
 
 // Add a keyboard shortcut listener for the Delete key
-Shortcuts.addShortcutListener(treeGrid,
-        () -> {
-            Folder selectedFolder = treeGrid.asSingleSelect().getValue();
-            if (selectedFolder != null) {
-                // Remove the selected folder from the TreeData
-                treeData.removeItem(selectedFolder);
+Shortcuts.addShortcutListener(treeGrid, () -> {
+    Folder selectedFolder = treeGrid.asSingleSelect().getValue();
+    if (selectedFolder != null) {
+        // Remove the selected folder from the TreeData
+        treeData.removeItem(selectedFolder);
 
-                // Refresh the Tree Grid to reflect the changes in the UI
-                treeDataProvider.refreshAll();
-            }
-        },
-        Key.DELETE);
+        // Refresh the Tree Grid to reflect the changes in the UI
+        treeDataProvider.refreshAll();
+    }
+}, Key.DELETE);
 ----
 
 As before, make sure to call [methodname]`TreeDataProvider#refreshAll()` to update the Tree Grid UI after making any structural changes to the [classname]`TreeData`.
@@ -235,18 +234,15 @@ class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Voi
 [source,java]
 .FolderTreeData.java
 ----
-public class FolderTreeData extends TreeData<Folder>{
-    public record Folder(String name);
-
-    /**
-     * Creates a TreeData object with the following folder hierarchy:
-     *
-     * ├── Work
-     * │   └── Documents
-     * │       └── Invoices
-     * └── Family
-     */
+public class FolderTreeData extends TreeData<Folder> {
     public FolderTreeData() {
+        // Creates a TreeData object with the following folder hierarchy:
+        //
+        // ├── Work
+        // │ └── Documents
+        // │ └── Invoices
+        // └── Family
+
         Folder work = new Folder("Work");
         Folder documents = new Folder("Documents");
         Folder invoices = new Folder("Invoices");
@@ -257,6 +253,12 @@ public class FolderTreeData extends TreeData<Folder>{
         addItem(documents, invoices);
     }
 }
+----
+
+[source,java]
+.Folder.java
+----
+public record Folder(String name) {};
 ----
 
 --
@@ -324,9 +326,10 @@ class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Voi
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, Void> query) {
-        // Return the size of the flattened sub-tree of the requested parent folder
-        // based on the expanded folders.
-        return (int) flatten(query.getParent(), query.getExpandedItemIds()).count();
+        // Return the size of the flattened sub-tree of the requested parent
+        // folder based on the expanded folders.
+        return (int) flatten(query.getParent(), query.getExpandedItemIds())
+                .count();
     }
 
     @Override
@@ -340,15 +343,17 @@ class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Voi
         return depth;
     }
 
-    private Stream<Folder> flatten(Folder parent, Set<Object> expandedFolderIds) {
-        // Build the parent folder's sub-tree based on the provided expanded folders. The
-        // result is a flat stream of folders in depth-first order. Filtering and sorting
-        // can also be applied here if needed. Keep in mind that sorting must be applied
-        // to each hierarchy level separately to preserve depth-first order in the final
-        // flat list.
+    private Stream<Folder> flatten(Folder parent,
+            Set<Object> expandedFolderIds) {
+        // Build the parent folder's sub-tree based on the provided expanded
+        // folders. The result is a flat stream of folders in depth-first order.
+        // Filtering and sorting can also be applied here if needed. Keep in
+        // mind that sorting must be applied to each hierarchy level separately
+        // to preserve depth-first order in the final flat list.
         return folderTreeData.getChildren(parent).stream().flatMap(child -> {
             if (expandedFolderIds.contains(getId(child))) {
-                return Stream.concat(Stream.of(child), flatten(child, expandedFolderIds));
+                return Stream.concat(Stream.of(child),
+                        flatten(child, expandedFolderIds));
             } else {
                 return Stream.of(child);
             }
@@ -360,18 +365,15 @@ class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Voi
 [source,java]
 .FolderTreeData.java
 ----
-public class FolderTreeData extends TreeData<Folder>{
-    public record Folder(String name);
-
-    /**
-     * Creates a TreeData object with the following folder hierarchy:
-     *
-     * ├── Work
-     * │   └── Documents
-     * │       └── Invoices
-     * └── Family
-     */
+public class FolderTreeData extends TreeData<Folder> {
     public FolderTreeData() {
+        // Creates a TreeData object with the following folder hierarchy:
+        //
+        // ├── Work
+        // │ └── Documents
+        // │ └── Invoices
+        // └── Family
+
         Folder work = new Folder("Work");
         Folder documents = new Folder("Documents");
         Folder invoices = new Folder("Invoices");
@@ -382,6 +384,12 @@ public class FolderTreeData extends TreeData<Folder>{
         addItem(documents, invoices);
     }
 }
+----
+
+[source,java]
+.Folder.java
+----
+public record Folder(String name) {};
 ----
 
 --

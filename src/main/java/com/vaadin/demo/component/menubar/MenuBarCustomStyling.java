@@ -16,18 +16,14 @@ public class MenuBarCustomStyling extends Div {
 
         // tag::snippet[]
         MenuItem view = menuBar.addItem("View");
-        view.addClassNames(LumoUtility.Background.PRIMARY,
-                LumoUtility.TextColor.PRIMARY_CONTRAST);
-        ;
+        view.addClassNames("custom");
 
         MenuItem edit = menuBar.addItem("Edit");
 
         MenuItem share = menuBar.addItem("Share");
         SubMenu shareSubMenu = share.getSubMenu();
 
-        shareSubMenu.addItem("By email").addClassNames(
-                LumoUtility.Background.PRIMARY,
-                LumoUtility.TextColor.PRIMARY_CONTRAST);
+        shareSubMenu.addItem("By email").addClassNames("custom");
         shareSubMenu.addItem("Get Link");
         // end::snippet[]
 
