@@ -1,0 +1,101 @@
+---
+title: Calling JavaScript
+page-title: Calling client-side JavaScript from Vaadin components
+description: Call JavaScript functions from the server.
+meta-description: Learn how to call client-side JavaScript functions from Vaadin components on the server side.
+order: 3
+---
+
+
+= Calling JavaScript from the Server
+:toclevels: 2
+
+The Element API contains methods for executing JavaScript in the browser from the server side.
+
+
+== `callJsFunction` Method
+
+The [methodname]`Element.callJsFunction()` method allows you to run a client-side component function from the server side. The method accepts two parameters: the name of the function to call; and the arguments to pass to the function.
+
+The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonValue`, `Element`, and `Component`.
+
+.Calling the `clearSelection()` JavaScript function on the root element from the server side
+[example]
+====
+[source,java]
+----
+public void clearSelection() {
+    getElement().callJsFunction("clearSelection");
+}
+----
+====
+
+.Calling the `expand(otherComponentElement)` JavaScript function on the root element from the server side
+[example]
+====
+[source,java]
+----
+public void setExpanded(Component otherComponent) {
+    getElement().callJsFunction("expand",
+            otherComponent.getElement());
+}
+----
+====
+
+
+== `executeJs` Method
+
+You can also use the generic [methodname]`Element.executeJs()` method to run JavaScript asynchronously from the server side. This method can be used in addition to the [methodname]`Element.callJsFunction()` method when calling any JavaScript.
+
+The [methodname]`executeJs()` method accepts two parameters: the JavaScript expression to invoke; and the parameters to pass to the expression. The given parameters are available as variables named `$0`, `$1`, and so on.
+
+The arguments passed to the expression must be a type supported by the communication mechanism. The supported types are `String`, `Integer`, `Double`, `Boolean` and `Element`.
+
+.Calling `MyModule.complete(true)` on the client side
+[example]
+====
+[source,java]
+----
+public void complete() {
+    getElement().executeJs("MyModule.complete($0)", true);
+}
+----
+====
+
+.Avoid Script Injection Vulnerabilities
+[WARNING]
+Always pass arguments using the `$0`, `$1`, ... notation to avoid script injection vulnerabilities. Never concatenate or interpolate strings to build JavaScript code to be executed.
+
+If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrent().getPage().executeJs()` method.
+
+
+== Return Values
+
+The return value from the JavaScript function called using [methodname]`callJsFunction()`, or the value from a `return` statement in an `executeJs()` expression can be accessed by adding a listener to the [classname]`PendingJavaScriptResult` instance returned from either method.
+
+.Checking for support of Constructable Stylesheets in the browser
+[example]
+====
+[source,java]
+----
+public void checkConstructableStylesheets() {
+    getElement().executeJs(
+            "return 'adoptedStyleSheets' in document")
+            .then(Boolean.class, supported -> {
+                if (supported) {
+                    System.out.println(
+                            "Feature is supported");
+                } else {
+                    System.out.println(
+                            "Feature isn't supported");
+                }
+            });
+}
+----
+====
+
+If the return value is a JavaScript `Promise`, the client only sends the return value to the server when the `Promise` is resolved.
+// TODO What happens if the Promise is rejected?
+
+
+[discussion-id]`AB7EDF45-DB22-4560-AF27-FF1DC6944482`

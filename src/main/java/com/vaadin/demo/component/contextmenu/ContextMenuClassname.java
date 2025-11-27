@@ -21,7 +21,7 @@ public class ContextMenuClassname extends Div {
         menu.addItem("Duplicate");
         // tag::snippet[]
         MenuItem item = menu.addItem("Delete");
-        item.setClassName("text-error");
+        item.setClassName("custom");
         // end::snippet[]
 
         add(button);

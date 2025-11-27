@@ -5,7 +5,6 @@ import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("card-header")
 public class CardHeader extends Div {
@@ -14,20 +13,15 @@ public class CardHeader extends Div {
         Card card = new Card();
 
         Div header = new Div();
-        header.addClassNames(
-                LumoUtility.Display.FLEX,
-                LumoUtility.FlexDirection.COLUMN_REVERSE,
-                LumoUtility.LineHeight.XSMALL
-        );
+        header.getStyle().set("display", "flex")
+                .set("flex-direction", "column-reverse")
+                .set("line-height", "1.25");
 
         H2 title = new H2("Lapland");
 
         Div subtitle = new Div("The Exotic North");
-        subtitle.addClassNames(
-                LumoUtility.TextTransform.UPPERCASE,
-                LumoUtility.FontSize.XSMALL,
-                LumoUtility.TextColor.SECONDARY
-        );
+        subtitle.getStyle().set("font-size", "0.8125rem").set("text-transform",
+                "uppercase");
 
         header.add(title, subtitle);
         card.setHeader(header);

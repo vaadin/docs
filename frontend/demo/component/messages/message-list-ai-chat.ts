@@ -40,7 +40,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- Live region for screen reader announcements -->
-      <div aria-live="polite" class="sr-only">${this.announcement}</div>
+      <div aria-live="polite" class="screen-reader-only">${this.announcement}</div>
 
       <!-- tag::snippet[] -->
       <vaadin-message-list .items="${this.messageListItems}" markdown></vaadin-message-list>
