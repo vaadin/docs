@@ -11,7 +11,7 @@ function Example() {
   const items = useSignal<ContextMenuItem[]>([
     { text: 'Share' },
     { text: 'Duplicate' },
-    { text: 'Delete', className: 'text-error' },
+    { text: 'Delete', className: 'custom' },
   ]);
   // end::snippet[]
 

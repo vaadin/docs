@@ -13,8 +13,6 @@ import com.vaadin.flow.router.Route;
 public class ProgressBarLabel extends Div {
 
     public ProgressBarLabel() {
-        getStyle().set("color", "var(--lumo-secondary-text-color)");
-
         // tag::snippet[]
         ProgressBar progressBar = new ProgressBar();
         progressBar.setValue(0.5);

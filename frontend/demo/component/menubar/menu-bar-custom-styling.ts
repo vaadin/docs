@@ -15,12 +15,12 @@ export class Example extends LitElement {
   // tag::snippet[]
   @state()
   private items = [
-    { text: 'View', className: 'bg-primary text-primary-contrast' },
+    { text: 'View', className: 'custom' },
     { text: 'Edit' },
     {
       text: 'Share',
       children: [
-        { text: 'By email', className: 'bg-primary text-primary-contrast' },
+        { text: 'By email', className: 'custom' },
         { text: 'Get link' },
       ],
     },

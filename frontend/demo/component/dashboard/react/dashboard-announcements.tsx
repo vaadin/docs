@@ -116,9 +116,9 @@ function Example() {
       <p>Live announcement:</p>
       {/* Live region for screen reader announcements. Changing its text content will result */}
       {/* in a new announcement. This element is only visible for demonstration purposes. In */}
-      {/* your application you should visually hide it using CSS, for example by using the   */}
-      {/* sr-only Lumo utility class: */}
-      {/* <div className="sr-only" aria-live="polite">{announcement}</div> */}
+      {/* your application you should visually hide it using CSS by applying a corresponding */}
+      {/* class name, like "screen-reader-only", as shown in the attached CSS example file: */}
+      {/* <div className="screen-reader-only" aria-live="polite">{announcement}</div> */}
       <div aria-live="polite">{announcement}</div>
       <Dashboard
         style={{
