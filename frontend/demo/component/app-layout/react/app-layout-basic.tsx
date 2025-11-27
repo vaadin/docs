@@ -26,10 +26,8 @@ function Example() {
     // tag::snippet[]
     <AppLayout>
       <DrawerToggle slot="navbar" />
-      <h1 slot="navbar">
-        MyApp
-      </h1>
-      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
+      <h1 slot="navbar">MyApp</h1>
+      <Scroller slot="drawer" style={{ padding: 'var(--vaadin-padding-s)' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />

@@ -23,7 +23,7 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(nav);
-        scroller.getStyle().set("padding", "0.5rem");
+        scroller.getStyle().set("padding", "var(--vaadin-padding-s)");
 
         addToDrawer(scroller);
         addToNavbar(toggle, title);

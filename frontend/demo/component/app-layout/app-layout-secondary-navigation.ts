@@ -37,7 +37,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">
         <h1 slot="drawer">MyApp</h1>
-        <vaadin-scroller slot="drawer" style="padding: 0.5rem">
+        <vaadin-scroller slot="drawer" style="padding: var(--vaadin-padding-s)">
           <vaadin-side-nav>
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>

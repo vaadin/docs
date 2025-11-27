@@ -27,11 +27,9 @@ function Example() {
     <AppLayout primarySection="drawer">
       <DrawerToggle slot="navbar" />
 
-      <h1 slot="navbar">
-        Dashboard
-      </h1>
+      <h1 slot="navbar">Dashboard</h1>
 
-      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
+      <Scroller slot="drawer" style={{ padding: 'var(--vaadin-padding-s)' }}>
         <SideNav ref={sideNavRef}>
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />

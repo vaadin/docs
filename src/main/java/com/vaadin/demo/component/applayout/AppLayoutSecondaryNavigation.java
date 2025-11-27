@@ -27,7 +27,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
 
         Scroller scroller = new Scroller(views);
-        scroller.getStyle().set("padding", "0.5rem");
+        scroller.getStyle().set("padding", "var(--vaadin-padding-s)");
 
         DrawerToggle toggle = new DrawerToggle();
 
