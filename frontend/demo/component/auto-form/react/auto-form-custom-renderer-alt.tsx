@@ -14,13 +14,13 @@ function GroupingLayoutRenderer({ children }: AutoFormLayoutRendererProps<Employ
   return (
     <VerticalLayout>
       <h4>Personal Information:</h4>
-      <HorizontalLayout theme="spacing" className="pb-l">
+      <HorizontalLayout theme="spacing" style={{ paddingBottom: '1.5rem' }}>
         {fieldsMapping.get('firstName')}
         {fieldsMapping.get('lastName')}
         {fieldsMapping.get('gender')}
       </HorizontalLayout>
       <h4>Employment Information:</h4>
-      <HorizontalLayout theme="spacing" className="pb-l items-baseline">
+      <HorizontalLayout theme="spacing" style={{ paddingBottom: '1.5rem', alignItems: 'baseline' }}>
         {fieldsMapping.get('startDate')}
         {fieldsMapping.get('shiftStartsAt')}
         {fieldsMapping.get('active')}

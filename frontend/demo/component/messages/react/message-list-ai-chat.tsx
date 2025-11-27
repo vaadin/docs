@@ -57,7 +57,7 @@ function Example() {
   return (
     <div>
       {/* Live region for screen reader announcements */}
-      <div aria-live="polite" className="sr-only">
+      <div aria-live="polite" className="screen-reader-only">
         {announcement.value}
       </div>
 
