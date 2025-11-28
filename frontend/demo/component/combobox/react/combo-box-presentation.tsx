@@ -12,7 +12,7 @@ function renderPerson({ item: person }: { item: Person }) {
   return (
     <div style={{ display: 'flex' }}>
       <img
-        style={{ height: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
+        style={{ height: '36px', marginRight: 'var(--vaadin-gap-s)' }}
         src={person.pictureUrl}
         alt={`Portrait of ${person.firstName} ${person.lastName}`}
       />
@@ -20,8 +20,8 @@ function renderPerson({ item: person }: { item: Person }) {
         {person.firstName} {person.lastName}
         <div
           style={{
-            fontSize: 'var(--lumo-font-size-s)',
-            color: 'var(--lumo-secondary-text-color)',
+            fontSize: 'var(--aura-font-size-s)',
+            color: 'var(--vaadin-text-color-secondary)',
           }}
         >
           {person.profession}

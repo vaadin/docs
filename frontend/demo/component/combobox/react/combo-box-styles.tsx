@@ -6,12 +6,12 @@ function Example() {
   return (
     // tag::snippet[]
     <ComboBox
-      theme="align-right small helper-above-field"
+      theme="helper-above-field"
       label="Label"
       helperText="Helper text"
       items={['Value']}
       value="Value"
-      style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
+      style={{ '--vaadin-input-field-border-width': '2px' } as React.CSSProperties}
     />
     // end::snippet[]
   );

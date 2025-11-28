@@ -40,11 +40,11 @@ public class ComboBoxPresentation extends Div {
         StringBuilder tpl = new StringBuilder();
         tpl.append("<div style=\"display: flex;\">");
         tpl.append(
-                "  <img style=\"height: 2.25rem; margin-right: var(--lumo-space-s);\" src=\"${item.pictureUrl}\" alt=\"Portrait of ${item.firstName} ${item.lastName}\" />");
+                "  <img style=\"height: 36px; margin-right: var(--vaadin-gap-s);\" src=\"${item.pictureUrl}\" alt=\"Portrait of ${item.firstName} ${item.lastName}\" />");
         tpl.append("  <div>");
         tpl.append("    ${item.firstName} ${item.lastName}");
         tpl.append(
-                "    <div style=\"font-size: 0.875rem; color: var(--lumo-secondary-text-color);\">${item.profession}</div>");
+                "    <div style=\"font-size: var(--aura-font-size-s); color: var(--vaadin-text-color-secondary);\">${item.profession}</div>");
         tpl.append("  </div>");
         tpl.append("</div>");
 
