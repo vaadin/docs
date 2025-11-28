@@ -114,7 +114,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
 
-      <vaadin-horizontal-layout theme="spacing" class="items-end">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: flex-end">
         <vaadin-integer-field
           label="Parent index"
           step-buttons-visible

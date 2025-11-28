@@ -5,12 +5,12 @@ import { MenuBar, type MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 function Example() {
   // tag::snippet[]
   const items: MenuBarItem[] = [
-    { text: 'View', className: 'bg-primary text-primary-contrast' },
+    { text: 'View', className: 'custom' },
     { text: 'Edit' },
     {
       text: 'Share',
       children: [
-        { text: 'By email', className: 'bg-primary text-primary-contrast' },
+        { text: 'By email', className: 'custom' },
         { text: 'Get link' },
       ],
     },
