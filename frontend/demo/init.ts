@@ -7,7 +7,7 @@ import { applyTheme } from 'Frontend/demo/theme';
 import client from 'Frontend/generated/connect-client.default';
 
 // Some Vaadin components add elements to document.body that require theme styles
-// (e.g. Dialog). Such components are embedded via iframes, but the same examples
+// (e.g. Notification). Such components are embedded via iframes, but the same examples
 // can also be opened as standalone pages. To support both cases, apply the theme
 // to the document when the example runs in an iframe or standalone. This is safe
 // because in those modes the styles are isolated from the rest of the site.
