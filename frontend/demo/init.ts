@@ -6,16 +6,17 @@ import '../generated/vaadin-featureflags';
 import { applyTheme } from 'Frontend/demo/theme';
 import client from 'Frontend/generated/connect-client.default';
 
-// Apply the theme to the document, so that notification styles work as expected,
-// as the notification container is added to the document body.
-applyTheme(document);
+// Some Vaadin components add elements to document.body that require theme styles
+// (e.g. Notification). Such components are embedded via iframes, but the same examples
+// can also be opened as standalone pages. To support both cases, apply the theme
+// to the document when the example runs in an iframe or standalone. This is safe
+// because in those modes the styles are isolated from the rest of the site.
+if (window.location.pathname.endsWith('/example')) {
+  applyTheme(document);
+}
 
 // @ts-expect-error Inserted by DS Publisher
 client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
-
-document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
-document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
-document.body.style.setProperty('--docs-example-render-background-color', 'var(--lumo-base-color)');
 
 // Ensures standalone UI sample pags have a lang attribute
 document.documentElement.setAttribute('lang', 'en');
