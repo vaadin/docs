@@ -26,7 +26,7 @@ const customConfig: UserConfigFn = (env) => ({
     },
     {
       name: 'apply-docs-theme',
-      transform(_code, id) {
+      transform(code, id) {
         // This module is imported by web components exported from Flow to inject styles into their
         // shadow root. Instead of importing the docs styles from the Flow bundle again, for example
         // by adding @CssImport to DemoExporter, we provide a global from the docs
@@ -35,6 +35,12 @@ const customConfig: UserConfigFn = (env) => ({
         // once, through the DSP bundle.
         if (id.endsWith('generated/css.generated.js')) {
           return 'export const applyCss = window.__applyTheme.applyTheme;';
+        }
+
+        // Remove applyCss(document) from `generated/vaadin-web-component.ts` because the global theme
+        // styles injection is handled by `init.ts` in the docs project.
+        if (id.endsWith('generated/vaadin-web-component.ts')) {
+          return code.replace('applyCss(document);', '');
         }
       },
     },

@@ -6,23 +6,23 @@ import '../generated/vaadin-featureflags';
 import { applyTheme } from 'Frontend/demo/theme';
 import client from 'Frontend/generated/connect-client.default';
 
-// Apply the theme to the document when example is rendered as a standalone page
-const searchParams = new URLSearchParams(window.location.search);
-if (searchParams.has('example-theme')) {
+// Some Vaadin components add elements to document.body that require theme styles
+// (e.g. Dialog). Such components are embedded via iframes, but the same examples
+// can also be opened as standalone pages. To support both cases, apply the theme
+// to the document when the example runs in an iframe or standalone. This is safe
+// because in those modes the styles are isolated from the rest of the site.
+if (window.location.pathname.endsWith('/example')) {
   applyTheme(document);
 }
 
 // @ts-expect-error Inserted by DS Publisher
 client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
 
-// document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
-// document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
-// document.body.style.setProperty('--docs-example-render-background-color', 'var(--lumo-base-color)');
-
 // Ensures standalone UI sample pags have a lang attribute
 document.documentElement.setAttribute('lang', 'en');
 
 // Applies input field borders based on a `borders` URL parameter
-if (searchParams.has('borders')) {
+const url = new URL(window.location.href);
+if (url.searchParams.has('borders')) {
   document.body.style.setProperty('--vaadin-input-field-border-width', '1px');
 }
