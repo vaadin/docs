@@ -30,13 +30,15 @@ public class AccordionSummary extends Div {
         Accordion accordion = new Accordion();
 
         FormLayout customerDetailsFormLayout = createFormLayout();
-        VerticalLayout customerDetailsLayout = new VerticalLayout(customerDetailsFormLayout);
+        VerticalLayout customerDetailsLayout = new VerticalLayout(
+                customerDetailsFormLayout);
         customerDetailsLayout.setPadding(false);
         AccordionPanel customDetailsPanel = accordion.add(CUSTOMER_DETAILS,
                 customerDetailsLayout);
 
         FormLayout billingAddressFormLayout = createFormLayout();
-        VerticalLayout billingAddressLayout = new VerticalLayout(billingAddressFormLayout);
+        VerticalLayout billingAddressLayout = new VerticalLayout(
+                billingAddressFormLayout);
         billingAddressLayout.setPadding(false);
         AccordionPanel billingAddressPanel = accordion.add(BILLING_ADDRESS,
                 billingAddressLayout);
@@ -58,11 +60,11 @@ public class AccordionSummary extends Div {
         customerDetailsFormLayout.add(phone, 2);
 
         // tag::snippet[]
-        Button customDetailsButton = new Button("Continue",
-                (e) -> {
-                    billingAddressPanel.setOpened(true);
-                    customDetailsPanel.setSummary(createCompletedSummary(CUSTOMER_DETAILS));
-                });
+        Button customDetailsButton = new Button("Continue", (e) -> {
+            billingAddressPanel.setOpened(true);
+            customDetailsPanel
+                    .setSummary(createCompletedSummary(CUSTOMER_DETAILS));
+        });
         // end::snippet[]
         customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         customerDetailsLayout.add(customDetailsButton);
@@ -79,11 +81,11 @@ public class AccordionSummary extends Div {
         billingAddressFormLayout.add(address, 2);
         billingAddressFormLayout.add(zipCode, city, countries);
 
-        Button billingAddressButton = new Button("Continue",
-                (e) -> {
-                    paymentPanel.setOpened(true);
-                    billingAddressPanel.setSummary(createCompletedSummary(BILLING_ADDRESS));
-                });
+        Button billingAddressButton = new Button("Continue", (e) -> {
+            paymentPanel.setOpened(true);
+            billingAddressPanel
+                    .setSummary(createCompletedSummary(BILLING_ADDRESS));
+        });
         billingAddressButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         billingAddressLayout.add(billingAddressButton);
 
@@ -96,11 +98,10 @@ public class AccordionSummary extends Div {
         paymentFormLayout.add(accountNumber, 2);
         paymentFormLayout.add(expiryDate, cvv);
 
-        Button paymentButton = new Button("Finish",
-                (e) -> {
-                    paymentPanel.setOpened(false);
-                    paymentPanel.setSummary(createCompletedSummary(PAYMENT));
-                });
+        Button paymentButton = new Button("Finish", (e) -> {
+            paymentPanel.setOpened(false);
+            paymentPanel.setSummary(createCompletedSummary(PAYMENT));
+        });
         paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         paymentLayout.add(paymentButton);
 
@@ -122,7 +123,7 @@ public class AccordionSummary extends Div {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         layout.add(title);
-        
+
         Icon icon = VaadinIcon.CHECK.create();
         icon.getStyle().set("color", "var(--lumo-success-text-color)");
         icon.getStyle().set("--vaadin-icon-size", "1rem");
