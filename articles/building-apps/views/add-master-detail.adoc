@@ -1,0 +1,169 @@
+---
+title: Add a Master-Detail View
+page-title: How to add a master-detail view to a Vaadin application 
+description: TODO
+meta-description: TODO
+order: 25
+---
+
+
+= Add a Master-Detail View
+:toclevels: 2
+
+This guide teaches you how to build a rudimentary master-detail view in Vaadin.
+
+.Copy-Paste into Your Project
+[TIP]
+====
+If you want to quickly try out a master-detail view, you can copy-paste the following class into your Vaadin project:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=snippet,indent=0]
+----
+
+For more detailed instructions on how to build a master-detail view from scratch, continue reading below. 
+====
+
+== What is a Master-Detail View?
+
+In a master-detail view, the user typically selects an item from a list (the master), and the details of the selected item are shown in another area (the detail). When no item is selected, the detail area is either hidden or shows a placeholder message. 
+
+// TODO add image
+
+
+== Creating a Master-Detail View
+
+Building a master-detail view in Vaadin involves three things: creating the master component, the detail component, and handling selection state. 
+
+Since you're building a web application, you should use a URL parameter to represent the selection state. This way, users can bookmark or share links to specific details. 
+
+
+=== Scaffolding the View
+
+When creating a master-detail view, it helps to start with the general structure. The following example uses:
+
+* a `SplitLayout` to arrange the master and detail components side by side,
+* an inner class for the master component (e.g., a grid),
+* an inner class for the detail component (e.g., a form),
+* a factory method for creating a placeholder component when no detail is selected, and
+* an optional <<pass-data/route-parameters#,route parameter>> to represent the selected item's ID.
+
+[source,java]
+----
+@Route("customers")
+public class CustomerView extends SplitLayout implements HasUrlParameter<Long> {
+
+    private final CustomerService customerService;
+    private final CustomerListComponent master;
+
+    CustomerView(CustomerService customerService) {
+        this.customerService = customerService;
+        this.master = new CustomerListComponent();
+        addToPrimary(master);
+        setSizeFull();
+    }
+
+    private class CustomerListComponent extends VerticalLayout {
+        // TODO Implement the master component (e.g., a grid of customers)
+
+        void select(Customer customer) {
+            // Select the given customer in the grid
+        }
+        void deselectAll() {
+            // Clear any selection in the grid
+        }
+    }
+
+    private class CustomerDetailComponent extends VerticalLayout {
+        // TODO Implement the detail component (e.g., a form showing customer details)
+
+        CustomerDetailComponent(Customer customer) {
+            // Populate the form with the given customer's details
+        }
+    }
+
+    private Component createNoDetailSelected() {
+        // TODO Create and return a placeholder component when no detail is selected
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long customerId) {
+        // TODO Handle the URL parameter to show the appropriate detail
+    }
+}
+----
+
+
+=== Creating the Components
+
+The next step is to implement the master and detail components. The master component is typically a grid, while the detail component is often a form. See the <<../forms-data/add-grid#,Add a Grid>> and <<../forms-data/add-form#,Add a Form>> guides for more information on creating these components.
+
+
+=== Handling Selection State
+
+The final step is to implement selection handling. You should cover the following scenarios:
+
+* No detail is selected (i.e., no URL parameter is present)
+* A detail is selected (i.e., a URL parameter is present)
+* A detail is selected, but it doesn't exist (i.e., the URL parameter is invalid)
+
+To keep things simple, you should handle all these scenarios in the `setParameter` method. Here's an example implementation:
+
+[source,java]
+----
+@Override
+public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    if (getSecondaryComponent() != null) {
+        getSecondaryComponent().removeFromParent(); // <1>
+    }
+    Optional.ofNullable(id)
+        .flatMap(customerService::findById) // <2>
+        .ifPresentOrElse(
+            customer -> { // <3>
+                addToSecondary(new CustomerDetailComponent(customer));
+                master.select(customer);
+            }, 
+            () -> { // <4>
+                addToSecondary(createNoDetailSelected()); 
+                master.deselectAll();
+            }
+        );
+}
+----
+<1> Remove any existing detail or placeholder before adding a new one.
+<2> Use the service to find the customer by ID.
+<3> If the customer exists, show the detail component and select the customer in the master.
+<4> If no customer is found, or the ID is not present, show the placeholder and clear the selection in the master.
+
+However, this is only the first half of selection handling. You also need to update the URL when the user selects an item in the master component. Start by creating <<navigate#your-own-api,navigation utility methods>> for setting and clearing the selection:
+
+[source,java]
+----
+public static void showCustomerDetails(long customerId) {
+    UI.getCurrent().navigate(CustomerView.class, customerId);
+}
+
+public static void showCustomerList() {
+    UI.getCurrent().navigate(CustomerView.class);
+}
+----
+
+Then, call these methods from the master component when the user selects or deselects an item. For example, if you're using a `Grid`, you can add a selection listener like this:
+
+[source,java]
+----
+customerGrid.addSelectionListener(event -> event.getFirstSelectedItem()
+    .ifPresentOrElse(
+        customer -> showCustomerDetails(customer.getId()),
+        () -> showCustomerList()
+    )
+);
+----
+
+You don't have to worry about an infinite loop caused by the selection listener navigating, and `setParameter()` updating the selection. Vaadin's router is smart enough to avoid re-navigating to the same URL.
+
+
+== The Master-Detail Layout
+
+TODO Explain the component and link to its documentation.
