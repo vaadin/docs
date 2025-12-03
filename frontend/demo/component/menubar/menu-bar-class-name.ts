@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('menu-bar-custom-styling')
+@customElement('menu-bar-class-name')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -19,10 +19,7 @@ export class Example extends LitElement {
     { text: 'Edit' },
     {
       text: 'Share',
-      children: [
-        { text: 'By email', className: 'custom' },
-        { text: 'Get link' },
-      ],
+      children: [{ text: 'By email', className: 'custom' }, { text: 'Get link' }],
     },
   ];
 
