@@ -8,10 +8,10 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
-@Route("menu-bar-custom-styling")
-public class MenuBarCustomStyling extends Div {
+@Route("menu-bar-class-name")
+public class MenuBarClassName extends Div {
 
-    public MenuBarCustomStyling() {
+    public MenuBarClassName() {
         MenuBar menuBar = new MenuBar();
 
         // tag::snippet[]
@@ -30,6 +30,6 @@ public class MenuBarCustomStyling extends Div {
         add(menuBar);
     }
 
-    public static class Exporter extends DemoExporter<MenuBarCustomStyling> { // hidden-source-line
+    public static class Exporter extends DemoExporter<MenuBarClassName> { // hidden-source-line
     } // hidden-source-line
 }
