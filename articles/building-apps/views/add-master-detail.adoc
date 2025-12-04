@@ -1,8 +1,8 @@
 ---
 title: Add a Master-Detail View
 page-title: How to add a master-detail view to a Vaadin application 
-description: TODO
-meta-description: TODO
+description: Learn how to build a master-detail view.
+meta-description: Learn how to build a master-detail view using Vaadin.
 order: 25
 ---
 
@@ -19,151 +19,128 @@ If you want to quickly try out a master-detail view, you can copy-paste the foll
 
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=snippet,indent=0]
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=full,indent=0]]
 ----
 
-For more detailed instructions on how to build a master-detail view from scratch, continue reading below. 
+For more detailed instructions on how to build a master-detail view from scratch, continue reading below. The guide uses the same code as in the copy-paste example, but breaks it down into smaller parts with explanations.
 ====
+
 
 == What is a Master-Detail View?
 
-In a master-detail view, the user typically selects an item from a list (the master), and the details of the selected item are shown in another area (the detail). When no item is selected, the detail area is either hidden or shows a placeholder message. 
+In a master-detail view, the user selects an item from a list (the master), and the details of the selected item are shown in another area (the detail). When no item is selected, the detail area is either hidden or shows a placeholder message. 
 
-// TODO add image
+In the following mock-up, the master is a list of employees, and the detail shows information about the selected employee to the right of the list:
 
+[.device]
+image::images/master-detail.png[A mock-up of a master-detail view showing a list of employees on the left and details of the selected employee on the right]
 
-== Creating a Master-Detail View
+Master-detail views can look different depending on the application. In the following mock-up, the master is a list of offices, and the detail shows information about the selected office below the list:
 
-Building a master-detail view in Vaadin involves three things: creating the master component, the detail component, and handling selection state. 
+[.device]
+image::images/master-detail2.png[A mock-up of a master-detail view showing a list of offices on the top and details of the selected office below the list]
 
-Since you're building a web application, you should use a URL parameter to represent the selection state. This way, users can bookmark or share links to specific details. 
-
-
-=== Scaffolding the View
-
-When creating a master-detail view, it helps to start with the general structure. The following example uses:
-
-* a `SplitLayout` to arrange the master and detail components side by side,
-* an inner class for the master component (e.g., a grid),
-* an inner class for the detail component (e.g., a form),
-* a factory method for creating a placeholder component when no detail is selected, and
-* an optional <<pass-data/route-parameters#,route parameter>> to represent the selected item's ID.
-
-[source,java]
-----
-@Route("customers")
-public class CustomerView extends SplitLayout implements HasUrlParameter<Long> {
-
-    private final CustomerService customerService;
-    private final CustomerListComponent master;
-
-    CustomerView(CustomerService customerService) {
-        this.customerService = customerService;
-        this.master = new CustomerListComponent();
-        addToPrimary(master);
-        setSizeFull();
-    }
-
-    private class CustomerListComponent extends VerticalLayout {
-        // TODO Implement the master component (e.g., a grid of customers)
-
-        void select(Customer customer) {
-            // Select the given customer in the grid
-        }
-        void deselectAll() {
-            // Clear any selection in the grid
-        }
-    }
-
-    private class CustomerDetailComponent extends VerticalLayout {
-        // TODO Implement the detail component (e.g., a form showing customer details)
-
-        CustomerDetailComponent(Customer customer) {
-            // Populate the form with the given customer's details
-        }
-    }
-
-    private Component createNoDetailSelected() {
-        // TODO Create and return a placeholder component when no detail is selected
-    }
-
-    @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long customerId) {
-        // TODO Handle the URL parameter to show the appropriate detail
-    }
-}
-----
+The example code in this guide does not look like the mock-ups above. It uses simple components and focuses only on the UI pattern: how to structure the layout, represent selection in the URL, and synchronize the two. It does not define data models, persistence, or form/grid configuration. Substitute your own components where indicated.
 
 
-=== Creating the Components
+== Scaffolding the View
 
-The next step is to implement the master and detail components. The master component is typically a grid, while the detail component is often a form. See the <<../forms-data/add-grid#,Add a Grid>> and <<../forms-data/add-form#,Add a Form>> guides for more information on creating these components.
+When creating a master-detail view, start with the general structure. You'll need:
 
+* a layout to arrange the master and detail components side by side,
+* a master component (e.g., a <</components/grid#,Grid>>),
+* a detail component (e.g., a form),
+* a placeholder component to show when no detail is selected, and
+* a way to represent the selected item's ID in the URL. 
 
-=== Handling Selection State
+Because the selected item's ID appears in the URL, the view can always reconstruct the correct UI state after navigation, a refresh, or a shared link.
 
-The final step is to implement selection handling. You should cover the following scenarios:
-
-* No detail is selected (i.e., no URL parameter is present)
-* A detail is selected (i.e., a URL parameter is present)
-* A detail is selected, but it doesn't exist (i.e., the URL parameter is invalid)
-
-To keep things simple, you should handle all these scenarios in the `setParameter` method. Here's an example implementation:
+The following listing shows the minimal structure of a master-detail view, using the same class as in the full example but with the implementation omitted for clarity. It uses a <</components/split-layout#,Split Layout>> to arrange the master and detail components side by side, and a
+<<pass-data/route-parameters#,route parameter>> to represent the selected item's ID:
 
 [source,java]
 ----
-@Override
-public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
-    if (getSecondaryComponent() != null) {
-        getSecondaryComponent().removeFromParent(); // <1>
-    }
-    Optional.ofNullable(id)
-        .flatMap(customerService::findById) // <2>
-        .ifPresentOrElse(
-            customer -> { // <3>
-                addToSecondary(new CustomerDetailComponent(customer));
-                master.select(customer);
-            }, 
-            () -> { // <4>
-                addToSecondary(createNoDetailSelected()); 
-                master.deselectAll();
-            }
-        );
-}
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=scaffolding,indent=0]
 ----
-<1> Remove any existing detail or placeholder before adding a new one.
-<2> Use the service to find the customer by ID.
-<3> If the customer exists, show the detail component and select the customer in the master.
-<4> If no customer is found, or the ID is not present, show the placeholder and clear the selection in the master.
 
-However, this is only the first half of selection handling. You also need to update the URL when the user selects an item in the master component. Start by creating <<navigate#your-own-api,navigation utility methods>> for setting and clearing the selection:
+With the class structure in place, the next step is to implement the master, detail, and placeholder components that the layout will display.
+
+[NOTE]
+You can use any layout you like to arrange the master and detail components in your application. Split Layout is not the only option, but it works well for this simple example.
+
+== Creating the Master Component
+
+To keep this example simple, the master component is a list of buttons. The buttons represent user selections; each button simulates selecting a different item by navigating to a URL containing its ID:
 
 [source,java]
 ----
-public static void showCustomerDetails(long customerId) {
-    UI.getCurrent().navigate(CustomerView.class, customerId);
-}
-
-public static void showCustomerList() {
-    UI.getCurrent().navigate(CustomerView.class);
-}
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=master,indent=0]
 ----
 
-Then, call these methods from the master component when the user selects or deselects an item. For example, if you're using a `Grid`, you can add a selection listener like this:
+In a real application, the master component would be a Grid with data loaded from a database. Adding such a Grid is covered in the <<../forms-data/add-grid#,Add a Grid>> guide.
+
+
+=== Implementing Navigation Methods
+
+The master uses <<navigate#your-own-api,navigation utility methods>> for showing the master and detail views. These methods either set or clear the URL parameter, resulting in the `setParameter()` method being called with the appropriate value:
 
 [source,java]
 ----
-customerGrid.addSelectionListener(event -> event.getFirstSelectedItem()
-    .ifPresentOrElse(
-        customer -> showCustomerDetails(customer.getId()),
-        () -> showCustomerList()
-    )
-);
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=navigation,indent=0]
 ----
 
-You don't have to worry about an infinite loop caused by the selection listener navigating, and `setParameter()` updating the selection. Vaadin's router is smart enough to avoid re-navigating to the same URL.
+The implementation of `setParameter()` is covered later in this guide.
 
 
-== The Master-Detail Layout
+== Creating the Detail Component
 
-TODO Explain the component and link to its documentation.
+The detail component in this example is even simpler: it shows the selected ID in a paragraph:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=detail,indent=0]
+----
+
+In a real application, the detail component would be a form. How to build such a form is covered in the <<../forms-data/add-form#,Add a Form>> guide.
+
+
+== Creating the Placeholder
+
+When no detail is selected, it's good practice to show a placeholder message. Here's a simple implementation that shows a message in a paragraph:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=nodetail,indent=0]
+----
+
+This is helpful when a user opens the list view without selecting anything.
+
+
+== Implementing View Logic
+
+With the components in place, the next step is to implement the view logic that ties everything together. Since the master is always visible, add it to the primary area of the Split Layout in the constructor:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=constructor,indent=0]
+----
+
+The secondary area of the Split Layout should be updated based on the user's selection:
+
+* If the user has selected an item, show the detail component. 
+* If no item is selected, show the placeholder component. 
+
+Because you're using a route parameter to represent the selected item's ID, implement this logic in the `setParameter()` method - remove the old detail area, check whether the ID is present, then show either the detail or the placeholder accordingly:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/masterdetail/MasterDetailView.java[tags=setparameter,indent=0]
+----
+
+In this simple example, the selection is not visible in the master component. In a real application, you'd want to reflect the selection state in the master component as well. 
+
+For example, if you're using a Grid, you could select the corresponding row when an item is selected, and clear the selection when no item is selected. All this logic would also go into the `setParameter()` method.
+
+
+
+With these methods in place, the master-detail view is complete. The next step is to integrate it into your application and enhance it with real data and more complex UI components as needed.
