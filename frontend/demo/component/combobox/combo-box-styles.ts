@@ -21,7 +21,6 @@ export class Example extends LitElement {
         helper-text="Helper text"
         .items="${['Value']}"
         value="Value"
-        style="--vaadin-input-field-border-width: 1px;"
       >
       </vaadin-combo-box>
       <!-- end::snippet[] -->
