@@ -13,10 +13,10 @@ import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.router.Route;
 
-@Route("message-list-with-theme")
-public class MessageListWithThemeComponent extends Div {
+@Route("message-list-class-name")
+public class MessageListClassName extends Div {
 
-    public MessageListWithThemeComponent() {
+    public MessageListClassName() {
         // tag::snippet[]
         Person person = DataService.getPeople(1).get(0);
         MessageList list = new MessageList();
@@ -41,7 +41,6 @@ public class MessageListWithThemeComponent extends Div {
         // end::snippet[]
     }
 
-    public static class Exporter extends // hidden-source-line
-            DemoExporter<MessageListWithThemeComponent> { // hidden-source-line
+    public static class Exporter extends DemoExporter<MessageListClassName> { // hidden-source-line
     } // hidden-source-line
 }
