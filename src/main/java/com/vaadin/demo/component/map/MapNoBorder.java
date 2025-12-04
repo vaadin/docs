@@ -6,17 +6,17 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.MapVariant;
 
-@Route("map-theme-borderless")
-public class MapThemeBorderless extends Div {
+@Route("map-no-border")
+public class MapNoBorder extends Div {
 
-    public MapThemeBorderless() {
+    public MapNoBorder() {
         Map map = new Map();
         add(map);
         // tag::snippet[]
-        map.addThemeVariants(MapVariant.BORDERLESS);
+        map.addThemeVariants(MapVariant.LUMO_NO_BORDER);
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<MapThemeBorderless> { // hidden-source-line
+    public static class Exporter extends DemoExporter<MapNoBorder> { // hidden-source-line
     } // hidden-source-line
 }
