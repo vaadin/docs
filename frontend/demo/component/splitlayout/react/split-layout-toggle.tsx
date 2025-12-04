@@ -38,7 +38,7 @@ function Example() {
         >
           <Icon icon={sidebarCollapsed.value ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
         </Button>
-        <MasterContent />
+        <MasterContent style={{ clear: 'right' }} />
       </div>
 
       <div style={{ width: `${100 - sidebarWidthPercentage}%` }}>
