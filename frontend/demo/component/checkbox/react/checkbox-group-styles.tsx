@@ -6,12 +6,7 @@ import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    <CheckboxGroup
-      theme="helper-above-field"
-      label="Label"
-      helperText="Helper text"
-      style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
-    >
+    <CheckboxGroup theme="helper-above-field" label="Label" helperText="Helper text">
       <Checkbox value="1" label="Item 1" />
       <Checkbox value="2" label="Item 2" />
       <Checkbox value="3" label="Item 3" />

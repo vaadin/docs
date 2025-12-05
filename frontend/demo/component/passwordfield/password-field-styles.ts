@@ -20,7 +20,6 @@ export class Example extends LitElement {
         label="Label"
         helper-text="Helper text"
         value="Ex@mplePassw0rd"
-        style="--vaadin-input-field-border-width: 1px;"
       ></vaadin-password-field>
       <!-- end::snippet[] -->
     `;
