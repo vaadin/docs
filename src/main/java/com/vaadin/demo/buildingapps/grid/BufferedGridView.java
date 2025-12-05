@@ -1,6 +1,7 @@
 package com.vaadin.demo.buildingapps.grid;
 
 // tag::full[]
+import java.util.Collections;
 import java.util.List;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -9,10 +10,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
-@Route("building-apps/grid/static-grid")
-public class StaticGridView extends VerticalLayout {
+@Route("building-apps/grid/buffered-grid")
+public class BufferedGridView extends VerticalLayout {
 
-    StaticGridView() {
+    BufferedGridView() {
         // In a real application, this would be injected or
         // retrieved via a service locator
         var service = new ItemService();
@@ -29,22 +30,10 @@ public class StaticGridView extends VerticalLayout {
         grid.addColumn(Item::name).setHeader("Name").setSortable(true);
         // end::sorting[]
 
-        // Set up data provider with filtering
-        // tag::dataprovider[]
-        var dataView = grid.setItems(service.getAllItems());
-        // end::dataprovider[]
         // tag::filtering[]
-        // Set the filter whenever the text field changes
-        filterField.addValueChangeListener(e -> {
-            var filterString = e.getValue().toLowerCase();
-            if (filterString.isBlank()) {
-                // No string -> show all items
-                dataView.removeFilters();
-            } else {
-                dataView.setFilter(item -> item.name().toLowerCase()
-                        .contains(filterString));
-            }
-        });
+        // Update the grid whenever the text field changes
+        filterField.addValueChangeListener(e -> grid.setItems(
+                service.findItems(e.getValue())));
         // end::filtering[]
 
         // Layout components
@@ -65,8 +54,16 @@ public class StaticGridView extends VerticalLayout {
                 new Item(6, "Estonia"),
                 new Item(7, "Germany"));
 
-        public List<Item> getAllItems() {
-            return ITEMS;
+        public List<Item> findItems(String filterString) {
+            // In a real application, this would query a database and
+            // enforce a maximum result size to avoid flooding the UI 
+            // with too many items.
+            var filterLower = filterString.toLowerCase().trim();
+            return filterLower.isEmpty()
+                    ? Collections.emptyList()
+                    : ITEMS.stream()
+                            .filter(item -> item.name().toLowerCase().contains(filterLower))
+                            .toList();
         }
     }
 
