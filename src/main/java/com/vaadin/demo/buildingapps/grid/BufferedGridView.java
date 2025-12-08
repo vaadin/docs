@@ -56,13 +56,16 @@ public class BufferedGridView extends VerticalLayout {
 
         public List<Item> findItems(String filterString) {
             // In a real application, this would query a database and
-            // enforce a maximum result size to avoid flooding the UI 
+            // enforce a maximum result size to avoid flooding the UI
             // with too many items.
             var filterLower = filterString.toLowerCase().trim();
             return filterLower.isEmpty()
                     ? Collections.emptyList()
                     : ITEMS.stream()
-                            .filter(item -> item.name().toLowerCase().contains(filterLower))
+                            .filter(item -> item
+                                    .name()
+                                    .toLowerCase()
+                                    .contains(filterLower))
                             .toList();
         }
     }
