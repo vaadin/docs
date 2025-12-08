@@ -10,7 +10,6 @@ function Example() {
       label="Label"
       helperText="Helper text"
       value="Ex@mplePassw0rd"
-      style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
     />
     // end::snippet[]
   );

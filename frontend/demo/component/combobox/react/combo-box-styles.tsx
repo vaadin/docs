@@ -11,7 +11,6 @@ function Example() {
       helperText="Helper text"
       items={['Value']}
       value="Value"
-      style={{ '--vaadin-input-field-border-width': '1px' } as React.CSSProperties}
     />
     // end::snippet[]
   );
