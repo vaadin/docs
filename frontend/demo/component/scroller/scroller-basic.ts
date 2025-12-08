@@ -10,35 +10,35 @@ import { applyTheme } from 'Frontend/demo/theme';
 @customElement('scroller-basic')
 export class Example extends LitElement {
   private eventDetails = `
-**Date & Time**  
+**Date & Time**
 
-Saturday, July 19, 2025  
+Saturday, July 19, 2025
 9:00 AM – 5:00 PM (PDT)
 
-**About This Event**  
+**About This Event**
 
 Join us for a full day of inspiring talks, hands-on workshops, and networking opportunities with industry leaders. Whether you're a seasoned developer or just starting out, there's something for everyone.
 
-**Schedule**  
+**Schedule**
 
-- **9:00 AM** – Registration & Breakfast  
-- **10:00 AM** – Opening Keynote  
-- **11:30 AM** – Breakout Sessions  
-- **1:00 PM** – Lunch & Networking  
-- **2:30 PM** – Afternoon Workshops  
+- **9:00 AM** – Registration & Breakfast
+- **10:00 AM** – Opening Keynote
+- **11:30 AM** – Breakout Sessions
+- **1:00 PM** – Lunch & Networking
+- **2:30 PM** – Afternoon Workshops
 - **4:30 PM** – Closing Remarks & Raffle
 
-**What to Bring**  
+**What to Bring**
 
-- Photo ID for check-in  
-- Laptop (optional, for workshops)  
-- Business cards for networking  
+- Photo ID for check-in
+- Laptop (optional, for workshops)
+- Business cards for networking
 
-**Parking**  
+**Parking**
 
 Free parking available in Lot B. Street parking is limited.
 
-**Contact**  
+**Contact**
 
 Questions? Email us at events@techconf.io
 `;
