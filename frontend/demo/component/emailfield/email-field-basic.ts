@@ -15,7 +15,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
         <!-- tag::snippet[] -->
         <vaadin-email-field
           label="Email address"

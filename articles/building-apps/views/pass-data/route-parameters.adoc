@@ -1,0 +1,140 @@
+---
+title: Route Parameters
+page-title: How to use route parameters in a Vaadin application 
+description: Learn how to use route parameters in Vaadin.
+meta-description: Learn how to use route parameters in Vaadin to pass dynamic data in URLs, personalize responses, and modify application behavior.
+order: 10
+---
+
+
+= Route Parameters
+:toclevels: 2
+
+In this guide, you'll learn how to create a view that accepts a single route parameter. You'll also explore the differences between optional and wildcard route parameters.
+
+
+== Copy-Paste into Your Project
+
+If you want to quickly try out route parameters in your Vaadin application, copy-paste the following code into a new Java class named [classname]`RouteParameterView` in your project's main package:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/RouteParameterView.java[tags=snippet,indent=0]
+----
+
+For more detailed instructions on how to use route parameters, continue reading below.
+
+
+== What Are Route Parameters?
+
+Route parameters are dynamic segments in a URL that allow extra information to be passed to a view. They are appended to the route path and can be used to personalize responses or modify application behavior.
+
+For example, if an application has a `greet` route that accepts a string parameter, users can call it with URLs like:
+
+* `/greet/John`
+* `/greet/Jane`
+* `/greet/World`
+
+Here, `"John"`, `"Jane"`, and `"World"` are parameter values that the `greet` route can use to generate a response.
+
+
+== Route Parameters vs Static Routes
+
+Static routes always take precedence over dynamic ones. For instance, consider an application with both a `customer` route (which accepts a string parameter), and a `customer/list` route:
+
+* `/customer/cu1234` -> Calls the `customer` route with `"cu1234"` as the parameter value.
+* `/customer/details` -> Calls the `customer` route with `"details"` as the parameter value.
+* `/customer/list` -> Calls the dedicated `customer/list` route.
+* `/customer` -> Returns a `404 Not Found` error, unless the parameter is explicitly declared optional.
+
+
+== Accessing the Route Parameter Value
+
+To pass a route parameter to a Vaadin view, implement the [interfacename]`HasUrlParameter<T>` interface. This interface requires a type argument, which can be `Long`, `Integer`, `String`, or `Boolean`. It defines the [methodname]`setParameter()` method, which receives the route parameter when the view is navigated to.
+
+For example, to create a [classname]`CustomerView` that takes a customer ID as a parameter, use the following code:
+
+[source,java]
+----
+@Route("customers")
+public class CustomerView extends Main implements HasUrlParameter<String> {
+
+    @Override
+    public void setParameter(BeforeEvent event, String parameter) {
+        setText("Customer ID: " + parameter);
+    }
+}
+----
+
+Now, if you navigate to `/customers/cu12345`, the router calls [methodname]`setParameter()` with `"cu12345"` as the parameter value.
+
+
+== Optional Parameters
+
+By default, route parameters are required. In the example above, if you try to navigate to `/customers`, the router returns a `404 Not Found` error. 
+
+To make a route parameter optional, add the [annotationname]`@OptionalParameter` annotation:
+
+[source,java]
+----
+@Route("customers")
+public class CustomerView extends Main implements HasUrlParameter<String> {
+
+    @Override
+// tag::snippet[]
+    public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
+// end::snippet[]
+        if (parameter == null) {
+            showCustomerList();
+        } else {
+            showCustomerWithId(parameter);
+        }
+    }
+
+    private void showCustomerList() {
+        // ...
+    }
+
+    private void showCustomerWithId(String customerId) {
+        // ...
+    }
+}
+----
+
+Now, if you now navigate to `/customers`, the router calls [methodname]`setParameter()` with `null` as the parameter value.
+
+
+== Wildcard Parameters
+
+By default, a route parameter captures only a single URL segment. For example, if your `customers` route expects a string parameter, navigating to `/customers/cu1234/edit` would result in a `404 Not Found` error. 
+
+To capture multiple URL segments as a single parameter, use the [annotationname]`@WildcardParameter` annotation:
+
+[source,java]
+----
+@Route("customers")
+public class CustomerView extends Main implements HasUrlParameter<String> {
+
+    @Override
+// tag::snippet[]
+    public void setParameter(BeforeEvent event, @WildcardParameter String parameter) {
+// end::snippet[]
+        if (parameter.isEmpty()) {
+            showCustomerList();
+        } else {
+            // Extract the and process the segments from the parameter
+        }
+    }
+
+    private void showCustomerList() {
+        // ...
+    }
+}
+----
+
+Now, navigating to `/customers/cu1234/edit` passes `"cu1234/edit"` as the parameter value.
+
+[NOTE]
+An empty wildcard parameter is an empty string (`""`), while an empty optional parameter is `null`. So, navigating to `/customers` calls [methodname]`setParameter()` with `""` instead of `null`.
+
+If you’re considering wildcard parameters because you need multiple route parameters, <<route-templates#,Route Templates>> may be a better solution.

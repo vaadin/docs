@@ -35,8 +35,8 @@ export class Example extends LitElement {
       <vaadin-app-layout>
         <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-scroller slot="drawer" style="padding: 0.5rem">
-          <vaadin-side-nav>
+        <vaadin-scroller slot="drawer">
+          <vaadin-side-nav style="margin: var(--vaadin-gap-s)">
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
               Dashboard
