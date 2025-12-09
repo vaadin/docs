@@ -1,0 +1,177 @@
+---
+title: Dialogs & Drawers
+page-title: How to show a form in dialogs and drawers in a Vaadin application
+description: Learn how to show forms in dialogs and drawers.
+meta-description: Learn how to show forms in dialogs and drawers in a Vaadin application.
+order: 20
+---
+
+
+= Dialogs & Drawers
+
+In business applications, dialogs are typically used for creating new items, while drawers are more often used for editing existing ones. Drawers are often tied to a selection. Selecting an item typically opens a drawer, closing the drawer then clears the selection.
+
+.Part of a Series
+[TIP]
+This is part 4 of the *Add a Form* series. It builds on the concepts introduced in the <<fields-and-binding#,Fields & Binding>>, <<validation#,Form Validation>> and <<loading-and-saving#,Loading & Saving>> guides.
+
+By implementing the form as a standalone component, you can reuse it in both dialogs and drawers.
+
+
+== Displaying Forms in Dialogs
+
+When working with dialogs in Vaadin, it's important to remember they do not alter the application's control flow. For example, in Swing, you can pass control to a dialog and wait until it closes. After that, control returns to the calling code and you can proceed, depending on what option the user selected. In Vaadin, opening a dialog is another way of displaying a UI element -- it doesn't block execution or pause logic. Instead, user interactions are handled through event listeners or callbacks.
+
+The following example shows *a dialog used to create new project proposals*. The caller supplies an `onSaveCallback`, which is triggered when the user clicks the [guibutton]*Create Proposal* button:
+
+[source,java]
+----
+public class ProposalDialog extends Dialog {
+        
+    private final SerializableConsumer<Proposal> onSaveCallback;
+    private final ProposalForm form;
+
+    public ProposalDialog(SerializableConsumer<Proposal> onSaveCallback) {
+        this.onSaveCallback = onSaveCallback;
+
+        // Create the components
+        form = new ProposalForm();
+
+        var saveBtn = new Button("Create Proposal", event -> save());
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var cancelBtn = new Button("Cancel", event -> close());
+
+        // Configure the dialog
+        setHeaderTitle("New Proposal");
+        add(form);
+        getFooter().add(cancelBtn, saveBtn);
+    }
+
+    private void save() {
+        form.getFormDataObject().ifPresent(proposal -> { // <1>
+            onSaveCallback.accept(proposal); // <2>
+            close();
+        });
+    }
+}
+----
+<1> Writes the form data to a new `Proposal` FDO (Form Data Object).
+<2> Uses a callback to let the caller decide how to save the FDO.
+
+Here's how you might use the dialog in your application:
+
+[source,java]
+----
+var grid = new Grid<Proposal>();
+// Configure grid here...
+
+var createProposalButton = new Button("Create Proposal", event -> {
+    new ProposalDialog(proposal -> {
+        var saved = proposalService.save(proposal); // <1>
+        grid.getDataProvider().refreshAll(); // <2>
+        grid.select(saved); // <3>
+    }).open();
+});
+----
+<1> Saves the proposal with an application service.
+<2> Refreshes the grid of proposals so that the new one shows up.
+<3> Selects the newly added proposal, opening the edit drawer.
+
+
+== Displaying Forms in Drawers
+
+// TODO Write about the new master-detail layout that is coming in the next Vaadin version!
+
+The following example shows *a drawer that reuses the same form component from the dialog example to edit project proposals*. The caller provides two callbacks: an `onSaveCallback` for handling save logic, and an `onCloseCallback` that runs when the drawer is closed:
+
+[source,java]
+----
+public class ProposalDrawer extends Section {
+
+    private final SerializableFunction<Proposal, Proposal> onSaveCallback;
+    private final SerializableRunnable onCloseCallback;
+    private final ProposalForm form;
+
+    public ProposalDrawer(SerializableFunction<Proposal, Proposal> onSaveCallback, 
+                          SerializableRunnable onCloseCallback) {
+        this.onSaveCallback = onSaveCallback;
+        this.onCloseCallback = onCloseCallback;
+
+        // Create the components
+        form = new ProposalForm();
+
+        var header = new H2("Edit Proposal");
+        header.setId("proposal-drawer-header"); // <1>
+        setAriaLabeledBy("proposal-drawer-header");
+
+        var saveBtn = new Button("Save", event -> save());
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var closeBtn = new Button("Close", event -> close());
+
+        var buttons = new HorizontalLayout(closeBtn, saveBtn);
+        
+        // Configure the drawer
+        add(header, form, buttons);
+        addClassNames(LumoUtility.Display.FLEX, // <2>
+                LumoUtility.FlexDirection.COLUMN, 
+                LumoUtility.Border.ALL,
+                LumoUtility.Padding.MEDIUM);
+        setVisible(false); // <3>
+    }
+
+    public void setProposal(@Nullable Proposal proposal) {
+        form.setFormDataObject(proposal);
+        setVisible(proposal != null);
+    }
+
+    private void save() {
+        form.getFormDataObject.ifPresent(proposal -> {
+            var savedProposal = onSaveCallback.apply(proposal);
+            form.setFormDataObject(savedProposal);
+        });
+    }
+
+    private void close() {
+        onCloseCallback.run();
+    }
+}
+----
+<1> Example accessibility improvements -- recommended, but not required for drawer functionality.
+<2> Optional styling —- included here for demonstration purposes but not required for drawer functionality.
+<3> Hide the drawer by default until an item is selected.
+
+To show the drawer when a user selects an item from a grid, you can use the following pattern:
+
+[source,java]
+----
+@Route("proposals")
+public class ProposalView extends Main {
+
+    public ProposalView(ProposalService proposalService) {
+        var grid = new Grid<Proposal>();
+        // Configure the grid here...
+
+        var drawer = new ProposalDrawer(
+            proposal -> {
+                var savedProposal = proposalService.save(proposal); // <1>
+                grid.getDataProvider().refreshAll(); // <2>
+                return savedProposal;
+            }, 
+            grid::deselectAll // <3>
+        );
+        grid.addSelectionListener(event -> 
+            drawer.setProposal(event.getFirstSelectedItem().orElse(null)) // <4>
+        );
+
+        add(grid, drawer);
+
+        // Style the view here...
+    }
+}
+----
+<1> Saves the proposal with an application service.
+<2> Refreshes the grid so that the updated proposal shows up.
+<3> Clears the grid selection when the drawer is closed.
+<4> Displays the selected proposal in the drawer, or closes the drawer if the selection is empty.

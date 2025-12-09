@@ -58,8 +58,8 @@ function Example() {
       <h1 style={h1Style} slot="drawer">
         MyApp
       </h1>
-      <Scroller slot="drawer" style={{ padding: '0.5rem' }}>
-        <SideNav ref={sideNavRef}>
+      <Scroller slot="drawer">
+        <SideNav ref={sideNavRef} style={{ margin: 'var(--vaadin-gap-s)' }}>
           <SideNavItem>
             <Icon icon="vaadin:dashboard" slot="prefix" />
             Dashboard

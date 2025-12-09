@@ -1,0 +1,204 @@
+---
+title: Add a View
+page-title: How to add a view to a Vaadin application 
+description: Learn how to add a view to a Vaadin application.
+meta-description: Learn how to add a view to a Vaadin application.
+order: 10
+---
+
+
+= Add a View
+:toclevels: 2
+
+In this guide, you'll learn how to create and name views in Java, assign multiple routes to a single view, and organize views into Java packages. 
+
+
+== Copy-Paste into Your Project
+
+If you want to quickly try out a view in your Vaadin application, copy-paste the following code into a new Java class named [classname]`HelloWorldView` in your project's main package:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/addview/HelloWorldView.java[tags=snippet,indent=0]
+----
+
+For more detailed instructions on how to add a view, continue reading below.
+
+
+== What Is a View?
+
+In a Vaadin application, a _view_ is a user interface component that forms a logical whole of the user interface. A page can contain other components than a view, but only one view at a time. Typically, the view takes up most of the page.
+
+=== Views or Routes?
+
+Each view is associated with its own URL path. When the user navigates from one view to another, the URL of the page changes. *The mapping between a URL path and a view is called a _route_*, where the *view is the _target_ of the route*.
+
+All routes must be unique to allow the routing logic to determine the view to render without any disambiguation. When conflicts are detected, the application fails to start and logs a message explaining the reason for the conflict.
+
+The main view of an application is mapped to the root path (`""`). It is sometimes also called the _root_ view. 
+
+.Screenshot of a main or root view
+image::images/root-view.png[Example of a main view]
+
+.Screenshot of a view mapped to the "customers" path
+image::images/customers-view.png[Example of a customers view]
+
+== Creating Views
+
+Vaadin views are Java classes that are annotated with [annotationname]`@Route` and extend [classname]`com.vaadin.flow.component.Component` -- or any of its subclasses. The default parameter of the [annotationname]`@Route` annotation is the path of the view. 
+
+For example, you can define the [classname]`HelloWorld` component as the main view like this:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("")
+// end::snippet[]
+public class HelloWorld extends Div {
+    public HelloWorld() {
+        setText("Hello world");
+    }
+}
+----
+
+If the application is running from the root context, users would be able to access this view by navigating to `\https://example.com`.
+
+Likewise, you can define the [classname]`CustomerListView` component as the target for the `customer/list` route:
+
+[source,java]
+----
+// tag::snippet[]
+@Route("customer/list")
+// end::snippet[]
+public class CustomerListView extends Main {
+    public CustomerListView() {
+        //...
+    }
+}
+----
+
+Users would be able to access this view by navigating to `\https://example.com/customer/list`.
+
+[NOTE]
+Don't include a leading `/` when you specify the path of a view.
+
+Navigation between views is covered in more detail in the <<navigate#,Navigate to a View>> guide.
+
+.Which Package to Put Views In?
+[TIP]
+For information about package structures for Vaadin applications, see the <</building-apps/architecture/packages#,Package Structure>> architecture deep-dive.
+
+== View Naming
+
+If you do not specify a default parameter for [annotationname]`@Route`, the path is derived from the name of the view. The derived name is the class name in lower case, with the `View` suffix removed if there is one. Also, [classname]`MainView` and [classname]`Main` are mapped to root. 
+
+For example:
+
+* [classname]`MyEditor` becomes `"myeditor"`
+* [classname]`PersonView` becomes `"person"`
+* [classname]`MainView` becomes `""`
+
+If you specify the path explicitly, you can name your views any way you like.
+
+
+== Route Aliases
+
+You can create multiple routes that target the same view. You do this with the `@RouteAlias` annotation.
+
+For example, you can map `\https://example.com`, `\https://example.com/home`, and `\https://example.com/main` to [classname]`HomeView` like this:
+
+[source,java]
+----
+@Route("")
+// tag::snippet[]
+@RouteAlias("home")
+@RouteAlias("main")
+// end::snippet[]
+public class HomeView extends Div {
+    public HomeView() {
+        //...
+    }
+}
+----
+
+Whenever you use route aliases, you have to create a primary route by using the [annotationname]`@Route` annotation. Only adding [annotationname]`@RouteAlias` to a view does not work.
+
+
+== Page Title
+
+By default, Vaadin views do not set a page title. You can define the page title either declaratively or dynamically.
+
+
+=== Declarative Page Title
+
+To set a page title declaratively, use the [annotationname]`@PageTitle` annotation:
+
+[source,java]
+----
+@Route("")
+// tag::snippet[]
+@PageTitle("Home Page")
+// end::snippet[]
+public class HomeView extends Div {
+    public HomeView() {
+        //...
+    }
+}
+----
+
+
+=== Dynamic Page Title
+
+To set the page title dynamically, implement the [interfacename]`HasDynamicTitle` interface:
+
+[source,java]
+----
+@Route("")
+// tag::snippet[]
+public class HomeView extends Div implements HasDynamicTitle {
+// end::snippet[]
+
+    public HomeView() {
+        //...
+    }
+
+// tag::snippet[]
+    @Override
+    public String getPageTitle() {
+        return "Home Page";
+    }
+// end::snippet[]
+}
+----
+
+The title is determined when the router navigates to the view. Any changes made after navigation will not affect the title.
+
+[IMPORTANT]
+A view cannot use both the [annotationname]`@PageTitle` annotation and implement the [interfacename]`HasDynamicTitle` interface simultaneously.
+
+
+== Navigation Menu Item
+
+Most business applications include a navigation menu. This menu can be generated dynamically using Vaadin's [classname]`MenuConfiguration`. To make a view appear in the menu, add the `@Menu` annotation:
+
+[source,java]
+----
+@Route()
+// tag::snippet[]
+@Menu(title = "Dashboard", order = 1, icon = "vaadin:dashboard")
+// end::snippet[]
+public class DashboardView extends Main {
+    public DashboardView() {
+        //...
+    }
+}
+----
+
+The [annotationname]`@Menu` annotation has the following attributes:
+
+`title` :: The menu title. Defaults to the page title if not specified.
+`order` :: Determines the menu item's position. Items with a defined order appear above unordered items.
+`icon` :: Specifies the menu icon. This is a string, allowing flexibility in interpretation. It could be an <<{articles}/components/icons#,Icon>> name or an SVG source, depending on the menu implementation.
+
+For more information on building a navigation menu, see <<add-navi-menu#,Add a Navigation Menu>>.
+// TODO Do we need a separate guide on building a navigation menu?
