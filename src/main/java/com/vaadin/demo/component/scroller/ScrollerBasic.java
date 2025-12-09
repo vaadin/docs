@@ -3,111 +3,68 @@ package com.vaadin.demo.component.scroller;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.card.Card;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.component.orderedlayout.Scroller;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
-import java.time.LocalDate;
-
 @Route("scroller-basic")
-public class ScrollerBasic extends VerticalLayout {
+public class ScrollerBasic extends Div {
 
-    public static final String PERSONAL_TITLE_ID = "personal-title";
-    public static final String EMPLOYMENT_TITLE_ID = "employment-title";
+    private static final String EVENT_DETAILS = """
+**Date & Time**
+
+Saturday, July 19, 2025
+9:00 AM – 5:00 PM (PDT)
+
+**About This Event**
+
+Join us for a full day of inspiring talks, hands-on workshops, and networking opportunities with industry leaders. Whether you're a seasoned developer or just starting out, there's something for everyone.
+
+**Schedule**
+
+- **9:00 AM** – Registration & Breakfast
+- **10:00 AM** – Opening Keynote
+- **11:30 AM** – Breakout Sessions
+- **1:00 PM** – Lunch & Networking
+- **2:30 PM** – Afternoon Workshops
+- **4:30 PM** – Closing Remarks & Raffle
+
+**What to Bring**
+
+- Photo ID for check-in
+- Laptop (optional, for workshops)
+- Business cards for networking
+
+**Parking**
+
+Free parking available in Lot B. Street parking is limited.
+
+**Contact**
+
+Questions? Email us at events@techconf.io
+            """;
 
     public ScrollerBasic() {
-        getStyle().set("border", "solid 1px var(--vaadin-border-color)");
-        setHeight(400, Unit.PIXELS);
-        setMaxWidth(100, Unit.PERCENTAGE);
-        setPadding(false);
-        setSpacing(false);
-        setWidth(360, Unit.PIXELS);
-        setAlignItems(FlexComponent.Alignment.STRETCH);
+        Card card = new Card();
+        card.setMaxWidth(400, Unit.PIXELS);
 
-        // Header
-        Header header = new Header();
-        header.getStyle().set("display", "flex").set("align-items", "center")
-                .set("gap", "1rem").set("padding", "1rem")
-                .set("border-bottom", "solid 1px #ccc");
-
-        H2 editEmployee = new H2("Edit employee");
-        editEmployee.getStyle().set("font-size", "1.375rem");
-
-        Icon arrowLeft = VaadinIcon.ARROW_LEFT.create();
-        arrowLeft.getStyle().set("padding", "0.25rem");
-        arrowLeft.getElement().setAttribute("aria-hidden", "true");
-
-        Anchor goBack = new Anchor("#", arrowLeft);
-        goBack.setAriaLabel("Go back");
-
-        header.add(goBack, editEmployee);
-        add(header);
+        card.setTitle("Summer Tech Conference 2025");
 
         // tag::snippet[]
-        // Personal information
-        H3 personalTitle = new H3("Personal information");
-        personalTitle.getStyle().set("font-size", "1.125rem");
-        personalTitle.setId(PERSONAL_TITLE_ID);
+        Markdown markdown = new Markdown(EVENT_DETAILS);
 
-        TextField firstName = new TextField("First name");
-        firstName.setWidthFull();
-
-        TextField lastName = new TextField("Last name");
-        lastName.setWidthFull();
-
-        DatePicker birthDate = new DatePicker("Birthdate");
-        birthDate.setInitialPosition(LocalDate.of(1990, 1, 1));
-        birthDate.setWidthFull();
-
-        Section personalInformation = new Section(personalTitle, firstName,
-                lastName, birthDate);
-        personalInformation.getElement().setAttribute("aria-labelledby",
-                PERSONAL_TITLE_ID);
-
-        // Employment information
-        H3 employmentTitle = new H3("Employment information");
-        employmentTitle.getStyle().set("font-size", "1.125rem")
-                .set("margin-top", "1.5rem");
-        employmentTitle.setId(EMPLOYMENT_TITLE_ID);
-
-        TextField position = new TextField("Position");
-        position.setWidthFull();
-
-        TextArea additionalInformation = new TextArea("Additional Information");
-        additionalInformation.setWidthFull();
-
-        Section employmentInformation = new Section(employmentTitle, position,
-                additionalInformation);
-        employmentInformation.getElement().setAttribute("aria-labelledby",
-                EMPLOYMENT_TITLE_ID);
-
-        Scroller scroller = new Scroller(
-                new Div(personalInformation, employmentInformation));
-        scroller.getStyle().set("border-bottom", "solid 1px #ccc")
-                .set("padding", "1rem");
-        scroller.setScrollDirection(Scroller.ScrollDirection.VERTICAL);
-        add(scroller);
+        Scroller scroller = new Scroller(markdown);
+        scroller.addThemeName("overflow-indicators");
+        scroller.setMaxHeight(300, Unit.PIXELS);
         // end::snippet[]
+        card.add(scroller);
 
-        // Footer
-        Button save = new Button("Save");
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button addToCalendar = new Button("Add to calendar");
+        card.addToFooter(addToCalendar);
 
-        Button reset = new Button("Reset");
-        reset.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
-        Footer footer = new Footer(save, reset);
-        footer.getStyle().set("display", "flex").set("gap", "0.5rem")
-                .set("padding", "0.5rem 1rem");
-        add(footer);
+        add(card);
     }
 
     public static class Exporter extends DemoExporter<ScrollerBasic> { // hidden-source-line
