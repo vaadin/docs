@@ -10,12 +10,7 @@ function Example() {
       label="Label"
       helperText="Helper text"
       value="Value"
-      style={
-        {
-          '--vaadin-input-field-border-width': '1px',
-          width: '100%',
-        } as React.CSSProperties
-      }
+      style={{ width: '100%' }}
     />
     // end::snippet[]
   );

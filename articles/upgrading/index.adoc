@@ -172,8 +172,35 @@ If you're using a Gradle wrapper, update it to version 8.14 by executing the fol
 
 For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
 
+== Development Tools
+
+Development tools are opt-in feature in Vaadin 25. `vaadin-dev` module isn't included transitively by default anymore via `vaadin` or `vaadin-core` or any other Vaadin dependencies. To include it, add following dependency to your build configuration:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-dev</artifactId>
+    <optional>true</optional>
+</dependency>
+----
+
+[source,groovy]
+----
+<source-info group="Gradle"></source-info>
+dependencies {
+    implementation('com.vaadin:vaadin-dev')
+}
+----
+--
+
+More detailed instructions can be found in <<{articles}/flow/configuration/development-mode#development-mode, Development Mode>>.
+
 == Hilla
-Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have react views, add `hilla-spring-boot-starter` to work together with `hilla-spring-boot-starter` in your build configuration.
+Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have react views, add `hilla-spring-boot-starter` to work together with `vaadin-spring-boot-starter` in your build configuration.
 
 .pom.xml
 [source,xml]
@@ -232,6 +259,41 @@ The [filename]`theme.json` configuration file is deprecated (but still supported
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
+
+=== Spring Security and StyleSheet
+
+By default, Vaadin Spring Security denies access to URLs that are not explicitly allowed in the <<{articles}/upgrading#security-configuration-changes, security configuration>>. To allow access to custom resources such as `@import 'css/foo.css'`, you need to configure permission for the relevant path in your security settings:
+
+[source,java]
+----
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/css/foo.css").permitAll());
+    http.with(VaadinSecurityConfigurer.vaadin(), vaadin -> {
+        ...
+    });
+    return http.build();
+}
+----
+
+Or use link:https://docs.spring.io/spring-boot/api/java/org/springframework/boot/security/autoconfigure/web/StaticResourceLocation.html[StaticResourceLocation] provided by Spring to allow common locations for static resources:
+
+[source,java]
+----
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
+...
+
+@Bean
+public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(auth -> {
+        auth.requestMatchers(PathRequest.toStaticResources()
+                .atCommonLocations()).permitAll();
+    });
+    ...
+    return http.build();
+}
+----
 
 === Lumo Theme
 
@@ -677,7 +739,6 @@ The deprecated [classname]`VaadinWebSecurity` class has been removed from Vaadin
 <source-info group="VaadinWebSecurity (deprecated since V24.9)"></source-info>
 @EnableWebSecurity
 @Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfig {
 
     @Bean
@@ -862,7 +923,6 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 ----
 @EnableWebSecurity // should be already present
 @Configuration     // should be already present
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfiguration {
 }
 ----

@@ -17,9 +17,9 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-card>
         <!-- tag::[] -->
-        <div slot="header" class="leading-xs flex flex-col">
+        <div slot="header" style="display: flex; flex-direction: column-reverse; line-height: 1.25">
           <h2>Lapland</h2>
-          <div class="uppercase text-xs text-secondary" style="order: -1;">The Exotic North</div>
+          <div style="font-size: 0.8125rem; text-transform: uppercase">The Exotic North</div>
         </div>
         <!-- end::[] -->
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>

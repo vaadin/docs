@@ -23,7 +23,7 @@ public class Application implements AppShellConfigurator {
 
 You can split your CSS over multiple stylesheets, and load them either with separate [annotationname]`@StyleSheet` annotations, or load additional stylesheets using the CSS `@import` rule.
 
-.src/resources/META-INF/resources/styles.css
+.src/main/resources/META-INF/resources/styles.css
 [source,css]
 ----
 @import "additional-styles.css";
@@ -46,7 +46,7 @@ public class Application implements AppShellConfigurator {
 }
 ----
 
-.src/resources/META-INF/resources/styles.css
+.src/main/resources/META-INF/resources/styles.css
 [source,css]
 ----
 @import "https://example.com/external-styles.css";
@@ -79,7 +79,7 @@ public class CalendarView extends VerticalLayout {
 }
 ----
 
-.src/resources/META-INF/resources/calendar-view.css
+.src/main/resources/META-INF/resources/calendar-view.css
 [source,css]
 ----
 .calendar-view {
@@ -95,5 +95,52 @@ public class CalendarView extends VerticalLayout {
 CSS class names are identifier-attributes applied to HTML elements in order to scope CSS styling to them. The same class name can be applied to multiple elements, and each element can have multiple class names. They have nothing to do with Java or TypeScript classes.
 
 Stylesheets can also be <<{articles}/styling/advanced/dynamic-stylesheets#, loaded and unloaded dynamically>> through Java code.
+
+== Spring Security
+
+If you are using <<{articles}/flow/security/enabling-security#, Spring Security>> in your Vaadin application, you need to ensure that your stylesheets are accessible to unauthenticated users. The default Vaadin Spring Security configuration only permits access to `src/main/resources/META-INF/resources/styles.css` as well as the Aura and Lumo theme stylesheets.
+
+To allow access to additional stylesheets, you can modify your Spring Security configuration like so:
+
+[source,java]
+----
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            ...
+        });
+
+// tag::snippet[]
+        // Permit access to common static resource paths
+        http.authorizeHttpRequests(auth -> {
+            auth.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll();
+        });
+// end::snippet[]
+
+        return http.build();
+    }
+
+    ...
+}
+----
+
+This allows access to common locations for static resources, one of which is the `css` path. To make stylesheets available under that path, place them in the `src/main/resources/META-INF/resources/css` folder. For example, if you place a stylesheet in `src/main/resources/META-INF/resources/css/additional-styles.css`, you can import it in your main stylesheet like so:
+
+.src/main/resources/META-INF/resources/styles.css
+[source,css]
+----
+@import "css/additional-styles.css";
+----
+
+When using lazy-loading, you can load the stylesheet with [annotationname]`@StyleSheet` like so:
+
+[source,java]
+----
+@StyleSheet("css/additional-styles.css")
+public class SomeView extends VerticalLayout {
+    ...
+}
+----
 
 [discussion-id]`caa5a55d-8bd0-425b-94dc-521a018a2e1b`
