@@ -25,6 +25,7 @@ public class SplitLayoutToggle extends Div {
         Div masterContainer = new Div();
         DetailContent detailContent = new DetailContent();
         MasterContent masterContent = new MasterContent();
+        masterContent.getStyle().set("clear", "right");
 
         sidebarCollapsed = false;
 

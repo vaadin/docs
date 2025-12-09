@@ -14,10 +14,9 @@ With reactive state management, the state of a view or component is explicitly d
 This helps make UI state management less complicated in general and is particularly useful for sharing state between multiple users in a thread-safe manner.
 Signals are reactive by design, automatically updating dependent parts of the UI when their values change.
 
-[NOTE]
-Signal support is a preview feature in Vaadin 24.8 and may change in future releases.
-The implementation in Vaadin 24.8 covers the fundamental functionality but component APIs are not yet updated to integrate signals.
-You thus need to manually add listeners to components and use effect functions to react to signal changes.
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
 
 === Key Features
 
@@ -404,4 +403,259 @@ You can access a signal's value without registering a dependency, i.e., without 
 Signal.effect(() -> {
   String name = nameSignal.peek(); // The effect will not depend on nameSignal
 });
+----
+
+== Signal Binding in Element
+
+Various [classname]`com.vaadin.flow.dom.Element` features support signal binding, such as text, attributes, properties, [classname]`ClassList`, and [classname]`Style`. See <</flow/component-internals/element-api#,Element API>> for more details of those features.
+
+Each feature works with same rules. When feature is bound to a signal, feature's value, like text content, is kept synchronized with the signal value while the element is in the attached state. When the element is in detached state, signal value changes have no effect. `null` signal unbinds the existing binding. While a signal is bound, any attempt to set the value manually in other way than through the signal, throws [classname]`BindingActiveException`. The same happens when trying to bind a new signal while one is already bound.
+
+The following code serves as the base for the examples in the subsequent sections. It adds a button that increments a number signal by one and an empty span element:
+[source,java]
+----
+public class SimpleCounter extends VerticalLayout {
+
+    private final NumberSignal counter =
+            SignalFactory.IN_MEMORY_SHARED.number("counter");
+
+    public SimpleCounter() {
+        Button button = new Button("Increment by one");
+        button.addClickListener(
+                click -> counter.incrementBy(1));
+        add(button);
+
+        Span span = new Span("");
+        add(span);
+    }
+}
+----
+
+=== Text Binding
+
+.`Element#bindText(Signal<String> signal)`
+[source,java]
+----
+// NumberSignal's Double type has to be mapped to String.
+Signal<String> signal = counter.map(value -> String.format("Clicked %.0f times", value));
+
+span.getElement().bindText(signal);
+// span's text content is now "Clicked 0 times"
+----
+.Basic functionality (same rules with all Element bindings)
+[source,java]
+----
+// The following code demonstrates behavior step by step:
+span.getElement().getText(); // returns "Clicked 0 times"
+span.getElement().setText(""); // throws BindingActiveException
+
+span.getElement().removeFromParent(); // detaching from the UI
+span.getElement().getText(); // returns "Clicked 0 times"
+span.getElement().setText(""); // throws BindingActiveException
+counter.value(5); // updating the signal value
+span.getElement().getText(); // returns "Clicked 0 times"
+add(span); // re-attaching the element to the UI
+span.getElement().getText(); // returns "Clicked 5 times"
+
+span.getElement().bindText(null); // unbinds the existing binding
+span.getElement().getText(); // returns "Clicked 5 times"
+span.getElement().setText("");
+span.getElement().getText(); // returns ""
+counter.value(0);
+span.getElement().getText(); // returns ""
+----
+
+=== Attribute Binding
+
+.`Element#bindAttribute(String attribute, Signal<String> signal)`
+[source,java]
+----
+ValueSignal<Boolean> hidden = new ValueSignal<>(false);
+
+span.getElement().bindAttribute("hidden", hidden.map(value -> value ? "" : null));
+// DOM has "<span hidden>".
+
+hidden.value(!hidden.peek());
+// DOM has "<span>" now.
+// Boolean is mapped to "" when true and null when false.
+// Some other value like 'foo' would be "<span hidden='foo'>".
+
+----
+
+=== Property Binding
+
+Supports various value types: `String`, `Boolean`, `Double`, `BaseJsonNode`, `Object` (bean), `List` and `Map`.
+
+Typed Lists and Maps are not supported, i.e. the signal must be of type `Signal<List<?>>` or `Signal<Map<?,?>`.
+
+.`Element#bindProperty(String name, Signal<?> signal)`
+[source,java]
+----
+ValueSignal<Boolean> hidden = new ValueSignal<>(false);
+
+span.getElement().bindProperty("hidden", hidden);
+hidden.value(!hidden.peek()); // toggles 'hidden' property
+----
+.String type
+[source,java]
+----
+ValueSignal<String> title = new ValueSignal<>("Hello");
+span.getElement().bindProperty("title", title);
+title.value("World"); // updates 'title' property
+----
+.Double type
+[source,java]
+----
+NumberSignal width = new NumberSignal();
+width.value(100.5);
+span.getElement().bindProperty("width", width);
+width.incrementBy(50); // updates 'width' property to 150.5
+----
+
+.Object (bean) type
+[source,java]
+----
+record Person(String name, int age) {
+}
+ValueSignal<Person> person = new ValueSignal<>(new Person("John", 30));
+span.getElement().bindProperty("person", person);
+person.value(new Person("Jane", 25));
+// element.person is now {name: 'Jane', age: 25}
+----
+
+.List type
+[source,java]
+----
+ValueSignal<List<String>> items = new ValueSignal<>(List.of("Item 1", "Item 2"));
+span.getElement().bindProperty("items", items);
+items.value(List.of("Item A", "Item B", "Item C"));
+// element.items is now ['Item A', 'Item B', 'Item C']
+----
+.Map type
+[source,java]
+----
+ValueSignal<Map<String, String>> config = new ValueSignal<>(Map.of("key1", "value1"));
+span.getElement().bindProperty("config", config);
+config.value(Map.of("key1", "value1", "key2", "value2"));
+// element.config is now {key1: 'value1', key2: 'value2'}
+----
+.BaseJsonNode type
+[source,java]
+----
+ObjectMapper mapper = new ObjectMapper();
+ObjectNode jsonNode = mapper.createObjectNode();
+jsonNode.put("key", "value");
+ValueSignal<ObjectNode> jsonSignal = new ValueSignal<>(jsonNode);
+span.getElement().bindProperty("jsonData", jsonSignal);
+
+ObjectNode updatedJson = mapper.createObjectNode();
+updatedJson.put("key", "updatedValue");
+updatedJson.put("newKey", "newValue");
+jsonSignal.value(updatedJson);
+// element.jsonData is now {key: 'updatedValue', newKey: 'newValue'}
+----
+
+
+
+.Property change listener for 'change' DOM event
+[source,java]
+----
+// Adds a property change listener and configures 'hidden' property
+// to be synchronized to the server when 'change' DOM event is fired.
+span.getElement().addPropertyChangeListener("hidden", "change", event -> {
+    Notification.show("'hidden' property changed to: " + event.getValue());
+});
+// property change event from the client will update the signal value
+
+// Example javascript that dispatches change event from the browser where
+// element is <span>:
+//   element.hidden = !element.hidden;
+//   element.dispatchEvent(new Event('change'));
+----
+
+=== ClassList Binding
+
+.`ClassList#bind(String name, Signal<Boolean> signal)`
+[source,java]
+----
+ValueSignal<Boolean> foo = new ValueSignal<>(false);
+ValueSignal<Boolean> bar = new ValueSignal<>(true);
+
+span.getElement().getClassList().bind("foo", foo);
+span.getElement().getClassList().bind("bar", bar);
+// DOM has "<span class='bar'>"
+foo.value(true);
+// DOM has "<span class='bar foo'>"
+
+span.getElement().getClassList().clear();
+// DOM has "<span class>". Binding is also removed.
+----
+
+=== Style Binding
+
+.`Style#bind(String name, Signal<Boolean> signal)`
+[source,java]
+----
+ValueSignal<String> color = new ValueSignal<>("black");
+ValueSignal<String> background = new ValueSignal<>("white");
+
+span.getElement().getStyle().bind("color", color);
+span.getElement().getStyle().bind("background", background);
+// DOM has "<span style='color: black; background: white'>"
+
+color.value("red");
+background.value("gray");
+// DOM has "<span style='color: red; background: gray'>"
+
+background.value(""); // same with null
+// DOM has "<span style='color: red;'>"
+
+span.getElement().getStyle().clear();
+// DOM has "<span style>". Binding is also removed.
+----
+
+=== SignalPropertySupport helper
+
+Not all component features delegate directly to the state in [classname]`com.vaadin.flow.dom.Element`. For those features, the [classname]`SignalPropertySupport` helper class ensures that state management behaves consistently with other Element bindings.
+
+For example, a component can have a Java API to bind `Signal<String>` to modify the https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent[`textContent`] property of the element in the browser. `SignalPropertySupport#create(Component, SerializableConsumer<T>)` creates a new instance of `SignalPropertySupport` with `bind(Signal<T>)`, `get()`, and `set(T)` methods. The given consumer sets the `textContent` based on the value, as shown in the following example.
+
+.MyComponent creation
+[source,java]
+----
+// The following code demonstrates behavior step by step:
+MyComponent component = new MyComponent();
+component.bindTextContent(counter.map(v -> "Signal value: " + v));
+add(component);
+// textContent in browser is "Content: Signal value: 0.0"
+component.getTextContent(); // returns "Signal value: 0.0"
+component.setTextContent(""); // throws BindingActiveException
+
+component.bindTextContent(null); // unbinds the existing binding
+component.setTextContent("");
+component.getTextContent(); // returns ""
+// textContent in browser is "Content: "
+----
+
+.SignalPropertySupport usage
+[source,java]
+----
+class MyComponent extends Div {
+    private final SignalPropertySupport<String> textProperty =
+            SignalPropertySupport.create(this, value -> {
+                getElement().executeJs("this.textContent = 'Content: ' + $0", value);
+            });
+
+    public String getTextContent() {
+        return textProperty.get();
+    }
+
+    public void setTextContent(String text) {
+        textProperty.set(text);
+    }
+
+    public void bindTextContent(Signal<String> textSignal) {
+        textProperty.bind(textSignal);
+    }
+}
 ----
