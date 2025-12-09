@@ -74,8 +74,13 @@ public class PopoverNotificationPanel extends Div {
         allList.setItems(Arrays.asList(message1, message2, message3, message4));
 
         TabSheet tabSheet = new TabSheet();
+        // Add style variants for Lumo theme
         tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
-                TabSheetVariant.LUMO_NO_PADDING, TabSheetVariant.AURA_NO_BORDER);
+                TabSheetVariant.LUMO_NO_PADDING);
+        // Add style variants for Aura theme
+        tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
+                TabSheetVariant.AURA_NO_BORDER);
+
         tabSheet.addClassName("notifications");
 
         Div unreadContent = new Div();
