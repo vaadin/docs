@@ -1,0 +1,98 @@
+---
+title: Paginated Data
+page-title: How to add a paginated grid to a Vaadin application 
+description: Learn how to populate a grid with paginated data from an application service.
+meta-description: Learn how to populate a grid with paginated data from an application service.
+order: 30
+---
+
+= Add a Paginated Grid
+:toclevels: 2
+
+Paginated data refers to datasets that are too large to fit in memory, even after filtering. Instead, *the data is loaded in chunks (pages)* from an application service as needed. *Both filtering and sorting are delegated to the service layer* (typically a database).
+
+In Vaadin, the Grid component has built-in support for paginated data (often referred to as lazy loading in API documentation). When the user scrolls or changes the sorting/filtering criteria, the grid requests the appropriate data page from the backend service. To the user, this appears as a seamless scrolling experience.
+
+This guide starts with a complete example that you can copy-paste into your project if you want. It then breaks down the example into sections that explain how to populate, filter, and sort the grid. The guide does not cover setting up the Grid component itself; for that, see the <</components/grid#,Grid>> component documentation.
+
+
+== Copy-Paste into Your Project
+
+If you want to quickly try out a paginated grid in your Vaadin application, copy-paste the following code into your project:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridView.java[tags=full,indent=0]
+----
+
+For more detailed walk-through of the example code, continue reading below.
+
+
+== Getting the Data
+
+The Grid component can request pages either by using a page number and size, or by using an offset and limit. If the dataset is sorted, you have to sort it before applying pagination.
+
+This example uses offset-based pagination and uses Vaadin's `QuerySortOrder` API to pass sorting information to the application service:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridView.java[tags=data,indent=0]
+----
+
+In a real world application, the service would be in its own file and the data would be queried from a database.
+
+
+== Populating the Grid
+
+You populate the grid with paginated data by passing it a callback function that fetches data pages on demand. The callback function receives a `Query` object that contains information about the requested page, sorting, and filtering criteria.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridView.java[tags=dataprovider,indent=0]
+----
+
+
+=== Spring Data Support
+
+If you are using Spring Data, use the `setItemsPageable()` method. It passes a `Pageable` object to the callback function that you can use directly with <<../repositories/jpa#,Spring Data repositories>>:
+
+[source,java]
+----
+// Spring Data Repository:
+public interface ItemReposiory<Item, Long> extends PagingAndSortingRepository<Item, Long> {
+    Slice<Item> findByNameContainingIgnoreCase(String name, Pageable pageable);
+}
+
+// In the view class:
+grid.setItemsPageable(pageable -> repository
+    .findByNameContainingIgnoreCase(filterField.getValue(), pageable)
+    .getContent()
+);
+----
+
+.Can you call a repository directly from the UI?
+[NOTE]
+Yes, if you're not using <<../../security/protect-services#,method security>> or any other service layer logic.
+Otherwise, it's better to have an <<../../business-logic/add-service#,application service>> between the UI and the repository.
+
+
+== Filtering
+
+The filtering happens in the application service and the filter string is passed to the service via the callback function. Because of this, you have to refresh the grid whenever the filter string changes:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridView.java[tags=filtering,indent=0]
+----
+
+
+== Sorting
+
+Sorting happens in the application service and the sort orders are passed to the service via the callback function. Only columns with a specific *sort property* are sortable:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridView.java[tags=sorting,indent=0]
+----
+
+Sort properties are strings that are passed to the application service. They typically correspond to database column names, but in this example they are mapped to the record fields in the `Item` class.
