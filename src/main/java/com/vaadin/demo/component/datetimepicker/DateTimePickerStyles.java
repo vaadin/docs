@@ -20,7 +20,6 @@ public class DateTimePickerStyles extends HorizontalLayout {
         field.addThemeVariants(DateTimePickerVariant.LUMO_SMALL,
                 DateTimePickerVariant.LUMO_ALIGN_RIGHT,
                 DateTimePickerVariant.LUMO_HELPER_ABOVE_FIELD);
-        field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
