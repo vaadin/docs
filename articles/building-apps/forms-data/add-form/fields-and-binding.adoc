@@ -1,23 +1,33 @@
 ---
-title: Flow
-page-title: How to use fields and data binding in Flow | Vaadin
-meta-description: Learn how to create and bind form fields in Vaadin using UI components and the Binder API with JavaBeans and records for data synchronization.
+title: Fields & Binding
+page-title: How to use field and data binding in Vaadin
+description: Learn how to compose field components into forms and bind them to Form Data Objects.
+meta-description: Learn how to compose field components into forms and bind them to Form Data Objects.
 order: 5
 ---
 
-
-= Fields and Binding in Flow
+= Fields and Binding
 :toclevels: 2
 
-This guide walks you through the fundamentals of working with fields and binding in Flow. It covers how to lay out form fields, choose the appropriate input components, and use the powerful `Binder` class to connect those components to your application's data model. You'll learn how to use both mutable JavaBeans and immutable records as Form Data Objects (FDOs), and how to read from and write to them.
+Forms are used to display and edit data in UI components called *fields*. This data comes from a *Form Data Object* (FDO), which is structured to align with the fields in the form. Each form field typically maps to a corresponding property in the FDO.
+
+FDOs are often fetched from and submitted to an <<loading-and-saving#,application service>> for processing, such as validation and persistence. Architecturally, *an FDO belongs to the application layer*, not the UI layer.
+
+
+.Entities as Form Data Objects
+[IMPORTANT]
+In simple cases -- such as CRUD views and administration screens -- the form model and the domain model may be the same. In those cases, *you can use your entities as FDOs*. However, doing so *couples your domain logic to the UI*. This can lead to maintainability issues, especially if UI requirements evolve independently of business logic. When that happens, it's better to introduce a dedicated FDO and handle data conversion in the application service.
+
+Data is exchanged between the form and the FDO through *data binding*. Typically, each field is bound to a specific property of the FDO. The binding mechanism keeps the form and the FDO in sync.
 
 .Part of a Series
 [TIP]
-This is part 1 of the *Add a Form* series. You should also read the <<.#,Overview>>.
+This is part 1 of the *Add a Form* series.
+
 
 == Laying Out the Fields
 
-In Flow, forms you build forms visually by *adding input components to layout components*. The most commonly used layout components for forms include <<{articles}/components/form-layout#,Form Layout>> and <<{articles}/components/vertical-layout#,Vertical Layout>>. Form Layout supports multiple columns, whereas Vertical Layout lays out the components in a single column. These are often combined with <<{articles}/components/horizontal-layout#,Horizontal Layout>>, which lays out its components in a single row.
+In Vaadin, you build forms visually by *adding input components to layout components*. The most commonly used layout components for forms include <</components/form-layout#,Form Layout>> and <</components/vertical-layout#,Vertical Layout>>. Form Layout supports multiple columns, whereas Vertical Layout lays out the components in a single column. These are often combined with <</components/horizontal-layout#,Horizontal Layout>>, which lays out its components in a single row.
 
 [NOTE]
 Layout components differ from router layouts, although you can construct a router layout using them.
@@ -58,11 +68,11 @@ public class ProposalForm extends Composite<FormLayout> { // <1>
 
 The finished form would look like this:
 
-[.fill]
-image::../images/example-form.png[A screenshot of a form]
+[.device]
+image::images/example-form.png[A screenshot of a form]
 
 Form Layout is responsive; when space is limited, it automatically adjusts to a single-column layout, placing each input on its own row. It also includes features not covered in this example. For
-more information see the <<{articles}/components/form-layout#,Form Layout>> documentation.
+more information see the <</components/form-layout#,Form Layout>> documentation.
 
 
 == Common Field Components
@@ -70,24 +80,24 @@ more information see the <<{articles}/components/form-layout#,Form Layout>> docu
 Vaadin provides a set of *build-in field components* that you can use in your forms:
 
 * *Text Input Components*
-  - <<{articles}/components/text-field#,Text Field>> -- For standard single-line text input
-  - <<{articles}/components/text-area#,Text Area>> -- For multi-line text input
-  - <<{articles}/components/email-field#,Email Field>> -- Specialized field for email addresses
-  - <<{articles}/components/password-field#,Password Field>> - Secure field for password entry
-  - <<{articles}/components/rich-text-editor#,Rich Text Editor>> - Advanced text editing with formatting options
+  - <</components/text-field#,Text Field>> -- For standard single-line text input
+  - <</components/text-area#,Text Area>> -- For multi-line text input
+  - <</components/email-field#,Email Field>> -- Specialized field for email addresses
+  - <</components/password-field#,Password Field>> - Secure field for password entry
+  - <</components/rich-text-editor#,Rich Text Editor>> - Advanced text editing with formatting options
 * *Selection Components*
-  - <<{articles}/components/checkbox#,Checkbox>> -- For binary (true/false) selections
-  - <<{articles}/components/radio-button#,Radio Button Group>> -- For selecting a single option from a visible list
-  - <<{articles}/components/combo-box#,Combo Box>> -- Drop-down for selecting a single option
-  - <<{articles}/components/multi-select-combo-box#,Multi-Select Combo Box>> -- Drop-down for selecting multiple options
-  - <<{articles}/components/select#,Select>> -- Simple drop-down menu
-  - <<{articles}/components/list-box#,List Box>> -- Scrollable list of options
+  - <</components/checkbox#,Checkbox>> -- For binary (true/false) selections
+  - <</components/radio-button#,Radio Button Group>> -- For selecting a single option from a visible list
+  - <</components/combo-box#,Combo Box>> -- Drop-down for selecting a single option
+  - <</components/multi-select-combo-box#,Multi-Select Combo Box>> -- Drop-down for selecting multiple options
+  - <</components/select#,Select>> -- Simple drop-down menu
+  - <</components/list-box#,List Box>> -- Scrollable list of options
 * *Date and Time Components*
-  - <<{articles}/components/date-picker#,Date Picker>> -- For selecting a date
-  - <<{articles}/components/time-picker#,Time Picker>> -- For selecting a time
-  - <<{articles}/components/date-time-picker#,Date Time Picker>> -- For selecting both date and time
+  - <</components/date-picker#,Date Picker>> -- For selecting a date
+  - <</components/time-picker#,Time Picker>> -- For selecting a time
+  - <</components/date-time-picker#,Date Time Picker>> -- For selecting both date and time
 * *Numeric Components*
-  - <<{articles}/components/number-field#,Number Field>> -- For numeric input
+  - <</components/number-field#,Number Field>> -- For numeric input
 
 
 == Introducing Binder
@@ -225,7 +235,7 @@ When using a JavaBean as an FDO, `Binder` can operate in *buffered* or *write-th
 * *Buffered mode*: Changes remain in the form until explicitly saved. This prevents side effects but may affect validation behavior.
 * *Write-through mode*: Updates the FDO immediately as the user edits the form. Business logic in setter methods is triggered immediately. However, invalid states can occur where the form contains errors, but the FDO remains valid.
 
-Form validation is covered in the <<../validation#,Form Validation>> guide.
+Form validation is covered in the <<validation#,Form Validation>> guide.
 
 
 === Reading from a Bean
