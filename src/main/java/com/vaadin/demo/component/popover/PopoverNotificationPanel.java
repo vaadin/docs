@@ -78,7 +78,7 @@ public class PopoverNotificationPanel extends Div {
         tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
                 TabSheetVariant.LUMO_NO_PADDING);
         // Add style variants for Aura theme
-        tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
+        tabSheet.addThemeVariants(TabSheetVariant.AURA_NO_PADDING,
                 TabSheetVariant.AURA_NO_BORDER);
 
         tabSheet.addClassName("notifications");
