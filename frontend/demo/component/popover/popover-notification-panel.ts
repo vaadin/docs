@@ -84,14 +84,14 @@ export class Example extends LitElement {
   renderNotifications(unread: MessageListItem[], all: MessageListItem[]) {
     return html`
       <vaadin-horizontal-layout
-        style="align-items: center; padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)"
+        style="align-items: center; padding: var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)"
       >
         <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
         <vaadin-button theme="small" style="margin: 0 0 0 auto;" @click="${this.markAllRead}">
           Mark all read
         </vaadin-button>
       </vaadin-horizontal-layout>
-      <vaadin-tabsheet class="notifications" theme="small no-padding">
+      <vaadin-tabsheet class="notifications" theme="small no-padding no-border">
         <vaadin-tabs slot="tabs">
           <vaadin-tab id="unread-tab">Unread</vaadin-tab>
           <vaadin-tab id="all-tab">All</vaadin-tab>

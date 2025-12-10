@@ -1,0 +1,83 @@
+---
+title: Add Logout
+page-title: How to implement secure logout in your Vaadin application
+description: Learn how to securely logout users from a Vaadin application using Spring Security.
+meta-description: Learn to implement secure logout in a your application using Spring Security. Learn about session invalidation and Vaadin's logout API.
+order: 2
+---
+
+
+= Add Logout
+
+Logging out of an application is just as important as logging in. Leaving a session open for too long or failing to properly close it can lead to serious security risks.
+
+Since Vaadin uses *Spring Security* for authentication, it also relies on it for *logging out and session invalidation*.
+
+.Vaadin Logout vs. Spring Logout
+[IMPORTANT]
+In a traditional Spring web application, logging out requires sending a `POST` request to `/logout`, which must include Spring's CSRF token. However, Vaadin applications use their own CSRF protection mechanism, making this approach difficult to implement. Additionally, since Vaadin views run on the server, they don't interact with HTTP requests directly.
+
+
+== Logging Out
+
+Vaadin provides the class [classname]`AuthenticationContext`, which includes a [methodname]`logout()` method. Calling this method *logs out the user* and *redirects* them to a preconfigured *logout success URL*.
+
+You typically call [methodname]`logout()` from a *button* or *menu item* click listener. Here's how to add a logout button to a view:
+
+[source,java]
+----
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import jakarta.annotation.security.PermitAll;
+
+@Route("logout")
+@PermitAll // <1>
+public class LogoutView extends Main {
+
+    public LogoutView(AuthenticationContext authenticationContext) { // <2>
+        add(new Button("Logout", event -> authenticationContext.logout()));
+    }
+}
+----
+<1> Grants access to _authenticated users_ -- otherwise, users wouldn't be able to log out.
+<2> Injects [classname]`AuthenticationContext`, which is a Spring Bean.
+
+
+== Configuring the Logout Success URL
+
+By default, users are redirected to the root URL (`/`) after logging out. To change this, *specify a custom logout success URL* in your security configuration:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.loginView(LoginView.class, "/logged-out.html"); // <1>
+// end::snippet[]
+        });
+        return http.build();
+    }
+    ...
+}
+----
+<1> Sets `/logged-out.html` as the *logout success URL*.
+
+If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
+
+
+=== Absolute vs. Relative URLs
+
+The logout success URL can be either absolute or relative.
+
+* *Absolute URLs* -- Start with `https://` or `http://` (e.g., `\https://example.com/logged-out`).
+* *Relative URLs* -- Start with `/` (e.g., `/logged-out.html`).
+
+.Relative logout URLs must include the context path
+[IMPORTANT]
+If your application is deployed at `\https://example.com/app`, the logout URL should be `/app/logged-out.html`.

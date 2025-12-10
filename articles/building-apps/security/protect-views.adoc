@@ -1,26 +1,30 @@
 ---
-title: Flow
-page-title: How to protect Flow views in a Vaadin application
-meta-description: Learn how to protect Vaadin Flow views using declarative and programmatic security. This guide covers role-based access control, custom navigation access checkers, and best practices.
-order: 5
+title: Protect Views
+page-title: How to protect the views in a Vaadin application
+description: Learn how to protect views in a Vaadin application based on user roles.
+meta-description: Learn how to restrict access to views in a Vaadin application based on user roles.
+order: 3
 ---
 
 
-= Protect Flow Views
+= Protect Views
 :toclevels: 2
 
-In this guide, you'll learn how to control access to specific views both declaratively and programmatically. A hands-on mini-tutorial at the end will help you apply these concepts in a real Vaadin application.
+Logging in and out ensures that only *authenticated users* can access the application. However, most business applications require more than just authentication—different types of users often have varying levels of access.
+
+In role-based applications, users are assigned specific _roles_ that determine what data they can access and which actions they can perform. To enforce these restrictions, you must implement proper *authorization* for your views.
 
 
 == Declarative View Security
 
-The easiest way to grant or deny access to a Flow view is to use annotations. The following annotations are supported:
+The easiest way to grant or deny access to a Vaadin view is to use annotations. The following annotations are supported:
 
 * [annotationname]`@AnonymousAllowed` allows access to *unauthenticated* users.
 * [annotationname]`@PermitAll` allows any *authenticated* user to navigate to the view.
 * [annotationname]`@RolesAllowed` allows users *having the roles* specified in the annotation value to navigate to the view.
-* [annotationname]`@DenyAll` prevents *everyone* from navigating to the view. By default, *all Flow views are inaccessible unless explicitly annotated*.
+* [annotationname]`@DenyAll` prevents *everyone* from navigating to the view. By default, *all views are inaccessible unless explicitly annotated*.
 
+.Different Security Annotations
 [NOTE]
 The `@AnonymousAllowed` annotation is a Vaadin-specific annotation; the others are Jakarta annotations (JSR-250). The Spring Security annotations `@Secured` and `@PreAuthorize` are *not supported on views*.
 
@@ -259,149 +263,3 @@ public class MyView extends Main {
     ...
 }
 ----
-
-
-[.collapsible-list]
-== Try It
-
-In this mini-tutorial, you'll learn how to add declarative view security to a real Vaadin application. You'll also learn how to control access programmatically inside a view. The tutorial uses the project from the <<../add-logout/flow#try-it,Add Logout>> guide. If you haven't completed that tutorial yet, do it now before proceeding.
-
-
-.Create Role Constants
-[%collapsible]
-====
-Create a new class [classname]`Roles` in the [packagename]`[application package].security` package:
-
-.Roles.java
-[source,java]
-----
-public final class Roles {
-    public static final String ADMIN = "ADMIN";
-    public static final String USER = "USER";
-
-    private Roles() {
-    }
-}
-----
-
-Then update the [methodname]`userDetailsManager()` method of the [classname]`SecurityConfig` class to use the new constants:
-
-.`SecurityConfig.java`
-[source,java]
-----
-@EnableWebSecurity
-@Configuration
-class SecurityConfig {
-    ...
-
-    @Bean
-    public UserDetailsManager userDetailsManager() {
-        LoggerFactory.getLogger(SecurityConfig.class)
-            .warn("Using in-memory user details manager!");
-        var user = User.withUsername("user")
-                .password("{noop}user")
-// tag::snippet[]
-                .roles(Roles.USER)
-// end::snippet[]
-                .build();
-        var admin = User.withUsername("admin")
-                .password("{noop}admin")
-// tag::snippet[]
-                .roles(Roles.ADMIN)
-// end::snippet[]
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
-    }
-}
-----
-====
-
-
-.Create Admin View
-[%collapsible]
-====
-Create a new class [classname]`AdminView` in the [packagename]`[application package].examplefeature.ui` package:
-
-.AdminView.java
-[source,java]
-----
-import com.example.application.security.Roles; // <1>
-
-import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.Menu;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.RolesAllowed;
-
-@Route
-@PageTitle("Task Admin")
-@Menu(order = 10, icon = "vaadin:wrench", title = "Task Admin")
-@RolesAllowed(Roles.ADMIN)
-public class AdminView extends Main {
-
-    public AdminView() {
-        setText("Admin View");
-    }
-}
-----
-<1> Replace with real package.
-
-Now navigate to: http://localhost:8080
-
-Log in as an `ADMIN`. You should see *Task Admin* in the navigation menu. Clicking it should take you to the admin view.
-
-Now log out and log back in as a `USER`. The *Task Admin* menu item should no longer be visible.
-
-Attempt to access http://localhost:8080/admin directly. You should see an access denied error.
-====
-
-
-.Make the Task List Read-Only For Users
-[%collapsible]
-====
-So far all authenticated users have been able to add tasks to [classname]`TaskListView`. You'll now change it so that only users with the `ADMIN` role can add tasks. Open [classname]`TaskListView` and change the constructor as follows:
-
-.TaskListView.java
-[source,java]
-----
-@Route("")
-@PageTitle("Task List")
-@Menu(order = 0, icon = "vaadin:clipboard-check", title = "Task List")
-@PermitAll
-public class TaskListView extends Main {
-
-    public TaskListView(TaskService taskService,
-// tag::snippet[]
-            AuthenticationContext authenticationContext) {
-// end::snippet[]
-
-        // The rest of the constructor omitted
-
-// tag::snippet[]
-        if (authenticationContext.hasRole(Roles.ADMIN)) {
-            add(new ViewToolbar("Task List",
-                ViewToolbar.group(description, dueDate, createBtn))); // <1>
-        } else {
-            add(new ViewToolbar("Task List")); // <2>
-        }
-// end::snippet[]
-        add(taskGrid);
-    }
-    ...
-}
-----
-<1> Only create the toolbar if the user is an `ADMIN`.
-
-Go back to your browser and try the application. The toolbar should only be visible in the *Task List* when you are logged in as `ADMIN`.
-
-[NOTE]
-The `description`, `dueDate`, and `createBtn` components are created for all users, even though they are only used by administrators. Technically this is a waste of memory, but this time it is acceptable since the view is so small.
-
-====
-
-
-.Final Thoughts
-[%collapsible]
-====
-Now that your views are secure, the next step is to *protect application services*. Learn how in the <<../protect-services#,Protect Services>> guide.
-====
