@@ -9,7 +9,7 @@ function Example() {
     // tag::snippet[]
     <HorizontalLayout
       theme="spacing"
-      className="icons-padding-example"
+      className="icons-sizing-padding-example"
       style={{ alignItems: 'flex-end' }}
     >
       {/* tag::snippet[] */}

@@ -18,7 +18,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout
         theme="spacing"
-        class="icons-padding-example"
+        class="icons-sizing-padding-example"
         style="align-items: flex-end"
       >
         <!-- tag::snippet[] -->

@@ -12,6 +12,7 @@ public class IconsSizing extends Div {
 
     public IconsSizing() {
         HorizontalLayout layout = new HorizontalLayout();
+        layout.addClassName("icons-sizing-padding-example");
         layout.setSpacing(true);
         layout.setAlignItems(FlexComponent.Alignment.END);
 
