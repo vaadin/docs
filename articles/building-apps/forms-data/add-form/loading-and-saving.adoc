@@ -1,21 +1,189 @@
 ---
-title: Flow
-page-title: How to load and save a form in Flow | Vaadin
-meta-description: Learn how to load and save forms in Vaadin Flow using either in-memory selection or service-based fetching, and handle both single or split save operations.
-order: 5
+title: Loading & Saving
+page-title: How to load and save a form in a Vaadin application
+description: Learn how to load and save a form in a Vaadin application.
+meta-description: Learn how to load and save a form in a Vaadin application.
+order: 15
 ---
 
-= Load and Save a Form in Flow
+= Load and Save a Form
 :toclevels: 2
 
-This guide demonstrates how to load forms using *Load from Selection* and *Fetch and Load*, and save them using *Single Save* or *Insert/Update* patterns in Flow.
+In a typical Vaadin application, a dedicated application service loads and saves Form Data Objects (FDOs).
 
 .Part of a Series
 [TIP]
-This is part 3 of the *Add a Form* series. It builds on the concepts introduced in the <<../fields-and-binding/flow#,Fields & Binding>> and <<../validation/flow#,Form Validation>> guides. You should also read the <<.#,Overview>>.
+This is part 3 of the *Add a Form* series. It builds on the concepts introduced in the <<fields-and-binding#,Fields & Binding>> and <<validation#,Form Validation>> guides.
 
 
-== Load from Selection
+== Loading Strategies
+
+In a Vaadin application, there are two common approaches to loading forms, each suited to different use cases.
+
+* *Load from Selection* -- A UI component, such as a grid, displays a list of FDOs. When the user selects an item, the form is populated directly with the selected object.
+* *Fetch and Load* -- The application receives the ID of the FDO to edit, either through a method call or a <<../../views/pass-data#,URL parameter>>. It then fetches the object from an application service before populating the form.
+
+
+== Saving Strategies
+
+As there are two loading strategies, there are also two saving strategies, each suited to different use cases.
+
+* *Single Save* -- The application uses the same operation to both insert and update data. The application service decides which operation to execute based on the presence or absence of an ID in the FDO. This is the simplest approach.
+* *Insert/Update* -- The application uses separate operations for inserting and updating data. The user interface decides which method to call. This approach is useful when you want to separate persistence concerns from the domain model, or when working with immutable value objects like Java records.
+
+
+== Application Service Design
+
+The application service's API depends on several aspects:
+
+* the loading and saving strategy
+* whether you're using entities or dedicated classes (or records) as FDOs
+* what your UI does after it has saved an FDO
+
+This section covers the basics of designing an application service for loading and saving an FDO. The implementation of the service is not covered in this guide.
+
+
+=== Load from Selection
+
+You don't need a separate `findById` method when using *Load from Selection*. All the information you need is returned by the list function. Here is an example of a list function that can be used to <</components/grid#lazy-loading,lazy-load a Grid>>:
+
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW) // <1>
+@PreAuthorize("isAuthenticated()") // <2>
+public class ProposalService {
+
+    public List<Proposal> list(Pageable pageable) {
+        // Return a page of proposals
+    }
+}
+----
+<1> Always use transactions when saving and loading data.
+<2> Always secure your application services. See the <<../../security/protect-services#,Protect Services>> guide for details.
+
+// TODO Link to the article about grids once it's written.
+
+
+=== Fetch and Load
+
+If you're using *Fetch and Load*, you need a separate method for fetching the FDO based on its ID, like this:
+
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+@PreAuthorize("isAuthenticated()")
+public class ProposalService {
+
+    public Optional<Proposal> findById(long proposalId) {
+        // Find and return the proposal.
+    }
+}
+----
+
+
+=== Single Save
+
+In *Single Save*, the application service must be able to decide whether the FDO is new or persistent. This is typically done by including the entity ID in the FDO. If unsaved, this ID is `null`:
+
+.Proposal.java
+[source,java]
+----
+public class Proposal {
+    private Long proposalId;
+    // (Other fields omitted for brevity)
+
+    public @Nullable Long getProposalId() {
+        return proposalId;
+    }
+    public void setProposalId(@Nullable Long proposalId) {
+        this.proposalId = proposalId;
+    }
+}
+----
+
+Here's an example of an application service that saves and retrieves a `Proposal` FDO:
+
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+@PreAuthorize("isAuthenticated()")
+public class ProposalService {
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public Proposal save(Proposal proposal) {
+        // Validate and save the proposal.
+    }
+
+    // (Other methods omitted for brevity)
+}
+----
+
+Returning the saved FDO allows the UI to access generated fields, such as IDs or timestamps, without needing to reload the data. However, if your UI does not need the result -- for example if it navigates to a different view, or refreshes itself -- the method should not return anything.
+
+[NOTE]
+This approach works well when you use the entity itself as an FDO.
+
+
+=== Insert/Update
+
+When you're using *Insert/Update*, you typically store the ID outside of the FDO. A convenient way of doing this is to introduce a wrapper class that includes the ID:
+
+[source,java]
+----
+public final class PersistentProposal { // <1>
+    private final long proposalId;
+    private final Proposal proposal;
+
+    public PersistentProposal(long proposalId, Proposal proposal) {
+        this.proposalId = proposalId;
+        this.proposal = proposal;
+    }
+
+    public Proposal unwrap() {
+        return proposal;
+    }
+}
+----
+<1> You could also use a Java record for this.
+
+The wrapper class can include other metadata, such as a version number for optimistic locking.
+
+The following example demonstrates how the `Proposal` and `PersistentProposal` classes are used in an application service:
+
+.ProposalService.java
+[source,java]
+----
+@Service
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+@PreAuthorize("isAuthenticated()")
+public class ProposalService {
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PersistentProposal insert(Proposal proposal) {
+        // Validate and insert the proposal.
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public PersistentProposal update(PersistentProposal proposal) {
+        // Validate and update the proposal.
+    }
+
+    // (Other methods omitted for brevity)
+}
+----
+
+Each method returns a new instance of `PersistentProposal`, making it easy to pass updated metadata to the UI. Again, if the UI does not need this information, the methods can return `void`.
+
+
+== Loading a Form
+
+You've now seen two common ways to design application services. Next, learn how these services integrate with Vaadin forms and views.
+
+
+=== Load from Selection
 
 This approach is straightforward and requires no extra service call. However, this can result in “stale data,” where the grid *displays values that appear saved but haven't been persisted* to the backend. Stale data can occur when the following conditions are met:
 
@@ -66,7 +234,7 @@ If you need a refresher on form binding, buffered mode and write-through mode, s
 // TODO Links to guides about grids and selection via URL parameter
 
 
-== Fetch and Load
+=== Fetch and Load
 
 This approach requires more code than the Load from Selection approach, but does not have the risk of stale data in the grid.
 
@@ -235,4 +403,3 @@ private void saveProposal() {
 ----
 <1> Assumes there is a `withData()` method that returns a new wrapper record with the same ID as the original one, but with the specified wrapped FDO.
 
-// TODO Add mini tutorial later. It should be about creating a proper form for adding new tasks to the todo list.
