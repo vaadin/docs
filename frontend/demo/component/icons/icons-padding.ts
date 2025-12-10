@@ -18,9 +18,15 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing" style="align-items: flex-end">
         <!-- tag::snippet[] -->
-        <vaadin-icon src="${codeBranch}"></vaadin-icon>
-        <vaadin-icon src="${codeBranch}" style="padding: 0.25em"></vaadin-icon>
-        <vaadin-icon src="${codeBranch}" style="padding: 0.5em"></vaadin-icon>
+        <vaadin-icon src="${codeBranch}" style="--vaadin-icon-size: 3rem;"></vaadin-icon>
+        <vaadin-icon
+          src="${codeBranch}"
+          style="--vaadin-icon-size: 3rem; --vaadin-icon-visual-size: 2rem;"
+        ></vaadin-icon>
+        <vaadin-icon
+          src="${codeBranch}"
+          style="--vaadin-icon-size: 3rem; --vaadin-icon-visual-size: 1rem;"
+        ></vaadin-icon>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

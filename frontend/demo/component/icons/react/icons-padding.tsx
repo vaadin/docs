@@ -9,9 +9,15 @@ function Example() {
     // tag::snippet[]
     <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end' }}>
       {/* tag::snippet[] */}
-      <Icon src={codeBranch} />
-      <Icon src={codeBranch} style={{ padding: '0.25em' }} />
-      <Icon src={codeBranch} style={{ padding: '0.5em' }} />
+      <Icon src={codeBranch} style={{ '--vaadin-icon-size': '3rem' }} />
+      <Icon
+        src={codeBranch}
+        style={{ '--vaadin-icon-size': '3rem', '--vaadin-icon-visual-size': '2rem' }}
+      />
+      <Icon
+        src={codeBranch}
+        style={{ '--vaadin-icon-size': '3rem', '--vaadin-icon-visual-size': '1rem' }}
+      />
       {/* end::snippet[] */}
     </HorizontalLayout>
     // end::snippet[]

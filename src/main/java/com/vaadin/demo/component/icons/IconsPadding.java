@@ -16,15 +16,18 @@ public class IconsPadding extends Div {
         layout.setAlignItems(FlexComponent.Alignment.END);
 
         // tag::snippet[]
-        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg");
+        SvgIcon icon = new SvgIcon("/icons/code-branch.svg");
+        icon.getStyle().set("--vaadin-icon-size", "3rem");
 
         SvgIcon iconSmallPadding = new SvgIcon("/icons/code-branch.svg");
-        iconSmallPadding.getStyle().set("padding", "0.25em");
+        iconSmallPadding.getStyle().set("--vaadin-icon-size", "3rem");
+        iconSmallPadding.getStyle().set("--vaadin-icon-visual-size", "2rem");
 
         SvgIcon iconLargePadding = new SvgIcon("/icons/code-branch.svg");
-        iconLargePadding.getStyle().set("padding", "0.5em");
+        iconLargePadding.getStyle().set("--vaadin-icon-size", "3rem");
+        iconLargePadding.getStyle().set("--vaadin-icon-visual-size", "1rem");
 
-        layout.add(iconDefaultSize, iconSmallPadding, iconLargePadding);
+        layout.add(icon, iconSmallPadding, iconLargePadding);
         // end::snippet[]
         add(layout);
     }

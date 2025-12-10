@@ -19,10 +19,10 @@ public class IconsSizing extends Div {
         SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
 
         SvgIcon iconLumoSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconLumoSize.setSize("var(--lumo-icon-size-l)");
+        iconLumoSize.setSize("2rem");
 
         SvgIcon iconPxSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconPxSize.setSize("48px");
+        iconPxSize.setSize("3rem");
 
         layout.add(iconDefaultSize, iconLumoSize, iconPxSize);
         // end::snippet[]
