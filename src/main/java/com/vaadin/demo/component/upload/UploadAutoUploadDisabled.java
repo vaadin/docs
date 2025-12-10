@@ -12,8 +12,9 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadAutoUploadDisabled extends Div {
 
     public UploadAutoUploadDisabled() {
-        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryHandler);
         upload.setAutoUpload(false);

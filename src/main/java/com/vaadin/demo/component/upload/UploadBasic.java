@@ -15,8 +15,8 @@ public class UploadBasic extends Div {
 
     public UploadBasic() {
         // tag::snippet[]
-        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
-                (metadata, data) -> {
+        InMemoryUploadHandler inMemoryHandler = UploadHandler
+                .inMemory((metadata, data) -> {
                     // Get other information about the file.
                     String fileName = metadata.fileName();
                     String mimeType = metadata.contentType();

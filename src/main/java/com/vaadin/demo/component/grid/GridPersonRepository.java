@@ -16,11 +16,12 @@ public interface GridPersonRepository extends JpaRepository<Person, Long> {
             String fullName, String profession, Pageable pageable);
 }
 */ // hidden-source-line
-// end::snippet[]
+    // end::snippet[]
 
 @Component // hidden-source-line
 public class GridPersonRepository { // hidden-source-line
-    List<Person> findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(String fullName, String profession, Pageable pageable) { // hidden-source-line
+    List<Person> findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase( // hidden-source-line
+            String fullName, String profession, Pageable pageable) { // hidden-source-line
         return List.of(); // hidden-source-line
     } // hidden-source-line
 }// hidden-source-line

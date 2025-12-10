@@ -48,8 +48,8 @@ public class BadgeColor extends VerticalLayout {
         onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
 
         add(new HorizontalLayout(pending, confirmed, warning, denied, onHold),
-                new HorizontalLayout(pendingPrimary, confirmedPrimary, warningPrimary,
-                        deniedPrimary, onHoldPrimary));
+                new HorizontalLayout(pendingPrimary, confirmedPrimary,
+                        warningPrimary, deniedPrimary, onHoldPrimary));
         setPadding(false);
         setSizeUndefined();
     }

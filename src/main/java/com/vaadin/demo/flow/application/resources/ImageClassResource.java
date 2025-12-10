@@ -12,7 +12,8 @@ public class ImageClassResource extends Div {
 
     public ImageClassResource() {
         // tag::snippet[]
-        Image image = new Image(DownloadHandler.forClassResource(getClass(),"/images/myimage.png"), "My Streamed Image");
+        Image image = new Image(DownloadHandler.forClassResource(getClass(),
+                "/images/myimage.png"), "My Streamed Image");
         add(image);
         // end::snippet[]
     }

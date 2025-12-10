@@ -71,6 +71,7 @@ public class GanttProgressIndicatorDemo extends Div {
         add(chart);
     }
 
-    public static class Exporter extends DemoExporter<GanttProgressIndicatorDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttProgressIndicatorDemo> { // hidden-source-line
     } // hidden-source-line
 }

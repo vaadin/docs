@@ -15,8 +15,8 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadFileCount extends Div {
 
     public UploadFileCount() {
-        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
-                (uploadMetadata, bytes) -> {
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
                 });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryUploadHandler);

@@ -14,8 +14,9 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadAllFiles extends Div {
 
     public UploadAllFiles() {
-        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryHandler);
         upload.setAutoUpload(false);

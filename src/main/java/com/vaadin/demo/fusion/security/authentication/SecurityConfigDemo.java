@@ -15,18 +15,20 @@ import org.springframework.security.web.SecurityFilterChain;
  * An example code for demoing the Spring Security configuration, shouldn't
  * affect the doc application itself.
  */
-//@EnableWebSecurity
-//@Configuration
+// @EnableWebSecurity
+// @Configuration
 public class SecurityConfigDemo {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
         // tag::public-resources[]
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/images/**").permitAll());
+        http.authorizeHttpRequests(
+                auth -> auth.requestMatchers("/images/**").permitAll());
         // end::public-resources[]
         // tag::login[]
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer.loginView("/login"));
+        http.with(VaadinSecurityConfigurer.vaadin(),
+                configurer -> configurer.loginView("/login"));
         // end::login[]
         return http.build();
     }

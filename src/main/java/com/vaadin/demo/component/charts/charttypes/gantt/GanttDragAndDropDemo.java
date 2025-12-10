@@ -42,7 +42,8 @@ public class GanttDragAndDropDemo extends Div {
 
         // tag::snippet[]
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
-        plotOptionsGantt.setAnimation(false); // Do not animate dependency connectors
+        plotOptionsGantt.setAnimation(false); // Do not animate dependency
+                                              // connectors
         final DragDrop dragDrop = plotOptionsGantt.getDragDrop();
         dragDrop.setDraggableX(true);
         dragDrop.setDraggableY(true);

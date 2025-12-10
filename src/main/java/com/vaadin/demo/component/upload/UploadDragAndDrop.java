@@ -15,10 +15,12 @@ public class UploadDragAndDrop extends Div {
 
     public UploadDragAndDrop() {
 
-        InMemoryUploadHandler inMemoryHandler1 = UploadHandler.inMemory(
-                (metadata, data) -> {});
-        InMemoryUploadHandler inMemoryHandler2 = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler1 = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
+        InMemoryUploadHandler inMemoryHandler2 = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
 
         // tag::snippet[]
         Upload dropEnabledUpload = new Upload(inMemoryHandler1);

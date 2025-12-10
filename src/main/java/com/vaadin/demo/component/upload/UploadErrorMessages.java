@@ -25,8 +25,8 @@ public class UploadErrorMessages extends Div {
     }
 
     private Div setupCautionExample() {
-        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
-                (uploadMetadata, bytes) -> {
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
                 });
         Upload upload = new Upload(inMemoryUploadHandler);
         upload.setDropAllowed(false);
@@ -48,7 +48,9 @@ public class UploadErrorMessages extends Div {
     }
 
     private Div setupRecommendedExample() {
-        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory((uploadMetadata, bytes) -> {});
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
+                });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryUploadHandler);
         upload.setDropAllowed(false);

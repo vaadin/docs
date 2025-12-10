@@ -17,8 +17,9 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadDropLabel extends Div {
 
     public UploadDropLabel() {
-        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryHandler);
 

@@ -26,8 +26,7 @@ public class TreeGridDragDrop extends Div {
 
     public TreeGridDragDrop() {
         List<Person> people = DataService.getPeople();
-        managers = people.stream().filter(Person::isManager)
-                .toList();
+        managers = people.stream().filter(Person::isManager).toList();
         staffGroupedByMangers = people.stream()
                 .filter(person -> person.getManagerId() != null)
                 .collect(Collectors.groupingBy(Person::getManagerId,
@@ -39,10 +38,11 @@ public class TreeGridDragDrop extends Div {
         TreeData<Person> treeData = new TreeData<>();
         treeData.addItems(managers, this::getStaff);
 
-        // To preserve scroll position after refreshAll(), configure TreeDataProvider
-        // to return data in HierarchyFormat.FLATTENED – it supports this format out
-        // of the box. For custom data providers, you will need to implement this format
-        // manually, see the HierarchyFormat enum JavaDoc for guidance.
+        // To preserve scroll position after refreshAll(), configure
+        // TreeDataProvider to return data in HierarchyFormat.FLATTENED –
+        // it supports this format out of the box. For custom data providers,
+        // you will need to implement this format manually, see the
+        // HierarchyFormat enum JavaDoc for guidance.
         TreeDataProvider<Person> treeDataProvider = new TreeDataProvider<>(
                 treeData, HierarchyFormat.FLATTENED);
         treeGrid.setDataProvider(treeDataProvider);

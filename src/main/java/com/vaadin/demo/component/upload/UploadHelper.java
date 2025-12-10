@@ -15,8 +15,8 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadHelper extends Div {
 
     public UploadHelper() {
-        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
-                (uploadMetadata, bytes) -> {
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
                 });
         // tag::snippet[]
         H4 title = new H4("Upload spreadsheet");

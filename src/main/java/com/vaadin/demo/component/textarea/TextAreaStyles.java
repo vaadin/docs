@@ -17,11 +17,11 @@ public class TextAreaStyles extends HorizontalLayout {
         field.addThemeVariants(TextAreaVariant.LUMO_SMALL,
                 TextAreaVariant.LUMO_ALIGN_RIGHT,
                 TextAreaVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.setWidthFull();
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
         field.setValue("Value");
-        field.setWidthFull();
 
         add(field);
     }

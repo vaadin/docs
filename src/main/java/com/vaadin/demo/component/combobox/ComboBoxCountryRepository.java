@@ -16,13 +16,15 @@ public interface ComboBoxCountryRepository extends JpaRepository<Country, Long> 
     List<Country> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }
 */ // hidden-source-line
-// end::snippet[]
+    // end::snippet[]
 
 @Component // hidden-source-line
 public class ComboBoxCountryRepository { // hidden-source-line
-    List<Country> findByNameContainingIgnoreCase(String name, Pageable pageable) { // hidden-source-line
+    List<Country> findByNameContainingIgnoreCase(String name,
+            Pageable pageable) { // hidden-source-line
         return DataService.getCountries().stream() // hidden-source-line
-                .filter(country -> country.getName().toLowerCase().contains(name.toLowerCase())) // hidden-source-line
+                .filter(country -> country.getName().toLowerCase() // hidden-source-line
+                        .contains(name.toLowerCase())) // hidden-source-line
                 .skip((long) pageable.getPageNumber() * pageable.getPageSize()) // hidden-source-line
                 .limit(pageable.getPageSize()) // hidden-source-line
                 .toList(); // hidden-source-line

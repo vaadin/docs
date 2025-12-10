@@ -44,7 +44,8 @@ public class MapClusters extends Div {
         // end::snippet[]
 
         // Override cluster icon to use inline images // hidden-source-line
-        map.getFeatureLayer().getClusterStyle().setImage(Icons.createClusterIcon()); // hidden-source-line
+        map.getFeatureLayer().getClusterStyle() // hidden-source-line
+                .setImage(Icons.createClusterIcon()); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MapClusters> { // hidden-source-line
