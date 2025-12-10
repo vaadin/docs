@@ -7,14 +7,15 @@ import codeBranch from '../../../../../src/main/resources/META-INF/resources/ico
 function Example() {
   return (
     // tag::snippet[]
-    <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end' }}>
+    <HorizontalLayout
+      theme="spacing"
+      className="icons-sizing-padding-example"
+      style={{ alignItems: 'flex-end' }}
+    >
       {/* tag::snippet[] */}
       <Icon src={codeBranch} />
-      <Icon
-        src={codeBranch}
-        style={{ height: 'var(--lumo-icon-size-l)', width: 'var(--lumo-icon-size-l)' }}
-      />
-      <Icon src={codeBranch} style={{ height: '48px', width: '48px' }} />
+      <Icon src={codeBranch} style={{ '--vaadin-icon-size': '2rem' }} />
+      <Icon src={codeBranch} style={{ '--vaadin-icon-size': '3rem' }} />
       {/* end::snippet[] */}
     </HorizontalLayout>
     // end::snippet[]

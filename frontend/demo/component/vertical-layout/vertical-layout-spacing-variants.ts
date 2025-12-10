@@ -27,7 +27,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-vertical-layout
         theme="${this.themeVariant} padding"
-        class="height-4xl"
+        class="height-5xl"
         style="align-items: stretch"
       >
         <div class="example-item">Item 1</div>
