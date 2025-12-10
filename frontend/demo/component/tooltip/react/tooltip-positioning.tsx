@@ -15,14 +15,15 @@ function Example() {
         <Tooltip slot="tooltip" text="Expand menu" position="end" />
       </DrawerToggle>
 
-      {/* tag::snippet[] */}
       <Tabs slot="drawer" orientation="vertical">
+        {/* tag::snippet[] */}
         <Tab>
           <a tabIndex={-1}>
             <Icon icon="vaadin:home" />
           </a>
           <Tooltip slot="tooltip" text="Home" position="end" />
         </Tab>
+        {/* end::snippet[] */}
 
         <Tab>
           <a tabIndex={-1}>
@@ -38,7 +39,6 @@ function Example() {
           <Tooltip slot="tooltip" text="Reports" position="end" />
         </Tab>
       </Tabs>
-      {/* end::snippet[] */}
     </AppLayout>
   );
 }

@@ -16,14 +16,15 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" style="align-items: flex-end">
+      <vaadin-horizontal-layout
+        theme="spacing"
+        class="icons-sizing-padding-example"
+        style="align-items: flex-end"
+      >
         <!-- tag::snippet[] -->
         <vaadin-icon src="${codeBranch}"></vaadin-icon>
-        <vaadin-icon
-          src="${codeBranch}"
-          style="height: var(--lumo-icon-size-l); width: var(--lumo-icon-size-l);"
-        ></vaadin-icon>
-        <vaadin-icon src="${codeBranch}" style="height: 48px; width: 48px;"></vaadin-icon>
+        <vaadin-icon src="${codeBranch}" style="--vaadin-icon-size: 2rem;"></vaadin-icon>
+        <vaadin-icon src="${codeBranch}" style="--vaadin-icon-size: 3rem;"></vaadin-icon>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
