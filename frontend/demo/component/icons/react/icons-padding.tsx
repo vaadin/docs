@@ -7,7 +7,11 @@ import codeBranch from '../../../../../src/main/resources/META-INF/resources/ico
 function Example() {
   return (
     // tag::snippet[]
-    <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end' }}>
+    <HorizontalLayout
+      theme="spacing"
+      className="icons-padding-example"
+      style={{ alignItems: 'flex-end' }}
+    >
       {/* tag::snippet[] */}
       <Icon src={codeBranch} style={{ '--vaadin-icon-size': '3rem' }} />
       <Icon
