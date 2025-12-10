@@ -47,7 +47,7 @@ export function applyTheme(root: DocumentFragment | DocumentOrShadowRoot | HTMLE
 
       // @ts-expect-error Force LumoInjector to update injected styles
       // synchronously to avoid FOUC when switching from Lumo to Aura.
-      root.__lumoInjector?.forceUpdate();
+      root.__lumoInjector?.forceUpdate?.();
     };
 
     new MutationObserver(updateTheme).observe(host, {
