@@ -18,13 +18,13 @@ public class IconsSizing extends Div {
         // tag::snippet[]
         SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
 
-        SvgIcon iconLumoSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconLumoSize.setSize("2rem");
+        SvgIcon iconMediumSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        iconMediumSize.setSize("2rem");
 
-        SvgIcon iconPxSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconPxSize.setSize("3rem");
+        SvgIcon iconLargeSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        iconLargeSize.setSize("3rem");
 
-        layout.add(iconDefaultSize, iconLumoSize, iconPxSize);
+        layout.add(iconDefaultSize, iconMediumSize, iconLargeSize);
         // end::snippet[]
         add(layout);
     }
