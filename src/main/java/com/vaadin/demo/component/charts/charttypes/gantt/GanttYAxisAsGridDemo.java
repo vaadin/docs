@@ -46,8 +46,13 @@ public class GanttYAxisAsGridDemo extends Div {
 
         AxisGrid grid = new AxisGrid();
         grid.setEnabled(true);
-        grid.setColumns(List.of(createProjectColumn(), createEstDaysColumn(),
-                createStartDateColumn(), createEndDateColumn()));
+        // @formatter:off hidden-source-line
+        grid.setColumns(List.of(
+                createProjectColumn(),
+                createEstDaysColumn(),
+                createStartDateColumn(),
+                createEndDateColumn()));
+        // @formatter:on hidden-source-line
         yAxis.setGrid(grid);
 
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();

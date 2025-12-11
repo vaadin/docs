@@ -31,16 +31,25 @@ public class RouteTemplateView extends VerticalLayout
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        var id = event.getRouteParameters().getInteger("id").orElseThrow();
-        var action = event.getRouteParameters().get("action")
-                .map(a -> Action.valueOf(a.toUpperCase())).orElse(Action.VIEW);
+        // @formatter:off hidden-source-line
+        var id = event.getRouteParameters()
+                .getInteger("id")
+                .orElseThrow();
+        var action = event.getRouteParameters()
+                .get("action")
+                .map(a -> Action.valueOf(a.toUpperCase()))
+                .orElse(Action.VIEW);
+        // @formatter:on hidden-source-line
         parameterValues.setText(
                 "Parameter values: id = " + id + ", action = " + action);
     }
 
     public static void showView(int id, Action action) {
-        var parameters = new RouteParameters(new RouteParam("id", id),
+        // @formatter:off hidden-source-line
+        var parameters = new RouteParameters(
+                new RouteParam("id", id),
                 new RouteParam("action", action.name()));
+        // @formatter:on hidden-source-line
         UI.getCurrent().navigate(RouteTemplateView.class, parameters);
     }
 }
