@@ -32,8 +32,8 @@ public class BufferedGridView extends VerticalLayout {
 
         // tag::filtering[]
         // Update the grid whenever the text field changes
-        filterField.addValueChangeListener(e -> grid.setItems(
-                service.findItems(e.getValue())));
+        filterField.addValueChangeListener(e -> grid.getListDataView()
+                .setItems(service.findItems(e.getValue())));
         // end::filtering[]
 
         // Layout components
