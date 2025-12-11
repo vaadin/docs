@@ -6,7 +6,6 @@ import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
 import com.vaadin.flow.component.map.configuration.Feature;
 import com.vaadin.flow.component.map.configuration.feature.MarkerFeature;
-import com.vaadin.flow.component.map.events.FeatureEventDetails;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;

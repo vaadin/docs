@@ -2,7 +2,6 @@ package com.vaadin.demo.component.grid;
 
 import com.vaadin.demo.domain.Person;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
