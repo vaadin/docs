@@ -233,9 +233,9 @@ class TocFooter extends LitElement {
           <div class="toc-footer">
             <a href="https://vaadin.com/learn/training" class="toc-footer--link">
 
-              <div class="toc-footer--heading">Video tutorial</div>
+              <div class="toc-footer--heading">UI Training & Certification</div>
               <div class="toc-footer--content">
-                Learn Vaadin fundamentals through short video tutorials.
+                Master your Java web app development skills and become a certified Vaadin developer.
               </div>
 
               <div class="toc-footer--img">
