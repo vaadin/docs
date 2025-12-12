@@ -28,7 +28,8 @@ import java.util.List;
 @Route("chart-gantt-y-axis-as-grid")
 public class GanttYAxisAsGridDemo extends Div {
 
-    private static final Instant TODAY = Instant.now().truncatedTo(ChronoUnit.DAYS);
+    private static final Instant TODAY = Instant.now()
+            .truncatedTo(ChronoUnit.DAYS);
 
     // tag::snippet[]
     public GanttYAxisAsGridDemo() {
@@ -45,12 +46,13 @@ public class GanttYAxisAsGridDemo extends Div {
 
         AxisGrid grid = new AxisGrid();
         grid.setEnabled(true);
+        // @formatter:off hidden-source-line
         grid.setColumns(List.of(
                 createProjectColumn(),
                 createEstDaysColumn(),
                 createStartDateColumn(),
-                createEndDateColumn())
-        );
+                createEndDateColumn()));
+        // @formatter:on hidden-source-line
         yAxis.setGrid(grid);
 
         PlotOptionsGantt plotOptionsGantt = new PlotOptionsGantt();
@@ -79,7 +81,10 @@ public class GanttYAxisAsGridDemo extends Div {
         column.setTitle("Est. Days");
         final Labels label = new Labels();
         label.setUseHTML(true);
-        label.setFormatter("function () { var point = this.point,days = (1000 * 60 * 60 * 24)," + "    number = (point.x2 - point.x) / days; " + "    return '<div style=\"width: 50px; text-align: center\">' + Math.round(number * 100) / 100 + '</div>'; }");
+        label.setFormatter(
+                "function () { var point = this.point,days = (1000 * 60 * 60 * 24),"
+                        + "    number = (point.x2 - point.x) / days; "
+                        + "    return '<div style=\"width: 50px; text-align: center\">' + Math.round(number * 100) / 100 + '</div>'; }");
         column.setLabels(label);
         return column;
     }
@@ -109,7 +114,8 @@ public class GanttYAxisAsGridDemo extends Div {
 
         GanttSeriesItem item;
 
-        item = new GanttSeriesItem("Start prototype", todayPlus(1), todayPlus(3));
+        item = new GanttSeriesItem("Start prototype", todayPlus(1),
+                todayPlus(3));
         item.setY(0);
         item.setCustom(new TaskCustomData("Richards"));
         series.add(item);
@@ -119,12 +125,14 @@ public class GanttYAxisAsGridDemo extends Div {
         item.setCustom(new TaskCustomData("Oystein"));
         series.add(item);
 
-        item = new GanttSeriesItem("Test prototype", todayPlus(5), todayPlus(7));
+        item = new GanttSeriesItem("Test prototype", todayPlus(5),
+                todayPlus(7));
         item.setY(2);
         item.setCustom(new TaskCustomData("Torstein"));
         series.add(item);
 
-        item = new GanttSeriesItem("Run acceptance tests", todayPlus(8), todayPlus(12));
+        item = new GanttSeriesItem("Run acceptance tests", todayPlus(8),
+                todayPlus(12));
         item.setY(3);
         item.setCustom(new TaskCustomData("Halliburton"));
         series.add(item);

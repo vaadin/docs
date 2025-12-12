@@ -13,12 +13,14 @@ public class CardCombineVariants extends Div {
     public CardCombineVariants() {
         // tag::snippet[]
         Card card = new Card();
+        // @formatter:off hidden-source-line
         card.addThemeVariants(
                 CardVariant.LUMO_OUTLINED,
                 CardVariant.LUMO_ELEVATED,
                 CardVariant.LUMO_HORIZONTAL,
                 CardVariant.LUMO_COVER_MEDIA
         );
+        // @formatter:on hidden-source-line
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
                 getClass(), "/images/lapland.avif", "lapland.avif");
@@ -28,7 +30,8 @@ public class CardCombineVariants extends Div {
 
         card.setTitle(new Div("Lapland"));
         card.setSubtitle(new Div("The Exotic North"));
-        card.add(new Div("Lapland is the northern-most region of Finland and an active outdoor destination."));
+        card.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
         // end::snippet[]
 
         add(card);

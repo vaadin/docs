@@ -63,6 +63,7 @@ public class GanttSmallTaskDependenciesDemo extends Div {
         return TODAY.plus(days, ChronoUnit.DAYS);
     }
 
-    public static class Exporter extends DemoExporter<GanttSmallTaskDependenciesDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttSmallTaskDependenciesDemo> { // hidden-source-line
     } // hidden-source-line
 }

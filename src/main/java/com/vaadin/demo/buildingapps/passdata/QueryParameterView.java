@@ -19,6 +19,7 @@ public class QueryParameterView extends VerticalLayout
         add(filterField);
 
         filterField.addValueChangeListener(event -> {
+            // @formatter:off hidden-source-line
             var queryParameters = UI.getCurrent()
                     .getActiveViewLocation()
                     .getQueryParameters()
@@ -26,15 +27,18 @@ public class QueryParameterView extends VerticalLayout
             UI.getCurrent().navigate(
                     QueryParameterView.class,
                     queryParameters);
+            // @formatter:on hidden-source-line
         });
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        // @formatter:off hidden-source-line
         event.getLocation()
                 .getQueryParameters()
                 .getSingleParameter("filter")
                 .ifPresent(filterField::setValue);
+        // @formatter:on hidden-source-line
     }
 }
 // end::snippet[]
