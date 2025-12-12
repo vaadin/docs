@@ -72,11 +72,11 @@ function Example() {
         }
       }}
       dragFilter={(model) => {
-        const item = model.item;
+        const { item } = model;
         return !item.manager;
       }}
       dropFilter={(model) => {
-        const item = model.item;
+        const { item } = model;
         return item.manager && item.id !== draggedItem.value?.managerId;
       }}
     >

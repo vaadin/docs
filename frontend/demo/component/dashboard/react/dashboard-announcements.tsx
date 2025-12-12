@@ -51,7 +51,7 @@ function Example() {
 
   function handleSelectedChange(e: DashboardItemSelectedChangedEvent<WidgetConfig>) {
     // This event is fired when the user starts or stops editing a widget
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
     const selected = e.detail.value ? 'selected' : 'deselected';
 
@@ -80,7 +80,7 @@ function Example() {
     // This event is fired when the user moves a widget
     const position = e.detail.items.findIndex((widget) => widget === e.detail.item) + 1;
     const total = e.detail.items.length;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
 
     announcement.value = `Moved widget ${title} to position ${position} of ${total}`;
@@ -91,8 +91,8 @@ function Example() {
 
   function handleResize(e: DashboardItemResizedEvent<WidgetConfig>) {
     // This event is fired when the user resizes a widget
-    const colspan = e.detail.item.colspan;
-    const rowspan = e.detail.item.rowspan;
+    const { colspan } = e.detail.item;
+    const { rowspan } = e.detail.item;
     const title = widgetTitles[e.detail.item.type];
 
     announcement.value = `Resized widget ${title} to ${colspan} columns, ${rowspan} rows`;
