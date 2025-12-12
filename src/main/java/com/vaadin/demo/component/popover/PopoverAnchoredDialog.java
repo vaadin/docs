@@ -72,7 +72,7 @@ public class PopoverAnchoredDialog extends Div {
         List<String> columns = List.of("firstName", "lastName", "email",
                 "phone", "birthday", "profession");
         // tag::gridsnippet[]
-        
+
         CheckboxGroup<String> group = new CheckboxGroup<>();
         group.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         group.setItems(columns);

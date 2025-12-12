@@ -34,33 +34,37 @@ public class GridManualPagination extends VerticalLayout {
     private final DataSource dataSource = new DataSource();
 
     // tag::snippet[]
-    private final DataProvider<Person, String> pagingDataProvider = DataProvider.fromFilteringCallbacks(query -> {
-        // We are implementing our own way of data pagination. Unfortunately, the data provider contract requires these
-        // two methods to be called during data fetch, otherwise IllegalStateException is thrown
-        // -> so we just call them but ignore their return values.
-        query.getLimit();
-        query.getOffset();
+    private final DataProvider<Person, String> pagingDataProvider = DataProvider
+            .fromFilteringCallbacks(query -> {
+                // We are implementing our own way of data pagination.
+                // Unfortunately, the data provider contract requires these
+                // two methods to be called during data fetch, otherwise
+                // IllegalStateException is thrown
+                // -> so we just call them but ignore their return values.
+                query.getLimit();
+                query.getOffset();
 
-        // determine the offset and limit for the current page.
-        var offset = paginationControls.calculateOffset();
-        var limit = paginationControls.getPageSize();
+                // determine the offset and limit for the current page.
+                var offset = paginationControls.calculateOffset();
+                var limit = paginationControls.getPageSize();
 
-        return dataSource.fetch(query.getFilter(), offset, limit);
-    }, query -> {
-        // Total count of filtered items
-        var itemCount = dataSource.count(query.getFilter());
+                return dataSource.fetch(query.getFilter(), offset, limit);
+            }, query -> {
+                // Total count of filtered items
+                var itemCount = dataSource.count(query.getFilter());
 
-        // Recalculate page count here to avoid calling
-        // dataSource.count twice
-        paginationControls.recalculatePageCount(itemCount);
+                // Recalculate page count here to avoid calling
+                // dataSource.count twice
+                paginationControls.recalculatePageCount(itemCount);
 
-        var offset = paginationControls.calculateOffset();
-        var limit = paginationControls.getPageSize();
+                var offset = paginationControls.calculateOffset();
+                var limit = paginationControls.getPageSize();
 
-        // Return the number of items for the current page, taking the remaining items on the last page into consideration
-        var remainingItemsCount = itemCount - offset;
-        return Math.min(remainingItemsCount, limit);
-    });
+                // Return the number of items for the current page, taking the
+                // remaining items on the last page into consideration
+                var remainingItemsCount = itemCount - offset;
+                return Math.min(remainingItemsCount, limit);
+            });
 
     public GridManualPagination() {
         setPadding(false);
@@ -76,7 +80,8 @@ public class GridManualPagination extends VerticalLayout {
         var dataProvider = pagingDataProvider.withConfigurableFilter();
         grid.setDataProvider(dataProvider);
 
-        paginationControls.onPageChanged(() -> grid.getDataProvider().refreshAll());
+        paginationControls
+                .onPageChanged(() -> grid.getDataProvider().refreshAll());
 
         final TextField searchField = createSearchField();
         searchField.addValueChangeListener(e -> {
@@ -91,8 +96,10 @@ public class GridManualPagination extends VerticalLayout {
     // end::snippet[]
 
     @NotNull
-    private VerticalLayout wrapWithVerticalLayout(Component component1, Component component2) {
-        var gridWithPaginationLayout = new VerticalLayout(component1, component2);
+    private VerticalLayout wrapWithVerticalLayout(Component component1,
+            Component component2) {
+        var gridWithPaginationLayout = new VerticalLayout(component1,
+                component2);
         gridWithPaginationLayout.setPadding(false);
         gridWithPaginationLayout.setSpacing(false);
         gridWithPaginationLayout.getThemeList().add("spacing-xs");
@@ -112,29 +119,32 @@ public class GridManualPagination extends VerticalLayout {
     public static class DataSource {
         private final List<Person> people = DataService.getPeople();
 
-        public Stream<Person> fetch(Optional<String> searchTerm, int offset, int limit) {
-            // emulate accessing the backend datasource - in a real application this would
-            // call, for example, an SQL query, passing an offset and a limit to the query
+        public Stream<Person> fetch(Optional<String> searchTerm, int offset,
+                int limit) {
+            // emulate accessing the backend datasource - in a real application
+            // this would call, for example, an SQL query, passing an offset and
+            // a limit to the query
             return people.stream().filter(
-                            person -> matchesSearchTerm(person, searchTerm.orElse("")))
+                    person -> matchesSearchTerm(person, searchTerm.orElse("")))
                     .skip(offset).limit(limit);
         }
 
         public int count(Optional<String> searchTerm) {
             return (int) people.stream().filter(
-                            person -> matchesSearchTerm(person, searchTerm.orElse("")))
+                    person -> matchesSearchTerm(person, searchTerm.orElse("")))
                     .count();
         }
 
         public boolean matchesSearchTerm(Person person, String searchTerm) {
-            return searchTerm == null
-                    || searchTerm.isEmpty()
-                    || person.getFullName().toLowerCase().contains(searchTerm.toLowerCase())
-                    || person.getEmail().toLowerCase().contains(searchTerm.toLowerCase())
-                    || person.getProfession().toLowerCase().contains(searchTerm.toLowerCase());
+            return searchTerm == null || searchTerm.isEmpty()
+                    || person.getFullName().toLowerCase()
+                            .contains(searchTerm.toLowerCase())
+                    || person.getEmail().toLowerCase()
+                            .contains(searchTerm.toLowerCase())
+                    || person.getProfession().toLowerCase()
+                            .contains(searchTerm.toLowerCase());
         }
     }
-
 
     public static class PaginationControls extends HorizontalLayout {
         private int totalItemCount = 0;
@@ -151,7 +161,8 @@ public class GridManualPagination extends VerticalLayout {
         private Component createPageSizeField() {
             Select<Integer> select = new Select<>();
             select.addThemeVariants(SelectVariant.LUMO_SMALL);
-            select.getStyle().set("--vaadin-input-field-value-font-size", "0.875rem");
+            select.getStyle().set("--vaadin-input-field-value-font-size",
+                    "0.875rem");
             select.setWidth("4.8rem");
             select.setItems(10, 15, 25, 50, 100);
             select.setValue(pageSize);
@@ -163,7 +174,8 @@ public class GridManualPagination extends VerticalLayout {
             label.setId("page-size-label");
             label.getStyle().set("font-size", "0.875rem");
             select.setAriaLabelledBy("page-size-label");
-            final HorizontalLayout layout = new HorizontalLayout(Alignment.CENTER, label, select);
+            final HorizontalLayout layout = new HorizontalLayout(
+                    Alignment.CENTER, label, select);
             layout.setSpacing(false);
             layout.getThemeList().add("spacing-s");
             return layout;
@@ -171,13 +183,13 @@ public class GridManualPagination extends VerticalLayout {
 
         private Runnable pageChangedListener;
 
-
         public PaginationControls() {
             setDefaultVerticalComponentAlignment(Alignment.CENTER);
             setSpacing("0.3rem");
             setWidthFull();
             addToStart(createPageSizeField());
-            addToEnd(firstPageButton, goToPreviousPageButton, currentPageLabel, goToNextPageButton, lastPageButton);
+            addToEnd(firstPageButton, goToPreviousPageButton, currentPageLabel,
+                    goToNextPageButton, lastPageButton);
         }
 
         private void recalculatePageCount(int totalItemCount) {
@@ -187,9 +199,11 @@ public class GridManualPagination extends VerticalLayout {
 
         private void updatePageCount() {
             if (totalItemCount == 0) {
-                this.pageCount = 1; // we still want to display one page even though there are no items
+                this.pageCount = 1; // we still want to display one page even
+                                    // though there are no items
             } else {
-                this.pageCount = (int) Math.ceil((double) totalItemCount / pageSize);
+                this.pageCount = (int) Math
+                        .ceil((double) totalItemCount / pageSize);
             }
             if (currentPage > pageCount) {
                 currentPage = pageCount;
@@ -207,7 +221,8 @@ public class GridManualPagination extends VerticalLayout {
         }
 
         private void updateControls() {
-            currentPageLabel.setText(String.format("Page %d of %d", currentPage, pageCount));
+            currentPageLabel.setText(
+                    String.format("Page %d of %d", currentPage, pageCount));
             firstPageButton.setEnabled(currentPage > 1);
             lastPageButton.setEnabled(currentPage < pageCount);
             goToPreviousPageButton.setEnabled(currentPage > 1);
@@ -215,30 +230,37 @@ public class GridManualPagination extends VerticalLayout {
         }
 
         private Button firstPageButton() {
-            return createIconButton(VaadinIcon.ANGLE_DOUBLE_LEFT, "Go to first page", () -> currentPage = 1);
+            return createIconButton(VaadinIcon.ANGLE_DOUBLE_LEFT,
+                    "Go to first page", () -> currentPage = 1);
         }
 
         private Button lastPageButton() {
-            return createIconButton(VaadinIcon.ANGLE_DOUBLE_RIGHT, "Go to last page", () -> currentPage = pageCount);
+            return createIconButton(VaadinIcon.ANGLE_DOUBLE_RIGHT,
+                    "Go to last page", () -> currentPage = pageCount);
         }
 
         private Button goToNextPageButton() {
-            return createIconButton(VaadinIcon.ANGLE_RIGHT, "Go to next page", () -> currentPage++);
+            return createIconButton(VaadinIcon.ANGLE_RIGHT, "Go to next page",
+                    () -> currentPage++);
         }
 
         private Button goToPreviousPageButton() {
-            return createIconButton(VaadinIcon.ANGLE_LEFT, "Go to previous page", () -> currentPage--);
+            return createIconButton(VaadinIcon.ANGLE_LEFT,
+                    "Go to previous page", () -> currentPage--);
         }
 
         private Span currentPageLabel() {
             var label = new Span();
-            label.getStyle().set("font-size", "0.875rem").set("padding", "0 0.5rem");
+            label.getStyle().set("font-size", "0.875rem").set("padding",
+                    "0 0.5rem");
             return label;
         }
 
-        private Button createIconButton(VaadinIcon icon, String ariaLabel, Runnable onClickListener) {
+        private Button createIconButton(VaadinIcon icon, String ariaLabel,
+                Runnable onClickListener) {
             Button button = new Button(new Icon(icon));
-            button.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL);
+            button.addThemeVariants(ButtonVariant.LUMO_ICON,
+                    ButtonVariant.LUMO_SMALL);
             button.addClickListener(e -> {
                 onClickListener.run();
                 updateControls();
@@ -260,11 +282,14 @@ public class GridManualPagination extends VerticalLayout {
     }
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person>of(
-                        "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                                + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
-                                + "  <span> ${item.fullName} </span>"
-                                + "</vaadin-horizontal-layout>")
+        return LitRenderer
+                .<Person> of(
+                        """
+                                <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <span> ${item.fullName} </span>
+                                </vaadin-horizontal-layout>
+                                """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName);
     }

@@ -26,7 +26,8 @@ public class CardHeader extends Div {
         header.add(title, subtitle);
         card.setHeader(header);
 
-        card.add("Lapland is the northern-most region of Finland and an active outdoor destination.");
+        card.add(
+                "Lapland is the northern-most region of Finland and an active outdoor destination.");
         // end::snippet[]
 
         card.setMaxWidth("300px");

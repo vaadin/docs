@@ -46,7 +46,7 @@ public class BadgeIcons extends VerticalLayout {
                 createIcon(VaadinIcon.CHECK));
         confirmed2.getElement().getThemeList().add("badge success");
 
-        Span warning2 = new Span( new Span("Warning"),
+        Span warning2 = new Span(new Span("Warning"),
                 createIcon(VaadinIcon.WARNING));
         warning2.getElement().getThemeList().add("badge warning");
 
@@ -58,8 +58,10 @@ public class BadgeIcons extends VerticalLayout {
                 createIcon(VaadinIcon.HAND));
         onHold2.getElement().getThemeList().add("badge contrast");
 
-        add(new HorizontalLayout(pending1, confirmed1, warning1, denied1, onHold1),
-                new HorizontalLayout(pending2, confirmed2, warning2, denied2, onHold2));
+        add(new HorizontalLayout(pending1, confirmed1, warning1, denied1,
+                onHold1),
+                new HorizontalLayout(pending2, confirmed2, warning2, denied2,
+                        onHold2));
         setPadding(false);
         setSizeUndefined();
     }

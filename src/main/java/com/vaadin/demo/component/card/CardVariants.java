@@ -4,7 +4,6 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.card.Card;
 import com.vaadin.flow.component.card.CardVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.dom.Style.Display;
 import com.vaadin.flow.router.Route;
 
 @Route("card-variants")

@@ -65,6 +65,7 @@ public class GanttCurrentDateIndicationDemo extends Div {
         return TODAY.plus(days, ChronoUnit.DAYS);
     }
 
-    public static class Exporter extends DemoExporter<GanttCurrentDateIndicationDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttCurrentDateIndicationDemo> { // hidden-source-line
     } // hidden-source-line
 }

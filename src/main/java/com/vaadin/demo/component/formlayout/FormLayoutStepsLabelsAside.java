@@ -36,6 +36,7 @@ public class FormLayoutStepsLabelsAside extends Div {
         add(splitLayout);
     }
 
-    public static class Exporter extends DemoExporter<FormLayoutStepsLabelsAside> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<FormLayoutStepsLabelsAside> { // hidden-source-line
     } // hidden-source-line
 }

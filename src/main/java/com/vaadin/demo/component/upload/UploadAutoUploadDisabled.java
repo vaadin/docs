@@ -3,7 +3,6 @@ package com.vaadin.demo.component.upload;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
@@ -12,8 +11,9 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadAutoUploadDisabled extends Div {
 
     public UploadAutoUploadDisabled() {
-        InMemoryUploadHandler inMemoryHandler = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryHandler);
         upload.setAutoUpload(false);

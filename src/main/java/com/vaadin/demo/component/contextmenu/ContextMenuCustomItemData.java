@@ -12,16 +12,15 @@ public class ContextMenuCustomItemData extends Div {
 
     public ContextMenuCustomItemData() {
         // tag::snippet[]
-        Div wrapper = new Div(
-                new H1("Context Menu"),
-                new Paragraph("Menu Bar is a horizontal button bar with hierarchical drop-down menus.")
-        );
+        Div wrapper = new Div(new H1("Context Menu"), new Paragraph(
+                "Menu Bar is a horizontal button bar with hierarchical drop-down menus."));
 
         ContextMenu menu = new ContextMenu();
         menu.setTarget(wrapper);
 
         menu.addItem("Copy as plain text", event -> {
-            // Provide a custom value by adding a click listener that holds a reference to that value
+            // Provide a custom value by adding a click listener that holds a
+            // reference to that value
             String value = "Menu Bar\n\nMenu Bar is a horizontal button bar with hierarchical drop-down menus.";
             copyToClipboard(value);
         });
@@ -41,9 +40,11 @@ public class ContextMenuCustomItemData extends Div {
     }
 
     private void copyToClipboard(String value) {
-        getUI().ifPresent(ui -> ui.getPage().executeJs("window.navigator.clipboard.writeText($0);", value));
+        getUI().ifPresent(ui -> ui.getPage()
+                .executeJs("window.navigator.clipboard.writeText($0);", value));
     }
 
-    public static class Exporter extends DemoExporter<ContextMenuCustomItemData> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<ContextMenuCustomItemData> { // hidden-source-line
     } // hidden-source-line
 }

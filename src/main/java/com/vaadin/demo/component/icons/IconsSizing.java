@@ -17,12 +17,15 @@ public class IconsSizing extends Div {
         layout.setAlignItems(FlexComponent.Alignment.END);
 
         // tag::snippet[]
-        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
 
-        SvgIcon iconMediumSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        SvgIcon iconMediumSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
         iconMediumSize.setSize("2rem");
 
-        SvgIcon iconLargeSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        SvgIcon iconLargeSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
         iconLargeSize.setSize("3rem");
 
         layout.add(iconDefaultSize, iconMediumSize, iconLargeSize);
