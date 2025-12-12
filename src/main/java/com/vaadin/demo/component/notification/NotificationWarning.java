@@ -18,7 +18,8 @@ public class NotificationWarning extends Div {
 
     public NotificationWarning() {
         // tag::snippet[]
-        Notification notification = Notification.show("Your section is about to expire");
+        Notification notification = Notification
+                .show("Your section is about to expire");
         notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);
