@@ -13,7 +13,7 @@ interface PersonWithRating extends Person {
 }
 
 const cellPartNameGenerator: GridCellPartNameGenerator<PersonWithRating> = (column, model) => {
-  const item = model.item;
+  const { item } = model;
   let parts = '';
   // Make the customer rating column bold
   if (column.header?.startsWith('Customer rating')) {

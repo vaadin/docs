@@ -7,8 +7,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getUserPermissions } from 'Frontend/demo/domain/DataService'; // hidden-source-line
-import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
+import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-source-line
 
 @customElement('badge-icons-only-table')
 export class Example extends LitElement {

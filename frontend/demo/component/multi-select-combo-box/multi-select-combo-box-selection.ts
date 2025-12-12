@@ -3,8 +3,8 @@ import '@vaadin/multi-select-combo-box';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 @customElement('multi-select-combo-box-selection')
 export class Example extends LitElement {

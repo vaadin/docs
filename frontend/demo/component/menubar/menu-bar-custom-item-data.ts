@@ -48,7 +48,7 @@ export class Example extends LitElement {
   }
 
   itemSelected(e: MenuBarItemSelectedEvent<MenuBarItem<{ value?: string }>>) {
-    const value = e.detail.value.value;
+    const { value } = e.detail.value;
     if (value) {
       navigator.clipboard.writeText(value);
     }
