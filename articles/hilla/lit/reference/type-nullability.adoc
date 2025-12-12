@@ -173,4 +173,104 @@ export default interface MyBean {
 }
 ----
 
+[role="since:com.vaadin:vaadin@V24.8"]
+== Kotlin Native Nullability Support
+
+Starting with Vaadin 24.8, Hilla supports Kotlin's native type system regarding nullability. When using Kotlin, the language's built-in nullability markers (`?`) are automatically recognized and properly mapped to TypeScript types, eliminating the need for additional annotations.
+
+Key characteristics of this feature:
+
+- **Language-based nullability**: For calculating the type nullability of Kotlin source code, only the language's typing is taken into account (e.g., `String` vs `String?`).
+- **No annotation enforcement**: Java nullability annotations like `@NonNullApi`, `@NonNull`, and `@Nullable` are disregarded when processing Kotlin sources.
+- **Kotlin-specific processing**: The feature exclusively affects classes from Kotlin codebases; Java entities and endpoints maintain their existing annotation-based nullability handling.
+- **Mixed inheritance support**: When a Kotlin endpoint extends Java-based classes (like `CrudRepositoryService`), inherited methods retain Java processing while new Kotlin implementations use language-based nullability detection.
+- **Default activation**: The underlying parser plugin activates automatically and can be disabled by excluding the `hilla-parser-jvm-plugin-nonnull-kotlin` dependency.
+
+.Kotlin data class with native nullability
+[source,kotlin]
+----
+data class Person(
+    val id: Long,                    // Non-nullable by default
+    val firstName: String,           // Non-nullable
+    val lastName: String,            // Non-nullable
+    val middleName: String?,         // Nullable
+    val connections: Map<String, String>?  // Nullable map
+)
+----
+
+.Generated TypeScript interface
+[source,typescript]
+----
+export default interface Person {
+  id: number;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  connections?: Record<string, string>;
+}
+----
+
+=== Maven Configuration Requirement
+
+For Kotlin's native nullability to work correctly with Hilla, the Kotlin compiler must preserve Java method parameter names. This requires the `-java-parameters` compiler flag.
+
+In Maven projects, you need to explicitly configure the `kotlin-maven-plugin`:
+
+.pom.xml
+[source,xml]
+----
+<plugin>
+    <groupId>org.jetbrains.kotlin</groupId>
+    <artifactId>kotlin-maven-plugin</artifactId>
+    <configuration>
+        <args>
+            <arg>-java-parameters</arg>
+        </args>
+    </configuration>
+</plugin>
+----
+
+[NOTE]
+Gradle projects automatically include this configuration through the Kotlin Gradle plugin, so no additional setup is required.
+
+=== Kotlin Nullability Priority
+
+When using Kotlin, the language's native nullability takes precedence over Java annotations. Kotlin's type system (`String` vs `String?`) determines the nullability of generated TypeScript types, and Java annotations like `@NonNull` or `@Nullable` are ignored in Kotlin code.
+
+.Kotlin endpoint with native nullability
+[source,kotlin]
+----
+@Endpoint
+class PersonEndpoint {
+    // firstName and lastName are non-nullable by default in Kotlin
+    fun setFullName(firstName: String, lastName: String, middleName: String?) {
+        // omitted code
+    }
+
+    // Return type is non-nullable
+    fun getFullName(): String {
+        // omitted code
+    }
+
+    // Map is nullable, but values are non-nullable
+    fun getConnections(): Map<String, String>? {
+        // omitted code
+    }
+}
+----
+
+.Generated TypeScript endpoint functions
+[source,typescript]
+----
+export async function setFullName(
+  firstName: string,
+  lastName: string,
+  middleName: string | undefined
+) { /* omitted code */ }
+
+export async function getFullName(): Promise<string> { /* omitted code */ }
+
+export async function getConnections(): Promise<Record<string, string> | undefined> { /* omitted code */ }
+----
+
 // end::content[]
