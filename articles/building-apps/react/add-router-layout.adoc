@@ -1,0 +1,171 @@
+---
+title: Hilla
+page-title: How to use router layouts in Hilla | Vaadin
+meta-description: Learn how to create and customize router layouts in Hilla applications, including main layouts and nested layouts.
+order: 10
+---
+
+
+= Router Layouts in Hilla
+:toclevels: 2
+
+In this guide, you'll learn how to create and customize router layouts in Hilla views. Router layouts are special view components that wrap around other views, providing common UI elements like navigation bars, menus, and footers.
+
+
+== Router Layouts in Hilla
+
+Router layouts in Hilla are React components that wrap other views. Router layouts do not create separate navigable routes, but they wrap views that are mapped to the actual routes. Common use cases for layouts are for providing the application's shell (e.g. including common UI elements like navigation bar, side menu, footer, etc.), or as a nested layout that wraps specific set of views with additional UI elements.
+
+
+== Creating a Router Layout
+
+To create a router layout, create a file named `@layout.tsx` in any directory under the `views`. The Hilla router, by convention, wraps all the views in the respective directory and its subdirectories with that layout. The layout must render the `<Outlet/>` component where child views should appear.
+
+Here's an example of a basic router layout created directly under the `views` directory that wraps all views in the application, as it is located in the root of `views` directory:
+
+[source,tsx]
+.frontend/views/@layout.tsx
+----
+// tag::snippet[]
+import { Outlet } from 'react-router';
+// end::snippet[]
+
+export default function MainLayout() {
+    return (
+        <div>
+            <header>
+                <h1>My Application</h1>
+            </header>
+
+            <main>
+                {/* tag::snippet[] */}
+                <Outlet />
+                {/* end::snippet[] */}
+            </main>
+
+            <footer>
+                <p>© 2025 My Company</p>
+            </footer>
+        </div>
+    );
+}
+----
+
+In this example, the `MainLayout` component wraps all views in the application with a common header and footer. The `<Outlet />` component acts as a placeholder of where the child views should render. Having `@layout.tsx` files is not limited to the root directory, you can create them in any subdirectory to create nested layouts.
+
+Here's an example of a layout that wraps the views defined in the `customers` directory and any possible subdirectories:
+
+[source,tsx]
+.frontend/views/customers/@layout.tsx
+----
+import { Outlet } from 'react-router';
+
+export default function CustomersLayout() {
+    return (
+        <div>
+            <header>
+                <h1>Customers</h1>
+            </header>
+
+            <main>
+                <Outlet />
+            </main>
+        </div>
+    );
+}
+----
+
+Depending on where a view file is located, by default it is wrapped and rendered within the available `@layout.tsx` of that directory, and also all the parent layouts of that directory.
+
+For example:
+
+[source]
+----
+views
+├── customers
+│   ├── {id}
+│   │   ├── @index.tsx
+│   │   └── edit.tsx
+│   ├── @index.tsx
+│   └── @layout.tsx <1>
+├── @index.tsx
+└── @layout.tsx <2>
+----
+<1> The layout file that wraps all views in the `customers` directory and its subdirectories
+<2> The layout file that wraps all views in the application
+
+
+== Skipping Layouts
+
+There are certain views and routes that should not be rendered inside any layouts. A `login` view is common example of such a view that should escape being rendered within the application layout. You can skip the layouts that are applied to views using the `ViewConfig` configuration object. Export this object from your view file to instruct the router not to wrap this view inside any layout available in the directory structure:
+
+[source,tsx]
+.frontend/views/login.tsx
+----
+// tag::snippet[]
+import { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+// end::snippet[]
+
+export default function LoginView() {
+    return (
+        <div>Login form here</div>
+    );
+}
+
+export const config: ViewConfig = {
+// tag::snippet[]
+    skipLayouts: true, // <1>
+// end::snippet[]
+};
+----
+<1> Instruct the router to skip all the layouts for this view
+
+
+== Creating Dynamic Menus
+
+The Hilla router provides utilities to create navigation menus based on your route structure. Use the `createMenuItems()` utility to automatically generate menu items:
+
+[source,tsx]
+.frontend/views/@layout.tsx
+----
+// tag::snippet[]
+import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
+// end::snippet[]
+import { useLocation, useNavigate } from 'react-router';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+
+export default function MainMenu() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    return (
+        <SideNav
+            onNavigate={({path}) => path && navigate(path)}
+            location={location}
+        >
+            {createMenuItems().map(({ to, icon, title }) => ( // <1>
+                <SideNavItem path={to} key={to}>
+                    {icon && <Icon icon={icon} slot="prefix"/>}
+                    {title}
+                </SideNavItem>
+            ))}
+        </SideNav>
+    );
+}
+----
+<1> Iterate over the list of available routes returned by `createMenuItems()` and create a menu item for each route
+
+[NOTE]
+The `createMenuItems()` utility returns all routes available in the application, including the routes from Flow views.
+
+
+== Best Practices
+
+When working with router layouts in Hilla, follow these best practices:
+
+1. Use `@layout.tsx` naming convention for layout files
+2. Always render the `<Outlet />` component where child views should appear
+3. Consider skipping layouts for authentication views
+
