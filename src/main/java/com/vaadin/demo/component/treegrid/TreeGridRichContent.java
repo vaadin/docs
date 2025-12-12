@@ -70,8 +70,8 @@ public class TreeGridRichContent extends Div {
                     "flex");
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
-            column.getStyle().set("font-size", "0.875rem")
-                    .set("line-height", "var(--lumo-line-height-m)");
+            column.getStyle().set("font-size", "0.875rem").set("line-height",
+                    "var(--lumo-line-height-m)");
             column.setPadding(false);
             column.setSpacing(false);
             return column;

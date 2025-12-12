@@ -17,7 +17,8 @@ public class IconsColor extends Div {
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // tag::snippet[]
-        SvgIcon svgIcon = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        SvgIcon svgIcon = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
         svgIcon.setColor("red");
 
         FontIcon fontIcon = new FontIcon("fa", "fa-user");

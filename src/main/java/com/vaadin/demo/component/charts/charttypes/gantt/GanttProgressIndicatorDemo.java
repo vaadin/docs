@@ -23,7 +23,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 @Route("chart-gantt-progress-indication")
 public class GanttProgressIndicatorDemo extends Div {
@@ -71,6 +70,7 @@ public class GanttProgressIndicatorDemo extends Div {
         add(chart);
     }
 
-    public static class Exporter extends DemoExporter<GanttProgressIndicatorDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttProgressIndicatorDemo> { // hidden-source-line
     } // hidden-source-line
 }
