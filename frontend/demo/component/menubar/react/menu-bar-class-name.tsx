@@ -9,10 +9,7 @@ function Example() {
     { text: 'Edit' },
     {
       text: 'Share',
-      children: [
-        { text: 'By email', className: 'custom' },
-        { text: 'Get link' },
-      ],
+      children: [{ text: 'By email', className: 'custom' }, { text: 'Get link' }],
     },
   ];
 

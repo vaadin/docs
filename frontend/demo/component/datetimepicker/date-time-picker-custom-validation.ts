@@ -3,8 +3,8 @@ import '@vaadin/date-time-picker';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Binder, field } from '@vaadin/hilla-lit-form';
-import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 import { applyTheme } from 'Frontend/demo/theme';
+import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
 @customElement('date-time-picker-custom-validation')
 export class Example extends LitElement {

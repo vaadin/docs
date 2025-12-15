@@ -11,8 +11,8 @@ import type { Details } from '@vaadin/details';
 import type { VirtualListLitRenderer } from '@vaadin/virtual-list/lit.js';
 import { virtualListRenderer } from '@vaadin/virtual-list/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('virtual-list-basic')
 export class Example extends LitElement {

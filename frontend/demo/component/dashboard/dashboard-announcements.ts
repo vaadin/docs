@@ -13,9 +13,9 @@ import type {
   DashboardItemResizeModeChangedEvent,
   DashboardItemSelectedChangedEvent,
 } from '@vaadin/dashboard';
+import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
-import { applyTheme } from 'Frontend/demo/theme';
 
 // Define a mapping from widget types to human-readable titles
 const widgetTitles: Record<WidgetType, string> = {
@@ -56,7 +56,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   handleSelectedChange(e: DashboardItemSelectedChangedEvent<WidgetConfig>) {
     // This event is fired when the user starts or stops editing a widget
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
     const selected = e.detail.value ? 'selected' : 'deselected';
 
@@ -85,7 +85,7 @@ export class Example extends LitElement {
     // This event is fired when the user moves a widget
     const position = e.detail.items.findIndex((widget) => widget === e.detail.item) + 1;
     const total = e.detail.items.length;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
     const title = widgetTitles[(e.detail.item as WidgetConfig).type];
     this.announcement = `Moved widget ${title} to position ${position} of ${total}`;
 
@@ -95,8 +95,8 @@ export class Example extends LitElement {
 
   handleResize(e: DashboardItemResizedEvent<WidgetConfig>) {
     // This event is fired when the user resizes a widget
-    const colspan = e.detail.item.colspan;
-    const rowspan = e.detail.item.rowspan;
+    const { colspan } = e.detail.item;
+    const { rowspan } = e.detail.item;
     const title = widgetTitles[e.detail.item.type];
 
     this.announcement = `Resized widget ${title} to ${colspan} columns, ${rowspan} rows`;

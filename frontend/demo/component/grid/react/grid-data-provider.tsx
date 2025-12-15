@@ -19,7 +19,7 @@ function Example() {
   // Create a data provider that calls a backend service with a
   // Spring Data pageable and the search term
   const dataProvider = useGridDataProvider(
-    async (pageable) => GridPersonService.list(pageable, searchTerm.value),
+    async (pageable) => await GridPersonService.list(pageable, searchTerm.value),
     // Providing the search term as a dependency will automatically
     // refresh the data provider when the search term changes
     [searchTerm.value]
