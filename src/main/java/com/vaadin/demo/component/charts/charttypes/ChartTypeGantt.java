@@ -5,14 +5,10 @@ import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.SolidColor;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
-import javax.xml.parsers.SAXParser;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 
 @Route("chart-type-gantt")
 public class ChartTypeGantt extends Div {

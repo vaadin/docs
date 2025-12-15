@@ -26,12 +26,12 @@ public class SecurityConfigurer {
     private String authSecret;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
         // end::stateless-configure[]
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin-only/**").hasAnyRole("admin")
-                .requestMatchers("/public/**").permitAll()
-        );
+                .requestMatchers("/public/**").permitAll());
 
         // tag::stateless-configure[]
         // Disable creating and using sessions in Spring Security
@@ -44,10 +44,11 @@ public class SecurityConfigurer {
 
         // Enable stateless authentication
         http.with(new VaadinStatelessSecurityConfigurer<>(),
-                cfg -> cfg.withSecretKey().secretKey(
-                     new SecretKeySpec(Base64.getDecoder().decode(authSecret), // <1>
-                          JwsAlgorithms.HS256) // <2>
-               ).and().issuer("com.example.application") // <3>
+                cfg -> cfg.withSecretKey()
+                        .secretKey(new SecretKeySpec(
+                                Base64.getDecoder().decode(authSecret), // <1>
+                                JwsAlgorithms.HS256) // <2>
+                        ).and().issuer("com.example.application") // <3>
         );
 
         return http.build();

@@ -32,8 +32,8 @@ public class BufferedGridView extends VerticalLayout {
 
         // tag::filtering[]
         // Update the grid whenever the text field changes
-        filterField.addValueChangeListener(e -> grid.setItems(
-                service.findItems(e.getValue())));
+        filterField.addValueChangeListener(e -> grid.getListDataView()
+                .setItems(service.findItems(e.getValue())));
         // end::filtering[]
 
         // Layout components
@@ -45,6 +45,7 @@ public class BufferedGridView extends VerticalLayout {
     // tag::data[]
     // In a real application, this would be in its own file
     static class ItemService {
+        // @formatter:off hidden-source-line
         private static final List<Item> ITEMS = List.of(
                 new Item(1, "Denmark"),
                 new Item(2, "Finland"),
@@ -53,20 +54,19 @@ public class BufferedGridView extends VerticalLayout {
                 new Item(5, "Sweden"),
                 new Item(6, "Estonia"),
                 new Item(7, "Germany"));
+        // @formatter:on hidden-source-line
 
         public List<Item> findItems(String filterString) {
             // In a real application, this would query a database and
             // enforce a maximum result size to avoid flooding the UI
             // with too many items.
             var filterLower = filterString.toLowerCase().trim();
-            return filterLower.isEmpty()
-                    ? Collections.emptyList()
-                    : ITEMS.stream()
-                            .filter(item -> item
-                                    .name()
-                                    .toLowerCase()
-                                    .contains(filterLower))
-                            .toList();
+            if (filterLower.isEmpty()) {
+                return Collections.emptyList();
+            }
+            return ITEMS.stream().filter(
+                    item -> item.name().toLowerCase().contains(filterLower))
+                    .toList();
         }
     }
 

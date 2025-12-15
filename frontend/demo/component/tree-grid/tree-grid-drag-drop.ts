@@ -100,11 +100,11 @@ export class Example extends LitElement {
           }
         }}"
         .dragFilter="${(model: GridItemModel<Person>) => {
-          const item = model.item;
+          const { item } = model;
           return !item.manager; // Only drag non-managers
         }}"
         .dropFilter="${(model: GridItemModel<Person>) => {
-          const item = model.item;
+          const { item } = model;
           return (
             item.manager && // Can only drop on a supervisor
             item.id !== this.draggedItem?.managerId // Disallow dropping on the same manager

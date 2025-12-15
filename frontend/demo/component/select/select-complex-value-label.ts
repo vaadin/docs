@@ -18,7 +18,7 @@ export class Example extends LitElement {
   private items: SelectItem[] = [];
 
   protected override async firstUpdated() {
-    const people = (await getPeople({ count: 5 })).people;
+    const { people } = await getPeople({ count: 5 });
     // tag::snippet[]
     this.items = people.map((person) => ({
       label: `${person.firstName} ${person.lastName}`,

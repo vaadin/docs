@@ -51,7 +51,6 @@ public class GanttProcessManagementDemo extends Div {
         configuration.addSeries(createOfficesSeries());
         configuration.addSeries(createNewProductLaunchSeries());
 
-
         chart.addPointClickListener(event -> {
             var name = ((GanttSeries) event.getSeries())
                     .get(event.getItemIndex()).getName();
@@ -203,6 +202,7 @@ public class GanttProcessManagementDemo extends Div {
         }
     }
 
-    public static class Exporter extends DemoExporter<GanttProcessManagementDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttProcessManagementDemo> { // hidden-source-line
     } // hidden-source-line
 }

@@ -12,7 +12,8 @@ import com.vaadin.flow.router.RouteParameters;
 
 // tag::snippet[]
 @Route("building-apps/pass-data/route-template/:id([0-9]{1,9})/:action?(view|edit)")
-public class RouteTemplateView extends VerticalLayout implements BeforeEnterObserver {
+public class RouteTemplateView extends VerticalLayout
+        implements BeforeEnterObserver {
 
     public enum Action {
         VIEW, EDIT
@@ -23,13 +24,14 @@ public class RouteTemplateView extends VerticalLayout implements BeforeEnterObse
     RouteTemplateView() {
         parameterValues = new Paragraph();
         add(parameterValues);
-        add(new Button("Set Parameter Values", e -> showView(
-                (int) (Math.random() * 1000),
-                Math.random() < 0.5 ? Action.VIEW : Action.EDIT)));
+        add(new Button("Set Parameter Values",
+                e -> showView((int) (Math.random() * 1000),
+                        Math.random() < 0.5 ? Action.VIEW : Action.EDIT)));
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        // @formatter:off hidden-source-line
         var id = event.getRouteParameters()
                 .getInteger("id")
                 .orElseThrow();
@@ -37,14 +39,17 @@ public class RouteTemplateView extends VerticalLayout implements BeforeEnterObse
                 .get("action")
                 .map(a -> Action.valueOf(a.toUpperCase()))
                 .orElse(Action.VIEW);
-        parameterValues.setText("Parameter values: id = " + id
-                + ", action = " + action);
+        // @formatter:on hidden-source-line
+        parameterValues.setText(
+                "Parameter values: id = " + id + ", action = " + action);
     }
 
     public static void showView(int id, Action action) {
+        // @formatter:off hidden-source-line
         var parameters = new RouteParameters(
                 new RouteParam("id", id),
                 new RouteParam("action", action.name()));
+        // @formatter:on hidden-source-line
         UI.getCurrent().navigate(RouteTemplateView.class, parameters);
     }
 }

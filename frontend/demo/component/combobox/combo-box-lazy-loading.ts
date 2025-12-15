@@ -6,9 +6,9 @@ import type {
   ComboBoxDataProviderCallback,
   ComboBoxDataProviderParams,
 } from '@vaadin/react-components';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { ComboBoxCountryService } from 'Frontend/generated/endpoints';
-import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('combo-box-lazy-loading')
 export class Example extends LitElement {
@@ -24,7 +24,7 @@ export class Example extends LitElement {
     callback: ComboBoxDataProviderCallback<Country>
   ) {
     // Convert the params to Spring Data Pageable
-    const filter = params.filter;
+    const { filter } = params;
     const pageable = {
       pageNumber: params.page,
       pageSize: params.pageSize,
