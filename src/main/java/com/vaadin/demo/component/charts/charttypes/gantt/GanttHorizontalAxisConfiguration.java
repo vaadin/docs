@@ -134,6 +134,7 @@ public class GanttHorizontalAxisConfiguration extends Div {
         return TODAY.plus(months * 30L, ChronoUnit.DAYS);
     }
 
-    public static class Exporter extends DemoExporter<GanttHorizontalAxisConfiguration> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttHorizontalAxisConfiguration> { // hidden-source-line
     } // hidden-source-line
 }

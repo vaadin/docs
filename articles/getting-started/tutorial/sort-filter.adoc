@@ -15,7 +15,7 @@ In this step, you'll start by making the grid sortable. You'll then add a search
 
 == Make the Grid Sortable
 
-The Vaadin Grid supports sorting out of the box, but it has to be enabled explicitly on the columns. How you do this depends on whether you're using in-memory data or a paginated data provider that fetches data from a backend. 
+The Grid component supports sorting out of the box, but it has to be enabled explicitly on the columns. How you do this depends on whether you're using <</building-apps/forms-data/add-grid/static-data#,in-memory data>> or a <</building-apps/forms-data/add-grid/paginated-data#,paginated data>> provider that fetches data from a backend. 
 
 In this tutorial, you're using a paginated data provider, which means the actual sorting takes place in the database. This in turn means that the data provider needs to know which column to sort by, and in which direction. You do this by
 using the `setSortProperty` method on the `Grid.Column` instance.
@@ -25,6 +25,14 @@ Change the constructor of `ProductCatalogView` as follows to make all columns so
 .ProductCatalogView.java
 [source,java]
 ----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
 @Route("")
 @PageTitle("Product Catalog")
 class ProductCatalogView extends VerticalLayout {
@@ -53,7 +61,10 @@ class ProductCatalogView extends VerticalLayout {
 // tag::snippet[]
                 .setSortProperty("brand");
 // end::snippet[]
-        grid.setItemsPageable(pageable -> repository.findAll(pageable).getContent());
+        grid.setItemsPageable(pageable -> repository
+            .findAll(pageable)
+            .getContent()
+        );
 
         // Layout view
         setSizeFull();
@@ -77,6 +88,13 @@ Although the sorting now works, using string literals for the sort properties is
 .ProductCatalogItem.java
 [source,java]
 ----
+package com.example.product;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+
 @Table("PRODUCTS")
 record ProductCatalogItem(
         @Id long productId,
@@ -101,6 +119,14 @@ Next, refactor the `ProductCatalogView` class to use these constants instead of 
 .ProductCatalogView.java
 [source,java]
 ----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
 @Route("")
 @PageTitle("Product Catalog")
 class ProductCatalogView extends VerticalLayout {
@@ -129,7 +155,10 @@ class ProductCatalogView extends VerticalLayout {
 // tag::snippet[]
                 .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
 // end::snippet[]
-        grid.setItemsPageable(pageable -> repository.findAll(pageable).getContent());
+        grid.setItemsPageable(pageable -> repository
+            .findAll(pageable)
+            .getContent()
+        );
 
         // Layout view
         setSizeFull();
@@ -151,11 +180,19 @@ Start by adding a `TextField` component for the search input in the constructor 
 .ProductCatalogView.java
 [source,java]
 ----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
 // tag::snippet[]
 import com.vaadin.flow.component.icon.VaadinIcon;
+// end::snippet[]
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+// tag::snippet[]
 import com.vaadin.flow.component.textfield.TextField;
 // end::snippet[]
-// The rest of the imports have been omitted for brevity
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 
 @Route("")
 @PageTitle("Product Catalog")
@@ -181,7 +218,10 @@ class ProductCatalogView extends VerticalLayout {
                 .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
         grid.addColumn(ProductCatalogItem::brand).setHeader("Brand")
                 .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository.findAll(pageable).getContent());
+        grid.setItemsPageable(pageable -> repository
+            .findAll(pageable)
+            .getContent()
+        );
 
         // Layout view
         setSizeFull();
@@ -213,6 +253,15 @@ Since the filtering takes place in the database, you need to add a new method to
 .ProductCatalogItemRepository.java
 [source,java]
 ----
+package com.example.product;
+
+// tag::snippet[]
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+// end::snippet[]
+
+import org.springframework.data.repository.PagingAndSortingRepository;
+
 interface ProductCatalogItemRepository 
         extends PagingAndSortingRepository<ProductCatalogItem, Long> {
 
@@ -222,7 +271,7 @@ interface ProductCatalogItemRepository
 }
 ----
 
-The `findByNameContainingIgnoreCase` method uses Spring Data's query derivation mechanism to generate a query that searches for products with names containing the specified string, ignoring case. See the https://docs.spring.io/spring-data/relational/reference/jdbc/query-methods.html:[Spring Data Relational documentation] for more information on query derivation.
+The `findByNameContainingIgnoreCase` method uses Spring Data's query derivation mechanism to generate a query that searches for products with names containing the specified string, ignoring case. See the https://docs.spring.io/spring-data/relational/reference/jdbc/query-methods.html[Spring Data Relational documentation] for more information on query derivation.
 
 == Implement Filtering Logic
 
@@ -233,7 +282,6 @@ Finally, you'll implement the filtering logic in the `ProductCatalogView` class.
 
 Start by modifying the `setItemsPageable` call to use the new repository method:
 
-.ProductCatalogView.java
 [source,java]
 ----
 grid.setItemsPageable(pageable -> repository
@@ -242,15 +290,13 @@ grid.setItemsPageable(pageable -> repository
 );
 ----
 
-Next, add a `ValueChangeListener` to the `searchField` that refreshes the grid's data provider whenever the value changes. Since this listener will reference the `grid` variable, it has to be added after the grid is created. A good practice is to add the listeners after setting up the components but before laying out the view:
+Next, add a `ValueChangeListener` to the `searchField` that refreshes the grid's data provider whenever the value changes. Since this listener will reference the `grid` variable, it has to be added after the grid is created:
 
-.ProductCatalogView.java
 [source,java]
 ----
 // Create components
 // ...
 
-// Set up listeners
 searchField.addValueChangeListener(e -> grid.getDataProvider().refreshAll());
 
 // Layout view
@@ -259,7 +305,6 @@ searchField.addValueChangeListener(e -> grid.getDataProvider().refreshAll());
 
 If you try the application now, you'll see that typing in the search field filters the products in the grid based on their names. However, the filtering only happens when you press Enter or the field loses focus. To improve the user experience, set the value change mode of the `searchField` to `LAZY`. This triggers value change events a short time after the user stops typing:
 
-.ProductCatalogView.java
 [source,java]
 ----
 // Create components
@@ -271,11 +316,24 @@ searchField.setValueChangeMode(ValueChangeMode.LAZY);
 // end::snippet[]
 ----
 
-The complete updated constructor now looks like this:
+The complete updated view now looks like this:
 
 .ProductCatalogView.java
 [source,java]
 ----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+// tag::snippet[]
+import com.vaadin.flow.data.value.ValueChangeMode;
+// end::snippet[]
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
 @Route("")
 @PageTitle("Product Catalog")
 class ProductCatalogView extends VerticalLayout {
@@ -303,14 +361,14 @@ class ProductCatalogView extends VerticalLayout {
                 .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
 // tag::snippet[]
         grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(), pageable)
-            .getContent()
+                .findByNameContainingIgnoreCase(searchField.getValue(), pageable)
+                .getContent()
         );
 // end::snippet[]
 
 // tag::snippet[]
-        // Set up listeners
-        searchField.addValueChangeListener(e -> grid.getDataProvider().refreshAll());
+        searchField.addValueChangeListener(e -> 
+                grid.getDataProvider().refreshAll());
 // end::snippet[]
 
         // Layout view
@@ -329,4 +387,4 @@ If you now type something in the search field, the grid updates automatically af
 
 == Next Steps
 
-With sorting and filtering implemented, your product catalog view is now much more user-friendly. In the next step, you'll add a form for creating and editing products in the catalog. Proceed to the <<modify-data#,Add and Edit Products>> step to continue the tutorial.
+With sorting and filtering implemented, your product catalog view is now much more user-friendly. In the next step, you'll add a form for viewing product details in the catalog. Proceed to the <<show-details#,Show Product Details>> step to continue the tutorial.

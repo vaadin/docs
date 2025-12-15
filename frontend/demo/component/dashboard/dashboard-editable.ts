@@ -11,10 +11,10 @@ import type {
   DashboardItemResizedEvent,
 } from '@vaadin/dashboard';
 import type { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
+import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
-import { applyTheme } from 'Frontend/demo/theme';
 
 // tag::snippet[]
 // NOTE: This example uses the additional classes WidgetConfig and DashboardService,

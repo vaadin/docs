@@ -8,9 +8,7 @@ function Example() {
     <div>
       {/* tag::snippet[] */}
       <HorizontalLayout style={{ justifyContent: 'space-between' }}>
-        <label id="pblabel">
-          Processing Financials.xlsx
-        </label>
+        <label id="pblabel">Processing Financials.xlsx</label>
 
         <span>50%</span>
       </HorizontalLayout>

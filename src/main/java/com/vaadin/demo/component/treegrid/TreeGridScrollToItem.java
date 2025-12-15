@@ -33,13 +33,12 @@ public class TreeGridScrollToItem extends Div {
         scrollToItem.setItemLabelGenerator(Person::getFullName);
         scrollToItem.setItems(getItemsToScrollTo());
         scrollToItem.setWidth("200px");
-        scrollToItem.addValueChangeListener(
-                event -> {
-                    Person item = event.getValue();
-                    // tag::snippet[]
-                    treeGrid.scrollToItem(item);
-                    // end::snippet[]
-                });
+        scrollToItem.addValueChangeListener(event -> {
+            Person item = event.getValue();
+            // tag::snippet[]
+            treeGrid.scrollToItem(item);
+            // end::snippet[]
+        });
         add(scrollToItem);
     }
 

@@ -18,10 +18,13 @@ public class GridPersonService {
         this.personRepository = personRepository;
     }
 
-    public @NonNull List<@NonNull Person> list(Pageable pageable, String filter) {
+    public @NonNull List<@NonNull Person> list(Pageable pageable,
+            String filter) {
         // Implement your data fetching logic here
         // For this example, we're using a Spring Data repository
-        return personRepository.findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(filter, filter, pageable);
+        return personRepository
+                .findByFullNameContainingIgnoreCaseOrProfessionContainingIgnoreCase(
+                        filter, filter, pageable);
     }
 }
 // end::snippet[]

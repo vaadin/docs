@@ -39,7 +39,7 @@ function Example() {
   };
 
   const onClick = (event: React.MouseEvent<ButtonElement>) => {
-    const profession = event.currentTarget.dataset.profession;
+    const { profession } = event.currentTarget.dataset;
 
     if (profession) {
       selectedProfessions.value = selectedProfessions.value.filter((p) => p !== profession);
