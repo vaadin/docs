@@ -131,6 +131,7 @@ public class GanttVerticalCategoriesGrouping extends Div {
         }
     }
 
-    public static class Exporter extends DemoExporter<GanttVerticalCategoriesGrouping> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttVerticalCategoriesGrouping> { // hidden-source-line
     } // hidden-source-line
 }

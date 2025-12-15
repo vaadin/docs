@@ -36,6 +36,7 @@ public class PaginatedGridView extends VerticalLayout {
         // tag::dataprovider[]
         // Fetch a slice from the service whenever the grid needs more data.
         // Include sorting and filtering info.
+        // @formatter:off hidden-source-line
         grid.setItems(query -> service
                 .findItems(
                         query.getOffset(),
@@ -43,12 +44,12 @@ public class PaginatedGridView extends VerticalLayout {
                         query.getSortOrders(),
                         filterField.getValue())
                 .stream());
+        // @formatter:on hidden-source-line
         // end::dataprovider[]
 
         // Refresh the grid whenever the text field changes
-        filterField.addValueChangeListener(e -> grid
-                .getDataProvider()
-                .refreshAll());
+        filterField.addValueChangeListener(
+                e -> grid.getDataProvider().refreshAll());
         // end::filtering[]
 
         // Layout components
@@ -75,18 +76,20 @@ public class PaginatedGridView extends VerticalLayout {
             // In a real application, this would query a database
             // end::data[]
             var filterLower = filterString.toLowerCase().trim();
-            var stream = filterLower.isEmpty()
-                    ? items.stream()
-                    : items.stream()
-                            .filter(item -> item
-                                    .name()
-                                    .toLowerCase()
-                                    .contains(filterLower));
+            var stream = items.stream();
+            // @formatter:off hidden-source-line
+            if (!filterLower.isEmpty()) {
+                stream = stream.filter(item -> item
+                    .name()
+                    .toLowerCase()
+                    .contains(filterLower));
+            }
             return stream
                     .sorted(toComparator(sortOrders))
                     .skip(offset)
                     .limit(limit)
                     .toList();
+            // @formatter:on hidden-source-line
             // tag::data[]
         }
         // end::data[]
@@ -97,8 +100,7 @@ public class PaginatedGridView extends VerticalLayout {
                 .comparing(Item::id);
 
         private Comparator<Item> toComparator(List<QuerySortOrder> sortOrders) {
-            return sortOrders.stream()
-                    .map(this::toComparator)
+            return sortOrders.stream().map(this::toComparator)
                     .reduce(Comparator::thenComparing)
                     .orElse(defaultComparator);
         }

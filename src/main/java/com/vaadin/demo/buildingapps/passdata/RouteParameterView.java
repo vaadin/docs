@@ -21,8 +21,8 @@ public class RouteParameterView extends VerticalLayout
     RouteParameterView() {
         parameterValue = new Paragraph();
         add(parameterValue);
-        add(new Button("Set Parameter Value", e -> showView("Hello"
-                + System.currentTimeMillis())));
+        add(new Button("Set Parameter Value",
+                e -> showView("Hello" + System.currentTimeMillis())));
     }
 
     @Override

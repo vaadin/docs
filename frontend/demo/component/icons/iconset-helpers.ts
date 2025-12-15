@@ -9,7 +9,7 @@ export const convertToEnumName = (s: string) => {
 
 async function getText(file: File): Promise<string> {
   const reader = new FileReader();
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     reader.onload = (e) => {
       const target = e.target!;
       resolve(target.result as string);

@@ -12,8 +12,8 @@ import com.vaadin.flow.server.streams.UploadHandler;
 public class UploadButtonThemeVariant extends Div {
 
     public UploadButtonThemeVariant() {
-        UploadHandler inMemoryUploadHandler = UploadHandler.inMemory(
-                (uploadMetadata, bytes) -> {
+        UploadHandler inMemoryUploadHandler = UploadHandler
+                .inMemory((uploadMetadata, bytes) -> {
                 });
         // tag::snippet[]
         Upload upload = new Upload(inMemoryUploadHandler);
