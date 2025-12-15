@@ -20,8 +20,8 @@ public class MasterDetailView extends SplitLayout
     // tag::constructor[]
     MasterDetailView() {
         // end::scaffolding[]
-        // In a real application, you'd store a reference to the master component
-        // so that you can update its selection when navigating
+        // In a real application, you'd store a reference to the master
+        // component so that you can update its selection when navigating
         addToPrimary(createMaster());
         setSizeFull();
         // tag::scaffolding[]
@@ -42,7 +42,8 @@ public class MasterDetailView extends SplitLayout
             // Example: grid.deselectAll();
         } else {
             addToSecondary(createDetail(id));
-            // In a real application, select the corresponding item in the master
+            // In a real application, select the corresponding item in the
+            // master
             // Example: grid.select(itemWithThisId);
         }
         // tag::scaffolding[]
@@ -55,8 +56,7 @@ public class MasterDetailView extends SplitLayout
         // In a real application, this would be a Grid component.
         // - Selecting an item would result in a call to showDetail(id)
         // - Clearing the selection would call showMaster()
-        return new VerticalLayout(
-                new Button("Detail 1", e -> showDetail(1)),
+        return new VerticalLayout(new Button("Detail 1", e -> showDetail(1)),
                 new Button("Detail 2", e -> showDetail(2)),
                 new Button("Detail 3", e -> showDetail(3)),
                 new Button("Master only", e -> showMaster()));
@@ -81,7 +81,7 @@ public class MasterDetailView extends SplitLayout
     }
     // end::nodetail[]
 
-// tag::navigation[]
+    // tag::navigation[]
     public static void showMaster() {
         // end::scaffolding[]
         UI.getCurrent().navigate(MasterDetailView.class);
@@ -93,7 +93,7 @@ public class MasterDetailView extends SplitLayout
         UI.getCurrent().navigate(MasterDetailView.class, id);
         // tag::scaffolding[]
     }
-// end::navigation[]
+    // end::navigation[]
 }
 // end::scaffolding[]
 // end::full[]

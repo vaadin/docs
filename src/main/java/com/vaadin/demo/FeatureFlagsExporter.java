@@ -18,10 +18,11 @@ import java.util.stream.Collectors;
 // feature flags are properly set when a Lit / React example renders.
 public class FeatureFlagsExporter implements TypeScriptBootstrapModifier {
     public void modify(List<String> bootstrapTypeScript, Options options,
-                       FrontendDependenciesScanner frontendDependenciesScanner) {
+            FrontendDependenciesScanner frontendDependenciesScanner) {
         try {
             Files.writeString(
-                    options.getFrontendGeneratedFolder().toPath().resolve("activate-vaadin-featureflags.js"),
+                    options.getFrontendGeneratedFolder().toPath()
+                            .resolve("activate-vaadin-featureflags.js"),
                     featureFlagsInitializer(options.getFeatureFlags()));
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
@@ -29,8 +30,7 @@ public class FeatureFlagsExporter implements TypeScriptBootstrapModifier {
     }
 
     static String featureFlagsInitializer(FeatureFlags featureFlags) {
-        return featureFlags.getFeatures()
-                .stream().filter(Feature::isEnabled)
+        return featureFlags.getFeatures().stream().filter(Feature::isEnabled)
                 .map(feature -> String.format("activator(\"%s\");",
                         feature.getId()))
                 .collect(Collectors.joining("\n",

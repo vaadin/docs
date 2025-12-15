@@ -15,7 +15,8 @@ public class CardCoverMedia extends Div {
     public CardCoverMedia() {
         Div layout = new Div();
         layout.getStyle().set("display", "grid")
-                .set("grid-template-columns", "repeat(auto-fill, minmax(200px, 1fr))")
+                .set("grid-template-columns",
+                        "repeat(auto-fill, minmax(200px, 1fr))")
                 .set("gap", "1em");
 
         // tag::snippet[]
@@ -30,7 +31,8 @@ public class CardCoverMedia extends Div {
 
         imageCard.setTitle(new Div("Lapland"));
         imageCard.setSubtitle(new Div("The Exotic North"));
-        imageCard.add("Lapland is the northern-most region of Finland and an active outdoor destination.");
+        imageCard.add(
+                "Lapland is the northern-most region of Finland and an active outdoor destination.");
 
         // Card with cover icon
         Card iconCard = new Card();
@@ -42,7 +44,8 @@ public class CardCoverMedia extends Div {
 
         iconCard.setTitle(new Div("Lapland"));
         iconCard.setSubtitle(new Div("The Exotic North"));
-        iconCard.add("Lapland is the northern-most region of Finland and an active outdoor destination.");
+        iconCard.add(
+                "Lapland is the northern-most region of Finland and an active outdoor destination.");
         // end::snippet[]
 
         layout.add(imageCard, iconCard);

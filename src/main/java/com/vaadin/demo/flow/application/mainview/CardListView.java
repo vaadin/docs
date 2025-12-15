@@ -1,6 +1,5 @@
 package com.vaadin.demo.flow.application.mainview;
 
-import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.PageTitle;
 

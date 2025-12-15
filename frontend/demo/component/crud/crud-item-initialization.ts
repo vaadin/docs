@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type { Crud, CrudNewEvent } from '@vaadin/crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('crud-item-initialization')
 export class Example extends LitElement {

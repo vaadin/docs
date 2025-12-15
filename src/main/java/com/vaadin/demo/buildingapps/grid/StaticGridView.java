@@ -56,6 +56,7 @@ public class StaticGridView extends VerticalLayout {
     // tag::data[]
     // In a real application, this would be in its own file
     static class ItemService {
+        // @formatter:off hidden-source-line
         private static final List<Item> ITEMS = List.of(
                 new Item(1, "Denmark"),
                 new Item(2, "Finland"),
@@ -64,6 +65,7 @@ public class StaticGridView extends VerticalLayout {
                 new Item(5, "Sweden"),
                 new Item(6, "Estonia"),
                 new Item(7, "Germany"));
+        // @formatter:on hidden-source-line
 
         public List<Item> getAllItems() {
             return ITEMS;
