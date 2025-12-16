@@ -1,12 +1,13 @@
 ---
 title: Add Data
 page-title: Create a Dialog for Adding Products | Vaadin Tutorial
-description: 🚧 Work in progress, check back later.
-meta-description: 
+description: Build your first Vaadin dialog and implement support for adding new items to the product catalog.
+meta-description: Learn how to use dialogs to implement support for adding items to a database in a Vaadin application.
 order: 30
 ---
 
 = Add Products
+:toclevels: 2
 
 In the previous steps, you built a drawer for editing the details of the currently selected item in the product catalog. However, there was no way of adding new items. You'll be addressing this in this step. However, instead of using the drawer again, you'll be making a dialog.
 
@@ -42,11 +43,13 @@ class AddProductDialog extends Dialog {
     private final ProductForm form;
 
     AddProductDialog() {
+        // Create components
         form = new ProductForm();
         var saveButton = new Button("Save");
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         var cancelButton = new Button("Cancel");
 
+        // Layout dialog
         setHeaderTitle("Add Product"); // <1>
         add(form); // <2>
         getFooter().add(cancelButton, saveButton); // <3>
@@ -62,7 +65,7 @@ Whenever you build any user interface element in Vaadin, you want to see what it
 
 == Show the Dialog
 
-Next, you'll add an [guibutton]*Add Product* button to the product catalog view. The button should show up on the same row as the search field, but in the top-right corner of the screen. To do this, you have to do two things:
+To add a new product, the user should click an [guibutton]*Add Product* button in the product catalog view. The button should show up on the same row as the search field, but in the top-right corner of the screen. To implement this, you have to do two things:
 
 1. Create a new `Button` that opens `AddProductDialog` when clicked.
 2. Move the search field into a new toolbar, and also add the button to it.
@@ -196,8 +199,11 @@ Close the dialog by pressing kbd:[Esc] or clicking outside the dialog. You'll ad
 
 == Implement Dialog Buttons
 
+The [guibutton]*Cancel* button is trivial to implement: it should close the dialog when clicked. You do this by calling the `close()` method in the button's click listener.
 
-TODO Continue here on Tuesday Dec 16
+The [guibutton]*Save* button is more interesting: it should validate the form, insert the product into the catalog, refresh the grid, and close the dialog. You'll use the same callback based design pattern that you used in `ProductFormDrawer`. This keeps the coding style consistent and also allows you to reuse some logic from `ProductCatalogView`.
+
+Update `AddProductCatalog` as follows:
 
 .AddProductDialog.java
 [source,java]
@@ -210,55 +216,853 @@ import com.vaadin.flow.component.dialog.Dialog;
 
 class AddProductDialog extends Dialog {
 
-    private final ProductForm form;
-    private final SaveCallback saveCallback;
-    private final ErrorCallback errorCallback;
-
-    AddProductDialog(SaveCallback saveCallback, ErrorCallback errorCallback) {
-        this.saveCallback = saveCallback;
-        this.errorCallback = errorCallback;
-
-        form = new ProductForm();
-        var saveButton = new Button("Save", e -> save());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        var cancelButton = new Button("Cancel", e -> close());
-
-        setHeaderTitle("Add Product");
-        add(form);
-        getFooter().add(cancelButton, saveButton);
-    }
-
-    private void save() {
-        form.getFormDataObject().ifPresent(product -> {
-            try {
-                saveCallback.save(product);
-                close();
-            } catch (RuntimeException e) {
-                errorCallback.handleException(e);
-            }
-        });
-    }
-
+// tag::snippet[]
     @FunctionalInterface
     interface SaveCallback {
-        void save(ProductDetails productDetails);
+        void save(ProductDetails productDetails); // <1>
     }
 
     @FunctionalInterface
     interface ErrorCallback {
         void handleException(RuntimeException e);
     }
+    private final SaveCallback saveCallback;
+    private final ErrorCallback errorCallback;
+// end::snippet[]
+    private final ProductForm form;
+
+// tag::snippet[]
+    AddProductDialog(SaveCallback saveCallback, ErrorCallback errorCallback) {
+        this.saveCallback = saveCallback;
+        this.errorCallback = errorCallback;
+// end::snippet[]
+
+        // Create components
+        form = new ProductForm();
+// tag::snippet[]
+        form.setFormDataObject(new ProductDetails()); // <2>
+        var saveButton = new Button("Save", e -> save());
+// end::snippet[]
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+// tag::snippet[]
+        var cancelButton = new Button("Cancel", e -> close());
+// end::snippet[]
+
+        // Layout dialog
+        setHeaderTitle("Add Product");
+        add(form);
+        getFooter().add(cancelButton, saveButton);
+    }
+
+// tag::snippet[]
+    private void save() { // <3>
+        form.getFormDataObject().ifPresent(productDetails -> {
+            try {
+                saveCallback.save(productDetails);
+                close();
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+    }
+// end::snippet[]
 }
 ----
+<1> This save callback does not need to return an object as the dialog will be closed on success.
+<2> Create a new, empty form data object for each dialog instance.
+<3> This is almost the same implementation as in `ProductFormDrawer`, but instead of re-populating the form with a new FDO it closes the dialog.
 
+Next, implement the callbacks in `ProductCatalogView`:
 
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout {
+
+    ProductCatalogView(ProductCatalogItemRepository repository,
+                       ProductDetailsRepository productDetailsRepository) {
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name).setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price).setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description).setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category).setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand).setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> repository
+                .findByNameContainingIgnoreCase(searchField.getValue(), pageable)
+                .getContent()
+        );
+
+        var drawer = new ProductFormDrawer(productDetails -> {
+            var saved = productDetailsRepository.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                    .flatMap(item -> productDetailsRepository.findById(item.productId()))
+                    .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+// tag::snippet[]
+        var addButton = new Button("Add Product", e -> 
+            new AddProductDialog(
+                productDetails -> {
+                    productDetailsRepository.save(productDetails); // <1>
+                    grid.getDataProvider().refreshAll(); // <2>
+                },
+                this::handleException // <3>
+            ).open()
+        );
+// end::snippet[]
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                "Another user has edited the same product. Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+}
+----
+<1> Call the repository to insert the product into the database.
+<2> Refresh the grid so that the new product shows up.
+<3> Re-use the `handleException()` method for error handling.
+
+You should now be able to add new products to the database, and they should show up in the grid.
 
 
 == Improve the User Experience
 
+When you implemented edit support in the previous tutorial step, you stumbled upon and fixed some user experience issues. You'll now fix two more issues.
+
+You may have noticed that every new item is added to the bottom of the grid unless it has been explicitly sorted by a particular column. This is because the grid is sorted by ID by default. You have to scroll down to see whether the item was actually added. This creates unnecessary confusion for the user and could be improved.
+
+Next, try to insert a product with the following SKU: `NBK-A5-DOT`
+
+The dialog should remain open and in the console output, you should see the following error:
+
+ org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: Unique index or primary key violation: "PUBLIC.CONSTRAINT_F2 INDEX PUBLIC.CONSTRAINT_INDEX_F ON PUBLIC.PRODUCTS(SKU NULLS FIRST) VALUES ( /* 2 */ 'NBK-A5-DOT' )";
+
+This is another example of a recoverable error triggered by a user action, and should be addressed.
+
+
+=== Select Added Item
+
+To make the experience less confusing for users, you'll select the newly added item after refreshing the product catalog grid. However, because the grid contains objects of type `ProductCatalogItem`, and the form uses `ProductDetails`, you have to find the corresponding item to select it.
+
+To do this, you first have to add a new `findById` method to `ProductCatalogItemRepository`:
+
+.ProductCatalogItemRepository.java
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+// tag::snippet[]
+import java.util.Optional;
+// end::snippet[]
+
+interface ProductCatalogItemRepository 
+    extends PagingAndSortingRepository<ProductCatalogItem, Long> {
+
+// tag::snippet[]
+    Optional<ProductCatalogItem> findById(Long id);
+// end::snippet[]
+    Slice<ProductCatalogItem> findByNameContainingIgnoreCase(String name, Pageable pageable);
+}
+----
+
+Spring Data automatically implements the method for you.
+
+Next, call the method to retrieve the `ProductCatalogItem` after having inserted a new `ProductDetails`. Modify the save callback in `ProductCatalogView` as follows:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout {
+
+    ProductCatalogView(ProductCatalogItemRepository repository,
+                       ProductDetailsRepository productDetailsRepository) {
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name).setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price).setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description).setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category).setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand).setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> repository
+                .findByNameContainingIgnoreCase(searchField.getValue(), pageable)
+                .getContent()
+        );
+
+        var drawer = new ProductFormDrawer(productDetails -> {
+            var saved = productDetailsRepository.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                    .flatMap(item -> productDetailsRepository.findById(item.productId()))
+                    .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e -> 
+            new AddProductDialog(
+                productDetails -> {
+// tag::snippet[]
+                    var saved = productDetailsRepository.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    repository.findById(saved.getProductId()).ifPresent(grid::select);
+// end::snippet[]
+                },
+                this::handleException
+            ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                "Another user has edited the same product. Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+}
+----
+
+Now when you add a new product, it should automatically be selected and show up in the drawer.
+
+
+=== Handle Constraint Violation
+
+Next, you'll handle the constraint violation error. Because the `PRODUCTS` table only contains one unique column - `sku` - you can assume that any `DataIntegrityViolationException` thrown concerns this column. Update the `handleException()` method in `ProductCatalogView` as follows:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+// tag::snippet[]
+import org.springframework.dao.DataIntegrityViolationException;
+// end::snippet[]
+import org.springframework.dao.OptimisticLockingFailureException;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout {
+
+    ProductCatalogView(ProductCatalogItemRepository repository,
+                       ProductDetailsRepository productDetailsRepository) {
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name).setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price).setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description).setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category).setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand).setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> repository
+                .findByNameContainingIgnoreCase(searchField.getValue(), pageable)
+                .getContent()
+        );
+
+        var drawer = new ProductFormDrawer(productDetails -> {
+            var saved = productDetailsRepository.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                    .flatMap(item -> productDetailsRepository.findById(item.productId()))
+                    .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e -> 
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = productDetailsRepository.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    repository.findById(saved.getProductId()).ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                "Another user has edited the same product. Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+// tag::snippet[]
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+// end::snippet[]            
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+}
+----
+
+Now try to create a new item with the SKU `NBK-A5-DOT`. You should receive a notification asking you to enter another SKU. Enter another one and click save. This should have worked, right? But it didn't. Instead you ended up with a different notification: 
+
+ Another user has edited the same product. Please refresh and try again.
+
+How is this possible? How can another user have edited a product that you haven't even inserted yet?
+
+You have now discovered a mismatch between how Spring Data and Vaadin assume data objects should be used. These mismatches are prone to happen whenever you're dealing with mutable data object, like `ProductDetails` in this case.
+
+Here's what happened:
+
+1. You clicked [guibutton]*Save* with a duplicate SKU.
+2. Spring Data attempted to insert the product and set its version number to 1.
+3. The database rejected the insert due to the duplicate SKU, and the transaction rolled back.
+4. *However, the `ProductDetails` object in memory was not rolled back* - it still has version=1.
+5. You changed the SKU and clicked [guibutton]*Save* again.
+6. Spring Data saw that the version was already set and assumed this was an _existing_ entity that needed updating, not a new one.
+7. The update failed because no such row exists in the database -- hence the optimistic locking error.
+
+If this had been a REST API, the `ProductDetails` object would always be a new instance and this would not be a problem. Since you're reusing the object, you have to work around this problem. You can do this in different ways, but the user interface itself should not need to know about any of them. Because of that, you'll have to do some refactoring.
+
+
+=== Refactor
+
+Since you'll be working around a limitation in your persistence layer, you want to hide it from the user interface. You'll therfore introduce an <</building-apps/business-logic/add-service#,application service>> that acts as an intermediary between the user interface and your repositories.
+
+Create a new class named `ProductCatalogService` in the `com.example.product` package. The first version declares all methods needed by `ProductCatalogView` and delegates to the corresponding repository, like this:
+
+.ProductCatalogService.java
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(ProductCatalogItemRepository productCatalogItemRepository,
+                                 ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm, Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+    public Optional<ProductCatalogItem> findItemById(Long id) {
+        return productCatalogItemRepository.findById(id);
+    }
+
+    @Transactional
+    public ProductDetails save(ProductDetails productDetails) {
+        return productDetailsRepository.save(productDetails);
+    }
+}
+----
+
+Next, refactor `ProductCatalogView` to use the service instead of the repositories:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout {
+
+// tag::snippet[]
+    ProductCatalogView(ProductCatalogService service) {
+// end::snippet[]
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name).setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price).setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description).setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category).setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand).setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+// tag::snippet[]
+        grid.setItemsPageable(pageable -> service
+                .findItems(searchField.getValue(), pageable)
+        );
+// end::snippet[]
+
+        var drawer = new ProductFormDrawer(productDetails -> {
+// tag::snippet[]
+            var saved = service.save(productDetails);
+// end::snippet[]
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+// tag::snippet[]
+                    .flatMap(item -> service.findDetailsById(item.productId()))
+// end::snippet[]
+                    .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e ->
+                new AddProductDialog(
+                        productDetails -> {
+// tag::snippet[]
+                            var saved = service.save(productDetails);
+                            grid.getDataProvider().refreshAll();
+                            service.findItemById(saved.getProductId())
+                                .ifPresent(grid::select);
+// end::snippet[]
+                        },
+                        this::handleException
+                ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                "Another user has edited the same product. Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+}
+----
+
+With the persistence logic encapsulated, you now have to decide how to fix this bug. The easiest options are the following:
+
+1. Set the version to `null` before saving an item that doesn't yet have an ID.
+2. Make a copy of the object and pass the copy to the repository, then return it if successful.
+
+Making a copy is more elegant because it ensures the original object remains unchanged until the transaction commits successfully. This follows a principle of keeping data objects immutable during uncertain operations. Also, you have already designed your UI callbacks to support backends that return new instances of data objects after saving them.
+
+Start by adding two constructors to `ProductDetails` - a _default constructor_ for creating new instances, and a _copy constructor_ for creating copies:
+
+.ProductDetails.java
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Table("PRODUCTS")
+class ProductDetails {
+
+    @Id
+    private Long productId;
+    @Version
+    private Long version;
+    private String name;
+    private String description;
+    private String category;
+    private String brand;
+    private String sku;
+    private LocalDate releaseDate;
+    private BigDecimal price;
+    private BigDecimal discount;
+
+// tag::snippet[]
+    public ProductDetails() {
+    }
+
+    public ProductDetails(ProductDetails original) {
+        this.productId = original.productId;
+        this.version = original.version;
+        this.name = original.name;
+        this.description = original.description;
+        this.category = original.category;
+        this.brand = original.brand;
+        this.sku = original.sku;
+        this.releaseDate = original.releaseDate;
+        this.price = original.price;
+        this.discount = original.discount;
+    }
+// end::snippet[]
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(BigDecimal discount) {
+        this.discount = discount;
+    }
+}
+----
+
+Next, update the `ProductCatalogService` so that it passes a copy of `ProductDetails` to the repository:
+
+.ProductCatalogService.java
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(ProductCatalogItemRepository productCatalogItemRepository,
+                                 ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm, Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+    public Optional<ProductCatalogItem> findItemById(Long id) {
+        return productCatalogItemRepository.findById(id);
+    }
+
+    @Transactional
+    public ProductDetails save(ProductDetails productDetails) {
+// tag::snippet[]
+        return productDetailsRepository.save(new ProductDetails(productDetails));
+// end::snippet[]
+    }
+}
+----
+
+Now try to insert a product item with an existing SKU again. You should receive the error notification, as expected. Then change the SKU to a unique one and save the item. Everything should work as expected.
 
 
 == Next Steps
 
-TODO
+You have now build a fully functional Vaadin application with the following features:
+
+- Paginated data loading
+- Sorting and filtering
+- Forms and validation
+- Editing and inserting
+
+You have also refactored and improved the structure of the code as new features and bugs have emerged. Although this example application is quite simple, the patterns you have learned are just as useful in larger, real-world business applications.
+
+.🚧 Work in Progress
+[TIP]
+This is not the end of the tutorial, only a pause. More steps will be added, so stay tuned.
