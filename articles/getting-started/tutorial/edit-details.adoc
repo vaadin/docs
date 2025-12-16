@@ -102,20 +102,19 @@ class ProductForm extends Composite<FormLayout>  {
 // tag::snippet[]
     public Optional<ProductDetails> getFormDataObject() {
         if (binder.getBean() == null) {
-            binder.setBean(new ProductDetails()); // <1>
+            throw new IllegalStateException("No form data object");
         }
         if (binder.validate().isOk()) {
-            return Optional.of(binder.getBean()); // <2>
+            return Optional.of(binder.getBean()); // <1>
         } else {
-            return Optional.empty(); // <3>
+            return Optional.empty(); // <2>
         }
     }
 // end::snippet[]
 }
 ----
-<1> Create a new FDO if there is none. This makes it possible to use the form for both editing and adding items.
-<2> Return the FDO if the form is valid.
-<3> Return an empty `Optional` if there are validation errors.
+<1> Return the FDO if the form is valid.
+<2> Return an empty `Optional` if there are validation errors.
 
 The form can now both read and write `ProductDetails` FDOs.
 
@@ -307,11 +306,14 @@ You should now be able to select a product, make some changes to it and save the
 
 Now clear the selection in the grid, and then click the [guibutton]*Save* button on the empty form. You should see a stack trace in the console output, caused by this error:
 
- org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column "PRICE";
+ java.lang.IllegalStateException: No form data object
 
-You can trigger the same error by selecting an existing product, clearing the Price field, and saving it.
 
 Next, select another product, make a small change to it and save it. The grid should lose its selection even though the product remains open in the form.
+
+Now clear the Price field and save the item again. You should see this error in the console output:
+
+ org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column "PRICE";
 
 Finally, open the product catalog view in two separate browser windows. Select the same product in both browser windows. Make a change in one of them and save it. This operation should work as expected. Then make a change to the same product in the other window and save it. *Nothing should happen.* In the console output, you should see an error:
 
@@ -322,7 +324,7 @@ This is because Spring Data uses <</building-apps/forms-data/consistency/optimis
 
 You have now identified several issues that make the application harder to use:
 
-1. The edit drawer sometimes tries to _insert_ new products.
+1. The drawer behaves strangely when no item is selected.
 2. Grid selection is not preserved between updates.
 3. Required fields are not marked nor validated in the UI.
 4. Errors are not reported to the user; they only show up in the console output.
@@ -330,9 +332,9 @@ You have now identified several issues that make the application harder to use:
 You'll now fix them one by one.
 
 
-=== Prevent Accidental Inserts
+=== Hide Empty Drawer
 
-Right now it is possible to use the drawer to add items if the form is empty. The easiest way to fix this is to hide the drawer when it does not contain any details, and handle adding items in another way.
+The drawer has no purpose if there is no selection. Therefore, you should hide it by default and only show it when there are details to show.
 
 Open `ProductFormDrawer` and make the following changes:
 
@@ -398,7 +400,7 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 <1> When the drawer is first created, it is empty by design and so should be hidden.
 <2> Show the drawer only when it contains product details.
 
-Now try the application. The drawer should only show up when you have selected a product in the grid. You'll implement support for adding new products in the next step of the tutorial.
+Now try the application. The drawer should only show up when you have selected a product in the grid.
 
 
 === Preserve Grid Selection
@@ -520,7 +522,9 @@ class ProductForm extends Composite<FormLayout>  {
                 .bind(ProductDetails::getCategory, ProductDetails::setCategory);
         binder.forField(brandField)
                 .bind(ProductDetails::getBrand, ProductDetails::setBrand);
-        binder.forField(skuField)
+// tag::snippet[]        
+        binder.forField(skuField).asRequired("Enter SKU")
+// end::snippet[]
                 .bind(ProductDetails::getSku, ProductDetails::setSku);
         binder.forField(releaseDateField)
                 .bind(ProductDetails::getReleaseDate, ProductDetails::setReleaseDate);
@@ -538,7 +542,7 @@ class ProductForm extends Composite<FormLayout>  {
 
     public Optional<ProductDetails> getFormDataObject() {
         if (binder.getBean() == null) {
-            binder.setBean(new ProductDetails());
+            throw new IllegalStateException("No form data object");
         }
         if (binder.validate().isOk()) {
             return Optional.of(binder.getBean());
