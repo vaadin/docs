@@ -159,6 +159,44 @@ binding.setValidatorsDisabled(true);
 ----
 
 
+=== Conditionally Applying Bindings
+
+Sometimes you need to exclude certain bindings from both validation and bean writing based on runtime conditions. For example, when a form field is hidden based on user selections, you may want to exclude its binding entirely. The [methodname]`isApplied()` method on [classname]`Binding` determines whether a binding participates in these operations.
+
+By default, bindings for non-visible components are automatically excluded. You can customize this behavior by providing a predicate:
+
+[source,java]
+----
+// Exclude the binding from validation and bean writing
+binding.setIsAppliedPredicate(b -> false);
+
+// Include the binding only when a condition is met
+binding.setIsAppliedPredicate(b -> someCondition);
+
+// Restore the default behavior (exclude non-visible components)
+binding.setIsAppliedPredicate(null);
+----
+
+This is useful for conditional forms where certain fields should be ignored based on other field values or application state:
+
+[source,java]
+----
+Checkbox useAlternateAddress = new Checkbox("Use alternate address");
+TextField alternateAddress = new TextField("Alternate Address");
+
+Binder.Binding<Person, String> alternateBinding = binder
+    .forField(alternateAddress)
+    .asRequired("Address is required")
+    .bind(Person::getAlternateAddress, Person::setAlternateAddress);
+
+// Only apply the binding when the checkbox is selected
+alternateBinding.setIsAppliedPredicate(
+    b -> useAlternateAddress.getValue());
+----
+
+With the predicate above, the [methodname]`asRequired()` validator only runs and the value is only written to the bean when the checkbox is selected.
+
+
 == Convert User Input
 
 You can bind application data to a UI field component, even if the types don't match. This might be useful when an application-specific type is used for a postal code that the user enters in a `TextField`. It might also help in requesting that the user enter only integers in a `TextField`, or to select enumeration values in a `Checkbox` field.
