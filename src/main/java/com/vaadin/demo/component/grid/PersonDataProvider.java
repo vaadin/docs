@@ -3,7 +3,6 @@ package com.vaadin.demo.component.grid;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.vaadin.demo.domain.DataService;

@@ -27,9 +27,9 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
         SideNav views = getPrimaryNavigation();
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+        views.getStyle().set("margin", "var(--vaadin-gap-s)");
 
         Scroller scroller = new Scroller(views);
-        scroller.getStyle().set("padding", "0.5rem");
 
         DrawerToggle toggle = new DrawerToggle();
 

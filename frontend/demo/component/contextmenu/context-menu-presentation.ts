@@ -12,8 +12,8 @@ import type { ContextMenuItem } from '@vaadin/context-menu';
 import type { Grid } from '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('context-menu-presentation')
 export class Example extends LitElement {

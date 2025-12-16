@@ -1,10 +1,7 @@
 package com.vaadin.demo;
 
-import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategyConfiguration;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,13 +9,14 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
 @Configuration
-@Import(VaadinAwareSecurityContextHolderStrategyConfiguration.class)
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable).build();
 
+        // @formatter:off hidden-source-line
         /* Disable on docs app, but leave in place to be used as snippet // hidden-source-line
         // tag::download[]
         // Restrict access to FileDownloadEndpoint to authenticated users
@@ -26,5 +24,6 @@ public class SecurityConfig {
                 .requestMatchers("/download/**").authenticated());
         // end::download[]
         */ // hidden-source-line
+        // @formatter:on hidden-source-line
     }
 }

@@ -33,12 +33,14 @@ public class MasterDetailLayoutVertical extends Div {
             }
         });
 
-        personDetail.addCloseListener(event -> personList.getGrid().deselectAll());
+        personDetail
+                .addCloseListener(event -> personList.getGrid().deselectAll());
 
         add(layout);
         setHeightFull();
     }
 
-    public static class Exporter extends DemoExporter<MasterDetailLayoutVertical> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<MasterDetailLayoutVertical> { // hidden-source-line
     } // hidden-source-line
 }

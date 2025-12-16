@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer, columnFooterRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 interface PersonWithRating extends Person {

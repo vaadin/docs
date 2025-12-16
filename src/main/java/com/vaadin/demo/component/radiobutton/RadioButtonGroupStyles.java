@@ -15,7 +15,6 @@ public class RadioButtonGroupStyles extends HorizontalLayout {
         // tag::snippet[]
         RadioButtonGroup<String> field = new RadioButtonGroup<>();
         field.addThemeVariants(RadioGroupVariant.LUMO_HELPER_ABOVE_FIELD);
-        field.getStyle().set("--vaadin-input-field-border-width", "1px");
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

@@ -13,7 +13,8 @@ public class CardTitle extends Div {
 
         card.setTitle(new Div("Lapland"));
 
-        card.add("Lapland is the northern-most region of Finland and an active outdoor destination.");
+        card.add(
+                "Lapland is the northern-most region of Finland and an active outdoor destination.");
         // end::snippet[]
 
         card.setMaxWidth("300px");

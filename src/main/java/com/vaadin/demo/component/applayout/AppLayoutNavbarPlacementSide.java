@@ -22,9 +22,9 @@ public class AppLayoutNavbarPlacementSide extends AppLayout {
 
         SideNav nav = getSideNav();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+        nav.getStyle().set("margin", "var(--vaadin-gap-s)");
 
         Scroller scroller = new Scroller(nav);
-        scroller.getStyle().set("padding", "0.5rem");
 
         addToDrawer(scroller);
         addToNavbar(toggle, title);

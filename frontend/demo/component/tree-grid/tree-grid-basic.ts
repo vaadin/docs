@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('tree-grid-basic')
 export class Example extends LitElement {

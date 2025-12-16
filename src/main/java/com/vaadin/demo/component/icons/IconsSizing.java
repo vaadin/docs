@@ -12,19 +12,23 @@ public class IconsSizing extends Div {
 
     public IconsSizing() {
         HorizontalLayout layout = new HorizontalLayout();
+        layout.addClassName("icons-sizing-padding-example");
         layout.setSpacing(true);
         layout.setAlignItems(FlexComponent.Alignment.END);
 
         // tag::snippet[]
-        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
+        SvgIcon iconDefaultSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
 
-        SvgIcon iconLumoSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconLumoSize.setSize("var(--lumo-icon-size-l)");
+        SvgIcon iconMediumSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
+        iconMediumSize.setSize("2rem");
 
-        SvgIcon iconPxSize = new SvgIcon("/icons/code-branch.svg", "svg-branch.svg");
-        iconPxSize.setSize("48px");
+        SvgIcon iconLargeSize = new SvgIcon("/icons/code-branch.svg",
+                "svg-branch.svg");
+        iconLargeSize.setSize("3rem");
 
-        layout.add(iconDefaultSize, iconLumoSize, iconPxSize);
+        layout.add(iconDefaultSize, iconMediumSize, iconLargeSize);
         // end::snippet[]
         add(layout);
     }

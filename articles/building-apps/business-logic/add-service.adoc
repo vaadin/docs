@@ -1,0 +1,358 @@
+---
+title: Add a Service
+page-title: How to add an application service to a Vaadin application 
+description: Learn how to add an application service to a Vaadin application.
+meta-description: Learn how to design and implement application services in Vaadin. This guide covers best practices, security, naming conventions, and calling services from Vaadin views.
+order: 5
+---
+
+
+= Add an Application Service
+:toclevels: 2
+
+In a Vaadin application, the _application layer_ contains the business, the data, and any integrations to external systems. The application layer exposes an <<../architecture/api-spi#,API>> that the _UI layer_ (i.e., the views) can call:
+
+image::images/application-layer-api.png[A diagram of the UI layer calling the application layer through an API]
+
+This API is implemented by _application services_. In practice, application services are *Spring beans* that you can call from Vaadin views. 
+
+
+== Design Guidelines
+
+You can design application services according to your preferred architectural style, but following these best practices helps prevent common issues:
+ 
+* The application services should have *high cohesion*. This means that all the methods in your service should relate to the same thing.
+* The application services should be *stateless*.
+* Application services should *initiate and complete <<../forms-data/consistency/transactions#,database transactions>>* before returning results.
+* The application services should be *<<../security/protect-services#,secure>>*.
+* Views should invoke application services, but application services *should not have dependencies on views*.
+
+[NOTE]
+Application services can use Vaadin's non-UI-related utilities and interfaces, but should not be tightly coupled to UI components.
+
+
+An application service could look like this:
+
+[source,java]
+----
+@Service // <1>
+@PreAuthorize("isAuthenticated()") // <2>
+public class OrderCreationService {
+
+    private final Validator validator;
+    private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    OrderCreationService(Validator validator, 
+            OrderRepository orderRepository, 
+            ApplicationEventPublisher eventPublisher) {
+        this.validator = validator;
+        this.orderRepository = orderRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // <3>
+    public OrderId createOrder(OrderForm orderForm) {
+        var validationErrors = validator.validate(orderForm);
+        if (!validationErrors.isEmpty()) {
+            throw new ConstraintViolationException(validationErrors);
+        }
+        var order = orderRepository.saveAndFlush(createOrderFromForm(orderForm));
+        eventPublisher.publishEvent(new OrderCreatedEvent(order)); // Notify other 
+                                                                   // components of
+                                                                   // the new order
+        return order.orderId();
+    }
+
+    private Order createOrderFromForm(OrderForm orderForm) {
+        // ...
+    }
+}
+----
+<1> Makes the service into a Spring bean.
+<2> Protects the service from unauthorized access.
+<3> Runs the method inside a database transaction.
+
+
+== Service Naming
+
+Since services form the API of your application, choosing clear and meaningful names is essential. A good service name should be easy to understand and locate in the code.
+
+Vaadin does not enforce a specific naming convention for application services. While the `Service` suffix is common, it is optional. If you need inspiration, consider these guidelines:
+
+* *CRUD services*: Use the entity name (e.g., `CustomerService`, `OrderService`, `ProductService`)
+* *Use-case-specific services*: Name them according to their function (e.g., `CustomerCreationService`, `SalaryPaymentService`)
+* *Verb-based names*: If noun-based names feel awkward, use verbs (e.g., `CreatingCustomersService`, `PayingSalariesService`)
+
+
+== Input & Output
+
+Application services often need to communicate with <<../forms-data/repositories#,repositories>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
+
+
+=== Entities
+
+When the application service passes the entities directly to the UI layer, they become part of the application layer API. Many service methods delegate to the corresponding repository methods. Here's an example of this:
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+
+    private final CustomerRepository repository;
+
+    CustomerCrudService(CustomerRepository repository) {
+        this.repository = repository;
+    }
+
+    public Page<Customer> findAll(Specification<Customer> specification, Pageable pageable) {
+        return repository.findAll(specification, pageable);
+    }
+
+    public Customer save(Customer customer) {
+        return repository.saveAndFlush(customer);
+    }
+}
+----
+
+Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
+
+Your entities should be _anemic_, which means that they only contain data and little to no business logic.
+
+In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
+
+
+=== Data Transfer Objects
+
+Sometimes, application services shouldn't return the entities themselves. For instance, the domain model may contain business logic that must be called within some context that isn't available in the UI layer. It might require access to other services, or run inside a transaction.
+
+In other cases, the user interface may need only a subset of the data stored inside a single entity, or a combination of data from multiple entities. Fetching and returning the full entities would be a waste of resources.
+
+You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains about the same.
+
+In this case, the application services should accept DTO:s as input, and return DTO:s as output. The entities should no longer be part of the application layer API.
+
+This adds another responsibility to the application service: mapping between entities and DTO:s.
+
+When using <<../forms-data/repositories#query-classes,query classes>>, you can do the mapping in them by returning their DTO:s, directly. The query DTO:s become part of the application layer API.
+
+For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
+
+[source,java]
+----
+@Service
+public class CustomerCrudService {
+
+    private final CustomerRepository repository;
+
+    CustomerCrudService(CustomerRepository repository) {
+        this.repository = repository;
+    }
+
+    // In this example, CustomerForm is a Java record.
+
+    public CustomerForm save(CustomerForm customerForm) {
+        var entity = Optional.ofNullable(customerForm.getId())
+            .flatMap(repository::findById)
+            .orElseGet(Customer::new);
+        entity.setName(customerForm.name());
+        entity.setEmail(customerForm.email());
+        ...
+        return toCustomerForm(repository.saveAndFlush(entity));
+    }
+
+    private CustomerForm toCustomerForm(Customer entity) {
+        return new CustomerForm(entity.getId(), entity.getName(), entity.getEmail(), ...);
+    }
+}
+----
+
+When using DTO:s, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
+
+
+=== Domain Payload Objects
+
+When using <<../forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
+
+
+=== Validation
+
+All input should be validated by the application services before they do anything else with it. This is important for security, integrity, and consistency. Even if you use input validation in your user interface, you should still validate the data in the application services.
+
+You can validate the input in different ways. For more information, see the <<../forms-data/consistency/validation#,Validation>> documentation page.
+
+
+== Package Naming
+
+For Java packages containing services, the recommended naming convention is `[feature].service`, where `[feature]` represents the full-stack feature the service belongs to. If the feature package is very small, you can simplify the structure and put the service directly in `[feature]`.
+
+For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm.service`
+
+This structure keeps services well-organized, easy to find, and clearly associated with their purpose.
+
+See the <<../architecture/packages#,Package Structure>> documentation page for more information.
+
+
+== Injecting a Service into a View
+
+Since application services are Spring beans, you can inject them directly into your Vaadin views through constructor injection.
+
+In the following example, [classname]`CustomerOnboardingService` is injected into [classname]`CustomerOnboardingView`:
+
+[source,java]
+----
+@Route
+public class CustomerOnboardingView extends Main {
+
+    private final CustomerOnboardingService service; // <1>
+
+// tag::snippet[]
+    public CustomerOnboardingView(CustomerOnboardingService service) { // <2>
+// end::snippet[]
+        this.service = service;
+        // ...
+    }
+    ...
+}
+----
+<1> Store the service in a `final` variable for future reference.
+<2> Inject the service as a constructor parameter.
+
+Constructor injection is recommended because it ensures that dependencies are provided at object creation, making the class easier to test and avoiding potential issues with uninitialized fields. Additionally, since the service is stored in a final variable, it cannot be reassigned accidentally, ensuring safer code.
+
+
+== Calling a Service
+
+Since Vaadin views are regular Java objects, calling a service is as simple as invoking a method.
+
+In the following example, the view calls [classname]`CustomerOnboardingService` when the user clicks a button:
+
+[source,java]
+----
+@Route
+public class CustomerOnboardingView extends Main {
+
+    private final CustomerOnboardingService service;
+    private final Binder<CustomerOnboardingForm> binder;
+
+    public CustomerOnboardingView(CustomerOnboardingService service) {
+        this.service = service;
+        this.binder = new Binder<>(CustomerOnboardingForm.class);
+
+        // Fields omitted
+
+        var createCustomerBtn = new Button("Create");
+// tag::snippet[]
+        createCustomerBtn.addClickListener(event -> createCustomer());
+// end::snippet[]
+        add(createCustomerBtn);
+    }
+    
+    private void createCustomer() {
+// tag::snippet[]
+        try {
+            var formData = binder.writeRecord(); // <1>
+            var customer = service.onboardCustomer(formData); // <2>
+            CustomerView.navigateTo(customer.customerId()); // <3>
+        } catch (ValidationException ex) {
+            // Handle the exception
+        }
+// end::snippet[]
+    }
+}
+----
+<1> Retrieves a `CustomerOnboardingForm` record from the binder.
+<2> Calls the service to onboard the customer.
+<3> Navigates to the newly created customer's view.
+
+For more information about forms and data binding, see the <<../forms-data/add-form#,Add a Form>> guide.
+
+
+== Calling a Service on View Creation
+
+Sometimes, you may need to call a service immediately upon view creation—for example, to populate a combo box or grid with data. While it may be tempting to do this in the constructor, *this is not recommended*.
+
+Vaadin may instantiate a view without actually displaying it. Because of this, you should *keep constructors free of side effects*.
+
+.What is a side effect?
+[NOTE]
+A _side effect_ is any operation that modifies state outside the object's scope or interacts with external systems like databases, files, or network services during object construction.
+
+
+=== After Navigation
+
+To call a service only after the user has navigated to a view, implement the [interfacename]`AfterNavigationObserver` interface and call the service in the [methodname]`afterNavigation()` method:
+
+[source,java]
+----
+@Route
+// tag::snippet[]
+public class MyView extends Main implements AfterNavigationObserver {
+// end::snippet[]
+
+    private final CountryService countryService;
+    private final ComboBox<Country> countries;
+
+    public MyView(CountryService countryService) {
+        this.countryService = countryService;
+        countries = new ComboBox<>();
+        add(countries);
+    }
+
+// tag::snippet[]
+    @Override
+    public void afterNavigation(AfterNavigationEvent afterNavigationEvent) {
+        countries.setItems(countryService.getCountries());
+    }
+// end::snippet[]
+}
+----
+
+This ensures that service calls happen only when the view is actually rendered.
+
+
+=== Cleaning Up
+
+If a service call requires cleanup afterward -- such as unsubscribing from a stream -- use Vaadin's *attach and detach events*.
+
+Every Vaadin component is notified when it is attached to or detached from the UI. You can handle these events in two ways:
+
+1. Override the protected [methodname]`onAttach()` and [methodname]`onDetach()` methods.
+2. Register attach and detach listeners dynamically.
+
+A common approach is to override [methodname]`onAttach()` and register a detach listener.
+
+In the following example, the view subscribes to a reactive stream when attached and unsubscribes when detached:
+
+[source,java]
+----
+public class MyView extends Main {
+
+    private final SubscriptionService subscriptionService;
+
+    public MyView(SubscriptionService subscriptionService) {
+        this.subscriptionService = subscriptionService;
+        // ...
+    }
+
+// tag::snippet[]
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var subscription = subscriptionService.myStream().subscribe(message -> { // <1>
+            // Do something with the message
+        });
+        addDetachListener(detachEvent -> {
+            detachEvent.unregisterListener(); // <2>
+            subscription.dispose(); // <3>
+        });
+    }
+// end::snippet[]
+}
+----
+<1> Calls the service to subscribe to the stream when attached.
+<2> Removes the detach listener to prevent duplicate listeners.
+<3> Cancels the subscription to avoid memory leaks.
+
+.Components Can Be Attached and Detached Multiple Times
+[IMPORTANT]
+When adding a detach listener inside [methodname]`onAttach()`, always remove it when the component is detached. Otherwise, if the component is reattached later, multiple detach listeners will accumulate, leading to potential memory leaks.

@@ -37,9 +37,11 @@ Any method in the component class annotated with [annotationname]`@ClientCallabl
 
 You can use it anywhere in your client-side implementation, and you can pass your own arguments to the method. The types should match the method declaration on the server side. The supported argument types are:
 
-- `boolean` , `int`, `double`, their boxed types (i.e., `Boolean` , `Integer`, `Double`);
+- `boolean`, `int`, `double`, their boxed types (i.e., `Boolean`, `Integer`, `Double`);
 - `String`;
-- `JsonValue`; and
+- `JsonNode`;
+- Bean/DTO types that can be deserialized from JSON using Jackson;
+- Collections such as `List` and `Map` with proper generic types; and
 - enumeration types mapped to strings on the client side
 
 .Making the `getGreeting(String)` method callable from the client side
@@ -53,6 +55,98 @@ public String getGreeting(String name) {
 }
 ----
 ====
+
+=== Receiving JSON Data
+
+You can receive complex JSON data from the client by using Jackson's `JsonNode` types as method parameters.
+
+.Receiving a JSON object from the client
+[example]
+====
+[source,java]
+----
+@ClientCallable
+public void saveSettings(JsonNode settings) {
+    String theme = settings.get("theme").asText();
+    int fontSize = settings.get("fontSize").asInt();
+    // Process settings...
+}
+----
+====
+
+The client-side code can pass a JavaScript object directly:
+
+[source,javascript]
+----
+this.$server.saveSettings({ theme: "dark", fontSize: 14 });
+----
+
+=== Receiving Bean/DTO Types
+
+You can receive data directly as Java beans or DTOs. The JSON data from the client is automatically deserialized using Jackson.
+
+.Receiving a bean from the client
+[example]
+====
+[source,java]
+----
+public class UserSettings {
+    private String theme;
+    private int fontSize;
+
+    // Getters and setters required for Jackson deserialization
+    public String getTheme() { return theme; }
+    public void setTheme(String theme) { this.theme = theme; }
+    public int getFontSize() { return fontSize; }
+    public void setFontSize(int fontSize) { this.fontSize = fontSize; }
+}
+
+@ClientCallable
+public void saveSettings(UserSettings settings) {
+    String theme = settings.getTheme();
+    int fontSize = settings.getFontSize();
+    // Process settings...
+}
+----
+====
+
+The client-side code passes the same JavaScript object:
+
+[source,javascript]
+----
+this.$server.saveSettings({ theme: "dark", fontSize: 14 });
+----
+
+=== Returning JSON Data
+
+You can also return JSON data from `@ClientCallable` methods.
+
+.Returning a JSON object to the client
+[example]
+====
+[source,java]
+----
+import tools.jackson.databind.node.ObjectNode;
+import com.vaadin.flow.internal.JacksonUtils;
+
+@ClientCallable
+public ObjectNode getUserInfo() {
+    ObjectNode info = JacksonUtils.createObjectNode();
+    info.put("name", "John Doe");
+    info.put("role", "admin");
+    info.put("loginCount", 42);
+    return info;
+}
+----
+====
+
+The client receives the data as a regular JavaScript object:
+
+[source,javascript]
+----
+const info = await this.$server.getUserInfo();
+console.log(info.name); // "John Doe"
+----
 
 The client-side method returns a `Promise`, which is resolved asynchronously with the return value from the server. If the server-side return type is `void`, the promise is resolved with the return value `null`.
 
