@@ -7,8 +7,8 @@ import type { GridDragStartEvent, GridDropEvent } from '@vaadin/grid';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 @customElement('grid-row-reordering')

@@ -31,7 +31,7 @@ function Example() {
     <MenuBar
       items={items}
       onItemSelected={(event) => {
-        const value = event.detail.value.value;
+        const { value } = event.detail.value;
         if (value) {
           navigator.clipboard.writeText(value);
         }

@@ -7,8 +7,8 @@ import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import type { GridColumn } from '@vaadin/grid/vaadin-grid-column.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 interface PersonWithRating extends Person {
@@ -54,7 +54,7 @@ export class Example extends LitElement {
   `;
 
   private cellPartNameGenerator(column: GridColumn, model: GridItemModel<PersonWithRating>) {
-    const item = model.item;
+    const { item } = model;
     let parts = '';
     // Make the customer rating column bold
     if (column.header?.startsWith('Customer rating')) {

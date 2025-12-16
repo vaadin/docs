@@ -15,8 +15,8 @@ import type {
 } from '@vaadin/grid';
 import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function matchesTerm(value: string, searchTerm: string) {
   return value.toLowerCase().includes(searchTerm.toLowerCase());

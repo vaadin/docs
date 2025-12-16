@@ -104,7 +104,7 @@ function Example() {
         <GridColumn<Person> path="email" />
       </Grid>
 
-      <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end'}}>
+      <HorizontalLayout theme="spacing" style={{ alignItems: 'flex-end' }}>
         <IntegerField
           label="Parent index"
           stepButtonsVisible
