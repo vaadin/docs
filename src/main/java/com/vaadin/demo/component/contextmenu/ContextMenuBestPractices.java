@@ -1,8 +1,6 @@
 package com.vaadin.demo.component.contextmenu;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.contextmenu.MenuItem;
-import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Div;

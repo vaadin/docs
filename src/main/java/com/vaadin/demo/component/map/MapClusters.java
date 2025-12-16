@@ -6,7 +6,6 @@ import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
 import com.vaadin.flow.component.map.configuration.Feature;
 import com.vaadin.flow.component.map.configuration.feature.MarkerFeature;
-import com.vaadin.flow.component.map.events.FeatureEventDetails;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -44,7 +43,8 @@ public class MapClusters extends Div {
         // end::snippet[]
 
         // Override cluster icon to use inline images // hidden-source-line
-        map.getFeatureLayer().getClusterStyle().setImage(Icons.createClusterIcon()); // hidden-source-line
+        map.getFeatureLayer().getClusterStyle() // hidden-source-line
+                .setImage(Icons.createClusterIcon()); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MapClusters> { // hidden-source-line

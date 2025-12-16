@@ -7,8 +7,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { RadioGroupValueChangedEvent } from '@vaadin/radio-group';
 import { getCards } from 'Frontend/demo/domain/DataService';
-import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 
 @customElement('radio-button-custom-option')
 export class Example extends LitElement {

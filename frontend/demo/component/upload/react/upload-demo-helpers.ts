@@ -240,7 +240,7 @@ export class MockHttpRequest {
 
   getAllResponseHeaders() {
     let r = '';
-    // eslint-disable-next-line no-restricted-syntax
+
     for (const header in this.responseHeaders) {
       if (header === 'set-cookie' || header === 'set-cookie2') {
         continue;
@@ -486,7 +486,7 @@ export class MockHttpServer {
   }
 
   start() {
-    const self = this; /* eslint-disable-line @typescript-eslint/no-this-alias */
+    const self = this;
 
     const Request = class extends MockHttpRequest {
       onsend = function onsend(this: MockHttpRequest) {

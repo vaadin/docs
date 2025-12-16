@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type { Crud } from '@vaadin/crud';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('crud-localization')
 export class Example extends LitElement {

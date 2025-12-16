@@ -13,8 +13,8 @@ import type {
   GridItemModel,
 } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 @customElement('grid-drag-drop-filters')
@@ -99,11 +99,11 @@ export class Example extends LitElement {
           }
         }}"
         .dragFilter="${(model: GridItemModel<Person>) => {
-          const item = model.item;
+          const { item } = model;
           return !item.manager; // Only drag non-managers
         }}"
         .dropFilter="${(model: GridItemModel<Person>) => {
-          const item = model.item;
+          const { item } = model;
           return (
             item.manager && // Can only drop on a supervisor
             item.id !== this.draggedItem?.managerId // Disallow dropping on the same manager

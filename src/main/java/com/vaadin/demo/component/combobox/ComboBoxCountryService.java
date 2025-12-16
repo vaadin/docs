@@ -20,7 +20,8 @@ public class ComboBoxCountryService {
         this.repository = repository;
     }
 
-    public @NonNull List<@NonNull Country> list(Pageable pageable, String filter) {
+    public @NonNull List<@NonNull Country> list(Pageable pageable,
+            String filter) {
         // Implement your data fetching and filtering logic here
         // For this example, we're using a Spring Data repository
         return repository.findByNameContainingIgnoreCase(filter, pageable);

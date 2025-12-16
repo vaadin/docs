@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('grid-pro-prevent-save')
 export class Example extends LitElement {
