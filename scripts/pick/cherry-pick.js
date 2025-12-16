@@ -12,7 +12,7 @@ let tmpSource, tmpTarget, debug;
 const cmd = program
     .option('-d, --debug', 'run in debug mode')
     .option('-T, --tmp <tmp>', 'Temporary folder', './tmp')
-    .option('-s, --branchSource <source>', 'source branch', 'latest')
+    .option('-s, --branchSource <source>', 'source branch', 'v24')
     .option('-s, --tagSource <tag|hash>', 'Tag or Hash in the source branch that should be used for picking changes', 'HEAD')
     .option('-t, --branchTarget <target>', 'target branch', 'dsp')
     .option('-c, --config <config>', 'config file', cfgDefault)
@@ -186,7 +186,7 @@ async function main() {
   log("Updating files")
   copyFolderRecursive("", "", config);
   await compileProject(tmpTarget);
-  commitChanges(tmpTarget, 'Update DSP branch from latest');
+  commitChanges(tmpTarget, 'Update DSP branch from v24');
 }
 
 main()
