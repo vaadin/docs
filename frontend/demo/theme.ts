@@ -1,4 +1,5 @@
 import '@vaadin/vaadin-lumo-styles/src/props/icons.css';
+import '@vaadin/vaadin-lumo-styles/src/components/grid-sorter-icons.css';
 import type { CSSResultGroup } from 'lit';
 import auraCss from '@vaadin/aura/aura.css?inline';
 import lumoCss from '@vaadin/vaadin-lumo-styles/lumo.css?inline';
