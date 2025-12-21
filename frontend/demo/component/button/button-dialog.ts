@@ -31,15 +31,10 @@ export class Example extends LitElement {
           ></vaadin-email-field>
         </vaadin-form-layout>
 
-        <vaadin-horizontal-layout
-          theme="spacing"
-          style="flex-wrap: wrap; justify-content: flex-end;"
-        >
-          <vaadin-button theme="secondary error" style="margin-inline-end: auto;">
-            Delete
-          </vaadin-button>
-          <vaadin-button theme="secondary">Cancel</vaadin-button>
-          <vaadin-button theme="primary">Create account</vaadin-button>
+        <vaadin-horizontal-layout theme="spacing wrap">
+          <vaadin-button theme="error">Delete</vaadin-button>
+          <vaadin-button slot="end">Cancel</vaadin-button>
+          <vaadin-button slot="end" theme="primary">Create account</vaadin-button>
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->
