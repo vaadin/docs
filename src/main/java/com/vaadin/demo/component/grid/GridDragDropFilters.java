@@ -42,7 +42,6 @@ public class GridDragDropFilters extends Div {
                 treeData);
         treeGrid.setDataProvider(treeDataProvider);
         treeGrid.setRowsDraggable(true);
-        treeGrid.setDropMode(GridDropMode.ON_TOP);
 
         // Only allow dragging staff
         treeGrid.setDragFilter(person -> !person.isManager());
@@ -50,7 +49,10 @@ public class GridDragDropFilters extends Div {
         treeGrid.setDropFilter(person -> person.isManager());
 
         treeGrid.addDragStartListener(e -> {
+            treeGrid.setDropMode(GridDropMode.ON_TOP);
             draggedItem = e.getDraggedItems().get(0);
+            // Workaround https://github.com/vaadin/flow-components/issues/6310
+            treeGrid.getDataCommunicator().reset();
         });
 
         treeGrid.addDropListener(e -> {
@@ -68,6 +70,7 @@ public class GridDragDropFilters extends Div {
         });
 
         treeGrid.addDragEndListener(e -> {
+            treeGrid.setDropMode(null);
             draggedItem = null;
         });
         // end::snippet[]
