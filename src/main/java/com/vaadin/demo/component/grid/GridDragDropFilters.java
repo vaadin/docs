@@ -51,8 +51,6 @@ public class GridDragDropFilters extends Div {
         treeGrid.addDragStartListener(e -> {
             treeGrid.setDropMode(GridDropMode.ON_TOP);
             draggedItem = e.getDraggedItems().get(0);
-            // Workaround https://github.com/vaadin/flow-components/issues/6310
-            treeGrid.getDataCommunicator().reset();
         });
 
         treeGrid.addDropListener(e -> {
