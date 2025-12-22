@@ -9,18 +9,18 @@ order: 35
 
 = Add Deep Linking
 
-In the previous step, you added support for adding new items to the product catalog. 
+In the previous step, you added support for creating new products in the catalog.
 
 In this step, you'll add support for deep linking, making it possible to share and bookmark links to individual products.
 
 
 == Add a Route Parameter
 
-To support deep linking, the application must be able to determine the selected item using only the URL. In this tutorial, you'll achieve this by including the product ID as a <</building-apps/views/pass-data/route-parameters#,route parameter>>.
+For deep linking to work, the application must be able to determine the selected item from the URL alone. You'll achieve this by including the product ID as a <</building-apps/views/pass-data/route-parameters#,route parameter>>.
 
 .Using internal database keys in public URLs
 [NOTE]
-In production applications, avoid exposing database primary keys directly in URLs. Sequential or predictable IDs can be guessed, which may lead to unauthorized data access. Instead, consider using a randomly generated, public-facing identifier (for example, a UUID or NanoID). This approach improves security and makes the application more future-proof, as changes to the database schema or key strategy won't break existing links.
+In production applications, avoid exposing database primary keys directly in URLs. Sequential or predictable IDs can be guessed, which may lead to unauthorized data access if authorization has not been implemented correctly. Instead, consider using a randomly generated, public-facing identifier (for example, a UUID or NanoID). This approach improves security and makes the application more future-proof, as changes to the database schema or key strategy won't break existing links.
 
 Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service`, `grid`, and `drawer` variables to fields as you'll be needing them later when you implement the `setParameter()` method. The updated code looks like this:
 
@@ -175,12 +175,12 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 <1> Implement `HasUrlParameter<Long>` to add a single route parameter of type `Long` to the view.
 <2> Make the route parameter optional with the `@OptionalParameter` annotation.
 
-You should now be able to navigate to http://localhost:8080/12, where `12` is the value of the route parameter. However, you should not notice any differences in the view yet. You'll fix that next.
+You can now navigate to http://localhost:8080/12, where `12` is the route parameter value. The view won't look any different yet — you'll fix that next.
 
 
 == Select on Navigation 
 
-You'll now implement `setParameter()` so that it uses the parameter value to select the corresponding product in the grid, and also show the product in the drawer. Likewise, if there is no parameter, it should clear the selection and hide the drawer.
+Now you'll implement `setParameter()` to select the corresponding product in the grid and display its details in the drawer. When there's no parameter, it should clear the selection and hide the drawer.
 
 Change the code of `ProductCatalogView` as follows:
 
@@ -321,23 +321,25 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 // tag::snippet[]
         // Update grid selection
         Optional.ofNullable(productId)
-                .flatMap(service::findItemById)
+                .flatMap(service::findItemById) // <1>
                 .ifPresentOrElse(grid::select, grid::deselectAll);
         // Show or hide the drawer
         drawer.setProductDetails(Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById)
+                .flatMap(service::findDetailsById) // <2>
                 .orElse(null));
 // end::snippet[]
     }
 }
 ----
+<1> The first service call fetches the `ProductCatalogItem` to select.
+<2> The second service call fetches the `ProductDetails` to show in the drawer.
 
 If you now navigate to http://localhost:8080/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080 should clear the selection and hide the drawer.
 
 
 == Add Navigation Methods
 
-As the URL is now used to set the selection, you can also navigate to specific products from other parts of the application using `UI.navigate()`. To make the code more readable, you'll introduce your own <</building-apps/views/navigate#your-own-api,navigation methods>>: one for navigating to a particular product, and another for navigating to the product catalog without selection.
+Now that the URL controls selection, you can navigate to specific products from anywhere in the application using `UI.navigate()`. To improve readability, you'll create two <</building-apps/views/navigate#your-own-api,helper methods>>: one to open a specific product, and one to open the catalog without selection.
 
 Update the code as follows:
 
@@ -487,7 +489,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
     }
 
 // tag::snippet[]
-    public static void showProductDetails(Long productId) {
+    public static void showProductDetails(long productId) {
         UI.getCurrent().navigate(ProductCatalogView.class, productId);
     }
 
@@ -498,14 +500,16 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 }
 ----
 
-Next, you'll refactor the code to call these methods.
+From other views, you'll be able to call `ProductCatalogView.showProductCatalog()` to open the catalog, or `ProductCatalogView.showProductDetails(productId)` to jump to a specific product. For now, you'll use these methods internally.
 
 
 == Navigate on Selection
 
-If you now open the application and select an item in the grid, you'll notice that the drawer still opens as before, but the URL does not change. The same applies with adding new items: the new item is selected, but nothing happens to the URL. You'll fix this next.
+If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. The same happens when adding new items: the product is selected, but the URL stays the same. You'll fix that next.
 
-Before, the selection was stored in the grid. Now, the route parameter has become the source of truth and you should handle both selection and deselection through view navigation. Update the grid selection listener and add button click listener as follows:
+Previously, the grid stored the selection state. Now the route parameter is the source of truth, so both selection and deselection should happen through navigation.
+
+Update the grid selection listener and add button click listener as follows:
 
 .ProductCatalogView.java
 [source,java]
@@ -653,7 +657,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .orElse(null));
     }
 
-    public static void showProductDetails(Long productId) {
+    public static void showProductDetails(long productId) {
         UI.getCurrent().navigate(ProductCatalogView.class, productId);
     }
 
@@ -667,6 +671,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 <3> Navigate to the newly added item.
 
 If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
+
+You may have noticed a potential loop: `setParameter()` calls `grid.select()`, which triggers the selection listener, which calls `setParameter()` again. Vaadin prevents this by comparing URL parameters before navigating -- if you're already on the same view with the same parameter, it does nothing.
 
 
 == Next Steps
