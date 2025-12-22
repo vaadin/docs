@@ -1,0 +1,685 @@
+---
+title: Deep Link
+page-title: Add Deep Linking to the Product Catalog | Vaadin Tutorial
+description: Use a route parameter to store the product item selection.
+meta-description: Learn how to use a route parameter to manage selection in a Vaadin application.
+order: 35
+---
+
+
+= Add Deep Linking
+
+In the previous step, you added support for creating new products in the catalog.
+
+In this step, you'll add support for deep linking, making it possible to share and bookmark links to individual products.
+
+
+== Add a Route Parameter
+
+For deep linking to work, the application must be able to determine the selected item from the URL alone. You'll achieve this by including the product ID as a <</building-apps/views/pass-data/route-parameters#,route parameter>>.
+
+.Using internal database keys in public URLs
+[NOTE]
+In production applications, avoid exposing database primary keys directly in URLs. Sequential or predictable IDs can be guessed, which may lead to unauthorized data access if authorization has not been implemented correctly. Instead, consider using a randomly generated, public-facing identifier (for example, a UUID or NanoID). This approach improves security and makes the application more future-proof, as changes to the database schema or key strategy won't break existing links.
+
+Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service`, `grid`, and `drawer` variables to fields as you'll be needing them later when you implement the `setParameter()` method. The updated code looks like this:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+// tag::snippet[]
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
+// end::snippet[]
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+@Route("")
+@PageTitle("Product Catalog")
+// tag::snippet[]
+class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> { // <1>
+// end::snippet[]
+
+// tag::snippet[]
+    private final ProductCatalogService service;
+    private final Grid<ProductCatalogItem> grid;
+    private final ProductFormDrawer drawer;
+// end::snippet[]
+
+    ProductCatalogView(ProductCatalogService service) {
+// tag::snippet[]
+        this.service = service;
+// end::snippet[]
+
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+// tag::snippet[]
+        grid = new Grid<>();
+// end::snippet[]
+        grid.addColumn(ProductCatalogItem::name)
+                .setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+                .setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+                .setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+                .setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+                .setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> service
+                .findItems(searchField.getValue(), pageable)
+        );
+
+// tag::snippet[]
+        drawer = new ProductFormDrawer(productDetails -> {
+// end::snippet[]
+            var saved = service.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()))
+                .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e ->
+                new AddProductDialog(
+                        productDetails -> {
+                            var saved = service.save(productDetails);
+                            grid.getDataProvider().refreshAll();
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
+                        },
+                        this::handleException
+                ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                    "Another user has edited the same product. "
+                            + "Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                    "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+
+// tag::snippet[]
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long productId) { // <2>
+        // To be implemented
+    }
+// end::snippet[]
+}
+----
+<1> Implement `HasUrlParameter<Long>` to add a single route parameter of type `Long` to the view.
+<2> Make the route parameter optional with the `@OptionalParameter` annotation.
+
+You can now navigate to http://localhost:8080/12, where `12` is the route parameter value. The view won't look any different yet — you'll fix that next.
+
+
+== Select on Navigation 
+
+Now you'll implement `setParameter()` to select the corresponding product in the grid and display its details in the drawer. When there's no parameter, it should clear the selection and hide the drawer.
+
+Change the code of `ProductCatalogView` as follows:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+// tag::snippet[]
+import java.util.Optional;
+// end::snippet[]
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+
+    private final ProductCatalogService service;
+    private final Grid<ProductCatalogItem> grid;
+    private final ProductFormDrawer drawer;
+
+    ProductCatalogView(ProductCatalogService service) {
+        this.service = service;
+
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        grid = new Grid<>();
+        grid.addColumn(ProductCatalogItem::name)
+                .setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+                .setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+                .setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+                .setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+                .setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> service
+                .findItems(searchField.getValue(), pageable)
+        );
+
+        drawer = new ProductFormDrawer(productDetails -> {
+            var saved = service.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()))
+                .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e ->
+                new AddProductDialog(
+                        productDetails -> {
+                            var saved = service.save(productDetails);
+                            grid.getDataProvider().refreshAll();
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
+                        },
+                        this::handleException
+                ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                    "Another user has edited the same product. "
+                            + "Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                    "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
+// tag::snippet[]
+        // Update grid selection
+        Optional.ofNullable(productId)
+                .flatMap(service::findItemById) // <1>
+                .ifPresentOrElse(grid::select, grid::deselectAll);
+        // Show or hide the drawer
+        drawer.setProductDetails(Optional.ofNullable(productId)
+                .flatMap(service::findDetailsById) // <2>
+                .orElse(null));
+// end::snippet[]
+    }
+}
+----
+<1> The first service call fetches the `ProductCatalogItem` to select.
+<2> The second service call fetches the `ProductDetails` to show in the drawer.
+
+If you now navigate to http://localhost:8080/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080 should clear the selection and hide the drawer.
+
+
+== Add Navigation Methods
+
+Now that the URL controls selection, you can navigate to specific products from anywhere in the application using `UI.navigate()`. To improve readability, you'll create two <</building-apps/views/navigate#your-own-api,helper methods>>: one to open a specific product, and one to open the catalog without selection.
+
+Update the code as follows:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+// tag::snippet[]
+import com.vaadin.flow.component.UI;
+// end::snippet[]
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+import java.util.Optional;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+
+    private final ProductCatalogService service;
+    private final Grid<ProductCatalogItem> grid;
+    private final ProductFormDrawer drawer;
+
+    ProductCatalogView(ProductCatalogService service) {
+        this.service = service;
+
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        grid = new Grid<>();
+        grid.addColumn(ProductCatalogItem::name)
+                .setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+                .setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+                .setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+                .setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+                .setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> service
+                .findItems(searchField.getValue(), pageable)
+        );
+
+        drawer = new ProductFormDrawer(productDetails -> {
+            var saved = service.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()))
+                .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        var addButton = new Button("Add Product", e ->
+                new AddProductDialog(
+                        productDetails -> {
+                            var saved = service.save(productDetails);
+                            grid.getDataProvider().refreshAll();
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
+                        },
+                        this::handleException
+                ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                    "Another user has edited the same product. "
+                            + "Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                    "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
+        // Update grid selection
+        Optional.ofNullable(productId)
+                .flatMap(service::findItemById)
+                .ifPresentOrElse(grid::select, grid::deselectAll);
+        // Show or hide the drawer
+        drawer.setProductDetails(Optional.ofNullable(productId)
+                .flatMap(service::findDetailsById)
+                .orElse(null));
+    }
+
+// tag::snippet[]
+    public static void showProductDetails(long productId) {
+        UI.getCurrent().navigate(ProductCatalogView.class, productId);
+    }
+
+    public static void showProductCatalog() {
+        UI.getCurrent().navigate(ProductCatalogView.class);
+    }    
+// end::snippet[]
+}
+----
+
+From other views, you'll be able to call `ProductCatalogView.showProductCatalog()` to open the catalog, or `ProductCatalogView.showProductDetails(productId)` to jump to a specific product. For now, you'll use these methods internally.
+
+
+== Navigate on Selection
+
+If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. The same happens when adding new items: the product is selected, but the URL stays the same. You'll fix that next.
+
+Previously, the grid stored the selection state. Now the route parameter is the source of truth, so both selection and deselection should happen through navigation.
+
+Update the grid selection listener and add button click listener as follows:
+
+.ProductCatalogView.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
+
+import java.util.Optional;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+
+    private final ProductCatalogService service;
+    private final Grid<ProductCatalogItem> grid;
+    private final ProductFormDrawer drawer;
+
+    ProductCatalogView(ProductCatalogService service) {
+        this.service = service;
+
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        grid = new Grid<>();
+        grid.addColumn(ProductCatalogItem::name)
+                .setHeader("Name")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+                .setHeader("Price")
+                .setTextAlign(ColumnTextAlign.END)
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+                .setHeader("Description")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+                .setHeader("Category")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+                .setHeader("Brand")
+                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> service
+                .findItems(searchField.getValue(), pageable)
+        );
+
+        drawer = new ProductFormDrawer(productDetails -> {
+            var saved = service.save(productDetails);
+            grid.getDataProvider().refreshAll();
+            return saved;
+        }, this::handleException);
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+// tag::snippet[]
+        grid.addSelectionListener(e -> e.getFirstSelectedItem()
+                .map(ProductCatalogItem::productId)
+                .ifPresentOrElse(
+                    ProductCatalogView::showProductDetails, // <1>
+                    ProductCatalogView::showProductCatalog // <2>
+                ));
+// end::snippet[]
+
+        var addButton = new Button("Add Product", e ->
+                new AddProductDialog(
+                        productDetails -> {
+                            var saved = service.save(productDetails);
+                            grid.getDataProvider().refreshAll();
+// tag::snippet[]
+                            showProductDetails(saved.getProductId()); // <3>
+// end::snippet[]
+                        },
+                        this::handleException
+                ).open()
+        );
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var toolbar = new HorizontalLayout();
+        toolbar.setWidthFull();
+        toolbar.addToStart(searchField);
+        toolbar.addToEnd(addButton);
+
+        var listLayout = new VerticalLayout(toolbar, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+
+    private void handleException(RuntimeException exception) {
+        if (exception instanceof OptimisticLockingFailureException) {
+            var notification = new Notification(
+                    "Another user has edited the same product. "
+                            + "Please refresh and try again.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else if (exception instanceof DataIntegrityViolationException) {
+            var notification = new Notification(
+                    "The SKU is already in use. Please enter another one.");
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.addThemeVariants(NotificationVariant.LUMO_WARNING);
+            notification.setDuration(3000);
+            notification.open();
+        } else {
+            // Delegate to Vaadin's default error handler
+            throw exception;
+        }
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
+        // Update grid selection
+        Optional.ofNullable(productId)
+                .flatMap(service::findItemById)
+                .ifPresentOrElse(grid::select, grid::deselectAll);
+        // Show or hide the drawer
+        drawer.setProductDetails(Optional.ofNullable(productId)
+                .flatMap(service::findDetailsById)
+                .orElse(null));
+    }
+
+    public static void showProductDetails(long productId) {
+        UI.getCurrent().navigate(ProductCatalogView.class, productId);
+    }
+
+    public static void showProductCatalog() {
+        UI.getCurrent().navigate(ProductCatalogView.class);
+    }    
+}
+----
+<1> Set the route parameter if there is a selected item.
+<2> Clear the route parameter if there is no selection.
+<3> Navigate to the newly added item.
+
+If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
+
+You may have noticed a potential loop: `setParameter()` calls `grid.select()`, which triggers the selection listener, which calls `setParameter()` again. Vaadin prevents this by comparing URL parameters before navigating -- if you're already on the same view with the same parameter, it does nothing.
+
+
+== Next Steps
+
+You've now added support for linking to and bookmarking individual product items. As an extra exercise, you could read the <</building-apps/views/pass-data/query-parameters#,Query Parameters>> guide and try to store the search field value in a query parameter.
+
+
+.🚧 Work in Progress
+[TIP]
+This is not the end of the tutorial, only a pause. More steps will be added, so stay tuned.
