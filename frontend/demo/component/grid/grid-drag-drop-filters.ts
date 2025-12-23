@@ -81,7 +81,7 @@ export class Example extends LitElement {
           this.expandedItems = event.detail.value;
         }}"
         rows-draggable
-        drop-mode="on-top"
+        .dropMode=${this.draggedItem ? 'on-top' : undefined}
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];
         }}"
