@@ -1,11 +1,9 @@
 package com.vaadin.demo.reference.componentinternals.element;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.junit.Test;
 
