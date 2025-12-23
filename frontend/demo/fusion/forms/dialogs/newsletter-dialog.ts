@@ -6,7 +6,7 @@ import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import type { Dialog, DialogOpenedChangedEvent } from '@vaadin/dialog';
+import type { Dialog } from '@vaadin/dialog';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { Binder, field, ObjectModel } from '@vaadin/hilla-lit-form';
 import { Notification } from '@vaadin/notification';
@@ -33,7 +33,7 @@ export class NewsletterDialog extends LitElement {
   private dialogOpened = false;
 
   @query('vaadin-dialog')
-  private dialog: Dialog | undefined;
+  private dialog!: Dialog;
 
   connectedCallback() {
     super.connectedCallback();
