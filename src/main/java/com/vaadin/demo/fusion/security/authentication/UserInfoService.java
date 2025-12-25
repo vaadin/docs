@@ -24,8 +24,7 @@ public class UserInfoService {
                 .getAuthentication();
 
         final List<String> authorities = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+                .map(GrantedAuthority::getAuthority).toList();
 
         return new UserInfo(auth.getName(), authorities);
     }

@@ -35,8 +35,7 @@ public class GridHeaderFooterStyling extends Div {
 
     private static List<PersonWithRating> createDataSet() {
         return DataService.getPeople().stream()
-                .map(PersonWithRating::generateFromPerson)
-                .collect(Collectors.toList());
+                .map(PersonWithRating::generateFromPerson).toList();
     }
 
     public static class Exporter // hidden-source-line
