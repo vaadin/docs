@@ -29,8 +29,7 @@ public class TreeGridDragDrop extends Div {
         managers = people.stream().filter(Person::isManager).toList();
         staffGroupedByMangers = people.stream()
                 .filter(person -> person.getManagerId() != null)
-                .collect(Collectors.groupingBy(Person::getManagerId,
-                        Collectors.toList()));
+                .collect(Collectors.groupingBy(Person::getManagerId));
 
         // tag::snippet[]
         TreeGrid<Person> treeGrid = setupTreeGrid();
