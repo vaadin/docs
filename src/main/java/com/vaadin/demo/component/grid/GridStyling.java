@@ -7,7 +7,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Route("grid-styling")
 public class GridStyling extends Div {

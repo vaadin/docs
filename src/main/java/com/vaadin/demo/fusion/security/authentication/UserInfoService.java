@@ -8,7 +8,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides information about the current user.

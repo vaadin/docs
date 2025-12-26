@@ -14,7 +14,6 @@ import java.util.Locale;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Route("date-picker-individual-input-fields")
