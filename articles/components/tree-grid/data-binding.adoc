@@ -129,15 +129,46 @@ Shortcuts.addShortcutListener(treeGrid, () -> {
 
 As before, make sure to call [methodname]`TreeDataProvider#refreshAll()` to update the Tree Grid UI after making any structural changes to the [classname]`TreeData`.
 
+=== Sorting Items
+
+Tree Data Provider provides built-in support for in-memory sorting. You can enable sorting on Tree Grid columns to make the data provider  automatically sort the items based on the sort order selected by the user:
+
+[source,java]
+----
+treeGrid.addHierarchyColumn(Folder::name).setHeader("Folder").setSortable(true);
+----
+
+[NOTE]
+====
+More examples of how to configure sortable columns, including multi-column sorting and custom comparators, can be found in the <<../grid/index#sorting,Grid>> documentation.
+====
+
+In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator if column sorting is used:
+
+[source,java]
+----
+// setSortComparator requires a serializable comparator, so
+// we use a lambda since Comparator itself isn't serializable.
+treeDataProvider.setSortComparator((folder0, folder1) ->
+    Comparator.comparing(Folder::name).reversed().compare(folder0, folder1));
+----
+
+Calling this method automatically re-renders the TreeGrid to reflect the new sort order.
+
+[NOTE]
+====
+To avoid breaking parent-child relationships, sorting only compares items within the same hierarchy level.
+====
+
 == Custom Data Providers
 
 Conceptually, any hierarchical data provider, including [classname]`TreeDataProvider`, is a class that implements the [classname]`HierarchicalDataProvider` interface.
 
-For convenience, Flow provides a related abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data providers. This class requires implementing the following methods:
+For convenience, Flow provides a related abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data provider. This class requires implementing the following methods:
 
 [source,java]
 ----
-class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
+public class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
     @Override
     public boolean isInMemory() { // <1>
         // Your implementation here
@@ -194,7 +225,7 @@ Below is an example of a simple in-memory data provider using the nested hierarc
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
@@ -298,7 +329,7 @@ Below is an example of a simple in-memory data provider using the flattened hier
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
