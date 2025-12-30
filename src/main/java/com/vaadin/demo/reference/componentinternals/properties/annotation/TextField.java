@@ -7,7 +7,7 @@ import com.vaadin.flow.component.Tag;
 @Tag("input")
 public class TextField extends Component {
 
-// tag::property[]
+    // tag::property[]
     @Synchronize("change")
     public String getValue() {
         return getElement().getProperty("value");
@@ -16,5 +16,5 @@ public class TextField extends Component {
     public void setValue(String value) {
         getElement().setProperty("value", value);
     }
-// end::property[]
+    // end::property[]
 }

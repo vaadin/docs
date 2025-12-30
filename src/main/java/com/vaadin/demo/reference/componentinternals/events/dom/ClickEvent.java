@@ -10,12 +10,12 @@ public class ClickEvent extends ComponentEvent<NativeButton> {
 
     private final int button;
 
-    public ClickEvent(NativeButton source, boolean fromClient, 
+    public ClickEvent(NativeButton source, boolean fromClient,
             @EventData("event.button") int button) {
         super(source, fromClient);
         this.button = button;
     }
-    
+
     public int getButton() {
         return button;
     }

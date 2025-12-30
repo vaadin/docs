@@ -6,6 +6,7 @@ import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.dom.DebouncePhase;
 
+// @formatter:off hidden-source-line
 @DomEvent(
     value = "input",
     debounce = @DebounceSettings(
@@ -13,16 +14,17 @@ import com.vaadin.flow.dom.DebouncePhase;
         phases = DebouncePhase.TRAILING
     )
 )
+// @formatter:on hidden-source-line
 public class InputEvent extends ComponentEvent<TextField> {
 
     private final String value;
 
-    public InputEvent(TextField source, boolean fromClient, 
+    public InputEvent(TextField source, boolean fromClient,
             @EventData("element.value") String value) {
         super(source, fromClient);
         this.value = value;
     }
-    
+
     public String getValue() {
         return value;
     }

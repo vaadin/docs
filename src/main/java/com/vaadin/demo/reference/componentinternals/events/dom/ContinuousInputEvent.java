@@ -6,16 +6,18 @@ import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.dom.DebouncePhase;
 
+// @formatter:off hidden-source-line
 @DomEvent(
-    value = "input", 
+    value = "input",
     debounce = @DebounceSettings(
-        timeout = 500, 
-        phases = { 
+        timeout = 500,
+        phases = {
             DebouncePhase.LEADING,
-            DebouncePhase.INTERMEDIATE 
+            DebouncePhase.INTERMEDIATE
         }
     )
 )
+// @formatter:on hidden-source-line
 public class ContinuousInputEvent extends ComponentEvent<TextField> {
 
     private final String value;

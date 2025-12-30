@@ -10,7 +10,8 @@ public class UserNameLabel extends Component {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         // This assumes the username has been stored in the session after login
-        String userName = (String) attachEvent.getSession().getAttribute("username");
+        String userName = (String) attachEvent.getSession()
+                .getAttribute("username");
         getElement().setText("Hello %s, weclome back!".formatted(userName));
     }
 }
