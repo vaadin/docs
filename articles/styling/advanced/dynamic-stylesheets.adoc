@@ -34,4 +34,58 @@ Registration registration = UI.getCurrent().getPage().addStyleSheet("dynamic-sty
 registration.remove();
 ----
 
+Using the dynamic loading and the registration it is possible to have swappable style functionality.
+
+This could be used for instance in a [classname]`StyleChanger` component and that changes the current style to the selected one.
+
+Sample code defines the styles `default`, `color vision deficiency` and `compact`, for which the actual style files would be located in `src/main/resources/META-INF/resources/`
+
+[source,java]
+----
+public class ThemeChanger extends Select<String> {
+    public ThemeChanger() {
+        setLabel("Select Theme");
+        setItems("default-style.css", "cvd-style.css", "compact-style.css");
+        setValue("default-style.css");
+
+        addValueChangeListener(event -> switchTheme(
+                event.getSource().getUI().orElse(UI.getCurrent()),
+                event.getValue()));
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        UI ui = attachEvent.getUI();
+        Registration registration = ComponentUtil.getData(ui,
+                Registration.class);
+        // set default-style if no registration found
+        if (registration != null) {
+            switchTheme(ui, "default-style.css");
+        }
+    }
+
+    /**
+     * Switch the current theme style sheet for a new one.
+     *
+     * @param ui         the ui in use, not {@code null}
+     * @param styleSheet new style to replace current with
+     */
+    protected void switchTheme(UI ui, String styleSheet) {
+        // Get previous style registration
+        Registration registration = ComponentUtil.getData(ui,
+                Registration.class);
+        // If previous available remove style sheet
+        if (registration != null) {
+            registration.remove();
+        }
+
+        // Add the new style sheet
+        registration = ui.getPage().addStyleSheet(styleSheet);
+
+        // Store registration to remove style on later change
+        ComponentUtil.setData(ui, Registration.class, registration);
+    }
+}
+----
+
 [discussion-id]`6c72d9f9-16d5-4ab5-add8-3c481c3103f8`
