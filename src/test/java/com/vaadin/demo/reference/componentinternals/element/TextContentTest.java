@@ -8,7 +8,7 @@ import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.dom.ElementFactory;
 
 public class TextContentTest {
-    
+
     @Test
     public void demonstrate_setText() {
         // tag::settext[]
@@ -17,10 +17,11 @@ public class TextContentTest {
         assertEquals("<div>Hello world</div>", element.toString());
 
         // <div>
-        //  Hello world<span></span>
+        // Hello world<span></span>
         // </div>
         element.appendChild(ElementFactory.createSpan());
-        assertEquals("<div>\n Hello world<span></span>\n</div>", element.toString());
+        assertEquals("<div>\n Hello world<span></span>\n</div>",
+                element.toString());
 
         // <div>Replacement text</div> (the span is removed)
         element.setText("Replacement text");
@@ -36,11 +37,12 @@ public class TextContentTest {
 
         Element name = ElementFactory.createStrong("Rudolph Reindeer");
         // <div>
-        //  Welcome back <strong>Rudolph Reindeer</strong>
+        // Welcome back <strong>Rudolph Reindeer</strong>
         // </div>
         element.appendChild(name);
 
-        assertEquals("Welcome back Rudolph Reindeer", element.getTextRecursively());        
+        assertEquals("Welcome back Rudolph Reindeer",
+                element.getTextRecursively());
         assertEquals("Welcome back ", element.getText());
         // end::gettext[]
     }

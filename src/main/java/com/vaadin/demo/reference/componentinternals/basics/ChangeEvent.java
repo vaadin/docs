@@ -7,5 +7,5 @@ public class ChangeEvent extends ComponentEvent<TextField> {
     public ChangeEvent(TextField source, boolean fromClient) {
         super(source, fromClient);
     }
-    
+
 }

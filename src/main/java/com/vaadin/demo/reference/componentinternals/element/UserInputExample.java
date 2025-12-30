@@ -14,7 +14,8 @@ public class UserInputExample extends Component {
         textInput.setAttribute("placeholder", "Enter your name");
         // end::create[]
         // tag::listen[]
-        textInput.addPropertyChangeListener("value", "change", e -> {});
+        textInput.addPropertyChangeListener("value", "change", e -> {
+        });
         // end::listen[]
 
         // tag::process[]
@@ -25,7 +26,7 @@ public class UserInputExample extends Component {
             getElement().appendChild(response);
         });
         // end::process[]
-        
+
         getElement().appendChild(textInput, button);
     }
 }
