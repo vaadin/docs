@@ -131,7 +131,7 @@ As before, make sure to call [methodname]`TreeDataProvider#refreshAll()` to upda
 
 === Sorting Items
 
-Tree Data Provider provides built-in support for in-memory sorting. You can enable sorting on Tree Grid columns to make the data provider  automatically sort the items based on the sort order selected by the user:
+Tree Data Provider provides built-in support for in-memory sorting. You can enable sorting on Tree Grid columns, and the data provider will automatically sort the items based on the sort order selected by the user:
 
 [source,java]
 ----
@@ -143,22 +143,47 @@ treeGrid.addHierarchyColumn(Folder::name).setHeader("Folder").setSortable(true);
 More examples of how to configure sortable columns, including multi-column sorting and custom comparators, can be found in the <<../grid/index#sorting,Grid>> documentation.
 ====
 
-In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator if column sorting is used:
+In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator if column sorting is used.
 
 [source,java]
 ----
-// setSortComparator requires a serializable comparator, so
-// we use a lambda since Comparator itself isn't serializable.
+// Set a custom sort comparator to sort folders by name in descending order.
+// setSortComparator requires a Serializable comparator, so we use a lambda
+// here since standard Comparator isn't serializable.
 treeDataProvider.setSortComparator((folder0, folder1) ->
     Comparator.comparing(Folder::name).reversed().compare(folder0, folder1));
+
+...
+
+// Remove the custom sort comparator
+treeDataProvider.setSortComparator(null);
 ----
 
-Calling this method automatically re-renders the TreeGrid to reflect the new sort order.
+The `setSortComparator` method automatically re-renders the Tree Grid to reflect the new sort order.
+
+Programmatically managing sorting can be useful when you have sort controls outside the Tree Grid and you want to integrate them.
 
 [NOTE]
 ====
 To avoid breaking parent-child relationships, sorting only compares items within the same hierarchy level.
 ====
+
+=== Filtering Items
+
+Tree Data Provider also supports in-memory filtering. To filter items, you can set a filter predicate on the [classname]`TreeDataProvider` instance using the [methodname]`setFilter(SerializablePredicate<T>)` method:
+
+[source,java]
+----
+// Only show folders whose names contain "doc" (case-insensitive)
+treeDataProvider.setFilter(folder -> folder.name().toLowerCase().contains("doc"));
+
+...
+
+// Reset to show all folders
+treeDataProvider.setFilter(null);
+----
+
+The `setFilter` method automatically re-renders the Tree Grid to show the filtered results. When filtering, the Tree Data Provider evaluates the entire expanded hierarchy so that if a nested item matches, all its parents are included as well – even if they don't match the filter themselves.
 
 == Custom Data Providers
 
