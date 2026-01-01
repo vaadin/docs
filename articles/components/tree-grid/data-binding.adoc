@@ -143,47 +143,61 @@ treeGrid.addHierarchyColumn(Folder::name).setHeader("Folder").setSortable(true);
 More examples of how to configure sortable columns, including multi-column sorting and custom comparators, can be found in the <<../grid/index#sorting,Grid>> documentation.
 ====
 
-In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator if column sorting is used.
+In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator when combined with column sorting.
+
+In the example below, a Select component is used to let users choose how folders are sorted in the Tree Grid. The `setSortComparator` method is called to apply the corresponding comparator based on the selected value:
 
 [source,java]
 ----
-// Set a custom sort comparator to sort folders by name in descending order.
-// setSortComparator requires a Serializable comparator, so we use a lambda
-// here since standard Comparator isn't serializable.
-treeDataProvider.setSortComparator((folder0, folder1) ->
-    Comparator.comparing(Folder::name).reversed().compare(folder0, folder1));
+Select<String> sortBySelect = new Select<>("Sort by", "", "Name (A-Z)", "Name (Z-A)");
+sortBySelect.setValue("");
+sortBySelect.addValueChangeListener(event -> {
+    Comparator<Folder> comparator = switch (event.getValue()) {
+        case "Name (A-Z)" -> Comparator.comparing(Folder::name);
+        case "Name (Z-A)" -> Comparator.comparing(Folder::name).reversed();
+        default -> null;
+    };
 
-...
-
-// Remove the custom sort comparator
-treeDataProvider.setSortComparator(null);
+    if (comparator != null) {
+        // The comparator can't be passed directly because it doesn't implement
+        // SerializableComparator, which is required by setSortComparator. Using
+        // comparator::compare works as a workaround, as long as no serialization
+        // is triggered at runtime.
+        treeDataProvider.setSortComparator(comparator::compare);
+    } else {
+        treeDataProvider.setSortComparator(null);
+    }
+});
 ----
 
-The `setSortComparator` method automatically re-renders the Tree Grid to reflect the new sort order.
-
-Programmatically managing sorting can be useful when you have sort controls outside the Tree Grid and you want to integrate them.
+The `setSortComparator` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
 
 [NOTE]
 ====
-To avoid breaking parent-child relationships, sorting only compares items within the same hierarchy level.
+Sorting in tree structures is always performed independently at each level to avoid breaking the links between parents and their children.
 ====
 
 === Filtering Items
 
-Tree Data Provider also supports in-memory filtering. To filter items, you can set a filter predicate on the [classname]`TreeDataProvider` instance using the [methodname]`setFilter(SerializablePredicate<T>)` method:
+Tree Data Provider also supports in-memory filtering. You can apply filtering by setting a predicate via the `TreeDataProvider#setFilter(SerializablePredicate<T>)` method.
+
+The following example demonstrates how this method can be used to filter folders based on a search term entered in a TextField component. As the user types, the Tree Grid updates in real time to show only folders whose names contain the search term:
 
 [source,java]
 ----
-// Only show folders whose names contain "doc" (case-insensitive)
-treeDataProvider.setFilter(folder -> folder.name().toLowerCase().contains("doc"));
+TextField searchInput = new TextField("Search folders", "Enter folder name");
+searchInput.setValueChangeMode(ValueChangeMode.EAGER);
+searchInput.addValueChangeListener(event -> {
+    String searchTerm = event.getValue();
 
-...
-
-// Reset to show all folders
-treeDataProvider.setFilter(null);
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+});
 ----
 
-The `setFilter` method automatically re-renders the Tree Grid to show the filtered results. When filtering, the Tree Data Provider evaluates the entire expanded hierarchy so that if a nested item matches, all its parents are included as well – even if they don't match the filter themselves.
+The `setFilter` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
+
+When filtering, the Tree Data Provider evaluates the entire expanded hierarchy. If a nested item matches the filter, all of its parent items are also included – even if they don't match the filter themselves – to ensure the matching item actually appears in the filtered tree.
 
 == Custom Data Providers
 
