@@ -10,13 +10,13 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      {/* Icon button using an aria-label to provide a textual alternative 
+      {/* Icon button using an aria-label to provide a textual alternative
           to screen readers  */}
       <Button theme="icon" aria-label="Add item">
         <Icon icon="vaadin:plus" />
       </Button>
 
-      {/* Icon button using a tooltip to provide a textual description of 
+      {/* Icon button using a tooltip to provide a textual description of
           the action that it triggers */}
       <Button theme="icon" aria-label="Close">
         <Icon icon="vaadin:close-small" />
