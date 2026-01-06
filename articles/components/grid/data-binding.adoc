@@ -9,11 +9,11 @@ section-nav: badge-flow
 = Binding Data to Grid [badge-flow]#Flow#
 :toclevels: 2
 
-Grid supports connecting to various types of data sources through data providers. A data provider is a class that implements the [interfacename]`DataProvider` interface and encapsulates the logic for fetching and counting items from a specific data source. Grid provides convenience methods to simplify common use cases where a full data provider setup isn't necessary, and also allows you to supply a custom data provider implementation for more complex scenarios.
+Grid supports connecting to various types of data sources through data providers. A data provider is a class that implements the [interfacename]`DataProvider` interface and encapsulates the logic for fetching items from a specific data source, with support for pagination, sorting, and filtering. Grid provides convenience methods to simplify common binding cases where a full data provider setup isn't needed, and also supports fully custom data providers for more complex scenarios.
 
-== Binding Items with `setItems`
+== Binding Items via `setItems`
 
-The `setItems` method in Grid is a convenience API that allows you to bind and display data from in-memory collections and simple lazy-loaded data sources without creating a data provider explicitly. This method offers several overloads for different scenarios and returns either a `GridListDataView` or `GridLazyDataView` instance, which let you configure the displayed items by applying filtering, sorting, and other options.
+The `setItems` method in Grid is a convenience API that allows you to bind and display data from in-memory collections and simple lazy-loaded data sources without explicitly creating a data provider. This method offers several overloads for different use cases, returning either a `GridListDataView` or `GridLazyDataView` instance, which you can then use to apply filtering, sorting, and other options to the displayed items.
 
 .Example: Binding a collection of items
 [source,java]
@@ -49,4 +49,133 @@ For more documentation and examples, see the <<{articles}/flow/binding-data/data
 
 == Custom Data Providers
 
-Alternatively, you can provide a custom data provider via the `setDataProvider` method, for example by passing your own class that implements the `DataProvider` interface.
+Alternatively, you can provide a custom data provider via the `setDataProvider(DataProvider<T, ?>)` method, passing your own class that implements the [interfacename]`DataProvider` interface.
+
+For convenience, Flow provides an abstract base class `AbstractDataProvider`, which you can extend to create a custom data provider.
+
+[.example]
+--
+
+[source,java]
+.PersonDataProvider.java
+----
+public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
+    // In a real application, data would come from a database or backend service.
+    // This example uses a static list to simulate a data source.
+    private final List<Person> DATABASE = Arrays.asList(
+            new Person("Michael Chen", "Engineering"),
+            new Person("Sarah Johnson", "Engineering"),
+            new Person("David Rodriguez", "Marketing"),
+            new Person("Emma Wilson", "HR"),
+            new Person("James Patterson", "Marketing"));
+
+    @Override
+    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
+        // SQL equivalent: SELECT ... FROM ...
+        Stream<Person> stream = DATABASE.stream();
+
+        // SQL equivalent: WHERE ...
+        if (query.getFilter().isPresent()) {
+            stream = stream.filter(person -> query.getFilter().get().test(person));
+        }
+
+        // SQL equivalent: ORDER BY ...
+        if (!query.getSortOrders().isEmpty()) {
+            stream = stream.sorted(createComparator(query.getSortOrders()));
+        }
+
+        // SQL equivalent: OFFSET ... LIMIT ...
+        return stream.skip(query.getOffset()).limit(query.getLimit());
+    }
+
+    @Override
+    protected int sizeInBackEnd(Query<Person, PersonFilter> query) {
+        // SQL equivalent: SELECT COUNT(*) FROM ...
+        Stream<Person> stream = DATABASE.stream();
+
+        // SQL equivalent: WHERE ...
+        if (query.getFilter().isPresent()) {
+            stream = stream.filter(person -> query.getFilter().get().test(person));
+        }
+
+        return (int) stream.count();
+    }
+
+    private Comparator<Person> createComparator(List<QuerySortOrder> sortOrders) {
+        // Builds a Java comparator based on the given sort orders.
+        // SQL equivalent: ORDER BY <field> [ASC|DESC], ...
+        return sortOrders.stream().map(sortOrder -> {
+            Comparator<Person> comparator = switch (sortOrder.getSorted()) {
+                case "name" -> Comparator.comparing(Person::name);
+                case "department" -> Comparator.comparing(Person::department);
+                default -> (p0, p1) -> 0;
+            };
+
+            return sortOrder.getDirection().equals(SortDirection.ASCENDING)
+                    ? comparator
+                    : comparator.reversed();
+        }).reduce((p0, p1) -> 0, Comparator::thenComparing);
+    }
+}
+----
+
+[source,java]
+.PeopleView.java
+----
+public class PeopleView extends VerticalLayout {
+    private TextField nameFilter;
+    private Select<String> departmentFilter;
+    private  ConfigurableFilterDataProvider<Person, Void, PersonFilter> dataProvider;
+
+    public PeopleView() {
+        Grid<Person> grid = new Grid<>(Person.class);
+
+        // Enable sorting for the columns
+        grid.setSortableColumns("name", "department");
+
+        // Create a data provider instance with a configurable filter.
+        // The returned wrapper allows setting the filter dynamically
+        // using the ConfigurableFilterDataProvider#setFilter() method
+        dataProvider = new PersonDataProvider().withConfigurableFilter();
+        grid.setDataProvider(dataProvider);
+
+        // Create filter components
+        nameFilter = new TextField("Search by name", event -> updateFilter());
+        departmentFilter = new Select<>("Department", event -> updateFilter());
+        departmentFilter.setItems("", "Engineering", "Marketing", "HR");
+
+        add(nameFilter, departmentFilter, grid);
+    }
+
+    private void updateFilter() {
+        dataProvider.setFilter(new PersonFilter(
+                nameFilter.getValue(),
+                departmentFilter.getValue()));
+    }
+}
+----
+
+[source,java]
+.PersonFilter.java
+----
+public record PersonFilter(String nameFilter, String departmentFilter) {
+    public boolean test(Person person) {
+        boolean matches = true;
+        if (nameFilter != null && !nameFilter.isEmpty()) {
+            matches &= person.name().toLowerCase().contains(nameFilter.toLowerCase());
+        }
+        if (departmentFilter != null && !departmentFilter.isEmpty()) {
+            matches &= person.department().equalsIgnoreCase(departmentFilter);
+        }
+        return matches;
+    }
+}
+----
+
+[source,java]
+.Person.java
+----
+public record Person(String name, String department) {
+}
+----
+--
