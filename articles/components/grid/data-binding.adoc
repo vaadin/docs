@@ -13,43 +13,163 @@ Grid supports connecting to various types of data sources through data providers
 
 == Binding Items via `setItems`
 
-The `setItems` method in Grid is a convenience API that allows you to bind and display data from in-memory collections and simple lazy-loaded data sources without explicitly creating a data provider. This method offers several overloads for different use cases, and returns either a `GridListDataView` or `GridLazyDataView` instance, which you can use to add filtering, sorting, and other configurations to the resulting list of displayed items.
+The simplest way to bind data to a Grid is by using the `setItems` convenience method. It lets you bind an in-memory collection or provide callbacks for lazy loading from a backend service without explicitly creating a data provider.
 
-.Example: Binding a collection of items
+*Example:* Binding items from an in-memory collection.
+
+[.example]
+--
+
 [source,java]
+.PeopleView.java
 ----
+Grid<Person> grid = new Grid<>(Person.class);
+
+// Binding
 GridListDataView dataView = grid.setItems(
-    new Person("George Washington", 1732),
-    new Person("John Adams", 1735),
-    new Person("Thomas Jefferson", 1743),
-    new Person("James Madison", 1751)
+    new Person("Michael Chen"),
+    new Person("Sarah Johnson"),
+    new Person("David Rodriguez"),
+    new Person("Emma Wilson")
+);
+
+// Filtering
+TextField searchInput = new TextField("Search", event -> {
+    if (!event.getValue().isEmpty()) {
+        // Set a filter to show only persons whose name contains the search term
+        dataView.setFilter(person ->
+            person.name().toLowerCase().contains(event.getValue().toLowerCase()));
+    } else {
+        // Clear the filter if the search term is empty
+        dataView.removeFilters();
+    }
+});
+
+// Sorting
+Select<String> sortBySelect = new Select<>("Sort by", event -> {
+    switch (event.getValue()) {
+        case "Name (A-Z)" ->
+            // Set sort order to ascending by name
+            dataView.setSortOrder(Person::name, SortDirection.ASCENDING);
+        case "Name (Z-A)" ->
+            // Set sort order to descending by name
+            dataView.setSortOrder(Person::name, SortDirection.DESCENDING);
+        default ->
+            // Clear sorting
+            dataView.removeSorting();
+    }
+});
+sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
+----
+
+[source,java]
+.Person.java
+----
+public record Person(String name) {
+}
+----
+
+--
+
+*Example:* Binding items from a data service via callbacks.
+
+[.example]
+--
+
+[source,java]
+.PeopleView.java
+----
+Grid<Person> grid = new Grid<>(Person.class);
+
+// Filtering
+TextField searchInput = new TextField("Search", event -> {
+    grid.getLazyDataView().refreshAll();
+});
+
+// Sorting
+Select<String> sortBySelect = new Select<>("Sort by", event -> {
+    grid.getLazyDataView().refreshAll();
+});
+sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
+
+// Binding
+grid.setItems(
+    (query) ->
+        PersonService.fetch(
+            searchInput.getValue(),
+            sortBySelect.getValue(),
+            query.getOffset(),
+            query.getLimit()),
+    (query) ->
+        PersonService.count(searchInput.getValue())
 );
 ----
 
-.Example: Binding items from a data service with lazy loading
 [source,java]
+.PersonService.java
 ----
-GridLazyDataView dataView = grid.setItems(
-    // Callback for fetching items, expected to return a stream of items
-    query -> personService.fetch(query.getOffset(), query.getLimit()),
-    // Callback for counting items, expected to return a number of items
-    query -> personService.count()
-);
+public class PersonService {
+    private static final List<Person> PEOPLE = Arrays.asList(
+        new Person("Michael Chen"),
+        new Person("Sarah Johnson"),
+        new Person("David Rodriguez"),
+        new Person("Emma Wilson");
+
+    public static Stream<Person> fetch(
+            String searchTerm, String sortOrder, int offset, int limit) {
+        return PEOPLE.stream()
+            .filter(person -> {
+                if (searchTerm == null || searchTerm.isEmpty()) {
+                    return true;
+                }
+
+                return person.name().toLowerCase().contains(searchTerm.toLowerCase());
+            })
+            .sorted((person0, person1) -> {
+                if (sortOrder == null) {
+                    return 0;
+                }
+                return switch (sortOrder) {
+                    case "Name (A-Z)" ->
+                        Comparator.comparing(Person::name).compare(person0, person1);
+                    case "Name (Z-A)" ->
+                        Comparator.comparing(Person::name).reversed().compare(person0, person1);
+                    default ->
+                        0;
+                };
+            })
+            .skip(offset)
+            .limit(limit);
+    }
+
+    public static int count(String searchTerm) {
+        return (int) PEOPLE.stream()
+            .filter(person -> {
+                if (searchTerm == null || searchTerm.isEmpty()) {
+                    return true;
+                }
+
+                return person.name().toLowerCase().contains(searchTerm.toLowerCase());
+            })
+            .count();
+    }
+}
 ----
 
-.Example: Filtering and sorting the resulting data view
 [source,java]
+.Person.java
 ----
-dataView
-    .addFilter(person -> person.getAge() >= 18)
-    .setSortOrder(Comparator.comparing(Person::getName));
+public record Person(String name) {
+}
 ----
 
-For more documentation and examples, see the <<{articles}/flow/binding-data/data-provider#,Binding Items To Components>> article.
+--
+
+More documentation and examples for using the `setItems` method are available in the <<{articles}/flow/binding-data/data-provider#,Binding Items To Components>> article.
 
 == Custom Data Providers
 
-Alternatively, you can provide a custom data provider via the `setDataProvider(DataProvider<T, ?>)` method, passing your own class that implements the [interfacename]`DataProvider` interface.
+Alternatively, you can supply a custom data provider via the `setDataProvider(DataProvider<T, ?>)` method, passing your own class that implements the [interfacename]`DataProvider` interface:
 
 [source,java]
 ----
@@ -83,7 +203,7 @@ public class CustomDataProvider extends AbstractDataProvider<T, F> {
 
 The `Query<T, F>` parameter in the `size` and `fetch` methods provides information about the requested data such as pagination details (offset and limit), sorting orders, and an optional filter object of type `F`.
 
-Below is a practical example of a custom data provider that extends the `AbstractDataProvider` class and uses a fake database to return `Person` records. It supports filtering with a `PersonFilter` object and sorting using a list of `QuerySortOrder` objects from the Grid. The example also includes a simple view that uses the data provider with a Grid and filter components:
+Below is a practical example of a custom data provider that extends the `AbstractDataProvider` class and uses a fake database to return `Person` records. It supports filtering with a `PersonFilter` object and sorting using `QuerySortOrder` objects from the Grid. The example also includes a simple view that uses the data provider with a Grid and filter components:
 
 [.example]
 --
@@ -99,7 +219,6 @@ public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilte
             new Person("Sarah Johnson", "Engineering"),
             new Person("David Rodriguez", "Marketing"),
             new Person("Emma Wilson", "HR"),
-            new Person("James Patterson", "Marketing"));
 
     @Override
     public boolean isInMemory() {
@@ -203,10 +322,13 @@ public class PeopleView extends VerticalLayout {
     public PeopleView() {
         Grid<Person> grid = new Grid<>(Person.class);
 
-        // Enable sorting for the columns
+        // Enable sorting for the columns. This will send sorting information
+        // to the data provider as List<QuerySortOrder> when the user sorts
+        // the columns in the Grid.
         grid.setSortableColumns("name", "department");
 
-        // Create a data provider instance with a configurable filter.
+        // Create a data provider instance with a configurable filter,
+        // as it doesn't provide filtering capabilities by default.
         // The returned wrapper allows setting the filter dynamically
         // using the ConfigurableFilterDataProvider#setFilter() method
         dataProvider = new PersonDataProvider().withConfigurableFilter();
