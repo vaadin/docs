@@ -13,7 +13,7 @@ Grid supports connecting to various types of data sources through data providers
 
 == Binding Items via `setItems`
 
-The `setItems` method in Grid is a convenience API that allows you to bind and display data from in-memory collections and simple lazy-loaded data sources without explicitly creating a data provider. This method offers several overloads for different use cases, returning either a `GridListDataView` or `GridLazyDataView` instance, which you can then use to apply filtering, sorting, and other options to the displayed items.
+The `setItems` method in Grid is a convenience API that allows you to bind and display data from in-memory collections and simple lazy-loaded data sources without explicitly creating a data provider. This method offers several overloads for different use cases, and returns either a `GridListDataView` or `GridLazyDataView` instance, which you can use to add filtering, sorting, and other configurations to the resulting list of displayed items.
 
 .Example: Binding a collection of items
 [source,java]
@@ -30,9 +30,9 @@ GridListDataView dataView = grid.setItems(
 [source,java]
 ----
 GridLazyDataView dataView = grid.setItems(
-    // Callback for fetching items, returns a Stream<Person>
+    // Callback for fetching items, expected to return a stream of items
     query -> personService.fetch(query.getOffset(), query.getLimit()),
-    // Callback for counting items, returns an Integer
+    // Callback for counting items, expected to return a number of items
     query -> personService.count()
 );
 ----
@@ -81,9 +81,9 @@ public class CustomDataProvider extends AbstractDataProvider<T, F> {
 <2> The [methodname]`size` method returns the number of items based on the query parameters.
 <3> The [methodname]`fetch` method returns a stream of items based on the query parameters.
 
-The `Query<T, F>` parameter in the `size` and `fetch` methods provides information about the requested data such as pagination details (offset and limit), sorting orders, and an optional filter of type `F`.
+The `Query<T, F>` parameter in the `size` and `fetch` methods provides information about the requested data such as pagination details (offset and limit), sorting orders, and an optional filter object of type `F`.
 
-The following is a practical example of a custom data provider that extends the `AbstractDataProvider` class and returns `Person` records from a database. It supports filtering with a `PersonFilter` object and sorting based on a list of `QuerySortOrder` objects from the Grid. It also includes a simple view that uses the data provider with a Grid and filter components:
+Below is a practical example of a custom data provider that extends the `AbstractDataProvider` class and uses a fake database to return `Person` records. It supports filtering with a `PersonFilter` object and sorting using a list of `QuerySortOrder` objects from the Grid. The example also includes a simple view that uses the data provider with a Grid and filter components:
 
 [.example]
 --
@@ -92,9 +92,9 @@ The following is a practical example of a custom data provider that extends the 
 .PersonDataProvider.java
 ----
 public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilter> {
-    // In a real application, data would come from a database or backend service.
+    // In a real application, data would come from a real database or backend service.
     // This example uses a static list for demonstration purposes only.
-    private final List<Person> DATABASE = Arrays.asList(
+    private final List<Person> FAKE_DATABASE = Arrays.asList(
             new Person("Michael Chen", "Engineering"),
             new Person("Sarah Johnson", "Engineering"),
             new Person("David Rodriguez", "Marketing"),
@@ -109,7 +109,7 @@ public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilte
     @Override
     public Stream<Person> fetch(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT ... FROM ...
-        Stream<Person> stream = DATABASE.stream();
+        Stream<Person> stream = FAKE_DATABASE.stream();
 
         // SQL equivalent: WHERE ...
         stream = stream.filter(createPredicate(query.getFilter()));
@@ -126,7 +126,7 @@ public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilte
     @Override
     public int size(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT COUNT(*) FROM ...
-        Stream<Person> stream = DATABASE.stream();
+        Stream<Person> stream = FAKE_DATABASE.stream();
 
         // SQL equivalent: WHERE ...
         stream = stream.filter(createPredicate(query.getFilter()));
