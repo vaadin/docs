@@ -59,9 +59,9 @@ For convenience, Flow provides an abstract base class `AbstractDataProvider`, wh
 [source,java]
 .PersonDataProvider.java
 ----
-public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
+public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilter> {
     // In a real application, data would come from a database or backend service.
-    // This example uses a static list to simulate a data source.
+    // This example uses a static list for demonstration purposes only.
     private final List<Person> DATABASE = Arrays.asList(
             new Person("Michael Chen", "Engineering"),
             new Person("Sarah Johnson", "Engineering"),
@@ -70,40 +70,57 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
             new Person("James Patterson", "Marketing"));
 
     @Override
-    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
+    public boolean isInMemory() {
+        return false;
+    }
+
+    @Override
+    public Stream<Person> fetch(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT ... FROM ...
         Stream<Person> stream = DATABASE.stream();
 
         // SQL equivalent: WHERE ...
-        if (query.getFilter().isPresent()) {
-            stream = stream.filter(person -> query.getFilter().get().test(person));
-        }
+        stream = stream.filter(createPredicate(query.getFilter()));
 
         // SQL equivalent: ORDER BY ...
-        if (!query.getSortOrders().isEmpty()) {
-            stream = stream.sorted(createComparator(query.getSortOrders()));
-        }
+        stream = stream.sorted(createComparator(query.getSortOrders()));
 
         // SQL equivalent: OFFSET ... LIMIT ...
-        return stream.skip(query.getOffset()).limit(query.getLimit());
+        stream = stream.skip(query.getOffset()).limit(query.getLimit());
+
+        return stream;
     }
 
     @Override
-    protected int sizeInBackEnd(Query<Person, PersonFilter> query) {
+    public int size(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT COUNT(*) FROM ...
         Stream<Person> stream = DATABASE.stream();
 
         // SQL equivalent: WHERE ...
-        if (query.getFilter().isPresent()) {
-            stream = stream.filter(person -> query.getFilter().get().test(person));
-        }
+        stream = stream.filter(createPredicate(query.getFilter()));
 
         return (int) stream.count();
     }
 
+    /**
+     * Creates a filter function (predicate) based on the filter object from the Grid.
+     *
+     * This is for demonstration purposes only. In a real application, you should do
+     * filtering in the database query e.g. by using SQL WHERE if you are using a
+     * relational database.
+     */
+    private Predicate<Person> createPredicate(Optional<PersonFilter> filter) {
+        return filter.map(f -> (Predicate<Person>) f::test).orElse(p -> true);
+    }
+
+    /**
+     * Creates a sorting function (comparator) based on the sort orders from the Grid.
+     *
+     * This is for demonstration purposes only. In a real application, you should do
+     * sorting in the database query e.g. by using SQL ORDER BY if you are using a
+     * relational database.
+     */
     private Comparator<Person> createComparator(List<QuerySortOrder> sortOrders) {
-        // Builds a Java comparator based on the given sort orders.
-        // SQL equivalent: ORDER BY <field> [ASC|DESC], ...
         return sortOrders.stream().map(sortOrder -> {
             Comparator<Person> comparator = switch (sortOrder.getSorted()) {
                 case "name" -> Comparator.comparing(Person::name);
@@ -120,12 +137,36 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
 ----
 
 [source,java]
+.PersonFilter.java
+----
+public record PersonFilter(String nameFilter, String departmentFilter) {
+    public boolean test(Person person) {
+        boolean matches = true;
+        if (nameFilter != null && !nameFilter.isEmpty()) {
+            matches &= person.name().toLowerCase().contains(nameFilter.toLowerCase());
+        }
+        if (departmentFilter != null && !departmentFilter.isEmpty()) {
+            matches &= person.department().equals(departmentFilter);
+        }
+        return matches;
+    }
+}
+----
+
+[source,java]
+.Person.java
+----
+public record Person(String name, String department) {
+}
+----
+
+[source,java]
 .PeopleView.java
 ----
 public class PeopleView extends VerticalLayout {
     private TextField nameFilter;
     private Select<String> departmentFilter;
-    private  ConfigurableFilterDataProvider<Person, Void, PersonFilter> dataProvider;
+    private ConfigurableFilterDataProvider<Person, Void, PersonFilter> dataProvider;
 
     public PeopleView() {
         Grid<Person> grid = new Grid<>(Person.class);
@@ -148,34 +189,10 @@ public class PeopleView extends VerticalLayout {
     }
 
     private void updateFilter() {
-        dataProvider.setFilter(new PersonFilter(
-                nameFilter.getValue(),
-                departmentFilter.getValue()));
+        dataProvider.setFilter(
+                new PersonFilter(nameFilter.getValue(), departmentFilter.getValue()));
     }
 }
 ----
 
-[source,java]
-.PersonFilter.java
-----
-public record PersonFilter(String nameFilter, String departmentFilter) {
-    public boolean test(Person person) {
-        boolean matches = true;
-        if (nameFilter != null && !nameFilter.isEmpty()) {
-            matches &= person.name().toLowerCase().contains(nameFilter.toLowerCase());
-        }
-        if (departmentFilter != null && !departmentFilter.isEmpty()) {
-            matches &= person.department().equalsIgnoreCase(departmentFilter);
-        }
-        return matches;
-    }
-}
-----
-
-[source,java]
-.Person.java
-----
-public record Person(String name, String department) {
-}
-----
 --
