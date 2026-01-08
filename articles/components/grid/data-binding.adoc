@@ -118,40 +118,36 @@ public class PersonService {
     public static Stream<Person> fetch(
             String searchTerm, String sortOrder, int offset, int limit) {
         return PEOPLE.stream()
-            .filter(person -> {
-                if (searchTerm == null || searchTerm.isEmpty()) {
-                    return true;
-                }
-
-                return person.name().toLowerCase().contains(searchTerm.toLowerCase());
-            })
-            .sorted((person0, person1) -> {
-                if (sortOrder == null) {
-                    return 0;
-                }
-                return switch (sortOrder) {
-                    case "Name (A-Z)" ->
-                        Comparator.comparing(Person::name).compare(person0, person1);
-                    case "Name (Z-A)" ->
-                        Comparator.comparing(Person::name).reversed().compare(person0, person1);
-                    default ->
-                        0;
-                };
-            })
+            .filter(createPredicate(searchTerm))
+            .sorted(createComparator(sortOrder))
             .skip(offset)
             .limit(limit);
     }
 
     public static int count(String searchTerm) {
         return (int) PEOPLE.stream()
-            .filter(person -> {
-                if (searchTerm == null || searchTerm.isEmpty()) {
-                    return true;
-                }
-
-                return person.name().toLowerCase().contains(searchTerm.toLowerCase());
-            })
+            .filter(createPredicate(searchTerm))
             .count();
+    }
+
+    private static Predicate<Person> createPredicate(String searchTerm) {
+        if (searchTerm == null || searchTerm.isEmpty()) {
+            return (person) -> true;
+        }
+
+        return person -> person.name().toLowerCase().contains(searchTerm.toLowerCase());
+    }
+
+    private static Comparator<Person> createComparator(String sortOrder) {
+        if (sortOrder == null) {
+            return 0;
+        }
+        Comparator<Person> comparator = switch (sortOrder) {
+            case "Name (A-Z)" -> Comparator.comparing(Person::name);
+            case "Name (Z-A)" -> Comparator.comparing(Person::name).reversed();
+            default -> 0;
+        };
+        return comparator::compare;
     }
 }
 ----
