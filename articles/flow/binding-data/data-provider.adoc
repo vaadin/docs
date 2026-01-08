@@ -580,7 +580,7 @@ public static void listItems(Grid<Person> grid, PersonRepository repository) {
 }
 ----
 
-You can create a separate data provider class. The following example uses only the [classname]`FetchCallBack`, but you can also implement a full data provider by extending [classname]`AbstractbackendDataProvider`.
+To completely split off the lazy data binding logic from UI components, you can create a separate data provider class. The following example shows a data provider with only a fetch callback:
 
 [source,java]
 ----
@@ -588,7 +588,7 @@ You can create a separate data provider class. The following example uses only t
 public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Person, Void> {
 
     @Autowired
-    PersonRepository repo;
+    private PersonRepository repo;
 
     @Override
     public Stream<Person> fetch(Query<Person, Void> query) {
@@ -598,7 +598,53 @@ public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Pe
 
 }
 
-personGrid.setItems(dataProvider);
+personGrid.setDataProvider(dataProvider);
+----
+
+You can also implement a full data provider by extending the [classname]`AbstractBackendDataProvider` class like so:
+
+[source,java]
+----
+public class PersonDataProvider extends AbstractBackendDataProvider<Person, String> {
+    @Autowired
+    private PersonRepository repo;
+
+    @Override
+    protected int sizeInBackEnd(Query<Person, String> query) {
+        String lastNameFilter = query.getFilter().orElse("");
+
+        return (int) repo.countByLastnameContaining(lastNameFilter);
+    }
+
+    @Override
+    protected Stream<Person> fetchFromBackEnd(Query<Person, String> query) {
+        String lastNameFilter = query.getFilter().orElse("");
+
+        return repo.findByLastnameContaining(lastNameFilter,
+                VaadinSpringDataHelpers.toSpringPageRequest(query),
+                VaadinSpringDataHelpers.toSpringDataSort(query)).stream();
+    }
+}
+----
+
+To use filtering with the data provider above, you need to instantiate it with a configurable filter type. This provides access to the [methodname]`setFilter()` method, which you can use to apply a filter value, as shown below:
+
+[source,java]
+----
+// Create a data provider
+PersonDataProvider dataProvider = new PersonDataProvider();
+
+// Wrap the original data provider to support configurable filtering
+ConfigurableFilterDataProvider<Person, Void, String>
+    configurableFilterDataProvider = dataProvider.withConfigurableFilter();
+
+// Set the wrapped data provider to the grid
+personGrid.setDataProvider(configurableFilterDataProvider);
+
+filterTextField.addValueChangeListener(e -> {
+    // Update the filter in the wrapped data provider on filter change
+    configurableFilterDataProvider.setFilter(e.getValue()));
+});
 ----
 
 

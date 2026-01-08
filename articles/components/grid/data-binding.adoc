@@ -9,13 +9,13 @@ section-nav: badge-flow
 = Binding Data to Grid [badge-flow]#Flow#
 :toclevels: 2
 
-Grid supports connecting to various types of data sources through data providers. A data provider is a class that implements the [interfacename]`DataProvider` interface and encapsulates the logic for fetching items from a specific data source, with support for pagination, sorting, and filtering. Grid provides convenience methods to simplify common binding cases where a full data provider setup isn't needed, and also supports fully custom data providers for more complex scenarios.
+Grid supports connecting to various types of data sources through data providers. A data provider is a class that implements the `DataProvider` interface and encapsulates the logic for fetching items from a specific data source, with support for pagination, sorting, and filtering. For common use cases, Grid provides convenience methods so that you don't have to deal with the full data provider setup, and it also supports custom data providers where more flexibility is needed.
 
 == Binding Items via `setItems`
 
-The simplest way to bind data to a Grid is by using the `setItems` convenience method. It lets you bind an in-memory collection or provide callbacks for lazy loading from a backend service without explicitly creating a data provider.
+The most straightforward way to bind data to a Grid is to use the `setItems` convenience method. It allows you to bind an in-memory collection or provide callbacks for lazy loading from a backend service without the need to explicitly create a data provider.
 
-*Example:* Binding items from an in-memory collection.
+The example below shows how to display, filter and sort a static list of `Person` records:
 
 [.example]
 --
@@ -71,7 +71,7 @@ public record Person(String name) {
 
 --
 
-*Example:* Binding items from a data service via callbacks.
+The next example shows how to display, filter and sort data from a backend service with lazy loading by providing fetch and count callbacks to the `setItems` method:
 
 [.example]
 --
@@ -165,41 +165,9 @@ More documentation and examples for using the `setItems` method are available in
 
 == Custom Data Providers
 
-Alternatively, you can supply a custom data provider via the `setDataProvider(DataProvider<T, ?>)` method, passing your own class that implements the [interfacename]`DataProvider` interface:
+A more advanced way to bind data to a Grid is to supply a custom data provider implementation via the `setDataProvider(DataProvider<T, F>)` method.
 
-[source,java]
-----
-grid.setDataProvider(new CustomDataProvider());
-----
-
-For convenience, Flow provides an abstract base class `AbstractDataProvider`, which you can extend to create a custom data provider. This class requires implementing the following methods:
-
-[source,java]
-----
-public class CustomDataProvider extends AbstractDataProvider<T, F> {
-    @Override
-    public boolean isInMemory() { // <1>
-        // Your implementation here
-    }
-
-    @Override
-    public int size(Query<T, F> query) { // <2>
-        // Your implementation here
-    }
-
-    @Override
-    public Stream<T> fetch(Query<T, F> query) { // <3>
-        // Your implementation here
-    }
-}
-----
-<1> The [methodname]`isInMemory` method indicates whether the data provider uses an in-memory data source. When all data is held in memory, Grid can enable features like a determinate Select All checkbox, which is only available in this case.
-<2> The [methodname]`size` method returns the number of items based on the query parameters.
-<3> The [methodname]`fetch` method returns a stream of items based on the query parameters.
-
-The `Query<T, F>` parameter in the `size` and `fetch` methods provides information about the requested data such as pagination details (offset and limit), sorting orders, and an optional filter object of type `F`.
-
-Below is a practical example of a custom data provider that extends the `AbstractDataProvider` class and uses a fake database to return `Person` records. It supports filtering with a `PersonFilter` object and sorting using `QuerySortOrder` objects from the Grid. The example also includes a simple view that uses the data provider with a Grid and filter components:
+The example below shows a Grid backed by a custom data provider that simulates fetching data from a database, with support for filtering and sorting:
 
 [.example]
 --
@@ -207,24 +175,19 @@ Below is a practical example of a custom data provider that extends the `Abstrac
 [source,java]
 .PersonDataProvider.java
 ----
-public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilter> {
+public class PersonDataProvider extends AbstractBackendDataProvider<Person, PersonFilter> {
     // In a real application, data would come from a real database or backend service.
     // This example uses a static list for demonstration purposes only.
-    private final List<Person> FAKE_DATABASE = Arrays.asList(
+    private final List<Person> DATABASE = Arrays.asList(
             new Person("Michael Chen", "Engineering"),
             new Person("Sarah Johnson", "Engineering"),
             new Person("David Rodriguez", "Marketing"),
-            new Person("Emma Wilson", "HR"),
+            new Person("Emma Wilson", "HR"));
 
     @Override
-    public boolean isInMemory() {
-        return false;
-    }
-
-    @Override
-    public Stream<Person> fetch(Query<Person, PersonFilter> query) {
+    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT ... FROM ...
-        Stream<Person> stream = FAKE_DATABASE.stream();
+        Stream<Person> stream = DATABASE.stream();
 
         // SQL equivalent: WHERE ...
         stream = stream.filter(createPredicate(query.getFilter()));
@@ -239,9 +202,9 @@ public class PersonDataProvider extends AbstractDataProvider<Person, PersonFilte
     }
 
     @Override
-    public int size(Query<Person, PersonFilter> query) {
+    protected int sizeInBackEnd(Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT COUNT(*) FROM ...
-        Stream<Person> stream = FAKE_DATABASE.stream();
+        Stream<Person> stream = DATABASE.stream();
 
         // SQL equivalent: WHERE ...
         stream = stream.filter(createPredicate(query.getFilter()));
@@ -346,3 +309,6 @@ public class PeopleView extends VerticalLayout {
 ----
 
 --
+
+More examples of custom data providers are available in the <<{articles}/flow/binding-data/data-provider#recycling-data-binding-logic,Binding Items To Components>> article.
+
