@@ -16,7 +16,7 @@ import com.vaadin.flow.data.provider.SortDirection;
 public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
     // In a real application, data would come from a real database or backend
     // service. This example uses a static list for demonstration purposes only.
-    private final List<Person> DATABASE = Arrays.asList(
+    private static final List<Person> DATABASE = Arrays.asList(
             new Person("Michael Chen", "Engineering"),
             new Person("Sarah Johnson", "Engineering"),
             new Person("David Rodriguez", "Marketing"),
