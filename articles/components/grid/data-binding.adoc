@@ -23,50 +23,12 @@ The example below shows how to display, filter and sort a static list of `Person
 [source,java]
 .PeopleView.java
 ----
-Grid<Person> grid = new Grid<>(Person.class);
-
-// Binding
-GridListDataView dataView = grid.setItems(
-    new Person("Michael Chen"),
-    new Person("Sarah Johnson"),
-    new Person("David Rodriguez"),
-    new Person("Emma Wilson")
-);
-
-// Filtering
-TextField searchInput = new TextField("Search", event -> {
-    if (!event.getValue().isEmpty()) {
-        // Set a filter to show only persons whose name contains the search term
-        dataView.setFilter(person ->
-            person.name().toLowerCase().contains(event.getValue().toLowerCase()));
-    } else {
-        // Clear the filter if the search term is empty
-        dataView.removeFilters();
-    }
-});
-
-// Sorting
-Select<String> sortBySelect = new Select<>("Sort by", event -> {
-    switch (event.getValue()) {
-        case "Name (A-Z)" ->
-            // Set sort order to ascending by name
-            dataView.setSortOrder(Person::name, SortDirection.ASCENDING);
-        case "Name (Z-A)" ->
-            // Set sort order to descending by name
-            dataView.setSortOrder(Person::name, SortDirection.DESCENDING);
-        default ->
-            // Clear sorting
-            dataView.removeSorting();
-    }
-});
-sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/BindingListData.java[tags=body,indent=0]
 ----
 
 [source,java]
-.Person.java
 ----
-public record Person(String name) {
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/Person.java[tags=body,indent=0]
 ----
 
 --
@@ -79,84 +41,17 @@ The next example shows how to display, filter and sort data from a backend servi
 [source,java]
 .PeopleView.java
 ----
-Grid<Person> grid = new Grid<>(Person.class);
-
-// Filtering
-TextField searchInput = new TextField("Search", event -> {
-    grid.getLazyDataView().refreshAll();
-});
-
-// Sorting
-Select<String> sortBySelect = new Select<>("Sort by", event -> {
-    grid.getLazyDataView().refreshAll();
-});
-sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
-
-// Binding
-grid.setItems(
-    (query) ->
-        PersonService.fetch(
-            searchInput.getValue(),
-            sortBySelect.getValue(),
-            query.getOffset(),
-            query.getLimit()),
-    (query) ->
-        PersonService.count(searchInput.getValue())
-);
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/BindingLazyData.java[tags=body,indent=0]
 ----
 
 [source,java]
-.PersonService.java
 ----
-public class PersonService {
-    private static final List<Person> PEOPLE = Arrays.asList(
-        new Person("Michael Chen"),
-        new Person("Sarah Johnson"),
-        new Person("David Rodriguez"),
-        new Person("Emma Wilson");
-
-    public static Stream<Person> fetch(
-            String searchTerm, String sortOrder, int offset, int limit) {
-        return PEOPLE.stream()
-            .filter(createPredicate(searchTerm))
-            .sorted(createComparator(sortOrder))
-            .skip(offset)
-            .limit(limit);
-    }
-
-    public static int count(String searchTerm) {
-        return (int) PEOPLE.stream()
-            .filter(createPredicate(searchTerm))
-            .count();
-    }
-
-    private static Predicate<Person> createPredicate(String searchTerm) {
-        if (searchTerm == null || searchTerm.isEmpty()) {
-            return (person) -> true;
-        }
-
-        return person -> person.name().toLowerCase().contains(searchTerm.toLowerCase());
-    }
-
-    private static Comparator<Person> createComparator(String sortOrder) {
-        if (sortOrder == null) {
-            return 0;
-        }
-        Comparator<Person> comparator = switch (sortOrder) {
-            case "Name (A-Z)" -> Comparator.comparing(Person::name);
-            case "Name (Z-A)" -> Comparator.comparing(Person::name).reversed();
-            default -> 0;
-        };
-        return comparator::compare;
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/PersonService.java[tags=body,indent=0]
 ----
 
 [source,java]
-.Person.java
 ----
-public record Person(String name) {
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/Person.java[tags=body,indent=0]
 ----
 
 --
@@ -173,139 +68,24 @@ The example below shows a Grid backed by a custom data provider that simulates f
 --
 
 [source,java]
-.PersonDataProvider.java
 ----
-public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
-    // In a real application, data would come from a real database or backend service.
-    // This example uses a static list for demonstration purposes only.
-    private final List<Person> DATABASE = Arrays.asList(
-            new Person("Michael Chen", "Engineering"),
-            new Person("Sarah Johnson", "Engineering"),
-            new Person("David Rodriguez", "Marketing"),
-            new Person("Emma Wilson", "HR"));
-
-    @Override
-    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
-        // SQL equivalent: SELECT ... FROM ...
-        Stream<Person> stream = DATABASE.stream();
-
-        // SQL equivalent: WHERE ...
-        stream = stream.filter(createPredicate(query.getFilter()));
-
-        // SQL equivalent: ORDER BY ...
-        stream = stream.sorted(createComparator(query.getSortOrders()));
-
-        // SQL equivalent: OFFSET ... LIMIT ...
-        stream = stream.skip(query.getOffset()).limit(query.getLimit());
-
-        return stream;
-    }
-
-    @Override
-    protected int sizeInBackEnd(Query<Person, PersonFilter> query) {
-        // SQL equivalent: SELECT COUNT(*) FROM ...
-        Stream<Person> stream = DATABASE.stream();
-
-        // SQL equivalent: WHERE ...
-        stream = stream.filter(createPredicate(query.getFilter()));
-
-        return (int) stream.count();
-    }
-
-    /**
-     * Creates a filter function (predicate) based on the filter object from the Grid.
-     *
-     * This is for demonstration purposes only. In a real application, you should do
-     * filtering in the database query e.g. by using SQL WHERE if you are using a
-     * relational database.
-     */
-    private Predicate<Person> createPredicate(Optional<PersonFilter> filter) {
-        return filter.map(f -> (Predicate<Person>) f::test).orElse(p -> true);
-    }
-
-    /**
-     * Creates a sorting function (comparator) based on the sort orders from the Grid.
-     *
-     * This is for demonstration purposes only. In a real application, you should do
-     * sorting in the database query e.g. by using SQL ORDER BY if you are using a
-     * relational database.
-     */
-    private Comparator<Person> createComparator(List<QuerySortOrder> sortOrders) {
-        return sortOrders.stream().map(sortOrder -> {
-            Comparator<Person> comparator = switch (sortOrder.getSorted()) {
-                case "name" -> Comparator.comparing(Person::name);
-                case "department" -> Comparator.comparing(Person::department);
-                default -> (p0, p1) -> 0;
-            };
-
-            return sortOrder.getDirection().equals(SortDirection.ASCENDING)
-                    ? comparator
-                    : comparator.reversed();
-        }).reduce((p0, p1) -> 0, Comparator::thenComparing);
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/PersonDataProvider.java[tags=body,indent=0]
 ----
 
 [source,java]
-.PersonFilter.java
 ----
-public record PersonFilter(String nameFilter, String departmentFilter) {
-    public boolean test(Person person) {
-        boolean matches = true;
-        if (nameFilter != null && !nameFilter.isEmpty()) {
-            matches &= person.name().toLowerCase().contains(nameFilter.toLowerCase());
-        }
-        if (departmentFilter != null && !departmentFilter.isEmpty()) {
-            matches &= person.department().equals(departmentFilter);
-        }
-        return matches;
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/PersonFilter.java[tags=body,indent=0]
 ----
 
 [source,java]
-.Person.java
 ----
-public record Person(String name, String department) {
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/Person.java[tags=body,indent=0]
 ----
 
 [source,java]
 .PeopleView.java
 ----
-public class PeopleView extends VerticalLayout {
-    private TextField nameFilter;
-    private Select<String> departmentFilter;
-    private ConfigurableFilterDataProvider<Person, Void, PersonFilter> dataProvider;
-
-    public PeopleView() {
-        Grid<Person> grid = new Grid<>(Person.class);
-
-        // Enable sorting for the columns. This will send sorting information
-        // to the data provider as List<QuerySortOrder> when the user sorts
-        // the columns in the Grid.
-        grid.setSortableColumns("name", "department");
-
-        // Create a data provider instance with a configurable filter,
-        // as it doesn't provide filtering capabilities by default.
-        // The returned wrapper allows setting the filter dynamically
-        // using the ConfigurableFilterDataProvider#setFilter() method
-        dataProvider = new PersonDataProvider().withConfigurableFilter();
-        grid.setDataProvider(dataProvider);
-
-        // Create filter components
-        nameFilter = new TextField("Search by name", event -> updateFilter());
-        departmentFilter = new Select<>("Department", event -> updateFilter());
-        departmentFilter.setItems("", "Engineering", "Marketing", "HR");
-
-        add(nameFilter, departmentFilter, grid);
-    }
-
-    private void updateFilter() {
-        dataProvider.setFilter(
-                new PersonFilter(nameFilter.getValue(), departmentFilter.getValue()));
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/component/grid/databinding/BindingDataProvider.java[tags=body,indent=0]
 ----
 
 --
