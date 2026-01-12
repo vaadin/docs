@@ -22,7 +22,11 @@ Both are available out of the box in Flow and can be used with Tree Grid like th
 
 [source,java]
 ----
-// Create a TreeData instance
+public record Folder(String name) {}
+
+...
+
+// Create a TreeData instance with Folder records
 TreeData<Folder> treeData = new TreeData<>();
 
 // Create a TreeDataProvider backed by the TreeData instance
@@ -30,7 +34,7 @@ TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(
         treeData,
         HierarchicalDataProvider.HierarchyFormat.FLATTENED);
 
-// Set the data provider to the Tree Grid
+// Set the TreeDataProvider as the data provider for the Tree Grid
 treeGrid.setDataProvider(treeDataProvider);
 ----
 
@@ -129,15 +133,85 @@ Shortcuts.addShortcutListener(treeGrid, () -> {
 
 As before, make sure to call [methodname]`TreeDataProvider#refreshAll()` to update the Tree Grid UI after making any structural changes to the [classname]`TreeData`.
 
+=== Sorting Items
+
+Tree Data Provider provides built-in support for in-memory sorting. You can enable sorting on Tree Grid columns, and the data provider will automatically sort the items based on the sort order selected by the user:
+
+[source,java]
+----
+treeGrid.addHierarchyColumn(Folder::name).setHeader("Folder").setSortable(true);
+----
+
+[NOTE]
+====
+More examples of how to configure sortable columns, including multi-column sorting and custom comparators, can be found in the <<../grid/index#sorting,Grid>> documentation.
+====
+
+In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator when combined with column sorting.
+
+In the example below, a Select component is used to let users choose how folders are sorted in the Tree Grid. The `setSortComparator` method is called to apply the corresponding comparator based on the selected value:
+
+[source,java]
+----
+Select<String> sortBySelect = new Select<>("Sort by", "", "Name (A-Z)", "Name (Z-A)");
+sortBySelect.setValue("");
+sortBySelect.addValueChangeListener(event -> {
+    Comparator<Folder> comparator = switch (event.getValue()) {
+        case "Name (A-Z)" -> Comparator.comparing(Folder::name);
+        case "Name (Z-A)" -> Comparator.comparing(Folder::name).reversed();
+        default -> null;
+    };
+
+    if (comparator != null) {
+        // The comparator can't be passed directly because it doesn't implement
+        // SerializableComparator, which is required by setSortComparator. Using
+        // comparator::compare works as a workaround, as long as no serialization
+        // is triggered at runtime.
+        treeDataProvider.setSortComparator(comparator::compare);
+    } else {
+        treeDataProvider.setSortComparator(null);
+    }
+});
+----
+
+The `setSortComparator` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
+
+[NOTE]
+====
+Sorting in tree structures is always performed independently at each level to avoid breaking the links between parents and their children.
+====
+
+=== Filtering Items
+
+Tree Data Provider also supports in-memory filtering. You can apply filtering by providing a filter predicate via the `TreeDataProvider#setFilter(SerializablePredicate<T>)` method.
+
+The following example demonstrates how this method can be used to filter folders based on a search term entered in a Text Field component. As the user types, the Tree Grid updates in real time to show only folders whose names contain the search term:
+
+[source,java]
+----
+TextField searchInput = new TextField("Search folders", "Enter folder name");
+searchInput.setValueChangeMode(ValueChangeMode.EAGER);
+searchInput.addValueChangeListener(event -> {
+    String searchTerm = event.getValue();
+
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+});
+----
+
+The `setFilter` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
+
+When filtering, Tree Data Provider evaluates the entire expanded hierarchy. If a nested item matches the filter, its full chain of parent items is also included. This ensures that the matching item appears in the filtered view even if some of its parents don't match the filter themselves.
+
 == Custom Data Providers
 
 Conceptually, any hierarchical data provider, including [classname]`TreeDataProvider`, is a class that implements the [classname]`HierarchicalDataProvider` interface.
 
-For convenience, Flow provides a related abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data providers. This class requires implementing the following methods:
+For convenience, Flow provides a related abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data provider. This class requires implementing the following methods:
 
 [source,java]
 ----
-class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
+public class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
     @Override
     public boolean isInMemory() { // <1>
         // Your implementation here
@@ -194,7 +268,7 @@ Below is an example of a simple in-memory data provider using the nested hierarc
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
@@ -298,7 +372,7 @@ Below is an example of a simple in-memory data provider using the flattened hier
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
