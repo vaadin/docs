@@ -30,21 +30,16 @@ public class PersonService {
     }
 
     private static Predicate<Person> createPredicate(String searchTerm) {
-        return person -> {
-            if (searchTerm == null) {
-                return true;
-            }
-            return person.name().toLowerCase().contains(searchTerm.toLowerCase());
-        };
+        return person -> person.name().toLowerCase()
+                .contains(searchTerm != null ? searchTerm.toLowerCase() : "");
     }
 
     private static Comparator<Person> createComparator(String sortOrder) {
-        Comparator<Person> comparator = switch (sortOrder) {
+        return switch (sortOrder) {
             case "Name (A-Z)" -> Comparator.comparing(Person::name);
             case "Name (Z-A)" -> Comparator.comparing(Person::name).reversed();
             default -> (p1, p2) -> 0;
         };
-        return comparator::compare;
     }
 }
 // end::body[]
