@@ -6,8 +6,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-public class BindingLazyData extends VerticalLayout {
-    public BindingLazyData() {
+public class BindingLazyLoadedList extends VerticalLayout {
+    public BindingLazyLoadedList() {
         // tag::body[]
         Grid<Person> grid = new Grid<>(Person.class);
 

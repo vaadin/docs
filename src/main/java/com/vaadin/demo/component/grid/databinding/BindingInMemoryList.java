@@ -8,8 +8,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-public class BindingListData extends VerticalLayout {
-    public BindingListData() {
+public class BindingInMemoryList extends VerticalLayout {
+    public BindingInMemoryList() {
         // tag::body[]
         Grid<Person> grid = new Grid<>(Person.class);
 
