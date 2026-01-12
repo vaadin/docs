@@ -51,7 +51,7 @@ fi
 echo $currentMajorRelease
 echo $major
 
-if [ $prerelease = false ] && [ $major = $currentMajorRelease ]
+if [ $prerelease = false ]
 then
   echo "updating files in the Latest branch"
   `updateLatestBranch $version`
