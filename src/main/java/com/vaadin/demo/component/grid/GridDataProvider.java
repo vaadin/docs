@@ -15,7 +15,7 @@ import com.vaadin.flow.router.Route;
 @Route("grid-data-provider")
 public class GridDataProvider extends VerticalLayout {
     public GridDataProvider() {
-        setPadding(false)
+        setPadding(false);
 
         // tag::snippet[]
         Grid<Person> grid = new Grid<>();
