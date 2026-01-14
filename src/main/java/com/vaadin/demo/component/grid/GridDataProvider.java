@@ -13,38 +13,37 @@ import com.vaadin.flow.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.flow.router.Route;
 
 @Route("grid-data-provider")
-public class GridDataProvider extends Div {
-
-    // tag::snippet[]
-    private PersonFilter personFilter = new PersonFilter();
-
-    private PersonDataProvider dataProvider = new PersonDataProvider();
-
-    private ConfigurableFilterDataProvider<Person, Void, PersonFilter> filterDataProvider = dataProvider
-            .withConfigurableFilter();
-
+public class GridDataProvider extends VerticalLayout {
     public GridDataProvider() {
+        setPadding(false);
+
+        // tag::snippet[]
         Grid<Person> grid = new Grid<>();
-        grid.addColumn(Person::getFullName, "name").setHeader("Name");
+        grid.addColumn(Person::getFullName, "name")
+                .setSortable(true).setHeader("Name");
         grid.addColumn(Person::getProfession, "profession")
-                .setHeader("Profession");
-        grid.setItems(filterDataProvider);
+                .setSortable(true).setHeader("Profession");
+
+        // Create a data provider instance with a configurable filter, allowing
+        // the filter value to be set programmatically via setFilter().
+        // @formatter:off hidden-source-line
+        ConfigurableFilterDataProvider<Person, Void, String> dataProvider =
+                new PersonDataProvider().withConfigurableFilter();
+        // @formatter:on hidden-source-line
+        grid.setItems(dataProvider);
 
         TextField searchField = new TextField();
         searchField.setWidth("50%");
         searchField.setPlaceholder("Search");
         searchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         searchField.setValueChangeMode(ValueChangeMode.EAGER);
-        searchField.addValueChangeListener(e -> {
-            personFilter.setSearchTerm(e.getValue());
-            filterDataProvider.setFilter(personFilter);
+        searchField.addValueChangeListener(event -> {
+            dataProvider.setFilter(event.getValue());
         });
 
-        VerticalLayout layout = new VerticalLayout(searchField, grid);
-        layout.setPadding(false);
-        add(layout);
+        add(searchField, grid);
+        // end::snippet[]
     }
-    // end::snippet[]
 
     public static class Exporter // hidden-source-line
             extends DemoExporter<GridDataProvider> { // hidden-source-line
