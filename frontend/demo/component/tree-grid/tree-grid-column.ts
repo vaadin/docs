@@ -7,8 +7,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { GridDataProviderCallback, GridDataProviderParams } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('tree-grid-column')
 export class Example extends LitElement {
@@ -43,10 +43,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout
-        style="align-items: center; height: var(--lumo-size-xl);"
-        theme="spacing"
-      >
+      <vaadin-horizontal-layout style="align-items: center; height: 3.5rem;" theme="spacing">
         <h3 style="flex-grow: 1; margin: 0;">Employee</h3>
         <vaadin-button @click="${this.expandAll}">Expand All</vaadin-button>
         <vaadin-button @click="${this.collapseAll}">Collapse All</vaadin-button>

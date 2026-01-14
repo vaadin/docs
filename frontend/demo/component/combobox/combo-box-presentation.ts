@@ -6,8 +6,8 @@ import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import type { ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
 import { comboBoxRenderer } from '@vaadin/combo-box/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
@@ -65,7 +65,7 @@ export class Example extends LitElement {
   private renderer: ComboBoxLitRenderer<Person> = (person) => html`
     <div style="display: flex;">
       <img
-        style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+        style="height: 2.25rem; margin-right: var(--lumo-space-s);"
         src="${person.pictureUrl}"
         alt="Portrait of ${person.firstName} ${person.lastName}"
       />

@@ -37,7 +37,7 @@ public class TreeGridRichContent extends Div {
             Span profession = new Span(person.getProfession());
             profession.getStyle()
                     .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "var(--lumo-font-size-s)");
+                    .set("font-size", "0.875rem");
 
             VerticalLayout column = new VerticalLayout(fullName, profession);
             column.getStyle().set("line-height", "var(--lumo-line-height-m)");
@@ -70,8 +70,8 @@ public class TreeGridRichContent extends Div {
                     "flex");
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
-            column.getStyle().set("font-size", "var(--lumo-font-size-s)")
-                    .set("line-height", "var(--lumo-line-height-m)");
+            column.getStyle().set("font-size", "0.875rem").set("line-height",
+                    "var(--lumo-line-height-m)");
             column.setPadding(false);
             column.setSpacing(false);
             return column;

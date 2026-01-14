@@ -22,8 +22,8 @@ The following tables show how to load various resources and where the resource f
 |File type |Import |File location
 
 |CSS files
-|`@CssImport("./my-styles/styles.css")`<<foot-1,[1]>>
-|`/src/main/frontend/my-styles/styles.css`
+|`@StyleSheet("styles.css")`<<foot-1,[1]>>
+|`/src/main/webapp/styles.css`
 
 |JavaScript, TypeScript and Lit templates
 |`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
@@ -45,8 +45,8 @@ The following tables show how to load various resources and where the resource f
 |File type |Import |File location
 
 |CSS files
-|`@CssImport("./my-styles/styles.css")`<<foot-1,[1]>>
-|`/src/main/frontend/my-styles/styles.css`
+|`@StyleSheet("styles.css")`<<foot-1,[1]>>
+|`/src/main/resources/META-INF/resources/styles.css`
 
 |JavaScript, TypeScript and Lit templates
 |`@JsModule("./src/my-script.js")`<<foot-1,[1]>>
@@ -104,59 +104,9 @@ anchor.getElement().setAttribute("router-ignore", true);
 
 == Programmatically Load Resources
 
-Components such as [classname]`Image` and [classname]`Anchor` allow you to display or download dynamic content by using [classname]`DownloadHandler.forClassResource(clazz, resourceName)`. It can be used to load, for example, images and documents shipped along with the application. Resources can be loaded from an application classpath or from the web application, which are stored in the `/src/main/resources` folder. If the resource name starts with `/`, it is considered to be an absolute path (underneath `/src/main/resources`). Otherwise, it is relative to the class package.
+Components such as [classname]`Image` and [classname]`Anchor` allow you to display or download dynamically generated content by using [classname]`DownloadHandler`. <<{articles}/flow/advanced/downloads#,Handle Downloads>> section describes how to use [classname]`DownloadHandler` in more detail.
 
-.Load resources from classpath
-[source,java]
-----
-// Given the following resources exists
-// `/src/main/resources/img/flower.jpg`
-// `/src/main/resources/com/example/document.pdf`
-package com.example;
-class MyView extends Div {
-    public MyView() {
-        add(new Image(DownloadHandler.forClassResource(getClass(),
-                "/img/flower.jpg", "flower.jpg")),
-            "Plant 3"
-        );
-        Anchor anchor = new Anchor(DownloadHandler.forClassResource(
-                getClass(), "document.pdf"),
-            "A document"
-        );
-        anchor.getElement().setAttribute("router-ignore", true);
-        add(anchor);
-    }
-}
-----
-
-Web application resources can be loaded through [methodname]`VaadinService.getResourceAsStream(path)` or directly from [methodname]`ServletContext.getResourceAsStream(path)`. The Servlet specifications state that the provided `path` should be absolute. However, some Servlet containers (e.g., Tomcat) are allowed to pass a path without the starting `/`.
-
-.Load resources from web application
-[source,java]
-----
-package com.example;
-class MyView extends Div {
-    public MyView() {
-        add(new Image(DownloadHandler.fromInputStream(
-                event -> new DownloadResponse(
-                    VaadinService.getCurrent().getResourceAsStream("/img/flower.jpg"),
-                    "flower.jpg", "image/jpeg", -1)),
-            "Plant 3"
-        ));
-        Anchor anchor = new Anchor(DownloadHandler.fromInputStream(
-            event -> new DownloadResponse(
-                    VaadinServlet.getCurrent().getServletContext()
-                        .getResourceAsStream("/assets/document.pdf"),
-                    "document.pdf", "application/pdf", -1)),
-            "A document");
-        anchor.getElement().setAttribute("router-ignore", true);
-        add(anchor);
-    }
-}
-----
-
-The physical location of the resources in the project is the same as described in the <<#flow.resource-cheat-sheet, Resource Cheat Sheet>> section.
-
+Note, even though it may feel handy to serve your static resources using the [classname]`DownloadHandler.forClassResource(clazz, resourceName)` helper, you are generally better off by letting your servlet container or Spring MVC directly serve e.g. your existing icons, images and videos, as they have better defaults for caching, and supports "Range requests".
 
 == Importing JavaScript & CSS
 
@@ -186,20 +136,20 @@ The following annotations are available:
 `@JsModule`::
 Defines a JavaScript module dependency. These dependencies are loaded first.
 +
-Lit templates should be imported using `@JsModule` (see <<{articles}/flow/create-ui/templates/basic#,Creating a Simple Component Using the Template API>> for more information).
+Lit templates should be imported using `@JsModule` (see <</flow/component-internals/templates/basic#,Creating a Simple Component Using the Template API>> for more information).
 
 `@JavaScript`::
 Defines a JavaScript file dependency. The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
 
 `@CssImport`::
-Imports a local style sheet, which can be included in the frontend bundle.
+Imports a style sheet from an npm package, which it can be included in the frontend bundle.
 +
-See <<{articles}/styling/legacy/css-import#,@CssImport Annotation>>.
+See <<{articles}/styling/advanced/npm-assets#styles-from-npm, Importing Stylesheets from npm Packages>>.
 
 `@StyleSheet`::
-Imports an external or linked style sheet.
+Imports a local, external or linked style sheet.
 +
-See <<{articles}/styling/advanced/lazy-loading-stylesheets#,Lazy-loading Stylesheets>>.
+See <<{articles}/styling/stylesheets#, Stylesheets>>.
 
 All of the resource annotations are repeatable. Include one annotation for each file that you need to add.
 
@@ -225,7 +175,7 @@ Imported dependency files of the same type load in the order they are defined in
 
 The loading order of imported dependencies is only guaranteed for one file type, in one class. Specifically, loading order isn't guaranteed between classes: annotations on class `A` could be imported before or after annotations on class `B`.
 
-Frontend resources bundled by Vite also have a type group ordering. JavaScript files loaded by the `@JsModule` annotation always come before JavaScript files loaded by `@JavaScript`, and both of those come before CSS files loaded by `@CssImport`. The exception to this rule is the `@JsModule` annotations of files annotated with `@Theme`. All JavaScript modules found on such classes are imported before other file types. This covers the `Lumo` theme, as well as custom themes created by the developer.
+Frontend resources bundled by Vite also have a type group ordering. JavaScript files loaded by the `@JsModule` annotation always come before JavaScript files loaded by `@JavaScript`, and both of those come before CSS files loaded by `@CssImport`.
 
 For example, you could have multiple imported dependencies of different file types in a single class, as follows:
 

@@ -59,15 +59,15 @@ binder.forField(titleField)
 
 === Custom Validation Error Messages
 
-You can customize the way error messages are displayed by defining a [classname]`ValidationStatusHandler`. Or you can do so by configuring the [classname]`Label` for each binding.
+You can customize the way error messages are displayed by defining a [classname]`ValidationStatusHandler`. Or you can do so by configuring a status label component for each binding.
 
-The label is used to show the status of the field. It can be used for validation errors, as well as confirmation and helper messages.
+The status label is used to show the status of the field. It can be used for validation errors, as well as confirmation and helper messages.
 
 The example below shows how to configure validation messages for email and minimum-length validation:
 
 [source,java]
 ----
-Label emailStatus = new Label();
+Span emailStatus = new Span();
 emailStatus.getStyle().set("color", "Red");
 binder.forField(emailField)
     .withValidator(new EmailValidator(
@@ -77,7 +77,7 @@ binder.forField(emailField)
     .withStatusLabel(emailStatus)
     .bind(Person::getEmail, Person::setEmail);
 
-Label nameStatus = new Label();
+Span nameStatus = new Span();
 
 binder.forField(nameField)
     // Define the validator
@@ -94,9 +94,9 @@ binder.forField(nameField)
     .bind(Person::getName, Person::setName);
 ----
 
-The [methodname]`withStatusLabel(Label label)` method sets the given label to show an error message if the validation fails.
+The [methodname]`withStatusLabel(HasText label)` method sets the given component to show an error message if the validation fails.
 
-As an alternative to using labels, you can set a custom validation status handler, using the [methodname]`withValidationStatusHandler()` method. This allows you to customize how the binder displays error messages. It's also more flexible than using the status label approach.
+As an alternative to using status labels, you can set a custom validation status handler, using the [methodname]`withValidationStatusHandler()` method. This allows you to customize how the binder displays error messages. It's also more flexible than using the status label approach.
 
 
 === Multiple Validators
@@ -157,6 +157,44 @@ binder.setValidatorsDisabled(true);
 // Disables validators for a single binding
 binding.setValidatorsDisabled(true);
 ----
+
+
+=== Conditionally Applying Bindings
+
+Sometimes you need to exclude certain bindings from both validation and bean writing based on runtime conditions. For example, when a form field is hidden based on user selections, you may want to exclude its binding entirely. The [methodname]`isApplied()` method on [classname]`Binding` determines whether a binding participates in these operations.
+
+By default, bindings for non-visible components are automatically excluded. You can customize this behavior by providing a predicate:
+
+[source,java]
+----
+// Exclude the binding from validation and bean writing
+binding.setIsAppliedPredicate(b -> false);
+
+// Include the binding only when a condition is met
+binding.setIsAppliedPredicate(b -> someCondition);
+
+// Restore the default behavior (exclude non-visible components)
+binding.setIsAppliedPredicate(null);
+----
+
+This is useful for conditional forms where certain fields should be ignored based on other field values or application state:
+
+[source,java]
+----
+Checkbox useAlternateAddress = new Checkbox("Use alternate address");
+TextField alternateAddress = new TextField("Alternate Address");
+
+Binder.Binding<Person, String> alternateBinding = binder
+    .forField(alternateAddress)
+    .asRequired("Address is required")
+    .bind(Person::getAlternateAddress, Person::setAlternateAddress);
+
+// Only apply the binding when the checkbox is selected
+alternateBinding.setIsAppliedPredicate(
+    b -> useAlternateAddress.getValue());
+----
+
+With the predicate above, the [methodname]`asRequired()` validator only runs and the value is only written to the bean when the checkbox is selected.
 
 
 == Convert User Input

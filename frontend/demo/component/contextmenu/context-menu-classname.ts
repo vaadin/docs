@@ -19,7 +19,7 @@ export class Example extends LitElement {
   private items: ContextMenuItem[] = [
     { text: 'Share' },
     { text: 'Duplicate' },
-    { text: 'Delete', className: 'text-error' },
+    { text: 'Delete', className: 'custom' },
   ];
   // end::snippet[]
 

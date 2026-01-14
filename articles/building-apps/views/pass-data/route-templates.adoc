@@ -1,20 +1,30 @@
 ---
 title: Route Templates
-page-title: How to use route templates in Flow | Vaadin
-description: Learn how to use route templates in Flow.
-meta-description: Learn to use route templates in Flow to handle multiple route parameters, optional and wildcard parameters, and constrain values with regular expressions.
-section-nav: badge-flow
+page-title: How to use route templates in Vaadin
+description: Learn how to use route templates in Vaadin.
+meta-description: Learn to use route templates in Vaadin to handle multiple route parameters, optional and wildcard parameters, and constrain values with regular expressions.
 order: 20
 ---
 
 
-= Route Templates [badge-flow]#Flow#
+= Route Templates
 :toclevels: 2
 
-In this guide, you'll learn how to create a view that accepts multiple route parameters using route templates. You'll also learn how to use modifiers and regular expressions to tweak the behavior of the route parameters. Finally, a mini-tutorial will help you apply these concepts in a real Vaadin application. 
+In this guide, you'll learn how to create a view that accepts multiple route parameters using route templates. You'll also learn how to use modifiers and regular expressions to tweak the behavior of the route parameters.
 
-[TIP]
-Using a single <<route-parameters/flow#,route parameter>> is easier than using a route template. If you can get the job done using the [interfacename]`HasUrlParameter<T>` interface, use that instead.
+Using a single <<route-parameters#,route parameter>> is easier than using a route template. If you can get the job done using the [interfacename]`HasUrlParameter<T>` interface, use that instead.
+
+
+== Copy-Paste into Your Project
+
+If you want to quickly try out route templates in your Vaadin application, copy-paste the following code into a new Java class named `RouteTemplateView` in your project's main package:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/RouteTemplateView.java[tags=snippet,indent=0]
+----
+
+For more detailed instructions on how to use route templates, continue reading below.
 
 
 == Specifying Multiple Route Parameters
@@ -64,7 +74,7 @@ public class CustomerView extends Main implements BeforeEnterObserver {
 ----
 <1> *Tip:* To improve readability and maintainability, declare route parameter names as constants near the [annotationname]`@Route` annotation.
 
-The [classname]`RouteParameters` class defines methods for accessing route parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`. 
+The [classname]`RouteParameters` class defines methods for accessing route parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`.
 
 In the example above, both `customerId` and `action` are required, so you can assume that those route parameter values are never empty. If you try to navigate to `/customer` or `/customer/cu12345`, the router returns a `404 Not Found` error.
 
@@ -173,204 +183,3 @@ public class CustomerView extends Main {
 If you navigate to a URL that doesn't meet these constraints, you'll receive a `404 Not Found` error.
 
 When you specify constraints on wildcard route parameters, the regular expression is applied to every segment that would be captured by the route parameter. If any of the segments fails to match the expression, the whole route template fails to match the URL, and you'll get a `404 Not Found` error.
-
-
-[.collapsible-list]
-== Try It
-
-In this mini-tutorial, you'll create a view that uses a route template. You'll then change the route template and see how the view behaves.
-
-
-.Set Up the Project
-[%collapsible]
-====
-First, generate a <<{articles}/getting-started/start#,walking skeleton with a Flow UI>>, <<{articles}/getting-started/import#,open>> it in your IDE, and <<{articles}/getting-started/run#,run>> it with hotswap enabled.
-====
-
-
-.Create the View
-[%collapsible]
-====
-Create a new package [packagename]`[application package].tutorial.ui.view`. Then, in this package, create a new class called `TemplateView`:
-
-.TemplateView.java
-[source,java]
-----
-import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.Route;
-
-@Route("template")
-public class TemplateView extends Main implements BeforeEnterObserver {
-
-    private static final String PARAM1 = "param1";
-    private static final String PARAM2 = "param2";
-    private static final String PARAM3 = "param3";
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        var param1 = event.getRouteParameters().get(PARAM1).orElse("N/A");
-        var param2 = event.getRouteParameters().get(PARAM2).orElse("N/A");
-        var param3 = event.getRouteParameters().get(PARAM3).orElse("N/A");
-        setText("param1: \"" + param1 + "\", param2: \"" + param2 
-            + "\", param3: \"" + param3 + "\"");
-    }
-}
-----
-
-Open your browser and go to: http://localhost:8080/template
-
-You should see:
-
-[source]
-----
-param1: "N/A", param2: "N/A", param3: "N/A"
-----
-====
-
-
-.Define Required Route Parameters
-[%collapsible]
-====
-Next, introduce the three route parameters, like this:
-
-[source,java]
-----
-// tag::snippet[]
-@Route("template/:param1/:param2/:param3")
-// end::snippet[]
-public class TemplateView extends Main implements BeforeEnterObserver {
-    ...
-}
-----
-
-Now, go back to your browser. Because the route parameters are required and you haven't provided any values, you should see a `Could not navigate to 'template'` error message. 
-
-To give values for the route parameters, navigate to this URL:
-
-http://localhost:8080/template/say/hello/vaadin
-
-You should see:
-
-[source]
-----
-param1: "say", param2: "hello", param3: "vaadin"
-----
-====
-
-
-.Make Route Parameters Optional
-[%collapsible]
-====
-You're now going to make the first two route parameters optional. Add the `?` modifier to them:
-
-[source,java]
-----
-// tag::snippet[]
-@Route("template/:param1?/:param2?/:param3")
-// end::snippet[]
-public class TemplateView extends Main implements BeforeEnterObserver {
-    ...
-}
-----
-
-Go back to your browser. You should still see all three route parameter values. However, watch what happens if you go to:
-
-http://localhost:8080/template/say
-
-Since the first two parameters are optional, the last parameter takes the first available value. You should see:
-
-[source]
-----
-param1: "N/A", param2: "N/A", param3: "say"
-----
-
-Now add a second route parameter value by navigating to:
-
-http://localhost:8080/template/say/hello
-
-You should see:
-
-[source]
-----
-param1: "say", param2: "N/A", param3: "hello"
-----
-====
-
-
-.Mark a Route Parameter as Wildcard
-[%collapsible]
-====
-You're now going to make the last route parameter a wildcard. Add the `*` modifier to it:
-
-[source,java]
-----
-// tag::snippet[]
-@Route("template/:param1?/:param2?/:param3*")
-// end::snippet[]
-public class TemplateView extends Main implements BeforeEnterObserver {
-    ...
-}
-----
-
-Go back to the browser. If you reload the page, you should now see the following:
-
-[source]
-----
-param1: "say", param2: "hello", param3: "N/A"
-----
-
-The `"hello"` string has moved from `param3` to `param2`. The reason for this is that wildcard route parameters are also optional. Next, navigate to the following URL:
-
-http://localhost:8080/template/say/hello/to/vaadin
-
-The last route parameter now holds two segments instead of one. You should see:
-
-[source]
-----
-param1: "say", param2: "hello", param3: "to/vaadin"
-----
-====
-
-
-.Add Regular Expressions
-[%collapsible]
-====
-You're now going to add some regular expressions to constrain the route parameters. You'll force `param1` to consist of digits only, and all the segments of `param3` to be one of `hello`, `to`, and `vaadin`:
-
-[source,java]
-----
-// tag::snippet[]
-@Route("template/:param1?([0-9]*)/:param2?/:param3*(hello|to|vaadin)")
-// end::snippet[]
-public class TemplateView extends Main implements BeforeEnterObserver {
-    ...
-}
-----
-
-Go back to the browser. You should now see a `Could not navigate to 'template/say/hello/to/vaadin`. This is because the first route parameter value is not a number. To fix this, navigate to:
-
-http://localhost:8080/template/123/say/hello/to/vaadin
-
-You should see:
-
-[source]
-----
-param1: "123", param2: "say", param3: "hello/to/vaadin"
-----
-====
-
-
-.Final Thoughts
-[%collapsible]
-====
-You've now successfully implemented route templates in Flow. You learned how to:
-
-* Specify multiple route parameters in a view.
-* Make route parameters optional.
-* Use a wildcard route parameter to capture multiple URL segments.
-* Use regular expressions to constrain the values of route parameters.
-
-You're now ready to use route parameters in real Vaadin applications. Try specifying your own route template, and make a <<../navigate/flow#your-own-api,custom API>> for navigating to it! Include at least one numeric route parameter, and use [methodname]`RouteParameters.getInteger()` to retrieve it.
-====

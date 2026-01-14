@@ -4,7 +4,7 @@ import '@vaadin/icon';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
-import codeBranch from '../../../../src/main/resources/icons/code-branch.svg?url';
+import codeBranch from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
 @customElement('icons-padding')
 export class Example extends LitElement {
@@ -16,11 +16,21 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" class="items-end">
+      <vaadin-horizontal-layout
+        theme="spacing"
+        class="icons-sizing-padding-example"
+        style="align-items: flex-end"
+      >
         <!-- tag::snippet[] -->
-        <vaadin-icon src="${codeBranch}"></vaadin-icon>
-        <vaadin-icon src="${codeBranch}" style="padding: 0.25em"></vaadin-icon>
-        <vaadin-icon src="${codeBranch}" style="padding: 0.5em"></vaadin-icon>
+        <vaadin-icon src="${codeBranch}" style="--vaadin-icon-size: 3rem;"></vaadin-icon>
+        <vaadin-icon
+          src="${codeBranch}"
+          style="--vaadin-icon-size: 3rem; --vaadin-icon-visual-size: 2rem;"
+        ></vaadin-icon>
+        <vaadin-icon
+          src="${codeBranch}"
+          style="--vaadin-icon-size: 3rem; --vaadin-icon-visual-size: 1rem;"
+        ></vaadin-icon>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

@@ -1,47 +1,56 @@
-import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
-import { DatePicker } from '@vaadin/react-components/DatePicker.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
+import { Card } from '@vaadin/react-components/Card.js';
+import { Markdown } from '@vaadin/react-components/Markdown.js';
 import { Scroller } from '@vaadin/react-components/Scroller.js';
-import { TextArea } from '@vaadin/react-components/TextArea.js';
-import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import exampleStyles from './scroller-basic-styles'; // hidden-source-line
+
+const eventDetails = `
+**Date & Time**
+
+Saturday, July 19, 2025
+9:00 AM – 5:00 PM (PDT)
+
+**About This Event**
+
+Join us for a full day of inspiring talks, hands-on workshops, and networking opportunities with industry leaders. Whether you're a seasoned developer or just starting out, there's something for everyone.
+
+**Schedule**
+
+- **9:00 AM** – Registration & Breakfast
+- **10:00 AM** – Opening Keynote
+- **11:30 AM** – Breakout Sessions
+- **1:00 PM** – Lunch & Networking
+- **2:30 PM** – Afternoon Workshops
+- **4:30 PM** – Closing Remarks & Raffle
+
+**What to Bring**
+
+- Photo ID for check-in
+- Laptop (optional, for workshops)
+- Business cards for networking
+
+**Parking**
+
+Free parking available in Lot B. Street parking is limited.
+
+**Contact**
+
+Questions? Email us at events@techconf.io
+`;
 
 function Example() {
   return (
-    <VerticalLayout className="border border-contrast-20 items-stretch max-w-full" id="container">
-      <header className="flex gap-m items-center border-b p-m">
-        <a href="#" aria-label="Go back">
-          <Icon className="box-border icon-m p-xs" icon="vaadin:arrow-left" aria-hidden="true" />
-        </a>
-        <h2 className="text-xl">Edit employee</h2>
-      </header>
-
+    <Card style={{ maxWidth: '400px' }}>
+      <div slot="title">Summer Tech Conference 2025</div>
       {/* tag::snippet[] */}
-      <Scroller className="border-b p-m" scrollDirection="vertical">
-        <section aria-labelledby="personal-title">
-          <h3 className="text-l" id="personal-title">Personal information</h3>
-          <TextField className="w-full" label="First name" />
-          <TextField className="w-full" label="Last name" />
-          <DatePicker initialPosition="1990-01-01" label="Birthdate" className="w-full" />
-        </section>
-        <section aria-labelledby="employment-title">
-          <h3 className="mt-l text-l" id="employment-title">Employment information</h3>
-          <TextField className="w-full" label="Position" />
-          <TextArea className="w-full" label="Additional information" />
-        </section>
+      <Scroller theme="overflow-indicators" style={{ maxHeight: '300px' }}>
+        <Markdown>{eventDetails}</Markdown>
       </Scroller>
       {/* end::snippet[] */}
-
-      <footer className="flex gap-s px-m py-s">
-        <Button theme="primary">Save</Button>
-        <Button theme="tertiary">Reset</Button>
-      </footer>
-    </VerticalLayout>
+      <Button slot="footer">Add to calendar</Button>
+    </Card>
   );
 }
 
-export default reactExample(Example, exampleStyles); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

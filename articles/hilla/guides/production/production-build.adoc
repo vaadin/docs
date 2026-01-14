@@ -13,7 +13,7 @@ If you generated your application with Hilla CLI, you can create a production bu
 
 [source,terminal]
 ----
-mvn clean package -Pproduction
+mvn clean package
 ----
 
 Executing this line builds a `JAR` file with all of the dependencies and bundled frontend resources, ready to be deployed. You can find the file in the `target` folder after the build is finished.
@@ -21,32 +21,27 @@ Executing this line builds a `JAR` file with all of the dependencies and bundled
 
 == Enabling Production Builds
 
-The production build command works out-of-the-box for Hilla starter projects. For example, it works with projects that are generated using the Hilla CLI. The starter projects come with the necessary Maven configuration. If you've manually created your project's [filename]`pom.xml` file, add the following Maven profile to enable production builds:
+The production build command works out-of-the-box for Hilla starter projects. For example, it works with projects that are generated using the Hilla CLI. The starter projects come with the necessary Maven configuration. If you've manually created your project's [filename]`pom.xml` file, add the following `vaadin-maven-plugin` to enable production builds:
 
 .pom.xml
 [source,xml]
 ----
-<profile>
-    <!-- Production mode is activated using -Pproduction -->
-    <id>production</id>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.vaadin</groupId>
-                <artifactId>vaadin-maven-plugin</artifactId>
-                <version>${vaadin.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build-frontend</goal>
-                        </goals>
-                        <phase>compile</phase>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</profile>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>build-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ----
 
 The actual content of the profile depends on the environment in which your application is running. However, all of the variants call the Maven goal `hilla:build-frontend`.
@@ -54,11 +49,9 @@ The actual content of the profile depends on the environment in which your appli
 
 == Creating a Production Build
 
-To create a production build, you can execute `mvn clean package -Pproduction`. This builds a `JAR` or `WAR` file with all of the dependencies and frontend resources compiled and ready to be deployed. The file is created in the `target` folder after the build completes.
+To create a production build, you can execute `mvn clean package`. This builds a `JAR` or `WAR` file with all of the dependencies and frontend resources compiled and ready to be deployed. The file is created in the `target` folder after the build completes.
 
-If you don't have the production Maven profile in your `POM` file, the easiest way to get it is to create a project base using the CLI. Then copy the production profile from the downloaded `POM` file.
-
-Having a production build as a separate Maven profile should help to avoid any unexpected problems during development, due to production settings.
+If you don't have the `build-frontend` goal in your `POM` file, the easiest way to get it is to create a project base using the CLI. Then copy the `vaadin-maven-plugin` plugin from the downloaded `POM` file.
 
 .Building for 64-Bit
 [NOTE]
@@ -67,31 +60,20 @@ If your operating system is 64-bit, be sure to use a 64-bit JDK installation, as
 
 == Excluding Development Server Module
 
-The `Vite` server integration and live-reload features -- which are available only during development -- are contained in the module `com.vaadin:vaadin-dev-server`. You should exclude this module from production builds. You can do so by adding the following dependency exclusion to the `<dependencies>` section in the `production` profile:
+The `Vite` server integration and live-reload features -- which are available only during development -- are contained in the module `com.vaadin:vaadin-dev-server`. You should exclude this module from production builds. You can do so by adding `vaadin-dev` dependency as a `optional` scope in project `<dependencies>`. Spring Boot 4 `spring-boot-maven-plugin` automatically excludes optional dependencies from the final build:
 
-.pom.xml
+.`pom.xml`
 [source,xml]
 ----
-<profiles>
-    <profile>
-        <id>production</id>
-
-        <!-- above production build configuration -->
-
-        <dependencies>
-            <dependency>
-                <groupId>com.vaadin</groupId>
-                <artifactId>vaadin-core</artifactId>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.vaadin</groupId>
-                        <artifactId>vaadin-dev</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-        </dependencies>
-    </profile>
-</profiles>
+<dependencies>
+    ...
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-dev</artifactId>
+        <optional>true</optional>
+    </dependency>
+    ...
+</dependencies>
 ----
 
 This results in less code and fewer dependency libraries being bundled in the production application.

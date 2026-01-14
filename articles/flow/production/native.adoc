@@ -57,15 +57,33 @@ public class PersonView extends VerticalLayout {
 
 With the annotation, it works as expected. Without it, you would get an empty grid in a natively compiled application. You can have the annotation either on a class or on a method, but not on the constructor.
 
+The same attention should be kept when using POJOs with [classname]`Element` <</flow/component-internals/element-api/properties-attributes#,Properties & Attributes>> or <</flow/component-internals/element-api/calling-javascript#,JavaScript invocation>>; every used custom class must be registered for reflection.
+An exception are classes used in <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> API, that are automatically detected and registered for reflection by Vaadin, but only when used with Spring Boot or Quarkus.
+
+For **Quarkus** applications, classes can be registered for reflection by using the [annotationname]`@RegisterForReflection` annotation, either on the class itself or on a separated class using the `targets` attribute. For more information see the https://quarkus.io/guides/writing-native-applications-tips#registerForReflection[Quarkus documentation]
+
+[source,java]
+----
+@RegisterForReflection
+public class Person {
+}
+
+// Useful when the class is in a third-party jar
+@RegisterForReflection(targets={Person.class})
+public class MyReflectionConfiguration {
+}
+----
+
+Another use case that requires manual registration of reflection hints is the usage of [methodname]`rerouteToError()` method in [classname]`BeforeEvent`. The framework automatically registers hints for exceptions handled by [interfacename]`HasErrorParameter<T extends Exception>` implementors, but it does not detect direct usage with [methodname]`rerouteToError()`. Exception used with that method must be manually registered as explained above.
 
 == Compilation
 
 Compile your Vaadin application into a native image using Maven by executing the following command in the project root directory:
 
 [source,bash]
-mvn -Pproduction -Pnative native:compile
+mvn -Pnative native:compile
 
-This command compiles the application with the production and native profiles enabled. The native profile instructs Maven to use the GraalVM native image compiler for the compilation process.
+This command compiles the application with the native profile enabled. The native profile instructs Maven to use the GraalVM native image compiler for the compilation process.
 
 Now run the application. The compilation creates the native image in the target directory. To run it, execute the following command:
 

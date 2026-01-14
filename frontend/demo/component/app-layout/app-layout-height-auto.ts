@@ -4,14 +4,14 @@ import '@vaadin/grid';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('app-layout-height-auto')
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: var(--lumo-space-m);
     }
   `;

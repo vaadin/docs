@@ -3,9 +3,16 @@ import '@vaadin/tabs';
 import '@vaadin/tabsheet';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('tabsheet-theme-bordered')
 export class Example extends LitElement {
+  protected override createRenderRoot() {
+    const root = super.createRenderRoot();
+    applyTheme(root);
+    return root;
+  }
+
   protected override render() {
     return html`
       <!-- tag::snippet[] -->

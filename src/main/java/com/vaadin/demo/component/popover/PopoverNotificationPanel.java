@@ -74,8 +74,13 @@ public class PopoverNotificationPanel extends Div {
         allList.setItems(Arrays.asList(message1, message2, message3, message4));
 
         TabSheet tabSheet = new TabSheet();
+        // Add style variants for Lumo theme
         tabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_SMALL,
                 TabSheetVariant.LUMO_NO_PADDING);
+        // Add style variants for Aura theme
+        tabSheet.addThemeVariants(TabSheetVariant.AURA_NO_PADDING,
+                TabSheetVariant.AURA_NO_BORDER);
+
         tabSheet.addClassName("notifications");
 
         Div unreadContent = new Div();
@@ -103,7 +108,7 @@ public class PopoverNotificationPanel extends Div {
         layout.setSpacing(false);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.getStyle().set("padding",
-                "var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)");
+                "var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)");
 
         popover.add(layout, tabSheet);
 
@@ -115,7 +120,7 @@ public class PopoverNotificationPanel extends Div {
                 .toInstant(ZoneOffset.UTC);
     }
 
-    public static class Exporter
+    public static class Exporter // hidden-source-line
             extends DemoExporter<PopoverNotificationPanel> { // hidden-source-line
     } // hidden-source-line
 }

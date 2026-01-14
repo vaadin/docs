@@ -1,4 +1,8 @@
+import '@vaadin/vaadin-lumo-styles/src/props/icons.css';
+import '@vaadin/vaadin-lumo-styles/src/components/grid-sorter-icons.css';
 import type { CSSResultGroup } from 'lit';
+import auraCss from '@vaadin/aura/aura.css?inline';
+import lumoCss from '@vaadin/vaadin-lumo-styles/lumo.css?inline';
 import docsCss from 'Frontend/themes/docs/styles.css?inline';
 
 function createStylesheet(css: CSSResultGroup | string): CSSStyleSheet {
@@ -11,14 +15,48 @@ function createStylesheet(css: CSSResultGroup | string): CSSStyleSheet {
   return stylesheet;
 }
 
-const docsStylesheet = createStylesheet(docsCss);
+const lumoStyleSheet = createStylesheet(lumoCss);
+const auraStyleSheet = createStylesheet(auraCss);
+const docsStyleSheet = createStylesheet(docsCss);
+
+function getRootHost(root: DocumentOrShadowRoot) {
+  let host: Element;
+  if (root instanceof ShadowRoot) {
+    host = root.host;
+  } else {
+    host = (root as Document).documentElement;
+  }
+  return host;
+}
 
 export function applyTheme(root: DocumentFragment | DocumentOrShadowRoot | HTMLElement) {
-  // The root parameter type is very broad to handle the default return type of
-  // LitElement.createRenderRoot. In general, we expect this to either be a document or a shadow
-  // root. The adoptedStyleSheets check below makes Typescript accept the parameter type.
-  if ('adoptedStyleSheets' in root && !root.adoptedStyleSheets.includes(docsStylesheet)) {
-    root.adoptedStyleSheets = [...root.adoptedStyleSheets, docsStylesheet];
+  if (root instanceof ShadowRoot || root instanceof Document) {
+    const host = getRootHost(root);
+
+    const updateTheme = () => {
+      const adoptedStyleSheets = root.adoptedStyleSheets.filter(
+        (styleSheet) => ![lumoStyleSheet, auraStyleSheet, docsStyleSheet].includes(styleSheet)
+      );
+
+      if (host.matches('[theme~="aura"]')) {
+        adoptedStyleSheets.push(auraStyleSheet);
+      } else {
+        adoptedStyleSheets.push(lumoStyleSheet);
+      }
+
+      root.adoptedStyleSheets = [...adoptedStyleSheets, docsStyleSheet];
+
+      // @ts-expect-error Force LumoInjector to update injected styles
+      // synchronously to avoid FOUC when switching from Lumo to Aura.
+      root.__lumoInjector?.forceUpdate?.();
+    };
+
+    new MutationObserver(updateTheme).observe(host, {
+      attributes: true,
+      attributeFilter: ['theme'],
+    });
+
+    updateTheme();
   }
 }
 

@@ -72,8 +72,8 @@ public class GridDynamicHeight extends Div {
 
         hint = new Div();
         hint.setText("No invitation has been sent");
-        hint.getStyle().set("padding", "var(--lumo-size-l)")
-                .set("text-align", "center").set("font-style", "italic")
+        hint.getStyle().set("padding", "2.75rem").set("text-align", "center")
+                .set("font-style", "italic")
                 .set("color", "var(--lumo-contrast-70pct)");
 
         add(hint, grid);

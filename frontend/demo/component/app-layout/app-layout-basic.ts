@@ -14,7 +14,7 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: 0;
     }
   `;
@@ -35,8 +35,8 @@ export class Example extends LitElement {
       <vaadin-app-layout>
         <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">MyApp</h1>
-        <vaadin-scroller slot="drawer" class="p-s">
-          <vaadin-side-nav>
+        <vaadin-scroller slot="drawer">
+          <vaadin-side-nav style="margin: var(--vaadin-gap-s)">
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
               Dashboard

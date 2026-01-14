@@ -1,14 +1,6 @@
-/**
- * Copyright 2000-2024 Vaadin Ltd.
- *
- * This program is available under Vaadin Commercial License and Service Terms.
- *
- * See {@literal <https://vaadin.com/commercial-license-and-service-terms>} for the full
- * license.
- */
 package com.vaadin.demo.component.charts.charttypes.gantt;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.*;
 import com.vaadin.flow.component.charts.model.style.SolidColor;
@@ -50,7 +42,6 @@ public class GanttProcessManagementDemo extends Div {
 
         configuration.addSeries(createOfficesSeries());
         configuration.addSeries(createNewProductLaunchSeries());
-
 
         chart.addPointClickListener(event -> {
             var name = ((GanttSeries) event.getSeries())
@@ -203,6 +194,7 @@ public class GanttProcessManagementDemo extends Div {
         }
     }
 
-    public static class Exporter extends DemoExporter<GanttProcessManagementDemo> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GanttProcessManagementDemo> { // hidden-source-line
     } // hidden-source-line
 }

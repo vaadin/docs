@@ -44,10 +44,11 @@ public class AvatarGroupDocumentation extends VerticalLayout {
 
     private void imageHandler() {
         // tag::avatar-group-images[]
-        avatarGroup.setImageHandler(userInfo ->
-            event -> {
+        avatarGroup.setImageHandler(userInfo -> {
+            return event -> {
                 try {
-                    String url = "https://i.pravatar.cc/40?u=" + userInfo.getId();
+                    String url = "https://i.pravatar.cc/40?u="
+                            + userInfo.getId();
                     event.setFileName("avatar_" + userInfo.getId() + ".jpg");
                     event.setContentType("image/jpeg");
                     try (InputStream in = new URL(url).openStream()) {
@@ -56,8 +57,8 @@ public class AvatarGroupDocumentation extends VerticalLayout {
                 } catch (IOException e) {
                     event.getResponse().setStatus(500);
                 }
-            }
-        );
+            };
+        });
         // end::avatar-group-images[]
     }
 

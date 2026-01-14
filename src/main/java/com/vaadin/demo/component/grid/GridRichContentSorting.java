@@ -34,26 +34,35 @@ public class GridRichContentSorting extends Div {
     }
 
     private static Renderer<Person> createEmployeeRenderer() {
-        return LitRenderer.<Person> of(
-                "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
-                        + "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
-                        + "    <span> ${item.fullName} </span>"
-                        + "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
-                        + "      ${item.email}" + "    </span>"
-                        + "  </vaadin-vertical-layout>"
-                        + "</vaadin-horizontal-layout>")
+        return LitRenderer
+                .<Person> of(
+                        """
+                                <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+                                    <span> ${item.fullName} </span>
+                                    <span style="font-size: 0.875rem; color: var(--lumo-secondary-text-color);">
+                                      ${item.email}
+                                    </span>
+                                  </vaadin-vertical-layout>
+                                </vaadin-horizontal-layout>
+                                """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName)
                 .withProperty("email", Person::getEmail);
     }
 
     private static Renderer<Person> createBirthdayRenderer() {
-        return LitRenderer.<Person> of(
-                "<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
-                        + "  <span>${item.birthday}</span>"
-                        + "  <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">Age: ${item.age}</span>"
-                        + "</vaadin-vertical-layout>")
+        return LitRenderer
+                .<Person> of(
+                        """
+                                <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
+                                  <span>${item.birthday}</span>
+                                  <span style="font-size: 0.875rem; color: var(--lumo-secondary-text-color);">
+                                    Age: ${item.age}
+                                  </span>
+                                </vaadin-vertical-layout>
+                                """)
                 .withProperty("birthday",
                         GridRichContentSorting::getFormattedPersonBirthday)
                 .withProperty("age", GridRichContentSorting::getPersonAge);

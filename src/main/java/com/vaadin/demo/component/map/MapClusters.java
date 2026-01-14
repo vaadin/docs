@@ -1,12 +1,11 @@
 package com.vaadin.demo.component.map;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
 import com.vaadin.flow.component.map.configuration.Feature;
 import com.vaadin.flow.component.map.configuration.feature.MarkerFeature;
-import com.vaadin.flow.component.map.events.FeatureEventDetails;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -38,13 +37,14 @@ public class MapClusters extends Div {
 
         // Zoom to cluster contents on click
         map.addClusterClickListener(event -> {
-            List<Feature> features = event.getFeatures().stream().map(FeatureEventDetails::getFeature).toList();
+            List<Feature> features = event.getFeatures();
             map.zoomToFit(features);
         });
         // end::snippet[]
 
         // Override cluster icon to use inline images // hidden-source-line
-        map.getFeatureLayer().getClusterStyle().setImage(Icons.createClusterIcon()); // hidden-source-line
+        map.getFeatureLayer().getClusterStyle() // hidden-source-line
+                .setImage(Icons.createClusterIcon()); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<MapClusters> { // hidden-source-line

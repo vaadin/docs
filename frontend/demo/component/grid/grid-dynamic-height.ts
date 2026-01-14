@@ -11,8 +11,8 @@ import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('grid-dynamic-height')
 export class Example extends LitElement {
@@ -86,7 +86,7 @@ export class Example extends LitElement {
 
   private renderNoInvitationAlert = () => html`
     <div
-      style="padding: var(--lumo-size-l);text-align: center;font-style: italic; color: var(--lumo-contrast-70pct);"
+      style="padding: 2.75rem; text-align: center; font-style: italic; color: var(--lumo-contrast-70pct);"
     >
       No invitation has been sent
     </div>

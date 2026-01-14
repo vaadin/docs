@@ -35,7 +35,7 @@ public class SelectPresentation extends Div {
             image.setSrc(person.getPictureUrl());
             image.setAlt("Portrait of " + person.getFirstName() + " "
                     + person.getLastName());
-            image.setWidth("var(--lumo-size-m)");
+            image.setWidth("2.25rem");
             image.getStyle().set("margin-right", "var(--lumo-space-s)");
 
             Div info = new Div();
@@ -43,7 +43,7 @@ public class SelectPresentation extends Div {
 
             Div profession = new Div();
             profession.setText(person.getProfession());
-            profession.getStyle().set("font-size", "var(--lumo-font-size-s)");
+            profession.getStyle().set("font-size", "0.875rem");
             profession.getStyle().set("color",
                     "var(--lumo-secondary-text-color)");
             info.add(profession);

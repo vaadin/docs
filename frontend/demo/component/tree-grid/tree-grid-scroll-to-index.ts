@@ -15,8 +15,8 @@ import type {
 } from '@vaadin/grid';
 import type { IntegerFieldChangeEvent } from '@vaadin/integer-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 @customElement('tree-grid-scroll-to-index')
 export class Example extends LitElement {
@@ -114,7 +114,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="email"></vaadin-grid-column>
       </vaadin-grid>
 
-      <vaadin-horizontal-layout theme="spacing" class="items-end">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: flex-end">
         <vaadin-integer-field
           label="Parent index"
           step-buttons-visible

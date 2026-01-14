@@ -1,0 +1,210 @@
+---
+title: Properties pass:[&] Attributes
+page-title: Managing DOM properties and attributes in Vaadin components
+description: Get and set DOM properties and attributes.
+meta-description: Learn how to use the Element API to manage client-side properties and attributes from a Vaadin component.
+order: 1
+---
+
+
+= Element Properties & Attributes
+
+The Element API contains methods to update and query parts of an element. You can use the Element API to change property and attribute values for server-side elements.
+
+
+== About Attributes
+
+Attributes are used mainly for the initial configuration of elements.
+
+Attribute values are always stored as strings.
+
+.Setting attributes for the `nameField` element
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/AttributeTest.java[tag=set,indent=0]
+----
+====
+
+.The same example as the previous one, expressed as HTML
+[example]
+====
+[source,html]
+----
+<input id="nameField" placeholder="John Doe" autofocus>
+----
+====
+
+You can also retrieve and manipulate attributes after they have been set.
+
+.Retrieving and changing attributes in the `nameField` element
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/AttributeTest.java[tag=getchange,indent=0]
+----
+====
+
+== About Properties
+
+Properties are used mainly to dynamically change the settings of an element after it has been initialized.
+
+Any JavaScript value can be used as a property value in the browser.
+
+You can use different variations of the [methodname]`Element.setProperty()` method to set a property value as a `String`, `boolean`, `double`, or [methodname]`Element.setPropertyJson()` to use `BaseJsonNode`.
+
+.Setting a property value as a `double`
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/PropertyTest.java[tag=setdouble,indent=0]
+----
+====
+
+Similarly, you can use different variations of the [methodname]`Element.getProperty()` method to retrieve the value of a property as a `String`, `boolean`, `double` or [method]`Element.getPropertyBean()` to get value deserialized to a bean.
+
+If you retrieve the value of a property as a different type from that used to set it, JavaScript type coercion rules are used to convert the value.
+For example, a property set as a non-empty `String` results as `true` if fetched as a `boolean`.
+
+=== Setting JSON Properties
+
+For complex property values such as objects or arrays, use the [methodname]`Element.setPropertyJson()` method with Jackson's `BaseJsonNode` types.
+
+.Setting a JSON object as a property
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/PropertyTest.java[tag=setjson,indent=0]
+----
+====
+
+.Setting a JSON array as a property
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/PropertyTest.java[tag=setarray,indent=0]
+----
+====
+
+.Setting a Java bean or record as a property
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/PropertyTest.java[tag=setbean,indent=0]
+----
+====
+
+.Converting retrieved value types
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/PropertyTest.java[tag=convert,indent=0]
+----
+====
+
+== Difference between Using Attributes and Properties
+
+Be cautious when using attributes and properties:
+
+* It's often possible to use either an attribute or property with the same name for the same effect, and both work fine.
+* However, in certain cases:
+** only one or the other works, or
+** the attribute is considered only when the element is initialized, and the property is effective after initialization.
+
+You should always check the specific documentation for the element you are using to find out whether a feature should be configured using a property or an attribute.
+
+pass:[<!-- vale Vaadin.HeadingCase = NO -->]
+pass:[<!-- vale Vale.Spelling = NO -->]
+
+== Using the `textContent` Property
+
+pass:[<!-- vale Vale.Spelling = YES -->]
+pass:[<!-- vale Vaadin.HeadingCase = YES -->]
+
+You can set an element's `textContent` property using the [methodname]`Element.setText()` method.
+This removes all the children of the element and replaces them with a single text node with the given value.
+
+The [interfacename]`ElementFactory` interface provides helpers that you can use to create an element with a given text content.
+
+.Using the [methodname]`createSpan()` and [methodname]`createDiv()` helper methods with the [methodname]`setText()` method
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/TextContentTest.java[tag=settext,indent=0]
+----
+====
+
+To retrieve the text of an element, you can use the:
+
+* [methodname]`Element.getText()` method to return the text in the element itself. Text in child elements is ignored.
+* [methodname]`Element.getTextRecursively()` method to return the text of the entire element tree, by recursively concatenating the text from all child elements.
+
+.Using the [methodname]`getText()` and [methodname]`getTextRecursively()` methods
+[example]
+====
+[source,java]
+----
+include::{root}/src/test/java/com/vaadin/demo/reference/componentinternals/element/TextContentTest.java[tag=gettext,indent=0]
+----
+====
+
+== Synchronizing Properties to the Server
+
+By default, values updated in the browser aren't sent to the server. To synchronize a property, use the [methodname]`Element.addPropertyChangeListener()` method. The method takes three parameters:
+
+. the name of the property to synchronize;
+. the name of the DOM event that triggers the synchronization; and
+. a listener that is invoked when the property value changes.
+
+After the property has been synchronized to the server, you can retrieve its value using the [methodname]`getProperty()` method. If you don't need to react to the property change directly when it occurs, you can use a NO-OP listener.
+
+.Using a NO-OP listener to synchronize the `value` property of a text input element whenever the `change` event occurs
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/element/UserInputExample.java[tag=listen,indent=0]
+----
+====
+
+[NOTE]
+As an alternative, you can use the [methodname]`addEventData()` method to transfer the value from the input to the server.
+See <<event-listener#,Listening to Element Events>> for more information.
+
+.Retrieving User Input
+[example]
+====
+This example demonstrates how to use the Element API to retrieve user input. The example adds a text input field that allows the user to enter their name.
+
+. Create a text input element:
++
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/element/UserInputExample.java[tag=create,indent=0]
+----
+
+. Transfer the value to the server by asking the client to update the server-side input element every time the value changes in the browser:
++
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/element/UserInputExample.java[tag=listen,indent=0]
+----
+
+. Retrieve the synchronized properties using [methodname]`Element.getProperty()`:
++
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/element/UserInputExample.java[tag=process,indent=0]
+----
+<1> The `value` property is `null` if the property wasn't previously set and the user hasn't typed text into the field.
+====
+
+[discussion-id]`867075C4-D3EB-4AE2-B369-51E678673A7A`

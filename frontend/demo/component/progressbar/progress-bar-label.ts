@@ -18,8 +18,8 @@ export class Example extends LitElement {
       <div>
         <!-- tag::snippet[] -->
         <vaadin-horizontal-layout style="justify-content: space-between;">
-          <label class="text-secondary" id="pblabel">Processing Financials.xlsx</label>
-          <span class="text-secondary">50%</span>
+          <label id="pblabel">Processing Financials.xlsx</label>
+          <span>50%</span>
         </vaadin-horizontal-layout>
 
         <vaadin-progress-bar aria-labelledby="pblabel" value="0.5"></vaadin-progress-bar>

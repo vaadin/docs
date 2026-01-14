@@ -1,72 +1,28 @@
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 @customElement('master-content')
 export class MasterContent extends LitElement {
-  static override styles = css`
-    :host {
-      overflow: hidden !important;
-      color: var(--lumo-contrast-20pct);
-    }
+  protected override createRenderRoot() {
+    return this;
+  }
 
-    table {
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      border-bottom: 1px solid currentColor;
-      padding: var(--lumo-space-wide-m);
-    }
-
-    th::before,
-    td::before {
-      content: '\\00a0';
-      display: inline-block;
-      width: 8rem;
-      background: currentColor;
-      border-radius: calc(var(--lumo-size-m) / 2);
-      font-size: var(--lumo-font-size-xxs);
-    }
-
-    th {
-      background: var(--lumo-contrast-5pct);
-    }
-  `;
+  connectedCallback() {
+    super.connectedCallback();
+    this.classList.add('master-content');
+  }
 
   protected override render() {
-    return html`
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-        <!-- prettier-ignore -->
-        <tbody>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        </tbody>
-      </table>
-    `;
+    return [...Array(16)].map(
+      () =>
+        html`<div class="row">
+          <div class="col"></div>
+          <div class="col"></div>
+          <div class="col"></div>
+          <div class="col"></div>
+          <div class="col"></div>
+          <div class="col"></div>
+        </div>`
+    );
   }
 }

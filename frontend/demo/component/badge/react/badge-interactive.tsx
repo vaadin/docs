@@ -39,7 +39,7 @@ function Example() {
   };
 
   const onClick = (event: React.MouseEvent<ButtonElement>) => {
-    const profession = event.currentTarget.dataset.profession;
+    const { profession } = event.currentTarget.dataset;
 
     if (profession) {
       selectedProfessions.value = selectedProfessions.value.filter((p) => p !== profession);
@@ -51,7 +51,7 @@ function Example() {
     <VerticalLayout theme="spacing">
       <ComboBox label="Profession" items={items.value} onChange={onChange} />
 
-      <HorizontalLayout style={{ flexWrap: 'wrap' }} theme="spacing">
+      <HorizontalLayout theme="spacing wrap">
         {selectedProfessions.value.map((profession) => (
           <span key={profession} {...{ theme: 'badge pill contrast' }}>
             <span>{profession}</span>

@@ -1,0 +1,125 @@
+---
+title: Add a Navigation Menu
+page-title: How to add a navigation menu to a Vaadin application
+description: Learn how to add a navigation menu to a router layout.
+meta-description: Learn how to add a navigation menu to a router layout in Vaadin.
+order: 21
+---
+
+
+= Add a Navigation Menu
+:toclevels: 2
+
+
+This guide teaches you how to add a navigation menu to a router layout in Vaadin. It is a continuation of the <<add-router-layout#,Add a Router Layout>> guide.
+
+
+== Copy-Paste into Your Project
+
+If you want to quickly try out a navigation menu, you can copy-paste the following code into your router layout:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/routerlayout/MainLayout.java[tags=navimenu,indent=0]
+----
+
+Expand the code for a complete implementation of a router layout with a navigation menu. For more detailed instructions on how to use build a navigation menu, continue reading below.
+
+
+== Creating a Navigation Menu
+
+You typically build a navigation menu in Vaadin using the Side Navigation components, which provide a vertical list of navigation links with support for collapsible, nested sections. This guide only covers the very basics of building a navigation menu. For more detailed information, see the <</components/side-nav#,Side Navigation>> documentation.
+
+Start by creating an instance of [classname]`SideNav` to act as the container for the navigation items:
+
+[source,java]
+----
+private SideNav createSideNav() {
+    SideNav sideNav = new SideNav();
+    // Add navigation items here
+    return sideNav;
+}
+----
+
+For every item in the navigation menu, create an instance of [classname]`SideNavItem`, and add it to the [classname]`SideNav` instance. Each item represents a link to a view in your application. You can create a simple navigation item like this:
+
+[source,java]
+----
+SideNavItem homeItem = new SideNavItem("Home", HomeView.class);
+sideNav.addItem(homeItem);
+----
+
+Now, whenever the user clicks on the item, the router navigates to the specified view. Furthermore, the item will be highlighted when the user is on that view.
+
+
+=== Highlighting Nested Views
+
+By default, a [classname]`SideNavItem` is highlighted only when the user is on the exact path of the view. That means that if the view has e.g. a URL parameter, or acts as a parent layout for another view, the item is not highlighted.
+
+For example, an item with the path `/customers` has the following behavior:
+
+* `/customers` -- item is highlighted
+* `/customers/123` -- item is *not* highlighted
+* `/customers/123/edit` -- item is *not* highlighted
+
+
+To highlight the item for all paths that start with the view's path, use the [methodname]`SideNavItem.setMatchNested()` method:
+
+[source,java]
+----
+SideNavItem customersItem = new SideNavItem("Customers", CustomersView.class);
+customersItem.setMatchNested(true);
+// Now matches /customers, /customers/123, /customers/123/edit, etc.
+sideNav.addItem(customersItem);
+----
+
+
+== Getting the Menu Items Dynamically
+
+If your views have <<add-view#navigation-menu-item,navigation menu items>> defined using the [annotationname]`@Menu` annotation, you can build the menu dynamically.
+
+The `MenuConfiguration.getMenuEntries()` method returns a list of all menu entries defined in the application. You can iterate over these entries and create corresponding [classname]`SideNavItem` instances for each entry:
+
+[source,java]
+----
+private SideNav createSideNav() {
+    var nav = new SideNav();
+    MenuConfiguration.getMenuEntries()
+            .forEach(entry -> nav.addItem(
+                new SideNavItem(
+                    entry.title(),
+                    entry.path()
+                )
+            ));
+    return nav;
+}
+----
+
+For technical details, see the <</flow/routing/menu-configuration#,Menu Configuration>> reference guide.
+
+
+== Icons in the Menu
+
+You often want to have icons in your navigation menu to improve usability and visual appeal. The `@Menu` annotation has an `icon` attribute, but it's an ordinary string. Therefore, you need to decide how to interpret that string in your menu implementation.
+
+For example, if you use <</components/icons#,Vaadin Icons>>, you can create an icon for a menu item like this:
+
+[source,java]
+----
+// Annotation on view:
+@Menu(title = "Dashboard", icon = "vaadin:dashboard")
+
+// In the menu building code:
+item.setPrefixComponent(new Icon(menuEntry.icon()));
+----
+
+If you're using SVG icons, you can do this instead:
+
+[source,java]
+----
+// Annotation on view:
+@Menu(title = "Dashboard", icon = "icons/dashboard.svg")
+
+// In the menu building code:
+item.setPrefixComponent(new SvgIcon(menuEntry.icon()));
+----

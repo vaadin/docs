@@ -37,7 +37,7 @@ export class Example extends LitElement {
               icon="${this.sidebarCollapsed ? 'vaadin:arrow-right' : 'vaadin:arrow-left'}"
             ></vaadin-icon>
           </vaadin-button>
-          <master-content></master-content>
+          <master-content style="clear: right"></master-content>
         </div>
         <detail-content style="width: ${100 - sidebarWidthPercentage}%"></detail-content>
       </vaadin-split-layout>

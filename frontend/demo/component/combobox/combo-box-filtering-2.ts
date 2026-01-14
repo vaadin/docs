@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
-import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { applyTheme } from 'Frontend/demo/theme';
+import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 // tag::snippet[]
 @customElement('combo-box-filtering-2')

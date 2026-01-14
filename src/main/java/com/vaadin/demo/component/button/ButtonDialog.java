@@ -32,10 +32,9 @@ public class ButtonDialog extends VerticalLayout {
         Button createAccount = new Button("Create account");
         createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(delete, cancel,
-                createAccount);
-        buttonLayout.getStyle().set("flex-wrap", "wrap");
-        buttonLayout.setJustifyContentMode(JustifyContentMode.END);
+        HorizontalLayout buttonLayout = new HorizontalLayout(delete);
+        buttonLayout.addToEnd(cancel, createAccount);
+        buttonLayout.addThemeNames("wrap");
         // end::snippet[]
 
         setPadding(false);

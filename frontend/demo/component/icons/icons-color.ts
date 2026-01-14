@@ -4,7 +4,7 @@ import '@vaadin/icon';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
-import codeBranch from '../../../../src/main/resources/icons/code-branch.svg?url';
+import codeBranch from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
 @customElement('icons-color')
 export class Example extends LitElement {
@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" class="items-center">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: center">
         <!-- tag::snippet[] -->
         <vaadin-icon src="${codeBranch}" style="color: red"></vaadin-icon>
         <vaadin-icon icon-class="fa fa-user" style="color: red"></vaadin-icon>

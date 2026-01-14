@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.notification;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.Route;

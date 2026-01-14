@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('tabs-badges')
 export class Example extends LitElement {
@@ -12,6 +13,12 @@ export class Example extends LitElement {
       }
     `,
   ];
+
+  protected override createRenderRoot() {
+    const root = super.createRenderRoot();
+    applyTheme(root);
+    return root;
+  }
 
   protected override render() {
     return html`

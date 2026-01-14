@@ -44,7 +44,7 @@ export class Example extends LitElement {
           .items="${this.items}"
           @change="${this.onChange}"
         ></vaadin-combo-box>
-        <vaadin-horizontal-layout style="flex-wrap: wrap" theme="spacing">
+        <vaadin-horizontal-layout theme="spacing wrap">
           ${repeat(
             this.selectedProfessions,
             (profession) => profession,

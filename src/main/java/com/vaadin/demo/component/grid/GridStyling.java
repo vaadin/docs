@@ -7,7 +7,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Route("grid-styling")
 public class GridStyling extends Div {
@@ -39,8 +38,7 @@ public class GridStyling extends Div {
 
     private static List<PersonWithRating> createDataSet() {
         return DataService.getPeople().stream()
-                .map(PersonWithRating::generateFromPerson)
-                .collect(Collectors.toList());
+                .map(PersonWithRating::generateFromPerson).toList();
     }
 
     public static class Exporter // hidden-source-line

@@ -17,13 +17,13 @@ import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
-      line-height: var(--lumo-size-l);
+      font-size: 1.125rem;
+      line-height: 2.75rem;
       margin: 0 var(--lumo-space-m);
     }
 
     h2 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: 0;
     }
   `;
@@ -44,8 +44,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-app-layout primary-section="drawer">
         <h1 slot="drawer">MyApp</h1>
-        <vaadin-scroller slot="drawer" class="p-s">
-          <vaadin-side-nav>
+        <vaadin-scroller slot="drawer">
+          <vaadin-side-nav style="margin: var(--vaadin-gap-s)">
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
               Dashboard
@@ -83,32 +83,35 @@ export class Example extends LitElement {
             <vaadin-drawer-toggle></vaadin-drawer-toggle>
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
-          <vaadin-horizontal-layout id="navigation" class="h-m justify-center gap-s">
+          <vaadin-horizontal-layout
+            id="navigation"
+            style="height: 2.25rem; justify-content: center; gap: 0.5rem"
+          >
             <a
               href="/all"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >All</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              All
+            </a>
             <a
               href="/open"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Open</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Open
+            </a>
             <!-- end::snippet[] -->
             <a
               href="/completed"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Completed</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Completed
+            </a>
             <a
               href="/cancelled"
-              class="flex items-center px-m text-secondary font-medium"
-              style="text-decoration: none"
-              >Cancelled</a
+              style="display: flex; align-items: center; padding: 0 1rem; font-weight: 500; text-decoration: none"
             >
+              Cancelled
+            </a>
             <!-- tag::snippet[] -->
           </vaadin-horizontal-layout>
         </vaadin-vertical-layout>
