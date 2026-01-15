@@ -1,37 +1,40 @@
 ---
-title: Manage UI State With Signals
+title: Signals
 page-title: How to use signals to manage UI state in Flow
 description: Using the signals in Flow to manage UI state reactively in Vaadin applications.
 meta-description: Manage UI state reactively and share it within an application with signals in Vaadin Flow.
-version: since:com.vaadin:vaadin@V24.8
 order: 125
 ---
 
-== Introduction
 
-Signals enable reactive state management solution for Vaadin Flow applications.
-With reactive state management, the state of a view or component is explicitly declared and components are configured to automatically update themselves when the state changes.
-This helps make UI state management less complicated in general and is particularly useful for sharing state between multiple users in a thread-safe manner.
-Signals are reactive by design, automatically updating dependent parts of the UI when their values change.
+= Manage UI State with Signals
+
+Signals enable reactive state management solution for Vaadin Flow applications. With reactive state management, the state of a view or component is explicitly declared and components are configured to automatically update themselves when the state changes.
+
+Signals make UI state management less complicated in general and are useful for sharing state between multiple users in a thread-safe manner.
 
 :preview-feature: Signals
 :feature-flag: com.vaadin.experimental.flowFullstackSignals
 include::{articles}/_preview-banner.adoc[opts=optional]
 
-=== Key Features
 
-* *Reactive*: Changes to signal values automatically propagate to dependent parts of the UI.
-* *Immutable values*: Signals work best with immutable values, e.g. String or Java Records, to ensure data consistency.
-* *Hierarchical data structures*: Signals can represent complex hierarchical data structures.
-* *Transactions*: Multiple operations can be grouped into a transaction that either succeeds or fails as a whole.
-* *Thread-safe by design*: Signals are designed to handle concurrent access from multiple users.
-* *Atomic operations*: Signals support atomic updates to ensure data consistency.
+== Key Features
+
+*Reactive*:: Changes to signal values automatically propagate to dependent parts of the UI.
+*Immutable Values*:: Signals work best with immutable values, e.g. String or Java Records, to ensure data consistency.
+*Hierarchical Data Structures*:: Signals can represent complex hierarchical data structures.
+*Transactions*:: Multiple operations can be grouped into a transaction that either succeeds or fails as a whole.
+*Thread-Safe by Design*:: Signals are designed to handle concurrent access from multiple users.
+*Atomic Operations*:: Signals support atomic updates to ensure data consistency.
+
 
 == Core Concepts
+
 
 === Signals
 
 A signal is a holder for a value. When the value of a signal value is changed, all dependent parts are automatically updated without the need to manually add and remove change listeners.
+
 
 === Effects
 
@@ -47,6 +50,7 @@ ComponentEffect.effect(span, () -> {
 });
 ----
 
+
 === Computed Signals
 
 Computed signals derive their values from other signals. They are automatically updated when any of the signals they depend on change.
@@ -57,6 +61,7 @@ Signal<String> fullName = Signal.computed(() -> {
     return firstNameSignal.value() + " " + lastNameSignal.value();
 });
 ----
+
 
 === Transactions
 
@@ -71,12 +76,15 @@ Signal.runInTransaction(() -> {
 });
 ----
 
+
+[.collapsible-list]
 == Signal Types
 
-Several signal types are available for different use cases:
+Several signal types are available for different use cases.
 
-=== ValueSignal
-
+.ValueSignal
+[%collapsible]
+====
 A signal containing a single value. The value is updated as a single atomic change.
 
 [source,java]
@@ -85,9 +93,12 @@ ValueSignal<String> name = new ValueSignal<>(String.class);
 name.value("John Doe"); // Set the value
 String currentName = name.value(); // Get the value
 ----
+====
 
-=== NumberSignal
 
+.NumberSignal
+[%collapsible]
+====
 A specialized signal for numeric values with support for atomic increments and decrements. The signal value is represented as a `double` and there are methods to access the value as an `int`.
 
 [source,java]
@@ -98,9 +109,12 @@ counter.incrementBy(1); // Increment by 1
 counter.incrementBy(-2); // Decrement by 2
 int count = counter.valueAsInt(); // Get the value as int
 ----
+====
 
-=== ListSignal
 
+.ListSignal
+[%collapsible]
+====
 A signal containing a list of values. Each value in the list is accessed as a separate [classname]`ValueSignal`.
 
 [source,java]
@@ -111,9 +125,12 @@ persons.insertLast(new Person("John", 30)); // Add to the end
 List<ValueSignal<Person>> personList = persons.value(); // Get all persons
 personList.get(0).value(new Person("Bob", 20)); // Update the value of a child signal
 ----
+====
 
-=== MapSignal
 
+.MapSignal
+[%collapsible]
+====
 A signal containing a map of values with string keys. Each value in the map is accessed as a separate [classname]`ValueSignal`.
 
 [source,java]
@@ -123,9 +140,12 @@ properties.put("name", "John"); // Add or update a property
 properties.putIfAbsent("age", "30"); // Add only if not present
 Map<String, ValueSignal<String>> propertyMap = properties.value(); // Get all properties
 ----
+====
 
-=== NodeSignal
 
+.NodeSignal
+[%collapsible]
+====
 A signal representing a node in a tree structure. A node can have its own value and child signals accessed by order or by key. A child node is always either a list child or a map child, but it cannot have both roles at the same time.
 
 [source,java]
@@ -142,6 +162,8 @@ user.value().listChildren().getLast().asValue(String.class).value(); // Access l
 MapSignal<String> mapChildren = user.asMap(String.class); // Access all map children
 mapChildren.value().get("name"); // Alternative way of accessing child value 'John Doe'
 ----
+====
+
 
 === ReferenceSignal
 
@@ -164,6 +186,7 @@ signal.modify(user -> user.setAge(26)); // Modify the referenced object
 
 The [classname]`SignalFactory` interface provides methods for creating signal instances based on a string key, value type and initial value. It supports different strategies for creating instances:
 
+
 === IN_MEMORY_SHARED
 
 Returns the same signal instance for the same name within the same JVM. This is similar to running the respective constructor to initialize a `static final` field.
@@ -172,6 +195,7 @@ Returns the same signal instance for the same name within the same JVM. This is 
 ----
 NodeSignal shared = SignalFactory.IN_MEMORY_SHARED.node("myNode");
 ----
+
 
 === IN_MEMORY_EXCLUSIVE
 
@@ -184,10 +208,13 @@ NodeSignal exclusive = SignalFactory.IN_MEMORY_EXCLUSIVE.node("myNode");
 
 The [classname]`SignalFactory` interface is the extension point for creating custom signal factories. Additional factory implementations are planned for creating signal instances that are shared across multiple JVMs in a cluster.
 
+
 == Usage Examples
 
-=== Simple Counter Example
 
+.Simple Counter Example
+[example]
+====
 This example demonstrates how to bind a counter signal (state) to a button (UI) — the button's text is updated reactively based on the counter value.
 The binding between state and UI is done using a [classname]`ComponentEffect.effect` helper. In this case, it creates an effect that uses the value from `counter` signal to update button text whenever the signal changes.
 
@@ -211,10 +238,12 @@ public class SimpleCounter extends VerticalLayout {
     }
 }
 ----
+====
 
 
-=== Text Field Example
-
+.Text Field Example
+[example]
+====
 [source,java]
 ----
 public class SharedText extends FormLayout {
@@ -246,9 +275,12 @@ ComponentEffect.effect(field,
 ----
 
 Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+====
 
-=== List Example
 
+.List Example
+[example]
+====
 [source,java]
 ----
 public class PersonList extends VerticalLayout {
@@ -283,11 +315,15 @@ public class PersonList extends VerticalLayout {
 Removing all list items and creating them again is not the most efficient solution. A helper method will be added later to bind child components in a more efficient way.
 
 The effect that creates new list item components will be run only when a new item is added to the list but not when the value of an existing item is updated.
+====
 
+
+[.collapsible-list]
 == Best Practices
 
-=== Use Immutable Values
-
+.Use Immutable Values
+[%collapsible]
+====
 Signals work best with immutable values. This ensures that changes to signal values are always made through the signal API, which maintains consistency and reactivity.
 
 [source,java]
@@ -300,9 +336,12 @@ user.update(u -> new User(u.getName(), u.getAge() + 1));
 User u = user.value();
 u.setAge(u.getAge() + 1); // This won't trigger reactivity!
 ----
+====
 
-=== Use Component Effects for UI Updates
 
+.Use Component Effects for UI Updates
+[%collapsible]
+====
 Various helper methods simplify binding of signals to components:
 
 [source,java]
@@ -317,9 +356,12 @@ ComponentEffect.bind(label, user.map(u -> u.getName()), Span::setText);
 ComponentEffect.bind(label, stringSignal, Span::setText);
 ComponentEffect.bind(label, stringSignal.map(value -> !value.isEmpty()), Span::setVisible);
 ----
+====
 
-=== Use Transactions for Atomic Updates
 
+.Use Transactions for Atomic Updates
+[%collapsible]
+====
 Use transactions when you need to update multiple signals atomically. All changes from the transaction are applied atomically so that no observer can see a partial update. If any change fails, then none of the changes are applied.
 
 [source,java]
@@ -330,17 +372,24 @@ Signal.runInTransaction(() -> {
     age.value(30);
 });
 ----
+====
 
-=== Use update() for Atomic Updates Based on Current Value
 
+.Use `update()` for Atomic Updates Based on Current Value
+[%collapsible]
+====
 Use the update() method when you need to update a signal's value based on its current value.
 
 [source,java]
 ----
 counter.update(current -> current + 1);
 ----
+====
 
-=== Avoid changing signal values from inside effect or computed signal callbacks
+
+.Avoid Changing Signal Values from Inside Effect or Computed Signal Callbacks
+[%collapsible]
+====
 
 Updating the value of a signal as a direct reaction to some other signal value change might cause an infinite loop.
 To help protect against this, effect and computed signal callbacks are run inside a read-only transaction to prevent any accidental changes.
@@ -354,8 +403,7 @@ Signal<String> otherSignal = Signal.computed(() -> {
 });
 ----
 
-
-If that is not possible and you are certain there's no risk for infinite loops, you can bypass the check by using the `runWithoutTransaction` method.
+If that isn't possible and you are certain there's no risk for infinite loops, you can bypass the check by using the `runWithoutTransaction` method.
 
 [source,java]
 ----
@@ -369,10 +417,13 @@ ComponentEffect.effect(() -> {
   });
 });
 ----
+====
+
 
 == Advanced Topics
 
-=== Standalone effects
+
+=== Standalone Effects
 
 A standalone signal effect can be used for effects that aren't related to any UI component.
 
@@ -390,6 +441,7 @@ cleanup.run();
 
 ----
 
+
 === Signal Mapping
 
 You can transform a signal's value using the map() method. This is a shorthand for creating a computed signal that depends on exactly one other signal.
@@ -401,6 +453,7 @@ Signal<String> ageCategory = age.map(a ->
     a < 18 ? "Child" : (a < 65 ? "Adult" : "Senior"));
 ----
 
+
 === Read-Only Signals
 
 You can create read-only versions of signals that don't allow modifications. The original signal remains writeable and the read-only instance is also updated for any changes made to the original instance.
@@ -410,6 +463,7 @@ You can create read-only versions of signals that don't allow modifications. The
 ValueSignal<String> name = SignalFactory.IN_MEMORY_SHARED.value("name", String.class);
 ValueSignal<String> readOnlyName = name.asReadonly();
 ----
+
 
 === Untracked Signal Access
 
@@ -421,6 +475,7 @@ Signal.effect(() -> {
   String name = nameSignal.peek(); // The effect will not depend on nameSignal
 });
 ----
+
 
 == Signal Binding in Element
 
@@ -447,6 +502,7 @@ public class SimpleCounter extends VerticalLayout {
     }
 }
 ----
+
 
 === Text Binding
 
@@ -482,6 +538,7 @@ counter.value(0);
 span.getElement().getText(); // returns ""
 ----
 
+
 === Attribute Binding
 
 .`Element#bindAttribute(String attribute, Signal<String> signal)`
@@ -499,6 +556,7 @@ hidden.value(!hidden.peek());
 
 ----
 
+
 === Property Binding
 
 Supports various value types: `String`, `Boolean`, `Double`, `BaseJsonNode`, `Object` (bean), `List` and `Map`.
@@ -513,6 +571,7 @@ ValueSignal<Boolean> hidden = new ValueSignal<>(false);
 span.getElement().bindProperty("hidden", hidden);
 hidden.value(!hidden.peek()); // toggles 'hidden' property
 ----
+
 .String type
 [source,java]
 ----
@@ -520,6 +579,7 @@ ValueSignal<String> title = new ValueSignal<>("Hello");
 span.getElement().bindProperty("title", title);
 title.value("World"); // updates 'title' property
 ----
+
 .Double type
 [source,java]
 ----
@@ -548,6 +608,7 @@ span.getElement().bindProperty("items", items);
 items.value(List.of("Item A", "Item B", "Item C"));
 // element.items is now ['Item A', 'Item B', 'Item C']
 ----
+
 .Map type
 [source,java]
 ----
@@ -556,6 +617,7 @@ span.getElement().bindProperty("config", config);
 config.value(Map.of("key1", "value1", "key2", "value2"));
 // element.config is now {key1: 'value1', key2: 'value2'}
 ----
+
 .BaseJsonNode type
 [source,java]
 ----
@@ -572,8 +634,6 @@ jsonSignal.value(updatedJson);
 // element.jsonData is now {key: 'updatedValue', newKey: 'newValue'}
 ----
 
-
-
 .Property change listener for 'change' DOM event
 [source,java]
 ----
@@ -589,6 +649,7 @@ span.getElement().addPropertyChangeListener("hidden", "change", event -> {
 //   element.hidden = !element.hidden;
 //   element.dispatchEvent(new Event('change'));
 ----
+
 
 === ClassList Binding
 
@@ -607,6 +668,7 @@ foo.value(true);
 span.getElement().getClassList().clear();
 // DOM has "<span class>". Binding is also removed.
 ----
+
 
 === Style Binding
 
@@ -631,7 +693,8 @@ span.getElement().getStyle().clear();
 // DOM has "<span style>". Binding is also removed.
 ----
 
-=== SignalPropertySupport helper
+
+=== SignalPropertySupport Helper
 
 Not all component features delegate directly to the state in [classname]`com.vaadin.flow.dom.Element`. For those features, the [classname]`SignalPropertySupport` helper class ensures that state management behaves consistently with other Element bindings.
 

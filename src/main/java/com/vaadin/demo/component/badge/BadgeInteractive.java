@@ -17,7 +17,7 @@ public class BadgeInteractive extends VerticalLayout {
     public BadgeInteractive() {
         // tag::snippet1[]
         HorizontalLayout badges = new HorizontalLayout();
-        badges.getStyle().set("flex-wrap", "wrap");
+        badges.addThemeNames("wrap");
 
         ComboBox<String> comboBox = new ComboBox<>("Profession");
         comboBox.setItems(DataService.getProfessions());

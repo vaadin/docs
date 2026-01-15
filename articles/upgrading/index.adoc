@@ -202,6 +202,12 @@ dependencies {
 
 More detailed instructions can be found in <<{articles}/flow/configuration/development-mode#development-mode, Development Mode>>.
 
+
+== Vaadin Router Deprecation
+
+The Vaadin Router library is no longer actively maintained, as Vaadin now uses React Router as its primary client-side routing solution. If your application currently uses Vaadin Router, you should migrate to React Router, by removing the `vaadin.react.enabled=false` property in your configuration.
+
+
 == Hilla
 Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have react views, add `hilla-spring-boot-starter` to work together with `vaadin-spring-boot-starter` in your build configuration.
 
@@ -233,37 +239,36 @@ Below are the main highlights of the changes and more detailed instructions are 
 
 The special `frontend/themes` folder, and the `components` sub-folder for CSS shadow-DOM injection, is deprecated (but still supported).
 
-Injecting CSS into Vaadin components’ shadow DOM through the components sub-folder in your theme folder is disabled by default. Shadow DOM styling is no longer recommended (as of V24), but if you still need to use it, it can be enabled with the feature flag `themeComponentStyles`.
+Injecting CSS into Vaadin components’ shadow DOM through the `components` sub-folder in your `frontend/themes/<mytheme>` folder is disabled by default. Shadow DOM styling is no longer recommended (as of V24), but if you still need to use it, it can be enabled with the <<{articles}/flow/configuration/feature-flags#,`themeComponentStyles`>> feature flag.
 
-The [classname]`@Theme` annotation is deprecated. Instead, [classname]`StyleSheet` annotation to be used for loading one or more stylesheets from public static resources locations (e.g. `META-INF/resources/`), whereas [classname]`CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
+The [annotationname]`@Theme` annotation is deprecated. Instead, the [annotationname]`@StyleSheet` annotation is to be used for loading one or more <<{articles}/styling/stylesheets#,stylesheets from public static resources locations>> (e.g. `META-INF/resources/`), whereas [annotationname]`@CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
 
-`StyleSheet` annotation is now a recommended way to load Vaadin theme for the application — to be placed on the application class implementing [classname]`AppShellConfigurator`. Below are some examples of how to use it:
+The [annotationname]`@StyleSheet` annotation is now the recommended way to load Vaadin themes and styles for the application — to be placed on the application class implementing [classname]`AppShellConfigurator`. Below are some examples of how to use it:
 
 [source,java]
 ----
-// theme selection
+// Load Vaadin theme
 @StyleSheet(Aura.STYLESHEET) // or Lumo.STYLESHEET
+// Load application styles
+@StyleSheet("styles.css") // references src/main/resources/META-INF/resources/styles.css
 public class Application implements AppShellConfigurator {}
-
-// or loading custom styles and theme:
-
-@StyleSheet("styles.css")
-public class Application implements AppShellConfigurator {}
-
-// then using @import in the src/main/resources/META-INF/resources/styles.css:
-
-@import 'aura/aura.css'; /* or 'lumo/lumo.css' */
-// your custom styles go here ...
-
 ----
 
-The [filename]`theme.json` configuration file is deprecated (but still supported, except the `lumoImports` property).
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. If the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications), the referenced stylesheet must be prefixed by the `context://` protocol.
+
+[source,java]
+----
+@StyleSheet("context://styles.css")
+public class Application implements AppShellConfigurator {}
+----
+
+The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
 
-You can use [classname]`@ColorScheme` for choosing between light or dark color scheme. 
+You can use [classname]`@ColorScheme` for choosing between light or dark color scheme.
 See <<{articles}/styling/themes#color-schemes, Color Schemes>> for more details on using color schemes.
 
 === Spring Security and StyleSheet
@@ -307,7 +312,7 @@ The Lumo theme is no longer loaded by default, except if you’re using the [cla
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET);
+@StyleSheet(Lumo.STYLESHEET)
 public class Application implements AppShellConfigurator {}
 ----
 
@@ -315,9 +320,20 @@ All Lumo styles, including badges, but excluding Lumo Utility Classes are includ
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET);
-@StyleSheet(Lumo.UTILITY_STYLESHEET);
+@StyleSheet(Lumo.STYLESHEET)
+@StyleSheet(Lumo.UTILITY_STYLESHEET)
 public class Application implements AppShellConfigurator {}
+----
+
+The Lumo icon collection is not loaded by default anymore, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. To ensure Lumo icons are included in your application bundle, use the [classname]`LumoIcon` enum instead of the general [classname]`Icon` class:
+
+[source,java,role="before"]
+----
+var icon = new Icon("lumo","cross");
+----
+[source,java,role="after"]
+----
+var icon = LumoIcon.CROSS.create();
 ----
 
 NOTE: The way the Lumo theme is injected into Vaadin components has been refactored to not use the `registerStyles()` helper. This should not cause any breaking changes in applications; please report issues at link:https://github.com/vaadin/web-components/issues[vaadin/web-components] if you find otherwise.
@@ -361,10 +377,13 @@ One exception is the `@vaadin/react-components/css/lumo/Utility.module.css` CSS 
 
 These changes are optional, as old approaches still work (with the exceptions listed in the Breaking Changes section), but recommended to get your application to the new best practices in Vaadin 25, and to avoid breaking changes in later major versions.
 
-* Refactor component styles from shadow DOM styles to normal CSS (this was the recommended approach already in V24)
+* Refactor component styles from shadow DOM styles to normal CSS (this was the recommended approach already in V24). (The _Styling_ sub-pages in the component documentation provide lists of css selectors and style properties that can be used to style components this way.)
+* Move stylesheets from `frontend/themes/<mytheme>` to `src/main/resources/META-INF/resources` in a Spring project, or to `src/main/webapp` in a non-Spring project.
 * Load custom styles through a master stylesheet with [classname]`@StyleSheet` instead of [classname]`@Theme` or multiple [classname]`@CssImport`-s
 * Load additional custom stylesheets through master stylesheet with `@import`
-* Move stylesheets from `frontend/themes/<mytheme>` to `src/main/resources/META-INF/resources`
+
+Note that `theme.json` and shadow-DOM styling of components through the `components` folder do not work in the new stylesheet location.
+
 
 == Components
 
