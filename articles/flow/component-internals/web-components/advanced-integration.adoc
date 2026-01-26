@@ -1,0 +1,434 @@
+---
+title: Advanced Integration
+page-title: Advanced web component integration with TypeScript and Lit
+description: How to wrap npm packages, use advanced Lit features, and handle complex state synchronization.
+meta-description: Learn advanced patterns for integrating web components in Vaadin Flow using TypeScript, Lit lifecycle, and npm package wrapping.
+order: 25
+---
+
+
+= Advanced Web Component Integration
+
+This guide covers advanced patterns for creating Web Component wrappers in Vaadin, including wrapping npm packages with TypeScript, using Lit lifecycle hooks and decorators, and managing complex state between the client and server.
+
+For basic integration, see <<index#,Integrating Web Components>> and <<an-in-project-web-component#,Creating an In-Project Web Component>>.
+For integrating React components, see <<{articles}/flow/integrations/react#,Using React Components in Flow>>.
+
+
+[[typescript-wrappers]]
+== TypeScript for Web Component Wrappers
+
+TypeScript is recommended for non-trivial Web Component wrappers. It provides:
+
+- Type-safe property definitions that catch mismatches at build time
+- Interfaces for configuration objects passed between Java and the client
+- Better IDE support with auto-completion when using third-party libraries
+
+A typical TypeScript wrapper defines interfaces for any complex data structures:
+
+[source,typescript]
+----
+interface ChartConfig {
+  type: 'bar' | 'line' | 'pie';
+  animate: boolean;
+  colors?: string[];
+}
+
+interface DataPoint {
+  label: string;
+  value: number;
+}
+----
+
+These types ensure that the JSON objects passed from Java via `getElement().setProperty()` conform to the expected shape, and that event data dispatched back to Java is consistent.
+
+
+[[wrapping-npm-packages]]
+== Wrapping npm Packages with TypeScript
+
+Wrapping a third-party npm library involves three parts working together: the `@NpmPackage` annotation declares the dependency, a TypeScript file imports and wraps the library as a Web Component, and a Java class exposes the API to server-side code.
+
+This section demonstrates the pattern using a fictional `@acme/widget` package. The same approach applies to any npm library.
+
+
+=== Step 1: The TypeScript Wrapper
+
+The TypeScript file imports the npm package and wraps it in a LitElement-based Web Component:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component-internals/acme-widget-wrapper.ts[tags=class,indent=0]
+----
+
+Key points:
+
+- The `@property` decorator exposes reactive properties that Java can set via `getElement().setProperty()`. When a property changes, Lit automatically re-renders.
+- The `@state` decorator marks internal state that triggers re-renders but is not exposed as HTML attributes.
+- The `configJson` property uses the `attribute` option to map the HTML attribute `config-json` to the camelCase JavaScript property, since HTML attributes are case-insensitive.
+- The `firstUpdated` lifecycle callback initializes the third-party widget after the component's DOM is ready.
+- The `disconnectedCallback` lifecycle callback cleans up the widget instance to prevent memory leaks when the component is removed from the DOM.
+- A `CustomEvent` is dispatched to communicate changes back to the Java side.
+
+
+=== Step 2: The Java Component Class
+
+The Java class declares the npm dependency and provides a typed API:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/internals/AcmeWidget.java[tags=class,indent=0]
+----
+
+Key points:
+
+- `@NpmPackage` declares the npm dependency. Vaadin installs it automatically during the build.
+- `@JsModule` points to the `.ts` file. Vaadin compiles TypeScript as part of the frontend build.
+- Complex configuration is passed as a JSON string. For simple properties, use `setProperty` directly.
+- `@DomEvent` and `@EventData` map the client-side `CustomEvent` to a typed Java event class.
+
+
+=== Step 3: Using the Component
+
+[source,java]
+----
+AcmeWidget widget = new AcmeWidget();
+widget.setTitle("Dashboard Widget");
+widget.setConfig("{\"type\": \"bar\", \"animate\": true}");
+widget.addWidgetChangeListener(event -> {
+    Notification.show(event.getLabel() + ": " + event.getValue());
+});
+add(widget);
+----
+
+
+[[advanced-lit-features]]
+== Advanced Lit Features
+
+When creating Web Component wrappers, Lit provides features beyond basic property binding and rendering.
+
+
+=== Reactive Properties vs. Internal State
+
+Use `@property` for values that should be settable from Java (via element properties or attributes). Use `@state` for internal values that affect rendering but shouldn't be part of the public API:
+
+[source,typescript]
+----
+import { LitElement, html } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+
+@customElement('my-counter')
+class MyCounter extends LitElement {
+  // Public: settable from Java via getElement().setProperty("max", 100)
+  @property({ type: Number })
+  accessor max: number = 10;
+
+  // Internal: only used within this component
+  @state()
+  private accessor _count: number = 0;
+
+  render() {
+    return html`
+      <span>${this._count} / ${this.max}</span>
+      <button @click=${this._increment}
+              ?disabled=${this._count >= this.max}>+</button>
+    `;
+  }
+
+  private _increment() {
+    this._count++;
+    this.dispatchEvent(
+      new CustomEvent('count-changed', {
+        detail: { count: this._count },
+        bubbles: true,
+      })
+    );
+  }
+}
+----
+
+Both `@property` and `@state` trigger re-renders when they change. The difference is that `@property` values can be set via HTML attributes and are part of the component's public API.
+
+
+=== Lifecycle Callbacks
+
+Lit provides several lifecycle callbacks beyond the standard Web Component ones:
+
+[cols="1,2"]
+|===
+|Callback |When to Use
+
+|`connectedCallback()`
+|The element is added to the DOM. Set up event listeners or start periodic tasks. Always call `super.connectedCallback()`.
+
+|`disconnectedCallback()`
+|The element is removed from the DOM. Clean up event listeners, timers, or third-party library instances to prevent memory leaks. Always call `super.disconnectedCallback()`.
+
+|`firstUpdated(changedProperties)`
+|Called once after the component's first render. Use this to initialize third-party libraries that need a DOM element to attach to.
+
+|`updated(changedProperties)`
+|Called after every render. Use this to react to property changes, such as reconfiguring a wrapped library. The `changedProperties` map contains the previous values.
+
+|`willUpdate(changedProperties)`
+|Called before rendering. Use this to compute derived values from properties before they're used in the template.
+|===
+
+Example using `firstUpdated` to initialize a library and `disconnectedCallback` to clean it up:
+
+[source,typescript]
+----
+@customElement('chart-wrapper')
+class ChartWrapper extends LitElement {
+  private _chart: Chart | null = null;
+
+  @property({ type: String })
+  accessor type: string = 'bar';
+
+  override firstUpdated() {
+    const canvas = this.renderRoot.querySelector('canvas');
+    this._chart = new Chart(canvas, { type: this.type });
+  }
+
+  override updated(changed: PropertyValues) {
+    if (changed.has('type') && this._chart) {
+      this._chart.config.type = this.type;
+      this._chart.update();
+    }
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._chart?.destroy();
+    this._chart = null;
+  }
+
+  override render() {
+    return html`<canvas></canvas>`;
+  }
+}
+----
+
+
+=== Shadow DOM vs. Light DOM
+
+By default, Lit renders into Shadow DOM, which encapsulates styles. Most wrapper components should use Shadow DOM. However, if you need the wrapped content to inherit page styles or participate in form submission, you can render into Light DOM:
+
+[source,typescript]
+----
+import { LitElement, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+
+@customElement('light-dom-wrapper')
+class LightDomWrapper extends LitElement {
+  override createRenderRoot() {
+    // Render into Light DOM instead of Shadow DOM
+    return this;
+  }
+
+  override render() {
+    return html`<div class="wrapper">Content here</div>`;
+  }
+}
+----
+
+.When to avoid Light DOM
+[NOTE]
+Light DOM components don't have style encapsulation. Their styles can leak out and page styles can leak in, which makes them harder to maintain. Prefer Shadow DOM unless you have a specific reason to use Light DOM.
+
+
+[[state-synchronization]]
+== State Synchronization Patterns
+
+Communication between the Java server and the client-side Web Component happens through element properties and events.
+
+
+=== Simple Properties
+
+For primitive values, set them directly from Java:
+
+[source,java]
+----
+getElement().setProperty("label", "Hello");
+getElement().setProperty("count", 42);
+getElement().setProperty("visible", true);
+----
+
+These are accessible in the TypeScript component as reactive properties.
+
+
+=== Complex Objects via JSON
+
+For objects and arrays, serialize to JSON on the Java side and parse on the client:
+
+*Java side:*
+[source,java]
+----
+// Using a JSON library (e.g., Jackson)
+String json = objectMapper.writeValueAsString(config);
+getElement().setProperty("configJson", json);
+----
+
+*TypeScript side:*
+[source,typescript]
+----
+@property({ type: String, attribute: 'config-json' })
+accessor configJson: string = '{}';
+
+private get _config(): MyConfig {
+  return JSON.parse(this.configJson) as MyConfig;
+}
+----
+
+Alternatively, Vaadin's `Element` API supports `JsonValue` for setting structured data without manual serialization:
+
+[source,java]
+----
+JsonObject config = Json.createObject();
+config.put("type", "bar");
+config.put("animate", true);
+getElement().setPropertyJson("config", config);
+----
+
+On the client, the property receives a JavaScript object directly:
+
+[source,typescript]
+----
+@property({ type: Object })
+accessor config: MyConfig = { type: 'bar', animate: false };
+----
+
+
+=== Two-Way Binding with Custom Events
+
+To send state changes from the client back to the server, dispatch a `CustomEvent` and listen for it in Java:
+
+*TypeScript side:*
+[source,typescript]
+----
+this.dispatchEvent(new CustomEvent('selection-changed', {
+  detail: { selectedIds: [1, 2, 3] },
+  bubbles: true,
+  composed: true,
+}));
+----
+
+*Java side using `@DomEvent`:*
+[source,java]
+----
+@DomEvent("selection-changed")
+public static class SelectionChangedEvent
+        extends ComponentEvent<MyComponent> {
+
+    private final JsonArray selectedIds;
+
+    public SelectionChangedEvent(MyComponent source, boolean fromClient,
+            @EventData("event.detail.selectedIds") JsonArray selectedIds) {
+        super(source, fromClient);
+        this.selectedIds = selectedIds;
+    }
+
+    public JsonArray getSelectedIds() {
+        return selectedIds;
+    }
+}
+----
+
+*Java side using `addEventListener`:*
+[source,java]
+----
+getElement().addEventListener("selection-changed", event -> {
+    JsonArray ids = event.getEventData().getArray("event.detail.selectedIds");
+    // process selection
+}).addEventData("event.detail.selectedIds");
+----
+
+Set `composed: true` on events that need to cross Shadow DOM boundaries.
+
+
+[[practical-patterns]]
+== Practical Patterns
+
+
+=== Loading States and Async Initialization
+
+When wrapping libraries that require async initialization (e.g., loading data from a remote source), use internal state to track loading:
+
+[source,typescript]
+----
+@state()
+private accessor _loading: boolean = true;
+
+@state()
+private accessor _error: string | null = null;
+
+override async firstUpdated() {
+  try {
+    await this._initializeLibrary();
+    this._loading = false;
+  } catch (e) {
+    this._error = e instanceof Error ? e.message : 'Initialization failed';
+    this._loading = false;
+  }
+}
+
+override render() {
+  if (this._error) {
+    return html`<div class="error">${this._error}</div>`;
+  }
+  if (this._loading) {
+    return html`<div class="loading">Loading...</div>`;
+  }
+  return html`<div id="content"></div>`;
+}
+----
+
+
+=== Cleanup and Memory Management
+
+Always clean up when the component is disconnected. This is critical for third-party libraries that create DOM elements, register global event listeners, or start timers:
+
+[source,typescript]
+----
+private _resizeObserver: ResizeObserver | null = null;
+private _refreshInterval: number | null = null;
+
+override connectedCallback() {
+  super.connectedCallback();
+  this._resizeObserver = new ResizeObserver(() => this._handleResize());
+  this._resizeObserver.observe(this);
+  this._refreshInterval = window.setInterval(() => this._refresh(), 30000);
+}
+
+override disconnectedCallback() {
+  super.disconnectedCallback();
+  this._resizeObserver?.disconnect();
+  this._resizeObserver = null;
+
+  if (this._refreshInterval !== null) {
+    clearInterval(this._refreshInterval);
+    this._refreshInterval = null;
+  }
+}
+----
+
+
+=== Error Handling in Event Dispatch
+
+When dispatching events with data that might fail to serialize, validate before dispatching:
+
+[source,typescript]
+----
+private _notifyChange(data: unknown): void {
+  // Only dispatch if there's meaningful data
+  if (data == null) return;
+
+  this.dispatchEvent(new CustomEvent('data-changed', {
+    detail: data,
+    bubbles: true,
+    composed: true,
+  }));
+}
+----
+
+
+[discussion-id]`4FA5E312-9C1B-4A3E-B7D2-6A8C3F2E1D09`

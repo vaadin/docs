@@ -17,21 +17,20 @@ This section demonstrates how to do this using the https://start.vaadin.com.
 
 == Creating the Component Template
 
-The first step is to create the JavaScript Lit template in [filename]`frontend/my-test-element/my-test-element.js`
+The first step is to create a TypeScript Lit template in [filename]`frontend/my-test-element/my-test-element.ts`.
 
-*Example*: Defining the `my-test-element` JavaScript template.
+*Example*: Defining the `my-test-element` TypeScript template.
 
-[source,javascript]
+[source,typescript]
 ----
 import { html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
+@customElement('my-test-element')
 class MyTestElement extends LitElement {
 
-  static get properties() {
-    return {
-      name: { type: String }
-    }
-  }
+  @property({ type: String })
+  accessor name: string = '';
 
   render() {
     return html`
@@ -39,9 +38,13 @@ class MyTestElement extends LitElement {
     `;
   }
 }
-
-window.customElements.define('my-test-element', MyTestElement);
 ----
+
+The `@customElement` decorator registers the class as a custom element, replacing the manual `customElements.define()` call. The `@property` decorator declares `name` as a reactive property with a type hint, so Lit automatically handles attribute-to-property conversion and triggers re-renders when the value changes.
+
+.JavaScript works, too
+[NOTE]
+You can also use plain JavaScript (`.js`) files if you prefer. TypeScript is recommended for larger components because it provides type checking and better IDE support, but both work identically with `@JsModule`.
 
 == Creating the Component Java API
 
@@ -53,7 +56,7 @@ You can modify them while creating the Java API.
 [source,java]
 ----
 @Tag("my-test-element")
-@JsModule("my-test-element/my-test-element.js")
+@JsModule("my-test-element/my-test-element.ts")
 public class MyTest extends Component {
 
     public MyTest(String msg) {
@@ -61,6 +64,8 @@ public class MyTest extends Component {
     }
 }
 ----
+
+Note the `@JsModule` annotation points to a `.ts` file. Vaadin's build tooling handles TypeScript compilation automatically.
 
 == Using the Web Component
 
@@ -75,6 +80,66 @@ public class MainView extends VerticalLayout {
     }
 }
 ----
+
+
+[[using-npm-packages]]
+== Using npm Packages in Your Component
+
+When your Web Component needs a third-party npm package, declare the dependency with `@NpmPackage` on the Java class and import the package in your TypeScript file.
+
+For example, to use a date formatting library in your component:
+
+*Step 1*: Import and use the package in TypeScript.
+
+[source,typescript]
+----
+import { html, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { format } from 'date-fns';
+
+@customElement('formatted-date')
+class FormattedDate extends LitElement {
+
+  @property({ type: String })
+  accessor date: string = '';
+
+  @property({ type: String })
+  accessor pattern: string = 'PP';
+
+  render() {
+    const formatted = this.date
+      ? format(new Date(this.date), this.pattern)
+      : '';
+    return html`<span>${formatted}</span>`;
+  }
+}
+----
+
+*Step 2*: Declare the npm dependency and module in the Java class.
+
+[source,java]
+----
+@Tag("formatted-date")
+@NpmPackage(value = "date-fns", version = "4.1.0")
+@JsModule("./formatted-date.ts")
+public class FormattedDate extends Component {
+
+    public FormattedDate() {
+    }
+
+    public void setDate(String isoDate) {
+        getElement().setProperty("date", isoDate);
+    }
+
+    public void setPattern(String pattern) {
+        getElement().setProperty("pattern", pattern);
+    }
+}
+----
+
+The `@NpmPackage` annotation ensures `date-fns` is installed when the application builds. The TypeScript file can then import from it like any other module.
+
+For more complex integration scenarios, including wrapping full-featured npm libraries and advanced Lit patterns, see <<advanced-integration#,Advanced Web Component Integration>>.
 
 
 [discussion-id]`F3B26182-6375-44E5-8B83-09BE00801C2A`
