@@ -10,13 +10,14 @@ import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.shared.Registration;
 
-import elemental.json.JsonObject;
-
 // tag::class[]
 @Tag("acme-widget-wrapper")
 @NpmPackage(value = "@acme/widget", version = "2.0.0")
 @JsModule("./component-internals/acme-widget-wrapper.ts")
 public class AcmeWidget extends Component {
+
+    public record WidgetConfig(String type, boolean animate) {
+    }
 
     public AcmeWidget() {
     }
@@ -29,8 +30,8 @@ public class AcmeWidget extends Component {
         return getElement().getProperty("title", "");
     }
 
-    public void setConfig(String configJson) {
-        getElement().setProperty("configJson", configJson);
+    public void setConfig(WidgetConfig config) {
+        getElement().setPropertyBean("config", config);
     }
 
     public void setInteractive(boolean interactive) {

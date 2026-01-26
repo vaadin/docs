@@ -48,8 +48,8 @@ class AcmeWidgetWrapper extends LitElement {
   @property({ type: String })
   accessor title: string = '';
 
-  @property({ type: String, attribute: 'config-json' })
-  accessor configJson: string = '{}';
+  @property({ type: Object })
+  accessor config: WidgetConfig = {};
 
   @property({ type: Boolean })
   accessor interactive: boolean = true;
@@ -89,9 +89,8 @@ class AcmeWidgetWrapper extends LitElement {
     super.updated(changedProperties);
 
     // Re-configure when config changes after initial render
-    if (changedProperties.has('configJson') && this._widget) {
-      const config = this._parseConfig();
-      this._widget.updateConfig(config);
+    if (changedProperties.has('config') && this._widget) {
+      this._widget.updateConfig(this.config);
     }
 
     if (changedProperties.has('interactive') && this._widget) {
@@ -114,10 +113,8 @@ class AcmeWidgetWrapper extends LitElement {
     const container = this.renderRoot.querySelector('#widget-root');
     if (!container) return;
 
-    const config = this._parseConfig();
-
     this._widget = new Widget(container as HTMLElement, {
-      ...config,
+      ...this.config,
       interactive: this.interactive,
       onChange: (data: WidgetData) => {
         // Dispatch event for Java-side listener
@@ -132,15 +129,6 @@ class AcmeWidgetWrapper extends LitElement {
     });
 
     this._loading = false;
-  }
-
-  private _parseConfig(): WidgetConfig {
-    try {
-      const parsed: WidgetConfig = JSON.parse(this.configJson);
-      return parsed;
-    } catch {
-      return {};
-    }
   }
 
   // -- Render --

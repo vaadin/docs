@@ -40,7 +40,7 @@ interface DataPoint {
 }
 ----
 
-These types ensure that the JSON objects passed from Java via `getElement().setProperty()` conform to the expected shape, and that event data dispatched back to Java is consistent.
+These types ensure that the objects passed from Java via `setPropertyBean()` conform to the expected shape, and that event data dispatched back to Java is consistent.
 
 
 [[wrapping-npm-packages]]
@@ -62,9 +62,9 @@ include::{root}/frontend/demo/component-internals/acme-widget-wrapper.ts[tags=cl
 
 Key points:
 
-- The `@property` decorator exposes reactive properties that Java can set via `getElement().setProperty()`. When a property changes, Lit automatically re-renders.
+- The `@property` decorator exposes reactive properties that Java can set via `getElement().setProperty()` or `setPropertyBean()`. When a property changes, Lit automatically re-renders.
 - The `@state` decorator marks internal state that triggers re-renders but is not exposed as HTML attributes.
-- The `configJson` property uses the `attribute` option to map the HTML attribute `config-json` to the camelCase JavaScript property, since HTML attributes are case-insensitive.
+- The `config` property uses `type: Object` so that Vaadin's `setPropertyBean()` can pass a Java record directly as a JavaScript object -- no manual JSON serialization needed.
 - The `firstUpdated` lifecycle callback initializes the third-party widget after the component's DOM is ready.
 - The `disconnectedCallback` lifecycle callback cleans up the widget instance to prevent memory leaks when the component is removed from the DOM.
 - A `CustomEvent` is dispatched to communicate changes back to the Java side.
@@ -83,7 +83,7 @@ Key points:
 
 - `@NpmPackage` declares the npm dependency. Vaadin installs it automatically during the build.
 - `@JsModule` points to the `.ts` file. Vaadin compiles TypeScript as part of the frontend build.
-- Complex configuration is passed as a JSON string. For simple properties, use `setProperty` directly.
+- The `WidgetConfig` record is passed to the client via `setPropertyBean()`, which serializes it to a JavaScript object automatically. For simple properties, use `setProperty` directly.
 - `@DomEvent` and `@EventData` map the client-side `CustomEvent` to a typed Java event class.
 
 
@@ -93,7 +93,7 @@ Key points:
 ----
 AcmeWidget widget = new AcmeWidget();
 widget.setTitle("Dashboard Widget");
-widget.setConfig("{\"type\": \"bar\", \"animate\": true}");
+widget.setConfig(new AcmeWidget.WidgetConfig("bar", true));
 widget.addWidgetChangeListener(event -> {
     Notification.show(event.getLabel() + ": " + event.getValue());
 });
@@ -256,30 +256,36 @@ getElement().setProperty("visible", true);
 These are accessible in the TypeScript component as reactive properties.
 
 
-=== Complex Objects via JSON
+=== Complex Objects with `setPropertyBean`
 
-For objects and arrays, serialize to JSON on the Java side and parse on the client:
+For objects and arrays, use `setPropertyBean()` to pass a Java record or bean directly to the client. Vaadin handles the JSON serialization automatically:
 
 *Java side:*
 [source,java]
 ----
-// Using a JSON library (e.g., Jackson)
-String json = objectMapper.writeValueAsString(config);
-getElement().setProperty("configJson", json);
+record ChartConfig(String type, boolean animate) {}
+
+ChartConfig config = new ChartConfig("bar", true);
+getElement().setPropertyBean("config", config);
 ----
 
 *TypeScript side:*
 [source,typescript]
 ----
-@property({ type: String, attribute: 'config-json' })
-accessor configJson: string = '{}';
-
-private get _config(): MyConfig {
-  return JSON.parse(this.configJson) as MyConfig;
-}
+@property({ type: Object })
+accessor config: ChartConfig = { type: 'bar', animate: false };
 ----
 
-Alternatively, Vaadin's `Element` API supports `JsonValue` for setting structured data without manual serialization:
+The client receives the bean as a plain JavaScript object. No manual JSON parsing is needed.
+
+You can also read the bean back on the server using `getPropertyBean()`:
+
+[source,java]
+----
+ChartConfig config = getElement().getPropertyBean("config", ChartConfig.class);
+----
+
+For cases where you need lower-level control, `setPropertyJson()` accepts an elemental `JsonValue`:
 
 [source,java]
 ----
@@ -287,14 +293,6 @@ JsonObject config = Json.createObject();
 config.put("type", "bar");
 config.put("animate", true);
 getElement().setPropertyJson("config", config);
-----
-
-On the client, the property receives a JavaScript object directly:
-
-[source,typescript]
-----
-@property({ type: Object })
-accessor config: MyConfig = { type: 'bar', animate: false };
 ----
 
 
