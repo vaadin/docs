@@ -12,7 +12,7 @@ Whenever you store data in a relational database, you have to manage the databas
 
 Some object-relational mapping tools, like Hibernate, can generate the initial schema for you. They may also be able to perform trivial updates to the schema, like creating new tables. In more complex cases, however, they are at a loss. For this reason, https://www.red-gate.com/products/flyway/community/[Flyway] is the recommended tool for managing database schemas in Vaadin applications.
 
-In this guide, you'll learn enough about Flyway to get started using it in your Vaadin applications. At the end, a mini-tutorial helps you apply these concepts in a real Vaadin application. Because Flyway has more features than presented here, you should also read the https://documentation.red-gate.com/flyway[Flyway Documentation].
+In this guide, you'll learn enough about Flyway to get started using it in your Vaadin applications. Because Flyway has more features than presented here, you should also read the https://documentation.red-gate.com/flyway[Flyway Documentation].
 
 
 == Migrations
@@ -43,7 +43,7 @@ For information about writing migrations in other languages than SQL, see the ht
 
 == Migrating on Application Startup
 
-Spring Boot has built-in support for Flyway. If the `org.flywaydb:flyway-core` module is on the classpath, Flyway is automatically executed on application startup.
+Spring Boot has built-in support for Flyway. If the `org.springframework.boot:spring-boot-flyway` module is on the classpath, Flyway is automatically executed on application startup.
 
 Flyway has built-in support for clustered environments. If you launch multiple instances of the same application, pointing to the same database, Flyway makes sure that every migration is applied only once, in the correct order.
 
@@ -59,8 +59,8 @@ Spring Boot declares the modules in its parent POM, so you don't have to look up
 <dependencies>
     ...
     <dependency>
-        <groupId>org.flywaydb</groupId>
-        <artifactId>flyway-core</artifactId>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-flyway</artifactId>
     </dependency>
     <dependency>
         <groupId>org.postgresql</groupId>
@@ -130,91 +130,3 @@ $ mvn -Dflyway.user=YOUR_DDL_USER -Dflyway.password=YOUR_DDL_USER_PASSWORD -Dfly
 ----
 
 For more information about what you can do with the Flyway Maven plugin and how to configure it, see the https://documentation.red-gate.com/flyway/reference/usage/maven-goal[Flyway Documentation].
-
-
-[.collapsible-list]
-== Try It
-
-In this tutorial, you'll add Flyway to a real Vaadin application.
-
-.Set Up the Project
-[%collapsible]
-====
-First, generate a new application at http://start.vaadin.com[start.vaadin.com], <</getting-started/dev-environment/import#,open>> it in your IDE, and <</getting-started/dev-environment/run#,run>> it with hotswap enabled.
-====
-
-.Add Maven Dependencies
-[%collapsible]
-====
-Open `pom.xml` and add the following dependencies:
-
-.pom.xml
-[source,xml]
-----
-<dependency>
-    <groupId>org.flywaydb</groupId>
-    <artifactId>flyway-core</artifactId>
-</dependency>
-----
-
-====
-
-.Write Migration Script
-[%collapsible]
-====
-Create a new directory `src/main/resources/db/migration`. In this directory, create a file `V1__task_management.sql`:
-
-.V1__task_management.sql
-[source,sql]
-----
-create sequence task_seq increment by 50;
-
-create table task
-(
-    task_id       bigint                   not null,
-    description   varchar(300)             not null,
-    creation_date timestamp with time zone not null,
-    due_date      date,
-    primary key (task_id)
-);
-----
-
-Open `[application package].examplefeature.Task` and compare the `@Entity` and `@Column` annotations with the SQL script. The names, size, and nullability should match.
-
-====
-
-.Disable Hibernate's Automatic DDL Generation
-[%collapsible]
-====
-Open `src/main/resources/application.properties` and remove the line that sets `spring.jpa.hibernate.ddl-auto` to `update`.
-====
-
-
-.Run the Integration Test
-[%collapsible]
-====
-Run the `TaskServiceTest` integration test in your IDE. The test should pass, and in the log, you should see messages like the following:
-
-[source]
-----
-Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
-Successfully validated 1 migration
-Creating Schema History table "PUBLIC"."flyway_schema_history" ...
-Current version of schema "PUBLIC": << Empty Schema >>
-Migrating schema "PUBLIC" to version "1 - task management"
-Successfully applied 1 migration to schema "PUBLIC", now at version v1
-----
-
-====
-
-.Run the Application
-[%collapsible]
-====
-Now run the application. You should see similar messages in the startup log. Open the application in your browser and create some tasks. Everything should work normally.
-====
-
-.Final Thoughts
-[%collapsible]
-====
-You've now implemented Flyway for schema management in a Vaadin application and replaced Hibernate's DDL auto-generation with a structured, version-controlled approach.
-====
