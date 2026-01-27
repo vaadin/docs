@@ -5,7 +5,7 @@ import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 function Example() {
   return (
     // tag::snippet[]
-    <LoginOverlay title="TaskMob" description="Built with ♥ by Vaadin" opened autofocus />
+    <LoginOverlay title="TaskMob" description="Built with ♥ by Vaadin" opened no-autofocus />
     // end::snippet[]
   );
 }
