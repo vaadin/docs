@@ -41,13 +41,61 @@ The `@Tag` annotation here defines the name of the HTML element. The `@JSModule`
 
 Your component may require in-project frontend files, such as additional JavaScript modules. In which case, add them to the `src/main/resources/META-INF/frontend` directory so that they're packaged in the component JAR if you choose to make an add-on of your component.
 
-As a example, you might use the `@JsModule` annotation to add a local JavaScript module like so:
+As a example, you might use the `@JsModule` annotation to add a local JavaScript or TypeScript module like so:
 [source,java]
 ----
 @JsModule("./my-local-module.js")
 ----
 
 When running `mvn clean install`, the `vaadin-maven-plugin` automatically installs the `npm` package in `node_modules` and imports the JavaScript module file into the document provided to the browser. Additionally, if you run the Jetty web server from Maven (i.e., using `mvn jetty:run`), your project's source code is monitored for changes to these types of annotations. Any change to `@NpmPackage` or `@JsModule` annotations triggers installation of the referenced packages and hot deployment of your application, including the new JS module imports.
+
+
+[[typescript-support]]
+== TypeScript Support
+
+Vaadin fully supports TypeScript for client-side files. You can use `.ts` files with the `@JsModule` annotation exactly as you would use `.js` files:
+
+[source,java]
+----
+@JsModule("./my-component.ts")
+----
+
+TypeScript provides type safety for property definitions, event data, and configuration objects, which is especially valuable for complex components. It also enables better IDE support with auto-completion and inline documentation.
+
+When using Lit to define Web Components, TypeScript enables typed decorators for properties and events:
+
+[source,typescript]
+----
+import { LitElement, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+
+@customElement('my-component')
+class MyComponent extends LitElement {
+  @property({ type: String })
+  accessor label: string = '';
+
+  @property({ type: Number })
+  accessor count: number = 0;
+
+  render() {
+    return html`<span>${this.label}: ${this.count}</span>`;
+  }
+}
+----
+
+See <<an-in-project-web-component#,Creating an In-Project Web Component>> for a complete TypeScript example, and <<advanced-integration#,Advanced Web Component Integration>> for guidance on wrapping npm packages with TypeScript and using advanced Lit features.
+
+
+[[npm-package-design]]
+== Why `@NpmPackage` Is Declared on Components
+
+You might wonder why the `@NpmPackage` annotation is placed directly on component classes rather than in a centralized configuration file. This design is intentional:
+
+*Automatic tree-shaking*:: Only npm packages referenced by components that are actually used in the application are installed. If a component class is never referenced, its npm dependencies are excluded from the bundle.
+
+*Self-contained add-ons*:: When creating a reusable add-on (e.g., for the Vaadin Directory), the component class carries its own dependency declarations. Consumers don't need to manually configure npm packages -- adding the Java dependency is sufficient.
+
+*Clear dependency graph*:: Each component explicitly declares what it needs. This makes it straightforward to understand which client-side libraries a component relies on, and avoids hidden or implicit dependencies.
 
 === Understanding the Project Files
 
@@ -111,3 +159,11 @@ You can also use the https://github.com/vaadin/addon-template/archive/v24.zip[Ad
 - Leave the default Web Component URL in the starter form;
 - Download the project; and then
 - Delete the `@NpmPackage` and `@JsModule` annotations, and the UI component class.
+
+
+== See Also
+
+- <<an-in-project-web-component#,Creating an In-Project Web Component>> -- creating application-specific components with TypeScript and Lit
+- <<advanced-integration#,Advanced Web Component Integration>> -- wrapping npm packages, advanced Lit features, and state synchronization patterns
+- <<java-api-for-a-web-component#,Creating a Java API for a Web Component>> -- properties, events, functions, and sub-elements
+- <<{articles}/flow/integrations/react#,Using React Components in Flow>> -- integrating React components using TypeScript adapters
