@@ -1,0 +1,197 @@
+---
+title: Persistence
+page-title: Persistence patterns and approaches | Vaadin
+description: How to choose and combine persistence strategies in Vaadin applications.
+meta-description: Learn how to persist data in Vaadin applications using JPA, jOOQ, and other technologies. Understand when to use aggregate-oriented vs table-oriented approaches.
+order: 10
+---
+
+
+= Persistence
+
+Most Vaadin applications need to store and retrieve data from a database. How you structure this persistence layer affects maintainability, performance, and how naturally your code maps to your problem domain.
+
+This section covers the main approaches to persistence and helps you choose between them—or combine them, which is what most real applications end up doing.
+
+If you're starting a new project, you'll also need to set up <<add-flyway#,database migrations with Flyway>> and add your chosen persistence technology (<<add-jooq#,jOOQ>>, <<add-spring-data#,Spring Data JPA>>, or both).
+
+
+== Two Approaches
+
+There are two common ways to think about database access in Java applications. The difference isn't just technical—it reflects how you model your problem.
+
+
+=== Aggregate-Oriented
+
+This approach models *entity lifecycles*. An `Order` transitions from draft to submitted to paid to shipped. Each transition has rules, may trigger side effects, and the entity itself guards its consistency.
+
+You load an object graph, work with it in memory, and save it back. The database structure is an implementation detail.
+
+[source,java]
+----
+var order = orderRepository.findById(orderId);
+order.addItem(productId, quantity);
+order.applyDiscount(couponCode);
+orderRepository.save(order);
+----
+
+This approach works well when:
+
+- Objects have complex relationships and invariants that must be enforced together
+- You benefit from encapsulating business logic inside the objects themselves
+- The object graph isn't too large (loading a thousand line items every time would be wasteful)
+
+
+=== Table-Oriented
+
+This approach thinks in *data transformations*. Update all rows matching these criteria. Aggregate values across a result set. Insert records from an external source. The operations are naturally expressed as set operations on tables.
+
+You work directly with queries and rows. The database structure is explicit in your code.
+
+[source,java]
+----
+var items = orderDao.findItemsByOrderId(orderId);
+orderDao.insertItem(orderId, productId, quantity);
+orderDao.applyDiscount(orderId, couponCode);
+----
+
+This approach works well when:
+
+- You need fine-grained control over queries for performance reasons
+- The operation is naturally expressed as a database operation (bulk updates, reports, aggregations)
+- You're working with simple data that doesn't need complex object relationships
+
+
+== Most Applications Use Both
+
+In practice, you'll likely use both approaches in the same application. This isn't a compromise—it's pragmatic.
+
+Your core domain objects—the ones with important state transitions and business rules—benefit from the aggregate-oriented approach. An `Order` that enforces pricing rules, validates state transitions, and maintains consistency across its line items is easier to reason about as an object graph.
+
+But not everything is a state machine. A dashboard showing order counts by region doesn't need to load `Order` aggregates. A bulk operation archiving old records shouldn't instantiate thousands of objects. A search feature returning paginated results is naturally a data transformation, not an aggregate retrieval.
+
+A typical Vaadin application might have:
+
+- *Aggregate-oriented persistence* for `Order`, `Customer`, `Product`—entities with lifecycles and business rules
+- *Table-oriented queries* for list views, reports, search results, dashboards
+- *Table-oriented commands* for bulk updates, data imports, archival operations
+
+This separation sometimes goes by the name CQRS (Command Query Responsibility Segregation), though you don't need to adopt the full pattern to benefit from the idea. Both the <<jpa#query-classes,JPA>> and <<jooq#query-classes,jOOQ>> documentation pages show how to implement this with dedicated query classes.
+
+
+== Technology Choices
+
+Different technologies naturally fit different approaches.
+
+
+=== JPA & Spring Data
+
+JPA was designed for aggregate-oriented persistence. It manages object state, tracks changes, handles lazy loading of relationships, and maps objects to tables. Spring Data adds a repository abstraction that reduces boilerplate.
+
+[source,java]
+----
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByCustomerId(Long customerId);
+}
+----
+
+JPA works best when:
+
+- You're working with entity graphs that map reasonably to your object model
+- You want automatic change tracking and dirty checking
+- Your queries are straightforward enough that derived query methods or JPQL handle them
+
+JPA becomes awkward when you need complex reporting queries, bulk operations, or fine-grained control over SQL. For those cases, combine it with jOOQ.
+
+See <<jpa#,JPA & Spring Data>> for implementation details.
+
+
+=== jOOQ
+
+jOOQ is a database-first tool. It generates Java code from your schema and lets you write type-safe SQL in Java. It supports both approaches.
+
+For table-oriented access, jOOQ's active records map directly to table rows:
+
+[source,java]
+----
+var record = create.newRecord(ORDER_ITEM);
+record.setOrderId(orderId);
+record.setProductId(productId);
+record.setQuantity(quantity);
+record.store();
+----
+
+For queries, jOOQ gives you full SQL power with compile-time type checking:
+
+[source,java]
+----
+var summary = create
+    .select(ORDER.STATUS, count(), sum(ORDER.TOTAL))
+    .from(ORDER)
+    .where(ORDER.CREATED_DATE.ge(startOfMonth))
+    .groupBy(ORDER.STATUS)
+    .fetch();
+----
+
+jOOQ works best when:
+
+- You need complex queries that are hard to express in JPQL
+- You want explicit control over the SQL being executed
+- Your schema is the source of truth and you want your code to reflect it
+- You're doing bulk operations or reporting
+
+See <<jooq#,jOOQ>> for implementation details.
+
+
+=== Combining JPA and jOOQ
+
+A practical combination used in real Vaadin projects:
+
+- *JPA* for loading and saving aggregates — your core domain entities with their relationships and business logic
+- *jOOQ* for everything else — list views, search, reports, bulk operations, complex queries
+
+Both can share the same database and even participate in the same transactions. They're not mutually exclusive.
+
+[source,java]
+----
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository; // JPA
+    private final OrderListQuery orderListQuery;   // jOOQ
+
+    public void addItem(Long orderId, Long productId, int quantity) {
+        var order = orderRepository.findById(orderId).orElseThrow();
+        order.addItem(productId, quantity);
+        orderRepository.save(order);
+    }
+
+    public Page<OrderListItem> findOrders(OrderFilter filter, Pageable pageable) {
+        return orderListQuery.findByFilter(filter, pageable);
+    }
+}
+----
+
+
+== Practical Guidelines
+
+Some guidelines that have worked well in Vaadin applications:
+
+*Start simple.* If your application is mostly CRUD with simple validation, you don't need complex patterns. Spring Data repositories with JPA entities might be all you need.
+
+*Introduce complexity when you feel the pain.* When queries become awkward in JPQL, add jOOQ. When business logic becomes scattered, consider richer domain objects. Don't architect for problems you don't have.
+
+*Keep list views and detail views separate.* The data you show in a Grid (a few columns, many rows, paginated) is different from what you need when editing a single entity (complete object graph, all fields). Different queries for different purposes.
+
+*Don't load what you don't need.* Whether you're using JPA or jOOQ, fetching complete entities when you only need three fields for a dropdown is wasteful. Use projections.
+
+*Be consistent within a bounded context.* If your order management uses JPA entities with repositories, stick with that pattern for orders. Mixing approaches within the same concept creates confusion.
+
+
+== Related Topics
+
+*<<../consistency/domain-primitives#,Domain Primitives>>* — Both JPA and jOOQ support domain primitives through converters and embeddable types. Using them improves type safety and validation at the persistence layer.
+
+*<<../consistency/transactions#,Transactions>>* — Both approaches require proper transaction management. Spring's `@Transactional` works with both JPA and jOOQ.
+
+*<<../consistency/optimistic-locking#,Optimistic Locking>>* and *<<../consistency/pessimistic-locking#,Pessimistic Locking>>* — Strategies for handling concurrent updates, supported by both JPA and jOOQ.

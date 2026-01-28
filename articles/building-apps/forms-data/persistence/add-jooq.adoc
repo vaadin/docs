@@ -1,0 +1,111 @@
+---
+title: Add jOOQ
+page-title: How to add jOOQ to a Vaadin application
+description: Learn how to integrate jOOQ into a Vaadin application using Spring Boot.
+meta-description: Learn how to add jOOQ to a Vaadin Spring Boot application, generate type-safe SQL code, and integrate it with Flyway and Spring transactions.
+order: 15
+---
+
+
+= Add jOOQ
+
+https://www.jooq.org/[jOOQ] is a framework for writing SQL queries in Java. It analyzes your database schema and generates Java classes that let you build type-safe SQL queries using a fluent API.
+
+This guide explains how to add jOOQ to a Vaadin application based on Spring Boot. You can use jOOQ without Spring Boot, but in that case you must configure the integration manually.
+
+If you are new to jOOQ, read the https://www.jooq.org/learn/[jOOQ tutorial] before continuing.
+
+
+== Java Code Generation
+
+To get the most out of jOOQ, you should configure it to generate Java code from your database schema. The code generator analyzes the schema and reverse-engineers it into classes that model tables, records, sequences, and other database objects.
+
+In a Vaadin application, the easiest approach is to declare your schema using <<add-flyway#,Flyway migrations>> and configure jOOQ to parse them using the `DDLDatabase`. For alternative approaches, see the https://www.jooq.org/doc/latest/manual/code-generation[jOOQ documentation].
+
+The jOOQ code generator is executed using a Maven plugin. Add the following plugin configuration to your `pom.xml` file:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.jooq</groupId>
+    <artifactId>jooq-codegen-maven</artifactId>
+    <version>${jooq.version}</version> <!--1-->
+    <executions>
+        <execution>
+            <id>jooq-codegen</id>
+            <phase>generate-sources</phase>
+            <goals>
+                <goal>generate</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <generator>
+            <database>
+                <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+                <properties>
+                    <property>
+                        <key>scripts</key>
+                        <value>src/main/resources/db/migration/*.sql</value> <!--2-->
+                    </property>
+                    <property>
+                        <key>sort</key>
+                        <value>flyway</value> <!--3-->
+                    </property>
+                </properties>
+            </database>
+            <target>
+                <packageName>com.example.application.jooq</packageName> <!--4-->
+            </target>
+        </generator>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-meta-extensions</artifactId>
+            <version>${jooq.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+<1> The `jooq.version` property is inherited from the Spring Boot starter parent.
+<2> Configures the plugin to read SQL scripts from the Flyway migrations directory.
+<3> Ensures that scripts are processed in the same order as Flyway applies them.
+<4> The Java package into which the jOOQ classes are generated.
+
+The code generator runs automatically whenever you build the Maven module. You can also trigger generation manually by running:
+
+[source,terminal]
+----
+$ mvn jooq-codegen:generate
+----
+
+If you're using a <</building-apps/architecture/project-structure/multi-module#,multi-module project>>, configure the plugin in the module that contains the Flyway migrations.
+
+
+== Spring Boot Configuration
+
+To use jOOQ at runtime, add the Spring Boot jOOQ starter dependency to your project:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jooq</artifactId>
+</dependency>
+----
+
+This starter automatically configures jOOQ to use the application's primary data source and integrates it with Spring's transaction management. As a result, you can manage transactions consistently whether you use jOOQ or JPA.
+
+For more information about transaction management in Vaadin applications, see the <<../consistency/transactions#,Transactions>> documentation.
+
+Once configured, you can inject `org.jooq.DSLContext` into any Spring-managed bean that needs to execute jOOQ queries.
+
+
+== Next Steps
+
+// TODO Edit this
+
+A common way to use jOOQ is through the <<dao#,Data Access Object>> pattern. See the <<dao/jooq#,jOOQ Data Access Objects>> deep dive for guidance and examples.
+
+If you prefer the <<repositories#,Repository>> pattern, refer to the <<repositories/jooq#,jOOQ Repositories>> deep dive instead.
