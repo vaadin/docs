@@ -265,7 +265,7 @@ public class MyView extends VerticalLayout {
         // Signal<String> localComputed = nameSignal.map(n -> "Hi, " + n);
 
         Span greetingSpan = new Span();
-        ComponentEffect.bind(greetingSpan, greeting, Span::setText);
+        greetingSpan.bindText(greeting);
         add(greetingSpan);
     }
 }
@@ -290,8 +290,7 @@ public class SharedCounter extends VerticalLayout {
         button.addClickListener(click -> counter.incrementBy(1));
         add(button);
 
-        ComponentEffect.effect(button,
-            () -> button.setText(String.format("Clicked %.0f times", counter.value())));
+        button.bindText(counter.map(c -> String.format("Clicked %.0f times", c)));
     }
 }
 ----
@@ -310,14 +309,8 @@ public class SharedText extends FormLayout {
     public SharedText() {
         TextField field = new TextField("Value");
 
-        ComponentEffect.bind(field, value, TextField::setValue);
-
-        field.addValueChangeListener(event -> {
-            // Only update signal if value changed to avoid infinite loop detection
-            if (!event.getValue().equals(value.peek())) {
-               value.value(event.getValue());
-            }
-        });
+        // Two-way binding: field changes update signal, signal changes update field
+        field.bindValue(value);
 
         add(field);
     }
@@ -348,13 +341,10 @@ public class PersonList extends VerticalLayout {
         });
 
         UnorderedList list = new UnorderedList();
-        ComponentEffect.effect(list, () -> {
-            list.removeAll();
-            persons.value().forEach(personSignal -> {
-                ListItem li = new ListItem();
-                ComponentEffect.bind(li, personSignal, ListItem::setText);
-                list.add(li);
-            });
+        ComponentEffect.bindChildren(list, persons, personSignal -> {
+            ListItem li = new ListItem();
+            li.bindText(personSignal);
+            return li;
         });
 
         add(addButton, updateButton, list);

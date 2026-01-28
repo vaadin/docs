@@ -38,26 +38,30 @@ The first parameter is the component that owns the effect. When the component is
 
 === Binding Signals to Component Properties
 
-The [methodname]`ComponentEffect.bind()` method is a convenience helper for the common pattern of binding a signal value to a component property:
+Components provide direct binding methods for common properties:
 
 [source,java]
 ----
-// Shorthand binding
-ComponentEffect.bind(label, stringSignal, Span::setText);
+// Bind text content
+label.bindText(stringSignal);
 
-// Equivalent to:
-ComponentEffect.effect(label, () -> label.setText(stringSignal.value()));
-----
-
-You can also use signal mapping with bind:
-
-[source,java]
-----
 // Bind with transformation
-ComponentEffect.bind(label, user.map(u -> u.getName()), Span::setText);
+label.bindText(user.map(u -> u.getName()));
 
-// Bind boolean derived from signal
-ComponentEffect.bind(label, stringSignal.map(value -> !value.isEmpty()), Span::setVisible);
+// Bind visibility
+label.bindVisible(stringSignal.map(value -> !value.isEmpty()));
+
+// Bind enabled state
+button.bindEnabled(isValidSignal);
+----
+
+For properties without direct binding methods, use [methodname]`ComponentEffect.effect()`:
+
+[source,java]
+----
+ComponentEffect.effect(component, () -> {
+    component.setCustomProperty(signal.value());
+});
 ----
 
 
@@ -77,8 +81,8 @@ ComponentEffect.bindChildren(container, todos, todoSignal -> {
     Checkbox checkbox = new Checkbox();
     Span text = new Span();
 
-    ComponentEffect.bind(checkbox, todoSignal.map(Todo::done), Checkbox::setValue);
-    ComponentEffect.bind(text, todoSignal.map(Todo::text), Span::setText);
+    checkbox.bindValue(todoSignal.map(Todo::done));
+    text.bindText(todoSignal.map(Todo::text));
 
     row.add(checkbox, text);
     return row;
@@ -146,7 +150,7 @@ Signal<Boolean> isLoading = new SharedValueSignal<>(Boolean.class);
 Signal<Boolean> isNotLoading = Signal.not(isLoading);
 
 // Useful for enabling/disabling UI
-ComponentEffect.bind(submitButton, isNotLoading, Button::setEnabled);
+submitButton.bindEnabled(isNotLoading);
 ----
 
 
@@ -271,9 +275,9 @@ Each effect should have a single responsibility:
 
 [source,java]
 ----
-// Good: Separate effects for separate concerns
-ComponentEffect.bind(nameLabel, userSignal.map(User::name), Span::setText);
-ComponentEffect.bind(ageLabel, userSignal.map(u -> String.valueOf(u.age())), Span::setText);
+// Good: Separate bindings for separate concerns
+nameLabel.bindText(userSignal.map(User::name));
+ageLabel.bindText(userSignal.map(u -> String.valueOf(u.age())));
 
 // Avoid: One large effect doing multiple things
 ComponentEffect.effect(container, () -> {
@@ -284,15 +288,15 @@ ComponentEffect.effect(container, () -> {
 ----
 
 
-=== Use bind() for Simple Cases
+=== Use Direct Binding Methods
 
-Prefer [methodname]`bind()` over [methodname]`effect()` when binding a single signal to a component property:
+Prefer component binding methods over effects when setting component properties:
 
 [source,java]
 ----
-// Preferred
-ComponentEffect.bind(label, signal, Span::setText);
+// Preferred: Direct binding method
+label.bindText(signal);
 
-// More verbose equivalent
+// Avoid: Using effect for simple property binding
 ComponentEffect.effect(label, () -> label.setText(signal.value()));
 ----
