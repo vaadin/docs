@@ -1,0 +1,167 @@
+---
+title: Signals
+page-title: How to use signals to manage UI state in Flow
+description: Using signals in Flow to manage UI state reactively in Vaadin applications.
+meta-description: Manage UI state reactively and share it within an application with signals in Vaadin Flow.
+order: 10
+---
+
+
+= Manage UI State with Signals
+
+Signals enable reactive state management for Vaadin Flow applications. With reactive state management, the state of a view or component is explicitly declared and components are configured to automatically update themselves when the state changes.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+section_outline::[]
+
+
+== Key Features
+
+*Reactive*:: Changes to signal values automatically propagate to dependent parts of the UI.
+*Immutable Values*:: Signals work best with immutable values, e.g. String or Java Records, to ensure data consistency.
+*Hierarchical Data Structures*:: Signals can represent complex hierarchical data structures.
+*Transactions*:: Multiple operations can be grouped into a transaction that either succeeds or fails as a whole.
+*Thread-Safe by Design*:: Shared signals are designed to handle concurrent access from multiple users.
+*Atomic Operations*:: Signals support atomic updates to ensure data consistency.
+
+
+== Local vs Shared Signals
+
+Vaadin provides two categories of signals for different use cases:
+
+[cols="1,1,1"]
+|===
+| Feature | Local Signals | Shared Signals
+
+| Package
+| `com.vaadin.signals.local`
+| `com.vaadin.signals.shared`
+
+| Scope
+| Single UI instance
+| Multiple users/sessions
+
+| Thread Safety
+| Not thread-safe
+| Thread-safe by design
+
+| Transactions
+| Cannot participate
+| Full transaction support
+
+| Use Case
+| UI-only state
+| Collaborative/shared state
+
+| Primary Class
+| `ValueSignal`
+| `SharedValueSignal`, `SharedNumberSignal`, etc.
+|===
+
+
+=== Choosing Between Local and Shared Signals
+
+Use *local signals* when:
+
+- The state is only relevant to a single user's UI session
+- You need simple, fast state management without synchronization overhead
+- You're managing UI state like form visibility, panel expansion, or local filters
+
+Use *shared signals* when:
+
+- Multiple users need to see the same data in real-time
+- You need transactional guarantees for state changes
+- You're building collaborative features like shared counters, live dashboards, or multi-user editing
+
+.Local vs Shared Signal Example
+[source,java]
+----
+// LOCAL: UI-only state (e.g., panel expanded/collapsed)
+import com.vaadin.signals.local.ValueSignal;
+ValueSignal<Boolean> panelExpanded = new ValueSignal<>(true);
+
+// SHARED: Multi-user collaborative state
+import com.vaadin.signals.shared.SharedNumberSignal;
+SharedNumberSignal clickCounter = SignalFactory.IN_MEMORY_SHARED.number("globalCounter");
+----
+
+
+== Core Concepts
+
+
+=== Signals
+
+A signal is a holder for a value. When the value of a signal changes, all dependent parts are automatically updated without the need to manually add and remove change listeners.
+
+
+=== Effects
+
+Effects are callbacks that automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
+
+Effects are used to update the UI in response to signal changes. The effect is defined in the context of a UI component. The effect is inactive while the component is detached and active while the component is attached.
+
+[source,java]
+----
+ComponentEffect.effect(span, () -> {
+    // This code runs whenever any signal value used inside changes
+    span.setText(firstNameSignal.value() + " " + lastNameSignal.value());
+});
+----
+
+
+=== Computed Signals
+
+Computed signals derive their values from other signals. They are automatically updated when any of the signals they depend on change.
+
+[source,java]
+----
+Signal<String> fullName = Signal.computed(() -> {
+    return firstNameSignal.value() + " " + lastNameSignal.value();
+});
+----
+
+
+=== Transactions
+
+Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together.
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // All operations here are committed atomically
+    firstNameSignal.value("John");
+    lastNameSignal.value("Doe");
+});
+----
+
+
+== Quick Start Example
+
+This example demonstrates a simple shared counter that updates reactively across all connected users:
+
+[source,java]
+----
+public class SimpleCounter extends VerticalLayout {
+    // Gets a signal instance shared across the application
+    private final SharedNumberSignal counter =
+            SignalFactory.IN_MEMORY_SHARED.number("counter");
+
+    public SimpleCounter() {
+        Button button = new Button();
+        button.addClickListener(
+                // Updates the signal value on each button click
+                click -> counter.incrementBy(1));
+        add(button);
+
+        // Effect updates the button's text whenever the counter changes
+        ComponentEffect.effect(button,
+            () -> button.setText(String.format("Clicked %.0f times", counter.value())));
+    }
+}
+----
+
+[NOTE]
+You need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.

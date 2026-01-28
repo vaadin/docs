@@ -1,0 +1,256 @@
+---
+title: Local Signals
+page-title: Local Signals for UI-Only State in Vaadin Flow
+description: Using local signals for UI-only state management in Vaadin Flow applications.
+meta-description: Learn how to use ValueSignal from com.vaadin.signals.local for managing UI-only state.
+order: 20
+---
+
+
+= Local Signals
+
+Local signals provide lightweight, UI-only state management for scenarios where state doesn't need to be shared across users or sessions. They are ideal for managing component-level state like visibility toggles, form state, or local UI preferences.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== ValueSignal (Local)
+
+The [classname]`ValueSignal` class from `com.vaadin.signals.local` is a writable signal that holds a reference to a value. Unlike shared signals, it doesn't provide thread safety for concurrent reads and writes, making it suitable for state that is only used by a single UI instance.
+
+[source,java]
+----
+import com.vaadin.signals.local.ValueSignal;
+
+ValueSignal<String> localName = new ValueSignal<>("Initial value");
+----
+
+
+== Creating Local Signals
+
+Local signals can be created with or without an initial value:
+
+[source,java]
+----
+// With initial value
+ValueSignal<String> nameSignal = new ValueSignal<>("John");
+
+// Without initial value (null)
+ValueSignal<User> userSignal = new ValueSignal<>();
+----
+
+
+== Reading and Writing Values
+
+Use the `value()` method to both read and write signal values:
+
+[source,java]
+----
+ValueSignal<String> signal = new ValueSignal<>("Hello");
+
+// Read the current value
+String current = signal.value();
+
+// Write a new value
+signal.value("World");
+----
+
+
+== Updating Values
+
+The `update()` method allows you to update a value based on its current state:
+
+[source,java]
+----
+ValueSignal<Integer> counter = new ValueSignal<>(0);
+
+// Update based on current value
+counter.update(current -> current + 1);
+----
+
+
+== Replacing Values
+
+The `replace()` method performs a compare-and-set operation:
+
+[source,java]
+----
+ValueSignal<String> status = new ValueSignal<>("pending");
+
+// Only replaces if current value matches expected
+boolean replaced = status.replace("pending", "complete");
+----
+
+
+== Working with Mutable Values
+
+For mutable values, use the `modify(Consumer)` method to perform updates. This method ensures the signal properly tracks changes:
+
+[source,java]
+----
+public class User {
+    private String name;
+    private int age;
+
+    // getters and setters...
+}
+
+ValueSignal<User> userSignal = new ValueSignal<>(new User("Jane", 25));
+
+// Correct: Use modify() for mutable objects
+userSignal.modify(user -> user.setAge(26));
+
+// Incorrect: Direct mutation won't trigger reactivity
+User user = userSignal.value();
+user.setAge(27); // This change won't be detected!
+----
+
+[WARNING]
+Direct mutation of objects retrieved from a signal won't trigger reactive updates. Always use `modify()` for mutable values, or preferably use immutable types like Java Records.
+
+
+== Thread-Safety Considerations
+
+Local signals are NOT thread-safe. They are designed for single-threaded access within a UI session:
+
+[source,java]
+----
+// Safe: Used within a single UI instance
+public class MyView extends VerticalLayout {
+    private final ValueSignal<String> localState = new ValueSignal<>("");
+
+    public MyView() {
+        // All access happens in the UI thread
+        TextField field = new TextField();
+        field.addValueChangeListener(e -> localState.value(e.getValue()));
+
+        ComponentEffect.effect(this, () -> {
+            // Effect runs in UI thread
+            System.out.println("Value changed: " + localState.value());
+        });
+    }
+}
+----
+
+If you need thread-safe state management or state shared across users, use <<shared-signals#,Shared Signals>> instead.
+
+
+== Transaction Limitations
+
+Local signals cannot participate in signal transactions:
+
+[source,java]
+----
+ValueSignal<String> local = new ValueSignal<>("value");
+
+// This will throw an exception
+Signal.runInTransaction(() -> {
+    local.value("new value"); // Not allowed!
+});
+----
+
+Use shared signals if you need transactional guarantees.
+
+
+== Peeking Values
+
+Use `peek()` to read a value without registering a dependency in effects or computed signals:
+
+[source,java]
+----
+ValueSignal<String> signal = new ValueSignal<>("Hello");
+
+ComponentEffect.effect(component, () -> {
+    // peek() doesn't register a dependency
+    String peeked = signal.peek();
+    // This effect won't re-run when signal changes
+});
+----
+
+
+== Subscribing to Changes
+
+Use the `subscribe()` method to react to signal value changes:
+
+[source,java]
+----
+ValueSignal<String> signal = new ValueSignal<>("Hello");
+
+signal.subscribe(() -> {
+    System.out.println("Signal value changed to: " + signal.value());
+});
+----
+
+For UI updates, prefer using <<effects-computed#,ComponentEffect>> which automatically manages the subscription lifecycle based on component attachment.
+
+
+== Transforming Values with map()
+
+Use the `map()` method to create a derived signal that transforms the original value:
+
+[source,java]
+----
+ValueSignal<String> name = new ValueSignal<>("john");
+Signal<String> upperName = name.map(String::toUpperCase);
+
+// upperName.value() returns "JOHN"
+// When name changes, upperName automatically updates
+----
+
+Use `map()` for single-signal transformations. For transformations depending on multiple signals, use `Signal.computed()` instead.
+
+
+== Best Practice: Store Signals as Fields
+
+Always store signals as class fields, not local variables. Local signal variables may be garbage collected, causing computed signals and subscriptions to stop working:
+
+[source,java]
+----
+public class MyView extends VerticalLayout {
+    // Good: Signal stored as a field
+    private final ValueSignal<String> nameSignal = new ValueSignal<>("");
+
+    // Good: Computed signal stored as a field
+    private final Signal<String> greeting = nameSignal.map(n -> "Hello, " + n);
+
+    public MyView() {
+        // Bad: Local computed signal may be garbage collected
+        // Signal<String> localComputed = nameSignal.map(n -> "Hi, " + n);
+
+        Span greetingSpan = new Span();
+        ComponentEffect.bind(greetingSpan, greeting, Span::setText);
+        add(greetingSpan);
+    }
+}
+----
+
+
+== Use Cases
+
+Local signals are ideal for:
+
+- *UI toggle states*: Panel expansion, modal visibility, sidebar open/closed
+- *Form state*: Current step in a wizard, validation state
+- *Local filters*: Search text, sort order within a single view
+- *Temporary state*: Editing mode, selection state
+
+[source,java]
+----
+public class ExpandablePanel extends VerticalLayout {
+    private final ValueSignal<Boolean> expanded = new ValueSignal<>(false);
+
+    public ExpandablePanel(String title, Component content) {
+        Button header = new Button(title);
+        header.addClickListener(e -> expanded.update(v -> !v));
+
+        // Reactively show/hide content
+        ComponentEffect.effect(content, () -> {
+            content.setVisible(expanded.value());
+        });
+
+        add(header, content);
+    }
+}
+----

@@ -28,7 +28,7 @@ Also, the implementation of full-stack signals is currently only available for V
 
 The purpose of a full-stack signal is to share and synchronize the state between the server and clients in real time. In Vaadin Hilla applications, you can do that by creating an instance of one of the available full-stack signal types and returning it from your [classname]`@BrowserCallable` annotated services.
 
-In the following example, an instance of a [classname]`ValueSignal` is created and returned from a server-side, browser-callable service:
+In the following example, an instance of a [classname]`SharedValueSignal` is created and returned from a server-side, browser-callable service:
 
 [source,java]
 .`VoteService.java`
@@ -38,27 +38,27 @@ package com.example.application;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
-import com.vaadin.hilla.signal.ValueSignal;
+import com.vaadin.signals.shared.SharedValueSignal;
 
 @AnonymousAllowed
 @BrowserCallable
 public class VoteService {
-    private final ValueSignal<Boolean> started =
-                    new ValueSignal<>(false, Boolean.class); // <1>
+    private final SharedValueSignal<Boolean> started =
+                    new SharedValueSignal<>(false, Boolean.class); // <1>
 
-    public ValueSignal<Boolean> startedSignal() {
+    public SharedValueSignal<Boolean> startedSignal() {
         return started; // <2>
     }
 }
 ----
 
-<1> Create an instance of a [classname]`ValueSignal` with an initial value of false.
-<2> Return the instance of the [classname]`ValueSignal` from the [methodname]`startedSignal` method.
+<1> Create an instance of a [classname]`SharedValueSignal` with an initial value of false.
+<2> Return the instance of the [classname]`SharedValueSignal` from the [methodname]`startedSignal` method.
 
 [CAUTION]
 The server-side instance of a full-stack signal is meant to be created once and shared across all clients. Therefore, create the instance as a field in a service class, and return it from the methods. This way, all clients are able to subscribe to the same signal instance and receive real-time updates when the state changes.
 
-The above example demonstrates a simple polling service that uses a [classname]`ValueSignal` to share a [classname]`Boolean` state of whether the voting has started. Clients can subscribe to this signal and receive real-time updates when the state changes. Based on this state, clients can then start or stop the voting process.
+The above example demonstrates a simple polling service that uses a [classname]`SharedValueSignal` to share a [classname]`Boolean` state of whether the voting has started. Clients can subscribe to this signal and receive real-time updates when the state changes. Based on this state, clients can then start or stop the voting process.
 
 For a complete list of available full-stack signal types, see <<available-full-stack-signal-types>>.
 
@@ -101,17 +101,17 @@ export default function VoteView() {
 [[available-full-stack-signal-types]]
 == Available Full-Stack Signal Types
 
-The full-stack signals are designed to be used in various scenarios. Based on the requirements, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.hilla.signals` package. Their client-side counterparts are available in `@vaadin/hilla-react-signals`.
+The full-stack signals are designed to be used in various scenarios. Based on the requirements, different types of full-stack signals are used. The server-side signal types are available in the `com.vaadin.signals.shared` package. Their client-side counterparts are available in `@vaadin/hilla-react-signals`.
 
-As this is currently under active development, more signal types are added with each new release. The currently available ones are [classname]`ValueSignal`, [classname]`NumberSignal`, and [classname]`ListSignal`. These are described in the following sub-sections.
+As this is currently under active development, more signal types are added with each new release. The currently available ones are [classname]`SharedValueSignal`, [classname]`SharedNumberSignal`, and [classname]`SharedListSignal`. These are described in the following sub-sections.
 
 
 [[value-signal]]
-=== ValueSignal
+=== SharedValueSignal
 
-The `ValueSignal<T>` is a full-stack signal that holds a single value of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework.
+The `SharedValueSignal<T>` is a full-stack signal that holds a single value of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework.
 
-The following example demonstrates how to create and use a [classname]`ValueSignal` in a server-side service:
+The following example demonstrates how to create and use a [classname]`SharedValueSignal` in a server-side service:
 
 [source,java]
 .`SomeService.java`
@@ -121,35 +121,35 @@ package com.example.application;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
-import com.vaadin.hilla.signals.ValueSignal;
+import com.vaadin.signals.shared.SharedValueSignal;
 
 @AnonymousAllowed
 @BrowserCallable
 public class SomeService {
-    private final ValueSignal<Boolean> sharedBoolean =
-                    new ValueSignal<>(true, Boolean.class);
+    private final SharedValueSignal<Boolean> sharedBoolean =
+                    new SharedValueSignal<>(true, Boolean.class);
 
-    private final ValueSignal<Integer> sharedInteger =
-                    new ValueSignal<>(42, Integer.class);
+    private final SharedValueSignal<Integer> sharedInteger =
+                    new SharedValueSignal<>(42, Integer.class);
 
-    private final ValueSignal<String> sharedString =
-                    new ValueSignal<>("Hello World", String.class);
+    private final SharedValueSignal<String> sharedString =
+                    new SharedValueSignal<>("Hello World", String.class);
 
-    public ValueSignal<Boolean> sharedBoolean() {
+    public SharedValueSignal<Boolean> sharedBoolean() {
         return sharedBoolean;
     }
 
-    public ValueSignal<Integer> sharedInteger() {
+    public SharedValueSignal<Integer> sharedInteger() {
         return sharedInteger;
     }
 
-    public ValueSignal<String> sharedString() {
+    public SharedValueSignal<String> sharedString() {
         return sharedString;
     }
 }
 ----
 
-The above example demonstrates a simple service that uses three [classname]`ValueSignal` instances to share a boolean, an integer, and a string value. The possibilities, though, aren't limited to primitive types. Any custom type can be used as long as it's JSON-serializable. Here's an example using a custom type:
+The above example demonstrates a simple service that uses three [classname]`SharedValueSignal` instances to share a boolean, an integer, and a string value. The possibilities, though, aren't limited to primitive types. Any custom type can be used as long as it's JSON-serializable. Here's an example using a custom type:
 
 [source,java]
 .`PersonService.java`
@@ -159,7 +159,7 @@ package com.example.application;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 import org.jspecify.annotations.NonNull;
-import com.vaadin.hilla.signals.ValueSignal;
+import com.vaadin.signals.shared.SharedValueSignal;
 
 @AnonymousAllowed
 @BrowserCallable
@@ -168,11 +168,11 @@ public class PersonService {
 
     private final Person initialValue = new Person("John Doe", 42); // <2>
 
-    private final ValueSignal<Person> sharedPerson =
-                    new ValueSignal<>(initialValue, Person.class); // <3>
+    private final SharedValueSignal<Person> sharedPerson =
+                    new SharedValueSignal<>(initialValue, Person.class); // <3>
 
     @NonNull
-    public ValueSignal<@NonNull Person> sharedPerson() { // <4>
+    public SharedValueSignal<@NonNull Person> sharedPerson() { // <4>
         return sharedPerson;
     }
 }
@@ -185,7 +185,7 @@ public class PersonService {
 
 Although the above example shows the usage of a record, you can also use classes with mutable properties. There aren't any technical limitations on this, as the wrapped value of the signal is always replaced with a new instance whenever an update is applied to the signals. However, the usage of immutable types is always preferred when dealing with share values. It helps to reduce confusion and potential bugs that might arise from the shared mutable state.
 
-Having a [classname]`@BrowserCallable`-annotated service with a method that returns a [classname]`ValueSignal` instance similar to the above example, enables the client-side code to subscribe to it by calling the service method:
+Having a [classname]`@BrowserCallable`-annotated service with a method that returns a [classname]`SharedValueSignal` instance similar to the above example, enables the client-side code to subscribe to it by calling the service method:
 
 [source,tsx]
 .`person.tsx`
@@ -222,7 +222,7 @@ Given the nature of the signals, only changing the value of the signal causes th
 
 ==== Setting the Value
 
-All signals have a `value` property that can be used both to set and read the value of the signal. However, setting concurrently a shared value among multiple clients can cause them to overwrite each other's changes. [classname]`ValueSignal` provides extra methods to set the value in different situations:
+All signals have a `value` property that can be used both to set and read the value of the signal. However, setting concurrently a shared value among multiple clients can cause them to overwrite each other's changes. [classname]`SharedValueSignal` provides extra methods to set the value in different situations:
 
 `set(value: T): Operation`:: This sets the signal's value with what's given. It's the same as assigning the `value` property, directly. The value change event that is propagated to the server as the result of this operation doesn't take the last seen value into account. Instead, it overwrites the shared value on the server unconditionally -- a policy known as, _Last Write Wins_. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 `replace(expected: T, newValue: T): Operation`:: This atomically replaces the value with a new one only if the current value is equal to the expected one. This means that a state change request is sent to the server asking it to "compare and set". At the time of processing this requested change on the server, if the current value is not equal to the expected value, the update is rejected by the server. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
@@ -264,11 +264,11 @@ export default function PersonView() {
 
 
 [[number-signal]]
-=== NumberSignal
+=== SharedNumberSignal
 
-The [classname]`NumberSignal` is a full-stack signal that holds a numeric value. This value is the [classname]`Double` type in Java, and a `number` type in client-side code. The [classname]`NumberSignal` can be considered a special case of the [classname]`ValueSignal` that is optimized for numeric values by introducing built-in support for atomic increment and decrement operations.
+The [classname]`SharedNumberSignal` is a full-stack signal that holds a numeric value. This value is the [classname]`Double` type in Java, and a `number` type in client-side code. The [classname]`SharedNumberSignal` can be considered a special case of the [classname]`SharedValueSignal` that is optimized for numeric values by introducing built-in support for atomic increment and decrement operations.
 
-The following example demonstrates how to create and use a [classname]`NumberSignal` in a service class:
+The following example demonstrates how to create and use a [classname]`SharedNumberSignal` in a service class:
 
 [source,java]
 .`CounterService.java`
@@ -278,22 +278,22 @@ package com.example.application;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
-import com.vaadin.hilla.signals.NumberSignal;
+import com.vaadin.signals.shared.SharedNumberSignal;
 
 @AnonymousAllowed
 @BrowserCallable
 public class CounterService {
-    private final NumberSignal counter = new NumberSignal(1.0); // <1>
+    private final SharedNumberSignal counter = new SharedNumberSignal(1.0); // <1>
 
-    public NumberSignal counter() { // <2>
+    public SharedNumberSignal counter() { // <2>
         return counter;
     }
 }
 ----
-<1> Create an instance of a [classname]`NumberSignal` with initial client-side value of `1`. If no value is provided to the constructor, it defaults to `0`.
-<2> Return the instance of the [classname]`NumberSignal` from the `counter` method.
+<1> Create an instance of a [classname]`SharedNumberSignal` with initial client-side value of `1`. If no value is provided to the constructor, it defaults to `0`.
+<2> Return the instance of the [classname]`SharedNumberSignal` from the `counter` method.
 
-The above example demonstrates a simple counter service that uses a [classname]`NumberSignal` to share a numeric value. The client can subscribe to this signal, and apart from receiving real-time updates, it can initiate atomic increment and decrement operations, as well:
+The above example demonstrates a simple counter service that uses a [classname]`SharedNumberSignal` to share a numeric value. The client can subscribe to this signal, and apart from receiving real-time updates, it can initiate atomic increment and decrement operations, as well:
 
 [source,tsx]
 .counter.tsx
@@ -322,16 +322,16 @@ export default function() {
 
 The [methodname]`incrementBy` operation is _incrementally atomic_, meaning it guarantees success by reading the current value and applying the increment on the value, atomically. Each operation builds on the previously accepted one, ensuring that `n` increments or decrements are always applied correctly -- even if there are multiple clients trying to update the value, concurrently.
 
-Since [classname]`NumberSignal` is a [classname]`ValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all methods, such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`NumberSignal`.
+Since [classname]`SharedNumberSignal` is a [classname]`SharedValueSignal` with the additional atomic operation of [methodname]`incrementBy`, it inherits all methods, such as [methodname]`replace` and [methodname]`update`, making those operations available when using a [classname]`SharedNumberSignal`.
 
 
 [[list-signal]]
 [role="since:com.vaadin:vaadin@V24.6"]
-=== ListSignal
+=== SharedListSignal
 
-The [classname]`ListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework. Every item in a [classname]`ListSignal` is a [classname]`ValueSignal`, meaning that any changes to the item's value is propagated to the server and other clients.
+The [classname]`SharedListSignal<T>` is a full-stack signal that holds a list of values of an arbitrary type. It has to be a JSON-serializable type that's supported by the Hilla framework. Every item in a [classname]`SharedListSignal` is a [classname]`SharedValueSignal`, meaning that any changes to the item's value is propagated to the server and other clients.
 
-The following example demonstrates how to create and use a [classname]`ListSignal` in a server-side service:
+The following example demonstrates how to create and use a [classname]`SharedListSignal` in a server-side service:
 
 [source,java]
 .`TodoService.java`
@@ -340,26 +340,26 @@ package com.example.application;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
-import com.vaadin.hilla.signals.ListSignal;
+import com.vaadin.signals.shared.SharedListSignal;
 
 @AnonymousAllowed
 @BrowserCallable
 public class TodoService {
     record TodoItem(String text, boolean done) {}
 
-    private final ListSignal<TodoItem> todoItems =
-                        new ListSignal<>(TodoItem.class); // <1>
+    private final SharedListSignal<TodoItem> todoItems =
+                        new SharedListSignal<>(TodoItem.class); // <1>
 
     @Nonnull
-    public ListSignal<@Nonnull TodoItem> todoItems() { // <2>
+    public SharedListSignal<@Nonnull TodoItem> todoItems() { // <2>
         return todoItems;
     }
 }
 ----
-<1> Create an instance of a [classname]`ListSignal`. The initial state of a [classname]`ListSignal` is an empty list.
-<2> Return the instance of the [classname]`ListSignal` from the [methodname]`todoItems` method.
+<1> Create an instance of a [classname]`SharedListSignal`. The initial state of a [classname]`SharedListSignal` is an empty list.
+<2> Return the instance of the [classname]`SharedListSignal` from the [methodname]`todoItems` method.
 
-On the client-side code, subscribing to the shared list signal instance is done in a similar way as with the [classname]`ValueSignal`.
+On the client-side code, subscribing to the shared list signal instance is done in a similar way as with the [classname]`SharedValueSignal`.
 
 The following example demonstrates how to create a to-do list view that enables concurrent users to add tasks to a shared list:
 
@@ -405,17 +405,17 @@ export default function TodoView(){
 ----
 
 <1> Subscribe to the `todoItems` list signal.
-<2> The `value` property of the [classname]`ListSignal` holds the list of tasks. The length of the list is checked to display a message when there are no tasks.
+<2> The `value` property of the [classname]`SharedListSignal` holds the list of tasks. The length of the list is checked to display a message when there are no tasks.
 <3> The `map` function is used to render the list of tasks.
-<4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`ListSignal`.
+<4> Add a new task to the list by calling the [methodname]`insertLast` method of the [classname]`SharedListSignal`.
 
 Since the `todoItems` signal holds the shared list of tasks, any subscribed client to this signal receives real-time updates when the list changes. When a client adds a new task to the list, all other clients receive the update and the list is re-rendered to reflect the changes. The above example, however, doesn't demonstrate how to remove or update tasks in the list. This is covered in the next section.
 
 
 [[list-signal-api]]
-==== ListSignal API
+==== SharedListSignal API
 
-The client-side API of the [classname]`ListSignal` provides methods to insert and remove items. The [classname]`ListSignal` is a sequence of [classname]`ValueSignal` entries. Therefore, its API is about how the entries are added to the list or removed, and how the concurrent operations regarding the structure of the entries is handled.
+The client-side API of the [classname]`SharedListSignal` provides methods to insert and remove items. The [classname]`SharedListSignal` is a sequence of [classname]`SharedValueSignal` entries. Therefore, its API is about how the entries are added to the list or removed, and how the concurrent operations regarding the structure of the entries is handled.
 
 As this is currently under active development, more methods and functionalities are added with each new release. The currently available ones are [methodname]`insertLast` and [methodname]`remove`. These are described below:
 
@@ -423,7 +423,7 @@ As this is currently under active development, more methods and functionalities 
 `remove(item: ValueSignal<T>): Operation`:: Removes the given item from the list. The returned `Operation` object can be used to chain further operations via the `result` property, which is a `Promise`. The chained operations are resolved after the current operation is completed and confirmed by the server.
 
 [NOTE]
-Since each item in a `ListSignal` is a `ValueSignal`, should a change occur to the value of an item, use the `ValueSignal` API -- such as `set`, `replace`, or `update` -- on the targeted item. `ListSignal` API is only about the organization of items in the list.
+Since each item in a `SharedListSignal` is a `SharedValueSignal`, should a change occur to the value of an item, use the `SharedValueSignal` API -- such as `set`, `replace`, or `update` -- on the targeted item. `SharedListSignal` API is only about the organization of items in the list.
 
 The following example demonstrates how to create a to-do list view that enables concurrent users to add, remove, and update tasks in a shared list, with no changes needed on the server-side:
 
@@ -529,7 +529,7 @@ export default function TodoView(){
 }
 ----
 
-As demonstrated in the above example, each entry in the [classname]`ListSignal<T>` is a [classname]`ValueSignal<T>` itself. Each value can be updated individually using the available API of the `ValueSignal`. The changes to each individual entry are propagated to all other clients that are subscribed to each entry of the [classname]`ListSignal`. This enables the React rendering process to render only the updated entry, instead of re-rendering the whole list.
+As demonstrated in the above example, each entry in the [classname]`SharedListSignal<T>` is a [classname]`SharedValueSignal<T>` itself. Each value can be updated individually using the available API of the `SharedValueSignal`. The changes to each individual entry are propagated to all other clients that are subscribed to each entry of the [classname]`SharedListSignal`. This enables the React rendering process to render only the updated entry, instead of re-rendering the whole list.
 
 
 [[method-parameters]]
@@ -550,8 +550,8 @@ import java.util.Map;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
 
-import com.vaadin.hilla.signal.ValueSignal;
-import com.vaadin.hilla.signals.NumberSignal;
+import com.vaadin.signals.shared.SharedValueSignal;
+import com.vaadin.signals.shared.SharedNumberSignal;
 
 @AnonymousAllowed
 @BrowserCallable
@@ -559,26 +559,26 @@ public class VoteService {
     private static final List<String> VOTE_OPTIONS = List.of(
                 "option1", "option2", "option3");
 
-    private final Map<String, NumberSignal> voteOptions = new HashMap<>();
+    private final Map<String, SharedNumberSignal> voteOptions = new HashMap<>();
 
     public VoteService() {
         VOTE_OPTIONS.forEach(option ->
-                voteOptions.put(option, new NumberSignal()));
+                voteOptions.put(option, new SharedNumberSignal()));
     }
 
     public List<String> voteOptions() {
         return VOTE_OPTIONS;
     }
 
-    public NumberSignal voteOptionSignal(String option) { // <1>
+    public SharedNumberSignal voteOptionSignal(String option) { // <1>
         return voteOptions.get(option.toLowerCase());
     }
 }
 ----
 
-<1> The service method returns the associated [classname]`NumberSignal` instance based on the passed argument.
+<1> The service method returns the associated [classname]`SharedNumberSignal` instance based on the passed argument.
 
-The above example demonstrates a simple voting service that returns different [classname]`NumberSignal` instances based on the name of the voting option. The client-side code can first ask for the available options, and then subscribe to each individual signal instance to send updates and to receive real-time updates when voting happens.
+The above example demonstrates a simple voting service that returns different [classname]`SharedNumberSignal` instances based on the name of the voting option. The client-side code can first ask for the available options, and then subscribe to each individual signal instance to send updates and to receive real-time updates when voting happens.
 
 [IMPORTANT]
 It's vitally important to make sure that the behaviour of the service method returning a signal instance is deterministic. The same input parameters should always produce the same output. This is necessary to ensure that the state is consistently shared across all of the clients.
@@ -640,7 +640,7 @@ The following example demonstrates how to add an operation validator to a signal
 [source,java]
 .`VoteService.java`
 ----
-NumberSignal voteSignal = new NumberSignal() // <1>
+SharedNumberSignal voteSignal = new SharedNumberSignal() // <1>
     .withOperationValidator(operation -> { // <2>
         if (operation instanceof IncrementOperation increment) { // <3>
             if (Math.abs(increment.value()) == 1.0) {
@@ -651,7 +651,7 @@ NumberSignal voteSignal = new NumberSignal() // <1>
         return ValidationResult.reject("Invalid Operation"); // <6>
     });
 ----
-<1> Creates an instance of a [classname]`NumberSignal` that defaults to zero.
+<1> Creates an instance of a [classname]`SharedNumberSignal` that defaults to zero.
 <2> Defines an operation validator on the signal instance, which results in a new signal instance with the operation validator attached. The original instance remains unchanged (i.e., no validators).
 <3> Checks the operation type to be only an `IncrementOperation`.
 <4> Allows the operation only if the value is incremented or decremented by `1.0`.
@@ -661,11 +661,11 @@ NumberSignal voteSignal = new NumberSignal() // <1>
 In the above example, the `operation` parameter is an instance of [classname]`SignalOperation`. At runtime, the operation can be one of the following types:
 
 `ValueOperation<T>`:: Represents an operation that contains a value of type `T`.
-`IncrementOperation`:: Specific to `NumberSignal`. Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
-`SetValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Also, applies to changes happening to the items in a `ListSignal`. Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ReplaceValueOperation<T>`:: Specific to `ValueSignal` and `NumberSignal`. Also, applies to the changes happening to the items in a `ListSignal`. Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ListInsertOperation<T>`:: Specific to `ListSignal`. Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
-`ListRemoveOperation<T>`:: Specific to `ListSignal`. Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
+`IncrementOperation`:: Specific to `SharedNumberSignal`. Represents an operation that increments the value of the signal by a given value. Value is of Type `Double`. This operation is a special case of [classname]`ValueOperation<Double>`.
+`SetValueOperation<T>`:: Specific to `SharedValueSignal` and `SharedNumberSignal`. Also, applies to changes happening to the items in a `SharedListSignal`. Represents an operation that sets the value of the signal to a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ReplaceValueOperation<T>`:: Specific to `SharedValueSignal` and `SharedNumberSignal`. Also, applies to the changes happening to the items in a `SharedListSignal`. Represents an operation that replaces the value of the signal with a new value of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListInsertOperation<T>`:: Specific to `SharedListSignal`. Represents an operation that inserts a new value to the list signal at a given position. The value is of type `T`. This operation is a special case of [classname]`ValueOperation<T>`.
+`ListRemoveOperation<T>`:: Specific to `SharedListSignal`. Represents an operation that removes a value from the list signal at a given position. The value is of type `T`.
 
 All of the above operations are implementations of [classname]`SignalOperation` interface.
 
@@ -685,10 +685,10 @@ public class TodoService {
 
     public record TodoItem(String text, boolean done) {}
 
-    private final ListSignal<TodoItem> notValidatedTodoItems = // <1>
-            new ListSignal<>(TodoItem.class);
+    private final SharedListSignal<TodoItem> notValidatedTodoItems = // <1>
+            new SharedListSignal<>(TodoItem.class);
 
-    private final ListSignal<TodoItem> validatedTodoItems = // <2>
+    private final SharedListSignal<TodoItem> validatedTodoItems = // <2>
         notValidatedTodoItems.withOperationValidator(operation ->
         switch (operation) {
             case ListInsertOperation<TodoItem> insertOp ->
@@ -700,7 +700,7 @@ public class TodoService {
             default -> ValidationResult.reject("Invalid Operation");
         });
 
-    private final ListSignal<TodoItem> userTodoItems = // <3>
+    private final SharedListSignal<TodoItem> userTodoItems = // <3>
         validatedTodoItems.withOperationValidator(operation -> {
             if (operation instanceof ListRemoveOperation<TodoItem>) {
                 return ValidationResult.reject("No Removal for users!");
@@ -708,7 +708,7 @@ public class TodoService {
             return ValidationResult.allow();
         });
 
-    private final ListSignal<TodoItem> guestTodoItems = // <4>
+    private final SharedListSignal<TodoItem> guestTodoItems = // <4>
             notValidatedTodoItems.asReadonly();
 
     private ValidationResult validateTodoText(TodoItem todoItem) {
@@ -717,7 +717,7 @@ public class TodoService {
                 ValidationResult.allow();
     }
 
-    public ListSignal<TodoItem> todoItems() { // <5>
+    public SharedListSignal<TodoItem> todoItems() { // <5>
         return switch (currentUserRole()) {
             case ADMIN -> validatedTodoItems;
             case USER -> userTodoItems;

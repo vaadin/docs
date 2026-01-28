@@ -1,0 +1,288 @@
+---
+title: Transactions
+page-title: Signal Transactions in Vaadin Flow
+description: Using transactions for atomic signal operations in Vaadin Flow applications.
+meta-description: Learn how to use signal transactions for atomic updates, verification, and operation results.
+order: 60
+---
+
+
+= Transactions
+
+Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together, ensuring data consistency.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== Basic Transactions
+
+Use [methodname]`Signal.runInTransaction()` to execute multiple signal operations atomically:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // All operations here will be committed atomically
+    firstNameSignal.value("John");
+    lastNameSignal.value("Doe");
+    ageSignal.value(30);
+});
+----
+
+If any operation fails, none of the changes are applied. Observers see either the complete update or nothing at all - never a partial update.
+
+
+== Transaction Benefits
+
+Transactions provide several guarantees:
+
+*Atomicity*:: All changes in a transaction succeed or fail together
+*Consistency*:: No observer sees partial updates
+*Isolation*:: Changes are not visible until the transaction commits
+
+
+== Verification Methods
+
+Transactions support verification methods that ensure certain conditions are met before committing changes.
+
+
+=== verifyValue()
+
+Verifies that a signal has a specific expected value:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // Transaction fails if current status is not "pending"
+    statusSignal.verifyValue("pending");
+
+    // Only executed if verification passes
+    statusSignal.value("processing");
+    processedBySignal.value(currentUser);
+});
+----
+
+
+=== verifyPosition()
+
+For list signals, verifies that an item is at a specific position:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    SharedValueSignal<Todo> firstItem = todoList.value().get(0);
+
+    // Verify the item we want to update is still first
+    todoList.verifyPosition(firstItem, 0);
+
+    // Update only if verification passes
+    firstItem.value(new Todo("Updated first item", false));
+});
+----
+
+
+=== verifyPresent()
+
+Verifies that an item exists in a list or map:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // Verify the item still exists before updating
+    itemSignal.verifyPresent();
+
+    itemSignal.value(updatedValue);
+});
+----
+
+
+=== verifyAbsent()
+
+Verifies that a key does not exist in a map:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // Only insert if key doesn't already exist
+    mapSignal.verifyAbsent("newKey");
+
+    mapSignal.put("newKey", newValue);
+});
+----
+
+
+== Operation Results
+
+Signal operations return result objects that provide information about the operation and allow chaining.
+
+
+=== SignalOperation
+
+The base interface for all signal operations. Operations can be observed for completion or rejection:
+
+[source,java]
+----
+SignalOperation<String> op = stringSignal.value("new value");
+
+// Check if the operation is completed
+if (op.isCompleted()) {
+    System.out.println("Operation completed");
+}
+----
+
+
+=== CancelableOperation
+
+Some operations that may retry (like [methodname]`update()`) return a [classname]`CancelableOperation` that can be canceled:
+
+[source,java]
+----
+CancelableOperation<Integer> updateOp = counter.update(v -> v + 1);
+
+// If needed, cancel the retry loop
+updateOp.cancel();
+----
+
+The [methodname]`update()` operation uses a compare-and-set approach. If another change occurs concurrently, the operation retries with the new value. Calling [methodname]`cancel()` stops this retry loop.
+
+[NOTE]
+A call to `cancel()` may not always be effective, as a succeeding operation might already be on its way to the server.
+
+
+=== InsertOperation
+
+List insert operations return an [classname]`InsertOperation` that provides immediate access to the inserted signal:
+
+[source,java]
+----
+SharedListSignal<Todo> todoList = new SharedListSignal<>(Todo.class);
+
+InsertOperation<Todo> op = todoList.insertLast(new Todo("New task", false));
+
+// Get the signal for the inserted item immediately
+SharedValueSignal<Todo> insertedSignal = op.signal();
+
+// You can start working with the signal right away
+insertedSignal.update(todo -> new Todo(todo.text(), true));
+----
+
+This is useful when you need to reference the newly inserted item immediately after insertion.
+
+
+=== TransactionOperation
+
+When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction:
+
+[source,java]
+----
+TransactionOperation txOp = Signal.runInTransaction(() -> {
+    firstNameSignal.value("John");
+    lastNameSignal.value("Doe");
+});
+
+// Check transaction status
+if (txOp.isCompleted()) {
+    System.out.println("Transaction committed successfully");
+}
+----
+
+
+== Bypassing Transactions
+
+Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes. If you need to modify a signal from within an effect (and you're certain there's no risk of infinite loops), use [methodname]`runWithoutTransaction()`:
+
+[source,java]
+----
+ComponentEffect.effect(component, () -> {
+    String value = sourceSignal.value();
+
+    // WARNING: This might lead to infinite loops.
+    // Do this only if absolutely necessary.
+    Signal.runWithoutTransaction(() -> {
+        derivedSignal.value(transformValue(value));
+    });
+});
+----
+
+[WARNING]
+Using `runWithoutTransaction()` bypasses safety checks. Only use it when you're certain the update won't cause an infinite loop.
+
+
+== Best Practices
+
+
+=== Use Transactions for Related Updates
+
+When multiple signals should be updated together, use a transaction:
+
+[source,java]
+----
+// Good: Related updates in a transaction
+Signal.runInTransaction(() -> {
+    orderStatusSignal.value("shipped");
+    shippedAtSignal.value(Instant.now());
+    trackingNumberSignal.value(tracking);
+});
+
+// Avoid: Separate updates that might leave inconsistent state
+orderStatusSignal.value("shipped");
+shippedAtSignal.value(Instant.now()); // What if this fails?
+trackingNumberSignal.value(tracking);
+----
+
+
+=== Use Verification for Conditional Updates
+
+When updates depend on current state, use verification:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    // Ensure we're updating the expected state
+    statusSignal.verifyValue("pending");
+    quantitySignal.verifyValue(expectedQuantity);
+
+    statusSignal.value("confirmed");
+    quantitySignal.value(newQuantity);
+});
+----
+
+
+=== Prefer update() for Single-Signal Atomic Updates
+
+For atomic updates based on current value, use [methodname]`update()` instead of a transaction:
+
+[source,java]
+----
+// Preferred for single-signal updates
+counter.update(v -> v + 1);
+
+// Transaction is overkill for single updates
+Signal.runInTransaction(() -> {
+    counter.value(counter.value() + 1);
+});
+----
+
+
+=== Keep Transactions Small
+
+Transactions hold resources while executing. Keep them focused on the minimal set of related operations:
+
+[source,java]
+----
+// Good: Small, focused transaction
+Signal.runInTransaction(() -> {
+    userSignal.value(updatedUser);
+    lastModifiedSignal.value(Instant.now());
+});
+
+// Avoid: Large transactions with unrelated operations
+Signal.runInTransaction(() -> {
+    userSignal.value(updatedUser);
+    lastModifiedSignal.value(Instant.now());
+    // Don't include unrelated updates
+    analyticsCounterSignal.incrementBy(1);
+    logSignal.value(logMessage);
+});
+----

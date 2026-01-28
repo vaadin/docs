@@ -1,0 +1,388 @@
+---
+title: Access Control
+page-title: Signal Access Control with CommandValidator in Vaadin Flow
+description: Fine-grained access control for signals using CommandValidator in Vaadin Flow applications.
+meta-description: Learn how to use CommandValidator for fine-grained security and validation of signal operations.
+order: 70
+---
+
+
+= Access Control
+
+Signals support fine-grained access control through the [classname]`CommandValidator` interface. This allows you to restrict which operations are allowed on a signal based on the operation type, the values involved, or the current user's permissions.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== CommandValidator Interface
+
+The [classname]`CommandValidator` functional interface validates commands before they are applied to a signal:
+
+[source,java]
+----
+@FunctionalInterface
+public interface CommandValidator<T> {
+    boolean validate(Command<T> command);
+}
+----
+
+The validator receives a command and returns `true` to allow the operation or `false` to reject it.
+
+
+== Adding Validators to Signals
+
+Use the [methodname]`withValidator()` method to add a validator to a signal:
+
+[source,java]
+----
+SharedNumberSignal counter = new SharedNumberSignal()
+    .withValidator(command -> {
+        // Validate the command
+        return isValidCommand(command);
+    });
+----
+
+The [methodname]`withValidator()` method returns a new signal instance with the validator attached. The original signal remains unchanged.
+
+
+== Built-in Validators
+
+
+=== ACCEPT_ALL
+
+The [constant]`CommandValidator.ACCEPT_ALL` constant accepts all operations:
+
+[source,java]
+----
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class)
+    .withValidator(CommandValidator.ACCEPT_ALL);
+----
+
+This is the default behavior when no validator is specified.
+
+
+=== REJECT_ALL
+
+The [constant]`CommandValidator.REJECT_ALL` constant rejects all operations, making the signal effectively read-only from the client side:
+
+[source,java]
+----
+SharedValueSignal<String> readOnlySignal = new SharedValueSignal<>(String.class)
+    .withValidator(CommandValidator.REJECT_ALL);
+----
+
+
+== Command Types
+
+Commands represent different operations that can be performed on signals. Check the command type to apply specific validation rules:
+
+
+=== Value Commands
+
+[source,java]
+----
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class)
+    .withValidator(command -> {
+        if (command instanceof SetValueCommand<String> setCmd) {
+            // Validate set value operations
+            return setCmd.value() != null && setCmd.value().length() <= 100;
+        }
+        if (command instanceof ReplaceValueCommand<String> replaceCmd) {
+            // Validate replace operations
+            return replaceCmd.newValue() != null;
+        }
+        return false;
+    });
+----
+
+
+=== Number Commands
+
+[source,java]
+----
+SharedNumberSignal counter = new SharedNumberSignal()
+    .withValidator(command -> {
+        if (command instanceof IncrementCommand inc) {
+            // Only allow increments/decrements of 1
+            return Math.abs(inc.delta()) == 1.0;
+        }
+        if (command instanceof SetValueCommand<?> set) {
+            // Don't allow direct value setting
+            return false;
+        }
+        return false;
+    });
+----
+
+
+=== List Commands
+
+[source,java]
+----
+SharedListSignal<Todo> todoList = new SharedListSignal<>(Todo.class)
+    .withValidator(command -> {
+        if (command instanceof InsertCommand<Todo> insert) {
+            // Validate inserted items
+            return insert.value().text() != null &&
+                   insert.value().text().length() <= 200;
+        }
+        if (command instanceof RemoveCommand<?> remove) {
+            // Allow all removals
+            return true;
+        }
+        return true;
+    });
+----
+
+
+== Composing Validators
+
+
+=== Using and()
+
+Combine multiple validators with the [methodname]`and()` method. All validators must pass for the command to be accepted:
+
+[source,java]
+----
+CommandValidator<String> lengthValidator = command -> {
+    if (command instanceof SetValueCommand<String> set) {
+        return set.value().length() <= 100;
+    }
+    return true;
+};
+
+CommandValidator<String> contentValidator = command -> {
+    if (command instanceof SetValueCommand<String> set) {
+        return !set.value().contains("forbidden");
+    }
+    return true;
+};
+
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class)
+    .withValidator(lengthValidator.and(contentValidator));
+----
+
+
+=== Chaining withValidator()
+
+You can chain multiple [methodname]`withValidator()` calls. Each call creates a new signal with the additional validator:
+
+[source,java]
+----
+SharedNumberSignal counter = new SharedNumberSignal()
+    .withValidator(command -> {
+        // First validator: only increments
+        return command instanceof IncrementCommand;
+    })
+    .withValidator(command -> {
+        // Second validator: limit increment size
+        if (command instanceof IncrementCommand inc) {
+            return Math.abs(inc.delta()) <= 10;
+        }
+        return true;
+    });
+----
+
+
+== Security Examples
+
+
+=== Role-Based Access
+
+Implement different access levels based on user roles:
+
+[source,java]
+----
+public class SecureCounter {
+    private final SharedNumberSignal baseSignal = new SharedNumberSignal();
+
+    // Admin signal: full access
+    private final SharedNumberSignal adminSignal = baseSignal
+        .withValidator(CommandValidator.ACCEPT_ALL);
+
+    // User signal: only increment by 1
+    private final SharedNumberSignal userSignal = baseSignal
+        .withValidator(command -> {
+            if (command instanceof IncrementCommand inc) {
+                return inc.delta() == 1.0;
+            }
+            return false;
+        });
+
+    // Guest signal: read-only
+    private final SharedNumberSignal guestSignal = baseSignal.asReadonly();
+
+    public SharedNumberSignal getSignal(UserRole role) {
+        return switch (role) {
+            case ADMIN -> adminSignal;
+            case USER -> userSignal;
+            case GUEST -> guestSignal;
+        };
+    }
+}
+----
+
+
+=== Input Validation
+
+Validate input values before accepting changes:
+
+[source,java]
+----
+record UserProfile(String name, String email, int age) {}
+
+SharedValueSignal<UserProfile> profileSignal = new SharedValueSignal<>(UserProfile.class)
+    .withValidator(command -> {
+        if (command instanceof SetValueCommand<UserProfile> set) {
+            UserProfile profile = set.value();
+
+            // Validate name
+            if (profile.name() == null || profile.name().isBlank()) {
+                return false;
+            }
+            if (profile.name().length() > 100) {
+                return false;
+            }
+
+            // Validate email
+            if (profile.email() == null || !profile.email().contains("@")) {
+                return false;
+            }
+
+            // Validate age
+            if (profile.age() < 0 || profile.age() > 150) {
+                return false;
+            }
+
+            return true;
+        }
+        return true;
+    });
+----
+
+
+=== Prevent Specific Values
+
+Blacklist certain values:
+
+[source,java]
+----
+Set<String> forbiddenWords = Set.of("spam", "forbidden", "blocked");
+
+SharedValueSignal<String> messageSignal = new SharedValueSignal<>(String.class)
+    .withValidator(command -> {
+        if (command instanceof SetValueCommand<String> set) {
+            String value = set.value().toLowerCase();
+            return forbiddenWords.stream().noneMatch(value::contains);
+        }
+        return true;
+    });
+----
+
+
+=== Rate Limiting Considerations
+
+While validators can't directly implement rate limiting, you can track and reject operations:
+
+[source,java]
+----
+public class RateLimitedSignal {
+    private final Map<String, Instant> lastOperationTime = new ConcurrentHashMap<>();
+    private final Duration minInterval = Duration.ofSeconds(1);
+
+    private final SharedNumberSignal signal = new SharedNumberSignal()
+        .withValidator(command -> {
+            String userId = getCurrentUserId();
+            Instant lastOp = lastOperationTime.get(userId);
+            Instant now = Instant.now();
+
+            if (lastOp != null && Duration.between(lastOp, now).compareTo(minInterval) < 0) {
+                return false; // Too soon, reject
+            }
+
+            lastOperationTime.put(userId, now);
+            return true;
+        });
+}
+----
+
+
+== Best Practices
+
+
+=== Always Validate Commands
+
+Never assume the command type. Always check before casting:
+
+[source,java]
+----
+// Good: Check command type first
+.withValidator(command -> {
+    if (command instanceof IncrementCommand inc) {
+        return Math.abs(inc.delta()) <= 1.0;
+    }
+    return false; // Reject unknown commands
+})
+
+// Avoid: Unchecked cast
+.withValidator(command -> {
+    IncrementCommand inc = (IncrementCommand) command; // May throw!
+    return Math.abs(inc.delta()) <= 1.0;
+})
+----
+
+
+=== Define Validators as Fields
+
+Create validator instances once and reuse them:
+
+[source,java]
+----
+// Good: Defined once as a field
+private final SharedNumberSignal counter = new SharedNumberSignal()
+    .withValidator(this::validateCounter);
+
+// Avoid: Creating new validators in methods
+public SharedNumberSignal getCounter() {
+    return new SharedNumberSignal()
+        .withValidator(command -> { /* ... */ }); // Created each time!
+}
+----
+
+
+=== Use Read-Only for View-Only Access
+
+For signals that shouldn't be modified, use [methodname]`asReadonly()` instead of a validator:
+
+[source,java]
+----
+// Preferred for pure read-only access
+SharedValueSignal<String> readOnly = originalSignal.asReadonly();
+
+// Validator approach works but is more complex
+SharedValueSignal<String> readOnly = originalSignal
+    .withValidator(CommandValidator.REJECT_ALL);
+----
+
+
+=== Log Rejected Commands
+
+In production, log rejected commands for security monitoring:
+
+[source,java]
+----
+private static final Logger logger = LoggerFactory.getLogger(MyService.class);
+
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class)
+    .withValidator(command -> {
+        boolean valid = validateCommand(command);
+        if (!valid) {
+            logger.warn("Rejected command: {} from user: {}",
+                command.getClass().getSimpleName(),
+                getCurrentUserId());
+        }
+        return valid;
+    });
+----
