@@ -18,7 +18,7 @@ include::{articles}/_preview-banner.adoc[opts=optional]
 
 == Overview
 
-The [classname]`ValueSignal` class is a writable signal that holds a reference to a value. Local signals are designed for single-threaded access within one UI session, providing a simple and efficient way to manage component-level state.
+The [classname]`ValueSignal` class is a writable signal that holds a reference to a value. Local signals are scoped to a single UI session, providing a simple and efficient way to manage component-level state.
 
 [source,java]
 ----
@@ -111,30 +111,27 @@ user.setAge(27); // This change won't be detected!
 Direct mutation of objects retrieved from a signal won't trigger reactive updates. Always use `modify()` for mutable values, or preferably use immutable types like Java records.
 
 
-== Thread-Safety Considerations
+== Thread Safety
 
-Local signals are NOT thread-safe. They are designed for single-threaded access within a UI session:
+Local signals are thread-safe and can be updated from any thread without wrapping calls in `ui.access()`. The signal handles UI synchronization internally:
 
 [source,java]
 ----
-// Safe: Used within a single UI instance
 public class MyView extends VerticalLayout {
     private final ValueSignal<String> localState = new ValueSignal<>("");
 
     public MyView() {
-        // All access happens in the UI thread
         TextField field = new TextField();
         field.addValueChangeListener(e -> localState.value(e.getValue()));
 
-        ComponentEffect.effect(this, () -> {
-            // Effect runs in UI thread
-            System.out.println("Value changed: " + localState.value());
-        });
+        Span output = new Span();
+        output.bindText(localState);
+        add(field, output);
     }
 }
 ----
 
-If you need thread-safe state management or state shared across users, use <<shared-signals#,Shared Signals>> instead.
+However, local signals are scoped to a single server instance and cannot be used in clustered deployments. If you need state that works across a cluster or is shared between users, use <<shared-signals#,Shared Signals>> instead.
 
 
 == Transaction Limitations
