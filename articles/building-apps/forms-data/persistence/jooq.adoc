@@ -192,6 +192,38 @@ public class Order {
 ----
 
 
+=== Loading Aggregates with MULTISET
+
+When loading an aggregate with its children, naive approaches either require multiple queries (N+1 problem) or complex joins with duplicate data. jOOQ's `MULTISET` solves this by fetching nested collections in a single query:
+
+[source,java]
+----
+public Optional<Order> findById(OrderId id) {
+    return create
+        .select(
+            ORDER.ORDER_ID,
+            ORDER.STATUS,
+            ORDER.CREATED_DATE,
+            multiset(
+                select(ORDER_LINE.PRODUCT_ID, ORDER_LINE.QUANTITY, ORDER_LINE.UNIT_PRICE)
+                .from(ORDER_LINE)
+                .where(ORDER_LINE.ORDER_ID.eq(ORDER.ORDER_ID))
+            ).as("lines").convertFrom(r -> r.map(Records.mapping(OrderLine::new)))
+        )
+        .from(ORDER)
+        .where(ORDER.ORDER_ID.eq(id.value()))
+        .fetchOptional(Records.mapping(Order::new));
+}
+----
+
+This executes as a single SQL statement with a correlated subquery. The result maps directly to your domain objects—an `Order` containing a `List<OrderLine>`.
+
+MULTISET works with multiple levels of nesting and multiple child collections. It's particularly valuable when your aggregates have complex structures that would be painful to load with JPA's eager/lazy fetching.
+
+[NOTE]
+MULTISET requires jOOQ's commercial editions for some databases, or jOOQ 3.15+ with databases that support it natively (PostgreSQL, MySQL 8+, etc.). Check the https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/multiset-value-constructor/[jOOQ documentation] for details.
+
+
 === Repositories
 
 Build your own repository classes:
@@ -208,6 +240,7 @@ public class OrderRepository {
     }
 
     public Optional<Order> findById(OrderId id) {
+        // Simple approach with two queries; consider MULTISET for single-query loading
         var orderRecord = create.fetchOne(ORDER, ORDER.ORDER_ID.eq(id.value()));
         if (orderRecord == null) {
             return Optional.empty();
