@@ -1,0 +1,462 @@
+---
+title: Building UI
+page-title: Building UI Using Signals in Vaadin Flow
+description: Using signals to build reactive user interfaces with component bindings in Vaadin Flow.
+meta-description: Learn how to bind signals to Vaadin components for reactive text, visibility, enabled state, form fields, and dynamic lists.
+order: 25
+---
+
+
+= Building UI Using Signals
+
+Signals connect directly to Vaadin components through binding methods. When a signal value changes, bound components update automatically without manual listeners or state synchronization.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== Overview
+
+Vaadin components provide direct binding methods for common properties. These bindings create a reactive connection between your data and the UI:
+
+[source,java]
+----
+ValueSignal<String> name = new ValueSignal<>("World");
+
+Span greeting = new Span();
+greeting.bindText(name.map(n -> "Hello, " + n + "!"));
+// Displays "Hello, World!"
+
+name.value("Vaadin");
+// Automatically updates to "Hello, Vaadin!"
+----
+
+This section covers the component-level binding APIs that most developers use. For lower-level Element bindings, see <<element-bindings#,Element Bindings>>.
+
+
+== Binding Text Content
+
+Use [methodname]`bindText()` to bind a component's text content to a signal:
+
+[source,java]
+----
+ValueSignal<String> message = new ValueSignal<>("Welcome");
+
+Span span = new Span();
+span.bindText(message);
+// Displays "Welcome"
+
+message.value("Hello!");
+// Automatically updates to "Hello!"
+----
+
+
+=== Transforming Values
+
+Use [methodname]`map()` to transform signal values before display:
+
+[source,java]
+----
+SharedNumberSignal counter = new SharedNumberSignal();
+
+Button button = new Button();
+button.bindText(counter.map(c -> String.format("Clicked %.0f times", c)));
+// Displays "Clicked 0 times"
+
+button.addClickListener(e -> counter.incrementBy(1));
+// After click: "Clicked 1 times"
+----
+
+
+=== Combining Multiple Signals
+
+Use [methodname]`Signal.computed()` to combine values from multiple signals:
+
+[source,java]
+----
+ValueSignal<String> firstName = new ValueSignal<>("John");
+ValueSignal<String> lastName = new ValueSignal<>("Doe");
+
+Span fullName = new Span();
+fullName.bindText(Signal.computed(() ->
+    firstName.value() + " " + lastName.value()));
+// Displays "John Doe"
+
+firstName.value("Jane");
+// Automatically updates to "Jane Doe"
+----
+
+
+== Binding Visibility
+
+Use [methodname]`bindVisible()` to show or hide components based on a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> showDetails = new ValueSignal<>(false);
+
+Div detailsPanel = new Div();
+detailsPanel.setText("Detailed information here...");
+detailsPanel.bindVisible(showDetails);
+// Panel is hidden initially
+
+Button toggleButton = new Button("Show Details");
+toggleButton.addClickListener(e -> showDetails.update(v -> !v));
+// Clicking toggles panel visibility
+----
+
+
+=== Conditional Visibility
+
+Derive visibility from other signal types using [methodname]`map()`:
+
+[source,java]
+----
+ValueSignal<String> searchText = new ValueSignal<>("");
+
+Span noResults = new Span("No results found");
+noResults.bindVisible(searchText.map(text -> text.isEmpty()));
+// Shows when search text is empty
+
+Div results = new Div();
+results.bindVisible(searchText.map(text -> !text.isEmpty()));
+// Shows when search text is not empty
+----
+
+
+== Binding Enabled State
+
+Use [methodname]`bindEnabled()` to enable or disable components based on a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> termsAccepted = new ValueSignal<>(false);
+
+Button submitButton = new Button("Submit");
+submitButton.bindEnabled(termsAccepted);
+// Button is disabled initially
+
+Checkbox termsCheckbox = new Checkbox("I accept the terms");
+termsCheckbox.addValueChangeListener(e -> termsAccepted.value(e.getValue()));
+// Button enables when checkbox is checked
+----
+
+
+=== Form Validation Example
+
+Enable a submit button only when the form is valid:
+
+[source,java]
+----
+ValueSignal<String> email = new ValueSignal<>("");
+ValueSignal<String> password = new ValueSignal<>("");
+
+Signal<Boolean> isFormValid = Signal.computed(() -> {
+    String e = email.value();
+    String p = password.value();
+    return e.contains("@") && p.length() >= 8;
+});
+
+Button submitButton = new Button("Sign Up");
+submitButton.bindEnabled(isFormValid);
+// Button enables only when email contains @ and password has 8+ characters
+----
+
+
+== Two-Way Form Field Binding
+
+Use [methodname]`bindValue()` on form fields to create two-way binding. Changes to the field update the signal, and changes to the signal update the field:
+
+[source,java]
+----
+SharedValueSignal<String> username = new SharedValueSignal<>(String.class);
+
+TextField usernameField = new TextField("Username");
+usernameField.bindValue(username);
+
+// User types "john" -> username.value() returns "john"
+// username.value("jane") -> field displays "jane"
+----
+
+
+=== Supported Field Types
+
+Two-way binding works with all form fields implementing [interfacename]`HasValue`:
+
+[source,java]
+----
+// Text fields
+TextField textField = new TextField();
+textField.bindValue(stringSignal);
+
+TextArea textArea = new TextArea();
+textArea.bindValue(stringSignal);
+
+// Checkbox
+SharedValueSignal<Boolean> accepted = new SharedValueSignal<>(Boolean.class);
+Checkbox checkbox = new Checkbox("Accept terms");
+checkbox.bindValue(accepted);
+
+// Number field
+SharedValueSignal<Double> amount = new SharedValueSignal<>(Double.class);
+NumberField numberField = new NumberField("Amount");
+numberField.bindValue(amount);
+
+// Select/ComboBox
+SharedValueSignal<String> country = new SharedValueSignal<>(String.class);
+ComboBox<String> countrySelect = new ComboBox<>("Country");
+countrySelect.setItems("USA", "UK", "Germany", "France");
+countrySelect.bindValue(country);
+
+// Date picker
+SharedValueSignal<LocalDate> birthDate = new SharedValueSignal<>(LocalDate.class);
+DatePicker datePicker = new DatePicker("Birth date");
+datePicker.bindValue(birthDate);
+----
+
+
+=== Read-Only Binding
+
+Use [methodname]`bindReadOnly()` to control the read-only state of a form field:
+
+[source,java]
+----
+ValueSignal<Boolean> isLocked = new ValueSignal<>(false);
+
+TextField field = new TextField("Document title");
+field.bindReadOnly(isLocked);
+// Field is editable initially
+
+Button lockButton = new Button("Lock", e -> isLocked.value(true));
+// After clicking: field becomes read-only
+----
+
+
+== Binding Theme Variants
+
+Use [methodname]`getThemeList().bind()` to toggle theme variants based on a signal:
+
+[source,java]
+----
+ValueSignal<Boolean> isDarkMode = new ValueSignal<>(false);
+
+VerticalLayout layout = new VerticalLayout();
+layout.getThemeList().bind("dark", isDarkMode);
+// Dark theme applied when isDarkMode is true
+
+Button toggleTheme = new Button("Toggle Dark Mode");
+toggleTheme.addClickListener(e -> isDarkMode.update(v -> !v));
+----
+
+
+=== Multiple Theme Variants
+
+Bind multiple independent theme variants:
+
+[source,java]
+----
+ValueSignal<Boolean> isCompact = new ValueSignal<>(false);
+ValueSignal<Boolean> isBordered = new ValueSignal<>(true);
+
+Grid<Person> grid = new Grid<>();
+grid.getThemeList().bind("compact", isCompact);
+grid.getThemeList().bind("row-stripes", isBordered);
+----
+
+
+== Binding Inline Styles
+
+Use [methodname]`getStyle().bind()` to bind CSS properties to signals:
+
+[source,java]
+----
+ValueSignal<String> backgroundColor = new ValueSignal<>("white");
+
+Div panel = new Div();
+panel.getStyle().bind("background-color", backgroundColor);
+
+// Change background color
+backgroundColor.value("lightblue");
+----
+
+
+=== Dynamic Styling Example
+
+Create dynamic visual feedback based on data:
+
+[source,java]
+----
+SharedNumberSignal progress = new SharedNumberSignal();
+
+Div progressBar = new Div();
+progressBar.getStyle().set("height", "20px");
+progressBar.getStyle().set("transition", "width 0.3s");
+progressBar.getStyle().bind("width", progress.map(p -> p + "%"));
+progressBar.getStyle().bind("background-color", progress.map(p ->
+    p < 50 ? "orange" : (p < 100 ? "blue" : "green")));
+----
+
+
+== Rendering Lists of Components
+
+Use [methodname]`ComponentEffect.bindChildren()` to efficiently render a list of components from a list signal. This method handles additions, removals, and reordering without recreating all children:
+
+[source,java]
+----
+SharedListSignal<String> items = new SharedListSignal<>(String.class);
+
+VerticalLayout container = new VerticalLayout();
+
+ComponentEffect.bindChildren(container, items, itemSignal -> {
+    Span itemView = new Span();
+    itemView.bindText(itemSignal);
+    return itemView;
+});
+
+// Add items
+items.insertLast("First item");
+items.insertLast("Second item");
+// Container now has two Span children
+----
+
+
+=== Complex List Items
+
+Create rich list items with nested bindings:
+
+[source,java]
+----
+record Todo(String text, boolean done) {}
+
+SharedListSignal<Todo> todos = new SharedListSignal<>(Todo.class);
+
+VerticalLayout todoList = new VerticalLayout();
+
+ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
+    HorizontalLayout row = new HorizontalLayout();
+    row.setAlignItems(FlexComponent.Alignment.CENTER);
+
+    Checkbox checkbox = new Checkbox();
+    checkbox.bindValue(todoSignal.map(Todo::done));
+
+    Span text = new Span();
+    text.bindText(todoSignal.map(Todo::text));
+
+    // Strike through completed items
+    text.getStyle().bind("text-decoration",
+        todoSignal.map(t -> t.done() ? "line-through" : "none"));
+
+    Button deleteButton = new Button("Delete", e -> {
+        todos.remove(todoSignal);
+    });
+
+    row.add(checkbox, text, deleteButton);
+    return row;
+});
+----
+
+
+=== Efficiency
+
+The factory function runs once per list item. When you modify the list:
+
+- *Adding items*: Only new items create new components
+- *Removing items*: Only removed items are detached
+- *Reordering*: Components are moved, not recreated
+- *Updating values*: Item bindings update, but components aren't recreated
+
+
+== Complete Example
+
+Here's a complete example combining multiple binding types:
+
+[source,java]
+----
+public class TaskManager extends VerticalLayout {
+    // State
+    private final SharedListSignal<Task> tasks = new SharedListSignal<>(Task.class);
+    private final ValueSignal<String> newTaskText = new ValueSignal<>("");
+    private final ValueSignal<Boolean> showCompleted = new ValueSignal<>(true);
+
+    // Computed signals
+    private final Signal<Long> totalCount = Signal.computed(() ->
+        (long) tasks.value().size());
+    private final Signal<Long> completedCount = Signal.computed(() ->
+        tasks.value().stream()
+            .filter(t -> t.value().done())
+            .count());
+
+    public TaskManager() {
+        // Header with statistics
+        Span stats = new Span();
+        stats.bindText(Signal.computed(() ->
+            String.format("Tasks: %d total, %d completed",
+                totalCount.value(), completedCount.value())));
+        add(stats);
+
+        // Add task form
+        HorizontalLayout addForm = new HorizontalLayout();
+        TextField taskInput = new TextField();
+        taskInput.setPlaceholder("Enter new task");
+        taskInput.bindValue(newTaskText);
+
+        Button addButton = new Button("Add Task");
+        addButton.bindEnabled(newTaskText.map(t -> !t.isBlank()));
+        addButton.addClickListener(e -> {
+            tasks.insertLast(new Task(newTaskText.value(), false));
+            newTaskText.value("");
+        });
+
+        addForm.add(taskInput, addButton);
+        add(addForm);
+
+        // Show/hide completed toggle
+        Checkbox showCompletedCheckbox = new Checkbox("Show completed tasks");
+        showCompletedCheckbox.bindValue(showCompleted);
+        add(showCompletedCheckbox);
+
+        // Task list
+        VerticalLayout taskList = new VerticalLayout();
+        taskList.setPadding(false);
+
+        ComponentEffect.bindChildren(taskList, tasks, taskSignal -> {
+            HorizontalLayout row = new HorizontalLayout();
+            row.setAlignItems(FlexComponent.Alignment.CENTER);
+            row.setWidthFull();
+
+            // Hide completed tasks when toggle is off
+            row.bindVisible(Signal.computed(() ->
+                showCompleted.value() || !taskSignal.value().done()));
+
+            Checkbox doneCheckbox = new Checkbox();
+            doneCheckbox.addValueChangeListener(e ->
+                taskSignal.update(t -> new Task(t.text(), e.getValue())));
+
+            Span taskText = new Span();
+            taskText.bindText(taskSignal.map(Task::text));
+            taskText.getStyle().bind("text-decoration",
+                taskSignal.map(t -> t.done() ? "line-through" : "none"));
+
+            Button deleteButton = new Button(VaadinIcon.TRASH.create());
+            deleteButton.addClickListener(e -> tasks.remove(taskSignal));
+
+            row.add(doneCheckbox, taskText, deleteButton);
+            return row;
+        });
+
+        add(taskList);
+    }
+
+    record Task(String text, boolean done) {}
+}
+----
+
+This example demonstrates:
+
+- Two-way binding with form fields ([methodname]`bindValue()`)
+- Conditional button enabling ([methodname]`bindEnabled()`)
+- Computed signals for derived values
+- List rendering with [methodname]`ComponentEffect.bindChildren()`
+- Dynamic visibility ([methodname]`bindVisible()`)
+- Dynamic styling ([methodname]`getStyle().bind()`)

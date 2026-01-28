@@ -274,12 +274,12 @@ public class MyView extends VerticalLayout {
 
 == Usage Examples
 
+For comprehensive UI binding examples including text, visibility, form fields, and dynamic lists, see <<building-ui#,Building UI Using Signals>>.
+
 
 .Counter Example
 [example]
 ====
-This example demonstrates a reactive counter:
-
 [source,java]
 ----
 public class SharedCounter extends VerticalLayout {
@@ -288,71 +288,27 @@ public class SharedCounter extends VerticalLayout {
     public SharedCounter() {
         Button button = new Button();
         button.addClickListener(click -> counter.incrementBy(1));
-        add(button);
-
         button.bindText(counter.map(c -> String.format("Clicked %.0f times", c)));
+        add(button);
     }
 }
 ----
 ====
 
 
-.Shared Text Field Example
+.Two-Way Form Field Binding
 [example]
 ====
 [source,java]
 ----
-public class SharedText extends FormLayout {
-    private final SharedValueSignal<String> value =
-            new SharedValueSignal<>(String.class);
+SharedValueSignal<String> value = new SharedValueSignal<>(String.class);
 
-    public SharedText() {
-        TextField field = new TextField("Value");
-
-        // Two-way binding: field changes update signal, signal changes update field
-        field.bindValue(value);
-
-        add(field);
-    }
-}
+TextField field = new TextField("Value");
+field.bindValue(value);
+// Changes sync both ways: field to signal and signal to field
 ----
 
 Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
-====
-
-
-.Shared List Example
-[example]
-====
-[source,java]
-----
-public class PersonList extends VerticalLayout {
-    private final SharedListSignal<String> persons =
-            new SharedListSignal<>(String.class);
-
-    public PersonList() {
-        Button addButton = new Button("Add Person", click -> {
-            persons.insertFirst("New person");
-        });
-
-        Button updateButton = new Button("Update first Person", click -> {
-            SharedValueSignal<String> first = persons.value().get(0);
-            first.update(text -> text + " updated");
-        });
-
-        UnorderedList list = new UnorderedList();
-        ComponentEffect.bindChildren(list, persons, personSignal -> {
-            ListItem li = new ListItem();
-            li.bindText(personSignal);
-            return li;
-        });
-
-        add(addButton, updateButton, list);
-    }
-}
-----
-
-The effect that creates new list item components runs only when a new item is added to the list, not when the value of an existing item is updated.
 ====
 
 

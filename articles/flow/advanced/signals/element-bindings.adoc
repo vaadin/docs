@@ -1,19 +1,28 @@
 ---
 title: Element Bindings
-page-title: Signal Bindings for Elements and Components in Vaadin Flow
-description: Binding signals to Element properties, attributes, styles, and component features.
-meta-description: Learn how to bind signals to DOM elements and Vaadin components for reactive UI updates.
+page-title: Low-Level Element Bindings for Signals in Vaadin Flow
+description: Binding signals to Element properties, attributes, and styles for advanced use cases.
+meta-description: Learn how to bind signals directly to DOM elements for advanced reactive UI patterns.
 order: 50
 ---
 
 
 = Element Bindings
 
-Various [classname]`Element` and component features support signal binding, including text, attributes, properties, [classname]`ClassList`, [classname]`Style`, visibility, and form fields. These bindings keep the UI synchronized with signal values automatically.
+This section covers low-level [classname]`Element` bindings for direct DOM manipulation. These APIs are useful when building custom components or when you need fine-grained control over element attributes and properties.
 
 :preview-feature: Signals
 :feature-flag: com.vaadin.experimental.flowFullstackSignals
 include::{articles}/_preview-banner.adoc[opts=optional]
+
+[NOTE]
+====
+For most applications, use the component-level binding methods covered in <<building-ui#,Building UI Using Signals>>. Component methods like `bindText()`, `bindVisible()`, and `bindEnabled()` provide a simpler API for common use cases. Use Element bindings when:
+
+- Building custom components
+- Working with HTML attributes not exposed by component APIs
+- Binding element properties for JavaScript interop
+====
 
 
 == Binding Rules
@@ -233,8 +242,7 @@ span.getElement().getStyle().clear();
 .`ThemeList#bind(String name, Signal<Boolean> signal)`
 [source,java]
 ----
-SharedValueSignal<Boolean> isDarkMode = new SharedValueSignal<>(Boolean.class);
-isDarkMode.value(false);
+ValueSignal<Boolean> isDarkMode = new ValueSignal<>(false);
 
 component.getThemeList().bind("dark", isDarkMode);
 // Theme "dark" is applied when isDarkMode is true
@@ -243,14 +251,17 @@ isDarkMode.value(true);
 // Component now has "dark" theme applied
 ----
 
+For component-level theme binding examples, see <<building-ui#binding-theme-variants,Binding Theme Variants>>.
+
 
 == Visibility Binding
+
+Components provide [methodname]`bindVisible()` directly. The Element-level binding follows the same pattern:
 
 .`Element#bindVisible(Signal<Boolean> signal)`
 [source,java]
 ----
-SharedValueSignal<Boolean> isVisible = new SharedValueSignal<>(Boolean.class);
-isVisible.value(true);
+ValueSignal<Boolean> isVisible = new ValueSignal<>(true);
 
 element.bindVisible(isVisible);
 // Element is visible when isVisible is true
@@ -259,21 +270,17 @@ isVisible.value(false);
 // Element is now hidden
 ----
 
-This is a convenience method equivalent to:
-
-[source,java]
-----
-ComponentEffect.bind(component, isVisible, Component::setVisible);
-----
+For component-level examples, see <<building-ui#binding-visibility,Binding Visibility>>.
 
 
 == Enabled Binding
 
+Components provide [methodname]`bindEnabled()` directly. The Element-level binding:
+
 .`Element#bindEnabled(Signal<Boolean> signal)`
 [source,java]
 ----
-SharedValueSignal<Boolean> isEnabled = new SharedValueSignal<>(Boolean.class);
-isEnabled.value(true);
+ValueSignal<Boolean> isEnabled = new ValueSignal<>(true);
 
 button.getElement().bindEnabled(isEnabled);
 // Button is enabled when isEnabled is true
@@ -282,14 +289,15 @@ isEnabled.value(false);
 // Button is now disabled
 ----
 
+For component-level examples, see <<building-ui#binding-enabled-state,Binding Enabled State>>.
+
 
 == HTML Content Binding
 
 .`Html#bindHtmlContent(Signal<String> signal)`
 [source,java]
 ----
-SharedValueSignal<String> htmlContent = new SharedValueSignal<>(String.class);
-htmlContent.value("<strong>Bold text</strong>");
+ValueSignal<String> htmlContent = new ValueSignal<>("<strong>Bold text</strong>");
 
 Html html = new Html("<span></span>");
 html.bindHtmlContent(htmlContent);
@@ -305,41 +313,24 @@ Be careful with HTML content binding to avoid XSS vulnerabilities. Never bind us
 
 == Form Field Bindings
 
+Form field bindings provide two-way synchronization between fields and signals. For comprehensive examples including all supported field types, see <<building-ui#two-way-form-field-binding,Two-Way Form Field Binding>> in Building UI Using Signals.
+
 
 === Two-Way Value Binding
 
 .`HasValue#bindValue(WritableSignal<V> signal)`
 
-The [methodname]`bindValue()` method creates a two-way binding between a form field and a writable signal. Changes to the field update the signal, and changes to the signal update the field.
+The [methodname]`bindValue()` method creates a two-way binding between a form field and a writable signal:
 
 [source,java]
 ----
 SharedValueSignal<String> nameSignal = new SharedValueSignal<>(String.class);
-nameSignal.value("");
 
 TextField nameField = new TextField("Name");
 nameField.bindValue(nameSignal);
 
 // User types in field -> signal is updated
 // Signal changes -> field is updated
-----
-
-This eliminates the need for manual value change listeners:
-
-[source,java]
-----
-// Without bindValue (manual approach)
-TextField field = new TextField();
-ComponentEffect.bind(field, signal, TextField::setValue);
-field.addValueChangeListener(e -> {
-    if (!e.getValue().equals(signal.peek())) {
-        signal.value(e.getValue());
-    }
-});
-
-// With bindValue (automatic two-way binding)
-TextField field = new TextField();
-field.bindValue(signal);
 ----
 
 
@@ -351,8 +342,7 @@ Binds the read-only state of a form field to a boolean signal:
 
 [source,java]
 ----
-SharedValueSignal<Boolean> isReadOnly = new SharedValueSignal<>(Boolean.class);
-isReadOnly.value(false);
+ValueSignal<Boolean> isReadOnly = new ValueSignal<>(false);
 
 TextField field = new TextField();
 field.bindReadOnly(isReadOnly);

@@ -9,11 +9,30 @@ order: 40
 
 = Effects and Computed Signals
 
-Effects and computed signals are the core mechanisms for reactive UI updates. Effects automatically re-run when their signal dependencies change, while computed signals derive values from other signals.
+Effects and computed signals are the core mechanisms for custom reactive logic. Effects automatically re-run when their signal dependencies change, while computed signals derive values from other signals.
 
 :preview-feature: Signals
 :feature-flag: com.vaadin.experimental.flowFullstackSignals
 include::{articles}/_preview-banner.adoc[opts=optional]
+
+For binding signals directly to component properties like text, visibility, and form field values, see <<building-ui#,Building UI Using Signals>>. This section covers effects for custom logic and computed signals for derived values.
+
+
+== When to Use Effects
+
+Use direct binding methods (covered in <<building-ui#,Building UI>>) when:
+
+- Binding text content with `bindText()`
+- Binding visibility with `bindVisible()`
+- Binding enabled state with `bindEnabled()`
+- Binding form field values with `bindValue()`
+- Binding styles, themes, or class lists
+
+Use [classname]`ComponentEffect` when:
+
+- You need custom side effects beyond property binding
+- You're working with component APIs that don't have binding methods
+- You need to execute logic that isn't just setting a property
 
 
 == Component Effects
@@ -36,26 +55,9 @@ ComponentEffect.effect(span, () -> {
 The first parameter is the component that owns the effect. When the component is detached, the effect is paused. When re-attached, the effect resumes and runs again with current values.
 
 
-=== Binding Signals to Component Properties
+=== Custom Effects for Non-Bindable Properties
 
-Components provide direct binding methods for common properties:
-
-[source,java]
-----
-// Bind text content
-label.bindText(stringSignal);
-
-// Bind with transformation
-label.bindText(user.map(u -> u.getName()));
-
-// Bind visibility
-label.bindVisible(stringSignal.map(value -> !value.isEmpty()));
-
-// Bind enabled state
-button.bindEnabled(isValidSignal);
-----
-
-For properties without direct binding methods, use [methodname]`ComponentEffect.effect()`:
+Use effects for component properties that don't have direct binding methods:
 
 [source,java]
 ----
@@ -65,36 +67,9 @@ ComponentEffect.effect(component, () -> {
 ----
 
 
-=== Binding List Signals to Child Components
-
-The [methodname]`ComponentEffect.bindChildren()` method efficiently binds a list signal to child components. Unlike manually recreating children in an effect, this method handles additions, removals, and reordering efficiently:
-
-[source,java]
-----
-SharedListSignal<Todo> todos = new SharedListSignal<>(Todo.class);
-
-VerticalLayout container = new VerticalLayout();
-
-ComponentEffect.bindChildren(container, todos, todoSignal -> {
-    // Create a component for each list item
-    HorizontalLayout row = new HorizontalLayout();
-    Checkbox checkbox = new Checkbox();
-    Span text = new Span();
-
-    checkbox.bindValue(todoSignal.map(Todo::done));
-    text.bindText(todoSignal.map(Todo::text));
-
-    row.add(checkbox, text);
-    return row;
-});
-----
-
-The factory function is called once for each list item. When items are added, removed, or reordered, only the affected DOM operations are performed.
-
-
 == Computed Signals
 
-Computed signals derive their values from other signals. They are automatically updated when any of the signals they depend on change.
+Computed signals derive their values from other signals. They automatically update when any of their dependencies change.
 
 [source,java]
 ----
@@ -104,6 +79,27 @@ Signal<String> fullName = Signal.computed(() -> {
 ----
 
 Computed signals are read-only; you cannot set their value directly.
+
+
+=== Combining Multiple Signals
+
+The primary use case for computed signals is combining values from multiple source signals:
+
+[source,java]
+----
+ValueSignal<Double> price = new ValueSignal<>(100.0);
+ValueSignal<Double> quantity = new ValueSignal<>(2.0);
+ValueSignal<Double> taxRate = new ValueSignal<>(0.1);
+
+Signal<Double> total = Signal.computed(() -> {
+    double subtotal = price.value() * quantity.value();
+    return subtotal * (1 + taxRate.value());
+});
+// total.value() returns 220.0
+
+quantity.value(3.0);
+// total.value() now returns 330.0
+----
 
 
 === Caching and Lazy Evaluation
@@ -125,7 +121,7 @@ expensiveComputation.value(); // Returns cached value
 
 == Signal Mapping
 
-The [methodname]`map()` method transforms a signal's value. This is a shorthand for creating a computed signal that depends on exactly one other signal.
+The [methodname]`map()` method transforms a signal's value. Use this when deriving a value from exactly one signal:
 
 [source,java]
 ----
@@ -137,6 +133,8 @@ Signal<String> ageCategory = age.map(a ->
 Signal<Boolean> isAdult = age.map(a -> a >= 18);
 ----
 
+Use [methodname]`map()` for single-signal transformations. For transformations depending on multiple signals, use [methodname]`Signal.computed()` instead.
+
 
 == Negating Boolean Signals
 
@@ -144,13 +142,10 @@ The [methodname]`Signal.not()` method creates a computed signal that negates a b
 
 [source,java]
 ----
-Signal<Boolean> isLoading = new SharedValueSignal<>(Boolean.class);
+Signal<Boolean> isLoading = new ValueSignal<>(true);
 
 // Create a negated signal
 Signal<Boolean> isNotLoading = Signal.not(isLoading);
-
-// Useful for enabling/disabling UI
-submitButton.bindEnabled(isNotLoading);
 ----
 
 
@@ -239,28 +234,44 @@ When `showDetails` is false, changes to `details` won't trigger the effect becau
 == Best Practices
 
 
-=== Avoid Changing Signals in Effects
+=== Prefer Direct Bindings Over Effects
 
-Updating the value of a signal as a direct reaction to some other signal value change might cause an infinite loop. To help protect against this, effect and computed signal callbacks are run inside a read-only transaction to prevent any accidental changes.
-
-Whenever possible, create a computed signal for any case where the value of some signal affects the value of another signal:
+Use component binding methods for property updates. Effects are for custom logic that bindings can't handle:
 
 [source,java]
 ----
-// Good: Use computed signal
+// Preferred: Direct binding
+label.bindText(signal);
+
+// Avoid: Effect for simple property binding
+ComponentEffect.effect(label, () -> label.setText(signal.value()));
+----
+
+See <<building-ui#,Building UI Using Signals>> for available binding methods.
+
+
+=== Avoid Changing Signals in Effects
+
+Updating a signal in reaction to another signal might cause an infinite loop. Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes.
+
+Use a computed signal when one signal's value depends on another:
+
+[source,java]
+----
+// Good: Use computed signal for derived values
 Signal<String> derivedValue = Signal.computed(() -> {
     return sourceSignal.value().toUpperCase();
 });
 ----
 
-If that isn't possible and you are certain there's no risk for infinite loops, you can bypass the check using [methodname]`runWithoutTransaction()`:
+If you must modify a signal from an effect and are certain there's no risk of infinite loops, use [methodname]`runWithoutTransaction()`:
 
 [source,java]
 ----
 ComponentEffect.effect(component, () -> {
     String value = oneSignal.value();
 
-    // This might lead to infinite loops.
+    // WARNING: This might lead to infinite loops.
     // Do this only if absolutely necessary.
     Signal.runWithoutTransaction(() -> {
         otherSignal.value(value);
@@ -271,7 +282,7 @@ ComponentEffect.effect(component, () -> {
 
 === Keep Effects Focused
 
-Each effect should have a single responsibility:
+Each effect should have a single responsibility. For multiple property updates, use separate bindings:
 
 [source,java]
 ----
@@ -285,18 +296,4 @@ ComponentEffect.effect(container, () -> {
     ageLabel.setText(String.valueOf(userSignal.value().age()));
     // ... more updates
 });
-----
-
-
-=== Use Direct Binding Methods
-
-Prefer component binding methods over effects when setting component properties:
-
-[source,java]
-----
-// Preferred: Direct binding method
-label.bindText(signal);
-
-// Avoid: Using effect for simple property binding
-ComponentEffect.effect(label, () -> label.setText(signal.value()));
 ----
