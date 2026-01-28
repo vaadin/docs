@@ -301,18 +301,21 @@ In the constructor:
 
 [source,java]
 ----
+private final ValueSignal<Department> department = new ValueSignal<>(); // <1>
+
 public EmployeeField() {
     super(null);
 
-    departmentSelect.setItems(
-            EmployeeService.getDepartments());
+    departmentSelect.setItems(EmployeeService.getDepartments());
+    departmentSelect.bindValue(department); // <2>
 
-    departmentSelect.addValueChangeListener(event -> {
-        Department department = event.getValue();
+    employeeSelect.bindEnabled(department.map(d -> d != null)); // <3>
 
-        employeeSelect.setItems(EmployeeService
-                .getEmployees(department));
-        employeeSelect.setEnabled(department != null);
+    ComponentEffect.effect(this, () -> { // <4>
+        Department d = department.value();
+        employeeSelect.setItems(d != null
+                ? EmployeeService.getEmployees(d)
+                : List.of());
     });
 
     employeeSelect.addValueChangeListener(event ->
@@ -321,6 +324,15 @@ public EmployeeField() {
     getContent().add(departmentSelect, employeeSelect);
 }
 ----
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+<1> A [classname]`ValueSignal` holds the selected department.
+<2> Two-way binding keeps the signal and combo box in sync.
+<3> The employee combo box is enabled only when a department is selected, using [methodname]`bindEnabled()` with a mapped signal.
+<4> A [classname]`ComponentEffect` updates the employee items whenever the department changes. For more about signals, see <<{articles}/flow/ui-state#,Managing UI State with Signals>>.
 
 As a next step, implement [methodname]`setPresentationValue()` to update the combo boxes according to a specified employee.
 
