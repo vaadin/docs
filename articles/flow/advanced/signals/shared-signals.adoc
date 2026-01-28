@@ -120,39 +120,10 @@ mapChildren.value().get("name"); // Alternative way of accessing 'John Doe'
 ====
 
 
-== Signal Factory
-
-The [classname]`SignalFactory` interface provides methods for creating signal instances based on a string key, value type, and initial value. It supports different strategies for creating instances:
-
-
-=== IN_MEMORY_SHARED
-
-Returns the same signal instance for the same name within the same JVM. This is similar to running the respective constructor to initialize a `static final` field.
-
-[source,java]
-----
-SharedNodeSignal shared = SignalFactory.IN_MEMORY_SHARED.node("myNode");
-SharedNumberSignal counter = SignalFactory.IN_MEMORY_SHARED.number("globalCounter");
-SharedValueSignal<String> name = SignalFactory.IN_MEMORY_SHARED.value("userName", String.class);
-----
-
-
-=== IN_MEMORY_EXCLUSIVE
-
-Always creates a new instance. Directly running the respective constructor typically leads to clearer code, but this factory can be used in cases where the same method supports multiple strategies.
-
-[source,java]
-----
-SharedNodeSignal exclusive = SignalFactory.IN_MEMORY_EXCLUSIVE.node("myNode");
-----
-
-The [classname]`SignalFactory` interface is the extension point for creating custom signal factories. Additional factory implementations are planned for creating signal instances that are shared across multiple JVMs in a cluster.
-
-
 == Reading Values
 
 
-=== value() Method
+=== Getting the Current Value
 
 The `value()` method returns the current locally-known value of the signal:
 
@@ -163,7 +134,7 @@ String current = signal.value();
 ----
 
 
-=== peek() Method
+=== Reading Without Registering Dependencies
 
 Use `peek()` to read a value without registering a dependency in effects or computed signals:
 
@@ -177,7 +148,7 @@ ComponentEffect.effect(component, () -> {
 ----
 
 
-=== peekConfirmed() Method
+=== Getting Cluster-Confirmed Values
 
 The `peekConfirmed()` method returns the last value that has been confirmed by the cluster. This is useful in distributed scenarios where you need to know the definitive server-confirmed state:
 
@@ -237,7 +208,7 @@ Shared signals are designed for concurrent access from multiple threads and user
 [source,java]
 ----
 // Safe to use from any thread - no ui.access() needed
-SharedNumberSignal counter = SignalFactory.IN_MEMORY_SHARED.number("counter");
+SharedNumberSignal counter = new SharedNumberSignal();
 
 // Multiple users can safely increment concurrently
 counter.incrementBy(1); // Atomic operation, UI updates automatically
@@ -286,7 +257,7 @@ Always store signals as class fields, not local variables. Local signal variable
 public class MyView extends VerticalLayout {
     // Good: Signal stored as a field
     private final SharedValueSignal<String> nameSignal =
-            SignalFactory.IN_MEMORY_SHARED.value("name", String.class);
+            new SharedValueSignal<>(String.class);
 
     // Good: Computed signal stored as a field
     private final Signal<String> greeting = nameSignal.map(n -> "Hello, " + n);
@@ -314,8 +285,7 @@ This example demonstrates a counter shared across all connected users:
 [source,java]
 ----
 public class SharedCounter extends VerticalLayout {
-    private final SharedNumberSignal counter =
-            SignalFactory.IN_MEMORY_SHARED.number("sharedCounter");
+    private final SharedNumberSignal counter = new SharedNumberSignal();
 
     public SharedCounter() {
         Button button = new Button();
@@ -337,7 +307,7 @@ public class SharedCounter extends VerticalLayout {
 ----
 public class SharedText extends FormLayout {
     private final SharedValueSignal<String> value =
-            SignalFactory.IN_MEMORY_SHARED.value("sharedText", String.class);
+            new SharedValueSignal<>(String.class);
 
     public SharedText() {
         TextField field = new TextField("Value");
@@ -367,7 +337,7 @@ Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.
 ----
 public class PersonList extends VerticalLayout {
     private final SharedListSignal<String> persons =
-            SignalFactory.IN_MEMORY_SHARED.list("persons", String.class);
+            new SharedListSignal<>(String.class);
 
     public PersonList() {
         Button addButton = new Button("Add Person", click -> {
@@ -404,7 +374,7 @@ You can create read-only versions of signals that don't allow modifications. The
 
 [source,java]
 ----
-SharedValueSignal<String> name = SignalFactory.IN_MEMORY_SHARED.value("name", String.class);
+SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
 SharedValueSignal<String> readOnlyName = name.asReadonly();
 
 // readOnlyName.value("new") would throw an exception
