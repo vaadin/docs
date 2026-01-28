@@ -244,27 +244,31 @@ The modified [classname]`MainView` class below shows how to add a [classname]`Bu
 @Route("")
 public class MainView extends VerticalLayout {
 
-    private ProgressBar progressBar = new ProgressBar();
-    private Button cancelButton = new Button("Cancel task execution");
+    private final ValueSignal<Boolean> taskRunning = new ValueSignal<>(false); // <1>
+    private final ProgressBar progressBar = new ProgressBar();
+    private final Button cancelButton = new Button("Cancel task execution");
 
     public MainView(BackendService backendService) {
         progressBar.setWidth("15em");
         progressBar.setIndeterminate(true);
 
-        progressBar.setVisible(false);
-        cancelButton.setVisible(false); // <1>
+        progressBar.bindVisible(taskRunning); // <2>
+        cancelButton.bindVisible(taskRunning);
 
         Button startButton = new Button("Start long-running task", clickEvent -> {
-            UI ui = clickEvent.getSource().getUI().orElseThrow();
+            taskRunning.value(true); // <3>
             ListenableFuture<String> future = backendService.longRunningTask();
-
-            progressBar.setVisible(true);
-            cancelButton.setVisible(true); // <2>
-            cancelButton.addClickListener(e -> future.cancel(true)); // <3>
+            cancelButton.addClickListener(e -> future.cancel(true));
 
             future.addCallback(
-                    successResult -> updateUi(ui, "Task finished: " + successResult),
-                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
+                    successResult -> {
+                        taskRunning.value(false); // <4>
+                        Notification.show("Task finished: " + successResult);
+                    },
+                    failureException -> {
+                        taskRunning.value(false);
+                        Notification.show("Task failed: " + failureException.getMessage());
+                    }
             );
         });
 
@@ -275,20 +279,27 @@ public class MainView extends VerticalLayout {
         add(startButton, new HorizontalLayout(progressBar, cancelButton), isBlockedButton);
     }
 
-    private void updateUi(UI ui, String result) {
-        ui.access(() -> {
-            Notification.show(result);
-            progressBar.setVisible(false);
-            cancelButton.setVisible(false); // <4>
-        });
-    }
-
 }
 ----
-<1> Like the [classname]`ProgressBar`, hide the *Cancel* [classname]`Button` by default.
-<2> Show the *Cancel* [classname]`Button` when the task is started.
-<3> The [classname]`Future` representing the long-running task is canceled when the *Cancel* [classname]`Button` is clicked.
-<4> When the task is completed or canceled, hide the cancel [classname]`Button`.
+<1> A [classname]`ValueSignal` centralizes the task running state.
+<2> Both components bind their visibility to the same signal using [methodname]`bindVisible()`.
+<3> Setting the signal value to `true` automatically shows both components.
+<4> Setting the signal value to `false` automatically hides both components. No [methodname]`ui.access()` is needed as signals handle thread-safe UI updates internally.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+[TIP]
+====
+Signals simplify this pattern by:
+
+* Centralizing the "task running" state in a single [classname]`ValueSignal`
+* Eliminating scattered [methodname]`setVisible()` calls throughout the code
+* Removing the need for [methodname]`ui.access()` since signals handle thread-safe UI updates internally
+
+For more about signals, see <<{articles}/flow/ui-state#,Managing UI State with Signals>>.
+====
 
 Here is the animation of the [classname]`MainView` with a *Cancel* [classname]`Button`.
 
