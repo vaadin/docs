@@ -176,32 +176,32 @@ This keeps documentation version-agnostic and maintainable.
 
 ### articles/getting-started
 
-This is the Getting Started section of the documentation. It consists of articles that help new users set up their development environments and offers tutorials that teach new users the basics of Vaadin. After completing the tutorials, users should know enough to start reading and utilizing the Building Apps guides.
+Environment setup and tutorials for new users. After completing these, users should be ready for the Building Apps guides.
 
 ### articles/building-apps
 
-This is the Building Apps section of the documentation. It consists of action-oriented, hands-on, opinionated guides that show the reader how to achieve a specific goal while building a business application. Rather than covering every possible aspect of a topic, the guides focus on the essentials and the most common use cases. They also highlight potential pitfalls and offer practical tips to avoid them. When applicable, the Building Apps guides should include code snippets at the top that can be copy-pasted into a project as-is.
+Action-oriented, opinionated how-to guides for building business applications. Focus on essentials, common use cases, pitfalls, and practical tips. Include copy-paste ready code snippets at the top when applicable.
 
-It may also contain deep dive articles that take a broader and more conceptual approach to building business applications. Unlike the structured how-to guides, these articles explore the reasoning behind certain practices, provide in-depth knowledge, and offer insights, opinions, and alternative approaches.
+Also contains deep dive articles that explore concepts, reasoning behind practices, and alternative approaches.
 
 ### articles/flow
 
-This is the Vaadin Reference section of the documentation. It contains the reference documentation for Vaadin Framework. Articles in this section describe which features Vaadin has, what they do, and how to use them on an API level. The articles are technical, code centric, to-the-point, and unopinionated. They form the basis on which the Building Apps articles are written.
+Vaadin Framework reference documentation. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
 
-This directory used to contain the full Vaadin framework documentation, including tutorials and how-to guides. You can therefore find old articles that do not fit the criteria of a reference article. These articles should be edited and split into corresponding Building Apps guides and reference articles.
+**Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
 
 ### articles/hilla
 
-This directory contains the documentation for the Hilla framework. It has been discontinued as a standalone product and relevant features are being merged into Vaadin framework. Relevant parts of the documentation in this directory should be migrated to /articles/flow.
+Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
 ### articles/components
 
-This directory contains the documentation for the Vaadin components. Every component has its own section that explains the component's capabilities, how to use it, and how to style it.
+Component documentation covering capabilities, usage, and styling for each Vaadin component.
 
 ### articles/styling
 
-This directory contains documentation about styling Vaadin applications on a more general level.
+General styling guidance for Vaadin applications.
 
 ### articles/tools
 
-This directory contains the documentation for the official Vaadin tools.
+Documentation for official Vaadin tools.
