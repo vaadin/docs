@@ -125,6 +125,23 @@ Common include options:
 - `tags=snippet` - Includes only tagged sections
 - `indent=0` - Removes indentation
 
+### Choosing Between Source Files and Inline Code
+
+**Use compilable source files** (included via `include::{root}/`) when:
+- Code needs to be rendered as a **live, interactive demo** (uses `render` attribute)
+- Same example should be shown in **multiple frameworks** (Flow/Lit/React variants)
+- Code is **complex or long** (typically 30+ lines) and benefits from compilation testing
+- It's a **reusable reference implementation** for a component feature
+- Writing **component documentation** (articles/components/)
+
+**Use inline code** when:
+- Showing **design patterns or architectural concepts** rather than specific features
+- Snippets are **short and illustrative** (typically under 30 lines)
+- Examples are **configuration** (properties, XML, CSS, annotations)
+- Writing **how-to guides or deep dives** where the focus is education, not live demos
+- Code is **pseudo-code or conceptual** - showing intent, not a complete implementation
+- Multiple **small variations** are easier to compare side-by-side inline
+
 ## Documentation Types
 
 ### How-To Guides (articles/building-apps)
