@@ -8,10 +8,11 @@ This is the Vaadin Documentation repository. It contains documentation for all V
 
 ## Directories
 
+* .github/styles/ - Configuration files for Vale, which define the writing style guide and formatting rules for the documentation.
 * articles/ - the actual documentation, written in AsciiDoc.
 * src/ - compilable Java source code examples that can be referred to from the documentation articles.
 * frontend/ - TypeScript/frontend code examples that can be referred to from the documentation articles.
-* dspublisher/ - Vaadin's Design System Publisher which is used to publish the documentation
+* dspublisher/ - Configuration files for Vaadin Design System Publisher, which is used to build the documentation website.
 
 ## Development Workflow
 
@@ -177,7 +178,7 @@ Common include options:
 
 ### Style Linting
 
-The repository uses Vale for automated style checking. Configuration is in `.vale.ini`.
+The repository uses Vale for automated style checking. Configuration is in `.vale.ini`, and style rules are in the `.github/styles/` folder.
 
 ### Version References
 
