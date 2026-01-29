@@ -22,6 +22,8 @@ Vaadin components provide direct binding methods for common properties. These bi
 
 [source,java]
 ----
+import com.vaadin.signals.local.ValueSignal;
+
 ValueSignal<String> name = new ValueSignal<>("World");
 
 Span greeting = new Span();
@@ -79,6 +81,8 @@ Use [methodname]`map()` to transform signal values before display:
 
 [source,java]
 ----
+import com.vaadin.signals.shared.SharedNumberSignal;
+
 SharedNumberSignal counter = new SharedNumberSignal();
 
 Button button = new Button();
@@ -173,14 +177,14 @@ Enable a submit button only when the form is valid:
 ValueSignal<String> email = new ValueSignal<>("");
 ValueSignal<String> password = new ValueSignal<>("");
 
-Signal<Boolean> isFormValid = Signal.computed(() -> {
+Signal<Boolean> formValid = Signal.computed(() -> {
     String e = email.value();
     String p = password.value();
     return e.contains("@") && p.length() >= 8;
 });
 
 Button submitButton = new Button("Sign Up");
-submitButton.bindEnabled(isFormValid);
+submitButton.bindEnabled(formValid);
 // Button enables only when email contains @ and password has 8+ characters
 ----
 
@@ -191,6 +195,8 @@ Use [methodname]`bindValue()` on form fields to create two-way binding. Changes 
 
 [source,java]
 ----
+import com.vaadin.signals.shared.SharedValueSignal;
+
 SharedValueSignal<String> username = new SharedValueSignal<>(String.class);
 
 TextField usernameField = new TextField("Username");
@@ -243,13 +249,13 @@ Use [methodname]`bindReadOnly()` to control the read-only state of a form field:
 
 [source,java]
 ----
-ValueSignal<Boolean> isLocked = new ValueSignal<>(false);
+ValueSignal<Boolean> locked = new ValueSignal<>(false);
 
 TextField field = new TextField("Document title");
-field.bindReadOnly(isLocked);
+field.bindReadOnly(locked);
 // Field is editable initially
 
-Button lockButton = new Button("Lock", e -> isLocked.value(true));
+Button lockButton = new Button("Lock", e -> locked.value(true));
 // After clicking: field becomes read-only
 ----
 
@@ -260,14 +266,14 @@ Use [methodname]`getThemeList().bind()` to toggle theme variants based on a sign
 
 [source,java]
 ----
-ValueSignal<Boolean> isDarkMode = new ValueSignal<>(false);
+ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
 
 VerticalLayout layout = new VerticalLayout();
-layout.getThemeList().bind("dark", isDarkMode);
-// Dark theme applied when isDarkMode is true
+layout.getThemeList().bind("dark", darkMode);
+// Dark theme applied when darkMode is true
 
 Button toggleTheme = new Button("Toggle Dark Mode");
-toggleTheme.addClickListener(e -> isDarkMode.update(v -> !v));
+toggleTheme.addClickListener(e -> darkMode.update(v -> !v));
 ----
 
 
@@ -277,12 +283,12 @@ Bind multiple independent theme variants:
 
 [source,java]
 ----
-ValueSignal<Boolean> isCompact = new ValueSignal<>(false);
-ValueSignal<Boolean> isBordered = new ValueSignal<>(true);
+ValueSignal<Boolean> compact = new ValueSignal<>(false);
+ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
 
 Grid<Person> grid = new Grid<>();
-grid.getThemeList().bind("compact", isCompact);
-grid.getThemeList().bind("row-stripes", isBordered);
+grid.getThemeList().bind("compact", compact);
+grid.getThemeList().bind("row-stripes", rowStripes);
 ----
 
 
@@ -325,6 +331,8 @@ Use [methodname]`ComponentEffect.bindChildren()` to efficiently render a list of
 
 [source,java]
 ----
+import com.vaadin.signals.shared.SharedListSignal;
+
 SharedListSignal<String> items = new SharedListSignal<>(String.class);
 
 VerticalLayout container = new VerticalLayout();
@@ -359,6 +367,8 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     row.setAlignItems(FlexComponent.Alignment.CENTER);
 
     Checkbox checkbox = new Checkbox();
+    checkbox.addValueChangeListener(e ->
+        todoSignal.update(t -> new Todo(t.text(), e.getValue())));
     checkbox.bindValue(todoSignal.map(Todo::done));
 
     Span text = new Span();
