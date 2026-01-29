@@ -1,0 +1,268 @@
+---
+title: Custom Upload
+page-title: Custom Upload with Upload Manager | Vaadin components
+description: Build custom file upload experiences with modular components and flexible layouts.
+meta-description: Learn how to create custom file upload experiences in Vaadin using the Upload Manager and modular upload components.
+section-nav: badge-preview
+---
+
+
+= Custom Upload
+
+[role="since:com.vaadin:vaadin@V25.1"]
+
+:preview-feature: Custom Upload components
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+The default <<index#,Upload>> component provides a complete, opinionated upload experience with a built-in drop zone, button, and file list. For use cases that require a different layout or integration into other UI components, Vaadin provides modular upload components that can be combined and placed independently.
+
+The modular upload components include:
+
+[classname]`UploadManager`:: A non-visual manager that handles file upload state, constraints, and server communication.
+[classname]`UploadButton`:: A button that opens the file picker dialog.
+[classname]`UploadDropZone`:: A container that accepts dropped files and can wrap other content.
+[classname]`UploadFileList`:: Displays upload progress, status, and file actions.
+
+These components work together through the [classname]`UploadManager`, which coordinates the upload process while the UI components can be placed anywhere in your layout.
+
+
+== When to Use Custom Upload
+
+Consider using custom upload components when:
+
+- The file upload needs to be embedded in another component (for example, a chat input, form field, or toolbar)
+- The file list should be displayed separately from the upload trigger
+- You need a compact upload button without the drop zone
+- The drop zone needs to wrap other content (for example, a text area)
+
+For standard file upload needs with a traditional layout, the default <<index#,Upload>> component is recommended.
+
+
+== Basic Usage
+
+The example below shows a compact file upload with the button and file list displayed separately. This layout is useful when space is limited or when the file list needs to appear in a different location.
+
+[.example]
+--
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-manager-basic.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadManagerBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/upload/react/upload-manager-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+The [classname]`UploadManager` is created with an upload handler that processes the files. The [classname]`UploadButton` and [classname]`UploadFileList` components are linked to the manager and can be placed anywhere in the layout.
+
+
+ifdef::flow[]
+== Owner Component Lifecycle
+
+The [classname]`UploadManager` requires an owner component, typically the view or layout containing the upload UI. The manager's lifecycle is tied to the owner's lifecycle:
+
+- When the owner is detached from the UI, uploads stop working
+- The manager is added as a virtual child of the owner (it does not appear in the DOM)
+- Events fired by the manager use the owner as their source component
+
+[source,java]
+----
+// The view itself is typically used as the owner
+public class MyView extends VerticalLayout {
+    public MyView() {
+        var manager = new UploadManager(this, handler);
+        // ...
+    }
+}
+----
+
+This design ensures that the upload infrastructure is automatically cleaned up when the view is removed, preventing resource leaks.
+endif::[]
+
+
+== Using a Drop Zone
+
+The [classname]`UploadDropZone` component provides drag-and-drop functionality. It can wrap other content, allowing users to drop files onto a larger area.
+
+[.example]
+--
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/upload/upload-manager-drop-zone.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/upload/UploadManagerDropZone.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/upload/react/upload-manager-drop-zone.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+The drop zone applies a `dragover` attribute when files are dragged over it, which can be styled using CSS.
+
+
+ifdef::flow[]
+== Upload Handler
+
+The [classname]`UploadManager` uses the [interfacename]`UploadHandler` API to process uploaded files. This is the same API used by the standard Upload component.
+
+[source,java]
+----
+// In-memory handling for small files
+var handler = UploadHandler.inMemory((metadata, data) -> {
+    String fileName = metadata.fileName();
+    String mimeType = metadata.contentType();
+    // Process the file data...
+});
+
+// File system handling for larger files
+var handler = UploadHandler.toFile((metadata) -> {
+    return Path.of("/uploads", metadata.fileName());
+});
+----
+
+See <<file-handling#,File Handling>> for more details on processing uploaded files.
+endif::[]
+
+
+== Configuration
+
+The [classname]`UploadManager` provides the same configuration options as the standard Upload component.
+
+
+=== File Constraints
+
+Set limits on file count, size, and accepted types:
+
+[source,java]
+----
+manager.setMaxFiles(5);
+manager.setMaxFileSize(10 * 1024 * 1024); // 10 MB
+manager.setAcceptedFileTypes("image/*", "application/pdf");
+----
+
+File constraint violations trigger the file rejected event and are displayed in the [classname]`UploadFileList`.
+
+
+=== Auto-Upload
+
+By default, files are uploaded immediately when selected. Disable auto-upload to let users review files before starting the upload:
+
+[source,java]
+----
+manager.setAutoUpload(false);
+----
+
+
+ifdef::flow[]
+== Disabling Uploads
+
+[WARNING]
+====
+Disabling UI components ([classname]`UploadButton`, [classname]`UploadDropZone`) only affects the user interface. A malicious client can still initiate uploads by sending requests directly to the server. To securely prevent uploads, you must disable the [classname]`UploadManager` itself.
+====
+
+Use [methodname]`setEnabled()` on the manager to securely control whether uploads are allowed:
+
+[source,java]
+----
+// Securely disable all uploads
+manager.setEnabled(false);
+
+// Re-enable uploads
+manager.setEnabled(true);
+----
+
+Disabling the manager prevents the server from accepting upload requests, regardless of the state of UI components. This is the authoritative server-side control for upload permissions.
+
+You can also disable individual UI components for visual feedback, but this should always be combined with disabling the manager for security:
+
+[source,java]
+----
+// Disable both for security AND visual feedback
+manager.setEnabled(false);
+uploadButton.setEnabled(false);
+dropZone.setEnabled(false);
+----
+endif::[]
+
+
+== Event Listeners
+
+The [classname]`UploadManager` provides events for monitoring the upload process:
+
+[source,java]
+----
+manager.addFileRejectedListener(event -> {
+    Notification.show(event.getErrorMessage());
+});
+
+manager.addFileRemovedListener(event -> {
+    // Handle file removal
+});
+
+manager.addAllFinishedListener(event -> {
+    // All uploads completed (success, failed, or aborted)
+});
+----
+
+
+== Internationalization (i18n)
+
+The [classname]`UploadFileList` component supports internationalization for its labels and messages:
+
+ifdef::flow[]
+[source,java]
+----
+var i18n = new UploadFileListI18N()
+    .setFile(new UploadFileListI18N.File()
+        .setRetry("Try again")
+        .setStart("Upload")
+        .setRemove("Delete"))
+    .setError(new UploadFileListI18N.Error()
+        .setTooManyFiles("Too many files")
+        .setFileIsTooBig("File is too large")
+        .setIncorrectFileType("Invalid file type"));
+
+fileList.setI18n(i18n);
+----
+endif::[]
+
+
+== Related Components
+
+|===
+
+|<<index#,Upload>>
+|The default Upload component with built-in drop zone, button, and file list.
+
+|<<../progress-bar#,Progress Bar>>
+|Component for showing task completion progress.
+
+|===
+
+
+[discussion-id]`UPLOAD-MANAGER-CUSTOM-UPLOAD`
