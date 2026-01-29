@@ -1,7 +1,7 @@
 ---
 title: Component Bindings
 page-title: Component Bindings with Signals in Vaadin Flow
-description: Using signals to build reactive user interfaces with component bindings in Vaadin Flow.
+description: Using signals to build reactive user interfaces with component bindings.
 meta-description: Learn how to bind signals to Vaadin components for reactive text, visibility, enabled state, form fields, and dynamic lists.
 order: 10
 ---
@@ -18,7 +18,12 @@ include::{articles}/_preview-banner.adoc[opts=optional]
 
 == Overview
 
-Vaadin components provide direct binding methods for common properties. These bindings create a reactive connection between your data and the UI:
+Vaadin components provide direct binding methods for common properties. These bindings create a reactive connection between your data and the UI. This section covers the general-purpose component-level binding APIs. For lower-level Element bindings, see <<element-bindings#,Element Bindings>>.
+
+
+== Signal Basics
+
+Signals hold reactive values. The most common type is [classname]`ValueSignal`:
 
 [source,java]
 ----
@@ -32,27 +37,6 @@ greeting.bindText(name.map(n -> "Hello, " + n + "!"));
 
 name.value("Vaadin");
 // Automatically updates to "Hello, Vaadin!"
-----
-
-This section covers the component-level binding APIs that most developers use. For lower-level Element bindings, see <<element-bindings#,Element Bindings>>.
-
-
-== Signal Basics
-
-Signals hold reactive values. The most common type is [classname]`ValueSignal`:
-
-[source,java]
-----
-ValueSignal<String> name = new ValueSignal<>("initial value");
-name.value("new value");  // Write
-String current = name.value();  // Read
-----
-
-Use [methodname]`map()` to transform a signal's value:
-
-[source,java]
-----
-Signal<String> upper = name.map(String::toUpperCase);
 ----
 
 For complete coverage of signal types and operations, see <<local-signals#,Local Signals>> and <<shared-signals#,Shared Signals>>.
@@ -96,7 +80,7 @@ button.addClickListener(e -> counter.incrementBy(1));
 
 === Combining Multiple Signals
 
-Use [methodname]`Signal.computed()` to combine values from multiple signals:
+Use a lambda to combine values from multiple signals:
 
 [source,java]
 ----
@@ -104,12 +88,19 @@ ValueSignal<String> firstName = new ValueSignal<>("John");
 ValueSignal<String> lastName = new ValueSignal<>("Doe");
 
 Span fullName = new Span();
-fullName.bindText(Signal.computed(() ->
-    firstName.value() + " " + lastName.value()));
+fullName.bindText(() -> firstName.value() + " " + lastName.value());
 // Displays "John Doe"
 
 firstName.value("Jane");
 // Automatically updates to "Jane Doe"
+----
+
+For expensive computations, wrap the lambda in [methodname]`Signal.computed()` to cache the result:
+
+[source,java]
+----
+fullName.bindText(Signal.computed(() ->
+    firstName.value() + " " + lastName.value()));
 ----
 
 
@@ -163,7 +154,7 @@ submitButton.bindEnabled(termsAccepted);
 // Button is disabled initially
 
 Checkbox termsCheckbox = new Checkbox("I accept the terms");
-termsCheckbox.addValueChangeListener(e -> termsAccepted.value(e.getValue()));
+termsCheckbox.bindValue(termsAccepted);
 // Button enables when checkbox is checked
 ----
 
@@ -369,7 +360,8 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     Checkbox checkbox = new Checkbox();
     checkbox.addValueChangeListener(e ->
         todoSignal.update(t -> new Todo(t.text(), e.getValue())));
-    checkbox.bindValue(todoSignal.map(Todo::done));
+    ComponentEffect.bind(checkbox, todoSignal,
+        (cb, todo) -> cb.setValue(todo.done()));
 
     Span text = new Span();
     text.bindText(todoSignal.map(Todo::text));
@@ -463,7 +455,8 @@ public class TaskManager extends VerticalLayout {
             Checkbox doneCheckbox = new Checkbox();
             doneCheckbox.addValueChangeListener(e ->
                 taskSignal.update(t -> new Task(t.text(), e.getValue())));
-            doneCheckbox.bindValue(taskSignal.map(Task::done));
+            ComponentEffect.bind(doneCheckbox, taskSignal,
+                (cb, task) -> cb.setValue(task.done()));
 
             Span taskText = new Span();
             taskText.bindText(taskSignal.map(Task::text));
@@ -487,6 +480,7 @@ public class TaskManager extends VerticalLayout {
 This example demonstrates:
 
 - Two-way binding with form fields ([methodname]`bindValue()`)
+- One-way binding with [methodname]`ComponentEffect.bind()`
 - Conditional button enabling ([methodname]`bindEnabled()`)
 - Computed signals for derived values
 - List rendering with [methodname]`ComponentEffect.bindChildren()`
