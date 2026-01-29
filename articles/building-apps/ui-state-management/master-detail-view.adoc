@@ -1,0 +1,91 @@
+---
+title: Master-Detail View
+page-title: Reactive Master-Detail View with Signals
+description: Learn how to implement a reactive master-detail pattern using Vaadin Signals.
+meta-description: Master-detail views are common in business applications. Learn how to use Signals to handle selection, fetch details, and bind them to the UI reactively.
+order: 40
+---
+
+= Master-Detail View
+
+A master-detail view is a common UI pattern where selecting an item from a list (the master) displays its full details in a separate panel (the detail).
+
+In a reactive application, the selection itself is a piece of state. When this state changes, the application should automatically fetch the corresponding details and update the UI. Signals make this pattern clean and declarative.
+
+== Implementation Strategy
+
+To implement a reactive master-detail view, you need:
+
+1.  **Selection State**: A `WritableSignal` to hold the currently selected item.
+2.  **Derived Details**: A `Computed` signal that automatically fetches details whenever the selection changes.
+3.  **Reactive Binding**: UI components that bind to these signals and update automatically.
+
+== Example: Invoice Management
+
+The following example shows an invoice management view. Selecting an invoice in the `Grid` updates a `selectedInvoiceSignal`. A computed `invoiceDetailsSignal` then reacts to this change by fetching the full invoice details (including line items) from a service.
+
+[source,java]
+----
+@Route("building-apps/ui-state-management/master-detail")
+public class MasterDetailInvoiceView extends VerticalLayout {
+
+    private final SharedListSignal<Invoice> invoiceListSignal = new SharedListSignal<>(Invoice.class);
+    private final SharedListSignal<LineItem> lineItemsSignal = new SharedListSignal<>(LineItem.class);
+
+    public MasterDetailInvoiceView(InvoiceService invoiceService) {
+        // ... load initial data into invoiceListSignal ...
+
+        // 1. Selection State
+        WritableSignal<Invoice> selectedInvoiceSignal = new ValueSignal<>(EMPTY_INVOICE);
+
+        // 2. Derived Details
+        Signal<InvoiceDetails> invoiceDetailsSignal = Signal.computed(() -> {
+            Invoice selected = selectedInvoiceSignal.value();
+            return (selected != null && !selected.getId().isEmpty())
+                    ? invoiceService.fetchInvoiceDetails(selected.getId())
+                    : EMPTY_DETAILS;
+        });
+
+        // 3. Reactive Binding
+        Grid<Invoice> invoiceGrid = new Grid<>(Invoice.class);
+        // ... configure columns ...
+
+        // Bind grid items to the list signal
+        ComponentEffect.bind(invoiceGrid, invoiceListSignal, (grid, items) -> grid.setItems(invoiceListSignal.value().stream().map(SharedValueSignal::peek).toList()));
+
+        // Update selection state when a row is clicked
+        invoiceGrid.asSingleSelect().addValueChangeListener(e -> selectedInvoiceSignal.value(e.getValue() != null ? e.getValue() : EMPTY_INVOICE));
+
+        // The detail panel binds to invoiceDetailsSignal
+        VerticalLayout detailsPanel = createDetailPanel(invoiceDetailsSignal);
+        // ...
+    }
+}
+----
+
+=== Handling Line Items
+
+In this example, the invoice details include a list of line items. We use another `SharedListSignal` to manage these items reactively. When the `invoiceDetailsSignal` changes, we sync the `lineItemsSignal`:
+
+[source,java]
+----
+ComponentEffect.effect(this, () -> {
+    lineItemsSignal.clear();
+    invoiceDetailsSignal.value().getLineItems().forEach(lineItemsSignal::insertLast);
+});
+----
+
+This ensures that any component bound to `lineItemsSignal` (like the line items grid) updates automatically whenever a new invoice is selected.
+
+=== Conditional Visibility
+
+The detail panel should only be visible when an invoice is selected. We can achieve this using the `bindVisible()` method:
+
+[source,java]
+----
+detailsPanel.bindVisible(invoiceDetailsSignal.map(d ->
+    d != null && !d.getInvoice().getId().isEmpty()
+));
+----
+
+This declarative approach eliminates the need for manual visibility toggling in event listeners.

@@ -1,0 +1,71 @@
+---
+title: Reactive Dashboard
+page-title: Building a Reactive Dashboard with Signals
+description: Learn how to build a real-time reactive dashboard using Vaadin Signals.
+meta-description: Explore how to use ValueSignal, NumberSignal, and ListSignal to create a live-updating dashboard in Vaadin Flow.
+order: 30
+---
+
+= Reactive Dashboard
+
+A dashboard is a classic use case for reactive programming. It often requires displaying multiple live-updating metrics, real-time charts, and data tables that stay in sync without full-page reloads.
+
+In this guide, you'll learn how to build a reactive dashboard using **Signals**. Signals simplify the implementation by providing a declarative way to bind your data (state) to UI components.
+
+== Implementation Strategy
+
+To build a reactive dashboard, we use a combination of layout components and signals:
+
+* **`Dashboard` and `DashboardWidget`**: To create a responsive, grid-based layout for the dashboard elements.
+* **`ValueSignal`**: To store individual metrics like "Current Users" or "Conversion Rate".
+* **`SharedListSignal`**: To manage a collection of data, such as service health status.
+* **`ComponentEffect`**: To bind these signals to UI components like `Span` for text or `Grid` for data tables.
+
+== The Reactive Dashboard View
+
+The following example demonstrates a dashboard with highlight cards for metrics and a grid for service health. The metrics and grid items are updated periodically to simulate real-time data flow.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/uistatemanagement/ReactiveDashboardView.java[indent=0]
+----
+
+== Key Concepts
+
+=== Live Metrics with `ValueSignal`
+
+Each highlight card is backed by a `ValueSignal<Double>`. When the signal's value changes, the UI automatically updates:
+
+[source,java]
+----
+// Create a signal for the metric
+private final WritableSignal<Double> currentUsersSignal = new ValueSignal<>(745.0);
+
+// Bind it to the UI inside an effect
+ComponentEffect.effect(this, () -> {
+    valueSpan.setText(format.apply(currentUsersSignal.value()));
+});
+----
+
+=== Real-time Grid with `SharedListSignal`
+
+The service health grid uses a `SharedListSignal`. This allows the grid to update when items are added or removed, and also when individual items within the list are modified.
+
+[source,java]
+----
+// Bind the grid to the list signal
+ComponentEffect.bind(grid, serviceHealthSignal, (g, items) -> {
+    g.setItems(items != null ? items : List.of());
+});
+
+// Update an individual item in the list
+serviceHealthSignal.value().get(0).value(newHealthData);
+----
+
+Using `SharedListSignal` ensures that only the affected rows in the grid are refreshed when data changes, rather than reloading the entire dataset.
+
+== Benefits of Signals for Dashboards
+
+* **Declarative UI**: You define *what* should be displayed based on the state, and Vaadin handles *when* to update the UI.
+* **Granular Updates**: Signals enable fine-grained updates, minimizing the amount of data sent to the browser.
+* **Simplified Sync**: Multiple components can depend on the same signal, ensuring they always display consistent information without manual event coordination.

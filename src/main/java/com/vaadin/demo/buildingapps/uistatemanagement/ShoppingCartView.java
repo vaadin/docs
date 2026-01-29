@@ -28,7 +28,8 @@ public class ShoppingCartView extends VerticalLayout {
         var subtotal = Signal.computed(() ->
             cartItems.value().stream()
                 .map(SharedValueSignal::value)
-                .map(item -> item.product().price().multiply(BigDecimal.valueOf(item.quantity())))
+                .map(item -> BigDecimal.valueOf(item.product().price())
+                    .multiply(BigDecimal.valueOf(item.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
         );
 
