@@ -70,6 +70,18 @@ ValueSignal<Integer> counter = new ValueSignal<>(0);
 counter.update(current -> current + 1);
 ----
 
+This is particularly useful for updating records or beans where you need to create a new instance with modified properties:
+
+[source,java]
+----
+record Task(String text, TaskState state) {}
+
+ValueSignal<Task> taskSignal = new ValueSignal<>(new Task("Write docs", TaskState.PENDING));
+
+// Update task state by creating a new record with the modified value
+taskSignal.update(t -> new Task(t.text(), TaskState.COMPLETED));
+----
+
 
 == Replacing Values
 
@@ -122,7 +134,7 @@ public class MyView extends VerticalLayout {
 
     public MyView() {
         TextField field = new TextField();
-        field.addValueChangeListener(e -> localState.value(e.getValue()));
+        field.bindValue(localState);
 
         Span output = new Span();
         output.bindText(localState);
@@ -131,7 +143,10 @@ public class MyView extends VerticalLayout {
 }
 ----
 
-However, local signals are scoped to a single server instance and cannot be used in clustered deployments. If you need state that works across a cluster or is shared between users, use <<shared-signals#,Shared Signals>> instead.
+[NOTE]
+When updating signals from background threads, ensure your application has the `@Push` annotation enabled. This allows the server to push UI updates to the client when signal values change asynchronously.
+
+However, local signals are scoped to a single server instance. Vaadin doesn't yet provide an integrated solution for sharing local signals within a cluster. If you need state that works across a cluster or is shared between users, use <<shared-signals#,Shared Signals>> instead.
 
 
 == Transaction Limitations
@@ -148,7 +163,7 @@ Signal.runInTransaction(() -> {
 });
 ----
 
-Use shared signals if you need transactional guarantees.
+Use shared signals if you need transactional guarantees. See <<transactions#,Transactions>> for more information about signal transactions.
 
 
 == Peeking Values
@@ -167,25 +182,9 @@ ComponentEffect.effect(component, () -> {
 ----
 
 
-== Subscribing to Changes
-
-Use the `subscribe()` method to react to signal value changes:
-
-[source,java]
-----
-ValueSignal<String> signal = new ValueSignal<>("Hello");
-
-signal.subscribe(() -> {
-    System.out.println("Signal value changed to: " + signal.value());
-});
-----
-
-For UI updates, prefer using <<effects-computed#,ComponentEffect>> which automatically manages the subscription lifecycle based on component attachment.
-
-
 == Transforming Signal Values
 
-Use the `map()` method to create a derived signal that transforms the original value:
+Use the `map()` method to create a computed signal that transforms the original value:
 
 [source,java]
 ----
@@ -199,29 +198,27 @@ Signal<String> upperName = name.map(String::toUpperCase);
 Use `map()` for single-signal transformations. For transformations depending on multiple signals, use `Signal.computed()` instead.
 
 
-== Storing Signals as Fields
+== Organizing Signals as Fields
 
-Always store signals as class fields, not local variables. Local signal variables may be garbage collected, causing computed signals and subscriptions to stop working:
+Storing signals as class fields is recommended for better code organization. It keeps all reactive state together at the top of the class, making it easier to understand the component's state at a glance:
 
 [source,java]
 ----
 public class MyView extends VerticalLayout {
-    // Good: Signal stored as a field
+    // State is clearly visible at the top of the class
     private final ValueSignal<String> nameSignal = new ValueSignal<>("");
-
-    // Good: Computed signal stored as a field
     private final Signal<String> greeting = nameSignal.map(n -> "Hello, " + n);
 
     public MyView() {
-        // Bad: Local computed signal may be garbage collected
-        // Signal<String> localComputed = nameSignal.map(n -> "Hi, " + n);
-
+        // Components can be local variables since they're added to the layout
         Span greetingSpan = new Span();
         greetingSpan.bindText(greeting);
         add(greetingSpan);
     }
 }
 ----
+
+This pattern also allows computed signals to be defined declaratively alongside their source signals, making the reactive dependencies clear.
 
 
 == Use Cases
