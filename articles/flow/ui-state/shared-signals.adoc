@@ -1,0 +1,317 @@
+---
+title: Shared Signals
+page-title: Shared Signals for Multi-User State in Vaadin Flow
+description: Using shared signals for thread-safe, multi-user state management.
+meta-description: Learn how to use SharedValueSignal, SharedNumberSignal, SharedListSignal, and other shared signal types.
+order: 40
+---
+
+
+= Shared Signals
+
+Shared signals provide thread-safe, transactional state management for scenarios where state needs to be synchronized across multiple users or sessions. They are ideal for collaborative features, real-time dashboards, and any state that multiple users need to access concurrently.
+
+All shared signals use an underlying JSON data representation that is replaced on modification. When reading a value, a new instance is created from the internal JSON representation, so the value object is never modified directly or concurrently. This immutability ensures thread-safe access without explicit synchronization.
+
+:preview-feature: Signals
+:feature-flag: com.vaadin.experimental.flowFullstackSignals
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== Shared Signal Types
+
+Several shared signal types are available for different use cases.
+
+[cols="1,2", options="header"]
+|===
+| Signal Type | Description
+
+| `SharedValueSignal<T>`
+| Single value of any type, updated atomically
+
+| `SharedNumberSignal`
+| Numeric value with atomic increment/decrement operations
+
+| `SharedListSignal<T>`
+| Ordered list with per-item change tracking
+
+| `SharedMapSignal<T>`
+| Key-value map with string keys and per-entry change tracking
+
+| `SharedNodeSignal`
+| Tree structure combining value, list, and map capabilities
+|===
+
+
+=== SharedValueSignal
+
+A signal containing a single value. The value is updated as a single atomic change.
+
+[source,java]
+----
+import com.vaadin.signals.shared.SharedValueSignal;
+
+SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
+name.value("John Doe"); // Set the value
+String currentName = name.value(); // Get the value
+----
+
+
+=== SharedNumberSignal
+
+A specialized signal for numeric values with support for atomic increments and decrements. The signal value is represented as a `double` and there are methods to access the value as an `int`.
+
+[source,java]
+----
+import com.vaadin.signals.shared.SharedNumberSignal;
+
+SharedNumberSignal counter = new SharedNumberSignal();
+counter.value(5); // Set the value
+counter.incrementBy(1); // Increment by 1
+counter.incrementBy(-2); // Decrement by 2
+int count = counter.valueAsInt(); // Get the value as int
+----
+
+
+=== SharedListSignal
+
+A signal containing a list of values. Each value in the list is accessed as a separate [classname]`SharedValueSignal`. This is different from `SharedValueSignal<List<T>>` - a [classname]`SharedListSignal` tracks both structural changes (additions, removals, reordering) and individual item changes, while `SharedValueSignal<List<T>>` only notifies when the entire list is replaced.
+
+[source,java]
+----
+import com.vaadin.signals.shared.SharedListSignal;
+
+SharedListSignal<Person> persons = new SharedListSignal<>(Person.class);
+persons.insertFirst(new Person("Jane", 25)); // Add to the beginning
+persons.insertLast(new Person("John", 30)); // Add to the end
+persons.insert(1, new Person("Bob", 20)); // Insert at specific index
+List<SharedValueSignal<Person>> personList = persons.value(); // Get all persons
+personList.get(0).value(new Person("Alice", 22)); // Update the value of a child signal
+----
+
+
+=== SharedMapSignal
+
+A signal containing a map of values with string keys (keys are always `String` type). Each value in the map is accessed as a separate [classname]`SharedValueSignal`.
+
+[source,java]
+----
+import com.vaadin.signals.shared.SharedMapSignal;
+
+SharedMapSignal<String> properties = new SharedMapSignal<>(String.class);
+properties.put("name", "John"); // Add or update a property
+properties.putIfAbsent("age", "30"); // Add only if not present
+SharedValueSignal<String> nameSignal = properties.get("name"); // Get signal for a key
+Map<String, SharedValueSignal<String>> propertyMap = properties.value(); // Get all properties
+properties.remove("age"); // Remove an entry
+----
+
+
+=== SharedNodeSignal
+
+A signal representing a node in a tree structure. A node can have its own value and child signals accessed by order or by key. A child node is always either a list child or a map child, but it cannot have both roles at the same time.
+
+[source,java]
+----
+import com.vaadin.signals.shared.SharedNodeSignal;
+
+SharedNodeSignal user = new SharedNodeSignal();
+user.putChildWithValue("name", "John Doe"); // Add a map child
+user.putChildWithValue("age", 30); // Add another map child
+user.insertChildWithValue("Reading", ListPosition.last()); // Add a hobby as a list child
+
+user.value().mapChildren().get("name").asValue(String.class).value(); // Access 'John Doe'
+user.value().mapChildren().get("age").asValue(Integer.class).value(); // Access 30
+user.value().listChildren().getLast().asValue(String.class).value(); // Access 'Reading'
+
+SharedMapSignal<String> mapChildren = user.asMap(String.class); // Access all map children
+mapChildren.value().get("name"); // Alternative way of accessing 'John Doe'
+----
+
+
+== Reading Values
+
+
+=== Getting the Current Value
+
+The `value()` method returns the current locally-known value of the signal:
+
+[source,java]
+----
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
+String current = signal.value();
+----
+
+
+=== Reading Without Registering Dependencies
+
+Use `peek()` to read a value without registering a dependency in effects or computed signals:
+
+[source,java]
+----
+ComponentEffect.effect(component, () -> {
+    // peek() doesn't register a dependency
+    String peeked = signal.peek();
+    // This effect won't re-run when signal changes
+});
+----
+
+
+=== Getting Cluster-Confirmed Values
+
+The `peekConfirmed()` method returns the last value that has been confirmed by the cluster. This is useful in distributed scenarios where you need to know the definitive server-confirmed state:
+
+[source,java]
+----
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
+
+// Get the locally-known value (may include optimistic updates)
+String optimistic = signal.value();
+
+// Get only the cluster-confirmed value
+String confirmed = signal.peekConfirmed();
+----
+
+In single-server deployments, `peekConfirmed()` typically returns the same value as `value()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
+
+
+== Writing Values
+
+All shared signals provide atomic write operations:
+
+[source,java]
+----
+SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
+
+// Direct value assignment
+signal.value("New value");
+
+// Update based on current value
+signal.update(current -> current.toUpperCase());
+
+// Replace only if current value matches expected
+signal.replace("expected", "newValue");
+----
+
+
+== Thread Safety
+
+Shared signals are designed for concurrent access from multiple threads and users. All operations are atomic and thread-safe. Signals handle UI updates automatically, so you don't need to wrap signal operations in `ui.access()`:
+
+[source,java]
+----
+// Safe to use from any thread - no ui.access() needed
+SharedNumberSignal counter = new SharedNumberSignal();
+
+// Multiple users can safely increment concurrently
+counter.incrementBy(1); // Atomic operation, UI updates automatically
+----
+
+
+== Best Practices
+
+
+=== Use Immutable Values
+
+Signals work best with immutable values. This ensures that changes to signal values are always made through the signal API, which maintains consistency and reactivity.
+
+[source,java]
+----
+SharedValueSignal<User> user = new SharedValueSignal<>(User.class);
+
+// Good: Creating a new immutable object
+user.update(u -> new User(u.getName(), u.getAge() + 1));
+
+// Bad: Modifying the object directly
+User u = user.value();
+u.setAge(u.getAge() + 1); // This won't trigger reactivity!
+----
+
+Use Java records for simple data structures:
+
+[source,java]
+----
+record Person(String name, int age) {}
+
+SharedValueSignal<Person> person = new SharedValueSignal<>(Person.class);
+person.value(new Person("John", 30));
+
+// Update creates a new record
+person.update(p -> new Person(p.name(), p.age() + 1));
+----
+
+
+=== Storing Signals as Fields
+
+When signals are used in multiple places throughout a class, storing them as fields provides better organization and makes the code easier to understand:
+
+[source,java]
+----
+public class MyView extends VerticalLayout {
+    // Signals stored as fields for easy access throughout the class
+    private final SharedValueSignal<String> nameSignal =
+            new SharedValueSignal<>(String.class);
+
+    // Computed signals derived from shared signals
+    private final Signal<String> greeting = nameSignal.map(n -> "Hello, " + n);
+
+    public MyView() {
+        Span greetingSpan = new Span();
+        greetingSpan.bindText(greeting);
+        add(greetingSpan);
+    }
+}
+----
+
+
+== Usage Examples
+
+For comprehensive UI binding examples including text, visibility, form fields, and dynamic lists, see <<building-ui#,Component Bindings>>.
+
+
+.Counter Example
+[example]
+====
+[source,java]
+----
+public class SharedCounter extends VerticalLayout {
+    private final SharedNumberSignal counter = new SharedNumberSignal();
+
+    public SharedCounter() {
+        Button button = new Button();
+        button.addClickListener(click -> counter.incrementBy(1));
+        button.bindText(counter.map(c -> String.format("Clicked %.0f times", c)));
+        add(button);
+    }
+}
+----
+====
+
+
+.Two-Way Form Field Binding
+[example]
+====
+[source,java]
+----
+SharedValueSignal<String> value = new SharedValueSignal<>(String.class);
+
+TextField field = new TextField("Value");
+field.bindValue(value);
+// Changes sync both ways: field to signal and signal to field
+----
+
+Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+====
+
+
+== Read-Only Signals
+
+You can create read-only versions of signals that don't allow modifications. The original signal remains writeable and the read-only instance is also updated for any changes made to the original instance.
+
+[source,java]
+----
+SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
+SharedValueSignal<String> readOnlyName = name.asReadonly();
+
+// readOnlyName.value("new") would throw an exception
+----
