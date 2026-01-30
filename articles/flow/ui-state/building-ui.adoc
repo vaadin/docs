@@ -23,7 +23,12 @@ Vaadin components provide direct binding methods for common properties. These bi
 
 == Signal Basics
 
-Signals hold reactive values. The most common type is [classname]`ValueSignal`:
+Signals hold reactive values. The most common type is [classname]`ValueSignal`. For complete coverage of signal types and operations, see <<local-signals#,Local Signals>> and <<shared-signals#,Shared Signals>>.
+
+
+== Binding Text Content
+
+Use [methodname]`bindText()` to bind a component's text content to a signal:
 
 [source,java]
 ----
@@ -37,25 +42,6 @@ greeting.bindText(name.map(n -> "Hello, " + n + "!"));
 
 name.value("Vaadin");
 // Automatically updates to "Hello, Vaadin!"
-----
-
-For complete coverage of signal types and operations, see <<local-signals#,Local Signals>> and <<shared-signals#,Shared Signals>>.
-
-
-== Binding Text Content
-
-Use [methodname]`bindText()` to bind a component's text content to a signal:
-
-[source,java]
-----
-ValueSignal<String> message = new ValueSignal<>("Welcome");
-
-Span span = new Span();
-span.bindText(message);
-// Displays "Welcome"
-
-message.value("Hello!");
-// Automatically updates to "Hello!"
 ----
 
 
@@ -370,14 +356,22 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     text.getStyle().bind("text-decoration",
         todoSignal.map(t -> t.done() ? "line-through" : "none"));
 
+    Button editButton = new Button("Edit", e -> {
+        // Update the todo's text - this only updates the state,
+        // the component is not recreated
+        todoSignal.update(t -> new Todo(t.text() + " (edited)", t.done()));
+    });
+
     Button deleteButton = new Button("Delete", e -> {
         todos.remove(todoSignal);
     });
 
-    row.add(checkbox, text, deleteButton);
+    row.add(checkbox, text, editButton, deleteButton);
     return row;
 });
 ----
+
+When you update a todo item using [methodname]`todoSignal.update()`, only the bound properties (text content, styling) are updated. The component itself is not recreated, maintaining its position and identity in the DOM.
 
 
 === Efficiency
