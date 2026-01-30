@@ -2,7 +2,7 @@ package com.vaadin.demo.buildingapps.uistatemanagement;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEffect;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.dashboard.Dashboard;
 import com.vaadin.flow.component.dashboard.DashboardWidget;
 import com.vaadin.flow.component.charts.model.style.FontWeight;
@@ -24,44 +24,28 @@ import com.vaadin.signals.local.ValueSignal;
 import com.vaadin.signals.shared.SharedListSignal;
 import com.vaadin.signals.shared.SharedValueSignal;
 import java.util.List;
-import java.util.Random;
 
+@Push
 @PageTitle("Reactive Dashboard")
 @Route("building-apps/ui-state-management/reactive-dashboard")
 public class ReactiveDashboardView extends Main {
 
-    private final WritableSignal<Double> currentUsersSignal = new ValueSignal<>(745.0);
-    private final WritableSignal<Double> viewEventsSignal = new ValueSignal<>(54600.0);
-    private final WritableSignal<Double> conversionRateSignal = new ValueSignal<>(18.5);
-    private final SharedListSignal<ServiceHealth> serviceHealthSignal = new SharedListSignal<>(ServiceHealth.class);
-    private final Random random = new Random();
-
-    public ReactiveDashboardView() {
+    public ReactiveDashboardView(DashboardDataService service) {
         addClassName("reactive-dashboard-view");
 
         Dashboard dashboard = new Dashboard();
 
-        dashboard.add(createWidget("Current Users", currentUsersSignal, n -> String.format("%.0f", n)));
-        dashboard.add(createWidget("View Events", viewEventsSignal, n -> n >= 1000 ? String.format("%.1fk", n / 1000) : n.toString()));
-        dashboard.add(createWidget("Conversion Rate", conversionRateSignal, n -> String.format("%.1f%%", n)));
+        dashboard.add(createWidget("Current Users", service.getCurrentUsersSignal(), n -> String.format("%.0f", n)));
+        dashboard.add(createWidget("View Events", service.getViewEventsSignal(), n -> n >= 1000 ? String.format("%.1fk", n / 1000) : n.toString()));
+        dashboard.add(createWidget("Conversion Rate", service.getConversionRateSignal(), n -> String.format("%.1f%%", n)));
         dashboard.add(createWidget("Uptime", new ValueSignal<>(99.9), n -> String.format("%.1f%%", n)));
 
         DashboardWidget gridWidget = new DashboardWidget("Service Health");
-        gridWidget.setContent(createServiceHealthGrid());
+        gridWidget.setContent(createServiceHealthGrid(service.getServiceHealthSignal()));
         gridWidget.setColspan(3);
         dashboard.add(gridWidget);
 
         add(dashboard);
-
-        // Simulate real-time updates
-        addAttachListener(event -> {
-            UI ui = event.getUI();
-            ui.setPollInterval(3000);
-            ui.addPollListener(pollEvent -> updateMockData());
-        });
-
-        // Initial mock data for grid
-        mockServiceHealth().forEach(serviceHealthSignal::insertLast);
     }
 
     private DashboardWidget createWidget(String title, WritableSignal<Double> signal, java.util.function.Function<Double, String> format) {
@@ -71,7 +55,7 @@ public class ReactiveDashboardView extends Main {
         return widget;
     }
 
-    private Component createServiceHealthGrid() {
+    private Component createServiceHealthGrid(SharedListSignal<ServiceHealth> serviceHealthSignal) {
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);
 
@@ -115,34 +99,6 @@ public class ReactiveDashboardView extends Main {
 
         layout.add(grid);
         return layout;
-    }
-
-    private void updateMockData() {
-        currentUsersSignal.value(745.0 + random.nextInt(50) - 25);
-        viewEventsSignal.value(54600.0 + random.nextInt(1000) - 500);
-        conversionRateSignal.value(18.0 + random.nextDouble() * 2);
-
-        List<ServiceHealth> newHealthData = mockServiceHealth();
-        List<SharedValueSignal<ServiceHealth>> currentSignals = serviceHealthSignal.value();
-
-        for (int i = 0; i < Math.min(newHealthData.size(), currentSignals.size()); i++) {
-            currentSignals.get(i).value(newHealthData.get(i));
-        }
-    }
-
-    private List<ServiceHealth> mockServiceHealth() {
-        return List.of(
-                new ServiceHealth(randomStatus(), "Münster", 280 + random.nextInt(100), 1200 + random.nextInt(500)),
-                new ServiceHealth(randomStatus(), "Cluj-Napoca", 260 + random.nextInt(100), 1100 + random.nextInt(500)),
-                new ServiceHealth(randomStatus(), "Ciudad Victoria", 240 + random.nextInt(100), 1000 + random.nextInt(500))
-        );
-    }
-
-    private ServiceHealth.Status randomStatus() {
-        int p = random.nextInt(10);
-        if (p < 2) return ServiceHealth.Status.FAILING;
-        if (p < 5) return ServiceHealth.Status.OK;
-        return ServiceHealth.Status.EXCELLENT;
     }
 
     private static class HighlightCard extends VerticalLayout {

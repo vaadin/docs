@@ -6,11 +6,13 @@ import org.springframework.boot.web.server.servlet.context.ServletComponentScan;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The entry point of the Spring Boot application.
  */
 @SpringBootApplication
+@EnableScheduling
 @ServletComponentScan
 @ComponentScan(excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ANNOTATION, value = ExcludeDemoSpringComponent.class) })

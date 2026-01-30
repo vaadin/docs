@@ -14,16 +14,26 @@ In this guide, you'll learn how to build a reactive dashboard using **Signals**.
 
 == Implementation Strategy
 
-To build a reactive dashboard, we use a combination of layout components and signals:
+To build a reactive dashboard, we use a combination of layout components, signals, and a background service:
 
 * **`Dashboard` and `DashboardWidget`**: To create a responsive, grid-based layout for the dashboard elements.
-* **`ValueSignal`**: To store individual metrics like "Current Users" or "Conversion Rate".
-* **`SharedListSignal`**: To manage a collection of data, such as service health status.
-* **`ComponentEffect`**: To bind these signals to UI components like `Span` for text or `Grid` for data tables.
+* **`ValueSignal` and `SharedListSignal`**: To store metrics and collection data.
+* **Spring `@Scheduled`**: To update the signals from a background service, simulating real-time data.
+* **`@Push`**: To ensure that background signal updates are immediately pushed to the browser.
+* **`ComponentEffect`**: To bind signals to UI components like `Span` or `Grid`.
+
+== The Background Data Service
+
+Using a Spring service with `@Scheduled` is a common way to handle periodic updates. Because Signals are thread-safe and integrated with Vaadin's lifecycle, updating a signal from a background thread automatically triggers UI updates for all attached components.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/uistatemanagement/DashboardDataService.java[indent=0]
+----
 
 == The Reactive Dashboard View
 
-The following example demonstrates a dashboard with highlight cards for metrics and a grid for service health. The metrics and grid items are updated periodically to simulate real-time data flow.
+The view remains simple and declarative. It injects the data service and binds its signals to the UI. Note the `@Push` annotation, which is required for the server to push updates to the client without a user-initiated request.
 
 [source,java]
 ----
@@ -32,40 +42,33 @@ include::{root}/src/main/java/com/vaadin/demo/buildingapps/uistatemanagement/Rea
 
 == Key Concepts
 
-=== Live Metrics with `ValueSignal`
+=== Live Metrics from a Service
 
-Each highlight card is backed by a `ValueSignal<Double>`. When the signal's value changes, the UI automatically updates:
-
-[source,java]
-----
-// Create a signal for the metric
-private final WritableSignal<Double> currentUsersSignal = new ValueSignal<>(745.0);
-
-// Bind it to the UI inside an effect
-ComponentEffect.effect(this, () -> {
-    valueSpan.setText(format.apply(currentUsersSignal.value()));
-});
-----
-
-=== Real-time Grid with `SharedListSignal`
-
-The service health grid uses a `SharedListSignal`. This allows the grid to update when items are added or removed, and also when individual items within the list are modified.
+Metrics are provided as signals by the service. When the `@Scheduled` task updates these signals, the UI automatically reflects the changes:
 
 [source,java]
 ----
-// Bind the grid to the list signal
-ComponentEffect.bind(grid, serviceHealthSignal, (g, items) -> {
+// Bind a signal from the service to the UI
+dashboard.add(createWidget("Current Users", service.getCurrentUsersSignal(), n -> String.format("%.0f", n)));
+----
+
+=== Real-time Grid with Server Push
+
+By using `@Push`, any change to the `SharedListSignal` in the background is immediately sent to the browser. This allows the `Grid` to show live updates without client-side polling.
+
+[source,java]
+----
+// Bind the grid to the list signal from the service
+ComponentEffect.bind(grid, service.getServiceHealthSignal(), (g, items) -> {
     g.setItems(items != null ? items : List.of());
 });
-
-// Update an individual item in the list
-serviceHealthSignal.value().get(0).value(newHealthData);
 ----
 
-Using `SharedListSignal` ensures that only the affected rows in the grid are refreshed when data changes, rather than reloading the entire dataset.
+Using Signals with a background service ensures that only the affected parts of the UI are updated, providing a smooth and efficient user experience.
 
 == Benefits of Signals for Dashboards
 
-* **Declarative UI**: You define *what* should be displayed based on the state, and Vaadin handles *when* to update the UI.
-* **Granular Updates**: Signals enable fine-grained updates, minimizing the amount of data sent to the browser.
-* **Simplified Sync**: Multiple components can depend on the same signal, ensuring they always display consistent information without manual event coordination.
+* **Real-time Synchronization**: Background updates propagate naturally to the UI via Signals and Push.
+* **Declarative UI**: You focus on binding state to components; Vaadin handles the push and refresh logic.
+* **Granular Updates**: Signals ensure that only changed metrics or grid rows are updated on the client.
+* **Simplified Architecture**: No need for manual event listeners or complex synchronization between background tasks and the UI layer.
