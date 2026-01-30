@@ -11,6 +11,8 @@ order: 40
 
 Shared signals provide thread-safe, transactional state management for scenarios where state needs to be synchronized across multiple users or sessions. They are ideal for collaborative features, real-time dashboards, and any state that multiple users need to access concurrently.
 
+All shared signals use an underlying JSON data representation that is replaced on modification. When reading a value, a new instance is created from the internal JSON representation, so the value object is never modified directly or concurrently. This immutability ensures thread-safe access without explicit synchronization.
+
 :preview-feature: Signals
 :feature-flag: com.vaadin.experimental.flowFullstackSignals
 include::{articles}/_preview-banner.adoc[opts=optional]
@@ -173,22 +175,6 @@ String confirmed = signal.peekConfirmed();
 In single-server deployments, `peekConfirmed()` typically returns the same value as `value()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
 
-== Subscribing to Changes
-
-Use the `subscribe()` method to react to signal value changes outside of effects:
-
-[source,java]
-----
-SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
-
-signal.subscribe(() -> {
-    System.out.println("Signal value changed to: " + signal.value());
-});
-----
-
-For UI updates, prefer using <<effects-computed#,ComponentEffect>> which automatically manages the subscription lifecycle based on component attachment.
-
-
 == Writing Values
 
 All shared signals provide atomic write operations:
@@ -257,22 +243,19 @@ person.update(p -> new Person(p.name(), p.age() + 1));
 
 === Storing Signals as Fields
 
-Always store signals as class fields, not local variables. Local signal variables may be garbage collected, causing computed signals and subscriptions to stop working:
+When signals are used in multiple places throughout a class, storing them as fields provides better organization and makes the code easier to understand:
 
 [source,java]
 ----
 public class MyView extends VerticalLayout {
-    // Good: Signal stored as a field
+    // Signals stored as fields for easy access throughout the class
     private final SharedValueSignal<String> nameSignal =
             new SharedValueSignal<>(String.class);
 
-    // Good: Computed signal stored as a field
+    // Computed signals derived from shared signals
     private final Signal<String> greeting = nameSignal.map(n -> "Hello, " + n);
 
     public MyView() {
-        // Bad: Local computed signal may be garbage collected
-        // Signal<String> localComputed = nameSignal.map(n -> "Hi, " + n);
-
         Span greetingSpan = new Span();
         greetingSpan.bindText(greeting);
         add(greetingSpan);

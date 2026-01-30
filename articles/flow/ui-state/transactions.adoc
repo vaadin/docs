@@ -74,7 +74,7 @@ Signal.runInTransaction(() -> {
     SharedValueSignal<Todo> firstItem = todoList.value().get(0);
 
     // Verify the item we want to update is still first
-    todoList.verifyPosition(firstItem, 0);
+    todoList.verifyPosition(firstItem, ListPosition.first());
 
     // Update only if verification passes
     firstItem.value(new Todo("Updated first item", false));
@@ -82,32 +82,19 @@ Signal.runInTransaction(() -> {
 ----
 
 
-=== Verifying Item Exists
+=== Verifying Child Exists
 
-The `verifyPresent()` method verifies that an item exists in a list or map:
+The `verifyChild()` method on [classname]`SharedListSignal` verifies that a child signal is still part of the list:
 
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    // Verify the item still exists before updating
-    itemSignal.verifyPresent();
+    SharedValueSignal<Todo> itemSignal = todoList.value().get(0);
+
+    // Verify the child signal still exists in the list before updating
+    todoList.verifyChild(itemSignal);
 
     itemSignal.value(updatedValue);
-});
-----
-
-
-=== Verifying Key Does Not Exist
-
-The `verifyAbsent()` method verifies that a key does not exist in a map:
-
-[source,java]
-----
-Signal.runInTransaction(() -> {
-    // Only insert if key doesn't already exist
-    mapSignal.verifyAbsent("newKey");
-
-    mapSignal.put("newKey", newValue);
 });
 ----
 
@@ -119,15 +106,22 @@ Signal operations return result objects that provide information about the opera
 
 === SignalOperation
 
-The base interface for all signal operations. Operations can be observed for completion or rejection:
+The base interface for all signal operations. Operations return a [classname]`CompletableFuture` that resolves when the operation completes:
 
 [source,java]
 ----
 SignalOperation<String> op = stringSignal.value("new value");
 
-// Check if the operation is completed
-if (op.isCompleted()) {
-    System.out.println("Operation completed");
+// Get the result as a CompletableFuture
+CompletableFuture<SignalOperation.ResultOrError<String>> result = op.result();
+
+// Check if the operation has completed
+if (result.isDone()) {
+    // Get the result (blocks if not yet complete)
+    SignalOperation.ResultOrError<String> resultOrError = result.get();
+    if (resultOrError.successful()) {
+        System.out.println("Operation completed successfully");
+    }
 }
 ----
 
@@ -172,7 +166,7 @@ This is useful when you need to reference the newly inserted item immediately af
 
 === TransactionOperation
 
-When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction:
+When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction. The [methodname]`returnValue()` method returns a [classname]`SignalOperation` that can be used to check the transaction result:
 
 [source,java]
 ----
@@ -181,8 +175,11 @@ TransactionOperation txOp = Signal.runInTransaction(() -> {
     lastNameSignal.value("Doe");
 });
 
-// Check transaction status
-if (txOp.isCompleted()) {
+// Get the underlying SignalOperation to check transaction status
+SignalOperation<?> signalOp = txOp.returnValue();
+CompletableFuture<?> result = signalOp.result();
+
+if (result.isDone()) {
     System.out.println("Transaction committed successfully");
 }
 ----

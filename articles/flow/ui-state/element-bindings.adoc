@@ -36,27 +36,6 @@ All element bindings follow consistent rules:
 - Attempting to bind a new signal while one is already bound throws [classname]`BindingActiveException`
 
 
-== Base Example
-
-The following code serves as the base for examples in subsequent sections:
-
-[source,java]
-----
-public class BindingExample extends VerticalLayout {
-    private final SharedNumberSignal counter = new SharedNumberSignal();
-
-    public BindingExample() {
-        Button button = new Button("Increment by one");
-        button.addClickListener(click -> counter.incrementBy(1));
-        add(button);
-
-        Span span = new Span("");
-        add(span);
-    }
-}
-----
-
-
 == Text Binding
 
 .`Element#bindText(Signal<String> signal)`
@@ -174,15 +153,23 @@ config.value(Map.of("key1", "value1", "key2", "value2"));
 // element.config is now {key1: 'value1', key2: 'value2'}
 ----
 
-.Property change listener for 'change' DOM event
+.Property change listener with bound signal
 [source,java]
 ----
-// Adds a property change listener and configures 'hidden' property
-// to be synchronized to the server when 'change' DOM event is fired
+SharedValueSignal<Boolean> hidden = new SharedValueSignal<>(Boolean.class);
+hidden.value(false);
+
+// Bind the 'hidden' property to the signal
+span.getElement().bindProperty("hidden", hidden);
+
+// Add a property change listener that synchronizes on 'change' DOM event
 span.getElement().addPropertyChangeListener("hidden", "change", event -> {
+    // When the property changes on the client (via DOM event),
+    // the changed value is synchronized with the bound signal
     Notification.show("'hidden' property changed to: " + event.getValue());
 });
-// property change event from the client will update the signal value
+
+// After a property change event from the client, signal.value() returns the updated value
 ----
 
 
