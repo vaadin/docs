@@ -37,7 +37,7 @@ Use [classname]`ComponentEffect` when:
 
 == Component Effects
 
-Effects are callbacks that automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
+Effects are callbacks that run immediately when created and automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
 
 
 === Creating Component-Bound Effects
@@ -46,13 +46,31 @@ The [methodname]`ComponentEffect.effect()` method creates an effect bound to a c
 
 [source,java]
 ----
-ComponentEffect.effect(span, () -> {
-    // This code runs whenever any signal value used inside changes
-    span.setText(firstNameSignal.value() + " " + lastNameSignal.value());
+Chart chart = new Chart(ChartType.AREASPLINE);
+ListSeries series = new ListSeries("My Series", new Number[0]);
+SharedListSignal<Number> seriesSignal = new SharedListSignal<>(Number.class);
+// initialization details omitted
+
+ComponentEffect.effect(chart, () -> {
+    // This code runs immediately and again whenever seriesSignal changes
+    series.setData(seriesSignal.value().stream()
+        .map(Signal::value).toArray(Number[]::new));
 });
 ----
 
 The first parameter is the component that owns the effect. When the component is detached, the effect is paused. When re-attached, the effect resumes and runs again with current values.
+
+The method returns a [classname]`Registration` instance that can be used to unregister the effect before the component is detached:
+
+[source,java]
+----
+Registration effectRegistration = ComponentEffect.effect(chart, () -> {
+    // effect logic
+});
+
+// Later, when you need to stop the effect
+effectRegistration.remove();
+----
 
 
 === Custom Effects for Non-Bindable Properties
@@ -195,12 +213,12 @@ A standalone signal effect can be used for effects that aren't related to any UI
 
 [source,java]
 ----
-Runnable cleanup = Signal.effect(() -> {
+CleanupCallback cleanup = Signal.effect(() -> {
     System.out.println("Counter updated to " + counter.value());
 });
 
 // Later, when the effect is no longer needed
-cleanup.run();
+cleanup.cleanup();
 ----
 
 [WARNING]
@@ -282,7 +300,9 @@ ComponentEffect.effect(component, () -> {
 
 === Keep Effects Focused
 
-Each effect should have a single responsibility. For multiple property updates, use separate bindings:
+Each effect should have a single responsibility. For multiple property updates, use separate bindings.
+
+Using separate effects or bindings for different concerns improves efficiency: when a signal changes, only the components that depend on it are updated. For example, in a dashboard with charts and cards, separate effects ensure that a single data change triggers updates only in the specific dependent component, rather than re-rendering unrelated parts of the UI.
 
 [source,java]
 ----
