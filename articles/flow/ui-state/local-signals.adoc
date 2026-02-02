@@ -198,6 +198,95 @@ Signal<String> upperName = name.map(String::toUpperCase);
 Use `map()` for single-signal transformations. For transformations depending on multiple signals, use `Signal.computed()` instead.
 
 
+[[two-way-mapping]]
+== Two-Way Signal Mapping
+
+The read-only [methodname]`map()` method described above creates a derived signal that updates when the source changes, but changes to the derived signal don't propagate back. For two-way binding scenarios where you need changes to flow in both directions, use the two-way mapping variants.
+
+This is particularly useful when binding a form field to a property of a complex object stored in a signal. For example, binding a checkbox directly to the `done` property of a `Todo` record.
+
+
+=== Mapping Immutable Values (Records)
+
+For immutable values like Java records, use [methodname]`map(getter, merger)`:
+
+[source,java]
+----
+record Todo(String text, boolean done) {
+    Todo withDone(boolean done) {
+        return new Todo(this.text, done);
+    }
+}
+
+ValueSignal<Todo> todoSignal = new ValueSignal<>(new Todo("Write docs", false));
+
+// Create a two-way mapping to the 'done' property
+WritableSignal<Boolean> doneSignal = todoSignal.map(Todo::done, Todo::withDone);
+
+// Bind checkbox directly to the property
+Checkbox checkbox = new Checkbox();
+checkbox.bindValue(doneSignal);
+// Checking the box updates the todo's done property
+// Calling todoSignal.update(...) updates the checkbox
+----
+
+The `merger` function receives the current parent value and the new child value, and returns a new parent value with the child property updated. Using wither methods like `withDone()` is a common pattern for records.
+
+
+=== Mapping Mutable Values (Beans)
+
+For mutable beans with setters, use [methodname]`mapMutable(getter, modifier)`:
+
+[source,java]
+----
+public class User {
+    private String name;
+    private int age;
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
+
+ValueSignal<User> userSignal = new ValueSignal<>(new User());
+
+// Create a two-way mapping to the 'name' property
+WritableSignal<String> nameSignal = userSignal.mapMutable(User::getName, User::setName);
+
+// Bind text field directly to the property
+TextField nameField = new TextField("Name");
+nameField.bindValue(nameSignal);
+----
+
+The `modifier` function receives the parent object and the new value, and mutates the parent in place. The signal framework handles change notification automatically.
+
+[NOTE]
+====
+Prefer immutable records over mutable beans when possible. Records are easier to reason about, naturally thread-safe, and work better with reactive patterns. Use `mapMutable()` only when working with existing mutable bean classes.
+====
+
+
+=== Comparison: Read-Only vs Two-Way Mapping
+
+[cols="1,1,1"]
+|===
+| Method | Use Case | Return Type
+
+| `map(getter)`
+| Read-only transformations
+| `Signal<T>` (read-only)
+
+| `map(getter, merger)`
+| Two-way binding with immutable values
+| `WritableSignal<T>`
+
+| `mapMutable(getter, modifier)`
+| Two-way binding with mutable beans
+| `WritableSignal<T>`
+|===
+
+
 == Organizing Signals as Fields
 
 Storing signals as class fields is recommended for better code organization. It keeps all reactive state together at the top of the class, making it easier to understand the component's state at a glance:

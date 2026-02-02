@@ -333,7 +333,11 @@ Create rich list items with nested bindings:
 
 [source,java]
 ----
-record Todo(String text, boolean done) {}
+record Todo(String text, boolean done) {
+    Todo withDone(boolean done) {
+        return new Todo(this.text, done);
+    }
+}
 
 SharedListSignal<Todo> todos = new SharedListSignal<>(Todo.class);
 
@@ -343,11 +347,9 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     HorizontalLayout row = new HorizontalLayout();
     row.setAlignItems(FlexComponent.Alignment.CENTER);
 
+    // Two-way binding to the 'done' property using signal mapping
     Checkbox checkbox = new Checkbox();
-    checkbox.addValueChangeListener(e ->
-        todoSignal.update(t -> new Todo(t.text(), e.getValue())));
-    ComponentEffect.bind(checkbox, todoSignal,
-        (cb, todo) -> cb.setValue(todo.done()));
+    checkbox.bindValue(todoSignal.map(Todo::done, Todo::withDone));
 
     Span text = new Span();
     text.bindText(todoSignal.map(Todo::text));
@@ -370,6 +372,8 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     return row;
 });
 ----
+
+The [methodname]`map(getter, merger)` method creates a two-way mapping that enables direct binding between the checkbox and the `done` property. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details.
 
 When you update a todo item using [methodname]`todoSignal.update()`, only the bound properties (text content, styling) are updated. The component itself is not recreated, maintaining its position and identity in the DOM.
 
@@ -446,11 +450,9 @@ public class TaskManager extends VerticalLayout {
             row.bindVisible(Signal.computed(() ->
                 showCompleted.value() || !taskSignal.value().done()));
 
+            // Two-way binding to the 'done' property
             Checkbox doneCheckbox = new Checkbox();
-            doneCheckbox.addValueChangeListener(e ->
-                taskSignal.update(t -> new Task(t.text(), e.getValue())));
-            ComponentEffect.bind(doneCheckbox, taskSignal,
-                (cb, task) -> cb.setValue(task.done()));
+            doneCheckbox.bindValue(taskSignal.map(Task::done, Task::withDone));
 
             Span taskText = new Span();
             taskText.bindText(taskSignal.map(Task::text));
@@ -467,14 +469,18 @@ public class TaskManager extends VerticalLayout {
         add(taskList);
     }
 
-    record Task(String text, boolean done) {}
+    record Task(String text, boolean done) {
+        Task withDone(boolean done) {
+            return new Task(this.text, done);
+        }
+    }
 }
 ----
 
 This example demonstrates:
 
 - Two-way binding with form fields ([methodname]`bindValue()`)
-- One-way binding with [methodname]`ComponentEffect.bind()`
+- Two-way property mapping with [methodname]`map(getter, merger)` (see <<local-signals#two-way-mapping,Two-Way Signal Mapping>>)
 - Conditional button enabling ([methodname]`bindEnabled()`)
 - Computed signals for derived values
 - List rendering with [methodname]`ComponentEffect.bindChildren()`
