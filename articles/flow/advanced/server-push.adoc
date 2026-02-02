@@ -1,8 +1,8 @@
 ---
 title: Server Push
-page-title: How to enable server push in Vaadin applications
-description: Server push allows you to update the UI from the server for the users without them requesting updates.
-meta-description: Implement server push in Vaadin to deliver real-time updates to users.
+page-title: Server Push Configuration Reference - Vaadin Docs
+description: Configuration reference for server push in Vaadin Flow applications.
+meta-description: Reference documentation for server push configuration options, annotations, and transport modes in Vaadin Flow.
 order: 620
 ---
 
@@ -10,22 +10,15 @@ order: 620
 [[push.configuration]]
 = Server Push Configuration
 
-[IMPORTANT]
-This page is being migrated to the new <<{articles}/building-apps#,Building Applications>> section. See the <</building-apps/business-logic/background-jobs#,Background Jobs>> and <</building-apps/server-push#,Server Push>> documentation pages.
+Server push is based on a client-server connection established by the client. The server can then use the connection to send updates to the client. Vaadin uses the link:https://github.com/Atmosphere/atmosphere[Atmosphere framework] internally for server push communication.
 
-Server push is based on a client-server connection established by the client. The server can then use the connection to send updates to the client. For example, it could send a new chat message to all participants without delay.
-
-The server-client communication uses a WebSocket connection, if supported by the browser and the server. If not, the connection resorts to whatever method is supported by the browser. Vaadin uses the link:https://github.com/Atmosphere/atmosphere[Atmosphere framework], internally.
+For practical usage guides and patterns, see <<{articles}/building-apps/server-push#,Server Push>> in the Building Apps section.
 
 
-[[push.configuration.enabling]]
-== Enabling Push in Your Application
+[[push.configuration.annotation]]
+== The @Push Annotation
 
-To enable server push, you'll need to define the push mode either in the deployment descriptor, or with the [annotationname]`@Push` annotation on your application shell class.
-
-The application shell class is a plain Java class implementing the [interfacename]`AppShellConfigurator` interface. The class is detected and instantiated by Vaadin during bootstrap. Only one application shell class is allowed. An exception is thrown if more than one class implements [interfacename]`AppShellConfigurator`.
-
-For example, you can use the following [classname]`Application` class -- which implements the [interfacename]`AppShellConfigurator` interface -- to enable server push in your application by adding the [annotationname]`@Push` annotation to it.
+Enable server push by adding the `@Push` annotation to a class implementing `AppShellConfigurator`:
 
 [source,java]
 ----
@@ -34,34 +27,40 @@ public class Application implements AppShellConfigurator {
   ...
 }
 ----
+
+The annotation supports the following parameters:
+
+[cols="1,1,3"]
+|===
+|Parameter |Default |Description
+
+|`value`
+|`PushMode.AUTOMATIC`
+|The push mode. See <<push.configuration.pushmode>>.
+
+|`transport`
+|`Transport.WEBSOCKET_XHR`
+|The transport mechanism. See <<push.configuration.transport>>.
+|===
 
 
 [[push.configuration.pushmode]]
-=== Push Modes & Transports
+== Push Modes
 
-You can use server push in two modes: `automatic` and `manual`. The automatic mode automatically pushes changes to the browser after [methodname]`access()` finishes. With the manual mode, you can do the push explicitly with [methodname]`push()`, which allows more flexibility.
+Server push operates in one of two modes:
 
-// Allow XHR
-pass:[<!-- vale Vaadin.Abbr = NO -->]
+[cols="1,3"]
+|===
+|Mode |Description
 
-Server push can use several transports: WebSockets, long polling, or combined WebSockets+XHR. WebSockets+XHR is the default transport.
+|`PushMode.AUTOMATIC`
+|Changes are pushed to the browser automatically after `UI.access()` finishes. This is the default mode.
 
-pass:[<!-- vale Vaadin.Abbr = YES -->]
+|`PushMode.MANUAL`
+|Changes are pushed only when you explicitly call `UI.push()`. Use this for fine-grained control over when updates are sent.
+|===
 
-[[push.configuration.annotation]]
-=== The @Push Annotation
-
-You can enable server push for the application annotating the application shell class with the `@Push` annotation as in the example here. It defaults to automatic mode (i.e., `PushMode.AUTOMATIC`).
-
-[source,java]
-----
-@Push
-public class Application implements AppShellConfigurator {
-  ...
-}
-----
-
-To enable manual mode, you need to pass the `PushMode.MANUAL` parameter, as follows:
+Example with manual mode:
 
 [source,java]
 ----
@@ -71,7 +70,32 @@ public class Application implements AppShellConfigurator {
 }
 ----
 
-To use the long polling transport, you'll need to set the transport parameter to `Transport.LONG_POLLING`, as follows:
+
+[[push.configuration.transport]]
+== Transport Options
+
+// Allow XHR
+pass:[<!-- vale Vaadin.Abbr = NO -->]
+
+Server push supports three transport mechanisms:
+
+[cols="1,3"]
+|===
+|Transport |Description
+
+|`Transport.WEBSOCKET_XHR`
+|Combined WebSockets and XHR. This is the default and recommended transport.
+
+|`Transport.WEBSOCKET`
+|Pure WebSocket connection.
+
+|`Transport.LONG_POLLING`
+|HTTP long polling. Use this if WebSocket connections are blocked by proxies or firewalls.
+|===
+
+pass:[<!-- vale Vaadin.Abbr = YES -->]
+
+Example with long polling:
 
 [source,java]
 ----
@@ -83,41 +107,26 @@ public class Application implements AppShellConfigurator {
 
 
 [[push.configuration.servlet]]
-=== Servlet Configuration
+== Servlet Configuration
 
-If you're manually configuring your servlet, be sure to set the `async-supported` parameter.
+If you're manually configuring your servlet, set the `async-supported` parameter to enable push support.
 
-You can enable server push and define the push mode for an entire application in the servlet configuration with the `pushMode` parameter for the servlet in the [filename]`web.xml` deployment descriptor, or a corresponding `@WebServlet` annotation.
+You can also configure push mode for the entire application in the servlet configuration with the `pushMode` parameter in the `web.xml` deployment descriptor, or a corresponding `@WebServlet` annotation.
 
-On the server side, the push endpoint is mapped to the `VAADIN/push` path. This mapping is added either under context root, context path, or the first URL mapping -- sorted by natural order and ignoring `/VAADIN/{empty}*` and `/vaadinServlet/{empty}*` -- of the Vaadin servlet, depending on application deployment configuration. In case of multiple servlet mappings, it's possible to set the URL mapping for server push by configuring the `pushServletMapping` parameter to match the desired mapping.
-
+On the server side, the push endpoint is mapped to the `VAADIN/push` path. This mapping is added either under context root, context path, or the first URL mapping (sorted by natural order and ignoring `/VAADIN/{empty}*` and `/vaadinServlet/{empty}*`) of the Vaadin servlet, depending on application deployment configuration. For multiple servlet mappings, configure the `pushServletMapping` parameter to match the desired mapping.
 
 
 [[push.access]]
-== Asynchronous Updates
+== UI.access() Method
 
-Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update done from another thread could conflict with a regular event-driven update and cause either data corruption or deadlocks. Because of this, you may only access a UI using the [methodname]`access()` method, which locks the session to prevent conflicts. It takes as a parameter a [classname]`Command` to execute while the session is locked.
-
-Below is an example of this:
-
-[source,java]
-----
-ui.access(new Command() {
-    @Override
-    public void execute() {
-        statusLabel.setText(statusText);
-    }
-});
-----
-
-You can also use a lambda expression to define your access command, like so:
+Making changes to a UI from another thread requires locking the user session to prevent conflicts with regular event-driven updates. Use the `UI.access()` method to safely update the UI from background threads:
 
 [source,java]
 ----
 ui.access(() -> statusLabel.setText(statusText));
 ----
 
-If the push mode is `manual`, you need to push the pending UI changes to the browser explicitly with the [methodname]`push()` method.
+With manual push mode, call `UI.push()` explicitly:
 
 [source,java]
 ----
@@ -127,156 +136,6 @@ ui.access(() -> {
 });
 ----
 
-The following is a complete example showing how to make UI changes from another thread:
-
-[source,java]
-----
-@Route("push")
-public class PushyView extends VerticalLayout {
-    private FeederThread thread;
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        add(new Span("Waiting for updates"));
-
-        // Start the data feed thread
-        thread = new FeederThread(attachEvent.getUI(), this);
-        thread.start();
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        // Cleanup
-        thread.interrupt();
-        thread = null;
-    }
-
-    private static class FeederThread extends Thread {
-        private final UI ui;
-        private final PushyView view;
-
-        private int count = 0;
-
-        public FeederThread(UI ui, PushyView view) {
-            this.ui = ui;
-            this.view = view;
-        }
-
-        @Override
-        public void run() {
-            try {
-                // Update the data for a while
-                while (count < 10) {
-                    // Sleep to emulate background work
-                    Thread.sleep(500);
-                    String message = "This is update " + count++;
-
-                    ui.access(() -> view.add(new Span(message)));
-                }
-
-                // Inform that we're done
-                ui.access(() -> {
-                    view.add(new Span("Done updating"));
-                });
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}
-----
-
-When sharing data between UIs or user sessions, you need to consider the message-passing mechanism, as explained in the next section.
-
-
-[[push.broadcaster]]
-== Collaborative Views
-
-Broadcasting messages, to be pushed to UIs in other user sessions, requires some sort of message-passing mechanism that sends the messages to all UIs that are registered as recipients. Since processing server requests for different UIs happens concurrently in different threads of the application server, locking the data structures is important to avoid deadlock situations.
-
-
-[[push.broadcaster.broadcaster]]
-=== The Broadcaster
-
-The standard pattern for sending messages to other users is to use a _broadcaster_ singleton that registers recipients and broadcasts messages to them. To avoid deadlocks, it's recommended that the messages are sent through a message queue in a separate thread. Using a Java `ExecutorService` running a single thread is one of the easiest and safest ways. The methods in the class are defined as `synchronized` to prevent race conditions.
-
-[source,java]
-----
-public class Broadcaster {
-    static Executor executor = Executors.newSingleThreadExecutor();
-
-    static LinkedList<Consumer<String>> listeners = new LinkedList<>();
-
-    public static synchronized Registration register(
-            Consumer<String> listener) {
-        listeners.add(listener);
-
-        return () -> {
-            synchronized (Broadcaster.class) {
-                listeners.remove(listener);
-            }
-        };
-    }
-
-    public static synchronized void broadcast(String message) {
-        for (Consumer<String> listener : listeners) {
-            executor.execute(() -> listener.accept(message));
-        }
-    }
-}
-----
-
-
-[[push.broadcaster.receiving]]
-=== Receiving Broadcasts
-
-The receivers need to register a consumer to the broadcaster to receive the broadcasts. The registration should be removed when the component is no longer attached. When updating the UI in a receiver, you should do this safely by executing the update through the [methodname]`access()` method of the [classname]`UI`, as described in the previous section (see <<push.access>>).
-
-[source,java]
-----
-@Route("broadcaster")
-public class BroadcasterView extends Div {
-    VerticalLayout messages = new VerticalLayout();
-    Registration broadcasterRegistration;
-
-    // Creating the UI shown separately
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        UI ui = attachEvent.getUI();
-        broadcasterRegistration = Broadcaster.register(newMessage -> {
-            ui.access(() -> messages.add(new Span(newMessage)));
-        });
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        broadcasterRegistration.remove();
-        broadcasterRegistration = null;
-    }
-}
-----
-
-
-[[push.broadcaster.sending]]
-=== Sending Broadcasts
-
-To send broadcasts with a broadcaster singleton, such as the one described previously, you would only need to call the [methodname]`broadcast()` method, as follows:
-
-[source,java]
-----
-@Route("broadcaster")
-public BroadcasterView() {
-    TextField message = new TextField();
-    Button send = new Button("Send", e -> {
-        Broadcaster.broadcast(message.getValue());
-        message.setValue("");
-    });
-
-    HorizontalLayout sendBar = new HorizontalLayout(message, send);
-
-    add(sendBar, messages);
-}
-----
+For detailed patterns and best practices for using `UI.access()`, including how to avoid memory leaks and flooding, see <<{articles}/building-apps/server-push/updates#,Pushing UI Updates>>.
 
 [discussion-id]`77E22B23-4E6A-4D32-AFCC-2423F633F81D`
