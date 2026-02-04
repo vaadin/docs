@@ -50,7 +50,7 @@ public class PropertyTest {
         items.add("Option 1");
         items.add("Option 2");
         items.add("Option 3");
-        element.setPropertyJson("items", items);        
+        element.setPropertyJson("items", items);
         // end::setarray[]
         assertEquals(items.toString(), element.getProperty("items"));
     }
@@ -64,7 +64,8 @@ public class PropertyTest {
         element.setPropertyBean("config", config);
         // end::setbean[]
         assertEquals(config, element.getPropertyBean("config", MyConfig.class));
-        assertNotSame(config, element.getPropertyBean("config", MyConfig.class));
+        assertNotSame(config,
+                element.getPropertyBean("config", MyConfig.class));
     }
 
     record MyConfig(String myBean, int myInt) {

@@ -1,13 +1,16 @@
 ---
-title: Data Providers
-page-title: Using data providers with the Vaadin Tree Grid component
+title: Data Binding
+page-title: How to bind data to Tree Grid with TreeDataProvider or custom hierarchical data provider
+description: Binding and displaying hierarchical data in Tree Grid
+meta-description: Learn how to use TreeData and TreeDataProvider or create custom hierarchical data providers with nested and flattened hierarchy formats in Vaadin Tree Grid.
 order: 30
+section-nav: badge-flow
 ---
 
-= Data Providers (Flow)
+= Binding Data to Tree Grid [badge-flow]#Flow#
 :toclevels: 2
 
-Tree Grid supports connecting to different types of data sources using hierarchical data providers. For simple use cases, it offers a built-in [classname]`TreeData` structure along with a ready-made [classname]`TreeDataProvider`, which together provide an easy way to create and manage hierarchies in memory. It also supports custom hierarchical data providers to fetch data from other sources, e.g. a database.
+Tree Grid supports connecting to various types of data sources through hierarchical data providers. For simple use cases, it offers a built-in [classname]`TreeData` structure along with a ready-made [classname]`TreeDataProvider`, which together provide an easy way to create and manage hierarchies in memory. It also supports custom hierarchical data providers to fetch data from other sources, e.g. a database.
 
 == Tree Data Provider
 
@@ -19,7 +22,11 @@ Both are available out of the box in Flow and can be used with Tree Grid like th
 
 [source,java]
 ----
-// Create a TreeData instance
+public record Folder(String name) {}
+
+...
+
+// Create a TreeData instance with Folder records
 TreeData<Folder> treeData = new TreeData<>();
 
 // Create a TreeDataProvider backed by the TreeData instance
@@ -27,7 +34,7 @@ TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(
         treeData,
         HierarchicalDataProvider.HierarchyFormat.FLATTENED);
 
-// Set the data provider to the Tree Grid
+// Set the TreeDataProvider as the data provider for the Tree Grid
 treeGrid.setDataProvider(treeDataProvider);
 ----
 
@@ -126,15 +133,85 @@ Shortcuts.addShortcutListener(treeGrid, () -> {
 
 As before, make sure to call [methodname]`TreeDataProvider#refreshAll()` to update the Tree Grid UI after making any structural changes to the [classname]`TreeData`.
 
-== Custom Data Providers
+=== Sorting Items
 
-Conceptually, any hierarchical data provider, including [classname]`TreeDataProvider`, is a class that implements the [classname]`HierarchicalDataProvider` interface.
-
-For convenience, Flow provides a related abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data providers. This class requires implementing the following methods:
+Tree Data Provider provides built-in support for in-memory sorting. You can enable sorting on Tree Grid columns, and the data provider will automatically sort the items based on the sort order selected by the user:
 
 [source,java]
 ----
-class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
+treeGrid.addHierarchyColumn(Folder::name).setHeader("Folder").setSortable(true);
+----
+
+[NOTE]
+====
+More examples of how to configure sortable columns, including multi-column sorting and custom comparators, can be found in the <<../grid/index#sorting,Grid>> documentation.
+====
+
+In addition to column-level sorting, you can define a sort comparator directly on the `TreeDataProvider` instance using the `setSortComparator(SerializableComparator<T>)` method. This comparator is applied when no column sorting is used, and it acts as a secondary comparator when combined with column sorting.
+
+In the example below, a Select component is used to let users choose how folders are sorted in the Tree Grid. The `setSortComparator` method is called to apply the corresponding comparator based on the selected value:
+
+[source,java]
+----
+Select<String> sortBySelect = new Select<>("Sort by", "", "Name (A-Z)", "Name (Z-A)");
+sortBySelect.setValue("");
+sortBySelect.addValueChangeListener(event -> {
+    Comparator<Folder> comparator = switch (event.getValue()) {
+        case "Name (A-Z)" -> Comparator.comparing(Folder::name);
+        case "Name (Z-A)" -> Comparator.comparing(Folder::name).reversed();
+        default -> null;
+    };
+
+    if (comparator != null) {
+        // The comparator can't be passed directly because it doesn't implement
+        // SerializableComparator, which is required by setSortComparator. Using
+        // comparator::compare works as a workaround, as long as no serialization
+        // is triggered at runtime.
+        treeDataProvider.setSortComparator(comparator::compare);
+    } else {
+        treeDataProvider.setSortComparator(null);
+    }
+});
+----
+
+The `setSortComparator` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
+
+[NOTE]
+====
+Sorting in tree structures is always performed independently at each level to avoid breaking the links between parents and their children.
+====
+
+=== Filtering Items
+
+Tree Data Provider also supports in-memory filtering. You can apply filtering by providing a filter predicate via the `TreeDataProvider#setFilter(SerializablePredicate<T>)` method.
+
+The following example demonstrates how this method can be used to filter folders based on a search term entered in a Text Field component. As the user types, the Tree Grid updates in real time to show only folders whose names contain the search term:
+
+[source,java]
+----
+TextField searchInput = new TextField("Search folders", "Enter folder name");
+searchInput.setValueChangeMode(ValueChangeMode.EAGER);
+searchInput.addValueChangeListener(event -> {
+    String searchTerm = event.getValue();
+
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+});
+----
+
+The `setFilter` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
+
+When filtering, Tree Data Provider evaluates the entire expanded hierarchy. If a nested item matches the filter, its full chain of parent items is also included. This ensures that the matching item appears in the filtered view even if some of its parents don't match the filter themselves.
+
+== Custom Data Providers
+
+Conceptually, any hierarchical data provider, including [classname]`TreeDataProvider`, is a class that implements the [classname]`HierarchicalDataProvider` interface. It encapsulates the logic needed to fetch hierarchical data from a specific data source, with support for pagination, sorting, and filtering.
+
+For convenience, Flow provides an abstract base class [classname]`AbstractHierarchicalDataProvider`, which you can extend to create a custom hierarchical data provider. This class requires implementing the following methods:
+
+[source,java]
+----
+public class CustomDataProvider extends AbstractHierarchicalDataProvider<T, F> {
     @Override
     public boolean isInMemory() { // <1>
         // Your implementation here
@@ -191,7 +268,7 @@ Below is an example of a simple in-memory data provider using the nested hierarc
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
@@ -240,8 +317,8 @@ public class FolderTreeData extends TreeData<Folder> {
         // Creates a TreeData object with the following folder hierarchy:
         //
         // ├── Work
-        // │ └── Documents
-        // │ └── Invoices
+        // │   └── Documents
+        // │       └── Invoices
         // └── Family
 
         Folder work = new Folder("Work");
@@ -274,9 +351,8 @@ public record Folder(String name) {};
 
 * The full size and structure of the tree remain unknown since determining them would require loading the entire hierarchy into memory, which isn't efficient for this format. As a result, Tree Grid can't restore the scroll position automatically after [methodname]`HierarchicalDataProvider#refreshAll()` because it resets the cached hierarchy state.
 * Fast scrolling can skip over hierarchy levels, which makes this format less ideal for using with drag-and-drop.
-* While individual requests are lightweight, a large number of expanded items can result in many requests in a short time, which may affect performance if the data source isn't optimized for this access pattern.
+* While individual requests are lightweight, a large number of expanded items can result in many small requests in a short time, which may affect performance if the data source isn't optimized for this access pattern.
 
-[role="since:com.vaadin:vaadin@V25.0"]
 ==== HierarchyFormat.FLATTENED
 
 The flattened hierarchy format refers to a data provider implementation that returns the entire sub-tree of the requested parent item in a single, flat list, including all expanded descendants arranged in depth-first order: parent first, then its children, followed by their children, and so on.
@@ -296,7 +372,7 @@ Below is an example of a simple in-memory data provider using the flattened hier
 [source,java]
 .FolderDataProvider.java
 ----
-class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
+public class FolderDataProvider implements AbstractHierarchicalDataProvider<Folder, Void> {
     public FolderTreeData folderTreeData = new FolderTreeData();
 
     @Override
@@ -371,8 +447,8 @@ public class FolderTreeData extends TreeData<Folder> {
         // Creates a TreeData object with the following folder hierarchy:
         //
         // ├── Work
-        // │ └── Documents
-        // │ └── Invoices
+        // │   └── Documents
+        // │       └── Invoices
         // └── Family
 
         Folder work = new Folder("Work");

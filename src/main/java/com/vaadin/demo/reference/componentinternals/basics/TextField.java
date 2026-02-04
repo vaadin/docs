@@ -15,10 +15,11 @@ import com.vaadin.flow.shared.Registration;
 public class TextField extends Component {
 
     public TextField(String value) {
-        getElement().setProperty("value",value);
+        getElement().setProperty("value", value);
     }
-// end::basic[]
-// tag::events[]
+
+    // end::basic[]
+    // tag::events[]
     @Synchronize("change")
     public String getValue() {
         return getElement().getProperty("value");
@@ -33,7 +34,7 @@ public class TextField extends Component {
             ComponentEventListener<ChangeEvent> listener) {
         return addListener(ChangeEvent.class, listener);
     }
-// end::events[]
-// tag::basic[]
+    // end::events[]
+    // tag::basic[]
 }
 // end::basic[]

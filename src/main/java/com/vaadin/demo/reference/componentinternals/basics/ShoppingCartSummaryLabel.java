@@ -16,13 +16,15 @@ public class ShoppingCartSummaryLabel extends Component {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         // This assumes the session already contains a ShopEventBus
-        var eventBus = attachEvent.getSession().getAttribute(ShopEventBus.class);
+        var eventBus = attachEvent.getSession()
+                .getAttribute(ShopEventBus.class);
         eventBus.register(eventHandler);
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
-        var eventBus = detachEvent.getSession().getAttribute(ShopEventBus.class);
+        var eventBus = detachEvent.getSession()
+                .getAttribute(ShopEventBus.class);
         eventBus.unregister(eventHandler);
     }
 

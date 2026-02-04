@@ -39,6 +39,7 @@ ifdef::react[]
 include::{root}/frontend/demo/component/grid/react/grid-content.tsx[render,tags=snippet,indent=0,group=React]
 ----
 endif::[]
+
 --
 
 
@@ -327,12 +328,14 @@ The example that follows is using the [methodname]`withProperty()` method to acc
 
 [source,java]
 ----
-grid.addColumn(LitRenderer.<Person>of(
-        "<div>${item.address.street}, number " +
-        "${item.address.number}<br>" +
-        "<small>${item.address.postalCode}</small>" +
-        "</div>")
-        .withProperty("address", Person::getAddress))
+grid.addColumn(LitRenderer.<Person> of(
+    """
+        <div>
+          ${item.address.street}, number ${item.address.number}<br>
+          <small>${item.address.postalCode}</small>
+        </div>
+        """)
+    .withProperty("address", Person::getAddress))
     .setHeader("Address");
 ----
 
@@ -345,15 +348,16 @@ The example that follows is using the [methodname]`withFunction()` method to map
 
 [source,java]
 ----
-grid.addColumn(LitRenderer.<Person>of(
-     "<button @click=\"${handleUpdate}\">Update</button>" +
-     "<button @click=\"${handleRemove}\">Remove</button>")
+grid.addColumn(LitRenderer.<Person> of(
+    """
+        <button @click="${handleUpdate}">Update</button>
+        <button @click="${handleRemove}">Remove</button>
+        """)
     .withFunction("handleUpdate", person -> {
         person.setName(person.getName() + " Updated");
         grid.getDataProvider().refreshItem(person);
     }).withFunction("handleRemove", person -> {
-        ListDataProvider<Person> dataProvider =
-            (ListDataProvider<Person>) grid
+        ListDataProvider<Person> dataProvider = (ListDataProvider<Person>) grid
                 .getDataProvider();
         dataProvider.getItems().remove(person);
         dataProvider.refreshAll();
@@ -370,13 +374,16 @@ Below is an example of this:
 
 [source,java]
 ----
-grid.addColumn(LitRenderer.<Person>of(
-     "<input .value=\"${item.profession}\" @change=\"${e => changed(e.target.value)}\">")
+grid.addColumn(LitRenderer.<Person> of(
+    """
+        <input .value="${item.profession}" @change="${e => changed(e.target.value)}">
+        """)
+    .withProperty("profession", Person::getProfession)
     .withFunction("changed", (person, args) -> {
         String profession = args.getString(0);
         person.setProfession(profession);
         grid.getDataProvider().refreshItem(person);
-    }).withProperty("profession", Person::getProfession));
+    }));
 ----
 
 The functions defined by the [methodname]`withFunction()` method can be called with any number of additional parameters. The additional argument of type [classname]`String` (the updated profession) is obtained from the second handler parameter with [methodname]`args.getString(0)`, where the number is the index of the argument in the [classname]`JsonArray`.
@@ -398,30 +405,34 @@ Indicates whether the item is selected or not.
 `model.detailsOpened`::
 Indicates whether the details row for the item is opened or closed.
 
+`model.hasChildren`::
+Indicates whether the item has child items and therefore can be expanded.
+
 The example below shows how to create a custom tree toggle for the `TreeGrid`:
 
 [source,java]
 ----
-// The click listener needs to check if the event gets canceled (by
-// vaadin-grid-tree-toggle) and only invoke the callback if it does.
-// vaadin-grid-tree-toggle will cancel the event if the user clicks on
-// a non-focusable element inside the toggle.
-var clickListener = "e => requestAnimationFrame(() => { e.defaultPrevented && onClick(e) })";
-
 grid.addColumn(LitRenderer.<Person> of(
-    "<vaadin-grid-tree-toggle @click=${" + clickListener + "} .leaf=${item.leaf} .expanded=${model.expanded} .level=${model.level}>"
-            + "${item.name}</vaadin-grid-tree-toggle>")
-    .withProperty("leaf",
-            item -> !grid.getDataCommunicator().hasChildren(item))
-    .withProperty("name",
-            item -> item.getName())
+    // The click listener needs to check if the event gets canceled
+    // (by vaadin-grid-tree-toggle) and only invoke the callback if
+    // it does. vaadin-grid-tree-toggle will cancel the event if the
+    // user clicks on a non-focusable element inside the toggle.
+    """
+        <vaadin-grid-tree-toggle
+          @click="${(e) => requestAnimationFrame(() => e.defaultPrevented && onClick(e))}"
+          .leaf="${!model.hasChildren}"
+          .level="${model.level}"
+          .expanded="${live(model.expanded)}"
+        >
+          ${item.name}
+        </vaadin-grid-tree-toggle>
+        """)
+    .withProperty("name", item -> item.getName())
     .withFunction("onClick", item -> {
-        if (grid.getDataCommunicator().hasChildren(item)) {
-            if (grid.isExpanded(item)) {
-                grid.collapse(item);
-            } else {
-                grid.expand(item);
-            }
+        if (grid.isExpanded(item)) {
+            grid.collapse(item);
+        } else {
+            grid.expand(item);
         }
     }));
 ----

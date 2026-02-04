@@ -9,9 +9,9 @@ import com.vaadin.flow.component.Tag;
 
 @Tag("input")
 public class TextField extends Component {
-// tag::property[]    
-    private static final PropertyDescriptor<String, String> VALUE 
-        = PropertyDescriptors.propertyWithDefault("value", "");
+    // tag::property[]
+    private static final PropertyDescriptor<String, String> VALUE = PropertyDescriptors
+            .propertyWithDefault("value", "");
 
     public String getValue() {
         return get(VALUE);
@@ -20,11 +20,11 @@ public class TextField extends Component {
     public void setValue(String value) {
         set(VALUE, value);
     }
-// end::property[]
+    // end::property[]
 
-// tag::attribute[]
-    private static final PropertyDescriptor<String, Optional<String>> PLACEHOLDER 
-        = PropertyDescriptors.optionalAttributeWithDefault("placeholder", "");
+    // tag::attribute[]
+    private static final PropertyDescriptor<String, Optional<String>> PLACEHOLDER = PropertyDescriptors
+            .optionalAttributeWithDefault("placeholder", "");
 
     public Optional<String> getPlaceholder() {
         return get(PLACEHOLDER);
@@ -33,5 +33,5 @@ public class TextField extends Component {
     public void setPlaceholder(String placeholder) {
         set(PLACEHOLDER, placeholder);
     }
-// end::attribute[]
+    // end::attribute[]
 }

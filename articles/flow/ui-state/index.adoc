@@ -1,0 +1,211 @@
+---
+title: UI State
+page-title: How to manage UI state with signals in Vaadin Flow
+description: Using signals in Flow to manage UI state reactively in Vaadin applications.
+meta-description: Manage UI state reactively and share it within an application with signals in Vaadin Flow.
+order: 25
+---
+
+
+= Manage UI State with Signals
+
+Signals enable reactive state management for Vaadin Flow applications. Instead of manually updating UI components when data changes, you declare the relationship between your data and UI once, and signals keep everything synchronized automatically.
+
+section_outline::[]
+
+
+== Why Signals?
+
+Consider a simple counter. Without signals, you need to manually update the UI whenever the value changes:
+
+[source,java]
+----
+public class TraditionalCounter extends VerticalLayout {
+    private int count = 0;
+
+    public TraditionalCounter() {
+        Button button = new Button("Clicked 0 times");
+        button.addClickListener(click -> {
+            count++;
+            button.setText("Clicked " + count + " times"); // Manual UI update
+        });
+        add(button);
+    }
+}
+----
+
+With signals, the UI updates automatically:
+
+[source,java]
+----
+import com.vaadin.signals.local.ValueSignal;
+
+public class SignalCounter extends VerticalLayout {
+    private final ValueSignal<Integer> count = new ValueSignal<>(0);
+
+    public SignalCounter() {
+        Button button = new Button();
+        button.addClickListener(click -> count.update(c -> c + 1));
+        add(button);
+
+        // UI updates automatically when count changes
+        button.bindText(count.map(c -> "Clicked " + c + " times"));
+    }
+}
+----
+
+The benefit becomes clear with more complex UIs. When multiple components depend on the same data, signals ensure they all stay in sync without manual coordination:
+
+[source,java]
+----
+public class UserProfile extends VerticalLayout {
+    private final ValueSignal<String> firstName = new ValueSignal<>("");
+    private final ValueSignal<String> lastName = new ValueSignal<>("");
+
+    public UserProfile() {
+        // Form fields
+        TextField firstNameField = new TextField("First name");
+        firstNameField.addValueChangeListener(e -> firstName.value(e.getValue()));
+
+        TextField lastNameField = new TextField("Last name");
+        lastNameField.addValueChangeListener(e -> lastName.value(e.getValue()));
+
+        // Multiple UI elements that update automatically
+        Span greeting = new Span();
+        Span fullName = new Span();
+        Button saveButton = new Button("Save");
+
+        greeting.bindText(firstName.map(name -> "Hello, " + name + "!"));
+
+        fullName.bindText(Signal.computed(() ->
+            firstName.value() + " " + lastName.value()));
+
+        saveButton.bindEnabled(Signal.computed(() ->
+            !firstName.value().isEmpty() && !lastName.value().isEmpty()));
+
+        add(firstNameField, lastNameField, greeting, fullName, saveButton);
+    }
+}
+----
+
+All three components (greeting, full name, save button) update automatically whenever the user types. No manual synchronization needed.
+
+
+== Key Features
+
+*Reactive*:: Changes to signal values automatically propagate to dependent parts of the UI.
+*Automatic Dependency Tracking*:: Effects automatically detect which signals they depend on.
+*Immutable Values*:: Signals work best with immutable values, such as strings or Java records, to ensure data consistency.
+*Transactions*:: Multiple operations can be grouped into a transaction that either succeeds or fails as a whole.
+*Thread-Safe*:: Signals can be updated from any thread without manual UI synchronization.
+
+
+== Core Concepts
+
+
+=== Signals
+
+A signal holds a value. When the value changes, all dependent parts of the UI update automatically without manual change listeners.
+
+[source,java]
+----
+ValueSignal<String> name = new ValueSignal<>("initial value");
+name.value("new value"); // Set the value
+String current = name.value(); // Get the value
+----
+
+
+=== Effects
+
+Effects are the mechanism behind reactive updates. When you bind a signal to a component, an effect tracks which signals are read and re-runs when they change.
+
+[source,java]
+----
+// This binding creates an effect that updates text when signals change
+span.bindText(Signal.computed(() ->
+    firstName.value() + " " + lastName.value()));
+----
+
+For custom logic, you can create effects directly:
+
+[source,java]
+----
+ComponentEffect.effect(component, () -> {
+    // This runs whenever firstName or lastName changes
+    System.out.println("Name changed to: " + firstName.value() + " " + lastName.value());
+});
+----
+
+
+=== Computed Signals
+
+Computed signals derive their value from other signals and update automatically when dependencies change.
+
+[source,java]
+----
+Signal<String> fullName = Signal.computed(() ->
+    firstName.value() + " " + lastName.value());
+----
+
+
+=== Transactions
+
+Transactions group multiple signal operations into a single atomic unit. All operations succeed or fail together.
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    firstName.value("John");
+    lastName.value("Doe");
+    // Both update atomically - observers never see partial state
+});
+----
+
+
+== Local vs Shared Signals
+
+Vaadin provides two categories of signals:
+
+*Local signals* are for UI state within a single browser session - things like whether a panel is expanded, form validation state, or filter settings.
+
+*Shared signals* are for state that needs synchronization across multiple users or requires transactional guarantees.
+
+[cols="1,1,1"]
+|===
+| | Local Signals | Shared Signals
+
+| Scope
+| Single UI instance
+| Multiple users/sessions
+
+| Cluster Support
+| Single server only
+| Works across cluster
+
+| Transactions
+| No
+| Yes
+
+| Primary Classes
+| `ValueSignal`, `ListSignal`
+| `SharedValueSignal`, `SharedNumberSignal`, `SharedListSignal`, etc.
+|===
+
+
+=== Choosing Between Local and Shared Signals
+
+Use *local signals* when:
+
+- The state is only relevant to a single user's UI session
+- You need simple, fast state management without synchronization overhead
+- You're managing UI state like form visibility, panel expansion, or local filters
+- You need dynamic lists for a single user (use [classname]`ListSignal` for add/remove operations)
+
+Use *shared signals* when:
+
+- Multiple users need to see the same data in real-time
+- You need transactional guarantees for state changes
+- You're building collaborative features like live dashboards or multi-user editing
+
+[NOTE]
+When using shared signals for multi-user scenarios, you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> so changes are pushed to all users immediately.

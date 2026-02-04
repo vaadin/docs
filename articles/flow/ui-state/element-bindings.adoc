@@ -1,0 +1,376 @@
+---
+title: Element Bindings
+page-title: Low-Level Element Bindings for Signals in Vaadin Flow
+description: Binding signals to Element properties, attributes, and styles for advanced use cases.
+meta-description: Learn how to bind signals directly to DOM elements for advanced reactive UI patterns.
+order: 50
+---
+
+
+= Element Bindings
+
+This section covers low-level [classname]`Element` bindings for direct DOM manipulation. These APIs are useful when building custom components or when you need fine-grained control over element attributes and properties.
+
+[NOTE]
+====
+For most applications, use the component-level binding methods covered in <<building-ui#,Component Bindings>>. Component methods like `bindText()`, `bindVisible()`, and `bindEnabled()` provide a simpler API for common use cases. Use Element bindings when:
+
+- Building custom components
+- Working with HTML attributes not exposed by component APIs
+- Binding element properties for JavaScript interoperability
+====
+
+
+== Binding Rules
+
+All element bindings follow consistent rules:
+
+- When a feature is bound to a signal, its value is kept synchronized with the signal value while the element is in the attached state
+- When the element is detached, signal value changes have no effect
+- Passing `null` as the signal unbinds the existing binding
+- While a signal is bound, any attempt to set the value manually (other than through the signal) throws [classname]`BindingActiveException`
+- Attempting to bind a new signal while one is already bound throws [classname]`BindingActiveException`
+
+
+== Text Binding
+
+.`Element#bindText(Signal<String> signal)`
+[source,java]
+----
+// NumberSignal's Double type must be mapped to String
+Signal<String> signal = counter.map(value -> String.format("Clicked %.0f times", value));
+
+span.getElement().bindText(signal);
+// span's text content is now "Clicked 0 times"
+----
+
+.Binding lifecycle
+[source,java]
+----
+span.getElement().getText(); // returns "Clicked 0 times"
+span.getElement().setText(""); // throws BindingActiveException
+
+span.getElement().removeFromParent(); // detaching from the UI
+span.getElement().getText(); // returns "Clicked 0 times"
+span.getElement().setText(""); // throws BindingActiveException
+counter.value(5); // updating the signal value
+span.getElement().getText(); // returns "Clicked 0 times"
+add(span); // re-attaching the element to the UI
+span.getElement().getText(); // returns "Clicked 5 times"
+
+span.getElement().bindText(null); // unbinds the existing binding
+span.getElement().getText(); // returns "Clicked 5 times"
+span.getElement().setText("");
+span.getElement().getText(); // returns ""
+----
+
+
+== Attribute Binding
+
+.`Element#bindAttribute(String attribute, Signal<String> signal)`
+[source,java]
+----
+SharedValueSignal<String> label = new SharedValueSignal<>(String.class);
+label.value("Close dialog");
+
+button.getElement().bindAttribute("aria-label", label);
+// DOM has "<button aria-label="Close dialog">"
+
+label.value(null);
+// DOM has "<button>" (attribute removed)
+----
+
+
+== Property Binding
+
+Property binding supports various value types: `String`, `Boolean`, `Double`, `BaseJsonNode`, `Object` (bean), `List` and `Map`.
+
+[NOTE]
+Typed Lists and Maps are not supported. The signal must be of type `Signal<List<?>>` or `Signal<Map<?,?>>`.
+
+.`Element#bindProperty(String name, Signal<?> signal)`
+
+[source,java]
+----
+SharedValueSignal<Boolean> hidden = new SharedValueSignal<>(Boolean.class);
+hidden.value(false);
+
+span.getElement().bindProperty("hidden", hidden);
+hidden.value(!hidden.peek()); // toggles 'hidden' property
+----
+
+.String type
+[source,java]
+----
+SharedValueSignal<String> title = new SharedValueSignal<>(String.class);
+title.value("Hello");
+span.getElement().bindProperty("title", title);
+title.value("World"); // updates 'title' property
+----
+
+.Double type
+[source,java]
+----
+SharedNumberSignal width = new SharedNumberSignal();
+width.value(100.5);
+span.getElement().bindProperty("width", width);
+width.incrementBy(50); // updates 'width' property to 150.5
+----
+
+.Object (bean) type
+[source,java]
+----
+record Person(String name, int age) {}
+
+SharedValueSignal<Person> person = new SharedValueSignal<>(Person.class);
+person.value(new Person("John", 30));
+span.getElement().bindProperty("person", person);
+person.value(new Person("Jane", 25));
+// element.person is now {name: 'Jane', age: 25}
+----
+
+.List type
+[source,java]
+----
+SharedValueSignal<List<String>> items = new SharedValueSignal<>(List.class);
+items.value(List.of("Item 1", "Item 2"));
+span.getElement().bindProperty("items", items);
+items.value(List.of("Item A", "Item B", "Item C"));
+// element.items is now ['Item A', 'Item B', 'Item C']
+----
+
+.Map type
+[source,java]
+----
+SharedValueSignal<Map<String, String>> config = new SharedValueSignal<>(Map.class);
+config.value(Map.of("key1", "value1"));
+span.getElement().bindProperty("config", config);
+config.value(Map.of("key1", "value1", "key2", "value2"));
+// element.config is now {key1: 'value1', key2: 'value2'}
+----
+
+.Property change listener with bound signal
+[source,java]
+----
+SharedValueSignal<Boolean> hidden = new SharedValueSignal<>(Boolean.class);
+hidden.value(false);
+
+// Bind the 'hidden' property to the signal
+span.getElement().bindProperty("hidden", hidden);
+
+// Add a property change listener that synchronizes on 'change' DOM event
+span.getElement().addPropertyChangeListener("hidden", "change", event -> {
+    // When the property changes on the client (via DOM event),
+    // the changed value is synchronized with the bound signal
+    Notification.show("'hidden' property changed to: " + event.getValue());
+});
+
+// After a property change event from the client, signal.value() returns the updated value
+----
+
+
+== ClassList Binding
+
+.`ClassList#bind(String name, Signal<Boolean> signal)`
+[source,java]
+----
+SharedValueSignal<Boolean> foo = new SharedValueSignal<>(Boolean.class);
+SharedValueSignal<Boolean> bar = new SharedValueSignal<>(Boolean.class);
+foo.value(false);
+bar.value(true);
+
+span.getElement().getClassList().bind("foo", foo);
+span.getElement().getClassList().bind("bar", bar);
+// DOM has "<span class='bar'>"
+
+foo.value(true);
+// DOM has "<span class='bar foo'>"
+
+span.getElement().getClassList().clear();
+// DOM has "<span class>". Binding is also removed.
+----
+
+
+== Style Binding
+
+.`Style#bind(String name, Signal<String> signal)`
+[source,java]
+----
+SharedValueSignal<String> color = new SharedValueSignal<>(String.class);
+SharedValueSignal<String> background = new SharedValueSignal<>(String.class);
+color.value("black");
+background.value("white");
+
+span.getElement().getStyle().bind("color", color);
+span.getElement().getStyle().bind("background", background);
+// DOM has "<span style='color: black; background: white'>"
+
+color.value("red");
+background.value("gray");
+// DOM has "<span style='color: red; background: gray'>"
+
+background.value(""); // same with null
+// DOM has "<span style='color: red;'>"
+
+span.getElement().getStyle().clear();
+// DOM has "<span style>". Binding is also removed.
+----
+
+
+== ThemeList Binding
+
+.`ThemeList#bind(String name, Signal<Boolean> signal)`
+[source,java]
+----
+ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
+
+component.getThemeList().bind("dark", darkMode);
+// Theme "dark" is applied when darkMode is true
+
+darkMode.value(true);
+// Component now has "dark" theme applied
+----
+
+For component-level theme binding examples, see <<building-ui#binding-theme-variants,Binding Theme Variants>>.
+
+
+== Visibility Binding
+
+Components provide [methodname]`bindVisible()` directly. The Element-level binding follows the same pattern:
+
+.`Element#bindVisible(Signal<Boolean> signal)`
+[source,java]
+----
+ValueSignal<Boolean> visible = new ValueSignal<>(true);
+
+element.bindVisible(visible);
+// Element is visible when visible is true
+
+visible.value(false);
+// Element is now hidden
+----
+
+For component-level examples, see <<building-ui#binding-visibility,Binding Visibility>>.
+
+
+== Enabled Binding
+
+Components provide [methodname]`bindEnabled()` directly. The Element-level binding:
+
+.`Element#bindEnabled(Signal<Boolean> signal)`
+[source,java]
+----
+ValueSignal<Boolean> enabled = new ValueSignal<>(true);
+
+button.getElement().bindEnabled(enabled);
+// Button is enabled when enabled is true
+
+enabled.value(false);
+// Button is now disabled
+----
+
+For component-level examples, see <<building-ui#binding-enabled-state,Binding Enabled State>>.
+
+
+== HTML Content Binding
+
+.`Html#bindHtmlContent(Signal<String> signal)`
+[source,java]
+----
+ValueSignal<String> htmlContent = new ValueSignal<>("<strong>Bold text</strong>");
+
+Html html = new Html("<span></span>");
+html.bindHtmlContent(htmlContent);
+// HTML content is now "<strong>Bold text</strong>"
+
+htmlContent.value("<em>Italic text</em>");
+// HTML content is now "<em>Italic text</em>"
+----
+
+[WARNING]
+Be careful with HTML content binding to avoid XSS vulnerabilities. Never bind user-provided content directly without proper sanitization.
+
+
+== Form Field Bindings
+
+Form field bindings provide two-way synchronization between fields and signals. For comprehensive examples including all supported field types, see <<building-ui#two-way-form-field-binding,Two-Way Form Field Binding>> in Component Bindings.
+
+
+=== Two-Way Value Binding
+
+.`HasValue#bindValue(WritableSignal<V> signal)`
+
+The [methodname]`bindValue()` method creates a two-way binding between a form field and a writable signal:
+
+[source,java]
+----
+SharedValueSignal<String> nameSignal = new SharedValueSignal<>(String.class);
+
+TextField nameField = new TextField("Name");
+nameField.bindValue(nameSignal);
+
+// User types in field -> signal is updated
+// Signal changes -> field is updated
+----
+
+
+=== Read-Only Binding
+
+.`HasValue#bindReadOnly(Signal<Boolean> signal)`
+
+Binds the read-only state of a form field to a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> readOnly = new ValueSignal<>(false);
+
+TextField field = new TextField();
+field.bindReadOnly(readOnly);
+
+readOnly.value(true);
+// Field is now read-only
+----
+
+
+== SignalPropertySupport Helper
+
+Not all component features delegate directly to the state in [classname]`Element`. For those features, the [classname]`SignalPropertySupport` helper class ensures that state management behaves consistently with other element bindings.
+
+[source,java]
+----
+class MyComponent extends Div {
+    private final SignalPropertySupport<String> textProperty =
+            SignalPropertySupport.create(this, value -> {
+                getElement().executeJs("this.textContent = 'Content: ' + $0", value);
+            });
+
+    public String getTextContent() {
+        return textProperty.get();
+    }
+
+    public void setTextContent(String text) {
+        textProperty.set(text);
+    }
+
+    public void bindTextContent(Signal<String> textSignal) {
+        textProperty.bind(textSignal);
+    }
+}
+----
+
+Usage:
+
+[source,java]
+----
+MyComponent component = new MyComponent();
+component.bindTextContent(counter.map(v -> "Signal value: " + v));
+add(component);
+// textContent in browser is "Content: Signal value: 0.0"
+
+component.getTextContent(); // returns "Signal value: 0.0"
+component.setTextContent(""); // throws BindingActiveException
+
+component.bindTextContent(null); // unbinds the existing binding
+component.setTextContent("");
+component.getTextContent(); // returns ""
+----
