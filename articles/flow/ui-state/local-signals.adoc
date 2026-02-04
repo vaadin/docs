@@ -2,7 +2,7 @@
 title: Local Signals
 page-title: Local Signals for UI-Only State in Vaadin Flow
 description: Using local signals for UI-only state management.
-meta-description: Learn how to use local ValueSignal for managing UI-only state in Vaadin Flow.
+meta-description: Learn how to use local ValueSignal and ListSignal for managing UI-only state in Vaadin Flow.
 order: 20
 ---
 
@@ -14,13 +14,18 @@ Local signals provide lightweight, UI-only state management for scenarios where 
 
 == Overview
 
-The [classname]`ValueSignal` class is a writable signal that holds a reference to a value. Local signals are scoped to a single UI session, providing a simple and efficient way to manage component-level state.
+Local signals are scoped to a single UI session, providing a simple and efficient way to manage component-level state. Two types of local signals are available:
+
+* [classname]`ValueSignal<T>` - holds a single value
+* [classname]`ListSignal<T>` - holds an ordered list of values with per-entry reactivity
 
 [source,java]
 ----
 import com.vaadin.signals.local.ValueSignal;
+import com.vaadin.signals.local.ListSignal;
 
-ValueSignal<String> localName = new ValueSignal<>("Initial value");
+ValueSignal<String> name = new ValueSignal<>("Initial value");
+ListSignal<String> items = new ListSignal<>();
 ----
 
 
@@ -77,6 +82,145 @@ ValueSignal<Task> taskSignal = new ValueSignal<>(new Task("Write docs", TaskStat
 // Update task state by creating a new record with the modified value
 taskSignal.update(t -> new Task(t.text(), TaskState.COMPLETED));
 ----
+
+
+== ListSignal
+
+[classname]`ListSignal<T>` provides an ordered list of values where each entry is independently reactive. Changes to the list structure (adding or removing items) trigger list-level dependents, while changes to individual entry values only trigger that entry's dependents.
+
+[source,java]
+----
+import com.vaadin.signals.local.ListSignal;
+
+ListSignal<String> tags = new ListSignal<>();
+----
+
+
+=== Adding Items
+
+Use [methodname]`insertFirst()`, [methodname]`insertLast()`, or [methodname]`insertAt()` to add items:
+
+[source,java]
+----
+ListSignal<String> items = new ListSignal<>();
+
+// Add to the end (most common)
+ValueSignal<String> lastItem = items.insertLast("Last");
+
+// Add to the beginning
+ValueSignal<String> firstItem = items.insertFirst("First");
+
+// Add at a specific position (0-indexed)
+ValueSignal<String> middleItem = items.insertAt(1, "Middle");
+
+// List is now: ["First", "Middle", "Last"]
+----
+
+Each insert method returns a [classname]`ValueSignal<T>` representing the entry. You can use this signal to update or remove the entry later.
+
+
+=== Removing Items
+
+Use [methodname]`remove()` to remove a specific entry, or [methodname]`clear()` to remove all entries:
+
+[source,java]
+----
+ListSignal<String> items = new ListSignal<>();
+ValueSignal<String> entry = items.insertLast("Item to remove");
+
+// Remove a specific entry
+items.remove(entry);
+
+// Remove all entries
+items.clear();
+----
+
+
+=== Reading List Contents
+
+Use [methodname]`value()` to get a snapshot of the list:
+
+[source,java]
+----
+ListSignal<String> items = new ListSignal<>();
+items.insertLast("A");
+items.insertLast("B");
+
+// Get a snapshot list of ValueSignal entries
+List<ValueSignal<String>> entries = items.value();
+
+// Read values from entries
+entries.forEach(entry -> System.out.println(entry.value()));
+----
+
+
+=== Updating Entry Values
+
+Since each list entry is a [classname]`ValueSignal`, you can update individual entries without affecting other entries or the list structure:
+
+[source,java]
+----
+ListSignal<String> items = new ListSignal<>();
+ValueSignal<String> entry = items.insertLast("Original");
+
+// Update the entry value
+entry.value("Updated");
+
+// The list still has one entry, but its value changed
+----
+
+This per-entry reactivity is efficient: only components bound to the changed entry update, not all components bound to the list.
+
+
+=== ListSignal Example
+
+Here's an example of dynamic phone number fields where users can add and remove entries:
+
+[source,java]
+----
+public class PhoneNumbersEditor extends VerticalLayout {
+    private final ListSignal<String> phoneNumbers = new ListSignal<>();
+
+    public PhoneNumbersEditor() {
+        VerticalLayout phoneList = new VerticalLayout();
+        phoneList.setPadding(false);
+        phoneList.setSpacing(false);
+
+        ComponentEffect.bindChildren(phoneList, phoneNumbers, phoneSignal -> {
+            HorizontalLayout row = new HorizontalLayout();
+            row.setAlignItems(FlexComponent.Alignment.CENTER);
+
+            TextField phoneField = new TextField();
+            phoneField.setPlaceholder("Phone number");
+            phoneField.bindValue(phoneSignal);
+
+            Button removeButton = new Button(VaadinIcon.MINUS.create());
+            removeButton.addClickListener(e -> phoneNumbers.remove(phoneSignal));
+
+            row.add(phoneField, removeButton);
+            return row;
+        });
+
+        Button addButton = new Button("Add phone number", e -> phoneNumbers.insertLast(""));
+        add(phoneList, addButton);
+    }
+}
+----
+
+
+=== When to Use ListSignal vs SharedListSignal
+
+Use [classname]`ListSignal` when:
+
+- The list is only relevant to a single user's UI session
+- You don't need to synchronize the list across users or browser tabs
+- Examples: dynamic form fields, local shopping cart UI, tabs/panels, temporary selections
+
+Use [classname]`SharedListSignal` when:
+
+- Multiple users need to see the same list in real-time
+- You need transactional guarantees for list operations
+- Examples: collaborative todo lists, shared document comments, live dashboards
 
 
 == Replacing Values
@@ -147,15 +291,17 @@ However, local signals are scoped to a single server instance. Vaadin doesn't ye
 
 == Transaction Limitations
 
-Local signals cannot participate in signal transactions:
+Local signals ([classname]`ValueSignal` and [classname]`ListSignal`) cannot participate in signal transactions:
 
 [source,java]
 ----
-ValueSignal<String> local = new ValueSignal<>("value");
+ValueSignal<String> localValue = new ValueSignal<>("value");
+ListSignal<String> localList = new ListSignal<>();
 
 // This will throw an exception
 Signal.runInTransaction(() -> {
-    local.value("new value"); // Not allowed!
+    localValue.value("new value"); // Not allowed!
+    localList.insertLast("item");  // Not allowed!
 });
 ----
 
@@ -194,6 +340,95 @@ Signal<String> upperName = name.map(String::toUpperCase);
 Use `map()` for single-signal transformations. For transformations depending on multiple signals, use `Signal.computed()` instead.
 
 
+[[two-way-mapping]]
+== Two-Way Signal Mapping
+
+The read-only [methodname]`map()` method described above creates a derived signal that updates when the source changes, but changes to the derived signal don't propagate back. For two-way binding scenarios where you need changes to flow in both directions, use the two-way mapping variants.
+
+This is particularly useful when binding a form field to a property of a complex object stored in a signal. For example, binding a checkbox directly to the `done` property of a `Todo` record.
+
+
+=== Mapping Immutable Values (Records)
+
+For immutable values like Java records, use [methodname]`map(getter, merger)`:
+
+[source,java]
+----
+record Todo(String text, boolean done) {
+    Todo withDone(boolean done) {
+        return new Todo(this.text, done);
+    }
+}
+
+ValueSignal<Todo> todoSignal = new ValueSignal<>(new Todo("Write docs", false));
+
+// Create a two-way mapping to the 'done' property
+WritableSignal<Boolean> doneSignal = todoSignal.map(Todo::done, Todo::withDone);
+
+// Bind checkbox directly to the property
+Checkbox checkbox = new Checkbox();
+checkbox.bindValue(doneSignal);
+// Checking the box updates the todo's done property
+// Calling todoSignal.update(...) updates the checkbox
+----
+
+The `merger` function receives the current parent value and the new child value, and returns a new parent value with the child property updated. Using wither methods like `withDone()` is a common pattern for records.
+
+
+=== Mapping Mutable Values (Beans)
+
+For mutable beans with setters, use [methodname]`mapMutable(getter, modifier)`:
+
+[source,java]
+----
+public class User {
+    private String name;
+    private int age;
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+}
+
+ValueSignal<User> userSignal = new ValueSignal<>(new User());
+
+// Create a two-way mapping to the 'name' property
+WritableSignal<String> nameSignal = userSignal.mapMutable(User::getName, User::setName);
+
+// Bind text field directly to the property
+TextField nameField = new TextField("Name");
+nameField.bindValue(nameSignal);
+----
+
+The `modifier` function receives the parent object and the new value, and mutates the parent in place. The signal framework handles change notification automatically.
+
+[NOTE]
+====
+Prefer immutable records over mutable beans when possible. Records are easier to reason about, naturally thread-safe, and work better with reactive patterns. Use `mapMutable()` only when working with existing mutable bean classes.
+====
+
+
+=== Comparison: Read-Only vs Two-Way Mapping
+
+[cols="1,1,1"]
+|===
+| Method | Use Case | Return Type
+
+| `map(getter)`
+| Read-only transformations
+| `Signal<T>` (read-only)
+
+| `map(getter, merger)`
+| Two-way binding with immutable values
+| `WritableSignal<T>`
+
+| `mapMutable(getter, modifier)`
+| Two-way binding with mutable beans
+| `WritableSignal<T>`
+|===
+
+
 == Organizing Signals as Fields
 
 Storing signals as class fields is recommended for better code organization. It keeps all reactive state together at the top of the class, making it easier to understand the component's state at a glance:
@@ -221,6 +456,8 @@ This pattern also allows computed signals to be defined declaratively alongside 
 
 Local signals are ideal for:
 
+*ValueSignal use cases:*
+
 - *UI toggle states*: Panel expansion, modal visibility, sidebar open/closed
 - *Form state*: Current step in a wizard, validation state
 - *Local filters*: Search text, sort order within a single view
@@ -242,3 +479,10 @@ public class ExpandablePanel extends VerticalLayout {
     }
 }
 ----
+
+*ListSignal use cases:*
+
+- *Dynamic form fields*: Add/remove phone numbers, addresses, or other repeating fields
+- *Local shopping cart*: Managing cart items in a single-user session
+- *UI tabs or panels*: Dynamic tabs that users can open and close
+- *Temporary selections*: Multi-select items before batch operations

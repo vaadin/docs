@@ -304,9 +304,9 @@ Use [methodname]`ComponentEffect.bindChildren()` to efficiently render a list of
 
 [source,java]
 ----
-import com.vaadin.signals.shared.SharedListSignal;
+import com.vaadin.signals.local.ListSignal;
 
-SharedListSignal<String> items = new SharedListSignal<>(String.class);
+ListSignal<String> items = new ListSignal<>();
 
 VerticalLayout container = new VerticalLayout();
 
@@ -322,15 +322,23 @@ items.insertLast("Second item");
 // Container now has two Span children
 ----
 
+[NOTE]
+Use [classname]`ListSignal` for single-user scenarios (dynamic form fields, local selections). Use [classname]`SharedListSignal` when multiple users need to see the same list in real-time or when you need transactional guarantees. See <<local-signals#listsignal,ListSignal>> for more details.
+
 
 === Complex List Items
 
-Create rich list items with nested bindings:
+Create rich list items with nested bindings. This example uses [classname]`SharedListSignal` for a collaborative todo list where multiple users can see changes in real-time:
 
 [source,java]
 ----
-record Todo(String text, boolean done) {}
+record Todo(String text, boolean done) {
+    Todo withDone(boolean done) {
+        return new Todo(this.text, done);
+    }
+}
 
+// Use SharedListSignal for multi-user collaboration
 SharedListSignal<Todo> todos = new SharedListSignal<>(Todo.class);
 
 VerticalLayout todoList = new VerticalLayout();
@@ -339,11 +347,9 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     HorizontalLayout row = new HorizontalLayout();
     row.setAlignItems(FlexComponent.Alignment.CENTER);
 
+    // Two-way binding to the 'done' property using signal mapping
     Checkbox checkbox = new Checkbox();
-    checkbox.addValueChangeListener(e ->
-        todoSignal.update(t -> new Todo(t.text(), e.getValue())));
-    ComponentEffect.bind(checkbox, todoSignal,
-        (cb, todo) -> cb.setValue(todo.done()));
+    checkbox.bindValue(todoSignal.map(Todo::done, Todo::withDone));
 
     Span text = new Span();
     text.bindText(todoSignal.map(Todo::text));
@@ -366,6 +372,8 @@ ComponentEffect.bindChildren(todoList, todos, todoSignal -> {
     return row;
 });
 ----
+
+The [methodname]`map(getter, merger)` method creates a two-way mapping that enables direct binding between the checkbox and the `done` property. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details.
 
 When you update a todo item using [methodname]`todoSignal.update()`, only the bound properties (text content, styling) are updated. The component itself is not recreated, maintaining its position and identity in the DOM.
 
@@ -442,11 +450,9 @@ public class TaskManager extends VerticalLayout {
             row.bindVisible(Signal.computed(() ->
                 showCompleted.value() || !taskSignal.value().done()));
 
+            // Two-way binding to the 'done' property
             Checkbox doneCheckbox = new Checkbox();
-            doneCheckbox.addValueChangeListener(e ->
-                taskSignal.update(t -> new Task(t.text(), e.getValue())));
-            ComponentEffect.bind(doneCheckbox, taskSignal,
-                (cb, task) -> cb.setValue(task.done()));
+            doneCheckbox.bindValue(taskSignal.map(Task::done, Task::withDone));
 
             Span taskText = new Span();
             taskText.bindText(taskSignal.map(Task::text));
@@ -463,16 +469,23 @@ public class TaskManager extends VerticalLayout {
         add(taskList);
     }
 
-    record Task(String text, boolean done) {}
+    record Task(String text, boolean done) {
+        Task withDone(boolean done) {
+            return new Task(this.text, done);
+        }
+    }
 }
 ----
 
 This example demonstrates:
 
 - Two-way binding with form fields ([methodname]`bindValue()`)
-- One-way binding with [methodname]`ComponentEffect.bind()`
+- Two-way property mapping with [methodname]`map(getter, merger)` (see <<local-signals#two-way-mapping,Two-Way Signal Mapping>>)
 - Conditional button enabling ([methodname]`bindEnabled()`)
 - Computed signals for derived values
 - List rendering with [methodname]`ComponentEffect.bindChildren()`
 - Dynamic visibility ([methodname]`bindVisible()`)
 - Dynamic styling ([methodname]`getStyle().bind()`)
+
+[TIP]
+If this task manager doesn't need to be shared across users, you can simplify it by using [classname]`ListSignal` instead of [classname]`SharedListSignal`. Replace `new SharedListSignal<>(Task.class)` with `new ListSignal<>()` for a single-user task manager.
