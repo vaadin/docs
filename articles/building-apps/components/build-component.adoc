@@ -2,37 +2,289 @@
 title: Build a Component
 page-title: How to build a Vaadin component
 description: Learn how to build a Vaadin component from scratch.
-meta-description: TODO
+meta-description: Learn how to build custom Vaadin components using Composite, Component extension, or by extending existing components with practical examples.
 order: 5
 ---
 
+
 = Build a Component
+:toclevels: 2
 
-Main points:
+This guide covers how to build reusable UI components in Vaadin. While views are technically components, this guide focuses on smaller, reusable building blocks that you combine to create views.
 
-- This is a hands-on tutorial based on the reference material in <</flow/component-internals#,Component Internals Reference>>. Readers should refer to that guide for details.
-- Even though views are also technically Vaadin component, this guide focuses on smaller components that you'd typically use when constructing a view.
-- First choice: Compose or Extend?
-  - Composite components:
-    - Useful if you don't want to deal with the underlying DOM
-    - Useful if you can compose the component out of existing Vaadin components rather than building something completely new
-    - Gives you better control over the component <</building-apps/architecture/api-spi#,API>> as `Composite` exposes very few methods.
-    - Create: A real-world, copy-pastable example of a component
-  - Extending Component:
-    - Useful when you want to control the underlying DOM
-    - You can still implement everything in Java and manipulate the DOM using the <</flow/component-internals/element-api#,Elements API>>.
-    - Create: A real-world, copy-pastable example of a component
-  - Extending another component:
-    - Useful when you want to add more features to an already existing Vaadin component
-    - Risky if the component was not designed to be extended
-- Second choice: The Java API
-  - <</flow/component-internals/properties#,Properties>>
-  - <</flow/component-internals/events#,Events>>
-  - <</flow/ui-state#,Signals>>
-  - Think about how the component will be used by clients
-  - Outsource as much logic as possible to the client
-  - The simpler the component, the more it can be reused
-  - Think about how the component can be reused. If the component is going to be extended, think about which methods should be protected, final, etc. If you don't want the component extended, mark it final. It can still be reused through composition.
-- Third choice: <</flow/component-internals/mixins#,Mixin Interfaces>>
-  - You don't have to build everything from scratch. Use existing APIs for common functionalitites.
-  
+For in-depth technical details, see the <<{articles}/flow/component-internals#,Component Internals Reference>>.
+
+
+== Composite Components
+
+Use `Composite` when combining existing Vaadin components into a reusable widget. This is the recommended approach for most custom components.
+
+`Composite` wraps a root component and exposes very few methods by default, giving you full control over the public API.
+
+The following example builds a `Banner` component for displaying messages with different severity levels:
+
+[source,java]
+----
+public class Banner extends Composite<HorizontalLayout> { // <1>
+
+    private final Span messageSpan = new Span();
+    private final Button closeButton = new Button(VaadinIcon.CLOSE.create());
+
+    public Banner() {
+        messageSpan.addClassName(LumoUtility.Flex.GROW);
+
+        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addClickListener(e -> fireEvent(new CloseEvent(this))); // <2>
+
+        getContent().setAlignItems(FlexComponent.Alignment.CENTER); // <3>
+        getContent().setWidthFull();
+        getContent().add(messageSpan, closeButton);
+    }
+
+    public void setMessage(String message) { // <4>
+        messageSpan.setText(message);
+    }
+
+    public void setVariant(BannerVariant variant) {
+        getContent().getStyle().setBackgroundColor(variant.backgroundColor);
+    }
+
+    public Registration addCloseListener( // <5>
+            ComponentEventListener<CloseEvent> listener) {
+        return addListener(CloseEvent.class, listener);
+    }
+
+    public void bindMessage(Signal<String> message) { // <6>
+        messageSpan.bindText(message);
+    }
+}
+----
+<1> The generic parameter specifies the root component type. `Composite` automatically instantiates it.
+<2> The close button fires a `CloseEvent` when clicked.
+<3> Use `getContent()` to access the root component. Keep these calls internal - exposing the root would let clients bypass your API.
+<4> Properties are simple setters that update internal components.
+<5> Events let clients react to user interactions.
+<6> Signal bindings let clients bind your component to their signals.
+
+
+=== Properties
+
+Properties expose component state through getter and setter methods.
+
+**From nested components** - Delegate to internal components:
+
+[source,java]
+----
+public String getMessage() {
+    return messageSpan.getText();
+}
+
+public void setMessage(String message) {
+    messageSpan.setText(message);
+}
+----
+
+**From Java fields** - For state that doesn't map directly to a single component:
+
+[source,java]
+----
+private BannerVariant variant;
+
+public BannerVariant getVariant() {
+    return variant;
+}
+
+public void setVariant(BannerVariant variant) {
+    this.variant = variant;
+    getContent().getStyle().setBackgroundColor(variant.backgroundColor);
+}
+----
+
+See <<{articles}/flow/component-internals/properties#,Properties Reference>> for more details.
+
+
+=== Events
+
+Events notify listeners when something happens in your component. Define a custom event class and provide a registration method:
+
+[source,java]
+----
+public static class CloseEvent extends ComponentEvent<Banner> {
+    public CloseEvent(Banner source) {
+        super(source, false);
+    }
+}
+
+public Registration addCloseListener(
+        ComponentEventListener<CloseEvent> listener) {
+    return addListener(CloseEvent.class, listener);
+}
+----
+
+Fire the event when the user clicks the close button:
+
+[source,java]
+----
+closeButton.addClickListener(e -> fireEvent(new CloseEvent(this)));
+----
+
+See <<{articles}/flow/component-internals/events#,Events Reference>> for more on defining and firing events.
+
+
+=== Signal Bindings
+
+Signals provide a reactive alternative to traditional properties. Components don't typically hold signals themselves. Instead, signals are declared in a ViewModel or parent component, and passed to child components through binding methods.
+
+Expose `bindX()` methods so consumers can bind your component to their signals:
+
+[source,java]
+----
+public void bindMessage(Signal<String> message) {
+    messageSpan.bindText(message);
+}
+
+public void bindVariant(Signal<BannerVariant> variant) {
+    ComponentEffect.effect(this, () -> setVariant(variant.value()));
+}
+----
+
+Consumers declare signals in their ViewModel or view, then bind your component to them:
+
+[source,java]
+----
+// Signal declared in ViewModel or view
+ValueSignal<String> message = new ValueSignal<>("Operation completed");
+
+Banner banner = new Banner();
+banner.bindMessage(message);
+
+// Updating the signal updates the banner
+message.value("New message");
+----
+
+See <<{articles}/flow/ui-state/local-signals#,Local Signals>> for reactive state management.
+
+
+== Extended Components
+
+Extend an existing Vaadin component to add features or create specialized variants.
+
+[WARNING]
+Extending Vaadin components can be risky if the component wasn't designed for extension. Internal APIs may change between versions. When possible, prefer composition over inheritance by wrapping the component in a `Composite` instead.
+
+This example creates a notification bell button that displays an unread count badge:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/notification/NotificationPopup.java[tags=messagesBtn,indent=0]
+----
+
+
+== DOM Components
+
+Extend `Component` directly when you need custom HTML structure or direct DOM manipulation.
+
+The `@Tag` annotation specifies the HTML element, and you use `getElement()` to access and manipulate it:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/TextField.java[tags=basic,indent=0]
+----
+
+For components with multiple elements, create child elements directly:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/LabeledTextField.java[indent=0]
+----
+
+You can read and write element properties. Use `@Synchronize` to sync client changes to the server:
+
+[source,java]
+----
+@Synchronize("change")
+public String getValue() {
+    return getElement().getProperty("value");
+}
+
+public void setValue(String value) {
+    getElement().setProperty("value", value);
+}
+----
+
+See the <<{articles}/flow/component-internals/element-api#,Element API Reference>> for detailed documentation on DOM manipulation.
+
+
+== Mixin Interfaces
+
+Mixin interfaces add standard functionality to your components without implementing everything from scratch. Vaadin provides mixins for common features.
+
+**Key mixin interfaces:**
+
+[cols="1,2"]
+|===
+| Interface | Functionality
+
+| `HasSize`
+| Width and height methods (`setWidth()`, `setHeight()`)
+
+| `HasStyle`
+| CSS classes and inline styles (`addClassName()`, `getStyle()`)
+
+| `HasComponents`
+| Child component management (`add()`, `remove()`)
+
+| `HasValue<T>`
+| Value with change events for form fields
+
+| `Focusable<T>`
+| Focus and blur methods (`focus()`, `blur()`)
+
+| `HasEnabled`
+| Enable/disable state (`setEnabled()`)
+
+| `HasText`
+| Text content (`setText()`, `getText()`)
+|===
+
+Implement the interfaces your component needs:
+
+[source,java]
+----
+@Tag("my-component")
+public class MyComponent extends Component
+        implements HasSize, HasStyle, Focusable<MyComponent> {
+
+    // HasSize, HasStyle, and Focusable methods are
+    // provided by default implementations
+}
+----
+
+See <<{articles}/flow/component-internals/mixins#,Mixin Interfaces Reference>> for the complete list.
+
+
+== Summary
+
+When building a component, follow this decision process:
+
+. **Combining existing components?** -> Use `Composite`
+. **Adding to existing component?** -> Extend it (carefully)
+. **Need custom HTML/DOM?** -> Extend `Component`
+
+Then design your API:
+
+* Properties for component state
+* Events for user interactions
+* Signal bindings for reactive patterns
+* Mixin interfaces for standard functionality
+
+.Component Building Checklist
+[%collapsible]
+====
+* [ ] Chose appropriate base class
+* [ ] API exposes only necessary methods
+* [ ] Events have proper registration methods
+* [ ] Implemented relevant mixin interfaces
+* [ ] Class marked `final` if not designed for extension
+* [ ] `getContent()` not exposed (for Composite)
+====
