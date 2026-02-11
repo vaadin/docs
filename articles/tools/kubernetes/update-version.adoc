@@ -96,155 +96,124 @@ my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             10m
 ----
 
 
-== Deploy Canary Ingress Rules
+== Route New Traffic to the New Version
 
-Before switching permanently to the new version, you can test access by deploying "canary" ingress rules. This routes new sessions to the new version, while keeping existing sessions on the previous version.
+Before switching permanently to the new version, you can route only new sessions to the new version, while keeping existing sessions on the previous version. This is achieved using the Gateway API's weighted routing and cookie-based session persistence.
 
-Create the ingress rule manifest like so:
+Update the HTTP route manifest to include both versions:
 
-.ingress-v2-canary.yaml
+.route-v1-v2.yaml
 [source,yaml]
 ----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: my-app-canary
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    # --- Optional ---
-    # If server Push is enabled in the application and uses Websocket for transport,
-    # these settings replace the default Websocket connection timeouts in Nginx.
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-    # ---
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    # Redirects all the requests to the new version of the application
-    nginx.ingress.kubernetes.io/canary: "true"
-    nginx.ingress.kubernetes.io/canary-weight: "100"
+  name: my-app
 spec:
+  parentRefs:
+    - name: public-gateway
   rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-app-v2
-                port:
-                  number: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-app-v1
+          port: 80
+          weight: 0
+        - name: my-app-v2
+          port: 80
+          weight: 100
+      sessionPersistence:
+        type: Cookie
 ----
 
-Then deploy it to your cluster:
+Deploy it to your cluster:
 
 [source,terminal]
-kubectl apply -f ingress-v2-canary.yaml
+kubectl apply -f route-v1-v2.yaml
+
+New sessions are now routed to the new version, while existing sessions remain connected to the previous version through cookie-based session persistence.
 
 
 == Notify Existing Users
 
-[IMPORTANT]
-.Configuration Snippets
-====
-As of version 1.9.0 of Ingress NGINX (helm chart version 4.8.0), the `nginx.ingress.kubernetes.io/configuration-snippet` annotation is no longer supported by default. It is considered a security risk, as it allows arbitrary code execution in the NGINX configuration. To use this annotation, you must enable it explicitly in the NGINX Ingress Controller configuration.
+Next, you may want to notify existing users that a new version is available. To do this, add an HTTP header filter that injects the `X-AppUpdate` header into all requests. The Kubernetes Kit uses this header to show a notification to users on the previous version, prompting them to switch.
 
-Create a patch file:
+Update the HTTP route manifest to include a request header modifier:
 
-.ingress-controller-patch.yaml
+.route-v1-v2-notify.yaml
 [source,yaml]
 ----
-data:
-  annotations-risk-level: "Critical"
-  allow-snippet-annotations: "true"
-----
-
-Next, apply the patch to your cluster:
-
-[source,terminal]
-kubectl -n ingress-nginx patch configmap ingress-nginx-controller --type merge --patch-file ingress-controller-patch.yaml
-====
-
-Next, you may want to notify existing users. To do this, create the ingress rule manifest:
-
-.ingress-v1-notify.yaml
-[source,yaml]
-----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: my-app
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    # --- Optional ---
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-    # ---
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
-    # Adds the X-AppUpdate new version header to the requests for the current
-    # application which is used to trigger the version update notification popup
-    nginx.ingress.kubernetes.io/configuration-snippet: proxy_set_header X-AppUpdate "2.0.0";
 spec:
+  parentRefs:
+    - name: public-gateway
   rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-app-v1
-                port:
-                  number: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-app-v1
+          port: 80
+          weight: 0
+        - name: my-app-v2
+          port: 80
+          weight: 100
+      sessionPersistence:
+        type: Cookie
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            add:
+              - name: X-AppUpdate
+                value: "2.0.0"
 ----
 
-Next, deploy it to your cluster:
+Deploy it to your cluster:
 
 [source,terminal]
-kubectl apply -f ingress-v1-notify.yaml
+kubectl apply -f route-v1-v2-notify.yaml
 
 
 == Remove Previous Version
 
-Once you're sure of the new version deployment, you can remove the previous version and make the ingress rules point permanently to the new version.
+Once you're satisfied with the new version deployment, you can remove the previous version and route all traffic to the new version.
 
-First, create the ingress rule manifest like this:
+First, update the HTTP route manifest to point only to the new version:
 
-.ingress-v2.yaml
+.route-v2.yaml
 [source,yaml]
 ----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: my-app
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    # --- Optional ---
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-    # ---
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
 spec:
+  parentRefs:
+    - name: public-gateway
   rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-app-v2
-                port:
-                  number: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-app-v2
+          port: 80
+      sessionPersistence:
+        type: Cookie
 ----
 
-Then deploy it to your cluster like so:
+Deploy it to your cluster:
 
 [source,terminal]
-kubectl apply -f ingress-v2.yaml
+kubectl apply -f route-v2.yaml
 
-Now delete the previous version and the canary ingress rules:
+Now delete the previous version deployment and service:
 
 [source,terminal]
-----
 kubectl delete -f app-v1.yaml
-kubectl delete -f ingress-v2-canary.yaml
-----
