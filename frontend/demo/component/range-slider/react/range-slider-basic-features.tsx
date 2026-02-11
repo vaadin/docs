@@ -1,0 +1,13 @@
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react';
+import { RangeSlider } from '@vaadin/react-components/RangeSlider.js';
+
+function Example() {
+  return (
+    // tag::snippet[]
+    <RangeSlider label="Label" helperText="Helper text" />
+    // end::snippet[]
+  );
+}
+
+export default reactExample(Example); // hidden-source-line
