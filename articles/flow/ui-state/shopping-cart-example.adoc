@@ -1,0 +1,247 @@
+---
+title: Shopping Cart Example
+page-title: Shopping Cart Example with Signals in Vaadin Flow
+description: Building a reactive shopping cart with signals, demonstrating ListSignal and ComponentEffect.bindChildren.
+meta-description: Learn how to build a reactive shopping cart with real-time totals using signals, ListSignal, and ComponentEffect.bindChildren in Vaadin Flow.
+order: 15
+---
+
+= Shopping Cart Example
+
+This example demonstrates building a reactive shopping cart with automatic total calculations. It shows how to use [classname]`ListSignal` to manage dynamic lists and [methodname]`ComponentEffect.bindChildren()` to efficiently render cart items.
+
+
+== Overview
+
+The shopping cart tracks:
+
+- Cart items with quantities
+- Discount codes
+- Shipping options
+- Real-time totals (subtotal, discount, tax, shipping, and grand total)
+
+All calculations update automatically as users modify the cart, apply discounts, or change shipping options.
+
+
+== State Management with Signals
+
+The cart uses three signals to track its state:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=signals,indent=0]
+----
+
+*[classname]`ListSignal<CartItem>`*:: Manages the list of cart items. Each item in the list is itself a signal ([classname]`ValueSignal<CartItem>`), enabling reactive updates when quantities change.
+
+*[classname]`ValueSignal<String>`*:: Tracks the discount code entered by the user.
+
+*[classname]`ValueSignal<ShippingOption>`*:: Tracks the selected shipping method.
+
+
+== Computed Totals
+
+Each total is a computed signal that automatically recalculates when dependencies change.
+
+
+=== Subtotal
+
+The subtotal sums the price of all items in the cart:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-subtotal,indent=0]
+----
+
+This computed signal reads from `cartItemsSignal`. It accesses each item's signal value using [methodname]`map(ValueSignal::value)`, then multiplies the product price by quantity. The result is summed using [methodname]`reduce()`.
+
+When cart items are added, removed, or quantities change, this signal automatically recalculates.
+
+
+=== Discount
+
+The discount depends on both the discount code and the subtotal:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-discount,indent=0]
+----
+
+This computed signal reads from both `discountCodeSignal` and `subtotalSignal`. When either changes, the discount recalculates.
+
+
+=== Tax
+
+Tax is calculated on the discounted subtotal:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-tax,indent=0]
+----
+
+This demonstrates chaining computed signals. The tax signal depends on `subtotalSignal` and `discountSignal`, both of which are themselves computed signals.
+
+
+=== Shipping
+
+Shipping cost depends on the selected shipping option:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-shipping,indent=0]
+----
+
+
+=== Grand Total
+
+The final total combines all computed values:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-total,indent=0]
+----
+
+This computed signal depends on four other computed signals: `subtotalSignal`, `discountSignal`, `shippingSignal`, and `taxSignal`. When any of these changes, the total automatically updates.
+
+
+== Binding Totals to UI
+
+Each total is bound to a label that displays it:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=totals-display,indent=0]
+----
+
+Key techniques:
+
+*[methodname]`bindText()`*:: Updates the label text whenever the signal changes
+*[methodname]`map()`*:: Transforms the signal value (e.g., formatting currency)
+*[methodname]`bindVisible()`*:: Shows the discount label only when a discount is applied
+
+
+== Form Field Binding
+
+The discount code and shipping option use two-way binding:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=discount-field,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=shipping-select,indent=0]
+----
+
+Two-way binding means:
+
+- When the user types in the field, the signal updates
+- When the signal is updated programmatically, the field updates
+
+This is different from read-only bindings like [methodname]`bindText()`, which only update the UI when the signal changes.
+
+
+== Dynamic List Rendering with ComponentEffect.bindChildren
+
+The core of the shopping cart is rendering the list of cart items. [methodname]`ComponentEffect.bindChildren()` efficiently manages this:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=bindchildren,indent=0]
+----
+
+[methodname]`ComponentEffect.bindChildren()` takes three parameters:
+
+1. *Container*: The layout where item components should be added
+2. *[classname]`ListSignal`*: The signal containing the list of items
+3. *Factory function*: A function that creates a component for each item signal
+
+The factory function receives a [classname]`ValueSignal<CartItem>` for each item. This signal represents an individual cart item and updates automatically when that item changes.
+
+
+Key techniques used:
+
+*Adding items*:: Only new items create new components
+*Removing items*:: Only removed items are detached from the DOM
+*Reordering*:: Components are moved, not recreated
+*Updating quantities*:: The quantity field updates, but the entire row component isn't recreated
+
+
+== Creating Cart Item Rows
+
+Each cart item is rendered as a row with reactive bindings:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=cart-item-row,indent=0]
+----
+
+Key techniques used:
+
+*Two-way signal mapping*:: [methodname]`itemSignal.map(CartItem::quantity, CartItem::withQuantity)` creates a writable signal that reads the quantity and writes it back using the `withQuantity` method. This enables two-way binding between the quantity field and the cart item.
+
+*Nested computed signal*:: [methodname]`Signal.computed()` calculates the item total by multiplying price by quantity. This computed signal automatically updates when the quantity changes.
+
+*Removing items*:: Calling [methodname]`cartItemsSignal.remove(itemSignal)` removes the item from the list. The component is automatically detached from the DOM.
+
+See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details on mapping signals to nested properties.
+
+
+== Adding Items to Cart
+
+When a user adds a product, the cart checks if it's already present:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=add-to-cart,indent=0]
+----
+
+This logic:
+
+1. Searches the cart for an item with the same product ID
+2. If found, increments its quantity by updating the signal's value
+3. If not found, inserts a new cart item at the end of the list
+
+When the quantity is updated on an existing item, the component row updates automatically without being recreated. Only the quantity field and item total update.
+
+
+== Reactivity Flow
+
+Here's what happens when a user changes a quantity:
+
+1. User types in the quantity field
+2. The two-way mapped signal updates the [classname]`CartItem` value
+3. The item total computed signal recalculates
+4. The subtotal computed signal recalculates
+5. The discount computed signal recalculates (because it depends on subtotal)
+6. The tax computed signal recalculates (because it depends on subtotal and discount)
+7. The grand total computed signal recalculates (because it depends on all other totals)
+8. All bound labels update automatically
+
+All of this happens automatically without manual event listeners or state synchronization.
+
+
+== When to Use ListSignal
+
+[classname]`ListSignal` is ideal for:
+
+- Single-user scenarios like this shopping cart
+- Dynamic form fields (add/remove rows)
+- Local selections and filters
+- Any list where items are added, removed, or reordered
+
+For multi-user scenarios where multiple users need to see the same list in real-time (like a collaborative task board), use [classname]`SharedListSignal` instead. See <<shared-signals#,Shared Signals>> for details.
+
+
+== Key Takeaways
+
+*[classname]`ListSignal`*:: Manages dynamic lists with per-item reactivity. Each item is a [classname]`ValueSignal` that can be updated independently.
+
+*[methodname]`ComponentEffect.bindChildren()`*:: Efficiently renders components from a list signal. Components are added, removed, and reordered without unnecessary recreation.
+
+*Two-way mapping*:: [methodname]`signal.map(getter, merger)` creates writable signals for nested properties, enabling direct binding to form fields.
+
+*Computed signal chains*:: Complex calculations can be broken into multiple computed signals that depend on each other. Changes propagate automatically through the chain.
+
+*Automatic updates*:: When any signal changes, all dependent computed signals and bindings update automatically without manual synchronization.
