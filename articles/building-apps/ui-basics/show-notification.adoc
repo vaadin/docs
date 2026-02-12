@@ -18,6 +18,7 @@ A self-contained view that demonstrates common notification patterns:
 
 [source,java]
 ----
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Span;
@@ -55,6 +56,8 @@ public class NotificationExampleView extends VerticalLayout {
                     VaadinIcon.CLOSE_SMALL.create(),
                     e -> notification.close());
             closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            closeButton.addClickShortcut(Key.ESCAPE)
+                    .listenOn(notification);
 
             notification.add(
                     new HorizontalLayout(message, closeButton));
@@ -165,7 +168,11 @@ Keep the minimum duration at 5 seconds. Shorter durations are easy to miss, espe
 
 == Persistent Notifications with a Close Button
 
-Error and warning notifications should be persistent so the user has time to read them. Add a close button to let the user dismiss the notification:
+Error and warning notifications should be persistent so the user has time to read them. Add a close button to let the user dismiss the notification. Notifications can also include action buttons for operations like Retry or Undo.
+
+Assign keyboard shortcuts to action and close buttons so the user can respond without reaching for the notification. Use kbd:[Escape] for the close button and kbd:[Enter] for the primary action as a best practice. See <</building-apps/ui-basics/add-keyboard-shortcuts#,Add Keyboard Shortcuts>> for details on the shortcut API.
+
+The following example shows a persistent error notification with a Retry button and a close button, with keyboard shortcuts assigned to both:
 
 [source,java]
 ----
@@ -174,38 +181,20 @@ notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 notification.setDuration(0);
 notification.setPosition(Notification.Position.MIDDLE);
 
-Span message = new Span("Failed to save. Please try again.");
-Button closeButton = new Button(
-        VaadinIcon.CLOSE_SMALL.create(),
-        event -> notification.close());
-closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-
-HorizontalLayout layout = new HorizontalLayout(message, closeButton);
-layout.setAlignItems(Alignment.CENTER);
-notification.add(layout);
-notification.open();
-----
-
-=== Action Buttons
-
-Notifications can include action buttons for operations like retry or undo:
-
-[source,java]
-----
-Notification notification = new Notification();
-notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-notification.setDuration(0);
-
 Span message = new Span("Upload failed.");
 Button retryButton = new Button("Retry", event -> {
     retryUpload();
     notification.close();
 });
+retryButton.addClickShortcut(Key.ENTER)
+        .listenOn(notification);
 
 Button closeButton = new Button(
         VaadinIcon.CLOSE_SMALL.create(),
         event -> notification.close());
 closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+closeButton.addClickShortcut(Key.ESCAPE)
+        .listenOn(notification);
 
 HorizontalLayout layout = new HorizontalLayout(
         message, retryButton, closeButton);
@@ -213,33 +202,6 @@ layout.setAlignItems(Alignment.CENTER);
 notification.add(layout);
 notification.open();
 ----
-
-=== Keyboard Shortcuts
-
-For common undo patterns, add a keyboard shortcut so the user can act without reaching for the notification:
-
-[source,java]
-----
-Notification notification = new Notification();
-notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
-notification.setDuration(10000);
-
-Span message = new Span("Message deleted");
-Span hint = new Span("Undo with Ctrl+Z");
-Button undoButton = new Button("Undo", event -> {
-    undoDelete();
-    notification.close();
-});
-
-notification.add(new HorizontalLayout(message, hint, undoButton));
-notification.open();
-
-Shortcuts.addShortcutListener(notification,
-        () -> { undoDelete(); notification.close(); },
-        Key.of("z"), KeyModifier.CONTROL);
-----
-
-See the <</components/notification#,Notification>> reference for more details.
 
 
 == Centralizing Notification Logic
@@ -270,6 +232,8 @@ public final class Notifications {
                 event -> notification.close());
         closeButton.addThemeVariants(
                 ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addClickShortcut(Key.ESCAPE)
+                .listenOn(notification);
 
         HorizontalLayout layout = new HorizontalLayout(
                 text, closeButton);
@@ -290,11 +254,15 @@ public final class Notifications {
             notification.close();
             retryAction.run();
         });
+        retryButton.addClickShortcut(Key.ENTER)
+                .listenOn(notification);
         Button closeButton = new Button(
                 VaadinIcon.CLOSE_SMALL.create(),
                 event -> notification.close());
         closeButton.addThemeVariants(
                 ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addClickShortcut(Key.ESCAPE)
+                .listenOn(notification);
 
         HorizontalLayout layout = new HorizontalLayout(
                 text, retryButton, closeButton);
