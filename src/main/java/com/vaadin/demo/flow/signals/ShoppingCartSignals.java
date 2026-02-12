@@ -181,12 +181,11 @@ public class ShoppingCartSignals extends VerticalLayout {
     // tag::cart-item-row[]
     private HorizontalLayout createCartItemRow(ValueSignal<CartItem> itemSignal,
             ListSignal<CartItem> cartItemsSignal) {
-        CartItem item = itemSignal.value();
-
         HorizontalLayout row = new HorizontalLayout();
 
-        Span nameLabel = new Span(item.product().name() + " - $"
-                + item.product().price().setScale(2, RoundingMode.HALF_UP));
+        Span nameLabel = new Span(itemSignal.map(item -> item.product().name()
+                + " - $" + item.product().price().setScale(2,
+                        RoundingMode.HALF_UP)));
 
         IntegerField quantityField = new IntegerField();
         quantityField.setMin(1);
@@ -207,13 +206,10 @@ public class ShoppingCartSignals extends VerticalLayout {
             }
         });
 
-        Span itemTotalLabel = new Span();
-        itemTotalLabel.bindText(Signal.computed(() -> {
-            CartItem current = itemSignal.value();
-            return "$" + current.product().price()
-                    .multiply(BigDecimal.valueOf(current.quantity()))
-                    .setScale(2, RoundingMode.HALF_UP);
-        }));
+        Span itemTotalLabel = new Span(itemSignal.map(item -> "$"
+                + item.product().price()
+                        .multiply(BigDecimal.valueOf(item.quantity()))
+                        .setScale(2, RoundingMode.HALF_UP)));
 
         Button removeButton = new Button("Remove", e -> {
             cartItemsSignal.remove(itemSignal);
