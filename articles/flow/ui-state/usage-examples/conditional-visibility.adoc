@@ -1,0 +1,186 @@
+---
+title: Conditional Visibility
+page-title: Conditional Visibility with Signals in Vaadin Flow
+description: Use signals to control component visibility based on form values.
+meta-description: Learn how to implement progressive disclosure and conditional visibility in forms using ValueSignal and bindVisible in Vaadin Flow.
+order: 10
+---
+
+
+= Conditional Visibility
+
+Progressive disclosure is a design pattern where form fields appear or disappear based on previous user selections. This improves user experience by showing only relevant fields and reducing visual clutter. With Signals, you can implement this pattern declaratively using `bindVisible()`.
+
+
+== The Pattern
+
+The key to conditional visibility is:
+
+1. Create `ValueSignal` instances to track the values that control visibility
+2. Bind form fields to both the data bean (using `Binder`) and to signals (using `bindValue()`)
+3. Use `bindVisible()` to show or hide sections based on signal values
+
+This creates a reactive chain: when a user changes a field, the signal updates, which triggers visibility changes in dependent sections.
+
+
+== Example: Visa Application Form
+
+Let's build a multi-level visa application form where fields appear progressively based on user selections.
+
+
+=== Setting Up Signals and Data
+
+First, create the signals that will control visibility:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=setup,indent=0]
+----
+
+Each signal tracks a value that other fields depend on. We initialize them with sensible defaults.
+
+
+=== Level 0: Base Question
+
+The root question controls whether any visa-related fields appear:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=level0,indent=0]
+----
+
+The checkbox is bound to both:
+
+* The data bean via `Binder` - for data persistence
+* The signal via `bindValue()` - for reactive visibility control
+
+When the user checks or unchecks this box, `needsVisaSignal` updates automatically.
+
+
+=== Level 1: Conditional Section
+
+Now we can show the visa section only when sponsorship is needed:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=level1,indent=0]
+----
+
+The `bindVisible(needsVisaSignal)` method creates a reactive binding: the section's visibility automatically tracks the signal's boolean value. When `needsVisaSignal` is `true`, the section appears. When `false`, it's hidden.
+
+Note that the `visaTypeSelect` field is also bound to `visaTypeSignal` - this allows the next level to react to the selected visa type.
+
+
+=== Level 2: Nested Conditions
+
+For more complex conditions, use a lambda expression:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=level2,indent=0]
+----
+
+The lambda `() -> needsVisaSignal.value() && visaTypeSignal.value() == VisaType.H1B` reads multiple signals. This section appears only when:
+
+* Visa sponsorship is needed (`needsVisaSignal` is `true`)
+* AND the selected visa type is H1-B
+
+The framework tracks which signals you access in the lambda and automatically updates visibility when any of them change.
+
+
+=== Level 3: Multi-Level Nesting
+
+You can nest conditions as deeply as needed:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=level3,indent=0]
+----
+
+This section requires three conditions to be `true`:
+
+1. Visa sponsorship is needed
+2. Visa type is H1-B
+3. User has held H1-B previously
+
+Each level progressively discloses more details, creating a smooth, focused user experience.
+
+
+== Key Concepts
+
+=== bindValue()
+
+`bindValue()` connects a form field to a signal so that:
+
+* When the user changes the field, the signal updates
+* When the signal changes programmatically, the field updates
+
+Use this on fields whose values other components depend on.
+
+[source,java]
+----
+checkbox.bindValue(needsVisaSignal);
+comboBox.bindValue(visaTypeSignal);
+----
+
+
+=== bindVisible()
+
+`bindVisible()` controls component visibility reactively:
+
+[source,java]
+----
+// Simple: show when signal is true
+component.bindVisible(booleanSignal);
+
+// Complex: show based on multiple conditions
+component.bindVisible(() -> signal1.value() && signal2.value() == expectedValue);
+----
+
+The framework automatically:
+
+* Tracks which signals are accessed in the lambda
+* Re-evaluates visibility when any tracked signal changes
+* Updates the component's visibility accordingly
+
+
+=== Combining with Binder
+
+Use `Binder` alongside signals to maintain data integrity:
+
+[source,java]
+----
+Checkbox checkbox = new Checkbox("Label");
+binder.forField(checkbox).bind(Data::getValue, Data::setValue); // Data binding
+checkbox.bindValue(signal); // Reactive binding
+----
+
+This dual binding ensures:
+
+* Data flows into your business objects (via `Binder`)
+* UI reactivity works correctly (via signals)
+
+
+== Best Practices
+
+**Create one signal per conditional value**: If three checkboxes control visibility independently, create three boolean signals.
+
+**Initialize signals with defaults**: Set initial values that match your form's default state to avoid inconsistencies.
+
+**Use lambda expressions for complex conditions**: When visibility depends on multiple signals or computed logic, use `bindVisible(() -> ...)`.
+
+**Keep conditions readable**: Extract complex visibility logic into well-named variables or methods if needed.
+
+**Test edge cases**: Verify behavior when users navigate through conditions in unexpected orders.
+
+
+== When to Use This Pattern
+
+Use conditional visibility with signals when:
+
+* Form fields should appear or disappear based on user input
+* You need progressive disclosure for complex forms
+* Multiple levels of nesting are required
+* Visibility logic needs to be reactive and automatic
+
+For simple show/hide based on a single button click, regular `setVisible()` may be sufficient. Use signals when the visibility rules are more complex or data-driven.
