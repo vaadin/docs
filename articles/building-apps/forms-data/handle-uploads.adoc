@@ -1,0 +1,319 @@
+---
+title: Handle File Uploads
+page-title: How to handle file uploads in a Vaadin application
+description: Learn how to receive uploaded files, process them with a service, and handle errors.
+meta-description: Handle file uploads in your Vaadin application using the Upload component with in-memory and temporary file strategies, service integration, and error handling.
+order: 30
+---
+
+
+= Handle File Uploads
+:toclevels: 2
+
+This article shows how to receive files uploaded by the user, pass them to a Spring service for processing, and handle errors. It covers in-memory and temporary file strategies, threading considerations, and cleanup. For UI customization, drag-and-drop, file restrictions, and progress tracking, see the <</components/upload#,Upload>> component reference and its <</components/upload/file-handling#,file handling>> documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that accepts a file upload, processes it, and handles errors:
+
+[source,java]
+----
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.server.streams.UploadHandler;
+import com.vaadin.flow.router.Route;
+
+@Route("upload-example")
+public class UploadExampleView extends VerticalLayout {
+
+    public UploadExampleView() {
+        Upload upload = new Upload(UploadHandler.inMemory( // <1>
+                (metadata, data) -> {
+                    try {
+                        processFile(metadata.fileName(),
+                                metadata.contentType(),
+                                data); // <2>
+                        UI.getCurrent().access(() -> // <3>
+                                Notification.show("File uploaded"));
+                    } catch (Exception e) {
+                        UI.getCurrent().access(() -> { // <4>
+                            Notification notification =
+                                    Notification.show("Upload failed");
+                            notification.addThemeVariants(
+                                    NotificationVariant.LUMO_ERROR);
+                        });
+                    }
+                }));
+
+        upload.setAcceptedFileTypes( // <5>
+                "application/pdf", ".pdf",
+                "image/png", ".png",
+                "image/jpeg", ".jpg");
+        upload.setMaxFileSize(5 * 1024 * 1024); // <6>
+
+        upload.addFileRejectedListener(event -> { // <7>
+            Notification notification =
+                    Notification.show(event.getErrorMessage());
+            notification.addThemeVariants(
+                    NotificationVariant.LUMO_WARNING);
+        });
+
+        add(upload);
+    }
+
+    private void processFile(String fileName,
+            String contentType, byte[] data) {
+        // Replace with your service call, e.g.:
+        // documentService.store(fileName, contentType, data);
+    }
+}
+----
+<1> `UploadHandler.inMemory()` buffers the file as a `byte[]`.
+<2> Delegates to a method where you call your service.
+<3> UI updates from the handler require `UI.access()` because the handler runs on a different thread.
+<4> Catches service failures and shows an error notification.
+<5> Restricts accepted file types on the client.
+<6> Sets a 5 MB maximum file size.
+<7> Handles client-side rejections — wrong type, too large — before the upload starts.
+
+
+== Receiving the File
+
+The `UploadHandler` controls how file data is buffered during upload. Vaadin provides three built-in strategies.
+
+
+=== In Memory
+
+`UploadHandler.inMemory()` reads the entire file into a `byte[]` and passes it to your callback:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.inMemory(
+        (metadata, data) -> {
+            String fileName = metadata.fileName();
+            String mimeType = metadata.contentType();
+            // data is a byte[] with the file contents
+        }));
+----
+
+This is the simplest option and works well for small files like profile pictures, icons, and CSV imports.
+
+.Memory usage
+[NOTE]
+Each concurrent upload holds the entire file in heap memory. With many concurrent users, even moderately sized files add up. For example, 50 users uploading 5 MB files simultaneously consume 250 MB of heap.
+
+
+=== As a Temporary File
+
+`UploadHandler.toTempFile()` streams the file to the system's temporary directory and passes a `File` reference to your callback:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.toTempFile(
+        (metadata, file) -> {
+            // file is a java.io.File in the temp directory
+            processFile(file);
+        }));
+----
+
+This keeps memory usage low regardless of file size, making it the better choice for large files and applications with many concurrent users.
+
+.Cleanup required
+[NOTE]
+Temporary files are not automatically deleted. You are responsible for cleaning them up after processing. See <<cleaning-up-temporary-files>>.
+
+For full control over where the upload writes files, use `UploadHandler.toFile()` with a custom `FileFactory` that returns the target `File` for each upload.
+
+
+== Passing the File to a Service
+
+In a typical application, the upload handler delegates to a Spring service for processing — storing the file in a database, writing it to cloud storage, or parsing its contents. The service accepts the file name, content type, and either the raw bytes or a `File` reference:
+
+[source,java]
+----
+@Service
+public class DocumentService {
+
+    public void store(String fileName, String contentType, byte[] data) {
+        // Save to database, cloud storage, etc.
+    }
+
+    public void store(String fileName, String contentType, File file) {
+        // Stream from file to database, cloud storage, etc.
+    }
+}
+----
+
+Call the `byte[]` overload from an in-memory handler:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.inMemory(
+        (metadata, data) -> {
+            documentService.store(
+                    metadata.fileName(),
+                    metadata.contentType(),
+                    data);
+        }));
+----
+
+With a temporary file strategy, pass the `File` instead:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.toTempFile(
+        (metadata, file) -> {
+            documentService.store(
+                    metadata.fileName(),
+                    metadata.contentType(),
+                    file);
+        }));
+----
+
+.Handler runs outside the UI thread
+[IMPORTANT]
+The upload handler callback runs on a separate thread, not the UI thread. You must use `UI.access()` to update UI components from inside the handler. Without it, UI updates are lost or cause exceptions.
+
+[source,java]
+----
+UploadHandler.inMemory((metadata, data) -> {
+    documentService.store(metadata.fileName(),
+            metadata.contentType(), data);
+    UI.getCurrent().access(() ->
+            Notification.show("File uploaded"));
+});
+----
+
+
+[[cleaning-up-temporary-files]]
+== Cleaning Up Temporary Files
+
+When using `UploadHandler.toTempFile()`, you are responsible for deleting the temporary file after processing. Two common patterns:
+
+*Immediate cleanup* — process and delete in the handler. This is the preferred approach when you don't need to keep the file around:
+
+[source,java]
+----
+UploadHandler.toTempFile((metadata, file) -> {
+    try {
+        documentService.store(
+                metadata.fileName(),
+                metadata.contentType(),
+                file);
+    } finally {
+        file.delete();
+    }
+});
+----
+
+*Deferred cleanup* — store the `File` reference and delete it later, for example, after the user confirms a form submission. Use a `DetachListener` to clean up if the user navigates away without saving:
+
+[source,java]
+----
+private File pendingFile;
+
+public MyView(DocumentService documentService) {
+    // In the upload handler:
+    Upload upload = new Upload(UploadHandler.toTempFile(
+            (metadata, file) -> {
+                pendingFile = file;
+                UI.getCurrent().access(() ->
+                        preview.setSrc(file));
+            }));
+
+    // In the save button handler:
+    save.addClickListener(event -> {
+        documentService.store(pendingFile);
+        deletePendingFile();
+    });
+
+    // Clean up if the user navigates away without saving:
+    addDetachListener(event -> deletePendingFile());
+}
+
+private void deletePendingFile() {
+    if (pendingFile != null) {
+        pendingFile.delete();
+        pendingFile = null;
+    }
+}
+----
+
+Even with a `DetachListener`, files can leak if the server crashes or the session expires without a clean detach. As a safety net, consider running a scheduled task that periodically removes old files from the temp directory — for example, deleting files older than 24 hours.
+
+.Avoid `File.deleteOnExit()`
+[NOTE]
+`File.deleteOnExit()` schedules deletion for when the JVM shuts down. In a long-running server application, that means files accumulate for the entire lifetime of the process — days or weeks. Each registered file also adds to an internal list that is never cleared, creating a memory leak. In containerized deployments, the shutdown hook may not run at all. Use explicit `file.delete()` calls instead.
+
+
+== Handling Errors
+
+File uploads can fail at different stages. Handle each layer to give the user clear feedback.
+
+=== Client-Side Rejection
+
+The `Upload` component checks file type and size restrictions on the client before starting the upload. Listen for rejections with `addFileRejectedListener()`:
+
+[source,java]
+----
+upload.addFileRejectedListener(event -> {
+    Notification notification =
+            Notification.show(event.getErrorMessage());
+    notification.addThemeVariants(
+            NotificationVariant.LUMO_WARNING);
+});
+----
+
+This catches files that are too large or have a disallowed type.
+
+=== Service Failure
+
+Wrap the service call in a try-catch inside the handler. Use `UI.access()` to show an error notification:
+
+[source,java]
+----
+UploadHandler.inMemory((metadata, data) -> {
+    try {
+        documentService.store(metadata.fileName(),
+                metadata.contentType(), data);
+        UI.getCurrent().access(() ->
+                Notification.show("File uploaded"));
+    } catch (Exception e) {
+        UI.getCurrent().access(() -> {
+            Notification notification = Notification.show(
+                    "Upload failed: " + e.getMessage());
+            notification.addThemeVariants(
+                    NotificationVariant.LUMO_ERROR);
+        });
+    }
+});
+----
+
+=== Spring Boot Multipart Limits
+
+Spring Boot sets its own multipart upload limits that apply before Vaadin's handler receives the file. If a file exceeds these limits, the upload fails with a server error.
+
+.Default multipart limits
+[NOTE]
+By default, Spring Boot limits individual files to 1 MB and the entire multipart request to 10 MB. You can adjust these in `application.properties`:
+
+[source,properties]
+----
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=50MB
+----
+
+If you prefer to let Vaadin handle all size validation, you can disable Spring's multipart processing entirely with `spring.servlet.multipart.enabled=false`. See the <</components/upload#,Upload>> reference documentation for details.
+
+
+== When to Use Each Strategy
+
+Choose a strategy based on both file size and how many users upload concurrently:
+
+- *In memory* — best for small files and low concurrency, such as admin tools or internal applications with a limited number of users. Each upload holds the entire file in heap, so multiply the expected file size by the number of concurrent uploads to estimate peak memory usage.
+- *Temporary file* — best for large files, high-concurrency applications, or when you need to stream data to external storage. Memory usage stays low regardless of file size. This is the preferred default for user-facing production applications.
+- *File handler* (`toFile()`) — best when you need control over where the upload writes files on disk, such as organizing uploads into predictable directory structures.
