@@ -10,7 +10,7 @@ order: 30
 = Handle File Uploads
 :toclevels: 2
 
-This article shows how to receive files uploaded by the user, pass them to a Spring service for processing, and handle errors. It covers in-memory and temporary file strategies, threading considerations, and cleanup. For UI customization, drag-and-drop, file restrictions, and progress tracking, see the <</components/upload#,Upload>> component reference and its <</components/upload/file-handling#,file handling>> documentation.
+This article shows how to receive files uploaded by the user, pass them to a Spring service for processing, and handle errors. It covers in-memory and temporary file strategies, cleanup, and error handling. For UI customization, drag-and-drop, file restrictions, and progress tracking, see the <</components/upload#,Upload>> component reference and its <</components/upload/file-handling#,file handling>> documentation.
 
 
 == Copy-Paste into Your Project
@@ -19,7 +19,6 @@ A self-contained view that accepts a file upload, processes it, and handles erro
 
 [source,java]
 ----
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -37,15 +36,12 @@ public class UploadExampleView extends VerticalLayout {
                         processFile(metadata.fileName(),
                                 metadata.contentType(),
                                 data); // <2>
-                        UI.getCurrent().access(() -> // <3>
-                                Notification.show("File uploaded"));
+                        Notification.show("File uploaded"); // <3>
                     } catch (Exception e) {
-                        UI.getCurrent().access(() -> { // <4>
-                            Notification notification =
-                                    Notification.show("Upload failed");
-                            notification.addThemeVariants(
-                                    NotificationVariant.LUMO_ERROR);
-                        });
+                        Notification notification = // <4>
+                                Notification.show("Upload failed");
+                        notification.addThemeVariants(
+                                NotificationVariant.LUMO_ERROR);
                     }
                 }));
 
@@ -74,7 +70,7 @@ public class UploadExampleView extends VerticalLayout {
 ----
 <1> `UploadHandler.inMemory()` buffers the file as a `byte[]`.
 <2> Delegates to a method where you call your service.
-<3> UI updates from the handler require `UI.access()` because the handler runs on a different thread.
+<3> Shows a success notification. The built-in handlers call the callback on the UI thread, so you can update UI components directly.
 <4> Catches service failures and shows an error notification.
 <5> Restricts accepted file types on the client.
 <6> Sets a 5 MB maximum file size.
@@ -174,19 +170,10 @@ Upload upload = new Upload(UploadHandler.toTempFile(
         }));
 ----
 
-.Handler runs outside the UI thread
-[IMPORTANT]
-The upload handler callback runs on a separate thread, not the UI thread. You must use `UI.access()` to update UI components from inside the handler. Without it, UI updates are lost or cause exceptions.
+[NOTE]
+The built-in upload handlers (`inMemory()`, `toTempFile()`, `toFile()`) call the success callback on the UI thread, so you can update UI components directly. If you implement `UploadHandler` yourself, the callback runs on the request thread and you need `UI.access()` for UI updates.
 
-[source,java]
-----
-UploadHandler.inMemory((metadata, data) -> {
-    documentService.store(metadata.fileName(),
-            metadata.contentType(), data);
-    UI.getCurrent().access(() ->
-            Notification.show("File uploaded"));
-});
-----
+Because the callback runs on the UI thread, avoid long-running processing inside it — this blocks the UI until the operation completes. For heavy tasks like virus scanning, image conversion, or large file imports, delegate the work to a background job and notify the user when it finishes. See <</building-apps/business-logic/background-jobs#,Background Jobs>> for patterns.
 
 
 [[cleaning-up-temporary-files]]
@@ -221,8 +208,7 @@ public MyView(DocumentService documentService) {
     Upload upload = new Upload(UploadHandler.toTempFile(
             (metadata, file) -> {
                 pendingFile = file;
-                UI.getCurrent().access(() ->
-                        preview.setSrc(file));
+                preview.setSrc(file);
             }));
 
     // In the save button handler:
@@ -272,7 +258,7 @@ This catches files that are too large or have a disallowed type.
 
 === Service Failure
 
-Wrap the service call in a try-catch inside the handler. Use `UI.access()` to show an error notification:
+Wrap the service call in a try-catch inside the handler and show an error notification on failure:
 
 [source,java]
 ----
@@ -280,15 +266,12 @@ UploadHandler.inMemory((metadata, data) -> {
     try {
         documentService.store(metadata.fileName(),
                 metadata.contentType(), data);
-        UI.getCurrent().access(() ->
-                Notification.show("File uploaded"));
+        Notification.show("File uploaded");
     } catch (Exception e) {
-        UI.getCurrent().access(() -> {
-            Notification notification = Notification.show(
-                    "Upload failed: " + e.getMessage());
-            notification.addThemeVariants(
-                    NotificationVariant.LUMO_ERROR);
-        });
+        Notification notification = Notification.show(
+                "Upload failed: " + e.getMessage());
+        notification.addThemeVariants(
+                NotificationVariant.LUMO_ERROR);
     }
 });
 ----
