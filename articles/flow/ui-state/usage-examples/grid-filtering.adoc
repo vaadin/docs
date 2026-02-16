@@ -48,12 +48,17 @@ Connect signals to filter components using [methodname]`bindValue()`:
 
 [source,java]
 ----
-categoryFilter.bindValue(categoryFilterSignal);
-searchField.bindValue(searchTermSignal);
-inStockCheckbox.bindValue(inStockOnlySignal);
+categoryFilter.bindValue(categoryFilterSignal, categoryFilterSignal::set);
+searchField.bindValue(searchTermSignal, searchTermSignal::set);
+inStockCheckbox.bindValue(inStockOnlySignal, inStockOnlySignal::set);
 ----
 
-This creates bidirectional connections: when users interact with the components, the signals update, and when code updates the signals, the components update. See <<../local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details about bidirectional bindings.
+This creates bidirectional connections:
+
+* When users interact with the components, the write callback (`signal::set`) updates the signal
+* When code updates the signals, the framework reads via `signal.get()` and updates the components
+
+See <<../local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details about bidirectional bindings.
 
 
 === Computed Signal for Filtered Data
@@ -63,21 +68,22 @@ Create a computed signal that derives the filtered dataset from all filter signa
 [source,java]
 ----
 Signal<List<Product>> filteredProductsSignal = Signal.computed(() -> {
-    String category = categoryFilterSignal.value();
-    String searchTerm = searchTermSignal.value().toLowerCase();
-    boolean inStockOnly = inStockOnlySignal.value();
+    String category = categoryFilterSignal.get();
+    String searchTerm = searchTermSignal.get().toLowerCase();
+    boolean inStockOnly = inStockOnlySignal.get();
 
     return allProducts.stream()
-            .filter(p -> category.equals("All")
-                    || p.category().equals(category))
-            .filter(p -> searchTerm.isEmpty()
-                    || p.name().toLowerCase().contains(searchTerm)
-                    || p.id().toLowerCase().contains(searchTerm))
-            .filter(p -> !inStockOnly || p.stock() > 0).toList();
+        .filter(p -> category.equals("All")
+            || p.category().equals(category))
+        .filter(p -> searchTerm.isEmpty()
+            || p.name().toLowerCase().contains(searchTerm)
+            || p.id().toLowerCase().contains(searchTerm))
+        .filter(p -> !inStockOnly || p.stock() > 0)
+        .toList();
 });
 ----
 
-This computed signal automatically recalculates whenever any of the three filter signals change. The filtering logic is centralized in one place, making it easy to understand and maintain. The signal reads all three filter values and applies them sequentially using stream operations.
+This computed signal automatically recalculates whenever any of the three filter signals change. The filtering logic is centralized in one place, making it easy to understand and maintain. The signal reads all three filter values using `get()` and applies them sequentially using stream operations.
 
 
 === Binding the Grid to Filtered Data
@@ -100,9 +106,9 @@ The [methodname]`ComponentEffect.bind()` method creates a component effect that 
 
 *Signals for filter state*:: Use [classname]`ValueSignal` to track each independent filter criterion. This makes the filter state explicit and reactive.
 
-*Two-way binding with [methodname]`bindValue()`*:: Connect filter components to signals so changes flow automatically in both directions.
+*Two-way binding with [methodname]`bindValue()`*:: Connect filter components to signals using the pattern `component.bindValue(signal, signal::set)`. The first parameter is the signal (read using `signal.get()`), and the second is the write callback that is supposed to update the signal when the user changes the component, this callback can have a conditional logic that write the value if it's valid, or does nothing otherwise.
 
-*Computed signals for derived data*:: Create a computed signal that reads all filter signals and produces the filtered dataset. This centralizes filtering logic and makes dependencies clear.
+*Computed signals for derived data*:: Create a computed signal that reads all filter signals using `signal.get()` and produces the filtered dataset. This centralizes filtering logic and makes dependencies clear.
 
 *Component effects for grid updates*:: Use [methodname]`ComponentEffect.bind()` to connect the grid to the filtered data signal. The effect runs automatically whenever the signal changes, updating the grid's items.
 
