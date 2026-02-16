@@ -36,13 +36,13 @@ public class BinderIntegrationExample extends VerticalLayout {
         ValueSignal<Integer> ageSignal = new ValueSignal<>(0);
 
         // Bind signals to form fields for two-way updates
-        accountTypeSelect.bindValue(accountTypeSignal);
-        ageField.bindValue(ageSignal);
+        accountTypeSelect.bindValue(accountTypeSignal, accountTypeSignal::set);
+        ageField.bindValue(ageSignal, ageSignal::set);
 
         // Computed signal for age validation that depends on account type
         Signal<Boolean> ageValidSignal = Signal.computed(() -> {
-            Integer age = ageSignal.value();
-            AccountType accountType = accountTypeSignal.value();
+            Integer age = ageSignal.get();
+            AccountType accountType = accountTypeSignal.get();
             if (age == null) {
                 return false;
             }
@@ -74,8 +74,8 @@ public class BinderIntegrationExample extends VerticalLayout {
         // Cross-field validation using signals for dynamic error messages
         // Runs each time the age or account field changes
         binder.forField(ageField)
-                .withValidator(value -> ageValidSignal.value(), value -> {
-                    AccountType accountType = accountTypeSignal.value();
+                .withValidator(value -> ageValidSignal.get(), value -> {
+                    AccountType accountType = accountTypeSignal.get();
                     return accountType == AccountType.BUSINESS
                             ? "Business accounts require age 18 or older"
                             : "Personal accounts require age 14 or older";
