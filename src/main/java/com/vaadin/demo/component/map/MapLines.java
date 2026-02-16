@@ -8,6 +8,7 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
+import com.vaadin.flow.component.map.configuration.controls.ScaleControl;
 import com.vaadin.flow.component.map.configuration.feature.LineStringFeature;
 import com.vaadin.flow.router.Route;
 
@@ -24,6 +25,8 @@ public class MapLines extends Div {
         List<Coordinate> routeCoordinates = loadRouteCoordinates();
         LineStringFeature route = new LineStringFeature(routeCoordinates);
         map.getFeatureLayer().addFeature(route);
+        map.getControls().getScale().setVisible(true);
+        map.getControls().getScale().setUnits(ScaleControl.Unit.NAUTICAL);
         map.zoomToFit(List.of(route), 100, 0);
         // end::snippet[]
     }
