@@ -53,9 +53,9 @@ The subtotal sums the price of all items in the cart:
 include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-subtotal,indent=0]
 ----
 
-This computed signal reads from `cartItemsSignal`. It accesses each item's signal value using [methodname]`map(ValueSignal::value)`, then multiplies the product price by quantity. The result is summed using [methodname]`reduce()`.
+This computed signal reads from `cartItemsSignal`. It accesses each item's signal value using [methodname]`map(ValueSignal::get)`, then multiplies the product price by quantity. The result is summed using [methodname]`reduce()`.
 
-When cart items are added, removed, or quantities change, this signal automatically recalculates.
+When cart items are added, removed, or quantities change, this signal recalculates automatically.
 
 
 === Discount
@@ -101,7 +101,7 @@ The final total combines all computed values:
 include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=computed-total,indent=0]
 ----
 
-This computed signal depends on four other computed signals: `subtotalSignal`, `discountSignal`, `shippingSignal`, and `taxSignal`. When any of these changes, the total automatically updates.
+This computed signal depends on four other computed signals: `subtotalSignal`, `discountSignal`, `shippingSignal`, and `taxSignal`. When any of these changes, the total updates automatically.
 
 
 == Binding Totals to UI
@@ -134,10 +134,10 @@ include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.j
 include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.java[tags=shipping-select,indent=0]
 ----
 
-Two-way binding means:
+The `bindValue(signal, signal::set)` method creates two-way binding:
 
-- When the user types in the field, the signal updates
-- When the signal is updated programmatically, the field updates
+- When the user types in the field, the write callback (`signal::set`) updates the signal
+- When the signal is updated programmatically, the framework reads via `signal.get()` and updates the field
 
 This is different from read-only bindings like [methodname]`bindText()`, which only update the UI when the signal changes.
 
@@ -179,9 +179,9 @@ include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.j
 
 Key techniques used:
 
-*Two-way signal mapping*:: [methodname]`itemSignal.map(CartItem::quantity, CartItem::withQuantity)` creates a writable signal that reads the quantity and writes it back using the `withQuantity` method. This enables two-way binding between the quantity field and the cart item.
+*Two-way signal mapping*:: [methodname]`itemSignal.map(CartItem::quantity, CartItem::withQuantity)` creates a writable signal that reads the quantity using `get()` and writes it back using the `withQuantity` method via `set()`. This enables two-way binding between the quantity field and the cart item.
 
-*Nested computed signal*:: [methodname]`Signal.computed()` calculates the item total by multiplying price by quantity. This computed signal automatically updates when the quantity changes.
+*Nested computed signal*:: [methodname]`Signal.computed()` calculates the item total by multiplying price by quantity. This computed signal updates automatically when the quantity changes.
 
 *Removing items*:: Calling [methodname]`cartItemsSignal.remove(itemSignal)` removes the item from the list. The component is automatically detached from the DOM.
 
@@ -199,8 +199,8 @@ include::{root}/src/main/java/com/vaadin/demo/flow/signals/ShoppingCartSignals.j
 
 This logic:
 
-1. Searches the cart for an item with the same product ID
-2. If found, increments its quantity by updating the signal's value
+1. Searches the cart for an item with the same product ID using `signal.get()`
+2. If found, increments its quantity by updating the signal's value using `signal.set()`
 3. If not found, inserts a new cart item at the end of the list
 
 When the quantity is updated on an existing item, the component row updates automatically without being recreated. Only the quantity field and item total update.
