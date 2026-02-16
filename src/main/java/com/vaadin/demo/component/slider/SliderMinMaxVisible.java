@@ -11,7 +11,7 @@ public class SliderMinMaxVisible extends Div {
     public SliderMinMaxVisible() {
         // tag::snippet[]
         Slider slider = new Slider("Temperature", 0, 100, 50);
-        // slider.setMinMaxVisible(true);
+        slider.setMinMaxVisible(true);
         add(slider);
         // end::snippet[]
     }

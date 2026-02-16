@@ -5,8 +5,7 @@ import { Slider } from '@vaadin/react-components/Slider.js';
 function Example() {
   return (
     // tag::snippet[]
-    // TODO: add minMaxVisible
-    <Slider label="Temperature" min={0} max={100} value={50} />
+    <Slider label="Temperature" min={0} max={100} value={50} minMaxVisible />
     // end::snippet[]
   );
 }

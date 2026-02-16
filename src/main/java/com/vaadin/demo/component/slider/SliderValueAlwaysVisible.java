@@ -11,11 +11,12 @@ public class SliderValueAlwaysVisible extends Div {
     public SliderValueAlwaysVisible() {
         // tag::snippet[]
         Slider slider = new Slider("Brightness", 0, 100, 75);
-        // slider.setValueAlwaysVisible(true);
+        slider.setValueAlwaysVisible(true);
         add(slider);
         // end::snippet[]
     }
 
-    public static class Exporter extends DemoExporter<SliderValueAlwaysVisible> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<SliderValueAlwaysVisible> { // hidden-source-line
     } // hidden-source-line
 }

@@ -5,8 +5,7 @@ import { Slider } from '@vaadin/react-components/Slider.js';
 function Example() {
   return (
     // tag::snippet[]
-    // TODO: add valueAlwaysVisible
-    <Slider label="Brightness" min={0} max={100} value={75} />
+    <Slider label="Brightness" min={0} max={100} value={75} valueAlwaysVisible />
     // end::snippet[]
   );
 }

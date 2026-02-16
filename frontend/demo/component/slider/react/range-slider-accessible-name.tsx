@@ -3,9 +3,6 @@ import React from 'react';
 import { RangeSlider } from '@vaadin/react-components/RangeSlider.js';
 
 function Example() {
-  // TODO add these properties
-  // accessibleNameStart="Minimum price"
-  // accessibleNameEnd="Maximum price"
   return (
     // tag::snippet[]
     <RangeSlider
@@ -13,6 +10,8 @@ function Example() {
       min={0}
       max={1000}
       value={[200, 800]}
+      accessibleNameStart="Minimum price"
+      accessibleNameEnd="Maximum price"
     />
     // end::snippet[]
   );
