@@ -80,7 +80,7 @@ For more complex conditions, use a lambda expression:
 include::{root}/src/main/java/com/vaadin/demo/flow/signals/ConditionalVisibility.java[tags=level2,indent=0]
 ----
 
-The lambda `() -> needsVisaSignal.value() && visaTypeSignal.value() == VisaType.H1B` reads multiple signals. This section appears only when:
+The lambda `() -> needsVisaSignal.get() && visaTypeSignal.get() == VisaType.H1B` reads multiple signals. This section appears only when:
 
 * Visa sponsorship is needed (`needsVisaSignal` is `true`)
 * AND the selected visa type is H1-B
@@ -110,18 +110,46 @@ Each level progressively discloses more details, creating a smooth, focused user
 
 === bindValue()
 
-`bindValue()` connects a form field to a signal so that:
-
-* When the user changes the field, the signal updates
-* When the signal changes programmatically, the field updates
-
-Use this on fields whose values other components depend on.
+`bindValue()` connects a form field to a signal using two callbacks:
 
 [source,java]
 ----
-checkbox.bindValue(needsVisaSignal);
-comboBox.bindValue(visaTypeSignal);
+checkbox.bindValue(needsVisaSignal, needsVisaSignal::set);
+comboBox.bindValue(visaTypeSignal, visaTypeSignal::set);
 ----
+
+The method signature is:
+
+[source,java]
+----
+field.bindValue(Signal<V> signal, Consumer<V> writeCallback)
+----
+
+**Read callback (signal)**: The first parameter is a `Signal<V>`. The framework reads its value using `signal.get()` whenever it needs to update the field. When the signal changes, the field automatically updates.
+
+**Write callback**: The second parameter is a `Consumer<V>` that receives the new value when the user changes the field. Typically, you pass the signal's setter (e.g., `signal::set`) to update the signal with the new field value, but the callback can also run some validation for input value.
+
+This creates a two-way binding:
+
+* User changes field → write callback is invoked → signal is updated via `set()`
+* Signal changes → framework reads via `get()` → field is updated
+
+==== Null Write Callback
+
+You can pass `null` as the write callback for read-only bindings:
+
+[source,java]
+----
+field.bindValue(mySignal, null);
+----
+
+In this case:
+
+* The field displays the signal's value
+* User changes to the field are ignored (the signal is not updated)
+* The signal can still be updated programmatically, and the field will reflect those changes
+
+This is useful when you want a field to display signal-driven data but prevent user input from modifying that data directly.
 
 
 === bindVisible()
@@ -134,7 +162,7 @@ comboBox.bindValue(visaTypeSignal);
 component.bindVisible(booleanSignal);
 
 // Complex: show based on multiple conditions
-component.bindVisible(() -> signal1.value() && signal2.value() == expectedValue);
+component.bindVisible(() -> signal1.get() && signal2.get() == expectedValue);
 ----
 
 The framework automatically:
@@ -152,7 +180,7 @@ Use `Binder` alongside signals to maintain data integrity:
 ----
 Checkbox checkbox = new Checkbox("Label");
 binder.forField(checkbox).bind(Data::getValue, Data::setValue); // Data binding
-checkbox.bindValue(signal); // Reactive binding
+checkbox.bindValue(signal, signal::set); // Reactive binding
 ----
 
 This dual binding ensures:

@@ -51,7 +51,7 @@ public class ConditionalVisibility extends VerticalLayout {
         Checkbox needsVisaCheckbox = new Checkbox("Do you require visa sponsorship?");
         binder.forField(needsVisaCheckbox)
             .bind(VisaApplicationData::getNeedsVisa, VisaApplicationData::setNeedsVisa);
-        needsVisaCheckbox.bindValue(needsVisaSignal);
+        needsVisaCheckbox.bindValue(needsVisaSignal, needsVisaSignal::set);
         // end::level0[]
 
         // tag::level1[]
@@ -62,7 +62,7 @@ public class ConditionalVisibility extends VerticalLayout {
         visaTypeSelect.setValue(VisaType.H1B);
         binder.forField(visaTypeSelect)
             .bind(VisaApplicationData::getVisaType, VisaApplicationData::setVisaType);
-        visaTypeSelect.bindValue(visaTypeSignal);
+        visaTypeSelect.bindValue(visaTypeSignal, visaTypeSignal::set);
 
         TextField currentVisaStatus = new TextField("Current Visa Status");
         binder.forField(currentVisaStatus)
@@ -79,14 +79,14 @@ public class ConditionalVisibility extends VerticalLayout {
         Checkbox hasH1BPreviouslyCheckbox = new Checkbox("Have you held an H1-B visa before?");
         binder.forField(hasH1BPreviouslyCheckbox)
             .bind(VisaApplicationData::getHasH1BPreviously, VisaApplicationData::setHasH1BPreviously);
-        hasH1BPreviouslyCheckbox.bindValue(hasH1BPreviouslySignal);
+        hasH1BPreviouslyCheckbox.bindValue(hasH1BPreviouslySignal, hasH1BPreviouslySignal::set);
 
         TextField h1bSpecialtyOccupation = new TextField("Specialty Occupation");
         // Binder binding omitted for brevity
 
         h1bSection.add(hasH1BPreviouslyCheckbox, h1bSpecialtyOccupation);
-        h1bSection.bindVisible(() -> needsVisaSignal.value()
-                && visaTypeSignal.value() == VisaType.H1B);
+        h1bSection.bindVisible(() -> needsVisaSignal.get()
+            && visaTypeSignal.get() == VisaType.H1B);
         // end::level2[]
 
         // tag::level3[]
@@ -101,9 +101,9 @@ public class ConditionalVisibility extends VerticalLayout {
         // Additional fields omitted for brevity
 
         previousH1BSection.add(previousEmployer, previousPetitionNumber);
-        previousH1BSection.bindVisible(() -> needsVisaSignal.value()
-                && visaTypeSignal.value() == VisaType.H1B
-                && hasH1BPreviouslySignal.value());
+        previousH1BSection.bindVisible(() -> needsVisaSignal.get()
+            && visaTypeSignal.get() == VisaType.H1B
+            && hasH1BPreviouslySignal.get());
         // end::level3[]
 
         add(needsVisaCheckbox, visaSection, h1bSection, previousH1BSection);
