@@ -21,9 +21,9 @@ public class BindingDataProvider extends VerticalLayout {
         grid.setSortableColumns("name", "department");
 
         // Create a data provider instance with a configurable filter allowing
-        // the filter value to be set programmatically via setFilter(). The filter
-        // value is passed to the data provider on change and is available through
-        // Query#getFilter().
+        // the filter value to be set programmatically via setFilter(). The
+        // filter value is passed to the data provider on change and is
+        // available through Query#getFilter().
         ConfigurableFilterDataProvider<Person, Void, PersonFilter> dataProvider = new PersonDataProvider()
                 .withConfigurableFilter();
         grid.setDataProvider(dataProvider);
@@ -43,7 +43,8 @@ public class BindingDataProvider extends VerticalLayout {
     }
 
     private PersonFilter createFilterObject() {
-        return new PersonFilter(nameFilter.getValue(), departmentFilter.getValue());
+        return new PersonFilter(nameFilter.getValue(),
+                departmentFilter.getValue());
     }
 }
 // end::body[]
