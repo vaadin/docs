@@ -25,7 +25,8 @@ public class BinderIntegrationExample extends VerticalLayout {
         TextField usernameField = new TextField("Username");
         EmailField emailField = new EmailField("Email");
         PasswordField passwordField = new PasswordField("Password");
-        PasswordField confirmPasswordField = new PasswordField("Confirm Password");
+        PasswordField confirmPasswordField = new PasswordField(
+                "Confirm Password");
         ComboBox<AccountType> accountTypeSelect = new ComboBox<>("Account Type",
                 AccountType.values());
         IntegerField ageField = new IntegerField("Age");
@@ -64,10 +65,9 @@ public class BinderIntegrationExample extends VerticalLayout {
 
         // Cross-field validation using Binder.Binding.value()
         // Runs each time the password field changes
-        binder.forField(confirmPasswordField)
-                .withValidator(value -> value != null && value.equals(pwBinding.value()),
-                        "Passwords do not match")
-                .bind("confirmPassword");
+        binder.forField(confirmPasswordField).withValidator(
+                value -> value != null && value.equals(pwBinding.value()),
+                "Passwords do not match").bind("confirmPassword");
 
         binder.forField(accountTypeSelect).bind("accountType");
 
@@ -79,17 +79,17 @@ public class BinderIntegrationExample extends VerticalLayout {
                     return accountType == AccountType.BUSINESS
                             ? "Business accounts require age 18 or older"
                             : "Personal accounts require age 14 or older";
-                })
-                .bind("age");
+                }).bind("age");
 
         // Initialize the binder with an empty bean
-        binder.readBean(new UserRegistration("", "", "", "", AccountType.PERSONAL, 0));
+        binder.readBean(
+                new UserRegistration("", "", "", "", AccountType.PERSONAL, 0));
 
         // Submit button enabled only when form is valid
         Button submitButton = new Button("Register", e -> {
             UserRegistration userRegistration = new UserRegistration();
             binder.writeBeanIfValid(userRegistration);
-                // Handle registration...
+            // Handle registration...
         });
         submitButton.bindEnabled(
                 binder.getValidationStatus().map(BinderValidationStatus::isOk));
@@ -132,22 +132,53 @@ public class BinderIntegrationExample extends VerticalLayout {
         }
 
         // Getters and setters omitted for brevity
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getConfirmPassword() { return confirmPassword; }
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getConfirmPassword() {
+            return confirmPassword;
+        }
+
         public void setConfirmPassword(String confirmPassword) {
             this.confirmPassword = confirmPassword;
         }
-        public AccountType getAccountType() { return accountType; }
+
+        public AccountType getAccountType() {
+            return accountType;
+        }
+
         public void setAccountType(AccountType accountType) {
             this.accountType = accountType;
         }
-        public Integer getAge() { return age; }
-        public void setAge(Integer age) { this.age = age; }
+
+        public Integer getAge() {
+            return age;
+        }
+
+        public void setAge(Integer age) {
+            this.age = age;
+        }
     }
 
     public enum AccountType {

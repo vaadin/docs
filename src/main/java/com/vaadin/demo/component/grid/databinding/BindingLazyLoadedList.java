@@ -24,12 +24,8 @@ public class BindingLazyLoadedList extends VerticalLayout {
         sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
 
         // Binding
-        grid.setItems(
-                (query) -> PersonService.fetch(
-                        searchInput.getValue(),
-                        sortBySelect.getValue(),
-                        query.getOffset(),
-                        query.getLimit()),
+        grid.setItems((query) -> PersonService.fetch(searchInput.getValue(),
+                sortBySelect.getValue(), query.getOffset(), query.getLimit()),
                 (query) -> PersonService.count(searchInput.getValue()));
 
         add(searchInput, sortBySelect, grid);
