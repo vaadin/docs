@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
@@ -100,7 +99,7 @@ public class ShoppingCartSignals extends VerticalLayout {
 
         Div cartItemsList = new Div();
         // tag::bindchildren[]
-        ComponentEffect.bindChildren(cartItemsList, cartItemsSignal,
+        cartItemsList.bindChildren(cartItemsSignal,
                 itemSignal -> createCartItemRow(itemSignal, cartItemsSignal));
         // end::bindchildren[]
 
