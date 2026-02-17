@@ -55,8 +55,9 @@ public class GridFilteringExample extends VerticalLayout {
         // Data grid
         Grid<Product> productGrid = new Grid<>(Product.class);
         productGrid.setColumns("id", "name", "category", "price", "stock");
-        ComponentEffect.bind(productGrid, filteredProductsSignal, (grid, items) -> {
-            grid.setItems(Objects.requireNonNullElseGet(items, List::of));
+        ComponentEffect.effect(productGrid, () -> {
+            productGrid.setItems(Objects.requireNonNullElseGet(
+                filteredProductsSignal.get(), List::of));
         });
 
         add(categoryFilter, searchField, inStockCheckbox, productGrid);
