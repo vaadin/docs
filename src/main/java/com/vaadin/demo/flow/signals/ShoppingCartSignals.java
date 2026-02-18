@@ -1,5 +1,6 @@
 package com.vaadin.demo.flow.signals;
 
+import com.vaadin.flow.router.Route;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -15,10 +16,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.signals.Signal;
-import com.vaadin.flow.signals.WritableSignal;
 import com.vaadin.flow.signals.local.ListSignal;
 import com.vaadin.flow.signals.local.ValueSignal;
 
+@Route("shopping-cart-with-signals")
 public class ShoppingCartSignals extends VerticalLayout {
 
     record Product(String id, String name, BigDecimal price) {}
@@ -192,10 +193,9 @@ public class ShoppingCartSignals extends VerticalLayout {
         quantityField.setWidth("120px");
         quantityField.setStepButtonsVisible(true);
 
-        // Two-way mapped signal for quantity
-        WritableSignal<Integer> quantitySignal = itemSignal
-                .map(CartItem::quantity, CartItem::withQuantity);
-        quantityField.bindValue(quantitySignal, quantitySignal::set);
+        // Two-way mapped signal for quantity (immutable value)
+        quantityField.bindValue(itemSignal.map(CartItem::quantity),
+                itemSignal.updater(CartItem::withQuantity));
 
         // Handle removal when quantity drops below 1
         quantityField.addValueChangeListener(e -> {

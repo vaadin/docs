@@ -2,7 +2,7 @@
 title: Effects and Computed Signals
 page-title: Effects and Computed Signals in Vaadin Flow
 description: Using effects and computed signals for reactive UI updates.
-meta-description: Learn how to use ComponentEffect, computed signals, and standalone effects for reactive programming.
+meta-description: Learn how to use Effect, computed signals, and standalone effects for reactive programming.
 order: 30
 ---
 
@@ -24,7 +24,7 @@ Use direct binding methods (covered in <<building-ui#,Component Bindings>>) when
 - Binding form field values with `bindValue()`
 - Binding styles, themes, or class lists
 
-Use [classname]`ComponentEffect` when:
+Use [classname]`Effect` when:
 
 - You need custom side effects beyond property binding
 - You're working with component APIs that don't have binding methods
@@ -36,9 +36,9 @@ Use [classname]`ComponentEffect` when:
 Effects are callbacks that run immediately when created and automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
 
 
-=== Creating Component-Bound Effects
+=== Creating Effects
 
-The [methodname]`ComponentEffect.effect()` method creates an effect bound to a component's lifecycle. The effect is active while the component is attached and inactive while detached.
+The [methodname]`Effect.effect()` method creates an effect that runs immediately and re-runs whenever its signal dependencies change.
 
 [source,java]
 ----
@@ -47,20 +47,18 @@ ListSeries series = new ListSeries("My Series", new Number[0]);
 ListSignal<Number> seriesSignal = new ListSignal<>();
 // initialization details omitted
 
-ComponentEffect.effect(chart, () -> {
+Effect.effect(() -> {
     // This code runs immediately and again whenever seriesSignal changes
     series.setData(seriesSignal.value().stream()
         .map(Signal::value).toArray(Number[]::new));
 });
 ----
 
-The first parameter is the component that owns the effect. When the component is detached, the effect is paused. When re-attached, the effect resumes and runs again with current values.
-
-The method returns a [classname]`Registration` instance that can be used to remove the effect before the component is detached:
+The method returns a [classname]`Registration` instance that can be used to remove the effect when it's no longer needed:
 
 [source,java]
 ----
-Registration effectRegistration = ComponentEffect.effect(chart, () -> {
+Registration effectRegistration = Effect.effect(() -> {
     // effect logic
 });
 
@@ -75,7 +73,7 @@ Use effects for component properties that don't have direct binding methods:
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Effect.effect(() -> {
     component.setCustomProperty(signal.value());
 });
 ----
@@ -177,7 +175,7 @@ Use [methodname]`peek()` to read a signal's value without registering a dependen
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Effect.effect(() -> {
     // value() registers a dependency - effect will re-run when nameSignal changes
     String name = nameSignal.value();
 
@@ -193,7 +191,7 @@ The [methodname]`Signal.untracked()` method executes a block of code without tra
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Effect.effect(() -> {
     // This read is tracked
     String trackedValue = trackedSignal.value();
 
@@ -236,7 +234,7 @@ ValueSignal<Boolean> showDetails = new ValueSignal<>(false);
 ValueSignal<String> summary = new ValueSignal<>("");
 ValueSignal<String> details = new ValueSignal<>("");
 
-ComponentEffect.effect(component, () -> {
+Effect.effect(() -> {
     if (showDetails.value()) {
         // Both showDetails and details are dependencies
         component.setText(details.value());
@@ -263,7 +261,7 @@ Use component binding methods for property updates. Effects are for custom logic
 label.bindText(signal);
 
 // Avoid: Effect for simple property binding
-ComponentEffect.effect(label, () -> label.setText(signal.value()));
+Effect.effect(() -> label.setText(signal.value()));
 ----
 
 See <<building-ui#,Component Bindings>> for available binding methods.
@@ -287,7 +285,7 @@ If you must modify a signal from an effect and are certain there's no risk of in
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Effect.effect(() -> {
     String value = oneSignal.value();
 
     // WARNING: This might lead to infinite loops.
@@ -312,7 +310,7 @@ nameLabel.bindText(userSignal.map(User::name));
 ageLabel.bindText(userSignal.map(u -> String.valueOf(u.age())));
 
 // Avoid: One large effect doing multiple things
-ComponentEffect.effect(container, () -> {
+Effect.effect(() -> {
     nameLabel.setText(userSignal.value().name());
     ageLabel.setText(String.valueOf(userSignal.value().age()));
     // ... more updates
