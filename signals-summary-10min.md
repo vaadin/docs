@@ -1,8 +1,8 @@
-# Vaadin Signals: 10-Minute Summary (25.1)
+# Production-ready Vaadin Signals: Short Summary (25.1)
 
 ## What Are Signals?
 
-Signals enable **reactive state management** in Vaadin Flow. Instead of manually updating UI components when data changes, you declare the relationship once, and signals keep everything synchronized automatically.
+Signals are **reactive value holders** that automatically track dependencies and update the UI when state changes — no manual listener wiring needed. Instead of manually updating UI components when data changes, you declare the relationship once, and signals keep everything synchronized automatically.
 
 ```java
 // Traditional approach: Manual updates
@@ -18,6 +18,17 @@ Button button = new Button();
 button.bindText(count.map(c -> "Clicked " + c + " times"));
 button.addClickListener(click -> count.update(c -> c + 1));
 ```
+
+### Key Capabilities
+
+- **Automatic dependency tracking** — Reading a signal inside an effect registers a subscription; changes trigger re-evaluation
+- **Derived/computed values** — `signal.map(...)` creates derived signals that stay in sync
+- **Two-way binding** — Bind UI components to signals with a single call (`bindValue`, `bindText`, `bindVisible`, `bindEnabled`)
+- **Lifecycle-aware** — Bindings activate on attach, clean up on detach
+- **Local & Shared signals** — `ValueSignal` for per-session state; `SharedValueSignal`/`SharedNumberSignal`/`SharedListSignal` for cross-session, cluster-ready state with optimistic updates and transactions
+- **Thread-safe UI updates** — `ui.access(...)` is used automatically when needed
+
+**Result:** Less boilerplate, fewer bugs from forgotten listeners, and a clear reactive data flow from state to UI.
 
 ---
 
