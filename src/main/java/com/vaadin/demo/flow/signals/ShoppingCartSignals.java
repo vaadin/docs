@@ -193,7 +193,7 @@ public class ShoppingCartSignals extends VerticalLayout {
         quantityField.setWidth("120px");
         quantityField.setStepButtonsVisible(true);
 
-        // Two-way mapped signal for quantity (immutable value)
+        // Two-way mapped signal for quantity
         quantityField.bindValue(itemSignal.map(CartItem::quantity),
                 itemSignal.updater(CartItem::withQuantity));
 
