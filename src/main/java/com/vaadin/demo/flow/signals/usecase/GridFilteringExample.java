@@ -7,7 +7,6 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.signals.Effect;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public class GridFilteringExample extends VerticalLayout {
         // Data grid
         Grid<Product> productGrid = new Grid<>(Product.class);
         productGrid.setColumns("id", "name", "category", "price", "stock");
-        Effect.effect(() -> {
+        Signal.effect(() -> {
             productGrid.setItems(Objects.requireNonNullElseGet(
                 filteredProductsSignal.get(), List::of));
         });
