@@ -23,9 +23,10 @@ public class BindingInMemoryList extends VerticalLayout {
         // Filtering
         TextField searchInput = new TextField("Search", event -> {
             if (!event.getValue().isEmpty()) {
-                // Set a filter to show only people whose name contains the search term
-                dataView.setFilter(person -> person
-                        .name().toLowerCase().contains(event.getValue().toLowerCase()));
+                // Set a filter to show only people whose name contains the
+                // search term
+                dataView.setFilter(person -> person.name().toLowerCase()
+                        .contains(event.getValue().toLowerCase()));
             } else {
                 // Clear the filter if the search term is empty
                 dataView.removeFilters();
@@ -36,15 +37,15 @@ public class BindingInMemoryList extends VerticalLayout {
         // Sorting
         Select<String> sortBySelect = new Select<>("Sort by", event -> {
             switch (event.getValue()) {
-                case "Name (A-Z)" ->
-                    // Set sort order to ascending by name
-                    dataView.setSortOrder(Person::name, SortDirection.ASCENDING);
-                case "Name (Z-A)" ->
-                    // Set sort order to descending by name
-                    dataView.setSortOrder(Person::name, SortDirection.DESCENDING);
-                default ->
-                    // Clear sorting
-                    dataView.removeSorting();
+            case "Name (A-Z)" ->
+                // Set sort order to ascending by name
+                dataView.setSortOrder(Person::name, SortDirection.ASCENDING);
+            case "Name (Z-A)" ->
+                // Set sort order to descending by name
+                dataView.setSortOrder(Person::name, SortDirection.DESCENDING);
+            default ->
+                // Clear sorting
+                dataView.removeSorting();
             }
         });
         sortBySelect.setItems("", "Name (A-Z)", "Name (Z-A)");
