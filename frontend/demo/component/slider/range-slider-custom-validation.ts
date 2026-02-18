@@ -19,6 +19,9 @@ export class Example extends LitElement {
   @state()
   private errorMessage = '';
 
+  @state()
+  private value = [200, 800];
+
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
@@ -27,10 +30,11 @@ export class Example extends LitElement {
         min="0"
         max="1000"
         step="50"
-        .value="${[200, 800]}"
+        .value="${this.value}"
         .invalid="${this.invalid}"
         .errorMessage="${this.errorMessage}"
         @change="${(e: RangeSliderChangeEvent) => {
+          this.value = e.target.value;
           const [start, end] = e.target.value;
           if (end - start < 200) {
             this.errorMessage = 'Price range must span at least $200';
