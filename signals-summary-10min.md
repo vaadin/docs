@@ -5,18 +5,17 @@
 Signals are **reactive value holders** that automatically track dependencies and update the UI when state changes — no manual listener wiring needed. Instead of manually updating UI components when data changes, you declare the relationship once, and signals keep everything synchronized automatically.
 
 ```java
-// Traditional approach: Manual updates
-Button button = new Button("Clicked 0 times");
-button.addClickListener(click -> {
-    count++;
-    button.setText("Clicked " + count + " times"); // Manual update
-});
+// Traditional approach: Manual listener wiring
+TextField textField = new TextField();
+Span label = new Span();
+textField.addValueChangeListener(e -> label.setText("Hello " + e.getValue()));
 
 // With signals: Automatic updates
-ValueSignal<Integer> count = new ValueSignal<>(0);
-Button button = new Button();
-button.bindText(count.map(c -> "Clicked " + c + " times"));
-button.addClickListener(click -> count.update(c -> c + 1));
+ValueSignal<String> name = new ValueSignal<>("");
+TextField textField = new TextField();
+Span label = new Span();
+textField.bindValue(name, name::set);       // two-way bind
+label.bindText(name.map(v -> "Hello " + v)); // auto-updates
 ```
 
 ### Key Capabilities
