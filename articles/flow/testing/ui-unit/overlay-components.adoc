@@ -1,0 +1,116 @@
+---
+title: Testing Overlay Components
+page-title: How to test overlay components like Context Menu in Vaadin UI unit tests
+description: How to test context menus, menu bars, and other overlay-based components in UI unit tests.
+meta-description: Learn how to test context menus and other overlay components in Vaadin UI unit tests using component testers.
+order: 25
+---
+
+
+= Testing Overlay Components
+
+Some Vaadin components render their content in overlays, which means their child components aren't part of the normal view component tree. Standard component queries using [methodname]`$()` can't find components inside these overlays. Instead, use the component-specific testers to interact with overlay content.
+
+
+== Context Menu
+
+[classname]`ContextMenu` renders its items in an overlay outside the main component tree. Use [classname]`ContextMenuTester` to interact with menu items and any custom components inside the menu.
+
+
+=== Clicking Menu Items
+
+Use [methodname]`clickItem()` to simulate clicking a menu item by its text or zero-based position. You don't need to open the menu first -- the tester operates directly on server-side state.
+
+[source,java]
+----
+ContextMenu menu = view.contextMenu;
+ContextMenuTester<ContextMenu> menu_ = test(menu);
+
+// Click a top-level item by text
+menu_.clickItem("Edit");
+
+// Click a nested item by text path
+menu_.clickItem("Share", "Email");
+
+// Click by position (zero-based, hidden items are skipped)
+menu_.clickItem(0);         // first visible item
+menu_.clickItem(1, 0);      // first item in second item's submenu
+----
+
+
+=== Checkable Menu Items
+
+Use [methodname]`isItemChecked()` to check whether a checkable item is checked. Clicking a checkable item toggles its checked state automatically.
+
+[source,java]
+----
+menu_.clickItem("Bold");
+Assertions.assertTrue(menu_.isItemChecked("Bold"));
+
+menu_.clickItem("Bold");
+Assertions.assertFalse(menu_.isItemChecked("Bold"));
+----
+
+
+=== Finding Components in the Menu
+
+If you've added custom components (not just text items) to the menu, use the tester's [methodname]`find()` method instead of the standard [methodname]`$()` query. Call [methodname]`open()` first if you need the components to be in an attached state.
+
+[source,java]
+----
+// Find a component inside the menu (detached)
+Div div = menu_.find(Div.class).withText("Custom Item").single();
+
+// Open first if you need attached components
+menu_.open();
+Div div = menu_.find(Div.class).withText("Custom Item").single();
+Assertions.assertTrue(div.isAttached());
+----
+
+
+=== Grid Context Menu
+
+[classname]`GridContextMenu` extends [classname]`ContextMenu`, so the same [classname]`ContextMenuTester` API works for grid context menus.
+
+[source,java]
+----
+GridContextMenu<Person> gridMenu = view.gridContextMenu;
+ContextMenuTester<GridContextMenu<Person>> gridMenu_ = test(gridMenu);
+
+gridMenu_.clickItem("Delete");
+----
+
+
+=== Common Pitfalls
+
+Using [methodname]`$()` to search for components inside a context menu doesn't work because the overlay content isn't part of the main component tree. Use [methodname]`test(contextMenu).find()` or [methodname]`test(contextMenu).clickItem()` instead.
+
+[source,java]
+----
+// This does NOT work -- won't find items inside the context menu
+Button menuButton = $(Button.class).withText("My Action").first(); // throws
+
+// Use the tester's find() method instead
+Button menuButton = test(contextMenu).find(Button.class)
+        .withText("My Action").single();
+----
+
+
+== Menu Bar
+
+[classname]`MenuBar` works similarly to context menu. Use [classname]`MenuBarTester` to click items by text or position.
+
+[source,java]
+----
+MenuBar menuBar = view.menuBar;
+MenuBarTester<MenuBar> menuBar_ = test(menuBar);
+
+// Click top-level item
+menuBar_.clickItem("File");
+
+// Click nested item
+menuBar_.clickItem("File", "Save As");
+----
+
+
+[discussion-id]`E3F7D8A2-9B14-4C6E-A1D0-8F5E2C3B7A91`
