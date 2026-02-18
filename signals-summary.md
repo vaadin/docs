@@ -72,33 +72,33 @@ checkbox.bindValue(
 
 ### 4. Advanced List Signal Capabilities
 
-**Enhanced in 25.1:**
 - Per-entry reactivity: changes to individual list items don't trigger full list re-renders
 - Efficient `bindChildren()` that only creates/removes affected components
 - Support for both `ListSignal` (local) and `SharedListSignal` (shared across users)
 
 ### 5. Explicit Write Callbacks in Transactions
 
-**Vaadin 25.1** provides explicit control over write operations through:
 - Clear separation between read-only and write operations
 - Effect callbacks run in read-only transactions (prevents accidental mutations)
 - Explicit `runWithoutTransaction()` for intentional side effects
 
 ### 6. Automatic Repeatable Reads
 
-**Introduced in 25.1** ([PR #23556](https://github.com/vaadin/flow/pull/23556)):
-- Operations like `update()` automatically retry on concurrent modifications
-- Compare-and-set semantics with automatic retry loops
-- `CancelableOperation` returned from `update()` allows cancellation if needed
+- Shared signals automatically use transactions during Vaadin session lock
+- Multiple reads within the same request return consistent values
+- Prevents race conditions where a signal value changes between reads
 
 ```java
-// Automatically retries if another user modifies the counter concurrently
-counter.update(v -> v + 1);
+// No sudden reads of concurrently changed value:
+if (signal.get().equals("update required")) {
+    // Can log "Doing required update from 'no need to update'"
+    log("Doing required update from '" + signal.get() + "'");
+    signal.set("updated");
+}
 ```
 
 ### 7. Signal Bindings vs Effects Lifecycle
 
-**Key difference:**
 - **Signal bindings** (via `bindText()`, `bindVisible()`, etc.) are **permanent** for the component's lifetime
 - **Effects** (via `Effect.effect()`) can be **unregistered** via the returned `Registration`
 
@@ -359,19 +359,6 @@ greeting.bindText(localeSignal.map(locale ->
 
 // Change locale - all bindings update automatically
 UI.getCurrent().setLocale(new Locale("fi"));
-```
-
-### Permanent Bindings vs Effects
-
-```java
-// Binding: Permanent for component lifetime
-button.bindText(counterSignal.map(c -> "Count: " + c));
-
-// Effect: Can be unregistered
-Registration reg = Effect.effect(() -> {
-    System.out.println("Count: " + counterSignal.value());
-});
-reg.remove(); // Stop the effect
 ```
 
 ### Local vs Shared Signals
