@@ -1,0 +1,127 @@
+---
+title: Figma to Code
+description: Generate Vaadin UI code from Figma designs using Vaadin Copilot.
+order: 2
+---
+
+= [since:com.vaadin:vaadin@V24.5]#Figma to Code#
+
+
+Figma to Vaadin is a feature of Vaadin Copilot that allows developers to copy designs from Figma and paste them directly into a Vaadin project, where Copilot automatically translates the design structure into Vaadin UI components.
+
+== How does the Figma import work?
+
+The import process does not rely on AI interpretation of visual layouts. Copilot reads structured XML data from Figma’s clipboard and parses it into Vaadin UI code. This ensures that the same design always produces the same output.
+
+The translation is deterministic and based on component metadata and layout structure defined in Figma.
+
+== How do I use it?
+
+. In Figma, select a frame or a section of a design.
+. Copy it to the clipboard using kbd:[Ctrl+C] (Windows/Linux) or kbd:[Cmd+C] (macOS).
+. Make sure your Vaadin project is running and Vaadin Copilot is enabled.
+. In your project, navigate to the location where you want to insert the UI.
+. Paste using kbd:[Ctrl+V] or kbd:[Cmd+V].
+
+After a few seconds, the application refreshes and shows the generated UI.
+
+You can copy an entire artboard or only a smaller section of a larger design.
+
+== What are the limitations?
+
+Out of the box, Figma to Vaadin generates functional UI components when designs use components from the *Vaadin Design System* Figma library.
+
+The translator relies on component metadata. For other component libraries, functional components are not automatically recognized unless translation rules are defined for them.
+
+Dialogs, overlays, and notifications are not supported because their behavior requires interaction logic that cannot be inferred from static design data.
+
+=== Extending support to own components
+
+You can extend the importer to support your own Figma component libraries.
+
+The extension mechanism is based on registering custom importer functions. These functions inspect Figma nodes during paste and define how they should be translated into Vaadin components.
+
+The general process is:
+
+. Add a unique marker property to your Figma components so they can be identified during import.
+. Create a TypeScript importer module in your Vaadin project.
+. Implement and register importer functions that:
+  * Detect the marker property.
+  * Map Figma properties to Vaadin component properties.
+  * Define how children are translated.
+. Register the importer module so it is loaded in development mode.
+
+When properly registered, copying a matching Figma component generates instances of your custom Vaadin components instead of default elements.
+
+For detailed instructions and examples, see:
+https://vaadin.com/blog/how-to-use-own-figma-components-in-vaadin-applications[How to use own Figma components in Vaadin applications].
+
+== Optimize Figma designs for import
+
+To accurately transform a Figma design into Vaadin code, the design must have a clear structure and use known components.
+
+=== Use Auto Layout
+
+Auto Layout defines structured layouts in Figma and closely maps to CSS Flexbox, which Vaadin layouts are based on.
+
+Using Auto Layout ensures predictable results. Elements placed inside regular groups or frames without Auto Layout may still be imported, but their positioning can be less accurate.
+
+Avoid disabling Auto Layout or using absolute positioning unless necessary.
+
+=== Use Vaadin Design System components
+
+Copilot recognizes components based on metadata defined in the *Vaadin Design System* Figma library.
+
+To generate functional Vaadin UI components, use the official Vaadin Design System library available in the Figma Community.
+
+Most Vaadin components are supported. Interactive elements such as dialogs and overlays are excluded.
+
+=== Configure components using properties
+
+Configure components using their built-in properties instead of manually modifying visual appearance.
+
+For example, set a field to an “invalid” state using component properties instead of changing its background color manually. Property-based configuration produces more accurate and functional code.
+
+=== Typography
+
+Regular text layers in Figma are translated into `<span>` elements without additional styling.
+
+To ensure correct semantic output, use text styles from the Vaadin Design System library:
+
+* Heading styles are translated into `H1`–`H6` elements.
+* Body text styles are translated into `<span>` elements with corresponding size classes.
+
+Text fill colors are not preserved. The application’s default text color is used.
+
+=== Other elements
+
+The following table describes how common Figma elements are translated:
+
+[cols="1,1", options="header"]
+|===
+|Figma element |Vaadin element
+
+|Text layer
+|`<span>`
+
+|Rectangle
+|`<div>` with fill, border, and border radius
+
+|Group
+|`<div>`
+
+|Frame
+|`<div>` with fill and border
+
+|Frame with Auto Layout
+|`VerticalLayout` or `HorizontalLayout` with alignment and spacing
+
+|Ellipse, Polygon, Star
+|Not supported
+
+|Line, Arrow, Pen
+|Not supported
+
+|Slice
+|Not supported
+|===
