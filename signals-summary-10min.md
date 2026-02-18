@@ -238,7 +238,7 @@ public class ShoppingCart extends VerticalLayout {
 - **Prefer bindings** over manual effects
 - **Use records** for immutable data
 - **Group related updates** in transactions
-- **Enable @Push** for shared signals
+- **Enable @Push**
 
 ```java
 // Good: Direct binding
@@ -272,14 +272,6 @@ userSignal.update(u -> u.withAge(31));
 
 ## Advanced Features
 
-### Automatic Retries
-
-Operations retry automatically on concurrent changes:
-```java
-// If another user changes the counter, this automatically retries
-counter.update(v -> v + 1);
-```
-
 ### Form Validation Integration
 
 ```java
@@ -294,6 +286,21 @@ binder.forField(nameField)
 // Validation status as signal
 Signal<Boolean> isValid = Signal.computed(() -> binder.isValid());
 saveButton.bindEnabled(isValid);
+```
+
+### UI Locale Signal
+
+Vaadin provides a built-in signal for reactive locale changes:
+```java
+// React to locale changes automatically
+Signal<Locale> localeSignal = UI.getCurrent().localeSignal();
+
+Span greeting = new Span();
+greeting.bindText(localeSignal.map(locale ->
+    locale.getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
+
+// Change locale - all bindings update automatically
+UI.getCurrent().setLocale(new Locale("fi"));
 ```
 
 ### Permanent Bindings vs Effects
