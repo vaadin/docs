@@ -1,5 +1,6 @@
 package com.vaadin.demo.flow.signals;
 
+import com.vaadin.flow.router.Route;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ListSignal;
 import com.vaadin.flow.signals.local.ValueSignal;
 
+@Route("shopping-cart-with-signals")
 public class ShoppingCartSignals extends VerticalLayout {
 
     record Product(String id, String name, BigDecimal price) {}
