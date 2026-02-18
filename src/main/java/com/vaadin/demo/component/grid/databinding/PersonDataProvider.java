@@ -13,7 +13,8 @@ import com.vaadin.flow.data.provider.QuerySortOrder;
 import com.vaadin.flow.data.provider.SortDirection;
 
 // tag::body[]
-public class PersonDataProvider extends AbstractBackEndDataProvider<Person, PersonFilter> {
+public class PersonDataProvider
+        extends AbstractBackEndDataProvider<Person, PersonFilter> {
     // In a real application, data would come from a real database or backend
     // service. This example uses a static list for demonstration purposes only.
     private static final List<Person> DATABASE = Arrays.asList(
@@ -23,7 +24,8 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
             new Person("Emma Wilson", "HR"));
 
     @Override
-    protected Stream<Person> fetchFromBackEnd(Query<Person, PersonFilter> query) {
+    protected Stream<Person> fetchFromBackEnd(
+            Query<Person, PersonFilter> query) {
         // SQL equivalent: SELECT ... FROM ...
         Stream<Person> stream = DATABASE.stream();
 
@@ -54,9 +56,9 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
      * Creates a filter function (predicate) based on the filter object from the
      * Grid.
      *
-     * This is for demonstration purposes only. In a real application, you should do
-     * filtering in the database query e.g. by using SQL WHERE if you are using a
-     * relational database.
+     * This is for demonstration purposes only. In a real application, you
+     * should do filtering in the database query e.g. by using SQL WHERE if you
+     * are using a relational database.
      */
     private Predicate<Person> createPredicate(Optional<PersonFilter> filter) {
         return filter.map(f -> (Predicate<Person>) f::test).orElse(p -> true);
@@ -66,16 +68,17 @@ public class PersonDataProvider extends AbstractBackEndDataProvider<Person, Pers
      * Creates a sorting function (comparator) based on the sort orders from the
      * Grid.
      *
-     * This is for demonstration purposes only. In a real application, you should do
-     * sorting in the database query e.g. by using SQL ORDER BY if you are using a
-     * relational database.
+     * This is for demonstration purposes only. In a real application, you
+     * should do sorting in the database query e.g. by using SQL ORDER BY if you
+     * are using a relational database.
      */
-    private Comparator<Person> createComparator(List<QuerySortOrder> sortOrders) {
+    private Comparator<Person> createComparator(
+            List<QuerySortOrder> sortOrders) {
         return sortOrders.stream().map(sortOrder -> {
             Comparator<Person> comparator = switch (sortOrder.getSorted()) {
-                case "name" -> Comparator.comparing(Person::name);
-                case "department" -> Comparator.comparing(Person::department);
-                default -> (p0, p1) -> 0;
+            case "name" -> Comparator.comparing(Person::name);
+            case "department" -> Comparator.comparing(Person::department);
+            default -> (p0, p1) -> 0;
             };
 
             return sortOrder.getDirection().equals(SortDirection.ASCENDING)
