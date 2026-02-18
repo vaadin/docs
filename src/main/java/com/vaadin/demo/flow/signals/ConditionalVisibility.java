@@ -5,8 +5,10 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.signals.local.ValueSignal;
 
+@Route("conditional-visibility-with-signals")
 public class ConditionalVisibility extends VerticalLayout {
 
     enum VisaType {
