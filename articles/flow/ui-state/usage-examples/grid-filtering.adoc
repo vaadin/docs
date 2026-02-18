@@ -1,0 +1,134 @@
+---
+title: In-Memory Grid Filtering
+description: Use signals to implement reactive client-side filtering for a in-memory data grid, where the displayed items update automatically as filter criteria change.
+order: 20
+---
+
+
+= Grid Filtering with Signals
+
+This guide shows how to implement reactive client-side filtering for a data grid using signals. The grid automatically updates whenever users change any filter criteria - category, search term, or stock status, without manual coordination between components.
+
+
+== The Use Case
+
+Data grids often need multiple filters that work together. For example, a product grid where users can filter by category, search by name or ID, and toggle to show only in-stock items. Each filter should immediately update the visible results, and all filters should work together seamlessly.
+
+Signals simplify this by making the filtered dataset reactive. When a user changes any filter, a computed signal automatically recalculates the filtered results and updates the grid.
+
+
+== The Solution
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/GridFilteringExample.java[tags=snippet,indent=0]
+----
+
+
+== How It Works
+
+
+=== Signals for Filter State
+
+Create [classname]`ValueSignal` instances for each filter input:
+
+[source,java]
+----
+ValueSignal<String> categoryFilterSignal = new ValueSignal<>("All");
+ValueSignal<String> searchTermSignal = new ValueSignal<>("");
+ValueSignal<Boolean> inStockOnlySignal = new ValueSignal<>(false);
+----
+
+These signals track the current state of each filter. When any filter changes, its signal updates automatically, triggering dependent computations.
+
+
+=== Two-Way Binding with Filter Components
+
+Connect signals to filter components using [methodname]`bindValue()`:
+
+[source,java]
+----
+categoryFilter.bindValue(categoryFilterSignal, categoryFilterSignal::set);
+searchField.bindValue(searchTermSignal, searchTermSignal::set);
+inStockCheckbox.bindValue(inStockOnlySignal, inStockOnlySignal::set);
+----
+
+This creates bidirectional connections:
+
+* When users interact with the components, the write callback (`signal::set`) updates the signal
+* When code updates the signals, the framework reads via `signal.get()` and updates the components
+
+See <<../local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details about bidirectional bindings.
+
+
+=== Computed Signal for Filtered Data
+
+Create a computed signal that derives the filtered dataset from all filter signals:
+
+[source,java]
+----
+Signal<List<Product>> filteredProductsSignal = Signal.computed(() -> {
+    String category = categoryFilterSignal.get();
+    String searchTerm = searchTermSignal.get().toLowerCase();
+    boolean inStockOnly = inStockOnlySignal.get();
+
+    return allProducts.stream()
+        .filter(p -> category.equals("All")
+            || p.category().equals(category))
+        .filter(p -> searchTerm.isEmpty()
+            || p.name().toLowerCase().contains(searchTerm)
+            || p.id().toLowerCase().contains(searchTerm))
+        .filter(p -> !inStockOnly || p.stock() > 0)
+        .toList();
+});
+----
+
+This computed signal automatically recalculates whenever any of the three filter signals change. The filtering logic is centralized in one place, making it easy to understand and maintain. The signal reads all three filter values using `get()` and applies them sequentially using stream operations.
+
+
+=== Binding the Grid to Filtered Data
+
+Connect the grid to the computed signal using [methodname]`ComponentEffect.effect()`:
+
+[source,java]
+----
+Grid<Product> productGrid = new Grid<>(Product.class);
+productGrid.setColumns("id", "name", "category", "price", "stock");
+ComponentEffect.effect(productGrid, () -> {
+    productGrid.setItems(Objects.requireNonNullElseGet(
+        filteredProductsSignal.get(), List::of));
+});
+----
+
+The [methodname]`ComponentEffect.effect()` method creates a component effect that runs whenever any signal accessed within it changes. The effect automatically tracks that it reads `filteredProductsSignal.get()` and reruns whenever the filtered products change. This establishes a reactive connection—whenever the computed signal recalculates (because any filter changed), the effect runs and updates the grid with the new filtered results.
+
+
+== Key Patterns
+
+*Signals for filter state*:: Use [classname]`ValueSignal` to track each independent filter criterion. This makes the filter state explicit and reactive.
+
+*Two-way binding with [methodname]`bindValue()`*:: Connect filter components to signals using the pattern `component.bindValue(signal, signal::set)`. The first parameter is the signal (read using `signal.get()`), and the second is the write callback that is supposed to update the signal when the user changes the component, this callback can have a conditional logic that write the value if it's valid, or does nothing otherwise.
+
+*Computed signals for derived data*:: Create a computed signal that reads all filter signals using `signal.get()` and produces the filtered dataset. This centralizes filtering logic and makes dependencies clear.
+
+*Component effects for grid updates*:: Use [methodname]`ComponentEffect.effect()` to connect the grid to the filtered data signal. The effect automatically tracks signal access via `signal.get()` and reruns whenever those signals change, updating the grid's items.
+
+
+== When to Use This Pattern
+
+This pattern is ideal when:
+
+- You have multiple filters that need to work together
+- Filtering logic is moderately complex or involves multiple conditions
+- You want client-side filtering for responsive interaction
+- The dataset is small enough to filter in memory (typically under 10,000 items)
+
+For larger datasets, consider server-side filtering with lazy loading. For single, simple filters, a direct event listener approach might be sufficient.
+
+
+== Related Topics
+
+- <<../local-signals#,Local Signals>> - Understanding ValueSignal and two-way binding
+- <<../effects-computed#,Effects and Computed Signals>> - Creating derived values
+- <<../building-ui#,Component Bindings>> - Binding signals to component properties
+- <<../../components/grid#,Grid>> - Reference documentation for Grid component
