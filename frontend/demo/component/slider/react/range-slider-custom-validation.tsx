@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useState } from 'react';
+import type { RangeSliderChangeEvent } from '@vaadin/react-components/RangeSlider.js';
 import { RangeSlider } from '@vaadin/react-components/RangeSlider.js';
-import type { RangeSliderValueChangedEvent } from '@vaadin/react-components/RangeSlider.js';
 
 function Example() {
   // tag::snippet[]
@@ -10,16 +10,17 @@ function Example() {
 
   return (
     <RangeSlider
-      label="Duration of Stay"
-      min={1}
-      max={30}
-      value={[5, 14]}
+      label="Price Range"
+      min={0}
+      max={1000}
+      step={50}
+      value={[200, 800]}
       invalid={invalid}
       errorMessage={errorMessage}
-      onValueChanged={(e: RangeSliderValueChangedEvent) => {
-        const [start, end] = e.detail.value;
-        if (end - start < 3) {
-          setErrorMessage('The stay must be at least 3 days');
+      onChange={(e: RangeSliderChangeEvent) => {
+        const [start, end] = e.target.value;
+        if (end - start < 200) {
+          setErrorMessage('Price range must span at least $200');
           setInvalid(true);
         } else {
           setInvalid(false);
