@@ -71,11 +71,48 @@ checkbox.bindValue(
 );
 ```
 
-### 4. Advanced Features
+### 4. Advanced List Signal Capabilities
 
-- **Automatic retries:** `update()` operations retry on concurrent changes
-- **Permanent bindings:** Unlike effects, bindings last the component's lifetime
-- **Per-item reactivity:** List changes only update affected components
+**Enhanced in 25.1:**
+- Per-entry reactivity: changes to individual list items don't trigger full list re-renders
+- Efficient `bindChildren()` that only creates/removes affected components
+- Support for both `ListSignal` (local) and `SharedListSignal` (shared across users)
+
+### 5. Explicit Write Callbacks in Transactions
+
+**Vaadin 25.1** provides explicit control over write operations through:
+- Clear separation between read-only and write operations
+- Effect callbacks run in read-only transactions (prevents accidental mutations)
+- Explicit `runWithoutTransaction()` for intentional side effects
+
+### 6. Automatic Repeatable Reads
+
+**Introduced in 25.1** ([PR #23556](https://github.com/vaadin/flow/pull/23556)):
+- Operations like `update()` automatically retry on concurrent modifications
+- Compare-and-set semantics with automatic retry loops
+- `CancelableOperation` returned from `update()` allows cancellation if needed
+
+```java
+// Automatically retries if another user modifies the counter concurrently
+counter.update(v -> v + 1);
+```
+
+### 7. Signal Bindings vs Effects Lifecycle
+
+**Key difference:**
+- **Signal bindings** (via `bindText()`, `bindVisible()`, etc.) are **permanent** for the component's lifetime
+- **Effects** (via `Effect.effect()`) can be **unregistered** via the returned `Registration`
+
+```java
+// Permanent binding - lasts as long as component is attached
+button.bindText(counter.map(c -> "Count: " + c));
+
+// Unregistrable effect - can be removed when no longer needed
+Registration reg = Effect.effect(() -> {
+    System.out.println("Counter: " + counter.value());
+});
+reg.remove(); // Stops the effect
+```
 
 ---
 
@@ -90,6 +127,8 @@ checkbox.bindValue(
 | `SharedValueSignal<T>` | Multi-user | Collaborative data |
 | `SharedNumberSignal` | Multi-user | Counters, metrics |
 | `SharedListSignal<T>` | Multi-user | Real-time lists |
+| `SharedMapSignal<T>` | Multi-user | Configuration, shared properties |
+| `SharedNodeSignal` | Multi-user | Hierarchical collaborative data |
 
 ### Component Bindings
 
@@ -115,6 +154,26 @@ container.bindChildren(itemsSignal, item -> {
     view.bindText(item, item::set);
     return view;
 });
+```
+
+### Element-Level Bindings
+
+For advanced use cases and custom components:
+
+```java
+// Text binding
+element.bindText(textSignal);
+
+// Attribute binding
+element.bindAttribute("aria-label", labelSignal);
+
+// Property binding (String, Boolean, Double, List, Map, Object)
+element.bindProperty("hidden", hiddenSignal);
+element.bindProperty("items", itemListSignal);
+
+// HTML content binding (Html component)
+Html html = new Html("<div></div>");
+html.bindHtmlContent(htmlContentSignal);
 ```
 
 ### Computed Signals
