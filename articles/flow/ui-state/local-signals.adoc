@@ -45,17 +45,17 @@ ValueSignal<User> userSignal = new ValueSignal<>();
 
 == Reading and Writing Values
 
-Use the `value()` method to both read and write signal values:
+Use the `get()` method to read signal values and `set()` to write them:
 
 [source,java]
 ----
 ValueSignal<String> signal = new ValueSignal<>("Hello");
 
 // Read the current value
-String current = signal.value();
+String current = signal.get();
 
 // Write a new value
-signal.value("World");
+signal.set("World");
 ----
 
 
@@ -138,7 +138,7 @@ items.clear();
 
 === Reading List Contents
 
-Use [methodname]`value()` to get a snapshot of the list:
+Use [methodname]`get()` to get a snapshot of the list:
 
 [source,java]
 ----
@@ -147,10 +147,10 @@ items.insertLast("A");
 items.insertLast("B");
 
 // Get a snapshot list of ValueSignal entries
-List<ValueSignal<String>> entries = items.value();
+List<ValueSignal<String>> entries = items.get();
 
 // Read values from entries
-entries.forEach(entry -> System.out.println(entry.value()));
+entries.forEach(entry -> System.out.println(entry.get()));
 ----
 
 
@@ -164,7 +164,7 @@ ListSignal<String> items = new ListSignal<>();
 ValueSignal<String> entry = items.insertLast("Original");
 
 // Update the entry value
-entry.value("Updated");
+entry.set("Updated");
 
 // The list still has one entry, but its value changed
 ----
@@ -255,7 +255,7 @@ ValueSignal<User> userSignal = new ValueSignal<>(new User("Jane", 25));
 userSignal.modify(user -> user.setAge(26));
 
 // Incorrect: Direct mutation won't trigger reactivity
-User user = userSignal.value();
+User user = userSignal.get();
 user.setAge(27); // This change won't be detected!
 ----
 
@@ -274,7 +274,7 @@ public class MyView extends VerticalLayout {
 
     public MyView() {
         TextField field = new TextField();
-        field.bindValue(localState);
+        field.bindValue(localState, localState::set);
 
         Span output = new Span();
         output.bindText(localState);
@@ -300,7 +300,7 @@ ListSignal<String> localList = new ListSignal<>();
 
 // This will throw an exception
 Signal.runInTransaction(() -> {
-    localValue.value("new value"); // Not allowed!
+    localValue.set("new value"); // Not allowed!
     localList.insertLast("item");  // Not allowed!
 });
 ----
@@ -316,7 +316,7 @@ Use `peek()` to read a value without registering a dependency in effects or comp
 ----
 ValueSignal<String> signal = new ValueSignal<>("Hello");
 
-Effect.effect(() -> {
+Signal.effect(component, () -> {
     // peek() doesn't register a dependency
     String peeked = signal.peek();
     // This effect won't re-run when signal changes
@@ -333,7 +333,7 @@ Use the `map()` method to create a computed signal that transforms the original 
 ValueSignal<String> name = new ValueSignal<>("john");
 Signal<String> upperName = name.map(String::toUpperCase);
 
-// upperName.value() returns "JOHN"
+// upperName.get() returns "JOHN"
 // When name changes, upperName automatically updates
 ----
 
@@ -350,7 +350,7 @@ This is particularly useful when binding a form field to a property of a complex
 
 === Mapping Immutable Values (Records)
 
-For immutable values like Java records, use [methodname]`bindValue()` with [methodname]`map()` and [methodname]`updater()`:
+For immutable values like Java records, use [methodname]`map()` for reading and [methodname]`updater()` for writing:
 
 [source,java]
 ----
@@ -369,12 +369,12 @@ checkbox.bindValue(todoSignal.map(Todo::done), todoSignal.updater(Todo::withDone
 // Calling todoSignal.update(...) updates the checkbox
 ----
 
-The [methodname]`updater()` method creates a setter function that takes a new value and returns an updated parent object. Using wither methods like `withDone()` is a common pattern for records.
+The [methodname]`updater()` method takes a wither function that receives the current parent value and the new child value, and returns a new parent value with the child property updated. Using wither methods like `withDone()` is a common pattern for records.
 
 
 === Mapping Mutable Values (Beans)
 
-For mutable beans with setters, use [methodname]`bindValue()` with [methodname]`map()` and [methodname]`modifier()`:
+For mutable beans with setters, use [methodname]`map()` for reading and [methodname]`modifier()` for writing:
 
 [source,java]
 ----
@@ -395,31 +395,28 @@ TextField nameField = new TextField("Name");
 nameField.bindValue(userSignal.map(User::getName), userSignal.modifier(User::setName));
 ----
 
-The [methodname]`modifier()` method creates a setter function that takes a new value and mutates the parent object in place. The signal framework handles change notification automatically.
+The [methodname]`modifier()` method takes a setter function that receives the parent object and the new value, and mutates the parent in place. The signal framework handles change notification automatically.
 
 [NOTE]
 ====
-Prefer immutable records over mutable beans when possible. Records are easier to reason about, naturally thread-safe, and work better with reactive patterns. Use [methodname]`modifier()` only when working with existing mutable bean classes.
+Prefer immutable records over mutable beans when possible. Records are easier to reason about, naturally thread-safe, and work better with reactive patterns. Use `modifier()` only when working with existing mutable bean classes.
 ====
 
 
 === Comparison: Read-Only vs Two-Way Mapping
 
-[cols="1,1,1"]
+[cols="1,2"]
 |===
-| Pattern | Use Case | Example
+| Method | Use Case
 
-| `bindValue(signal, signal::set)`
-| Two-way binding to a simple signal
-| `textField.bindValue(nameSignal, nameSignal::set)`
+| `map(getter)`
+| Read-only transformations
 
-| `bindValue(signal.map(getter), signal.updater(wither))`
+| `bindValue(signal.map(getter), signal.updater(merger))`
 | Two-way binding with immutable values
-| `checkbox.bindValue(todoSignal.map(Todo::done), todoSignal.updater(Todo::withDone))`
 
 | `bindValue(signal.map(getter), signal.modifier(setter))`
 | Two-way binding with mutable beans
-| `textField.bindValue(userSignal.map(User::getName), userSignal.modifier(User::setName))`
 |===
 
 
