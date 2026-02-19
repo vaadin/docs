@@ -10,7 +10,7 @@ const appProps = readFileSync(
   resolve(__dirname, 'src/main/resources/application.properties'),
   'utf-8'
 );
-const serverPort = /^server\.port=(\d+)/m.exec(appProps)?.[1] ?? '8880';
+const serverPort = /^server\.port=(\d+)/m.exec(appProps)?.[1];
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 

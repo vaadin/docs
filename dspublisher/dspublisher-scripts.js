@@ -74,9 +74,11 @@ const appProps = fs.readFileSync(
   path.resolve(projectRootPath, 'src/main/resources/application.properties'),
   'utf-8'
 );
-const serverPort = parseInt(appProps.match(/^server\.port=(\d+)/m)?.[1] ?? '8880');
-const dspConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8'));
-const dspPort = dspConfig.port ?? 8800;
+const serverPort = parseInt(appProps.match(/^server\.port=(\d+)/m)?.[1]);
+const dspConfig = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8')
+);
+const dspPort = dspConfig.port;
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
