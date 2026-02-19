@@ -36,7 +36,7 @@ Span greeting = new Span();
 greeting.bindText(name.map(n -> "Hello, " + n + "!"));
 // Displays "Hello, World!"
 
-name.value("Vaadin");
+name.set("Vaadin");
 // Automatically updates to "Hello, Vaadin!"
 ----
 
@@ -70,10 +70,10 @@ ValueSignal<String> firstName = new ValueSignal<>("John");
 ValueSignal<String> lastName = new ValueSignal<>("Doe");
 
 Span fullName = new Span();
-fullName.bindText(() -> firstName.value() + " " + lastName.value());
+fullName.bindText(() -> firstName.get() + " " + lastName.get());
 // Displays "John Doe"
 
-firstName.value("Jane");
+firstName.set("Jane");
 // Automatically updates to "Jane Doe"
 ----
 
@@ -82,7 +82,7 @@ For expensive computations, wrap the lambda in [methodname]`Signal.computed()` t
 [source,java]
 ----
 fullName.bindText(Signal.computed(() ->
-    firstName.value() + " " + lastName.value()));
+    firstName.get() + " " + lastName.get()));
 ----
 
 Both variants execute the callback when a dependency signal value changes. The difference is that the lambda variant recalculates the result every time someone reads the lambda signal value, while an explicit computed signal (using [methodname]`Signal.computed()`) caches the result until any dependency signal value changes. For simple operations like [methodname]`String::length`, a lambda is enough. However, for complex or expensive computations, use an explicit computed signal to avoid unnecessary recalculations when the value is read multiple times.
@@ -138,7 +138,7 @@ submitButton.bindEnabled(termsAccepted);
 // Button is disabled initially
 
 Checkbox termsCheckbox = new Checkbox("I accept the terms");
-termsCheckbox.bindValue(termsAccepted);
+termsCheckbox.bindValue(termsAccepted, termsAccepted::set);
 // Button enables when checkbox is checked
 ----
 
@@ -153,8 +153,8 @@ ValueSignal<String> email = new ValueSignal<>("");
 ValueSignal<String> password = new ValueSignal<>("");
 
 Signal<Boolean> formValid = Signal.computed(() -> {
-    String e = email.value();
-    String p = password.value();
+    String e = email.get();
+    String p = password.get();
     return e.contains("@") && p.length() >= 8;
 });
 
@@ -175,10 +175,10 @@ import com.vaadin.flow.signals.shared.SharedValueSignal;
 ValueSignal<String> username = new ValueSignal<>("");
 
 TextField usernameField = new TextField("Username");
-usernameField.bindValue(username);
+usernameField.bindValue(username, username::set);
 
-// User types "john" -> username.value() returns "john"
-// username.value("jane") -> field displays "jane"
+// User types "john" -> username.get() returns "john"
+// username.set("jane") -> field displays "jane"
 ----
 
 
@@ -190,31 +190,31 @@ Two-way binding works with all form fields implementing [interfacename]`HasValue
 ----
 // Text fields
 TextField textField = new TextField();
-textField.bindValue(stringSignal);
+textField.bindValue(stringSignal, stringSignal::set);
 
 TextArea textArea = new TextArea();
-textArea.bindValue(stringSignal);
+textArea.bindValue(stringSignal, stringSignal::set);
 
 // Checkbox
 ValueSignal<Boolean> accepted = new ValueSignal<>(false);
 Checkbox checkbox = new Checkbox("Accept terms");
-checkbox.bindValue(accepted);
+checkbox.bindValue(accepted, accepted::set);
 
 // Number field
 ValueSignal<Double> amount = new ValueSignal<>(0.0);
 NumberField numberField = new NumberField("Amount");
-numberField.bindValue(amount);
+numberField.bindValue(amount, amount::set);
 
 // Select/ComboBox
 ValueSignal<String> country = new ValueSignal<>("");
 ComboBox<String> countrySelect = new ComboBox<>("Country");
 countrySelect.setItems("USA", "UK", "Germany", "France");
-countrySelect.bindValue(country);
+countrySelect.bindValue(country, country::set);
 
 // Date picker
 ValueSignal<LocalDate> birthDate = new ValueSignal<>(null);
 DatePicker datePicker = new DatePicker("Birth date");
-datePicker.bindValue(birthDate);
+datePicker.bindValue(birthDate, birthDate::set);
 ----
 
 
@@ -230,7 +230,7 @@ TextField field = new TextField("Document title");
 field.bindReadOnly(locked);
 // Field is editable initially
 
-Button lockButton = new Button("Lock", e -> locked.value(true));
+Button lockButton = new Button("Lock", e -> locked.set(true));
 // After clicking: field becomes read-only
 ----
 
@@ -279,7 +279,7 @@ Div panel = new Div();
 panel.getStyle().bind("background-color", backgroundColor);
 
 // Change background color
-backgroundColor.value("lightblue");
+backgroundColor.set("lightblue");
 ----
 
 
@@ -302,7 +302,7 @@ progressBar.getStyle().bind("background-color", progress.map(p ->
 
 == Rendering Lists of Components
 
-Use [methodname]`bindChildren()` on [classname]`HasComponents` to efficiently render a list of components from a list signal. This method handles additions, removals, and reordering without recreating all children:
+Use [methodname]`bindChildren()` to efficiently render a list of components from a list signal. This method handles additions, removals, and reordering without recreating all children:
 
 [source,java]
 ----
@@ -375,7 +375,7 @@ todoList.bindChildren(todos, todoSignal -> {
 });
 ----
 
-The [methodname]`updater()` method creates a setter function for two-way binding between the checkbox and the `done` property. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details.
+The [methodname]`updater()` method creates a write callback that enables direct two-way binding between the checkbox and the `done` property. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details.
 
 When you update a todo item using [methodname]`todoSignal.update()`, only the bound properties (text content, styling) are updated. The component itself is not recreated, maintaining its position and identity in the DOM.
 
@@ -404,10 +404,10 @@ public class TaskManager extends VerticalLayout {
 
     // Computed signals
     private final Signal<Long> totalCount = Signal.computed(() ->
-        (long) tasks.value().size());
+        (long) tasks.get().size());
     private final Signal<Long> completedCount = Signal.computed(() ->
-        tasks.value().stream()
-            .filter(t -> t.value().done())
+        tasks.get().stream()
+            .filter(t -> t.get().done())
             .count());
 
     public TaskManager() {
@@ -415,20 +415,20 @@ public class TaskManager extends VerticalLayout {
         Span stats = new Span();
         stats.bindText(Signal.computed(() ->
             String.format("Tasks: %d total, %d completed",
-                totalCount.value(), completedCount.value())));
+                totalCount.get(), completedCount.get())));
         add(stats);
 
         // Add task form
         HorizontalLayout addForm = new HorizontalLayout();
         TextField taskInput = new TextField();
         taskInput.setPlaceholder("Enter new task");
-        taskInput.bindValue(newTaskText);
+        taskInput.bindValue(newTaskText, newTaskText::set);
 
         Button addButton = new Button("Add Task");
         addButton.bindEnabled(newTaskText.map(t -> !t.isBlank()));
         addButton.addClickListener(e -> {
-            tasks.insertLast(new Task(newTaskText.value(), false));
-            newTaskText.value("");
+            tasks.insertLast(new Task(newTaskText.get(), false));
+            newTaskText.set("");
         });
 
         addForm.add(taskInput, addButton);
@@ -436,7 +436,7 @@ public class TaskManager extends VerticalLayout {
 
         // Show/hide completed toggle
         Checkbox showCompletedCheckbox = new Checkbox("Show completed tasks");
-        showCompletedCheckbox.bindValue(showCompleted);
+        showCompletedCheckbox.bindValue(showCompleted, showCompleted::set);
         add(showCompletedCheckbox);
 
         // Task list
@@ -450,7 +450,7 @@ public class TaskManager extends VerticalLayout {
 
             // Hide completed tasks when toggle is off
             row.bindVisible(Signal.computed(() ->
-                showCompleted.value() || !taskSignal.value().done()));
+                showCompleted.get() || !taskSignal.get().done()));
 
             // Two-way binding to the 'done' property
             Checkbox doneCheckbox = new Checkbox();
