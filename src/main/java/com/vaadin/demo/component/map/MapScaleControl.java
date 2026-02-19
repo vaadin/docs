@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.map;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
@@ -12,6 +11,7 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.slider.Slider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.impl.Effect;
 import com.vaadin.flow.signals.local.ValueSignal;
 
 @Route("map-scale-control")
@@ -32,7 +32,7 @@ public class MapScaleControl extends Div {
         scaleControl.setMinWidth(175);
 
         // Update control when data changes
-        ComponentEffect.effect(map, () -> {
+        Effect.effect(map, () -> {
             scaleControl.setUnits(units.get());
             scaleControl.setDisplayMode(showAsBar.get() ? ScaleControl.DisplayMode.BAR : ScaleControl.DisplayMode.LINE);
             scaleControl.setScaleBarSteps(barSteps.get().intValue());
@@ -49,7 +49,8 @@ public class MapScaleControl extends Div {
         barCheckbox.bindValue(showAsBar, showAsBar::set);
 
         // Configure number of bar segments
-        Slider stepsSlider = new Slider("Bar steps", 2, 8, 4);
+        Slider stepsSlider = new Slider("Bar steps", 2, 8);
+        stepsSlider.setValue(4d);
         stepsSlider.setStep(2);
         stepsSlider.setValueChangeMode(ValueChangeMode.EAGER);
         stepsSlider.bindEnabled(showAsBar);
