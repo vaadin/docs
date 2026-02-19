@@ -1,9 +1,16 @@
+import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import type { UserConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const appProps = readFileSync(
+  resolve(__dirname, 'src/main/resources/application.properties'),
+  'utf-8'
+);
+const serverPort = /^server\.port=(\d+)/m.exec(appProps)?.[1] ?? '8880';
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 
@@ -37,7 +44,7 @@ const config: UserConfig = {
     /* dev-mode proxy config */
     proxy: {
       '/vaadin': {
-        target: 'http://localhost:8080',
+        target: `http://localhost:${serverPort}`,
       },
     },
   },

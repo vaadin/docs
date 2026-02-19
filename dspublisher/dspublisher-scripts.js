@@ -15,7 +15,7 @@ const DSP_VERSION = '3.0.0-alpha.12';
 async function checkPreConditions() {
   try {
     // Verify the necessary ports are available on localhost
-    const ports = [8000, 8080];
+    const ports = [8000, serverPort];
     await Promise.all(
       ports.map((port) => {
         return new Promise((resolve, reject) => {
@@ -70,6 +70,11 @@ async function checkPreConditions() {
 }
 
 const projectRootPath = path.resolve(__dirname, '..');
+const appProps = fs.readFileSync(
+  path.resolve(projectRootPath, 'src/main/resources/application.properties'),
+  'utf-8'
+);
+const serverPort = parseInt(appProps.match(/^server\.port=(\d+)/m)?.[1] ?? '8880');
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
