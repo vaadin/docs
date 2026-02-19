@@ -43,8 +43,8 @@ function Example() {
       <Dialog
         header-title="User details"
         opened={dialogOpened.value}
-        onOpenedChanged={(event) => {
-          dialogOpened.value = event.detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
         header={
           <Button theme="tertiary" onClick={close}>

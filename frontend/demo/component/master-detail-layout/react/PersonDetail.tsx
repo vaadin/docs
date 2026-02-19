@@ -15,14 +15,16 @@ interface PersonDetailProps {
 
 function PersonDetail({ person, onClose }: PersonDetailProps) {
   return (
-    <VerticalLayout theme="padding spacing">
+    <VerticalLayout theme="padding">
       <FormLayout>
         <TextField label="First Name" value={person?.firstName ?? ''} readonly />
         <TextField label="Last Name" value={person?.lastName ?? ''} readonly />
         <EmailField label="Email" value={person?.email ?? ''} readonly />
         <TextField label="Profession" value={person?.profession ?? ''} readonly />
       </FormLayout>
-      <Button onClick={onClose}>Close</Button>
+      <Button onClick={onClose} style={{ marginTop: 'var(--vaadin-gap-l)' }}>
+        Close
+      </Button>
     </VerticalLayout>
   );
 }

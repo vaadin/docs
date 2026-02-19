@@ -16,7 +16,7 @@ function renderNoInvitationAlert() {
   return (
     <div
       style={{
-        padding: 'var(--lumo-size-l)',
+        padding: '2.75rem',
         textAlign: 'center',
         fontStyle: 'italic',
         color: 'var(--lumo-contrast-70pct)',

@@ -2,7 +2,7 @@ package com.vaadin.demo.domain;
 
 import java.util.Date;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

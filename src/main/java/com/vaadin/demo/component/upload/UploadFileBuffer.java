@@ -12,8 +12,8 @@ public class UploadFileBuffer extends Div {
         // tag::snippet[]
         /* Example for FileBuffer */
         /* Handles both single and multifile upload */
-        FileUploadHandler fileHandler = UploadHandler.toFile(
-                (metadata, file) -> {
+        FileUploadHandler fileHandler = UploadHandler
+                .toFile((metadata, file) -> {
                     System.out.printf("File saved to: %s%n",
                             file.getAbsolutePath());
                 }, metadata -> new File(System.getProperty("java.io.tmpdir"),

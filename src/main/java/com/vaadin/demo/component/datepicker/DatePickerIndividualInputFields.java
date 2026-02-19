@@ -14,7 +14,6 @@ import java.util.Locale;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Route("date-picker-individual-input-fields")
@@ -29,8 +28,7 @@ public class DatePickerIndividualInputFields extends Div {
         LocalDate now = LocalDate.now(ZoneId.systemDefault());
 
         List<Integer> selectableYears = IntStream
-                .range(now.getYear() - 99, now.getYear() + 1).boxed()
-                .collect(Collectors.toList());
+                .range(now.getYear() - 99, now.getYear() + 1).boxed().toList();
 
         yearPicker = new ComboBox<>("Year", selectableYears);
         yearPicker.setWidth(6, Unit.EM);
@@ -80,8 +78,8 @@ public class DatePickerIndividualInputFields extends Div {
                 monthPicker.getValue(), 1);
         int lengthOfMonth = startOfMonth.lengthOfMonth();
 
-        dayPicker.setItems(IntStream.range(1, lengthOfMonth + 1).boxed()
-                .collect(Collectors.toList()));
+        dayPicker.setItems(
+                IntStream.range(1, lengthOfMonth + 1).boxed().toList());
     }
     // end::snippet[]
 

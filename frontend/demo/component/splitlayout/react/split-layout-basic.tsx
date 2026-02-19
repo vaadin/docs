@@ -3,7 +3,6 @@ import React from 'react';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout';
 import DetailContent from './detail-content';
 import MasterContent from './master-content';
-import exampleStyles from './split-layout-example-styles'; // hidden-source-line
 
 function Example() {
   return (
@@ -16,4 +15,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example, exampleStyles); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

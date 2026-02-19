@@ -9,7 +9,6 @@ import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("message-list-ai-chat")
 public class MessageListAiChat extends Div {
@@ -32,7 +31,7 @@ public class MessageListAiChat extends Div {
         // Live region for screen reader announcements
         Div liveRegion = new Div();
         liveRegion.getElement().setAttribute("aria-live", "polite");
-        liveRegion.addClassName(LumoUtility.Accessibility.SCREEN_READER_ONLY);
+        liveRegion.addClassName("screen-reader-only");
         add(liveRegion);
 
         List<Message> history = LLMClient.getHistory(chatId);

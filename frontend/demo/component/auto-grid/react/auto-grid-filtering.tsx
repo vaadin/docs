@@ -47,8 +47,8 @@ function Example() {
   });
 
   return (
-    <div className="flex flex-col items-start gap-m">
-      <div className="flex items-baseline gap-m">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem' }}>
         <Select
           label="Filter by category"
           items={categories}

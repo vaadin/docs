@@ -7,13 +7,12 @@ import '@vaadin/email-field';
 import '@vaadin/split-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('form-layout-expand-columns')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -30,7 +29,7 @@ export class Example extends LitElement {
   private renderFormLayout() {
     // tag::snippet[]
     return html`
-      <vaadin-form-layout class="w-full" auto-responsive column-width="8em" expand-columns>
+      <vaadin-form-layout style="width: 100%" auto-responsive column-width="8em" expand-columns>
         <vaadin-form-row>
           <vaadin-text-field label="First name"></vaadin-text-field>
           <vaadin-text-field label="Last name"></vaadin-text-field>

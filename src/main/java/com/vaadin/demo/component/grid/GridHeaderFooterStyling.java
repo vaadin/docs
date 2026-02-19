@@ -1,13 +1,12 @@
 package com.vaadin.demo.component.grid;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Route("grid-header-footer-styling")
 public class GridHeaderFooterStyling extends Div {
@@ -35,8 +34,7 @@ public class GridHeaderFooterStyling extends Div {
 
     private static List<PersonWithRating> createDataSet() {
         return DataService.getPeople().stream()
-                .map(PersonWithRating::generateFromPerson)
-                .collect(Collectors.toList());
+                .map(PersonWithRating::generateFromPerson).toList();
     }
 
     public static class Exporter // hidden-source-line

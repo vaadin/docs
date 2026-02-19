@@ -14,8 +14,8 @@ import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 type PersonEnhanced = Person & { displayName: string };
 
@@ -23,7 +23,6 @@ type PersonEnhanced = Person & { displayName: string };
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -133,7 +132,6 @@ export class GridPaginationControls extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -173,11 +171,11 @@ export class GridPaginationControls extends LitElement {
     return html`
       <vaadin-horizontal-layout style="align-items: center; gap: 0.3rem; width: 100%">
         <vaadin-horizontal-layout style="align-items: center" theme="spacing-s">
-          <span id="page-size-label" class="text-s">Page size</span>
+          <span id="page-size-label" style="font-size: 0.875rem">Page size</span>
           <vaadin-select
             theme="small"
             aria-labelledby="page-size-label"
-            style="width: 4.8rem; --vaadin-input-field-value-font-size: var(--lumo-font-size-s);"
+            style="width: 4.8rem; --vaadin-input-field-value-font-size: 0.875rem"
             .items="${['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}"
             .value="${this.pageSize}"
             @value-changed="${(e: CustomEvent) => {
@@ -210,7 +208,9 @@ export class GridPaginationControls extends LitElement {
         >
           <vaadin-icon icon="vaadin:angle-left"></vaadin-icon>
         </vaadin-button>
-        <span class="text-s px-s" slot="end"> Page ${this.currentPage} of ${this.pageCount} </span>
+        <span style="font-size: 0.875rem; padding: 0 0.5rem" slot="end">
+          Page ${this.currentPage} of ${this.pageCount}
+        </span>
         <vaadin-button
           theme="small icon"
           slot="end"

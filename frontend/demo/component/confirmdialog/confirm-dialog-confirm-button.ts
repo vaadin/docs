@@ -4,14 +4,12 @@ import '@vaadin/confirm-dialog';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ConfirmDialogOpenedChangedEvent } from '@vaadin/confirm-dialog';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('confirm-dialog-confirm-button')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -35,7 +33,7 @@ export class Example extends LitElement {
           header="Export failed"
           confirm-text="OK"
           .opened="${this.dialogOpened}"
-          @opened-changed="${this.openedChanged}"
+          @closed="${this.onClosed}"
           @confirm="${() => {
             this.status = 'Acknowledged';
           }}"
@@ -50,14 +48,12 @@ export class Example extends LitElement {
     `;
   }
 
-  openedChanged(e: ConfirmDialogOpenedChangedEvent) {
-    this.dialogOpened = e.detail.value;
-    if (this.dialogOpened) {
-      this.status = '';
-    }
+  onClosed() {
+    this.dialogOpened = false;
   }
 
   private open() {
     this.dialogOpened = true;
+    this.status = '';
   }
 }

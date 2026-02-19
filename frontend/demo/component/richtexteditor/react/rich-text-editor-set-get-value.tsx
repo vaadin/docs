@@ -22,7 +22,7 @@ function Example() {
   };
 
   const handleHtmlChange = (event: TextAreaChangeEvent) => {
-    const value = event.target.value;
+    const { value } = event.target;
     htmlValue.value = value;
     if (richTextEditorRef.current) {
       richTextEditorRef.current.dangerouslySetHtmlValue(value);

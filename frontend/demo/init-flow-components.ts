@@ -11,13 +11,13 @@
 import '@vaadin/flow-frontend/dndConnector.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // Flow component specific modules
-import '@vaadin/flow-frontend/cookieConsentConnector.js';
 import '@vaadin/flow-frontend/comboBoxConnector.js';
 import '@vaadin/flow-frontend/contextMenuConnector.js';
 import '@vaadin/flow-frontend/contextMenuTargetConnector.js';
 import '@vaadin/flow-frontend/datepickerConnector.js';
 import '@vaadin/flow-frontend/disableOnClickFunctions.js';
 import '@vaadin/flow-frontend/gridConnector.js';
+import '@vaadin/flow-frontend/treeGridConnector.js';
 import '@vaadin/flow-frontend/vaadin-grid-flow-selection-column.js';
 import '@vaadin/flow-frontend/gridProConnector.js';
 import '@vaadin/flow-frontend/vaadin-map/mapConnector.js';
@@ -29,5 +29,3 @@ import '@vaadin/flow-frontend/virtualListConnector.js';
 import '@vaadin/flow-frontend/tooltip.js';
 // Lit renderer
 import '@vaadin/flow-frontend/lit-renderer.js';
-// Legacy template renderer
-import '@vaadin/polymer-legacy-adapter/template-renderer.js';

@@ -5,7 +5,7 @@ import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
       {/* tag::snippet[] */}
       <EmailField
         label="Email address"

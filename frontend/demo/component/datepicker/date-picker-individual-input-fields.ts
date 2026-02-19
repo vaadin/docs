@@ -1,17 +1,16 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/combo-box';
 import '@vaadin/horizontal-layout';
-import getDaysInMonth from 'date-fns/getDaysInMonth';
+import { getDaysInMonth } from 'date-fns/getDaysInMonth';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxSelectedItemChangedEvent } from '@vaadin/combo-box';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('date-picker-individual-input-fields')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

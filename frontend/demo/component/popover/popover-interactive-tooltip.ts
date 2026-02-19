@@ -5,14 +5,12 @@ import '@vaadin/popover';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { PopoverTrigger } from '@vaadin/popover';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('popover-interactive-tooltip')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -29,23 +27,18 @@ export class Example extends LitElement {
         .trigger="${this.trigger}"
         position="top"
         theme="arrow"
-        accessible-name-ref="cvv-heading"
-        ${popoverRenderer(this.cvvRenderer)}
-      ></vaadin-popover>
+        aria-labelledby="cvv-heading"
+      >
+        <h3 id="cvv-heading" style="margin: 0; font-size: 1rem">Card Verification Value</h3>
+        <div style="max-width: 300px">
+          A three or four digit code, usually printed on the back of the card, next to, or at the
+          end of, the signature strip.
+        </div>
+        <a href="https://www.cvvnumber.com/cvv.html" target="_blank">
+          See where to find CVV on different cards
+        </a>
+      </vaadin-popover>
       <!-- end::snippet[] -->
-    `;
-  }
-
-  cvvRenderer() {
-    return html`
-      <h3 id="cvv-heading" style="margin: 0; font-size: 1rem">Card Verification Value</h3>
-      <div style="max-width: 300px">
-        A three or four digit code, usually printed on the back of the card, next to, or at the end
-        of, the signature strip.
-      </div>
-      <a href="https://www.cvvnumber.com/cvv.html" target="_blank">
-        See where to find CVV on different cards
-      </a>
     `;
   }
 }

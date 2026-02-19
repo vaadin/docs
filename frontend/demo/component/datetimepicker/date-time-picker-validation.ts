@@ -6,7 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import type { DatePicker } from '@vaadin/date-picker';
 import type { DateTimePicker, DateTimePickerValidatedEvent } from '@vaadin/date-time-picker';
 import type { TimePicker } from '@vaadin/time-picker';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('date-time-picker-validation')
 export class Example extends LitElement {
@@ -21,7 +21,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

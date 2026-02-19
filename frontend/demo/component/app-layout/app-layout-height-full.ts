@@ -4,8 +4,8 @@ import '@vaadin/grid';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('app-layout-height-full')
 export class Example extends LitElement {
@@ -15,14 +15,13 @@ export class Example extends LitElement {
     }
 
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: var(--lumo-space-m);
     }
   `;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

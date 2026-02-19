@@ -1,0 +1,46 @@
+package com.vaadin.demo.component.messages;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.domain.DataService;
+import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.router.Route;
+
+@Route("message-list-class-name")
+public class MessageListClassName extends Div {
+
+    public MessageListClassName() {
+        // tag::snippet[]
+        Person person = DataService.getPeople(1).get(0);
+        MessageList list = new MessageList();
+
+        Instant yesterday = LocalDateTime.now(ZoneOffset.UTC).minusDays(1)
+                .toInstant(ZoneOffset.UTC);
+        MessageListItem message1 = new MessageListItem(
+                "Linsey, could you check if the details with the order are okay?",
+                yesterday, "Matt Mambo");
+        message1.setUserColorIndex(1);
+
+        Instant fiftyMinsAgo = LocalDateTime.now(ZoneOffset.UTC)
+                .minusMinutes(50).toInstant(ZoneOffset.UTC);
+        MessageListItem message2 = new MessageListItem("All good. Ship it.",
+                fiftyMinsAgo, "Linsey Listy", person.getPictureUrl());
+        message2.setUserColorIndex(2);
+        // Add custom class name
+        message2.addClassNames("current-user");
+
+        list.setItems(Arrays.asList(message1, message2));
+        add(list);
+        // end::snippet[]
+    }
+
+    public static class Exporter extends DemoExporter<MessageListClassName> { // hidden-source-line
+    } // hidden-source-line
+}

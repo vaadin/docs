@@ -3,17 +3,15 @@ import '@vaadin/button';
 import '@vaadin/dialog';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('dialog-footer')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -35,8 +33,8 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="${`Delete user "${this.user?.firstName} ${this.user?.lastName}"?`}"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(event: DialogOpenedChangedEvent) => {
-          this.dialogOpened = event.detail.value;
+        @closed="${() => {
+          this.dialogOpened = false;
         }}"
         ${dialogRenderer(() => html`Are you sure you want to delete this user permanently?`, [])}
         ${dialogFooterRenderer(

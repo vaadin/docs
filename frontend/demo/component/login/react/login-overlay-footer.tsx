@@ -1,13 +1,12 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
-import { applyTheme } from 'Frontend/generated/theme';
 
 function Example() {
   return (
     // tag::snippet[]
-    <LoginOverlay>
-      <p slot="footer" className="text-center">
+    <LoginOverlay opened no-autofocus>
+      <p slot="footer" style={{ textAlign: 'center' }}>
         Never tell your password to anyone
       </p>
     </LoginOverlay>
@@ -15,4 +14,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example, applyTheme); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

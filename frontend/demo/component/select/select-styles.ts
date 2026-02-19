@@ -2,13 +2,12 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/select';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('select-styles')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -20,7 +19,6 @@ export class Example extends LitElement {
         theme="align-right small helper-above-field"
         label="Label"
         helper-text="Helper text"
-        style="--vaadin-input-field-border-width: 1px;"
         .items="${this.items}"
         value="${this.items[0].value}"
       ></vaadin-select>

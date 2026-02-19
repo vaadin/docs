@@ -11,9 +11,8 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("button-images")
 public class ButtonImages extends Div {
     public ButtonImages() {
-        DownloadHandler src = DownloadHandler.forClassResource(
-                getClass(), "/images/vaadin-logo-dark.png",
-                "vaadin-logo-dark.png");
+        DownloadHandler src = DownloadHandler.forClassResource(getClass(),
+                "/images/vaadin-logo-dark.png", "vaadin-logo-dark.png");
         // tag::snippet[]
         Image img = new Image(src, "Vaadin logo");
         img.setWidth("100px");

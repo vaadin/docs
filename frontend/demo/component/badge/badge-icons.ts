@@ -5,13 +5,12 @@ import '@vaadin/icons';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('badge-icons')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -28,6 +27,10 @@ export class Example extends LitElement {
           <span theme="badge success">
             <vaadin-icon icon="vaadin:check" style="padding: var(--lumo-space-xs)"></vaadin-icon>
             <span>Confirmed</span>
+          </span>
+          <span theme="badge warning">
+            <vaadin-icon icon="vaadin:warning" style="padding: var(--lumo-space-xs)"></vaadin-icon>
+            <span>Warning</span>
           </span>
           <span theme="badge error">
             <vaadin-icon
@@ -49,6 +52,10 @@ export class Example extends LitElement {
           <span theme="badge success">
             <span>Confirmed</span>
             <vaadin-icon icon="vaadin:check" style="padding: var(--lumo-space-xs)"></vaadin-icon>
+          </span>
+          <span theme="badge warning">
+            <span>Warning</span>
+            <vaadin-icon icon="vaadin:warning" style="padding: var(--lumo-space-xs)"></vaadin-icon>
           </span>
           <span theme="badge error">
             <span>Denied</span>

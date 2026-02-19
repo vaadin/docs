@@ -47,8 +47,20 @@ function Example() {
         </MasterDetailLayout.Detail>
       </MasterDetailLayout>
       {/* end::snippet[] */}
-      <div style={{ flex: '0 0 auto', minWidth: '1.75em', backgroundColor: 'var(--lumo-contrast-5pct)', display: 'flex', textAlign: 'center' }}>
-        <span style={{textOrientation: 'sideways', writingMode: 'vertical-lr', fontWeight: 'bold'}}>Drag to resize</span>
+      <div
+        style={{
+          flex: '0 0 auto',
+          minWidth: '1.75em',
+          backgroundColor: 'var(--vaadin-background-container)',
+          display: 'flex',
+          textAlign: 'center',
+        }}
+      >
+        <span
+          style={{ textOrientation: 'sideways', writingMode: 'vertical-lr', fontWeight: 'bold' }}
+        >
+          Drag to resize
+        </span>
       </div>
     </SplitLayout>
   );

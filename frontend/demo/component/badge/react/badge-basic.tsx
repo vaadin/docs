@@ -10,6 +10,7 @@ function Example() {
         can use the spread operator to pass the theme attribute to the span element. */}
       <span {...{ theme: 'badge' }}>Pending</span>
       <span {...{ theme: 'badge success' }}>Confirmed</span>
+      <span {...{ theme: 'badge warning' }}>Warning</span>
       <span {...{ theme: 'badge error' }}>Denied</span>
       <span {...{ theme: 'badge contrast' }}>On hold</span>
       {/* end::snippet[] */}

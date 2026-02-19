@@ -1,0 +1,157 @@
+---
+title: Stylesheets
+page-title: Using stylesheets in Vaadin applications
+description: A guide on how to use stylesheets to style Vaadin applications.
+meta-description: Learn how to effectively use stylesheets to customize the appearance of your Vaadin applications.
+order: 10
+---
+
+
+= Stylesheets
+
+In most project configurations, <<{articles}/styling/stylesheets#, stylesheets>> are placed in the `src/main/resources/META-INF/resources` folder. In non-Spring projects packaged as WAR files they are placed in the `src/main/webapp` folder.
+
+In both cases they are loaded with the [annotationname]`@StyleSheet` annotation.
+
+In most cases you should apply [annotationname]`@StyleSheet` annotations to the main application class that implements the [interfacename]`AppShellConfigurator` interface. This ensures that the CSS in it is applied globally, up-front, when the application UI is loaded into the browser.
+
+[source,java]
+----
+@StyleSheet("styles.css")
+public class Application implements AppShellConfigurator {
+ ...
+}
+----
+
+You can split your CSS over multiple stylesheets, and load them either with separate [annotationname]`@StyleSheet` annotations, or load additional stylesheets using the CSS `@import` rule.
+
+.src/main/resources/META-INF/resources/styles.css
+[source,css]
+----
+@import "additional-styles.css";
+
+/* your CSS goes here */
+----
+
+Stylesheets are applied to your UI in the order in which the [annotationname]`@StyleSheet` annotations and `@import` rules occur in your code.
+
+== Custom VaadinServlet URL Mapping
+
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. If the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications), the referenced stylesheet must be prefixed by the `context://` protocol.
+
+[source,java]
+----
+@StyleSheet("context://styles.css")
+public class Application implements AppShellConfigurator {}
+----
+
+== External Stylesheets
+
+All of the above methods for loading stylesheets also allow you to load stylesheets from external URIs, including other domains, by supplying an absolute path to [annotationname]`@StyleSheet` or `@import`.
+
+[source,java]
+----
+@StyleSheet("styles.css")
+@StyleSheet("https://example.com/external-styles.css")
+public class Application implements AppShellConfigurator {
+ ...
+}
+----
+
+.src/main/resources/META-INF/resources/styles.css
+[source,css]
+----
+@import "https://example.com/external-styles.css";
+----
+
+You can link:https://developer.mozilla.org/en-US/docs/Web/CSS/@import[read more about the @import at-rule on MDN,window=_blank].
+
+== Lazy-Loading Stylesheets
+
+If you want to delay the loading of a particular stylesheet until it’s needed – for example if the stylesheet is big and only needed in a particular view or Flow component – you can apply the [annotationname]`@StyleSheet` annotation to its class instead of the main application class.
+
+[source,java]
+----
+@StyleSheet("calendar-view.css")
+public class CalendarView extends VerticalLayout {
+  ...
+}
+----
+
+Note that the stylesheet will remain loaded even after the user navigates away from the view, or when the component is no longer displayed, so you still need to ensure that the styles in it are scoped appropriately. You can use CSS class names to scope styles to a particular view or other part of the UI.
+
+[source,java]
+----
+@StyleSheet("calendar-view.css")
+public class CalendarView extends VerticalLayout {
+  public CalendarView() {
+    addClassName("calendar-view");
+  }
+}
+----
+
+.src/main/resources/META-INF/resources/calendar-view.css
+[source,css]
+----
+.calendar-view {
+  /* style rules in here only apply to CalendarView */
+  vaadin-button {
+    --aura-accent-color: green;
+  }
+}
+----
+
+.CSS Class Names
+[NOTE]
+CSS class names are identifier-attributes applied to HTML elements in order to scope CSS styling to them. The same class name can be applied to multiple elements, and each element can have multiple class names. They have nothing to do with Java or TypeScript classes.
+
+Stylesheets can also be <<{articles}/styling/advanced/dynamic-stylesheets#, loaded and unloaded dynamically>> through Java code.
+
+== Spring Security
+
+If you are using <<{articles}/flow/security/enabling-security#, Spring Security>> in your Vaadin application, you need to ensure that your stylesheets are accessible to unauthenticated users. The default Vaadin Spring Security configuration only permits access to `src/main/resources/META-INF/resources/styles.css` as well as the Aura and Lumo theme stylesheets.
+
+To allow access to additional stylesheets, you can modify your Spring Security configuration like so:
+
+[source,java]
+----
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            ...
+        });
+
+// tag::snippet[]
+        // Permit access to common static resource paths
+        http.authorizeHttpRequests(auth -> {
+            auth.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll();
+        });
+// end::snippet[]
+
+        return http.build();
+    }
+
+    ...
+}
+----
+
+This allows access to common locations for static resources, one of which is the `css` path. To make stylesheets available under that path, place them in the `src/main/resources/META-INF/resources/css` folder. For example, if you place a stylesheet in `src/main/resources/META-INF/resources/css/additional-styles.css`, you can import it in your main stylesheet like so:
+
+.src/main/resources/META-INF/resources/styles.css
+[source,css]
+----
+@import "css/additional-styles.css";
+----
+
+When using lazy-loading, you can load the stylesheet with [annotationname]`@StyleSheet` like so:
+
+[source,java]
+----
+@StyleSheet("css/additional-styles.css")
+public class SomeView extends VerticalLayout {
+    ...
+}
+----
+
+[discussion-id]`caa5a55d-8bd0-425b-94dc-521a018a2e1b`

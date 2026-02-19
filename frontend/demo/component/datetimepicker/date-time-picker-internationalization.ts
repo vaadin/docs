@@ -3,13 +3,12 @@ import '@vaadin/date-time-picker';
 import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import type { DateTimePicker } from '@vaadin/date-time-picker';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('date-time-picker-internationalization')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

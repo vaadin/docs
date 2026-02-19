@@ -8,7 +8,6 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 import { SplitLayout } from '@vaadin/react-components/SplitLayout.js';
 import DetailContent from './detail-content';
 import MasterContent from './master-content';
-import exampleStyles from './split-layout-example-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -39,7 +38,7 @@ function Example() {
         >
           <Icon icon={sidebarCollapsed.value ? 'vaadin:arrow-right' : 'vaadin:arrow-left'} />
         </Button>
-        <MasterContent />
+        <MasterContent style={{ clear: 'right' }} />
       </div>
 
       <div style={{ width: `${100 - sidebarWidthPercentage}%` }}>
@@ -50,4 +49,4 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example, exampleStyles); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

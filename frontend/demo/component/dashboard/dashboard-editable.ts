@@ -11,10 +11,10 @@ import type {
   DashboardItemResizedEvent,
 } from '@vaadin/dashboard';
 import type { MenuBarItem, MenuBarItemSelectedEvent } from '@vaadin/menu-bar';
+import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
-import { applyTheme } from 'Frontend/generated/theme';
 
 // tag::snippet[]
 // NOTE: This example uses the additional classes WidgetConfig and DashboardService,
@@ -59,7 +59,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

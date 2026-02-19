@@ -1,0 +1,158 @@
+---
+title: Other Tools
+page-title: Configure Other MCP-Compatible Tools to Use Vaadin MCP Server
+description: General instructions for configuring any MCP-compatible tool to access Vaadin documentation
+meta-description: Setup guide for connecting any MCP-compatible AI tool to the Vaadin MCP server, supporting both HTTP and stdio transports.
+order: 80
+---
+
+
+= Other Tools
+
+The Vaadin MCP server can be used with any MCP-compatible client. Choose the appropriate configuration based on your tool's transport support.
+
+== Tools with Native HTTP Support
+
+If your tool supports HTTP/SSE natively, point it to the HTTP endpoint:
+
+----
+https://mcp.vaadin.com/docs
+----
+
+The exact configuration format depends on your specific tool. Look for settings like:
+
+* "MCP Server URL"
+* "HTTP transport"
+* "Streamable HTTP"
+* "Server endpoint"
+
+Common configuration patterns:
+
+[.tabs]
+=== JSON Configuration
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "vaadin": {
+      "url": "https://mcp.vaadin.com/docs"
+    }
+  }
+}
+----
+
+=== TOML Configuration
+
+[source,toml]
+----
+[mcp_servers.vaadin]
+url = "https://mcp.vaadin.com/docs"
+----
+
+=== YAML Configuration
+
+[source,yaml]
+----
+mcpServers:
+  vaadin:
+    url: https://mcp.vaadin.com/docs
+----
+
+== Tools with stdio Support Only
+
+If your tool only supports stdio transport, use an HTTP adapter to bridge stdio to HTTP:
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "vaadin": {
+      "command": "npx",
+      "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+      "env": {
+        "URI": "https://mcp.vaadin.com/docs",
+        "MCP_NAME": "vaadin"
+      }
+    }
+  }
+}
+----
+
+Adapt the JSON structure to match your tool's configuration format. The adapter uses environment variables:
+
+* `URI` - The server endpoint
+* `MCP_NAME` - An identifier for the server
+
+[IMPORTANT]
+====
+The stdio adapter requires Node.js 18 or later. Install it if you haven't already:
+
+[source,bash]
+----
+npm install -g @pyroprompts/mcp-stdio-to-streamable-http-adapter
+----
+====
+
+== Configuration File Locations
+
+Common locations for MCP configuration files:
+
+* `~/.config/[tool-name]/mcp.json`
+* `~/.config/[tool-name]/config.json`
+* `~/.config/[tool-name]/settings.json`
+* `~/.config/[tool-name]/config.toml`
+* Project-specific: `.vscode/mcp.json`, `.cursor/mcp.json`
+
+Consult your tool's documentation for the exact location.
+
+== Verify the Setup
+
+After configuration:
+
+. Restart your tool to load the MCP server
+. Start a conversation or coding session
+. Ask a question about Vaadin development
+. Your tool should query the Vaadin MCP server for documentation
+
+Look for indicators in your tool's UI showing:
+
+* Active MCP servers
+* Tool invocations
+* Server connection status
+
+== Troubleshooting
+
+Common issues and solutions:
+
+[cols="1,2"]
+|===
+|Issue |Solution
+
+|Server not loading
+|Check configuration file syntax and location. Ensure the tool supports MCP.
+
+|Connection errors
+|Verify internet connectivity. Test the endpoint: `curl https://mcp.vaadin.com/docs`
+
+|stdio adapter fails
+|Ensure Node.js 18+ is installed. Try installing the adapter globally.
+
+|Tool doesn't query server
+|Some tools require explicit tool invocation. Try asking directly about Vaadin documentation.
+|===
+
+== Resources
+
+* https://github.com/pyroprompts/mcp-stdio-to-streamable-http-adapter[HTTP to stdio Adapter]
+* https://modelcontextprotocol.io[Model Context Protocol Documentation]
+* https://spec.modelcontextprotocol.io[MCP Specification]
+* https://github.com/vaadin/vaadin-mcp[Vaadin MCP Server Repository]
+
+== Contributing
+
+If you've successfully configured a tool not listed in this documentation, consider contributing your configuration:
+
+. Open an issue on the https://github.com/vaadin/vaadin-mcp[Vaadin MCP repository]
+. Share your configuration details
+. Help other developers use Vaadin with their preferred AI tools

@@ -16,6 +16,9 @@ public class BadgeBasic extends HorizontalLayout {
         Span confirmed = new Span("Confirmed");
         confirmed.getElement().getThemeList().add("badge success");
 
+        Span warning = new Span("Warning");
+        warning.getElement().getThemeList().add("badge warning");
+
         Span denied = new Span("Denied");
         denied.getElement().getThemeList().add("badge error");
 
@@ -23,7 +26,7 @@ public class BadgeBasic extends HorizontalLayout {
         onHold.getElement().getThemeList().add("badge contrast");
         // end::snippet[]
 
-        add(pending, confirmed, denied, onHold);
+        add(pending, confirmed, warning, denied, onHold);
     }
 
     public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-source-line

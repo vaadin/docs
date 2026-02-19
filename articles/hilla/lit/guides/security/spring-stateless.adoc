@@ -55,14 +55,15 @@ Add the following dependencies to the project's [filename]`pom.xml` file:
 
 === Configure Spring Security
 
-Modify the Spring Security configuration and use the [methodname]`VaadinWebSecurity.setStatelessAuthentication()` method to set up stateless authentication, as follows:
+Modify the Spring Security configuration and use the [methodname]`VaadinStatelessSecurityConfigurer` to set up stateless authentication, as follows:
 
-
-.`SecurityConfig.java`
+.`SecurityConfigurer.java`
 [source,java]
 ----
-include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfig.java[tags="stateless-configure"]
+<source-info group="VaadinSecurityConfigurer"></source-info>
+include::{root}{root-fix}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfigurer.java[tags="stateless-configure"]
 ----
+
 <1> Sets the secret key that's used for signing and verifying the JWT.
 <2> Sets the JWT signature algorithm. The key length should match the algorithm chosen. For example, the HS256 algorithm used here requires a 32-byte secret key.
 <3> Sets the issuer JWT claim &ndash; a string or a URL that identifies your application.
@@ -116,18 +117,21 @@ By default, the JWT and cookies expire thirty minutes after the last server requ
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends VaadinWebSecurity {
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         ...
-        setStatelessAuthentication(http,
-            new SecretKeySpec(Base64.getDecoder().decode("..."),
-                JwsAlgorithms.HS256),
-            "com.example.application",
-            3600 // The JWT lifetime in seconds
+        http.with(new VaadinStatelessSecurityConfigurer<>(),
+            cfg -> cfg.withSecretKey().secretKey(
+                 new SecretKeySpec(Base64.getDecoder().decode("..."),
+                      JwsAlgorithms.HS256)
+           ).and().issuer("com.example.application")
+            .expiresIn(3600) // The JWT lifetime in seconds
         );
+        return http.build();
     }
 }
 ----

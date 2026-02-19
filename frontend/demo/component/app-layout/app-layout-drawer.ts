@@ -8,20 +8,19 @@ import '@vaadin/side-nav';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('app-layout-drawer')
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: 0;
     }
   `;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -36,8 +35,8 @@ export class Example extends LitElement {
       <vaadin-app-layout primary-section="drawer">
         <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <h1 slot="navbar">Dashboard</h1>
-        <vaadin-scroller slot="drawer" class="p-s">
-          <vaadin-side-nav>
+        <vaadin-scroller slot="drawer">
+          <vaadin-side-nav style="margin: var(--vaadin-gap-s)">
             <vaadin-side-nav-item path="/dashboard">
               <vaadin-icon icon="vaadin:dashboard" slot="prefix"></vaadin-icon>
               Dashboard

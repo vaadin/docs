@@ -17,12 +17,12 @@ function Example() {
         <EmailField label="Email address" value="john.smith@example.com" data-colspan="2" />
       </FormLayout>
 
-      <HorizontalLayout theme="spacing" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <Button theme="secondary error" style={{ marginInlineEnd: 'auto' }}>
-          Delete
+      <HorizontalLayout theme="spacing wrap">
+        <Button theme="error">Delete</Button>
+        <Button slot="end">Cancel</Button>
+        <Button slot="end" theme="primary">
+          Create account
         </Button>
-        <Button theme="secondary">Cancel</Button>
-        <Button theme="primary">Create account</Button>
       </HorizontalLayout>
     </VerticalLayout>
     // end::snippet[]

@@ -20,7 +20,7 @@ function GroupingLayoutRenderer({ form }: AutoFormLayoutRendererProps<EmployeeMo
   return (
     <VerticalLayout>
       <h4>Personal Information:</h4>
-      <HorizontalLayout theme="spacing" className="pb-l">
+      <HorizontalLayout theme="spacing" style={{ paddingBottom: '1.5rem' }}>
         <TextField label="First Name" {...field(model.firstName)} />
         <TextField label="Last Name" {...field(model.lastName)} />
         <Select
@@ -35,7 +35,7 @@ function GroupingLayoutRenderer({ form }: AutoFormLayoutRendererProps<EmployeeMo
         />
       </HorizontalLayout>
       <h4>Employment Information:</h4>
-      <HorizontalLayout theme="spacing" className="pb-l items-baseline">
+      <HorizontalLayout theme="spacing" style={{ paddingBottom: '1.5rem', alignItems: 'baseline' }}>
         <DatePicker label="Start Date" {...field(model.startDate)} />
         <TimePicker label="Shift Starts At" {...field(model.shiftStartsAt)} />
         <Checkbox label="Active" {...field(model.active)} />

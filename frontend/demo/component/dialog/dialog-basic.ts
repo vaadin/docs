@@ -5,9 +5,8 @@ import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DialogOpenedChangedEvent } from '@vaadin/dialog';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('dialog-basic')
 export class Example extends LitElement {
@@ -27,7 +26,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -41,8 +39,8 @@ export class Example extends LitElement {
       <vaadin-dialog
         header-title="New employee"
         .opened="${this.dialogOpened}"
-        @opened-changed="${(event: DialogOpenedChangedEvent) => {
-          this.dialogOpened = event.detail.value;
+        @closed="${() => {
+          this.dialogOpened = false;
         }}"
         ${dialogRenderer(this.renderDialog, [])}
         ${dialogFooterRenderer(this.renderFooter, [])}

@@ -5,14 +5,13 @@ import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/icons.js';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/lapland.avif?url';
 
 @customElement('card-cover-media')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -38,7 +37,7 @@ export class Example extends LitElement {
           <vaadin-icon
             slot="media"
             icon="lumo:photo"
-            class="bg-primary-10 text-primary"
+            style="background: rgba(0, 0, 0, 0.2)"
           ></vaadin-icon>
           <div slot="title">Lapland</div>
           <div slot="subtitle">The Exotic North</div>

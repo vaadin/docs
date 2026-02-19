@@ -2,22 +2,44 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
-// Import all Lumo CSS custom properties into the global style scope
-import '@vaadin/vaadin-lumo-styles/color.js';
-import '@vaadin/vaadin-lumo-styles/color-global.js';
-import '@vaadin/vaadin-lumo-styles/typography.js';
-import '@vaadin/vaadin-lumo-styles/sizing.js';
-import '@vaadin/vaadin-lumo-styles/spacing.js';
-import '@vaadin/vaadin-lumo-styles/style.js';
-// Import all Material CSS custom properties into the global style scope
-import '@vaadin/vaadin-material-styles/color';
-import '@vaadin/vaadin-material-styles/typography';
-
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
+}
+
+// Add stylesheet links to document head once
+if (process.env.NODE_ENV !== 'development') {
+  const stylesheets = [
+    {
+      rel: 'stylesheet',
+      href: 'https://cdn.vaadin.com/website/antlers/v2/assets/fonts/nbinternationalpro/stylesheet.css',
+    },
+    {
+      rel: 'preload',
+      as: 'style',
+      href: 'https://cdn.vaadin.com/website/antlers/v2/assets/icons/css/line-awesome.min.css',
+    },
+    {
+      rel: 'preload',
+      as: 'style',
+      href: 'https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css',
+    },
+  ];
+
+  stylesheets.forEach(({ rel, href, as }) => {
+    // Check if link already exists to prevent duplicates
+    if (!document.head.querySelector(`link[href="${href}"]`)) {
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.href = href;
+      if (as) {
+        link.setAttribute('as', as);
+      }
+      document.head.appendChild(link);
+    }
+  });
 }
 
 class Header extends LitElement {
@@ -43,22 +65,6 @@ class Header extends LitElement {
     }
 
     return html`
-      <link
-        rel="preload"
-        as="style"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap"
-      />
-      <link
-        rel="preload"
-        as="style"
-        href="https://cdn.vaadin.com/website/antlers/v2/assets/icons/css/line-awesome.min.css"
-      />
-      <link
-        rel="preload"
-        as="style"
-        href="https://cdn.vaadin.com/website/hubspot-theme/v2/haas/css/haas.css"
-      />
-
       <div id="haas-container"></div>
       ${this.haasImportScript()}
     `;
@@ -169,7 +175,7 @@ class TocFooter extends LitElement {
             }
 
             .toc-footer--img img {
-              margin-top: 1rem; 
+              margin-top: 1rem;
               width: 100%;
               height: auto;
               border-radius: 0.25rem;
@@ -185,11 +191,11 @@ class TocFooter extends LitElement {
               font-weight: 600;
               color: var(--docs-heading-text-color) !important;
             }
-           
+
             .toc-footer > a::after {
               content: none !important;
             }
-            
+
             /* Hide the footer on mobile when the TOC is closed */
             @media screen and (max-width: 65rem) {
               .toctoggle:not([open]) + .toc > dspublisher-toc-footer {
@@ -201,13 +207,13 @@ class TocFooter extends LitElement {
                 display: flex;
                 flex-direction: row-reverse;
                 align-items: flex-start;
-                gap: 1rem; 
+                gap: 1rem;
                 justify-content: flex-end;
               }
 
               .toc-footer--img {
-                flex-shrink: 0; 
-                width: 4rem; 
+                flex-shrink: 0;
+                width: 4rem;
               }
 
               .toc-footer--img img {
@@ -219,7 +225,7 @@ class TocFooter extends LitElement {
 
               .toc-footer--content {
                 flex: 1;
-                padding-top: 0.25rem; 
+                padding-top: 0.25rem;
               }
             }
           </style>
@@ -227,9 +233,9 @@ class TocFooter extends LitElement {
           <div class="toc-footer">
             <a href="https://vaadin.com/learn/training" class="toc-footer--link">
 
-              <div class="toc-footer--heading">Video tutorial</div>
+              <div class="toc-footer--heading">UI Training & Certification</div>
               <div class="toc-footer--content">
-                Learn Vaadin fundamentals through short video tutorials.
+                Master your Java web app development skills and become a certified Vaadin developer.
               </div>
 
               <div class="toc-footer--img">

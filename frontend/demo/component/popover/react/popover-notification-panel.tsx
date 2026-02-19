@@ -67,13 +67,13 @@ function Example() {
         theme="arrow no-padding"
         modal
         position="bottom"
-        contentWidth="300px"
-        accessibleNameRef="notifications-heading"
+        width="300px"
+        aria-labelledby="notifications-heading"
       >
         <HorizontalLayout
           style={{
-            alignItems: 'baseline',
-            padding: 'var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)',
+            alignItems: 'center',
+            padding: 'var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)',
           }}
         >
           <h4 style={{ margin: 0 }} id="notifications-heading">
@@ -89,7 +89,7 @@ function Example() {
             Mark all read
           </Button>
         </HorizontalLayout>
-        <TabSheet theme="small no-padding" className="notifications">
+        <TabSheet theme="small no-padding no-border" className="notifications">
           <TabSheetTab label="Unread">
             {unreadNotifications.value.length ? (
               <MessageList items={unreadNotifications.value} />

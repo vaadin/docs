@@ -46,7 +46,7 @@ public class SelectCustomRendererLabel extends Div {
             image.setSrc(person.getPictureUrl());
             image.setAlt("Portrait of " + person.getFirstName() + " "
                     + person.getLastName());
-            image.setWidth("var(--lumo-size-m)");
+            image.setWidth("2.25rem");
             image.getStyle().set("margin-right", "var(--lumo-space-s)");
 
             Div info = new Div();
@@ -56,7 +56,7 @@ public class SelectCustomRendererLabel extends Div {
             profession.setText(person.getProfession());
             profession.getStyle()
                     .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "var(--lumo-font-size-s)");
+                    .set("font-size", "0.875rem");
             info.add(profession);
 
             wrapper.add(image, info);

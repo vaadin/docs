@@ -21,11 +21,7 @@ function Example() {
   return (
     <SplitLayout orientation="vertical" style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      <MasterDetailLayout
-        orientation="vertical"
-        masterMinSize="150px"
-        detailSize="250px"
-      >
+      <MasterDetailLayout orientation="vertical" masterMinSize="150px" detailSize="250px">
         {/* end::snippet[] */}
         <MasterDetailLayout.Master>
           <PersonList
@@ -49,8 +45,14 @@ function Example() {
         {/* tag::snippet[] */}
       </MasterDetailLayout>
       {/* end::snippet[] */}
-      <div style={{ flex: '0 0 auto', backgroundColor: 'var(--lumo-contrast-5pct)', textAlign: 'center' }}>
-        <span style={{fontWeight: 'bold', minHeight: '1.75em'}}>Drag to resize</span>
+      <div
+        style={{
+          flex: '0 0 auto',
+          backgroundColor: 'var(--vaadin-background-container)',
+          textAlign: 'center',
+        }}
+      >
+        <span style={{ fontWeight: 'bold', minHeight: '1.75em' }}>Drag to resize</span>
       </div>
     </SplitLayout>
   );

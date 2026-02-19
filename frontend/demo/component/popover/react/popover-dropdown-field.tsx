@@ -81,12 +81,17 @@ function Example() {
       <Popover
         for="range-field"
         modal
-        contentWidth="340px"
+        width="340px"
         position="bottom-start"
-        accessibleName="Select a date range"
+        aria-label="Select a date range"
         opened={opened.value}
         onOpenedChanged={(e) => {
-          opened.value = e.detail.value;
+          if (e.detail.value) {
+            opened.value = true;
+          }
+        }}
+        onClosed={() => {
+          opened.value = false;
         }}
       >
         <Select

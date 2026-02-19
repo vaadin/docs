@@ -10,15 +10,13 @@ import { format, subMinutes } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { MessageListItem } from '@vaadin/message-list';
-import { popoverRenderer } from '@vaadin/popover/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('popover-notifications-panel')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -73,42 +71,38 @@ export class Example extends LitElement {
         for="show-notifications"
         theme="arrow no-padding"
         modal
-        accessible-name-ref="notifications-heading"
-        content-width="300px"
+        aria-labelledby="notifications-heading"
+        width="300px"
         position="bottom"
-        ${popoverRenderer(this.notificationsRenderer, [
-          this.unreadNotifications,
-          this.allNotifications,
-        ])}
-      ></vaadin-popover>
+      >
+        ${this.renderNotifications(this.unreadNotifications, this.allNotifications)}
+      </vaadin-popover>
       <!-- end::snippet[] -->
     `;
   }
 
-  notificationsRenderer() {
+  renderNotifications(unread: MessageListItem[], all: MessageListItem[]) {
     return html`
       <vaadin-horizontal-layout
-        style="align-items: center; padding: var(--lumo-space-m) var(--lumo-space-m) var(--lumo-space-xs)"
+        style="align-items: center; padding: var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)"
       >
         <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
         <vaadin-button theme="small" style="margin: 0 0 0 auto;" @click="${this.markAllRead}">
           Mark all read
         </vaadin-button>
       </vaadin-horizontal-layout>
-      <vaadin-tabsheet class="notifications" theme="small no-padding">
+      <vaadin-tabsheet class="notifications" theme="small no-padding no-border">
         <vaadin-tabs slot="tabs">
           <vaadin-tab id="unread-tab">Unread</vaadin-tab>
           <vaadin-tab id="all-tab">All</vaadin-tab>
         </vaadin-tabs>
         <div tab="unread-tab">
-          ${this.unreadNotifications.length
-            ? html`
-                <vaadin-message-list .items="${this.unreadNotifications}"></vaadin-message-list>
-              `
+          ${unread.length
+            ? html`<vaadin-message-list .items="${unread}"></vaadin-message-list>`
             : html`<div class="no-notifications-msg">No unread notifications</div>`}
         </div>
         <div tab="all-tab">
-          <vaadin-message-list .items="${this.allNotifications}"></vaadin-message-list>
+          <vaadin-message-list .items="${all}"></vaadin-message-list>
         </div>
       </vaadin-tabsheet>
     `;

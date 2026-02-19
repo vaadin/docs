@@ -2,14 +2,13 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/vaadin-logo-dark.png?url';
 
 @customElement('button-images')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

@@ -34,32 +34,24 @@ After doing this, the application is protected with a default Spring login view.
 
 == Server Configuration
 
-To implement your own security configuration, create a new configuration class that extends the [classname]`VaadinWebSecurity` class. Then annotate it to enable security.
+To implement your own security configuration, create a new configuration class that uses the [classname]`VaadinSecurityConfigurer` class. Then annotate it to enable security.
 
-[classname]`VaadinWebSecurity` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
+[classname]`VaadinSecurityConfigurer` is a helper which provides default bean implementations for link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/web/SecurityFilterChain.html[SecurityFilterChain] and link:https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/config/annotation/web/configuration/WebSecurityCustomizer.html[WebSecurityCustomizer]. It takes care of the basic configuration for requests, so that you can concentrate on your application-specific configuration.
 
 .`SecurityConfig.java`
 [source,java]
 ----
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends VaadinWebSecurity {
+public class SecurityConfig {
 
-  private final RouteUtil routeUtil;
-
-  public SecurityConfig(RouteUtil routeUtil) {
-    this.routeUtil = routeUtil;
-  }
-
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    // Set default security policy that permits Hilla internal requests and
-    // denies all other
-    http.authorizeHttpRequests(registry -> registry.requestMatchers(
-            routeUtil::isRouteAllowed).permitAll());
-    super.configure(http);
-    // use a custom login view and redirect to root on logout
-    setLoginView(http, "/login", "/");
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http, RouteUtil routeUtil) throws Exception {
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+      // use a custom login view and redirect to root on logout
+      configurer.loginView("/login", "/");
+    });
+    return http.build();
   }
 
   @Bean
@@ -81,21 +73,22 @@ You should never hard-code credentials in an application. The <<{articles}/hilla
 
 === Public Views & Resources
 
-Public views need to be added to the configuration before calling [methodname]`super.configure()`. Here's an example of this:
+Public views need to be added to the configuration in [methodname]`securityFilterChain`. Here's an example of this:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(registry -> {
-        registry.requestMatchers(new AntPathRequestMatcher("/public-view")).permitAll(); // custom matcher
+        registry.requestMatchers("/public-view").permitAll(); // custom matcher
     });
-    super.configure(http);
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { ... });
+    return http.build();
   }
 ----
 
-Public resources can be added by overriding [methodname]`configure(WebSecurity web)` like so:
+Public resources can be added to the configuration in [methodname]`securityFilterChain` like so:
 
 .`SecurityConfig.java`
 [source,java]
@@ -148,7 +141,7 @@ const routes = [
 ]
 ----
 
-Update the [classname]`SecurityConfig` to use the [methodname]`setLogin()` helper, which sets up everything needed for a Hilla-based login view:
+Update the [classname]`SecurityConfig` to use the [methodname]`loginView()` helper, which sets up everything needed for a Hilla-based login view:
 
 [source,java]
 ----
@@ -330,35 +323,43 @@ endif::hilla-react[]
 
 === Configuration Helper Alternatives
 
-[methodname]`VaadinWebSecurity.configure(http)` configures HTTP security to bypass framework internal resources. If you prefer to make your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`VaadinWebSecurity.getDefaultHttpSecurityPermitMatcher()`.
+[methodname]`VaadinSecurityConfigurer` configures HTTP security to bypass framework internal resources. If you prefer to make your own configuration, instead of using the helper, the matcher for these resources can be retrieved with [methodname]`VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher()`.
 
-For example, [methodname]`VaadinWebSecurity.configure(http)` requires all requests to be authenticated, except the Hilla internal ones. If you want to allow public access to certain views, you can configure it as follows:
+For example, if you want to allow public access to certain views and require authentication for all other requests, you can configure it as follows:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests()
-        .requestMatchers(
-          VaadinWebSecurity.getDefaultHttpSecurityPermitMatcher()
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry ->
+        registry.requestMatchers(
+           VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher()
         ).permitAll()
         .requestMatchers("/public-view").permitAll() // custom matcher
-        .anyRequest().authenticated();
-        ...
+        .anyRequest().authenticated()
+    );
+    ...
+    return http.build();
 }
 ----
 
-Similarly, the matcher for static resources to be ignored is available as [methodname]`VaadinWebSecurity.getDefaultWebSecurityIgnoreMatcher()`:
+Similarly, the matcher for static resources to be ignored is available as [methodname]`VaadinSecurityConfigurer.getDefaultWebSecurityIgnoreMatcher()`:
 
 .`SecurityConfig.java`
 [source,java]
 ----
-public static void configure(WebSecurity web) throws Exception {
-    web.ignoring()
-       .requestMatchers(
-         VaadinWebSecurity.getDefaultWebSecurityIgnoreMatcher())
-       .requestMatchers(antMatcher("static/**")) // custom matcher
-       ...
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry ->
+        registry.requestMatchers(
+           VaadinSecurityConfigurer.getDefaultWebSecurityIgnoreMatcher()
+        ).permitAll()
+        .requestMatchers("static/**").permitAll() // custom matcher
+        .anyRequest().authenticated()
+    );
+    ...
+    return http.build();
 }
 ----
 
@@ -496,31 +497,33 @@ The example given here of managing users in memory is valid for test application
 
 The following example demonstrates how to access an SQL database with tables for users and authorities.
 
+
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends VaadinWebSecurity {
+public class SecurityConfig {
   //...
 
-  @Autowired
-  private DataSource dataSource;
+  @Bean
+  UserDetailsService userDetailsService(DataSource dataSource) {
+      // Configure users and roles in a JDBC database
+      JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+      jdbcUserDetailsManager.setUsersByUsernameQuery(
+              "SELECT username, password, enabled FROM users WHERE username=?");
+      jdbcUserDetailsManager.setAuthoritiesByUsernameQuery(
+              "SELECT username, authority FROM authorities WHERE username=?");
+      return jdbcUserDetailsManager;
+  }
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    // Configure users and roles in a JDBC database
-    auth.jdbcAuthentication()
-      .dataSource(dataSource)
-      .usersByUsernameQuery(
-          "SELECT username, password, enabled FROM users WHERE username=?")
-      .authoritiesByUsernameQuery(
-          "SELECT username, authority FROM from authorities WHERE username=?")
-      .passwordEncoder(new BCryptPasswordEncoder());
+  @Bean
+  PasswordEncoder passwordEncoder() {
+      return new BCryptPasswordEncoder();
   }
 }
 ----
-
 
 === LDAP Authentication
 
@@ -529,26 +532,40 @@ This next example shows how to configure authentication by using an LDAP reposit
 .`SecurityConfig.java`
 [source,java]
 ----
+<source-info group="VaadinSecurityConfigurer"></source-info>
 @EnableWebSecurity
 @Configuration
-public class SecurityConfig extends VaadinWebSecurity {
+public class SecurityConfig {
   //...
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-    // Obtain users and roles from an LDAP service
-    auth.ldapAuthentication()
-      .userDnPatterns("uid={0},ou=people")
-      .userSearchBase("ou=people")
-      .groupSearchBase("ou=groups")
-      .contextSource()
-      .url("ldap://localhost:8389/dc=example,dc=com")
-      .and()
-      .passwordCompare()
-      .passwordAttribute("userPassword");
-  }
+    @Bean
+    public EmbeddedLdapServerContextSourceFactoryBean contextSourceFactoryBean() { // <1>
+        return EmbeddedLdapServerContextSourceFactoryBean.fromEmbeddedLdapServer();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(BaseLdapPathContextSource contextSource, LdapAuthoritiesPopulator authorities) {
+        LdapPasswordComparisonAuthenticationManagerFactory factory = new LdapPasswordComparisonAuthenticationManagerFactory(
+                contextSource, NoOpPasswordEncoder.getInstance());
+        factory.setUserDnPatterns("uid={0},ou=people");
+        factory.setUserSearchBase("ou=people");
+        factory.setPasswordAttribute("userPassword");
+        factory.setLdapAuthoritiesPopulator(authorities);
+        return factory.createAuthenticationManager();
+    }
+
+    @Bean
+    LdapAuthoritiesPopulator authorities(BaseLdapPathContextSource contextSource) {
+        String groupSearchBase = "ou=groups";
+        DefaultLdapAuthoritiesPopulator authorities =
+                new DefaultLdapAuthoritiesPopulator(contextSource, groupSearchBase);
+        authorities.setGroupSearchFilter("member={0}");
+        return authorities;
+    }
 }
 ----
+
+<1> `VaadinSecurityConfigurer` example here configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-embedded[embedded UnboundID LDAP server]. You can also configure https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html#servlet-authentication-ldap-contextsource[LDAP ContextSource] to connect to other LDAP server.
 
 Remember to add the corresponding LDAP client dependency to the project:
 

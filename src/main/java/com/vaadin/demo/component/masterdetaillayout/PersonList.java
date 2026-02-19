@@ -11,7 +11,8 @@ public class PersonList extends VerticalLayout {
     private final Grid<Person> grid;
 
     public PersonList(List<Person> people) {
-        Paragraph paragraph = new Paragraph("Select a person to view their details:");
+        Paragraph paragraph = new Paragraph(
+                "Select a person to view their details:");
         grid = new Grid<>();
         grid.addColumn(Person::getFirstName).setHeader("First Name");
         grid.addColumn(Person::getLastName).setHeader("Last Name");

@@ -6,13 +6,11 @@ function Example() {
   return (
     // tag::snippet[]
     <div>
-      <label className="text-secondary" id="pblbl">
-        Generating report...
-      </label>
+      <label id="pblbl">Generating report...</label>
 
       <ProgressBar indeterminate aria-labelledby="pblbl" aria-describedby="sublbl" />
 
-      <span className="text-secondary text-xs" id="sublbl">
+      <span id="sublbl" style={{ fontSize: '0.8125rem' }}>
         Process can take upwards of 10 minutes
       </span>
     </div>

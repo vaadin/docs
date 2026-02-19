@@ -28,8 +28,8 @@ function Example() {
         draggable
         modeless
         opened={dialogOpened.value}
-        onOpenedChanged={(event) => {
-          dialogOpened.value = event.detail.value;
+        onClosed={() => {
+          dialogOpened.value = false;
         }}
         header={
           <h2

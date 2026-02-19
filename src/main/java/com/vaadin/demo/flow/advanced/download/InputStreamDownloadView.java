@@ -19,20 +19,23 @@ import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
 
 @Route("/download-attachment")
-public class InputStreamDownloadView extends Div  {
+public class InputStreamDownloadView extends Div {
     public InputStreamDownloadView(AttachmentRepository attachmentsRepository) {
         long attachmentId = 1L; // Example attachment ID
         // tag::snippet[]
         Anchor downloadAttachment = new Anchor(
                 DownloadHandler.fromInputStream((event) -> {
-            try {
-                Attachment attachment = attachmentsRepository.findById(attachmentId);
-                return new DownloadResponse(attachment.getData().getBinaryStream(),
-                        attachment.getName(), attachment.getMime(), attachment.getSize());
-            } catch (Exception e) {
-                return DownloadResponse.error(500);
-            }
-        }), "Download attachment");
+                    try {
+                        Attachment attachment = attachmentsRepository
+                                .findById(attachmentId);
+                        return new DownloadResponse(
+                                attachment.getData().getBinaryStream(),
+                                attachment.getName(), attachment.getMime(),
+                                attachment.getSize());
+                    } catch (Exception e) {
+                        return DownloadResponse.error(500);
+                    }
+                }), "Download attachment");
         // end::snippet[]
         add(downloadAttachment);
     }
@@ -58,16 +61,28 @@ public class InputStreamDownloadView extends Div  {
         @Column(name = "mime", nullable = false)
         private String mime;
 
-        public Blob getData() { return data; }
-        public Integer getSize() { return size; }
-        public String getName() { return name; }
-        public String getMime() { return mime; }
+        public Blob getData() {
+            return data;
+        }
+
+        public Integer getSize() {
+            return size;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getMime() {
+            return mime;
+        }
 
         // other class fields and methods are omitted
     }
 
-    public interface AttachmentRepository extends
-            JpaRepository<Attachment, Long>, JpaSpecificationExecutor<Attachment> {
+    public interface AttachmentRepository
+            extends JpaRepository<Attachment, Long>,
+            JpaSpecificationExecutor<Attachment> {
         Attachment findById(long id);
         // other class fields and methods are omitted
     }

@@ -5,7 +5,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.streams.InMemoryUploadHandler;
 import com.vaadin.flow.server.streams.UploadHandler;
@@ -15,10 +14,12 @@ public class UploadDragAndDrop extends Div {
 
     public UploadDragAndDrop() {
 
-        InMemoryUploadHandler inMemoryHandler1 = UploadHandler.inMemory(
-                (metadata, data) -> {});
-        InMemoryUploadHandler inMemoryHandler2 = UploadHandler.inMemory(
-                (metadata, data) -> {});
+        InMemoryUploadHandler inMemoryHandler1 = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
+        InMemoryUploadHandler inMemoryHandler2 = UploadHandler
+                .inMemory((metadata, data) -> {
+                });
 
         // tag::snippet[]
         Upload dropEnabledUpload = new Upload(inMemoryHandler1);

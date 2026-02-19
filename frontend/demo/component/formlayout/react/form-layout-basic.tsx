@@ -13,7 +13,7 @@ function Example() {
   function renderFormLayout() {
     // tag::snippet[]
     return (
-      <FormLayout className="w-full" autoResponsive>
+      <FormLayout style={{ width: '100%' }} autoResponsive>
         <FormRow>
           <TextField label="First name" />
           <TextField label="Last name" />

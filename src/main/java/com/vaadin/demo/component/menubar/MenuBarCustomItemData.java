@@ -17,7 +17,8 @@ public class MenuBarCustomItemData extends Div {
         SubMenu copySubMenu = copy.getSubMenu();
 
         copySubMenu.addItem("Copy as plain text", event -> {
-            // Provide a custom value by adding a click listener that holds a reference to that value
+            // Provide a custom value by adding a click listener that holds a
+            // reference to that value
             String value = "Menu Bar\n\nMenu Bar is a horizontal button bar with hierarchical drop-down menus.";
             copyToClipboard(value);
         });
@@ -37,7 +38,8 @@ public class MenuBarCustomItemData extends Div {
     }
 
     private void copyToClipboard(String value) {
-        getUI().ifPresent(ui -> ui.getPage().executeJs("window.navigator.clipboard.writeText($0);", value));
+        getUI().ifPresent(ui -> ui.getPage()
+                .executeJs("window.navigator.clipboard.writeText($0);", value));
     }
 
     public static class Exporter extends DemoExporter<MenuBarCustomItemData> { // hidden-source-line

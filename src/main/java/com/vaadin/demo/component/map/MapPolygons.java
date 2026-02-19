@@ -18,6 +18,7 @@ public class MapPolygons extends Div {
         add(map);
 
         // tag::snippet[]
+        // @formatter:off hidden-source-line
         PolygonFeature polygon = new PolygonFeature(List.of(
                 new Coordinate(-50, 50),
                 new Coordinate(-10, 50),
@@ -25,10 +26,12 @@ public class MapPolygons extends Div {
                 new Coordinate(-50, 10),
                 new Coordinate(-50, 50) // Closing the polygon
         ));
+        // @formatter:on hidden-source-line
         map.getFeatureLayer().addFeature(polygon);
 
         PolygonFeature polygonWithHole = new PolygonFeature();
-        polygonWithHole.setCoordinates(new Coordinate[][]{
+        polygonWithHole.setCoordinates(new Coordinate[][] {
+                // @formatter:off hidden-source-line
                 new Coordinate[]{
                         new Coordinate(30, 50),
                         new Coordinate(70, 50),
@@ -43,6 +46,7 @@ public class MapPolygons extends Div {
                         new Coordinate(35, 15),
                         new Coordinate(35, 45) // Closing the hole
                 }
+                // @formatter:on hidden-source-line
         });
         map.getFeatureLayer().addFeature(polygonWithHole);
         // end::snippet[]

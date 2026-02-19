@@ -45,9 +45,9 @@ function Example() {
       <Popover
         for="avatar"
         position="bottom-end"
-        overlayRole="menu"
+        role="menu"
         modal
-        accessibleName="User menu"
+        aria-label="User menu"
         theme="no-padding"
       >
         <HorizontalLayout className="userMenuHeader">

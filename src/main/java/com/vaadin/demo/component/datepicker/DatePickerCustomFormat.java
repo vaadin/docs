@@ -46,7 +46,7 @@ public class DatePickerCustomFormat extends VerticalLayout {
         Div helpText1 = new Div(new Text(
                 "Displays and parses dates in ISO 8601 format \"yyyy-MM-dd\"."));
         helpText1.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("font-size", "var(--lumo-font-size-s)");
+                .set("font-size", "0.875rem");
         add(new Div(headline1, helpText1, singleFormatDatePicker));
 
         Div headline2 = new Div(new Text(
@@ -55,7 +55,7 @@ public class DatePickerCustomFormat extends VerticalLayout {
         Div helpText2 = new Div(new Text(
                 "Displays and parses dates in ISO 8601 format \"yyyy-MM-dd\". Also allows entering dates in the formats: \"MM/dd/yyyy\", \"dd.MM.yyyy\""));
         helpText2.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("font-size", "var(--lumo-font-size-s)");
+                .set("font-size", "0.875rem");
         add(new Div(headline2, helpText2, multiFormatDatePicker));
 
         setPadding(false);

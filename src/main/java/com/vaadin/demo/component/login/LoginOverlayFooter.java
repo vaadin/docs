@@ -5,7 +5,6 @@ import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("login-overlay-footer")
 public class LoginOverlayFooter extends Div {
@@ -14,7 +13,7 @@ public class LoginOverlayFooter extends Div {
         // tag::snippet[]
         LoginOverlay loginOverlay = new LoginOverlay();
         Paragraph text = new Paragraph("Never tell your password to anyone");
-        text.addClassName(LumoUtility.TextAlignment.CENTER);
+        text.getStyle().set("text-align", "center");
         loginOverlay.getFooter().add(text);
         // end::snippet[]
         add(loginOverlay);

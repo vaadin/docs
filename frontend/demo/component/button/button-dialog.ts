@@ -7,13 +7,12 @@ import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('button-dialog')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -32,15 +31,10 @@ export class Example extends LitElement {
           ></vaadin-email-field>
         </vaadin-form-layout>
 
-        <vaadin-horizontal-layout
-          theme="spacing"
-          style="flex-wrap: wrap; justify-content: flex-end;"
-        >
-          <vaadin-button theme="secondary error" style="margin-inline-end: auto;">
-            Delete
-          </vaadin-button>
-          <vaadin-button theme="secondary">Cancel</vaadin-button>
-          <vaadin-button theme="primary">Create account</vaadin-button>
+        <vaadin-horizontal-layout theme="spacing wrap">
+          <vaadin-button theme="error">Delete</vaadin-button>
+          <vaadin-button slot="end">Cancel</vaadin-button>
+          <vaadin-button slot="end" theme="primary">Create account</vaadin-button>
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->

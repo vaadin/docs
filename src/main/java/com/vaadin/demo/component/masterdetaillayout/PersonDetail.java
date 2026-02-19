@@ -29,10 +29,12 @@ public class PersonDetail extends VerticalLayout {
         professionField = new TextField("Profession");
         professionField.setReadOnly(true);
 
-        formLayout.add(firstNameField, lastNameField, emailField, professionField);
+        formLayout.add(firstNameField, lastNameField, emailField,
+                professionField);
 
         Button closeButton = new Button("Close");
-        closeButton.addClickListener(event -> fireEvent(new CloseEvent(this, false)));
+        closeButton.addClickListener(
+                event -> fireEvent(new CloseEvent(this, false)));
 
         add(formLayout, closeButton);
         setPadding(true);
@@ -58,7 +60,8 @@ public class PersonDetail extends VerticalLayout {
         }
     }
 
-    public Registration addCloseListener(ComponentEventListener<CloseEvent> listener) {
+    public Registration addCloseListener(
+            ComponentEventListener<CloseEvent> listener) {
         return addListener(CloseEvent.class, listener);
     }
 }

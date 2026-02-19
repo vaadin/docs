@@ -1,0 +1,75 @@
+---
+title: Element Events
+page-title: Handling browser events in Vaadin components
+description: Listen to any browser events on the server.
+meta-description: Learn how to listen to and handle browser events in Vaadin components on the server side.
+order: 2
+---
+
+
+= Listening to Element Events
+
+The Element API contains methods to receive events and event data from the browser and handle them on the server side.
+
+
+== Registering Event Listeners
+
+Use the [methodname]`Element.addEventListener()` method to listen to any browser event.
+
+.Using the [methodname]`addEventListener()` method to react to a `click` event
+[example]
+====
+[source,java]
+----
+Element helloButton = ElementFactory.createButton("Say hello");
+helloButton.addEventListener("click", e -> { // <1>
+    Element response = ElementFactory.createDiv("Hello!");
+    getElement().appendChild(response); // <2>
+});
+getElement().appendChild(helloButton);
+----
+<1> Clicking the "Say hello" button in the browser sends the event to the server for processing.
+<2> A new `<div>Hello!</div>` element is added to the DOM.
+====
+
+== Accessing Data from Events
+
+You can get more information about the element or user interaction by defining the required event data on the [classname]`DomListenerRegistration` returned by the [methodname]`addEventListener()` method.
+
+.Using the [methodname]`addEventData()` method to define the required event data
+[example]
+====
+[source,java]
+----
+helloButton.addEventListener("click", this::handleClick)
+    .addEventData("event.shiftKey") // <1>
+    .addEventData("element.offsetWidth");
+
+private void handleClick(DomEvent event) {
+    JsonObject eventData = event.getEventData(); // <2>
+    boolean shiftKey = eventData
+            .getBoolean("event.shiftKey"); // <3>
+    double width = eventData
+            .getNumber("element.offsetWidth");
+
+    String text = "Shift " + (shiftKey ? "down" : "up");
+    text += " on button whose width is " + width + "px";
+
+    Element response = ElementFactory.createDiv(text);
+    getElement().appendChild(response);
+}
+----
+<1> The requested event data values are sent as a JSON object from the client.
+<2> You can retrieve the event data using the [methodname]`DomEvent.getEventData()` method in the listener.
+<3> Make sure that you use:
+* the correct getter based on the data type;
+* the same keys that were provided as parameters in the [methodname]`addEventData()` method.
+====
+
+
+== Filtering and Debouncing
+
+Filtering and debouncing are covered in detail in <<../events#limiting-event-frequency,Declaring and Firing Component Events>>, in the context of the `@DomEvent` annotation. However, you can configure the exact same settings through the [classname]`DomListenerRegistration` object.
+
+
+[discussion-id]`465CAE8B-8B0D-426B-818F-1CF58A9BD034`

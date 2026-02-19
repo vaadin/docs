@@ -4,10 +4,9 @@ import '@vaadin/horizontal-layout';
 import '@vaadin/notification';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { NotificationOpenedChangedEvent } from '@vaadin/notification';
 import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { notificationRenderer } from '@vaadin/notification/lit.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('notification-keyboard-a11y')
 export class Example extends LitElement {
@@ -19,7 +18,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -38,8 +36,8 @@ export class Example extends LitElement {
         duration="10000"
         position="middle"
         .opened="${this.notificationOpened}"
-        @opened-changed="${(e: NotificationOpenedChangedEvent) => {
-          this.notificationOpened = e.detail.value;
+        @closed="${() => {
+          this.notificationOpened = false;
         }}"
         ${notificationRenderer(this.renderer, [])}
       ></vaadin-notification>

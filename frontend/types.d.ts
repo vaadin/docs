@@ -18,5 +18,4 @@ declare module '*.avif?url' {
   export = value;
 }
 
-declare module 'Frontend/generated/theme';
 declare module 'Frontend/generated/jar-resources/dev-tools-database.js';

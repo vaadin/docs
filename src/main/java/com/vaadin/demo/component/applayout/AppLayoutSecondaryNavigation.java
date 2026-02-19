@@ -14,7 +14,6 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("app-layout-secondary-navigation")
 // tag::snippet[]
@@ -22,21 +21,20 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     public AppLayoutSecondaryNavigation() {
         H1 appTitle = new H1("MyApp");
-        appTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("line-height", "var(--lumo-size-l)")
+        appTitle.getStyle().set("font-size", "1.125rem")
+                .set("line-height", "2.75rem")
                 .set("margin", "0 var(--lumo-space-m)");
 
         SideNav views = getPrimaryNavigation();
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
+        views.getStyle().set("margin", "var(--vaadin-gap-s)");
 
         Scroller scroller = new Scroller(views);
-        scroller.setClassName(LumoUtility.Padding.SMALL);
 
         DrawerToggle toggle = new DrawerToggle();
 
         H2 viewTitle = new H2("Orders");
-        viewTitle.getStyle().set("font-size", "var(--lumo-font-size-l)")
-                .set("margin", "0");
+        viewTitle.getStyle().set("font-size", "1.125rem").set("margin", "0");
 
         HorizontalLayout subViews = getSecondaryNavigation();
         subViews.getElement() // hidden-source-line
@@ -77,8 +75,10 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
 
     private HorizontalLayout getSecondaryNavigation() {
         HorizontalLayout navigation = new HorizontalLayout();
-        navigation.addClassNames(LumoUtility.JustifyContent.CENTER,
-                LumoUtility.Gap.SMALL, LumoUtility.Height.MEDIUM);
+        navigation
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        navigation.setHeight("2.25rem");
+        navigation.getStyle().set("gap", "0.5rem");
         navigation.add(createLink("All"), createLink("Open"),
                 createLink("Completed"), createLink("Cancelled"));
         return navigation;
@@ -89,12 +89,9 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         link.add(viewName);
         // Demo has no routes
         // link.setRoute(viewClass.java);
-
-        link.addClassNames(LumoUtility.Display.FLEX,
-                LumoUtility.AlignItems.CENTER,
-                LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.TextColor.SECONDARY, LumoUtility.FontWeight.MEDIUM);
-        link.getStyle().set("text-decoration", "none");
+        link.getStyle().set("display", "flex").set("align-items", "center")
+                .set("padding", "0 1rem").set("font-weight", "500")
+                .set("text-decoration", "none");
         // hidden-source-line: workaround to make text color work
         link.getElement().setAttribute("href", viewName); // hidden-source-line
 

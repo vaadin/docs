@@ -3,10 +3,7 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
-import {
-  ConfirmDialog,
-  type ConfirmDialogOpenedChangedEvent,
-} from '@vaadin/react-components/ConfirmDialog.js';
+import { ConfirmDialog } from '@vaadin/react-components/ConfirmDialog.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 
 function Example() {
@@ -14,22 +11,18 @@ function Example() {
   const dialogOpened = useSignal(false);
   const status = useSignal('');
 
-  const openedChanged = (event: ConfirmDialogOpenedChangedEvent) => {
-    dialogOpened.value = event.detail.value;
-    if (event.detail.value) {
-      status.value = '';
-    }
-  };
+  function open() {
+    status.value = '';
+    dialogOpened.value = true;
+  }
+
+  function onClosed() {
+    dialogOpened.value = false;
+  }
 
   return (
     <HorizontalLayout style={{ alignItems: 'center', justifyContent: 'center' }} theme="spacing">
-      <Button
-        onClick={() => {
-          dialogOpened.value = true;
-        }}
-      >
-        Open confirm dialog
-      </Button>
+      <Button onClick={open}>Open confirm dialog</Button>
 
       {/* tag::snippet[] */}
       <ConfirmDialog
@@ -38,7 +31,7 @@ function Example() {
         confirmText="Delete"
         confirmTheme="error primary"
         opened={dialogOpened.value}
-        onOpenedChanged={openedChanged}
+        onClosed={onClosed}
         onCancel={() => {
           status.value = 'Canceled';
         }}

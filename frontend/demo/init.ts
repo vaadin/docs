@@ -1,22 +1,22 @@
 // Legacy Polymer-based dom-module styling
-import '@vaadin/polymer-legacy-adapter/style-modules.js';
 import './init-flow-namespace';
 import './init-flow-components';
 import '../generated/activate-vaadin-featureflags.js';
 import '../generated/vaadin-featureflags';
-import '../generated/theme-docs.global.generated.js';
+import { applyTheme } from 'Frontend/demo/theme';
 import client from 'Frontend/generated/connect-client.default';
-import { applyTheme } from 'Frontend/generated/theme';
 
-// Apply the theme, so that overlay elements styles and custom property overrides work as expected
-applyTheme(document);
+// Some Vaadin components add elements to document.body that require theme styles
+// (e.g. Notification). Such components are embedded via iframes, but the same examples
+// can also be opened as standalone pages. To support both cases, apply the theme
+// to the document when the example runs in an iframe or standalone. This is safe
+// because in those modes the styles are isolated from the rest of the site.
+if (window.location.pathname.endsWith('/example')) {
+  applyTheme(document);
+}
 
 // @ts-expect-error Inserted by DS Publisher
 client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
-
-document.body.style.setProperty('--docs-example-render-font-family', 'var(--lumo-font-family)');
-document.body.style.setProperty('--docs-example-render-color', 'var(--lumo-body-text-color)');
-document.body.style.setProperty('--docs-example-render-background-color', 'var(--lumo-base-color)');
 
 // Ensures standalone UI sample pags have a lang attribute
 document.documentElement.setAttribute('lang', 'en');

@@ -1,8 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import addMonths from 'date-fns/addMonths';
-import formatISO from 'date-fns/formatISO';
-import startOfMonth from 'date-fns/startOfMonth';
+import { addMonths } from 'date-fns/addMonths';
+import { formatISO } from 'date-fns/formatISO';
+import { startOfMonth } from 'date-fns/startOfMonth';
 import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
 
 const startOfNextMonth = startOfMonth(addMonths(new Date(), 1));

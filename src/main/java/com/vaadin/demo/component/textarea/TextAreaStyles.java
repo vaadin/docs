@@ -17,12 +17,11 @@ public class TextAreaStyles extends HorizontalLayout {
         field.addThemeVariants(TextAreaVariant.LUMO_SMALL,
                 TextAreaVariant.LUMO_ALIGN_RIGHT,
                 TextAreaVariant.LUMO_HELPER_ABOVE_FIELD);
-        field.getStyle().set("--vaadin-input-field-border-width", "1px");
+        field.setWidthFull();
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
         field.setValue("Value");
-        field.setWidthFull();
 
         add(field);
     }

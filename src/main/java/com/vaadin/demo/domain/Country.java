@@ -1,6 +1,6 @@
 package com.vaadin.demo.domain;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
 

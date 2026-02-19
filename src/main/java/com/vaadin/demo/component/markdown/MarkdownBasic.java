@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.markdown;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.markdown.Markdown;
 import com.vaadin.flow.router.Route;

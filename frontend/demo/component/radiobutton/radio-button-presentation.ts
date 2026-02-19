@@ -4,14 +4,13 @@ import '@vaadin/radio-group';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getCards } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('radio-button-presentation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

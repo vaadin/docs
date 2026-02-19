@@ -21,7 +21,7 @@ function Example() {
       {/* tag::[] */}
       <Card theme="cover-media">
         {/* end::[] */}
-        <Icon slot="media" icon="lumo:photo" className="bg-primary-10 text-primary" />
+        <Icon slot="media" icon="lumo:photo" style={{ background: 'rgba(0, 0, 0, 0.2)' }} />
         <div slot="title">Lapland</div>
         <div slot="subtitle">The Exotic North</div>
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>

@@ -1,0 +1,177 @@
+---
+title: Basics
+page-title: How to create a basic component in Vaadin Flow
+description: Creating a Vaadin component with a client-side element and a server-side Java API.
+meta-description: Discover how to create basic components to extend your Vaadin Flow applications using the Element API.
+order: 2
+---
+
+
+= Vaadin Component Basics
+:toclevels: 2
+
+All Vaadin components consist of a client-side HTML element and a server-side Java component. The server-side components extend the [classname]`com.vaadin.flow.component.Component` base class. Vaadin provides support for keeping the client-side element and server-side component in sync.
+
+
+== Defining a Root Element
+
+Every component is associated with a root `Element`, which is accessible from the [methodname]`Component.getElement()` method. The `@Tag` annotation specifies the HTML tag name of the root element.
+
+You use the Element API to interact with the client-side elements, for example by manipulating attributes, properties and styles, and reacting to events. See the <<element-api/#,Element API>> reference guide for more information.
+
+.Creating a `TextField` component based on an `<input>` element
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/TextField.java[tag=basic,indent=0]
+----
+====
+
+You can use predefined constants in the `@Tag` annotation. For example, the `@Tag("input")` annotation is equivalent to `@Tag(Tag.INPUT)`. Most tag names have a constant, but not all.
+
+
+=== Using Multiple Elements
+
+A component can consist of multiple elements in the DOM tree. In this case, the root element is still defined using the `@Tag` annotation, and other elements are created and appended to the root element using the Element API.
+
+.Creating a `LabeledTextField` component with `<input>` and `<label>` elements inside a `<div>` root element
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/LabeledTextField.java[indent=0]
+----
+
+This generates the following DOM-tree structure in the browser:
+
+[source,html]
+----
+<div>
+    <label></label>
+    <input>
+</div>
+----
+====
+
+=== Extending a Component
+
+If you extend an existing component, the root element is inherited from the parent component class. You can still use the Element API to manipulate the root element or create and append child elements. However, you don't need to use the `@Tag` annotation in this case.
+
+.Extending the `LabeledTextField` component created above
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/CustomTextField.java[indent=0]
+----
+
+This generates the following DOM-tree structure in the browser:
+
+[source,html]
+----
+<div>
+    <label></label>
+    <input>
+    <span></span>
+</div>
+----
+====
+
+
+=== Composite Components
+
+When you create a new component by combining existing components, you should extend the `Composite<T>` class, where `T` is the type of the root component. This does not affect the DOM structure, but prevents users of your component from accessing the API of the root component directly.
+
+.Creating a `CompositeTextField` component with `Input` and `NativeLabel` components inside a `Div` root component
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/CompositeTextField.java[indent=0]
+----
+
+This generates the following DOM-tree structure in the browser:
+
+[source,html]
+----
+<div>
+    <label></label>
+    <input>
+</div>
+----
+====
+
+
+== Creating a Java API
+
+The Element API provides low-level access to the client-side element. You typically want to create a higher-level Java API that hides these details from the users of your component.
+
+A Vaadin component API consists of:
+
+* Properties for accessing and setting values. This is covered in the <<properties#,Component Properties>> reference guide.
+* Events and event listeners for reacting to user actions. This is covered in the <<events#,Declaring and Firing Component Events>> reference guide.
+* Other methods that act on the component. Some of them may use the Element API to call JavaScript functions on the client side. This is covered in the <<client-server-rpc#,Remote Procedure Calls>> reference guide.
+
+
+.An API for getting and setting the `value` property, and reacting to value changes
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/TextField.java[tag=events,indent=0]
+----
+====
+
+== Lifecycle Callbacks
+
+The topmost component in any component hierarchy is the `UI` instance. The `UI` may represent an entire browser window (or tab), or some part of an HTML page where a Vaadin application is embedded.
+
+=== Attach to UI
+
+Whenever a component is added to a `UI`, either directly or indirectly through another component, it is considered to be *attached* to the `UI`. When a component is removed from the `UI`, it is considered to be *detached* from the `UI`.
+
+The `Component` class provides an `onAttach()` method that is called when the component has been attached to a `UI`. Override this method to perform initialization that requires the component to be attached. The default implementation is empty, so you don't need to call `super.onAttach()` unless you are extending another component class that requires it.
+
+.Getting a session attribute in the [methodname]`onAttach()` method
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/UserNameLabel.java[indent=0]
+----
+====
+
+You can also use the `Component.addAttachListener()` method to register an attach listener instead of overriding the [methodname]`onAttach()` method. The listener is invoked after the [methodname]`onAttach()` method. This is useful when you want to add attach behavior to an existing component without creating a subclass.
+
+
+=== Detach from UI
+
+The `Component` class also provides a [methodname]`onDetach()` method that is called right before the component is detached from the `UI`. Override this method to perform cleanup, for example to release resources that were acquired in the [methodname]`onAttach()` method. The default implementation is empty, so you don't need to call [methodname]`super.onDetach()` unless you are extending another component class that requires it.
+
+.Subscribing to an event bus in the [methodname]`onAttach()` method and unsubscribing in the [methodname]`onDetach()` method
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/ShoppingCartSummaryLabel.java[indent=0]
+----
+====
+
+You can also use the `Component.addDetachListener()` method to register a detach listener instead of overriding the [methodname]`onDetach()` method. The listener is invoked after the [methodname]`onDetach()` method. This is useful when you want to add detach behavior to an existing component without creating a subclass.
+
+
+== Setting Id
+
+You can set an `Id` for any component. The `Id` is passed to the client side as the `id` of the corresponding element. However, an `Id` *must be unique within the page*, as it can be used to select the element in JavaScript code or CSS rules.
+
+.Setting a component `Id`
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/SetIdView.java[tag=id,indent=0]
+----
+====
+
+[discussion-id]`2E20FB94-B5FD-4105-B53B-3EECA329EFF3`

@@ -32,8 +32,8 @@ function Example() {
         duration={0}
         position="middle"
         opened={notificationOpened.value}
-        onOpenedChanged={({ detail: { value } }) => {
-          notificationOpened.value = value;
+        onClosed={() => {
+          notificationOpened.value = false;
         }}
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>

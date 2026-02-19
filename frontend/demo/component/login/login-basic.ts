@@ -2,22 +2,19 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/login/vaadin-login-form.js';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('login-basic')
 export class Example extends LitElement {
   static override styles = css`
     :host {
-      background-color: var(--lumo-contrast-5pct);
       display: flex !important;
       justify-content: center;
-      padding: var(--lumo-space-l);
     }
   `;
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

@@ -42,15 +42,11 @@ function Example() {
         <GridColumn path="email" />
       </Grid>
 
-      <HorizontalLayout theme="spacing">
+      <HorizontalLayout theme="spacing wrap">
         <Button disabled={selectedItems.value.length !== 1}>Edit profile</Button>
         <Button disabled={selectedItems.value.length !== 1}>Manage permissions</Button>
         <Button disabled={selectedItems.value.length !== 1}>Reset password</Button>
-        <Button
-          theme="error"
-          disabled={selectedItems.value.length === 0}
-          style={{ marginInlineStart: 'auto' }}
-        >
+        <Button slot="end" theme="error" disabled={selectedItems.value.length === 0}>
           Delete
         </Button>
       </HorizontalLayout>

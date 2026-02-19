@@ -6,14 +6,13 @@ import type { ComboBoxFilterChangedEvent } from '@vaadin/combo-box';
 import type { ComboBoxLitRenderer } from '@vaadin/combo-box/lit.js';
 import { comboBoxRenderer } from '@vaadin/combo-box/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('combo-box-presentation')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -66,7 +65,7 @@ export class Example extends LitElement {
   private renderer: ComboBoxLitRenderer<Person> = (person) => html`
     <div style="display: flex;">
       <img
-        style="height: var(--lumo-size-m); margin-right: var(--lumo-space-s);"
+        style="height: 2.25rem; margin-right: var(--lumo-space-s);"
         src="${person.pictureUrl}"
         alt="Portrait of ${person.firstName} ${person.lastName}"
       />

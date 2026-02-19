@@ -7,16 +7,18 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 import { Scroller } from '@vaadin/react-components/Scroller.js';
 
 const sectionStyle = {
+  border: 'solid 1px var(--vaadin-border-color)',
   width: '360px',
+  maxWidth: '100%',
 };
 
 function Example() {
   return (
-    <section className="border border-contrast-20 max-w-full" id="container" style={sectionStyle}>
-      <h2 className="pt-m px-m text-xl">Create new...</h2>
+    <section id="container" style={sectionStyle}>
+      <h2 style={{ padding: '1rem 1rem 0', fontSize: '1.375rem' }}>Create new...</h2>
       {/* tag::snippet[] */}
       <Scroller scroll-direction="horizontal">
-        <HorizontalLayout className="inline-flex" theme="padding spacing">
+        <HorizontalLayout style={{ display: 'inline-flex' }} theme="padding spacing">
           <Button style={{ height: '100px' }}>
             <Icon icon="vaadin:clipboard-check" slot="prefix" />
             Audit

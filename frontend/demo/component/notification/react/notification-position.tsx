@@ -2,7 +2,6 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Notification, type NotificationPosition } from '@vaadin/react-components/Notification.js';
-import exampleStyles from './notification-position-example-styles'; // hidden-source-line
 
 function Example() {
   const show = (position: NotificationPosition) => {
@@ -26,4 +25,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example, exampleStyles); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

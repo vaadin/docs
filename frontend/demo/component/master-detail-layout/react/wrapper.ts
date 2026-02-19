@@ -1,7 +1,7 @@
 import 'Frontend/demo/init';
 import React, { type ComponentClass, type FunctionComponent } from 'react';
 import { createRoot } from 'react-dom/client';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 /**
  * Custom wrapper for rendering Master Detail Layout examples into an iframe. Compared to the usual

@@ -2,13 +2,12 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/card';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('card-header')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -18,9 +17,9 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-card>
         <!-- tag::[] -->
-        <div slot="header" class="leading-xs flex flex-col">
+        <div slot="header" style="display: flex; flex-direction: column-reverse; line-height: 1.25">
           <h2>Lapland</h2>
-          <div class="uppercase text-xs text-secondary" style="order: -1;">The Exotic North</div>
+          <div style="font-size: 0.8125rem; text-transform: uppercase">The Exotic North</div>
         </div>
         <!-- end::[] -->
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>

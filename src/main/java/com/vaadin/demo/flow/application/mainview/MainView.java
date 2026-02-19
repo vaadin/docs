@@ -14,6 +14,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLink;
 
@@ -23,7 +25,7 @@ import com.vaadin.flow.router.RouterLink;
 // tag::mainview[]
 @CssImport("./styles/views/main/main-view.css")
 @JsModule("./styles/shared-styles.js")
-public class MainView extends AppLayout {
+public class MainView extends AppLayout implements AfterNavigationObserver {
     private final Tabs menu;
     private H1 viewTitle;
 
@@ -117,9 +119,7 @@ public class MainView extends AppLayout {
 
     // tag::navigation[]
     @Override
-    protected void afterNavigation() {
-        super.afterNavigation();
-
+    public void afterNavigation(AfterNavigationEvent event) {
         // Select the tab corresponding to currently shown view
         getTabForComponent(getContent()).ifPresent(menu::setSelectedTab);
 

@@ -5,7 +5,7 @@ import { Icon } from '@vaadin/react-components/Icon.js';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing" className="items-center">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
       {/* tag::snippet[] */}
       <Icon iconClass="fa fa-code-branch" />
       <Icon iconClass="fa fa-user" />

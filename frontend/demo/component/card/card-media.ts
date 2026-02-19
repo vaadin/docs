@@ -5,14 +5,13 @@ import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/icons.js';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/lapland.avif?url';
 
 @customElement('card-media')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }

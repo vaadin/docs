@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -14,7 +15,7 @@ public class VaadinIcons extends Div {
     public VaadinIcons() {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        layout.addClassName("items-center");
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
         // tag::snippet[]
         Icon phoneIcon = VaadinIcon.PHONE.create();

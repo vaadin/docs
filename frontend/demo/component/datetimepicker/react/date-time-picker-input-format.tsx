@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import dateFnsFormat from 'date-fns/format';
-import dateFnsParse from 'date-fns/parse';
+import { format as dateFnsFormat } from 'date-fns/format';
+import { parse as dateFnsParse } from 'date-fns/parse';
 import type { DatePickerDate } from '@vaadin/date-picker';
 import {
   DateTimePicker,

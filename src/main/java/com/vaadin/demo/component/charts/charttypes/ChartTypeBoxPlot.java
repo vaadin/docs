@@ -1,6 +1,6 @@
 package com.vaadin.demo.component.charts.charttypes;
 
-import com.vaadin.demo.DemoExporter;
+import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.BoxPlotItem;
 import com.vaadin.flow.component.charts.model.ChartType;

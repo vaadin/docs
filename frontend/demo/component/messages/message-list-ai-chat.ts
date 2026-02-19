@@ -6,7 +6,7 @@ import { customElement, state } from 'lit/decorators.js';
 import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import type { MessageListItem } from '@vaadin/message-list';
 import LLMChatService from 'Frontend/demo/services/LLMChatService.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 function createItem(text: string, assistant = false): MessageListItem {
   return {
@@ -20,7 +20,6 @@ function createItem(text: string, assistant = false): MessageListItem {
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -41,7 +40,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- Live region for screen reader announcements -->
-      <div aria-live="polite" class="sr-only">${this.announcement}</div>
+      <div aria-live="polite" class="screen-reader-only">${this.announcement}</div>
 
       <!-- tag::snippet[] -->
       <vaadin-message-list .items="${this.messageListItems}" markdown></vaadin-message-list>

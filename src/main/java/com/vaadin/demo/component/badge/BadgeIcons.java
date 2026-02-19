@@ -23,6 +23,10 @@ public class BadgeIcons extends VerticalLayout {
                 new Span("Confirmed"));
         confirmed1.getElement().getThemeList().add("badge success");
 
+        Span warning1 = new Span(createIcon(VaadinIcon.WARNING),
+                new Span("Warning"));
+        warning1.getElement().getThemeList().add("badge warning");
+
         Span denied1 = new Span(createIcon(VaadinIcon.EXCLAMATION_CIRCLE_O),
                 new Span("Denied"));
         denied1.getElement().getThemeList().add("badge error");
@@ -42,6 +46,10 @@ public class BadgeIcons extends VerticalLayout {
                 createIcon(VaadinIcon.CHECK));
         confirmed2.getElement().getThemeList().add("badge success");
 
+        Span warning2 = new Span(new Span("Warning"),
+                createIcon(VaadinIcon.WARNING));
+        warning2.getElement().getThemeList().add("badge warning");
+
         Span denied2 = new Span(new Span("Denied"),
                 createIcon(VaadinIcon.EXCLAMATION_CIRCLE_O));
         denied2.getElement().getThemeList().add("badge error");
@@ -50,8 +58,10 @@ public class BadgeIcons extends VerticalLayout {
                 createIcon(VaadinIcon.HAND));
         onHold2.getElement().getThemeList().add("badge contrast");
 
-        add(new HorizontalLayout(pending1, confirmed1, denied1, onHold1),
-                new HorizontalLayout(pending2, confirmed2, denied2, onHold2));
+        add(new HorizontalLayout(pending1, confirmed1, warning1, denied1,
+                onHold1),
+                new HorizontalLayout(pending2, confirmed2, warning2, denied2,
+                        onHold2));
         setPadding(false);
         setSizeUndefined();
     }

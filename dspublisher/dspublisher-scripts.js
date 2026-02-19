@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '3.0.0-alpha.7';
+const DSP_VERSION = '3.0.0-alpha.12';
 
 async function checkPreConditions() {
   try {
@@ -44,13 +44,13 @@ async function checkPreConditions() {
           resolve();
         } else {
           reject(
-            new Error('Maven is not installed. Plase make sure it is installed and in your PATH.')
+            new Error('Maven is not installed. Please make sure it is installed and in your PATH.')
           );
         }
       });
 
       ps.on('error', () => {
-        new Error('Maven is not installed. Plase make sure it is installed and in your PATH.');
+        new Error('Maven is not installed. Please make sure it is installed and in your PATH.');
       });
     });
 
@@ -405,6 +405,14 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
         }
 
         phase.done = true;
+      }
+    });
+
+    ps.stderr.on('data', (data) => {
+      if (ignoredLogSignals.every((signal) => !data.toString().includes(signal))) {
+        const redColor = '\x1b[31m';
+        const defaultColor = '\x1b[0m';
+        logProgress(progressState, `${redColor}${data.toString()}${defaultColor}`);
       }
     });
   });

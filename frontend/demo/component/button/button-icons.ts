@@ -6,13 +6,12 @@ import '@vaadin/icons';
 import '@vaadin/tooltip';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('button-icons')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -21,13 +20,13 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <!-- Icon button using an aria-label to provide a textual alternative 
+        <!-- Icon button using an aria-label to provide a textual alternative
              to screen readers -->
         <vaadin-button theme="icon" aria-label="Add item">
           <vaadin-icon icon="vaadin:plus"></vaadin-icon>
         </vaadin-button>
 
-        <!-- Icon button using a tooltip to provide a textual description of 
+        <!-- Icon button using a tooltip to provide a textual description of
              the action that it triggers -->
         <vaadin-button theme="icon" aria-label="Close">
           <vaadin-icon icon="vaadin:close-small"></vaadin-icon>

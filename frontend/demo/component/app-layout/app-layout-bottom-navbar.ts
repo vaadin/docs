@@ -6,14 +6,14 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { applyTheme } from 'Frontend/generated/theme';
+import { applyTheme } from 'Frontend/demo/theme';
 import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
 @customElement('app-layout-bottom-navbar')
 export class Example extends LitElement {
   static override styles = css`
     h1 {
-      font-size: var(--lumo-font-size-l);
+      font-size: 1.125rem;
       margin: var(--lumo-space-m) var(--lumo-space-l);
     }
 
@@ -29,7 +29,6 @@ export class Example extends LitElement {
 
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -42,19 +41,35 @@ export class Example extends LitElement {
         <h1 slot="navbar">MyApp</h1>
         <vaadin-horizontal-layout
           slot="navbar touch-optimized"
-          class="w-full justify-evenly self-stretch"
+          style="width: 100%; justify-content: space-evenly;"
         >
-          <a href="/dashboard" aria-label="Dashboard" class="text-secondary px-l flex items-center">
+          <a
+            href="/dashboard"
+            aria-label="Dashboard"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:dashboard"></vaadin-icon>
           </a>
-          <a href="/orders" aria-label="Orders" class="text-secondary px-l flex items-center">
+          <a
+            href="/orders"
+            aria-label="Orders"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:cart"></vaadin-icon>
           </a>
           <!-- end::snippet[] -->
-          <a href="/customers" aria-label="Customers" class="text-secondary px-l flex items-center">
+          <a
+            href="/customers"
+            aria-label="Customers"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:user-heart"></vaadin-icon>
           </a>
-          <a href="/products" aria-label="Products" class="text-secondary px-l flex items-center">
+          <a
+            href="/products"
+            aria-label="Products"
+            style="display: flex; align-items: center; padding: 0 1.5rem;"
+          >
             <vaadin-icon icon="vaadin:package"></vaadin-icon>
           </a>
           <!-- tag::snippet[] -->

@@ -10,6 +10,7 @@ public class EmailFieldBasic extends HorizontalLayout {
 
     public EmailFieldBasic() {
         setPadding(false);
+        setAlignItems(Alignment.BASELINE);
 
         // tag::snippet[]
         EmailField validEmailField = new EmailField();

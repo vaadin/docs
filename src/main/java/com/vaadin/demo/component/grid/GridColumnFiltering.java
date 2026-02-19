@@ -115,11 +115,14 @@ public class GridColumnFiltering extends Div {
     // end::snippet2[]
 
     private static Renderer<Person> createPersonRenderer() {
-        return LitRenderer.<Person> of(
-                "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
-                        + "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
-                        + "  <span> ${item.fullName} </span>"
-                        + "</vaadin-horizontal-layout>")
+        return LitRenderer
+                .<Person> of(
+                        """
+                                <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <span> ${item.fullName} </span>
+                                </vaadin-horizontal-layout>
+                                """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName);
     }

@@ -54,8 +54,9 @@ public class ButtonGrid extends VerticalLayout {
         });
 
         HorizontalLayout footer = new HorizontalLayout(editProfile,
-                managePermissions, resetPassword, delete);
-        footer.getStyle().set("flex-wrap", "wrap");
+                managePermissions, resetPassword);
+        footer.addToEnd(delete);
+        footer.addThemeNames("wrap");
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();

@@ -9,14 +9,13 @@ import { customElement, state } from 'lit/decorators.js';
 import type { GridSelectedItemsChangedEvent } from '@vaadin/grid';
 import type { GridSelectionColumnSelectAllChangedEvent } from '@vaadin/grid/vaadin-grid-selection-column';
 import { getPeople } from 'Frontend/demo/domain/DataService';
+import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
-import { applyTheme } from 'Frontend/generated/theme';
 
 @customElement('button-grid')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
-    // Apply custom theme (only supported if your app uses one)
     applyTheme(root);
     return root;
   }
@@ -58,7 +57,7 @@ export class Example extends LitElement {
           <vaadin-grid-column path="email"></vaadin-grid-column>
         </vaadin-grid>
 
-        <vaadin-horizontal-layout theme="spacing" style="flex-wrap: wrap;">
+        <vaadin-horizontal-layout theme="spacing wrap">
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">Edit profile</vaadin-button>
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">
             Manage permissions
@@ -66,11 +65,7 @@ export class Example extends LitElement {
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">
             Reset password
           </vaadin-button>
-          <vaadin-button
-            theme="error"
-            ?disabled="${this.selectedItems.length === 0}"
-            style="margin-inline-start: auto;"
-          >
+          <vaadin-button slot="end" theme="error" ?disabled="${this.selectedItems.length === 0}">
             Delete
           </vaadin-button>
         </vaadin-horizontal-layout>

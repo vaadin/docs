@@ -6,7 +6,6 @@ import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 
 @Route("progress-bar-completion-time")
 public class ProgressBarCompletionTime extends Div {
@@ -18,13 +17,11 @@ public class ProgressBarCompletionTime extends Div {
 
         NativeLabel progressBarLabel = new NativeLabel("Generating report...");
         progressBarLabel.setId("pblbl");
-        progressBarLabel.addClassName(LumoUtility.TextColor.SECONDARY);
 
         Span progressBarSubLabel = new Span(
                 "Process can take upwards of 10 minutes");
         progressBarSubLabel.setId("sublbl");
-        progressBarSubLabel.addClassNames(LumoUtility.TextColor.SECONDARY,
-                LumoUtility.FontSize.XSMALL);
+        progressBarSubLabel.getStyle().set("font-size", "0.8125rem");
 
         // Associates the labels with the bar programmatically, for screen
         // readers:

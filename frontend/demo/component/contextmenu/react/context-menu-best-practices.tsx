@@ -28,7 +28,7 @@ function Example() {
       <Grid allRowsVisible items={gridItems.value}>
         <GridColumn path="name" />
         <GridColumn path="size" />
-        <GridColumn width="70px" flexGrow={0} renderer={renderMenuBar}/>
+        <GridColumn width="70px" flexGrow={0} renderer={renderMenuBar} />
       </Grid>
     </ContextMenu>
     // end::snippet[]
