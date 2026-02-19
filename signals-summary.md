@@ -347,6 +347,17 @@ greeting.bindText(() ->
 UI.getCurrent().setLocale(new Locale("fi"));
 ```
 
+### Reactive Window Size Tracking (under review, not yet released)
+
+Vaadin provides a built-in signal for reactive window size changes:
+```java
+Div layoutDiv = new Div();
+Signal<WindowSize> windowSize = UI.getCurrent().getPage().windowSizeSignal();
+
+layoutDiv.getElement().getClassList().bind("mobile-layout",
+                                 windowSize.map(size -> size.width() < 768));
+```
+
 ### Local vs Shared Signals
 
 | Aspect | Local | Shared |
