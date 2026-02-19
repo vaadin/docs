@@ -1,7 +1,6 @@
 package com.vaadin.demo.flow.signals.usecase;
 
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.signals.impl.Effect;
 import java.util.List;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -57,8 +56,10 @@ public class GridFilteringExample extends VerticalLayout {
         // Data grid
         Grid<Product> productGrid = new Grid<>(Product.class);
         productGrid.setColumns("id", "name", "category", "price", "stock");
-        Effect.effect(productGrid, () -> productGrid.setItems(Objects.requireNonNullElseGet(
-            filteredProductsSignal.get(), List::of)));
+        Signal.effect(productGrid, () -> {
+            productGrid.setItems(Objects.requireNonNullElseGet(
+                filteredProductsSignal.get(), List::of));
+        });
 
         add(categoryFilter, searchField, inStockCheckbox, productGrid);
     }
