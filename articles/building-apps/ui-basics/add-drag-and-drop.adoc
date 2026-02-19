@@ -1,0 +1,192 @@
+---
+title: Add Drag and Drop
+page-title: How to add drag and drop in Vaadin
+description: Learn how to make components draggable and droppable in your Vaadin application.
+meta-description: Add drag-and-drop interactions to your Vaadin application using the DragSource and DropTarget APIs with accessibility considerations.
+order: 35
+---
+
+= Add Drag and Drop
+:toclevels: 2
+
+Vaadin lets you make any component draggable and any component a drop target. The user grabs a component with the mouse, drags it, and drops it onto another component — triggering server-side logic to move, copy, or associate items. This article covers the basics: making a component draggable, creating a drop target, and handling the drop event. For the full API including drag data, effects, drag images, and browser-specific behavior, see the <</flow/component-internals/dnd#,Drag & Drop>> reference documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view where you can drag items between two columns:
+
+[source,java]
+----
+import com.vaadin.flow.component.dnd.DragSource;
+import com.vaadin.flow.component.dnd.DropEffect;
+import com.vaadin.flow.component.dnd.DropTarget;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("dnd-example")
+public class DragAndDropExampleView extends HorizontalLayout {
+
+    public DragAndDropExampleView() {
+        VerticalLayout todo = createColumn("To Do");
+        VerticalLayout done = createColumn("Done");
+
+        todo.add(
+                createDraggableItem("Write documentation"),
+                createDraggableItem("Review pull request"),
+                createDraggableItem("Fix bug #42"));
+
+        add(todo, done);
+        setSizeFull();
+        setPadding(true);
+    }
+
+    private VerticalLayout createColumn(String title) {
+        VerticalLayout column = new VerticalLayout();
+        column.add(new H3(title));
+        column.setWidth("300px");
+        column.setMinHeight("400px");
+        column.getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
+        column.getStyle().set("border-radius", "var(--lumo-border-radius-m)");
+
+        DropTarget<VerticalLayout> dropTarget = DropTarget.create(column);
+        dropTarget.setDropEffect(DropEffect.MOVE);
+        dropTarget.addDropListener(event ->
+                event.getDragSourceComponent().ifPresent(column::add));
+
+        return column;
+    }
+
+    private Div createDraggableItem(String text) {
+        Div item = new Div(new Span(text));
+        item.getStyle().set("padding", "var(--lumo-space-s)");
+        item.getStyle().set("background", "var(--lumo-contrast-5pct)");
+        item.getStyle().set("border-radius", "var(--lumo-border-radius-s)");
+        item.getStyle().set("cursor", "grab");
+
+        DragSource.create(item);
+        return item;
+    }
+}
+----
+
+
+== Making a Component Draggable
+
+Use `DragSource.create()` to make any component draggable:
+
+[source,java]
+----
+Div card = new Div(new Span("Drag me"));
+DragSource.create(card);
+----
+
+This adds the HTML `draggable` attribute to the component. The user can now grab it and drag it.
+
+You can also make a component draggable conditionally:
+
+[source,java]
+----
+DragSource<Div> dragSource = DragSource.configure(card);
+dragSource.setDraggable(true);  // enable
+dragSource.setDraggable(false); // disable later
+----
+
+
+== Creating a Drop Target
+
+Use `DropTarget.create()` to make any component accept drops:
+
+[source,java]
+----
+VerticalLayout dropZone = new VerticalLayout();
+DropTarget<VerticalLayout> dropTarget = DropTarget.create(dropZone);
+----
+
+When a draggable component is dropped onto this layout, a `DropEvent` fires on the server.
+
+
+== Handling the Drop
+
+Add a drop listener to react when something is dropped. The event gives you access to the dragged component (when the drag originated from the same browser tab):
+
+[source,java]
+----
+dropTarget.addDropListener(event -> {
+    event.getDragSourceComponent().ifPresent(component -> {
+        dropZone.add(component); // moves the component here
+    });
+});
+----
+
+Calling `add()` on the drop target removes the component from its original parent and adds it to the new one — effectively moving it.
+
+
+== Visual Feedback during Dragging
+
+Vaadin automatically applies CSS class names during drag operations that you can use for styling:
+
+- `v-dragged` — added to the component being dragged
+- `v-drag-over-target` — added to a drop target while a draggable hovers over it
+
+[source,css]
+----
+.v-dragged {
+    opacity: 0.5;
+}
+
+.v-drag-over-target {
+    outline: 2px solid var(--lumo-primary-color);
+}
+----
+
+This gives users a clear visual cue about what they're dragging and where they can drop it.
+
+
+== Accessibility
+
+Drag and drop relies on precise mouse movement, which makes it inaccessible to some users — including people who navigate with a keyboard, use screen readers, or have limited fine motor control. *Always provide an alternative way to perform the same operation.* Drag and drop should enhance the experience, not gate it.
+
+Common alternatives include:
+
+- *Buttons or context menus* — add "Move to..." actions that accomplish the same thing as dragging. For example, each task card could have a button that moves it to the next column.
+- *Select and act* — let the user select items (with checkboxes or click-to-select), then provide a toolbar action like "Move selected to Done".
+- *Arrow key reordering* — for sortable lists, let users reorder items using the keyboard.
+
+[TIP]
+A good test: can a user who never touches the mouse accomplish everything that a drag-and-drop user can? If not, add keyboard-accessible alternatives.
+
+
+== When to Use Drag and Drop
+
+Drag and drop works best when it makes spatial relationships intuitive:
+
+*Good uses:*
+
+- Moving items between columns in a task board
+- Reordering items in a list
+- Assigning items to categories by dragging them into groups
+- File upload zones (the browser handles the file-to-page drag natively)
+
+*Avoid:*
+
+- Using drag and drop as the _only_ way to perform an action — always provide a clickable/keyboard alternative
+- Adding drag and drop to actions that are simpler with a button click, such as deleting an item
+- Complex multi-step operations where the user needs to drag across scrollable areas or nested containers — these are frustrating and error-prone
+
+
+== Beyond the Basics
+
+This article covers the fundamentals, but Vaadin's drag-and-drop API offers more:
+
+- *Server-side drag data* — attach Java objects to a drag source with `setDragData()` and retrieve them in the drop event, without sending data to the browser
+- *Drag effects* — control whether a drag represents a move, copy, or link operation using `effectAllowed` and `dropEffect`
+- *Drag images* — customize the visual representation shown under the cursor during dragging
+- *Drag start and end events* — react when dragging begins or ends, for example to highlight valid drop targets
+- *Grid row drag and drop* — `Grid` and `TreeGrid` have built-in support for <<{articles}/components/grid/#drag-and-drop,dragging and dropping rows>>
+
+See the <</flow/component-internals/dnd#,Drag & Drop>> reference for details on these features.
