@@ -15,7 +15,7 @@ const DSP_VERSION = '3.0.0-alpha.12';
 async function checkPreConditions() {
   try {
     // Verify the necessary ports are available on localhost
-    const ports = [8000, serverPort];
+    const ports = [dspPort, serverPort];
     await Promise.all(
       ports.map((port) => {
         return new Promise((resolve, reject) => {
@@ -75,6 +75,8 @@ const appProps = fs.readFileSync(
   'utf-8'
 );
 const serverPort = parseInt(appProps.match(/^server\.port=(\d+)/m)?.[1] ?? '8880');
+const dspConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8'));
+const dspPort = dspConfig.port ?? 8800;
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
@@ -178,7 +180,7 @@ const SCRIPTS = {
           {
             text: 'Starting up DSP',
             readySignal: ['watching for file changes'],
-            doneText: 'Ready at http://localhost:8000. Stop the server with Ctrl+C',
+            doneText: `Ready at http://localhost:${dspPort}. Stop the server with Ctrl+C`,
             weight: 5,
             lastPhase: true,
           },
