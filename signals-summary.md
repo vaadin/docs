@@ -5,11 +5,12 @@
 Signals are **reactive value holders** that automatically track dependencies and update the UI when state changes — no manual listener wiring needed. Instead of manually updating UI components when data changes, you declare the relationship once, and signals keep everything synchronized automatically.
 
 ```java
-// Traditional approach: Manual updates
 NumberField priceField = new NumberField("Price");
 NumberField quantityField = new NumberField("Quantity");
 Span totalLabel = new Span();
 
+// Traditional approach: Manual updates
+totalLabel.setText("Total: 0.0");
 priceField.addValueChangeListener(e ->
     totalLabel.setText("Total: " + (priceField.getValue() * quantityField.getValue())));
 quantityField.addValueChangeListener(e ->
@@ -300,12 +301,12 @@ record User(String name, int age) {
 - **Don't use effects for simple bindings**
 
 ```java
-// Bad: Manual update in effect
-Signal.effect(label, () -> label.setText(signal.get()));
-
 // Bad: Direct mutation
 User user = userSignal.get();
 user.setAge(31); // Won't work!
+
+// Manual update in effect, if no binding method is available in a component
+Signal.effect(checkBoxGroup, () -> checkBoxGroup.setRequired(signal.get()));
 
 // Good: Update through signal
 userSignal.update(user -> user.withAge(31));
