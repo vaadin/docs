@@ -1,33 +1,40 @@
-# Production-ready Vaadin Signals: Short Summary (25.1)
+# Production-Ready Vaadin Signals: Short Summary (25.1)
 
 ## What Are Signals?
 
 Signals are **reactive value holders** that automatically track dependencies and update the UI when state changes — no manual listener wiring needed. Instead of manually updating UI components when data changes, you declare the relationship once, and signals keep everything synchronized automatically.
 
 ```java
-// Traditional approach: Manual listener wiring
-TextField textField = new TextField();
-Span label = new Span();
-textField.addValueChangeListener(e -> label.setText("Hello " + e.getValue()));
+// Traditional approach: Manual updates
+NumberField priceField = new NumberField("Price");
+NumberField quantityField = new NumberField("Quantity");
+Span totalLabel = new Span();
 
-// With signals: Automatic updates
-ValueSignal<String> name = new ValueSignal<>("");
-TextField textField = new TextField();
-Span label = new Span();
-textField.bindValue(name, name::set);       // two-way bind
-label.bindText(name.map(v -> "Hello " + v)); // auto-updates
+priceField.addValueChangeListener(e ->
+    totalLabel.setText("Total: " + (priceField.getValue() * quantityField.getValue())));
+quantityField.addValueChangeListener(e ->
+    totalLabel.setText("Total: " + (priceField.getValue() * quantityField.getValue())));
+
+// With signals: Automatic reactive updates
+ValueSignal<Double> price = new ValueSignal<>(0.0);
+ValueSignal<Double> quantity = new ValueSignal<>(0.0);
+
+priceField.bindValue(price, price::set);
+quantityField.bindValue(quantity, quantity::set);
+totalLabel.bindText(() -> "Total: " + (price.get() * quantity.get()));
 ```
 
 ### Key Capabilities
 
 - **Automatic dependency tracking** — Reading a signal inside an effect registers a subscription; changes trigger re-evaluation
 - **Derived/computed values** — `signal.map(...)` creates derived signals that stay in sync
-- **Two-way binding** — Bind UI components to signals with a single call (`bindValue`, `bindText`, `bindVisible`, `bindEnabled`)
+- **Two-way binding for input fields** — Use `bindValue()` to sync input fields with signals bidirectionally
+- **Read-only bindings for UI state** — Use `bindText()`, `bindVisible()`, `bindEnabled()` to reactively update UI based on signal values
 - **Lifecycle-aware** — Bindings activate on attach, clean up on detach
 - **Local & Shared signals** — `ValueSignal` for per-session state; `SharedValueSignal`/`SharedNumberSignal`/`SharedListSignal` for cross-session, cluster-ready state with optimistic updates and transactions
 - **Thread-safe UI updates** — `ui.access(...)` is used automatically when needed
 
-**Result:** Less boilerplate, fewer bugs from forgotten listeners, and a clear reactive data flow from state to UI.
+**Result:** Less boilerplate, fewer bugs from inconsistently applied updates, and a clear reactive data flow from state to UI.
 
 ---
 
@@ -72,44 +79,35 @@ checkbox.bindValue(
 
 ### 4. Advanced List Signal Capabilities
 
-- Per-entry reactivity: changes to individual list items don't trigger full list re-renders
 - Efficient `bindChildren()` that only creates/removes affected components
 - Support for both `ListSignal` (local) and `SharedListSignal` (shared across users)
 
-### 5. Explicit Write Callbacks in Transactions
-
-- Clear separation between read-only and write operations
-- Effect callbacks run in read-only transactions (prevents accidental mutations)
-- Explicit `runWithoutTransaction()` for intentional side effects
-
-### 6. Automatic Repeatable Reads
+### 5. Automatic Repeatable Reads
 
 - Shared signals automatically use transactions during Vaadin session lock
 - Multiple reads within the same request return consistent values
 - Prevents race conditions where a signal value changes between reads
 
 ```java
-// No sudden reads of concurrently changed value:
-if (signal.get().equals("update required")) {
-    // Can log "Doing required update from 'no need to update'"
-    log("Doing required update from '" + signal.get() + "'");
-    signal.set("updated");
+// Consistent reads guaranteed
+if (sharedSignal.get().equals("update required")) {
+    log("Updating from '" + sharedSignal.get() + "'"); // Always logs "update required"
+    sharedSignal.set("updated");
 }
 ```
 
-### 7. Signal Bindings vs Effects Lifecycle
+### 6. Signal Bindings vs Effects Lifecycle
 
 - **Signal bindings** (via `bindText()`, `bindVisible()`, etc.) are **permanent** for the component's lifetime
-- **Effects** (via `Effect.effect()`) can be **unregistered** via the returned `Registration`
+- **Effects** can be **unregistered** via the returned `Registration`
 
 ```java
 // Permanent binding - lasts as long as component is attached
-button.bindText(counter.map(c -> "Count: " + c));
+button.bindText(() -> "Count: " + counter.get());
 
 // Unregistrable effect - can be removed when no longer needed
-Registration reg = Effect.effect(() -> {
-    System.out.println("Counter: " + counter.value());
-});
+Registration reg = Signal.effect(() -> 
+    System.out.println("Counter: " + counter.get()));
 reg.remove(); // Stops the effect
 ```
 
@@ -133,7 +131,7 @@ reg.remove(); // Stops the effect
 
 ```java
 // Text
-label.bindText(nameSignal.map(n -> "Hello, " + n));
+label.bindText(() -> "Hello, " + nameSignal.get());
 
 // Visibility
 panel.bindVisible(showDetailsSignal);
@@ -148,11 +146,7 @@ textField.bindValue(nameSignal, nameSignal::set);
 div.getStyle().bind("background-color", colorSignal);
 
 // Dynamic lists
-container.bindChildren(itemsSignal, item -> {
-    Span view = new Span();
-    view.bindText(item, item::set);
-    return view;
-});
+container.bindChildren(itemsSignal, itemSignal -> new Span(itemSignal));
 ```
 
 ### Element-Level Bindings
@@ -167,8 +161,8 @@ element.bindText(textSignal);
 element.bindAttribute("aria-label", labelSignal);
 
 // Property binding (String, Boolean, Double, List, Map, Object)
-element.bindProperty("hidden", hiddenSignal);
-element.bindProperty("items", itemListSignal);
+element.bindProperty("hidden", hiddenSignal::set);
+element.bindProperty("items", itemListSignal::set);
 
 // HTML content binding (Html component)
 Html html = new Html("<div></div>");
@@ -177,24 +171,18 @@ html.bindHtmlContent(htmlContentSignal);
 
 ### Computed Signals
 
-Derive values from other signals:
+Three ways to derive values from signals:
+
 ```java
+// 1. Signal.computed() - for combining multiple signals
 Signal<String> fullName = Signal.computed(() ->
-    firstName.value() + " " + lastName.value());
+    firstName.get() + " " + lastName.get());
 
-Signal<Boolean> formValid = Signal.computed(() ->
-    !email.value().isEmpty() && password.value().length() >= 8);
-```
+// 2. signal.map() - for transforming a single signal
+Signal<String> upperName = firstName.map(String::toUpperCase);
 
-### Transactions
-
-Group related updates atomically:
-```java
-Signal.runInTransaction(() -> {
-    firstNameSignal.value("John");
-    lastNameSignal.value("Doe");
-    ageSignal.value(30);
-});
+// 3. Inline lambda - directly in bindings
+label.bindText(() -> "Welcome, " + firstName.get() + "!");
 ```
 
 ---
@@ -217,7 +205,7 @@ public class ShoppingCart extends VerticalLayout {
 
     // Computed signals
     private final Signal<BigDecimal> subtotal = Signal.computed(() ->
-        cartItems.value().stream()
+        cartItems.get().stream()
             .map(Signal::value)
             .map(item -> item.product().price()
                 .multiply(BigDecimal.valueOf(item.quantity())))
@@ -225,14 +213,14 @@ public class ShoppingCart extends VerticalLayout {
     );
 
     private final Signal<BigDecimal> discount = Signal.computed(() -> {
-        if ("SAVE20".equals(discountCode.value())) {
-            return subtotal.value().multiply(new BigDecimal("0.20"));
+        if ("SAVE20".equals(discountCode.get())) {
+            return subtotal.get().multiply(new BigDecimal("0.20"));
         }
         return BigDecimal.ZERO;
     });
 
     private final Signal<BigDecimal> total = Signal.computed(() ->
-        subtotal.value().subtract(discount.value())
+        subtotal.get().subtract(discount.get())
     );
 
     public ShoppingCart() {
@@ -242,22 +230,21 @@ public class ShoppingCart extends VerticalLayout {
 
         // Totals display
         Span subtotalLabel = new Span();
-        subtotalLabel.bindText(subtotal.map(s -> "Subtotal: $" + s));
+        subtotalLabel.bindText(() -> "Subtotal: $" + subtotal.get());
 
         Span discountLabel = new Span();
-        discountLabel.bindText(discount.map(d -> "Discount: -$" + d));
-        discountLabel.bindVisible(discount.map(d -> d.compareTo(BigDecimal.ZERO) > 0));
+        discountLabel.bindText(() -> "Discount: -$" + discount.get());
+        discountLabel.bindVisible(() -> discount.get().compareTo(BigDecimal.ZERO) > 0);
 
         Span totalLabel = new Span();
-        totalLabel.bindText(total.map(t -> "Total: $" + t));
+        totalLabel.bindText(() -> "Total: $" + total.get());
 
         // Dynamic cart items
         VerticalLayout cartList = new VerticalLayout();
         cartList.bindChildren(cartItems, itemSignal -> {
             HorizontalLayout row = new HorizontalLayout();
 
-            Span name = new Span();
-            name.bindText(itemSignal.map(i -> i.product().name()));
+            Span name = new Span(() -> itemSignal.get().product().name());
 
             IntegerField qtyField = new IntegerField();
             qtyField.bindValue(
@@ -281,7 +268,6 @@ public class ShoppingCart extends VerticalLayout {
 - Local signals for UI state
 - Computed signals for calculations
 - Two-way form binding
-- Property-level binding with `updater()`
 - Dynamic list rendering
 - Conditional visibility
 
@@ -295,7 +281,6 @@ public class ShoppingCart extends VerticalLayout {
 - **Use shared signals** for multi-user collaboration
 - **Prefer bindings** over manual effects
 - **Use records** for immutable data
-- **Group related updates** in transactions
 - **Enable @Push**
 
 ```java
@@ -316,14 +301,14 @@ record User(String name, int age) {
 
 ```java
 // Bad: Manual update in effect
-Effect.effect(() -> label.setText(signal.value()));
+Signal.effect(label, () -> label.setText(signal.get()));
 
 // Bad: Direct mutation
-User user = userSignal.value();
+User user = userSignal.get();
 user.setAge(31); // Won't work!
 
 // Good: Update through signal
-userSignal.update(u -> u.withAge(31));
+userSignal.update(user -> user.withAge(31));
 ```
 
 ---
@@ -339,10 +324,11 @@ TextField nameField = new TextField();
 nameField.bindValue(nameSignal, nameSignal::set);
 binder.forField(nameField)
     .asRequired("Name required")
-    .bind(Person::name, (p, n) -> nameSignal.value(n));
+    .bind(Person::name, (p, n) -> nameSignal.set(n));
 
-// Validation status as signal
-Signal<Boolean> isValid = Signal.computed(() -> binder.isValid());
+// Use binder's built-in validation status signal
+Signal<Boolean> isValid = binder.getValidationStatus()
+    .map(status -> !status.hasErrors());
 saveButton.bindEnabled(isValid);
 ```
 
@@ -354,8 +340,8 @@ Vaadin provides a built-in signal for reactive locale changes:
 Signal<Locale> localeSignal = UI.getCurrent().localeSignal();
 
 Span greeting = new Span();
-greeting.bindText(localeSignal.map(locale ->
-    locale.getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
+greeting.bindText(() ->
+        localeSignal.get().getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
 
 // Change locale - all bindings update automatically
 UI.getCurrent().setLocale(new Locale("fi"));
@@ -366,7 +352,9 @@ UI.getCurrent().setLocale(new Locale("fi"));
 | Aspect | Local | Shared |
 |--------|-------|--------|
 | Scope | Single UI | Multi-user |
-| Performance | Faster | Slightly slower |
+| Performance | Faster (synchronous) | Slightly slower (asynchronous) |
+| Value types | Any Java object | JSON serializable only |
+| API | Synchronous | Asynchronous (returns operations) |
 | Transactions | ❌ | ✅ |
 | Cluster support | ❌ | ✅ |
 | Example | Form state | Collaborative dashboard |
