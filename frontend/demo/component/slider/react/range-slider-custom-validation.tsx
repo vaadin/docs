@@ -7,6 +7,7 @@ function Example() {
   // tag::snippet[]
   const [invalid, setInvalid] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [value, setValue] = useState([200, 800]);
 
   return (
     <RangeSlider
@@ -14,10 +15,11 @@ function Example() {
       min={0}
       max={1000}
       step={50}
-      value={[200, 800]}
+      value={value}
       invalid={invalid}
       errorMessage={errorMessage}
       onChange={(e: RangeSliderChangeEvent) => {
+        setValue(e.target.value);
         const [start, end] = e.target.value;
         if (end - start < 200) {
           setErrorMessage('Price range must span at least $200');

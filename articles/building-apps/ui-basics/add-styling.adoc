@@ -1,0 +1,181 @@
+---
+title: Add Styling
+page-title: How to add styling to a Vaadin application
+description: Learn how to style components using theme variants, inline styles, and CSS class names — starting from pure Java.
+meta-description: Style your Vaadin application using theme variants, inline styles, and CSS class names, starting from pure Java with no CSS required.
+order: 25
+---
+
+= Add Styling
+:toclevels: 2
+
+Vaadin gives you several ways to style components and elements. This article covers the three most common: theme variants and inline styles, which are pure Java — no CSS needed — and CSS class names, which give you full control through a stylesheet. The examples use the <<{articles}/styling/themes/lumo#,Lumo>> theme, but the techniques work the same way with <<{articles}/styling/themes/aura#,Aura>>. For utility classes, component style properties, and other advanced techniques, see the <<{articles}/styling#,Styling>> documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that demonstrates three styling approaches:
+
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("styling-example")
+public class StylingExampleView extends VerticalLayout {
+
+    public StylingExampleView() {
+        // 1. Theme variant — built-in component style (pure Java)
+        Button saveButton = new Button("Save");
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        // 2. Inline style — one-off styling (pure Java)
+        Div accent = new Div("Accent bar");
+        accent.getStyle()
+                .setBackground("var(--lumo-primary-color)")
+                .setColor("white")
+                .setPadding("var(--lumo-space-s) var(--lumo-space-m)")
+                .setBorderRadius("8px");
+
+        // 3. CSS class name — styled via styles.css (requires CSS)
+        Div banner = new Div("Welcome back!");
+        banner.addClassName("info-banner");
+
+        add(saveButton, accent, banner);
+    }
+}
+----
+
+Add the following CSS to your `styles.css` file for the `.info-banner` class used above:
+
+[source,css]
+----
+.info-banner {
+    background: var(--lumo-contrast-5pct);
+    padding: var(--lumo-space-m);
+    border-radius: var(--lumo-border-radius-m);
+}
+----
+
+
+== Theme Variants
+
+Theme variants are built-in style presets that many Vaadin components support. They are the easiest way to adjust a component's appearance — one line of Java, no CSS required.
+
+Use `addThemeVariants()` with the variant constants for the component:
+
+[source,java]
+----
+Button primary = new Button("Save");
+primary.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+----
+
+You can combine multiple variants. For example, a small primary button:
+
+[source,java]
+----
+Button submit = new Button("Submit");
+submit.addThemeVariants(
+        ButtonVariant.LUMO_PRIMARY,
+        ButtonVariant.LUMO_SMALL);
+----
+
+[TIP]
+Check each component's documentation for its available variants. For example, see <<{articles}/components/button/styling#,Button Styling>>.
+
+
+== Inline Styles
+
+The `getStyle()` API applies CSS properties directly to a component from Java. Use it for one-off adjustments or styles that change at runtime.
+
+Common CSS properties have dedicated methods, and you can use the generic `set()` method for any property:
+
+[source,java]
+----
+Div header = new Div("Dashboard");
+header.getStyle()
+        .setFontWeight(Style.FontWeight.BOLD)
+        .setBackground("var(--lumo-primary-color)")
+        .setColor("var(--lumo-primary-contrast-color)")
+        .set("border-radius", "var(--lumo-border-radius-m)");
+----
+
+Values like `var(--lumo-primary-color)` are theme custom properties — named values defined by the theme for colors, spacing, typography, and other styles. Both the <<{articles}/styling/themes/lumo/lumo-style-properties#,Lumo>> and <<{articles}/styling/themes/aura#,Aura>> themes provide them. Using custom properties instead of hardcoded values keeps your styles consistent and makes them adapt to dark mode automatically.
+
+[NOTE]
+====
+Inline styles set through `getStyle()` apply to the root HTML element of the component. For HTML elements (`Div`, `Span`, `Paragraph`, etc.) and layout components (`HorizontalLayout`, `VerticalLayout`), the root element _is_ the visible element, so inline styles work as expected. For Vaadin components like `TextField`, `Button`, or `Grid`, the visible parts are inside shadow DOM — inline styles on the root element don't reach them. To style those components, use theme variants or CSS. See the <<{articles}/styling#,Styling>> reference for details.
+====
+
+[NOTE]
+If the same inline style appears in multiple places, extract it into a CSS class in a stylesheet. Inline styles are harder to find, override, and maintain than stylesheet rules.
+
+
+== CSS Class Names
+
+Adding a CSS class name to a component and writing matching styles in a stylesheet is the most flexible approach. It requires writing CSS, but keeps styles reusable and maintainable as your application grows.
+
+Use `addClassName()` or `addClassNames()` in Java:
+
+[source,java]
+----
+Div card = new Div();
+card.addClassName("product-card");
+
+Span label = new Span("Urgent");
+label.addClassNames("status-label", "status-urgent");
+----
+
+Then write the matching CSS rules in your <<{articles}/styling/stylesheets#,stylesheet>> (typically `styles.css` in `src/main/resources/META-INF/resources`):
+
+[source,css]
+----
+.product-card {
+    background: var(--lumo-base-color);
+    border: 1px solid var(--lumo-contrast-10pct);
+    border-radius: var(--lumo-border-radius-l);
+    padding: var(--lumo-space-m);
+}
+
+.status-label {
+    font-size: var(--lumo-font-size-s);
+    border-radius: var(--lumo-border-radius-s);
+    padding: var(--lumo-space-xs) var(--lumo-space-s);
+}
+
+.status-urgent {
+    background: var(--lumo-error-color-10pct);
+    color: var(--lumo-error-text-color);
+}
+----
+
+[TIP]
+Use semantic class names that describe what the element *is*, not how it looks. Prefer `status-urgent` over `red-text` — the visual style can change, but the meaning stays.
+
+
+== When to Style with What
+
+What approach to use depends on _what_ you're styling:
+
+*Styling components* (`TextField`, `Button`, `Grid`, etc.) — Theme variants are the easiest option: one line of Java for built-in presets like primary buttons, small fields, or notification colors. For anything beyond variants, use CSS — see the <<{articles}/styling#,Styling>> reference. Inline styles don't reach component internals because the visible parts are inside shadow DOM.
+
+*Styling HTML elements and layouts* (`Div`, `Span`, `HorizontalLayout`, etc.) — You have the full range of options. Use inline styles for one-off adjustments or dynamic values that change at runtime. Use CSS class names for reusable styles shared across elements. Use utility classes for a Java-only alternative to writing CSS.
+
+[TIP]
+The <<{articles}/styling#,Styling>> reference covers more advanced techniques when you're ready — including utility classes, component style properties, and shadow DOM styling.
+
+
+== Beyond the Basics
+
+This article covers the core styling approaches, but Vaadin's styling system offers more:
+
+- *Utility classes* — apply styles from Java using `LumoUtility` constants, or use <<{articles}/styling/utility-classes#tailwind,Tailwind CSS>>. A Java-only alternative to writing CSS classes.
+- *Component style properties* — customize component appearance with `--vaadin-*` properties without writing complex CSS selectors
+- *Theme properties* — change the look of your entire application with `--lumo-*` or `--aura-*` properties
+- *Styling component internals* — target internal elements with `::part()` selectors for deep customization
+- *Lazy-loading and scoping stylesheets* — control when and where stylesheets are loaded
+
+See the <<{articles}/styling#,Styling>> documentation for details on these features.

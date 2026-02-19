@@ -33,8 +33,7 @@ public class RangeSliderCustomValidation extends Div {
 
     public RangeSliderCustomValidation() {
         // tag::snippet[]
-        RangeSlider rangeSlider = new RangeSlider("Price Range", 0, 1000,
-                new RangeSliderValue(0, 1000));
+        RangeSlider rangeSlider = new RangeSlider("Price Range", 0, 1000);
         rangeSlider.setStep(50);
         rangeSlider.setMinMaxVisible(true);
 

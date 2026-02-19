@@ -1,0 +1,303 @@
+---
+title: Show a Notification
+page-title: How to show notifications in a Vaadin application
+description: Learn how to show notifications to inform users about events, completed actions, and errors.
+meta-description: Show notifications in your Vaadin application using the Notification component with theme variants, positioning, duration, and rich content.
+order: 20
+---
+
+= Show a Notification
+:toclevels: 2
+
+This article shows how to display brief messages to the user using the `Notification` component. It covers basic text notifications, theme variants for different severity levels, positioning, auto-close duration, and persistent notifications with close buttons. For the full API details, see the <</components/notification#,Notification>> reference documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that demonstrates common notification patterns:
+
+[source,java]
+----
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("notification-example")
+public class NotificationExampleView extends VerticalLayout {
+
+    public NotificationExampleView() {
+        // Simple text notification
+        Button infoButton = new Button("Show info", event ->
+                Notification.show("Task completed"));
+
+        // Success notification
+        Button successButton = new Button("Show success", event -> {
+            Notification notification = Notification.show("File uploaded");
+            notification.addThemeVariants(
+                    NotificationVariant.LUMO_SUCCESS);
+        });
+
+        // Error notification with a close button
+        Button errorButton = new Button("Show error", event -> {
+            Notification notification = new Notification();
+            notification.addThemeVariants(
+                    NotificationVariant.LUMO_ERROR);
+            notification.setDuration(0);
+
+            Span message = new Span("Upload failed. Check your connection.");
+            Button closeButton = new Button(
+                    VaadinIcon.CLOSE_SMALL.create(),
+                    e -> notification.close());
+            closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            closeButton.addClickShortcut(Key.ESCAPE)
+                    .listenOn(notification);
+
+            notification.add(
+                    new HorizontalLayout(message, closeButton));
+            notification.open();
+        });
+
+        add(infoButton, successButton, errorButton);
+    }
+}
+----
+
+
+== Showing a Notification
+
+The simplest way to show a notification is the static `Notification.show()` method:
+
+[source,java]
+----
+Notification.show("Changes saved");
+----
+
+This displays a text notification at the bottom of the viewport. It auto-closes after 5 seconds.
+
+You can also specify the duration and position:
+
+[source,java]
+----
+Notification.show("Changes saved", 3000,
+        Notification.Position.TOP_END);
+----
+
+
+== Theme Variants
+
+Theme variants give notifications a visual style that matches their purpose. The examples in this article use the <</styling/themes/lumo#,Lumo>> theme variants. Apply them with `addThemeVariants()`:
+
+[source,java]
+----
+Notification notification = Notification.show("File uploaded");
+notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+----
+
+The available Lumo variants are:
+
+- `LUMO_SUCCESS` — completed actions, for example, "Record saved"
+- `LUMO_ERROR` — failures, for example, "Upload failed"
+- `LUMO_WARNING` — warnings, for example, "Session expiring soon"
+- `LUMO_PRIMARY` — important informational messages
+- `LUMO_CONTRAST` — messages that need to stand out from the surrounding UI
+
+[NOTE]
+The <</styling/themes/aura#,Aura>> theme does not yet have notification variants. If your application uses Aura, notifications render with the default style regardless of the variant applied.
+
+[TIP]
+Don't overuse success notifications. If an action succeeds silently without side effects, a notification may not be necessary.
+
+
+== Position
+
+Notifications appear at the bottom center of the viewport by default. Change the position with `setPosition()`:
+
+[source,java]
+----
+Notification notification = Notification.show("New message");
+notification.setPosition(Notification.Position.TOP_END);
+----
+
+Common positions:
+
+- `BOTTOM_START` or `TOP_END` — unobtrusive but noticeable. Good defaults for most notifications.
+- `MIDDLE` — the most disruptive position. Reserve for important messages like errors.
+- `TOP_STRETCH` or `BOTTOM_STRETCH` — span the full width of the viewport. Use for important messages that need more space.
+
+Multiple simultaneous notifications stack vertically.
+
+[TIP]
+Be consistent with positioning. Pick one or two positions and use them throughout your application.
+
+
+== Duration
+
+By default, `Notification.show()` auto-closes after 5000 milliseconds (5 seconds). Set a custom duration in milliseconds:
+
+[source,java]
+----
+Notification notification = Notification.show("Brief message");
+notification.setDuration(3000);
+----
+
+A duration of `0` makes the notification persistent — it stays visible until the user or your code closes it. Use persistent notifications for errors, warnings, and any notification with interactive content.
+
+[source,java]
+----
+Notification notification = new Notification();
+notification.setDuration(0); // <1>
+notification.add("Connection lost.");
+notification.open();
+
+// Later, when the connection is restored:
+notification.close(); // <2>
+----
+<1> The notification stays visible until explicitly closed.
+<2> Call `close()` to dismiss the notification programmatically.
+
+[TIP]
+Keep the minimum duration at 5 seconds. Shorter durations are easy to miss, especially for longer messages.
+
+
+== Persistent Notifications with a Close Button
+
+Error and warning notifications should be persistent so the user has time to read them. Add a close button to let the user dismiss the notification. Notifications can also include action buttons for operations like Retry or Undo.
+
+Assign keyboard shortcuts to action and close buttons so the user can respond without reaching for the notification. Use kbd:[Escape] for the close button and kbd:[Enter] for the primary action as a best practice. See <</building-apps/ui-basics/add-keyboard-shortcuts#,Add Keyboard Shortcuts>> for details on the shortcut API.
+
+The following example shows a persistent error notification with a Retry button and a close button, with keyboard shortcuts assigned to both:
+
+[source,java]
+----
+Notification notification = new Notification();
+notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+notification.setDuration(0);
+notification.setPosition(Notification.Position.MIDDLE);
+
+Span message = new Span("Upload failed.");
+Button retryButton = new Button("Retry", event -> {
+    retryUpload();
+    notification.close();
+});
+retryButton.addClickShortcut(Key.ENTER)
+        .listenOn(notification);
+
+Button closeButton = new Button(
+        VaadinIcon.CLOSE_SMALL.create(),
+        event -> notification.close());
+closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+closeButton.addClickShortcut(Key.ESCAPE)
+        .listenOn(notification);
+
+HorizontalLayout layout = new HorizontalLayout(
+        message, retryButton, closeButton);
+layout.setAlignItems(Alignment.CENTER);
+notification.add(layout);
+notification.open();
+----
+
+
+== Centralizing Notification Logic
+
+As your application grows, constructing notifications by hand in every view leads to inconsistency — different durations, positions, and styles across the codebase. Create a utility class with static methods so that every notification looks and behaves the same:
+
+[source,java]
+----
+public final class Notifications {
+
+    private Notifications() {}
+
+    public static void showSuccess(String message) {
+        Notification notification = Notification.show(message);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notification.setPosition(Notification.Position.BOTTOM_START);
+    }
+
+    public static void showError(String message) {
+        Notification notification = new Notification();
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.setDuration(0);
+        notification.setPosition(Notification.Position.MIDDLE);
+
+        Span text = new Span(message);
+        Button closeButton = new Button(
+                VaadinIcon.CLOSE_SMALL.create(),
+                event -> notification.close());
+        closeButton.addThemeVariants(
+                ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addClickShortcut(Key.ESCAPE)
+                .listenOn(notification);
+
+        HorizontalLayout layout = new HorizontalLayout(
+                text, closeButton);
+        layout.setAlignItems(Alignment.CENTER);
+        notification.add(layout);
+        notification.open();
+    }
+
+    public static void showRetryableError(String message,
+            Runnable retryAction) {
+        Notification notification = new Notification();
+        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.setDuration(0);
+        notification.setPosition(Notification.Position.MIDDLE);
+
+        Span text = new Span(message);
+        Button retryButton = new Button("Retry", event -> {
+            notification.close();
+            retryAction.run();
+        });
+        retryButton.addClickShortcut(Key.ENTER)
+                .listenOn(notification);
+        Button closeButton = new Button(
+                VaadinIcon.CLOSE_SMALL.create(),
+                event -> notification.close());
+        closeButton.addThemeVariants(
+                ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addClickShortcut(Key.ESCAPE)
+                .listenOn(notification);
+
+        HorizontalLayout layout = new HorizontalLayout(
+                text, retryButton, closeButton);
+        layout.setAlignItems(Alignment.CENTER);
+        notification.add(layout);
+        notification.open();
+    }
+}
+----
+
+Then call them anywhere in your application:
+
+[source,java]
+----
+Notifications.showSuccess("Record saved");
+Notifications.showError("Failed to save. Please try again.");
+Notifications.showRetryableError("Upload failed.", () -> uploadFile());
+----
+
+This keeps your notification behavior — position, duration, theme, and close button pattern — defined in one place. When you need to change how notifications work, you update the utility class instead of every call site.
+
+
+== When to Use Notifications
+
+Notifications work best for brief, non-critical information that does not require the user to take immediate action.
+
+*Good uses:*
+
+- Confirming completed actions ("Record saved", "Email sent")
+- Reporting non-critical failures with a retry option ("Upload failed")
+- Providing undo opportunities for reversible actions
+
+*Use something else when:*
+
+- The message requires immediate user action — use a <</components/dialog#,Dialog>> or <</components/confirm-dialog#,Confirm Dialog>> instead
+- The content is longer than one or two lines — link to a detail page instead of cramming text into a notification
+- The error is a form validation issue — display validation errors inline on the field itself, not in a notification. Notifications disappear, but validation errors should remain visible until the user corrects them.
+- You are tempted to show a notification for every action — if an action succeeds without side effects, silence is often the best feedback
