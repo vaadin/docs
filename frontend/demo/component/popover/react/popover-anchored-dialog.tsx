@@ -44,8 +44,8 @@ function Example() {
   return (
     <>
       <HorizontalLayout style={{ alignItems: 'baseline' }}>
-        <h3 style={{ flex: 1 }}>Employees</h3>
-        <Button id="toggle-columns" theme="icon" aria-label="Show / hide columns">
+        <h3>Employees</h3>
+        <Button id="toggle-columns" slot="end" theme="icon" aria-label="Show / hide columns">
           <Icon icon="vaadin:grid-h" />
         </Button>
       </HorizontalLayout>
