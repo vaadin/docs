@@ -25,8 +25,6 @@ public class MapLines extends Div {
         List<Coordinate> routeCoordinates = loadRouteCoordinates();
         LineStringFeature route = new LineStringFeature(routeCoordinates);
         map.getFeatureLayer().addFeature(route);
-        map.getControls().getScale().setVisible(true);
-        map.getControls().getScale().setUnits(ScaleControl.Unit.NAUTICAL);
         map.zoomToFit(List.of(route), 100, 0);
         // end::snippet[]
     }
