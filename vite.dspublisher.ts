@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 const dspConfig = JSON.parse(
   readFileSync(resolve(__dirname, 'dspublisher/config/default.json'), 'utf-8')
 );
-const serverPort = dspConfig.docsPort;
+const docsPort = dspConfig.docsPort;
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 
@@ -43,7 +43,7 @@ const config: UserConfig = {
     /* dev-mode proxy config */
     proxy: {
       '/vaadin': {
-        target: `http://localhost:${serverPort}`,
+        target: `http://localhost:${docsPort}`,
       },
     },
   },

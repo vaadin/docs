@@ -12,10 +12,21 @@ const __dirname = path.dirname(__filename);
 
 const DSP_VERSION = '3.0.0-alpha.13';
 
+const projectRootPath = path.resolve(__dirname, '..');
+const dspConfig = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8')
+);
+if (!dspConfig.port || !dspConfig.docsPort) {
+  console.error('Could not find port or docsPort in dspublisher/config/default.json');
+  process.exit(1);
+}
+const dspPort = dspConfig.port;
+const docsPort = dspConfig.docsPort;
+
 async function checkPreConditions() {
   try {
     // Verify the necessary ports are available on localhost
-    const ports = [dspPort, serverPort];
+    const ports = [dspPort, docsPort];
     await Promise.all(
       ports.map((port) => {
         return new Promise((resolve, reject) => {
@@ -68,17 +79,6 @@ async function checkPreConditions() {
     process.exit(1);
   }
 }
-
-const projectRootPath = path.resolve(__dirname, '..');
-const dspConfig = JSON.parse(
-  fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8')
-);
-if (!dspConfig.port || !dspConfig.docsPort) {
-  console.error('Could not find port or docsPort in dspublisher/config/default.json');
-  process.exit(1);
-}
-const dspPort = dspConfig.port;
-const serverPort = dspConfig.docsPort;
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
@@ -171,7 +171,7 @@ const SCRIPTS = {
           '--kill-others',
           '--raw',
           `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
-          `"mvn -C -Dspring-boot.run.arguments=--server.port=${serverPort}"`,
+          `"mvn -C -Dspring-boot.run.arguments=--server.port=${docsPort}"`,
         ],
         phases: [
           {
