@@ -74,10 +74,19 @@ const appProps = fs.readFileSync(
   path.resolve(projectRootPath, 'src/main/resources/application.properties'),
   'utf-8'
 );
-const serverPort = parseInt(appProps.match(/^server\.port=(\d+)/m)?.[1]);
+const serverPortMatch = appProps.match(/^server\.port=(\d+)/m);
+if (!serverPortMatch) {
+  console.error('Could not find server.port in application.properties');
+  process.exit(1);
+}
+const serverPort = parseInt(serverPortMatch[1]);
 const dspConfig = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8')
 );
+if (!dspConfig.port) {
+  console.error('Could not find port in dspublisher/config/default.json');
+  process.exit(1);
+}
 const dspPort = dspConfig.port;
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
