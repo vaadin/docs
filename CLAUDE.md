@@ -20,7 +20,7 @@ This is the Vaadin Documentation repository. It contains documentation for all V
 # Clean
 npm run dspublisher:clean
 
-# Start the documentation server on http://localhost:8000
+# Start the documentation server
 npm run dspublisher:start
 
 # Build the documentation for production
