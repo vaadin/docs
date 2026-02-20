@@ -21,6 +21,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
 
 import java.util.function.Function;
+import org.springframework.stereotype.Service;
 
 /**
  * Real-time dashboard demonstrating signal-based architecture.
@@ -121,7 +122,7 @@ public class RealtimeDashboard extends VerticalLayout {
         bindChartData(chart, newYorkSeries, newYorkTimelineSignal);
 
         // Effect to update x-axis categories
-        Signal.effect(() ->
+        Signal.effect(chart, () ->
             xAxis.setCategories(timelineCategoriesSignal.get()
                 .stream().map(Signal::get).toArray(String[]::new))
         );
@@ -131,7 +132,7 @@ public class RealtimeDashboard extends VerticalLayout {
         conf.addSeries(newYorkSeries);
 
         // Separate effect to trigger chart redraw when any data changes
-        Signal.effect(() -> {
+        Signal.effect(chart, () -> {
             berlinTimelineSignal.get();
             londonTimelineSignal.get();
             newYorkTimelineSignal.get();
@@ -149,11 +150,9 @@ public class RealtimeDashboard extends VerticalLayout {
      */
     private static void bindChartData(Chart chart, ListSeries series,
             ListSignal<Number> signal) {
-        Signal.effect(() -> {
-            series.setData(signal.get().stream()
-                .map(Signal::get)
-                .toArray(Number[]::new));
-        });
+        Signal.effect(chart, () -> series.setData(signal.get().stream()
+            .map(Signal::get)
+            .toArray(Number[]::new)));
     }
     // end::bind-data[]
 
@@ -176,7 +175,7 @@ public class RealtimeDashboard extends VerticalLayout {
 
             // Effect: Update changeSignal when the main signal changes
             // This tracks the previous value to calculate percentage change
-            Signal.effect(() -> {
+            Signal.unboundEffect(() -> {
                 double current = signal.get().doubleValue();
                 double previous = changeSignal.peek().current();
                 changeSignal.set(new Change(previous, current));
@@ -266,7 +265,8 @@ public class RealtimeDashboard extends VerticalLayout {
     }
 
     // Supporting classes (simplified for documentation)
-
+    // Using Spring's DI in this example
+    @Service
     static class SchedulerService {
         private final java.util.concurrent.ScheduledExecutorService scheduler =
             java.util.concurrent.Executors.newScheduledThreadPool(1);
