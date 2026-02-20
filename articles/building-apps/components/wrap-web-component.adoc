@@ -1,0 +1,273 @@
+---
+title: Wrap a Web Component
+page-title: How to wrap a web component for use in Vaadin
+description: Learn how to create a Java API for an existing web component.
+meta-description: Create a Java API for any web component using annotations, properties, events, and JavaScript function calls in Vaadin Flow.
+order: 50
+---
+
+= Wrap a Web Component
+:toclevels: 2
+
+This article shows how to create a Java API for an existing web component so it can be used in Vaadin like any built-in component. The web component's client-side code runs in the browser; your Java class controls it from the server. For wrapping React components, see <<wrap-react-component#,Wrap a React Component>>. For the full reference, see <</flow/component-internals/web-components#,Integrating Web Components>>.
+
+
+== Copy-Paste Example
+
+A complete wrapper for a third-party toggle switch web component:
+
+[source,java]
+----
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
+
+@Tag("toggle-switch") // <1>
+@NpmPackage(value = "toggle-switch-element", version = "1.0.0") // <2>
+@JsModule("toggle-switch-element/toggle-switch.js") // <3>
+public class ToggleSwitch extends Component {
+
+    public boolean isChecked() {
+        return getElement().getProperty("checked", false);
+    }
+
+    public void setChecked(boolean checked) {
+        getElement().setProperty("checked", checked);
+    }
+
+    public void setDisabled(boolean disabled) {
+        getElement().setProperty("disabled", disabled);
+    }
+
+    public Registration addCheckedChangeListener(
+            ComponentEventListener<CheckedChangeEvent> listener) {
+        return addListener(CheckedChangeEvent.class, listener);
+    }
+
+    @DomEvent("checked-changed")
+    public static class CheckedChangeEvent
+            extends ComponentEvent<ToggleSwitch> {
+        private final boolean checked;
+
+        public CheckedChangeEvent(ToggleSwitch source,
+                boolean fromClient,
+                @EventData("event.detail.value") boolean checked) {
+            super(source, fromClient);
+            this.checked = checked;
+        }
+
+        public boolean isChecked() {
+            return checked;
+        }
+    }
+}
+----
+<1> The HTML tag name — must match exactly what the web component registers.
+<2> The npm package that provides the web component.
+<3> The JavaScript module that defines the custom element.
+
+
+== The Three Annotations
+
+Every web component wrapper needs three annotations on the Java class:
+
+`@Tag("element-name")` — the custom element tag name that the web component registers with the browser. This must match exactly — including case and hyphens.
+
+`@NpmPackage(value = "package-name", version = "x.y.z")` — the npm package to install. Vaadin runs `npm install` automatically during development builds.
+
+`@JsModule("package-name/entry-file.js")` — the JavaScript module to import. This triggers the web component's registration in the browser. Check the web component's documentation for the correct entry point file.
+
+[source,java]
+----
+@Tag("my-datepicker")
+@NpmPackage(value = "my-datepicker", version = "2.1.0")
+@JsModule("my-datepicker/my-datepicker.js")
+public class MyDatepicker extends Component {
+}
+----
+
+
+== Properties
+
+Web components expose behavior through properties on their DOM element. Use `getElement().setProperty()` and `getElement().getProperty()` to read and write them:
+
+[source,java]
+----
+public void setLabel(String label) {
+    getElement().setProperty("label", label);
+}
+
+public String getLabel() {
+    return getElement().getProperty("label", "");
+}
+
+public void setMax(int max) {
+    getElement().setProperty("max", max);
+}
+
+public int getMax() {
+    return getElement().getProperty("max", 0);
+}
+----
+
+The second argument to `getProperty()` is the default value returned when the property hasn't been set. It should match the web component's default.
+
+For components with many properties, you can use `PropertyDescriptor` to reduce repetition:
+
+[source,java]
+----
+private static final PropertyDescriptor<String, String> labelProperty =
+        PropertyDescriptors.propertyWithDefault("label", "");
+
+public void setLabel(String label) {
+    labelProperty.set(this, label);
+}
+
+public String getLabel() {
+    return labelProperty.get(this);
+}
+----
+
+See <</flow/component-internals/properties#,Properties>> for the full property API reference.
+
+
+== Events
+
+Web components fire DOM events to signal user interactions. Use `@DomEvent` to map a DOM event to a Java event class:
+
+[source,java]
+----
+@DomEvent("value-changed")
+public static class ValueChangeEvent extends ComponentEvent<MySlider> {
+    private final double value;
+
+    public ValueChangeEvent(MySlider source,
+            boolean fromClient,
+            @EventData("event.detail.value") double value) {
+        super(source, fromClient);
+        this.value = value;
+    }
+
+    public double getValue() {
+        return value;
+    }
+}
+----
+
+`@EventData` extracts data from the DOM event object. Common expressions:
+
+- `event.detail.value` — a value from the event's detail object
+- `element.value` — the current value of the element
+- `event.clientX` — mouse position from pointer events
+
+Add a listener registration method:
+
+[source,java]
+----
+public Registration addValueChangeListener(
+        ComponentEventListener<ValueChangeEvent> listener) {
+    return addListener(ValueChangeEvent.class, listener);
+}
+----
+
+See <</flow/component-internals/events#,Events>> for more on event data expressions and debouncing.
+
+
+== Value Synchronization
+
+If the web component is an input (the user enters a value), extend `AbstractSinglePropertyField` to get automatic value synchronization and `HasValue` support for use with Binder:
+
+[source,java]
+----
+@Tag("my-slider")
+@NpmPackage(value = "my-slider", version = "1.0.0")
+@JsModule("my-slider/my-slider.js")
+public class MySlider extends AbstractSinglePropertyField<MySlider, Double> {
+
+    public MySlider() {
+        super("value", 0.0, false);
+    }
+
+    public void setMin(double min) {
+        getElement().setProperty("min", min);
+    }
+
+    public void setMax(double max) {
+        getElement().setProperty("max", max);
+    }
+}
+----
+
+The constructor arguments are:
+
+. The property name that holds the value (`"value"`)
+. The default value (`0.0`)
+. Whether to allow null values (`false`)
+
+This gives you `getValue()`, `setValue()`, `addValueChangeListener()`, and Binder compatibility for free.
+
+
+== Calling JavaScript Functions
+
+Some web component APIs are exposed as JavaScript functions rather than properties. Use `callJsFunction()` to invoke them:
+
+[source,java]
+----
+public void open() {
+    getElement().callJsFunction("open");
+}
+
+public void scrollToIndex(int index) {
+    getElement().callJsFunction("scrollToIndex", index);
+}
+----
+
+For functions that return a value, use the returned `PendingJavaScriptResult`:
+
+[source,java]
+----
+public void getSelectedItems(SerializableConsumer<JsonValue> callback) {
+    getElement().callJsFunction("getSelectedItems")
+            .then(callback);
+}
+----
+
+
+== Child Content
+
+If the web component accepts child elements (e.g., list items, menu options), you can support this from Java.
+
+For simple cases, implement `HasComponents`:
+
+[source,java]
+----
+@Tag("my-list")
+@NpmPackage(value = "my-list", version = "1.0.0")
+@JsModule("my-list/my-list.js")
+public class MyList extends Component implements HasComponents {
+}
+----
+
+This adds `add()`, `remove()`, and related methods.
+
+For named slots (where children go into specific parts of the component), use the Element API directly:
+
+[source,java]
+----
+public void setHeader(Component header) {
+    header.getElement().setAttribute("slot", "header");
+    getElement().appendChild(header.getElement());
+}
+----
+
+
+== Pitfalls
+
+*Match the tag name exactly.* The `@Tag` value must match what the web component registers with `customElements.define()`. Check the web component's source or documentation — a mismatch means the element never upgrades and nothing renders.
+
+*Use the correct entry point file.* The `@JsModule` path must point to the file that calls `customElements.define()`. Some packages have multiple entry points or require a specific sub-path. Check the package's documentation or its `package.json` `main`/`module` field.
+
+*Provide correct default values.* The default value in `getProperty()` should match the web component's default. If the web component defaults `disabled` to `false`, your getter should too. Mismatched defaults cause the server and client to disagree about the component's state.
+
+*Don't forget to synchronize properties from the client.* If a property changes on the client side (e.g., user interaction), Vaadin doesn't automatically know about it. Either use `@Synchronize` on the getter, listen for the appropriate DOM event, or use `AbstractSinglePropertyField` for value-based components.
