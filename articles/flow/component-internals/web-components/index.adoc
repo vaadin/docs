@@ -19,12 +19,22 @@ The Web Component's client-side files -- typically JavaScript module files -- ar
 [TIP]
 Vaadin also supports using https://www.npmjs.com/package/pnpm[pnpm] (known as _performant npm_) or https://bun.sh[_bun_]. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#,Configuring npm/pnpm/bun>> for details.
 
+.Packaging and publishing components
+[TIP]
+For step-by-step guides on packaging a component as a reusable add-on or publishing it to the Vaadin Directory, see <<{articles}/building-apps/components/package-component#,Package a Component>> and <<{articles}/building-apps/components/publish-component#,Publish a Component>>.
 
-== Integrating a JS Module into Vaadin
 
-Although you can create all of the files manually, the easiest way is to use the https://github.com/vaadin/addon-starter-flow[Vaadin Add-on Starter]. This gives you a project with all of the necessary dependencies. It also provides an `npm` import for the selected component, as well as a stub component Java class for your Web Component integration. And it gives you a Maven profile that handles everything necessary to deploy the component to Vaadin Directory.
+== Annotations
 
-The following is an example of annotations in the Java component class as a starter project for the https://github.com/material-components/material-web/tree/mwc/packages/slider[mwc-slider] Web Component:
+Every web component integration requires three annotations on the Java class:
+
+`@Tag` defines the HTML element name. It must match the name the web component registers with `customElements.define()`.
+
+`@NpmPackage` declares the npm package to install. Vaadin runs `npm install` automatically during development builds.
+
+`@JsModule` specifies the JavaScript module to import. This triggers the web component's registration in the browser.
+
+The following is an example of annotations for the https://github.com/nicknisi/mwc-slider[mwc-slider] Web Component:
 
 [source,java]
 ----
@@ -34,7 +44,7 @@ The following is an example of annotations in the Java component class as a star
 @JsModule("@material/mwc-slider/slider.js")
 ----
 
-The `@Tag` annotation here defines the name of the HTML element. The `@JSModule` and `@NpmPackage` annotations define the import of the JavaScript module.
+The `@Tag` annotation here defines the name of the HTML element. The `@JsModule` and `@NpmPackage` annotations define the import of the JavaScript module.
 
 
 == Adding Frontend Files
@@ -50,68 +60,3 @@ As a example, you might use the `@JsModule` annotation to add a local JavaScript
 .Use explicit relative paths in CSS imports
 [NOTE]
 When importing CSS files within other CSS files, always use explicit relative paths (e.g., `@import "./second.css";` instead of `@import "second.css";`). Some tools like Tailwind CSS require this notation to resolve imports correctly. See <<debugging-a-web-component-integration#theming-issues,Theming Issues>> for more details.
-
-When running `mvn clean install`, the `vaadin-maven-plugin` automatically installs the `npm` package in `node_modules` and imports the JavaScript module file into the document provided to the browser. Additionally, if you run the Jetty web server from Maven (i.e., using `mvn jetty:run`), your project's source code is monitored for changes to these types of annotations. Any change to `@NpmPackage` or `@JsModule` annotations triggers installation of the referenced packages and hot deployment of your application, including the new JS module imports.
-
-=== Understanding the Project Files
-
-The project includes the [classname]`AddonView` component class at `src/test/java/…/AddonView.java`:
-
-[source,java]
-----
-@Route("")
-public class AddonView extends Div {
-  ...
-}
-----
-
-This project set-up is slightly unconventional to allow it to be a single-module Maven project. It uses the `test` folder both for the demo application and for the actual test files. When you run `mvn jetty:run` in the project, it deploys `AddonView` and displays it at http://localhost:8080.
-
-Once you've done all of this, your project is ready for you to proceed to creating the Java API. See <<java-api-for-a-web-component#,Creating a Java API for a Web Component>> for how to do this.
-
-.Web Components may not show a UI
-[NOTE]
-Some Web Components don't show a UI when they are added to the page as empty tags. If the addon view is empty, use the browser console to verify that all files were found (i.e., no `404` errors) and then check that the component is correctly configured. See <<debugging-a-web-component-integration#,Debugging a Web Component Integration>> for more.
-
-.Project setup isn't configured for deployment
-[NOTE]
-Although the project setup is easy to use for development and testing, it doesn't allow you easily to produce a demo `WAR` file for deployment. It's usually better to create a separate project -- or to convert the project into a multi-module project -- for this purpose. The demo files included in the starter are intended as test UIs, whereas your result should be aimed at the end user.
-
-.Source monitoring doesn't work in a multi-module project
-[IMPORTANT]
-If your project is configured as a multi-module project, for example because the base project is an older version or you have manually converted it, source monitoring won't work. Moreover, changes to the component aren't automatically reflected in your demo application.
-
-
-== Deploying the Add-on to the Vaadin Directory
-
-When you're satisfied with the API, you can make the add-on available to everyone by deploying it to the https://vaadin.com/directory[Vaadin Directory].
-
-To create a directory-compatible add-on package, execute the following:
-
-[source,terminal]
-----
-mvn clean install -Pdirectory
-----
-
-This creates a `ZIP` file in the `target` directory.
-
-To add your add-on to the Vaadin Directory, you'll need to do the following:
-
-- Login or register at https://vaadin.com/directory.
-- Then, upload the `ZIP` file.
-- Write an overview of your add-on to let others know what it can do, which browsers are supported, and any other relevant information.
-
-When finished, you may publish your add-on. Users can use your add-on by copying the dependency information from the add-on page in the directory.
-
-.Make sure to keep metadata up to date
-[NOTE]
-The metadata used by the Vaadin Directory is defined in `assembly/MANIFEST.MF`, based on the project's metadata. If you make changes to the project (e.g., by removing `<name></name>`), make sure to update the metadata, as well.
-
-
-== Creating Other Add-on Types
-
-You can also use the https://github.com/vaadin/addon-template/archive/v24.zip[Add-on Starter] to create different kinds of add-ons  (e.g., to create a data provider). To create a generic project that can be used for any add-on, do the following:
-
-- Leave the default Web Component URL in the starter form;
-- Download the project; and then
-- Delete the `@NpmPackage` and `@JsModule` annotations, and the UI component class.

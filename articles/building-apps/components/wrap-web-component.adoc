@@ -1,64 +1,65 @@
 ---
 title: Wrap a Web Component
 page-title: How to wrap a web component for use in Vaadin
-description: Learn how to create a Java API for an existing web component.
-meta-description: Create a Java API for any web component using annotations, properties, events, and JavaScript function calls in Vaadin Flow.
+description: Learn how to create a Java API for a web component, whether third-party or your own.
+meta-description: Create a Java API for any web component — third-party or custom — using annotations, properties, events, and JavaScript function calls in Vaadin Flow.
 order: 50
 ---
 
 = Wrap a Web Component
 :toclevels: 2
 
-This article shows how to create a Java API for an existing web component so it can be used in Vaadin like any built-in component. The web component's client-side code runs in the browser; your Java class controls it from the server. For wrapping React components, see <<wrap-react-component#,Wrap a React Component>>. For the full reference, see <</flow/component-internals/web-components#,Integrating Web Components>>.
+This article shows how to create a Java API for a web component so it can be used in Vaadin like any built-in component. The web component can come from an npm package or be one you <<writing-your-own-web-component,write yourself>>. Either way, the client-side code runs in the browser and your Java class controls it from the server. For wrapping React components, see <<wrap-react-component#,Wrap a React Component>>. For the full reference, see <</flow/component-internals/web-components#,Integrating Web Components>>.
 
 
 == Copy-Paste Example
 
-A complete wrapper for a third-party toggle switch web component:
+A complete wrapper for https://github.com/web-padawan/vanilla-colorful[vanilla-colorful], a tiny color picker web component:
 
 [source,java]
 ----
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.DomEvent;
+import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.shared.Registration;
 
-@Tag("toggle-switch") // <1>
-@NpmPackage(value = "toggle-switch-element", version = "1.0.0") // <2>
-@JsModule("toggle-switch-element/toggle-switch.js") // <3>
-public class ToggleSwitch extends Component {
+@Tag("hex-color-picker") // <1>
+@NpmPackage(value = "vanilla-colorful", version = "0.7.2") // <2>
+@JsModule("vanilla-colorful/hex-color-picker.js") // <3>
+public class ColorPicker extends Component {
 
-    public boolean isChecked() {
-        return getElement().getProperty("checked", false);
+    public String getColor() {
+        return getElement().getProperty("color", "#000000");
     }
 
-    public void setChecked(boolean checked) {
-        getElement().setProperty("checked", checked);
+    public void setColor(String hex) {
+        getElement().setProperty("color", hex);
     }
 
-    public void setDisabled(boolean disabled) {
-        getElement().setProperty("disabled", disabled);
+    public Registration addColorChangeListener(
+            ComponentEventListener<ColorChangeEvent> listener) {
+        return addListener(ColorChangeEvent.class, listener);
     }
 
-    public Registration addCheckedChangeListener(
-            ComponentEventListener<CheckedChangeEvent> listener) {
-        return addListener(CheckedChangeEvent.class, listener);
-    }
+    @DomEvent("color-changed")
+    public static class ColorChangeEvent
+            extends ComponentEvent<ColorPicker> {
+        private final String color;
 
-    @DomEvent("checked-changed")
-    public static class CheckedChangeEvent
-            extends ComponentEvent<ToggleSwitch> {
-        private final boolean checked;
-
-        public CheckedChangeEvent(ToggleSwitch source,
+        public ColorChangeEvent(ColorPicker source,
                 boolean fromClient,
-                @EventData("event.detail.value") boolean checked) {
+                @EventData("event.detail.value") String color) {
             super(source, fromClient);
-            this.checked = checked;
+            this.color = color;
         }
 
-        public boolean isChecked() {
-            return checked;
+        public String getColor() {
+            return color;
         }
     }
 }
@@ -86,6 +87,106 @@ Every web component wrapper needs three annotations on the Java class:
 public class MyDatepicker extends Component {
 }
 ----
+
+
+== Writing Your Own Web Component
+
+Sometimes no existing web component does what you need. You can write the client-side code yourself and wrap it the same way.
+
+Create a JavaScript file in the `frontend/` directory — for example, `frontend/my-rating-stars.js`:
+
+[source,javascript]
+----
+import { html, LitElement, css } from 'lit';
+
+class MyRatingStars extends LitElement {
+
+  static get properties() {
+    return {
+      rating: { type: Number, reflect: true },
+      max: { type: Number }
+    };
+  }
+
+  static get styles() {
+    return css`
+      span { cursor: pointer; font-size: 1.5em; }
+      .filled { color: gold; }
+      .empty { color: lightgray; }
+    `;
+  }
+
+  constructor() {
+    super();
+    this.rating = 0;
+    this.max = 5;
+  }
+
+  render() {
+    return html`${Array.from({ length: this.max }, (_, i) =>
+      html`<span class="${i < this.rating ? 'filled' : 'empty'}"
+                 @click="${() => this._select(i + 1)}">★</span>`
+    )}`;
+  }
+
+  _select(value) {
+    this.rating = value;
+    this.dispatchEvent(
+      new CustomEvent('rating-changed', { detail: { value } })
+    );
+  }
+}
+
+customElements.define('my-rating-stars', MyRatingStars);
+----
+
+Then create the Java wrapper. Since the file is local, use a `./` path in `@JsModule` and omit `@NpmPackage`:
+
+[source,java]
+----
+@Tag("my-rating-stars")
+@JsModule("./my-rating-stars.js")
+public class RatingStars extends Component {
+
+    public void setRating(int rating) {
+        getElement().setProperty("rating", rating);
+    }
+
+    public int getRating() {
+        return getElement().getProperty("rating", 0);
+    }
+
+    public void setMax(int max) {
+        getElement().setProperty("max", max);
+    }
+
+    public Registration addRatingChangeListener(
+            ComponentEventListener<RatingChangeEvent> listener) {
+        return addListener(RatingChangeEvent.class, listener);
+    }
+
+    @DomEvent("rating-changed")
+    public static class RatingChangeEvent
+            extends ComponentEvent<RatingStars> {
+        private final int value;
+
+        public RatingChangeEvent(RatingStars source,
+                boolean fromClient,
+                @EventData("event.detail.value") int value) {
+            super(source, fromClient);
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+}
+----
+
+The `./` prefix in `@JsModule("./my-rating-stars.js")` tells Vaadin to look in the `frontend/` directory instead of `node_modules/`. Everything else — properties, events, `callJsFunction()`, child content — works exactly the same as with a third-party web component.
+
+If you plan to share the component across projects, see <<package-component#,Package a Component>> for how to structure it as a JAR add-on, including where to put frontend files (`META-INF/frontend`).
 
 
 == Properties
@@ -205,7 +306,7 @@ The constructor arguments are:
 . The default value (`0.0`)
 . Whether to allow null values (`false`)
 
-This gives you `getValue()`, `setValue()`, `addValueChangeListener()`, and Binder compatibility for free.
+This gives you `getValue()`, `setValue()`, `addValueChangeListener()`, and Binder compatibility for free. See <</flow/component-internals/web-components/java-api-for-a-web-component#synchronizing-the-value,Synchronizing the Value>> for advanced cases like type conversion callbacks and `AbstractField`. See <</flow/component-internals/properties#,Properties>> for the `@Synchronize` annotation and `PropertyDescriptor` API.
 
 
 == Calling JavaScript Functions
@@ -232,6 +333,8 @@ public void getSelectedItems(SerializableConsumer<JsonValue> callback) {
             .then(callback);
 }
 ----
+
+See <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> for supported parameter types, return values, and `@ClientCallable` methods.
 
 
 == Child Content
@@ -260,6 +363,8 @@ public void setHeader(Component header) {
     getElement().appendChild(header.getElement());
 }
 ----
+
+See <</flow/component-internals/container#,Component Containers>> for custom add/remove methods, hierarchy navigation, and child removal.
 
 
 == Pitfalls
