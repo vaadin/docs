@@ -22,7 +22,7 @@ The main branch is `main`. Always target `main` when creating pull requests, unl
 # Clean
 npm run dspublisher:clean
 
-# Start the documentation server on http://localhost:8000
+# Start the documentation server
 npm run dspublisher:start
 
 # Build the documentation for production
