@@ -6,11 +6,10 @@ import type { UserConfig } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const appProps = readFileSync(
-  resolve(__dirname, 'src/main/resources/application.properties'),
-  'utf-8'
+const dspConfig = JSON.parse(
+  readFileSync(resolve(__dirname, 'dspublisher/config/default.json'), 'utf-8')
 );
-const serverPort = /^server\.port=(\d+)/m.exec(appProps)?.[1];
+const serverPort = dspConfig.docsPort;
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 

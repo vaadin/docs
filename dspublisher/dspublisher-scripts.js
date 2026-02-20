@@ -70,24 +70,15 @@ async function checkPreConditions() {
 }
 
 const projectRootPath = path.resolve(__dirname, '..');
-const appProps = fs.readFileSync(
-  path.resolve(projectRootPath, 'src/main/resources/application.properties'),
-  'utf-8'
-);
-const serverPortMatch = appProps.match(/^server\.port=(\d+)/m);
-if (!serverPortMatch) {
-  console.error('Could not find server.port in application.properties');
-  process.exit(1);
-}
-const serverPort = parseInt(serverPortMatch[1]);
 const dspConfig = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, 'config', 'default.json'), 'utf-8')
 );
-if (!dspConfig.port) {
-  console.error('Could not find port in dspublisher/config/default.json');
+if (!dspConfig.port || !dspConfig.docsPort) {
+  console.error('Could not find port or docsPort in dspublisher/config/default.json');
   process.exit(1);
 }
 const dspPort = dspConfig.port;
+const serverPort = dspConfig.docsPort;
 const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
@@ -180,7 +171,7 @@ const SCRIPTS = {
           '--kill-others',
           '--raw',
           `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
-          '"mvn -C"',
+          `"mvn -C -Dspring-boot.run.arguments=--server.port=${serverPort}"`,
         ],
         phases: [
           {
