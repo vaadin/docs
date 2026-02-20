@@ -2,7 +2,7 @@
 title: Generate PDF Reports
 page-title: How to generate PDF reports in a Vaadin application | Vaadin Docs
 description: Learn how to generate PDF reports and embed them in a Vaadin view.
-meta-description: Generate PDF reports in Vaadin using OpenPDF, display them with IFrame or PDF.js, and choose the right viewer for your use case.
+meta-description: Generate PDF reports in Vaadin using OpenPDF and display them with IFrame, the PDF Viewer add-on, or a custom PDF.js viewer.
 order: 36
 ---
 
@@ -10,7 +10,7 @@ order: 36
 = Generate PDF Reports
 :toclevels: 2
 
-This article shows how to generate a PDF document using OpenPDF and display it in a Vaadin view. It covers two approaches: using the browser's built-in PDF viewer via `IFrame`, and rendering with PDF.js for more control. For serving files as downloads instead, see <<handle-downloads#,Handle File Downloads>>.
+This article shows how to generate a PDF document using OpenPDF and display it in a Vaadin view. It covers three approaches: using the browser's built-in PDF viewer via `IFrame`, using the https://vaadin.com/directory/component/pdf-viewer[PDF Viewer] add-on for a feature-rich viewer, and building a custom viewer with PDF.js for full control. For serving files as downloads instead, see <<handle-downloads#,Handle File Downloads>>.
 
 
 == Add the OpenPDF Dependency
@@ -113,6 +113,39 @@ Anchor downloadLink = new Anchor(
 ----
 
 See <<handle-downloads#,Handle File Downloads>> for more download patterns.
+
+
+== Display with PDF Viewer Add-On
+
+The https://vaadin.com/directory/component/pdf-viewer[PDF Viewer] add-on is a ready-made Vaadin component that wraps PDF.js with built-in controls for page navigation, zoom, thumbnails, printing, and download. It gives you a full-featured PDF viewer without writing any client-side code.
+
+NOTE: PDF Viewer is a https://vaadin.com/components/component-factory[Component Factory] add-on. Component Factory components are developed by Vaadin experts but are not maintained as part of the Vaadin platform. They are not covered by the Vaadin warranty, but on-demand maintenance is available through Expert on Demand.
+
+Install the add-on from the https://vaadin.com/directory/component/pdf-viewer[Vaadin Directory] and use it as a drop-in viewer:
+
+[source,java]
+----
+import com.vaadin.componentfactory.pdfviewer.PdfViewer;
+import com.vaadin.flow.server.streams.DownloadHandler;
+
+PdfViewer pdfViewer = new PdfViewer();
+pdfViewer.setSrc(DownloadHandler.fromInputStream(event -> {
+    try {
+        byte[] pdf = generateReport();
+        return new DownloadResponse(
+                new ByteArrayInputStream(pdf),
+                "report.pdf",
+                "application/pdf",
+                pdf.length);
+    } catch (Exception e) {
+        return DownloadResponse.error(500);
+    }
+}));
+pdfViewer.setWidth("100%");
+pdfViewer.setHeight("800px");
+
+add(pdfViewer);
+----
 
 
 == Display with PDF.js (Custom Viewer)
@@ -326,41 +359,53 @@ add(pdfViewer);
 The server-side API is identical to the `IFrame` version. The difference is entirely in how the browser renders the PDF.
 
 
-== Choosing Between IFrame and PDF.js
+== Choosing a Viewer
 
-[cols="1,1,1",options="header"]
+[cols="1,1,1,1",options="header"]
 |===
-| | IFrame (Browser Viewer) | PDF.js (Custom Viewer)
+| | IFrame (Browser Viewer) | PDF Viewer Add-On | PDF.js (Custom Viewer)
 | Setup
 | No extra dependencies
+| Add-on from Vaadin Directory
 | Requires a LitElement component + npm package
 
 | UI controls
 | Browser-provided (zoom, page nav, print, download)
+| Built-in (zoom, page nav, thumbnails, print, download)
 | You build your own (or start minimal)
 
 | Cross-browser consistency
 | Varies — each browser has a different PDF viewer
 | Identical rendering everywhere
+| Identical rendering everywhere
 
 | Customization
 | None — the viewer is a browser black box
+| Toolbar options and labels
 | Full control over layout, styling, and behavior
 
 | Text search
 | Built into most browser viewers
+| Built-in
 | Requires PDF.js text layer (extra code)
 
 | Mobile
 | Some mobile browsers don't render PDFs inline
 | Works on all browsers that support `<canvas>`
+| Works on all browsers that support `<canvas>`
 
 | Bundle size
 | Zero
+| ~400 KB (PDF.js library + worker, bundled)
 | ~400 KB (PDF.js library + worker)
+
+| Maintenance
+| N/A — browser built-in
+| Community / Expert on Demand
+| You maintain the component
 |===
 
-Use `IFrame` when you want a quick, zero-dependency solution and the browser's built-in viewer is good enough. Use PDF.js when you need a consistent viewer across browsers, want custom controls, or need to support mobile browsers that don't handle inline PDFs well.
+Use `IFrame` when you want a quick, zero-dependency solution and the browser's built-in viewer is good enough. Use the PDF Viewer add-on when you want a feature-rich viewer without building client-side code. Use a custom PDF.js component when you need full control over the viewer's layout, styling, and behavior.
 
 
 == Beyond the Basics
