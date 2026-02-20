@@ -1,0 +1,179 @@
+---
+title: Add Keyboard Shortcuts
+page-title: How to add keyboard shortcuts in Vaadin
+description: Learn how to add keyboard shortcuts to buttons and input fields in your Vaadin application.
+meta-description: Add keyboard shortcuts to buttons and input fields in Vaadin using click shortcuts and focus shortcuts for improved keyboard navigation.
+order: 30
+---
+
+= Add Keyboard Shortcuts
+:toclevels: 2
+
+Vaadin lets you assign keyboard shortcuts to components so that users can trigger actions and navigate without reaching for the mouse. This article covers the two most common types: click shortcuts that trigger a button press, and focus shortcuts that move focus to an input field. For custom shortcuts, scoped shortcuts, lifecycle management, and other advanced features, see the <</flow/component-internals/shortcut#,Keyboard Shortcuts>> reference documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that demonstrates click and focus shortcuts:
+
+[source,java]
+----
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("shortcut-example")
+public class ShortcutExampleView extends VerticalLayout {
+
+    public ShortcutExampleView() {
+        // Focus shortcut: Alt+N focuses the name field
+        TextField name = new TextField("Name");
+        name.setPlaceholder("Alt+N to focus");
+        name.addFocusShortcut(Key.KEY_N, KeyModifier.ALT);
+
+        // Focus shortcut: Alt+E focuses the email field
+        TextField email = new TextField("Email");
+        email.setPlaceholder("Alt+E to focus");
+        email.addFocusShortcut(Key.KEY_E, KeyModifier.ALT);
+
+        // Click shortcut: Enter triggers the save button
+        Button save = new Button("Save", event ->
+                Notification.show("Saved: " + name.getValue()));
+        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        save.addClickShortcut(Key.ENTER);
+
+        add(new Paragraph("Try Alt+N, Alt+E, and Enter."),
+                name, email, save);
+    }
+}
+----
+
+
+== Click Shortcuts
+
+A click shortcut triggers a button's click action when the user presses a key. Any component that implements `ClickNotifier` supports this — most commonly `Button`.
+
+Add a click shortcut with `addClickShortcut()`:
+
+[source,java]
+----
+Button login = new Button("Login");
+login.addClickListener(event -> performLogin());
+login.addClickShortcut(Key.ENTER);
+----
+
+The kbd:[Enter] key now triggers the login button from anywhere on the page.
+
+You can add key modifiers to avoid conflicts with other shortcuts:
+
+[source,java]
+----
+Button save = new Button("Save");
+save.addClickShortcut(Key.KEY_S, KeyModifier.CONTROL);
+----
+
+[TIP]
+The most common click shortcut is kbd:[Enter] on a form's primary action button. This matches the behavior users expect from web forms.
+
+
+== Focus Shortcuts
+
+A focus shortcut moves keyboard focus to a `Focusable` component, like a text field. This lets users jump directly to an input without clicking.
+
+Add a focus shortcut with `addFocusShortcut()`:
+
+[source,java]
+----
+TextField search = new TextField("Search");
+search.addFocusShortcut(Key.KEY_S, KeyModifier.ALT);
+----
+
+Pressing kbd:[Alt+S] now focuses the search field from anywhere on the page.
+
+[TIP]
+Focus shortcuts typically use kbd:[Alt] plus a letter as the modifier. This mirrors the access key convention in desktop applications and avoids conflicts with browser shortcuts.
+
+
+== Keys and Modifiers
+
+Shortcut key combinations consist of one primary key and zero or more modifiers.
+
+Primary keys are defined in the `Key` class:
+
+- Letter keys: `Key.KEY_A` through `Key.KEY_Z`
+- Special keys: `Key.ENTER`, `Key.ESCAPE`, `Key.SPACE`, `Key.TAB`
+- Function keys: `Key.F1` through `Key.F12`
+
+Modifiers are defined in the `KeyModifier` enum:
+
+- `KeyModifier.ALT`
+- `KeyModifier.CONTROL`
+- `KeyModifier.SHIFT`
+- `KeyModifier.META` (Cmd on macOS, Win on Windows)
+
+Pass modifiers as extra arguments:
+
+[source,java]
+----
+// Single modifier
+button.addClickShortcut(Key.KEY_S, KeyModifier.CONTROL);
+
+// Multiple modifiers
+button.addClickShortcut(Key.KEY_N, KeyModifier.CONTROL, KeyModifier.ALT);
+----
+
+You can also chain modifiers using the fluent API on the returned `ShortcutRegistration`:
+
+[source,java]
+----
+button.addClickShortcut(Key.KEY_S).withControl().withShift();
+----
+
+
+== Removing Shortcuts
+
+Both `addClickShortcut()` and `addFocusShortcut()` return a `ShortcutRegistration` that you can use to remove the shortcut later:
+
+[source,java]
+----
+ShortcutRegistration registration =
+        button.addClickShortcut(Key.ENTER);
+
+// Later, when the shortcut is no longer needed:
+registration.remove();
+----
+
+
+== When to Add Shortcuts
+
+Shortcuts work best when they speed up frequent actions without surprising the user:
+
+*Good uses:*
+
+- kbd:[Enter] to submit a form — users expect this from web forms
+- kbd:[Escape] to close a dialog or cancel an action (Vaadin's `Dialog` has built-in support for this via `setCloseOnEsc()`)
+- kbd:[Alt+letter] to jump to key input fields in data-heavy forms
+- kbd:[Ctrl+S] to save — mirrors the convention from desktop applications
+
+*Avoid:*
+
+- Adding shortcuts that conflict with browser defaults, for example, kbd:[Ctrl+T], kbd:[Ctrl+W], and kbd:[F5]
+- Assigning shortcuts to rarely used actions — they add complexity without benefit
+- Using shortcuts as the _only_ way to trigger an action — always offer a clickable alternative for discoverability
+
+
+== Beyond Click and Focus Shortcuts
+
+Click and focus shortcuts cover the most common needs, but Vaadin's shortcut system can do more:
+
+- *Custom shortcuts* — run any action when a key combination is pressed, using `UI.addShortcutListener()`
+- *Scoped shortcuts* — limit a shortcut to a specific part of the UI with `listenOn()`
+- *Lifecycle management* — bind a shortcut's active state to a component's visibility
+
+See the <</flow/component-internals/shortcut#,Keyboard Shortcuts>> reference for details on these features.

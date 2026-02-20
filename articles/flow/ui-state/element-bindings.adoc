@@ -53,7 +53,7 @@ span.getElement().setText(""); // throws BindingActiveException
 span.getElement().removeFromParent(); // detaching from the UI
 span.getElement().getText(); // returns "Clicked 0 times"
 span.getElement().setText(""); // throws BindingActiveException
-counter.value(5); // updating the signal value
+counter.set(5); // updating the signal value
 span.getElement().getText(); // returns "Clicked 0 times"
 add(span); // re-attaching the element to the UI
 span.getElement().getText(); // returns "Clicked 5 times"
@@ -75,7 +75,7 @@ ValueSignal<String> label = new ValueSignal<>("Close dialog");
 button.getElement().bindAttribute("aria-label", label);
 // DOM has "<button aria-label="Close dialog">"
 
-label.value(null);
+label.set(null);
 // DOM has "<button>" (attribute removed)
 ----
 
@@ -94,7 +94,7 @@ Typed Lists and Maps are not supported. The signal must be of type `Signal<List<
 ValueSignal<Boolean> hidden = new ValueSignal<>(false);
 
 span.getElement().bindProperty("hidden", hidden);
-hidden.value(!hidden.peek()); // toggles 'hidden' property
+hidden.set(!hidden.peek()); // toggles 'hidden' property
 ----
 
 .String type
@@ -102,14 +102,14 @@ hidden.value(!hidden.peek()); // toggles 'hidden' property
 ----
 ValueSignal<String> title = new ValueSignal<>("Hello");
 span.getElement().bindProperty("title", title);
-title.value("World"); // updates 'title' property
+title.set("World"); // updates 'title' property
 ----
 
 .Double type
 [source,java]
 ----
 NumberSignal width = new NumberSignal();
-width.value(100.5);
+width.set(100.5);
 span.getElement().bindProperty("width", width);
 width.incrementBy(50); // updates 'width' property to 150.5
 ----
@@ -121,7 +121,7 @@ record Person(String name, int age) {}
 
 ValueSignal<Person> person = new ValueSignal<>(new Person("John", 30));
 span.getElement().bindProperty("person", person);
-person.value(new Person("Jane", 25));
+person.set(new Person("Jane", 25));
 // element.person is now {name: 'Jane', age: 25}
 ----
 
@@ -130,7 +130,7 @@ person.value(new Person("Jane", 25));
 ----
 ValueSignal<List<String>> items = new ValueSignal<>(List.of("Item 1", "Item 2"));
 span.getElement().bindProperty("items", items);
-items.value(List.of("Item A", "Item B", "Item C"));
+items.set(List.of("Item A", "Item B", "Item C"));
 // element.items is now ['Item A', 'Item B', 'Item C']
 ----
 
@@ -139,7 +139,7 @@ items.value(List.of("Item A", "Item B", "Item C"));
 ----
 ValueSignal<Map<String, String>> config = new ValueSignal<>(Map.of("key1", "value1"));
 span.getElement().bindProperty("config", config);
-config.value(Map.of("key1", "value1", "key2", "value2"));
+config.set(Map.of("key1", "value1", "key2", "value2"));
 // element.config is now {key1: 'value1', key2: 'value2'}
 ----
 
@@ -158,7 +158,7 @@ span.getElement().addPropertyChangeListener("hidden", "change", event -> {
     Notification.show("'hidden' property changed to: " + event.getValue());
 });
 
-// After a property change event from the client, signal.value() returns the updated value
+// After a property change event from the client, signal.get() returns the updated value
 ----
 
 
@@ -174,7 +174,7 @@ span.getElement().getClassList().bind("foo", foo);
 span.getElement().getClassList().bind("bar", bar);
 // DOM has "<span class='bar'>"
 
-foo.value(true);
+foo.set(true);
 // DOM has "<span class='bar foo'>"
 
 span.getElement().getClassList().clear();
@@ -194,11 +194,11 @@ span.getElement().getStyle().bind("color", color);
 span.getElement().getStyle().bind("background", background);
 // DOM has "<span style='color: black; background: white'>"
 
-color.value("red");
-background.value("gray");
+color.set("red");
+background.set("gray");
 // DOM has "<span style='color: red; background: gray'>"
 
-background.value(""); // same with null
+background.set(""); // same with null
 // DOM has "<span style='color: red;'>"
 
 span.getElement().getStyle().clear();
@@ -216,7 +216,7 @@ ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
 component.getThemeList().bind("dark", darkMode);
 // Theme "dark" is applied when darkMode is true
 
-darkMode.value(true);
+darkMode.set(true);
 // Component now has "dark" theme applied
 ----
 
@@ -235,7 +235,7 @@ ValueSignal<Boolean> visible = new ValueSignal<>(true);
 element.bindVisible(visible);
 // Element is visible when visible is true
 
-visible.value(false);
+visible.set(false);
 // Element is now hidden
 ----
 
@@ -254,7 +254,7 @@ ValueSignal<Boolean> enabled = new ValueSignal<>(true);
 button.getElement().bindEnabled(enabled);
 // Button is enabled when enabled is true
 
-enabled.value(false);
+enabled.set(false);
 // Button is now disabled
 ----
 
@@ -272,7 +272,7 @@ Html html = new Html("<span></span>");
 html.bindHtmlContent(htmlContent);
 // HTML content is now "<strong>Bold text</strong>"
 
-htmlContent.value("<em>Italic text</em>");
+htmlContent.set("<em>Italic text</em>");
 // HTML content is now "<em>Italic text</em>"
 ----
 
@@ -287,18 +287,18 @@ Form field bindings provide two-way synchronization between fields and signals. 
 
 === Two-Way Value Binding
 
-.`HasValue#bindValue(WritableSignal<V> signal)`
+.`HasValue#bindValue(Signal<V> signal, SerializableConsumer<V> setter)`
 
-The [methodname]`bindValue()` method creates a two-way binding between a form field and a writable signal:
+The [methodname]`bindValue()` method creates a two-way binding between a form field and a signal:
 
 [source,java]
 ----
 ValueSignal<String> nameSignal = new ValueSignal<>("");
 
 TextField nameField = new TextField("Name");
-nameField.bindValue(nameSignal);
+nameField.bindValue(nameSignal, nameSignal::set);
 
-// User types in field -> signal is updated
+// User types in field -> signal is updated via setter
 // Signal changes -> field is updated
 ----
 
@@ -316,7 +316,7 @@ ValueSignal<Boolean> readOnly = new ValueSignal<>(false);
 TextField field = new TextField();
 field.bindReadOnly(readOnly);
 
-readOnly.value(true);
+readOnly.set(true);
 // Field is now read-only
 ----
 

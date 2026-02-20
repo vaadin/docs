@@ -1,0 +1,304 @@
+---
+title: Add Dialogs and Popovers
+page-title: How to add dialogs and popovers to a Vaadin application
+description: Learn how to use Confirm Dialog, Dialog, and Popover to present information and collect input in overlays.
+meta-description: Add overlays to your Vaadin application using Confirm Dialog for confirmations, Dialog for custom forms, and Popover for anchored content.
+order: 15
+---
+
+= Add Dialogs and Popovers
+:toclevels: 2
+
+This article shows how to present information and collect input using overlays. It covers three components: Confirm Dialog for simple confirmations, Dialog for custom overlay content, and Popover for content anchored to a UI element. For the full API details, see the <</components/confirm-dialog#,Confirm Dialog>>, <</components/dialog#,Dialog>>, and <</components/popover#,Popover>> reference documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that demonstrates all three overlay components:
+
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("overlay-example")
+public class OverlayExampleView extends VerticalLayout {
+
+    public OverlayExampleView() {
+        // Confirm Dialog — quick confirmation with predefined buttons
+        Button deleteButton = new Button("Delete item", event -> {
+            ConfirmDialog confirmDialog = new ConfirmDialog();
+            confirmDialog.setHeader("Delete Item");
+            confirmDialog.setText("This action cannot be undone.");
+            confirmDialog.setCancelable(true);
+            confirmDialog.setConfirmText("Delete");
+            confirmDialog.setConfirmButtonTheme("error primary");
+            confirmDialog.addConfirmListener(e ->
+                    Notification.show("Item deleted"));
+            confirmDialog.open();
+        });
+
+        // Dialog — custom content in a centered overlay
+        Button editButton = new Button("Edit name", event -> {
+            Dialog dialog = new Dialog();
+            dialog.setHeaderTitle("Edit Name");
+            TextField nameField = new TextField("Name");
+            dialog.add(nameField);
+            dialog.getFooter().add(
+                    new Button("Cancel", e -> dialog.close()),
+                    new Button("Save", e -> {
+                        Notification.show("Saved: " + nameField.getValue());
+                        dialog.close();
+                    }));
+            dialog.open();
+        });
+
+        // Popover — content anchored to a target element
+        Button infoButton = new Button(VaadinIcon.INFO_CIRCLE.create());
+        infoButton.setAriaLabel("More info");
+        Popover popover = new Popover();
+        popover.setTarget(infoButton);
+        popover.add(new Span("This action removes the item permanently."));
+
+        add(deleteButton, editButton, infoButton);
+    }
+}
+----
+
+
+== Confirm Dialog
+
+`ConfirmDialog` is a purpose-built modal dialog for confirming user actions. It provides a title, a message, and up to three buttons — all without requiring manual layout.
+
+=== When to Use It
+
+Use Confirm Dialog when you need the user to acknowledge information or confirm an action before proceeding. Common examples include confirming deletions, discarding unsaved changes, and acknowledging errors or warnings.
+
+=== Structure
+
+A Confirm Dialog has a header, a text message, and up to three buttons:
+
+- *Confirm* — visible by default. Represents the primary action.
+- *Cancel* — must be explicitly enabled. Lets the user back out entirely.
+- *Reject* — must be explicitly enabled. Represents a secondary action that still moves the user forward (for example, "Discard" when leaving a view with unsaved changes).
+
+[source,java]
+----
+ConfirmDialog dialog = new ConfirmDialog();
+dialog.setHeader("Unsaved Changes");
+dialog.setText("Do you want to save your changes before leaving?");
+
+dialog.setConfirmText("Save");
+dialog.addConfirmListener(e -> saveAndNavigate());
+
+dialog.setRejectable(true);
+dialog.setRejectText("Discard");
+dialog.addRejectListener(e -> navigateAway());
+
+dialog.setCancelable(true);
+dialog.addCancelListener(e -> stayOnPage());
+
+dialog.open();
+----
+
+=== Button Labels and Themes
+
+Use concise labels that describe the action, such as "Delete" or "Save". Avoid ambiguous labels like "Yes" and "No". For destructive actions, apply the error theme to the confirm button:
+
+[source,java]
+----
+dialog.setConfirmText("Delete");
+dialog.setConfirmButtonTheme("error primary");
+----
+
+=== Closing
+
+Confirm Dialog closes when any of its buttons is clicked. Pressing Escape triggers the cancel action if a cancel button is enabled.
+
+See the <</components/confirm-dialog#,Confirm Dialog>> reference for more details.
+
+
+== Dialog
+
+`Dialog` is a general-purpose overlay for presenting custom content. Unlike Confirm Dialog, you control the full layout — header, body, and footer.
+
+=== When to Use It
+
+Use Dialog when you need more than a simple confirmation: editing a record in a form, displaying detailed information, or building a multi-step workflow inside an overlay. If all you need is a title, message, and a few buttons, use <<Confirm Dialog>> instead.
+
+=== Structure
+
+A Dialog has three areas: a header, a scrollable content area, and a footer. The header and footer appear only when you add content to them.
+
+[source,java]
+----
+Dialog dialog = new Dialog();
+
+dialog.setHeaderTitle("Edit Contact");
+
+TextField name = new TextField("Name");
+EmailField email = new EmailField("Email");
+dialog.add(name, email); // <1>
+
+Button saveButton = new Button("Save", e -> {
+    // Save logic
+    dialog.close();
+});
+Button cancelButton = new Button("Cancel",
+        e -> dialog.close());
+dialog.getFooter().add(cancelButton, saveButton); // <2>
+
+dialog.open();
+----
+<1> Content added with `add()` goes into the scrollable content area.
+<2> Footer content is right-aligned by default.
+
+=== Adding a Close Button to the Header
+
+You can add components to the header alongside the title. A common pattern is a close button:
+
+[source,java]
+----
+dialog.setHeaderTitle("Details");
+
+Button closeButton = new Button(VaadinIcon.CLOSE.create(),
+        e -> dialog.close());
+closeButton.setAriaLabel("Close");
+closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+dialog.getHeader().add(closeButton);
+----
+
+=== Modality
+
+Dialogs are modal by default — the user cannot interact with the rest of the UI while the dialog is open.
+
+Set a dialog to non-modal when the user needs to access content behind it:
+
+[source,java]
+----
+dialog.setModality(ModalityMode.MODELESS);
+dialog.setDraggable(true); // <1>
+----
+<1> Non-modal dialogs should typically be draggable so the user can move them out of the way.
+
+=== Size and Resizing
+
+Set an explicit size when the default auto-sizing does not fit your content:
+
+[source,java]
+----
+dialog.setWidth("600px");
+dialog.setHeight("400px");
+----
+
+For dialogs with dynamic content like grids or complex forms, make the dialog resizable:
+
+[source,java]
+----
+dialog.setResizable(true);
+----
+
+[TIP]
+Use dialogs sparingly. They interrupt the user's workflow. For non-essential messages like "Saved successfully", use a <</components/notification#,Notification>> instead.
+
+See the <</components/dialog#,Dialog>> reference for more details.
+
+
+== Popover
+
+`Popover` is an overlay whose position is anchored to a target element in the UI. Unlike Dialog, it appears next to the element that triggered it rather than in the center of the viewport.
+
+=== When to Use It
+
+Use Popover when the overlay content relates directly to a specific UI element — for example, a user menu anchored to an avatar, a notification panel attached to a bell icon, or a rich tooltip with interactive content. If the content is independent of any particular element, use a <<Dialog>> instead.
+
+=== Basic Usage
+
+Create a Popover, add content to it, and set the target element it should anchor to:
+
+[source,java]
+----
+Button settingsButton = new Button(VaadinIcon.COG.create());
+settingsButton.setAriaLabel("Settings");
+
+Popover popover = new Popover();
+popover.setTarget(settingsButton);
+popover.add(new Span("Popover content here"));
+----
+
+The popover opens when the user clicks the target element. It closes on Escape, clicking outside, or clicking the target again.
+
+=== Positioning and Arrow
+
+By default, the popover appears below the target, centered horizontally. Change the position to suit your layout:
+
+[source,java]
+----
+popover.setPosition(PopoverPosition.END); // <1>
+popover.addThemeVariants(PopoverVariant.LUMO_ARROW); // <2>
+----
+<1> Opens to the right of the target element.
+<2> Adds a wedge-shaped arrow pointing at the target.
+
+=== Opening Triggers
+
+By default, the popover opens on click. You can also open it on hover, focus, or a combination:
+
+[source,java]
+----
+popover.setOpenOnClick(false);
+popover.setOpenOnHover(true);
+popover.setOpenOnFocus(true);
+----
+
+This is useful for rich, interactive tooltips — content that goes beyond plain text but should appear on hover. Use <</components/tooltip#,Tooltip>> if the content is plain text only.
+
+=== Modal Popovers
+
+A modal popover blocks interaction with the rest of the UI while open. This prevents the user from accidentally triggering other elements when clicking outside to close the popover.
+
+[source,java]
+----
+popover.setModal(true);
+popover.setBackdropVisible(true); // <1>
+----
+<1> Optional. Dims the background to visually indicate that the rest of the UI is blocked.
+
+Modal popovers automatically move focus into the popover when it opens.
+
+See the <</components/popover#,Popover>> reference for more details.
+
+
+== Choosing the Right Overlay
+
+Each overlay component serves a different purpose. Pick the one that best fits your use case:
+
+*Confirm Dialog* — Use for simple confirmations with a title, message, and predefined buttons. No custom layout needed.
+
+- Confirming a deletion
+- Acknowledging an error or warning
+- Asking whether to save or discard changes
+
+*Dialog* — Use for custom overlay content that is not tied to a specific UI element.
+
+- Editing a record in a form
+- Displaying detailed information
+- Multi-step workflows in an overlay
+
+*Popover* — Use when the overlay is visually tied to a specific element in the UI.
+
+- User menus anchored to an avatar
+- Notification panels attached to an icon
+- Interactive tooltips with links or actions
+- Custom drop-down fields
+
+[TIP]
+When in doubt, start with Confirm Dialog if you only need a message and buttons. Move to Dialog if you need custom content. Use Popover only when anchoring to a specific element adds value to the interaction.

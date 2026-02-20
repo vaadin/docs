@@ -10,7 +10,8 @@ public class SliderValueAlwaysVisible extends Div {
 
     public SliderValueAlwaysVisible() {
         // tag::snippet[]
-        Slider slider = new Slider("Brightness", 0, 100, 75);
+        Slider slider = new Slider("Brightness", 0, 100);
+        slider.setValue(75.0);
         slider.setValueAlwaysVisible(true);
         add(slider);
         // end::snippet[]

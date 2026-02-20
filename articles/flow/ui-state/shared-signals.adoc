@@ -48,8 +48,8 @@ A signal containing a single value. The value is updated as a single atomic chan
 import com.vaadin.flow.signals.shared.SharedValueSignal;
 
 SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
-name.value("John Doe"); // Set the value
-String currentName = name.value(); // Get the value
+name.set("John Doe"); // Set the value
+String currentName = name.get(); // Get the value
 ----
 
 
@@ -62,7 +62,7 @@ A specialized signal for numeric values with support for atomic increments and d
 import com.vaadin.flow.signals.shared.SharedNumberSignal;
 
 SharedNumberSignal counter = new SharedNumberSignal();
-counter.value(5); // Set the value
+counter.set(5); // Set the value
 counter.incrementBy(1); // Increment by 1
 counter.incrementBy(-2); // Decrement by 2
 int count = counter.valueAsInt(); // Get the value as int
@@ -81,8 +81,8 @@ SharedListSignal<Person> persons = new SharedListSignal<>(Person.class);
 persons.insertFirst(new Person("Jane", 25)); // Add to the beginning
 persons.insertLast(new Person("John", 30)); // Add to the end
 persons.insert(1, new Person("Bob", 20)); // Insert at specific index
-List<SharedValueSignal<Person>> personList = persons.value(); // Get all persons
-personList.get(0).value(new Person("Alice", 22)); // Update the value of a child signal
+List<SharedValueSignal<Person>> personList = persons.get(); // Get all persons
+personList.get(0).set(new Person("Alice", 22)); // Update the value of a child signal
 ----
 
 
@@ -98,7 +98,7 @@ SharedMapSignal<String> properties = new SharedMapSignal<>(String.class);
 properties.put("name", "John"); // Add or update a property
 properties.putIfAbsent("age", "30"); // Add only if not present
 SharedValueSignal<String> nameSignal = properties.get("name"); // Get signal for a key
-Map<String, SharedValueSignal<String>> propertyMap = properties.value(); // Get all properties
+Map<String, SharedValueSignal<String>> propertyMap = properties.get(); // Get all properties
 properties.remove("age"); // Remove an entry
 ----
 
@@ -116,12 +116,12 @@ user.putChildWithValue("name", "John Doe"); // Add a map child
 user.putChildWithValue("age", 30); // Add another map child
 user.insertChildWithValue("Reading", ListPosition.last()); // Add a hobby as a list child
 
-user.value().mapChildren().get("name").asValue(String.class).value(); // Access 'John Doe'
-user.value().mapChildren().get("age").asValue(Integer.class).value(); // Access 30
-user.value().listChildren().getLast().asValue(String.class).value(); // Access 'Reading'
+user.get().mapChildren().get("name").asValue(String.class).get(); // Access 'John Doe'
+user.get().mapChildren().get("age").asValue(Integer.class).get(); // Access 30
+user.get().listChildren().getLast().asValue(String.class).get(); // Access 'Reading'
 
 SharedMapSignal<String> mapChildren = user.asMap(String.class); // Access all map children
-mapChildren.value().get("name"); // Alternative way of accessing 'John Doe'
+mapChildren.get().get("name"); // Alternative way of accessing 'John Doe'
 ----
 
 
@@ -130,12 +130,12 @@ mapChildren.value().get("name"); // Alternative way of accessing 'John Doe'
 
 === Getting the Current Value
 
-The `value()` method returns the current locally-known value of the signal:
+The `get()` method returns the current locally-known value of the signal:
 
 [source,java]
 ----
 SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
-String current = signal.value();
+String current = signal.get();
 ----
 
 
@@ -145,7 +145,7 @@ Use `peek()` to read a value without registering a dependency in effects or comp
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Signal.effect(component, () -> {
     // peek() doesn't register a dependency
     String peeked = signal.peek();
     // This effect won't re-run when signal changes
@@ -162,13 +162,13 @@ The `peekConfirmed()` method returns the last value that has been confirmed by t
 SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
 
 // Get the locally-known value (may include optimistic updates)
-String optimistic = signal.value();
+String optimistic = signal.get();
 
 // Get only the cluster-confirmed value
 String confirmed = signal.peekConfirmed();
 ----
 
-In single-server deployments, `peekConfirmed()` typically returns the same value as `value()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
+In single-server deployments, `peekConfirmed()` typically returns the same value as `get()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
 
 == Writing Values
@@ -180,7 +180,7 @@ All shared signals provide atomic write operations:
 SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
 
 // Direct value assignment
-signal.value("New value");
+signal.set("New value");
 
 // Update based on current value
 signal.update(current -> current.toUpperCase());
@@ -219,7 +219,7 @@ SharedValueSignal<User> user = new SharedValueSignal<>(User.class);
 user.update(u -> new User(u.getName(), u.getAge() + 1));
 
 // Bad: Modifying the object directly
-User u = user.value();
+User u = user.get();
 u.setAge(u.getAge() + 1); // This won't trigger reactivity!
 ----
 
@@ -230,7 +230,7 @@ Use Java records for simple data structures:
 record Person(String name, int age) {}
 
 SharedValueSignal<Person> person = new SharedValueSignal<>(Person.class);
-person.value(new Person("John", 30));
+person.set(new Person("John", 30));
 
 // Update creates a new record
 person.update(p -> new Person(p.name(), p.age() + 1));
@@ -292,7 +292,7 @@ public class SharedCounter extends VerticalLayout {
 SharedValueSignal<String> value = new SharedValueSignal<>(String.class);
 
 TextField field = new TextField("Value");
-field.bindValue(value);
+field.bindValue(value, value::set);
 // Changes sync both ways: field to signal and signal to field
 ----
 
@@ -309,5 +309,5 @@ You can create read-only versions of signals that don't allow modifications. The
 SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
 SharedValueSignal<String> readOnlyName = name.asReadonly();
 
-// readOnlyName.value("new") would throw an exception
+// readOnlyName.set("new") would throw an exception
 ----

@@ -2,7 +2,7 @@
 title: Effects and Computed Signals
 page-title: Effects and Computed Signals in Vaadin Flow
 description: Using effects and computed signals for reactive UI updates.
-meta-description: Learn how to use ComponentEffect, computed signals, and standalone effects for reactive programming.
+meta-description: Learn how to use effects, computed signals, and standalone effects for reactive programming.
 order: 30
 ---
 
@@ -24,7 +24,7 @@ Use direct binding methods (covered in <<building-ui#,Component Bindings>>) when
 - Binding form field values with `bindValue()`
 - Binding styles, themes, or class lists
 
-Use [classname]`ComponentEffect` when:
+Use [methodname]`Signal.effect()` when:
 
 - You need custom side effects beyond property binding
 - You're working with component APIs that don't have binding methods
@@ -36,9 +36,9 @@ Use [classname]`ComponentEffect` when:
 Effects are callbacks that run immediately when created and automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
 
 
-=== Creating Component-Bound Effects
+=== Creating Effects
 
-The [methodname]`ComponentEffect.effect()` method creates an effect bound to a component's lifecycle. The effect is active while the component is attached and inactive while detached.
+The [methodname]`Signal.effect()` method creates an effect bound to a component's lifecycle. The effect is active while the component is attached and inactive while detached.
 
 [source,java]
 ----
@@ -47,20 +47,18 @@ ListSeries series = new ListSeries("My Series", new Number[0]);
 ListSignal<Number> seriesSignal = new ListSignal<>();
 // initialization details omitted
 
-ComponentEffect.effect(chart, () -> {
+Signal.effect(chart, () -> {
     // This code runs immediately and again whenever seriesSignal changes
-    series.setData(seriesSignal.value().stream()
-        .map(Signal::value).toArray(Number[]::new));
+    series.setData(seriesSignal.get().stream()
+        .map(Signal::get).toArray(Number[]::new));
 });
 ----
 
-The first parameter is the component that owns the effect. When the component is detached, the effect is paused. When re-attached, the effect resumes and runs again with current values.
-
-The method returns a [classname]`Registration` instance that can be used to remove the effect before the component is detached:
+The method returns a [classname]`Registration` instance that can be used to remove the effect when it's no longer needed:
 
 [source,java]
 ----
-Registration effectRegistration = ComponentEffect.effect(chart, () -> {
+Registration effectRegistration = Signal.effect(chart, () -> {
     // effect logic
 });
 
@@ -75,8 +73,8 @@ Use effects for component properties that don't have direct binding methods:
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
-    component.setCustomProperty(signal.value());
+Signal.effect(component, () -> {
+    component.setCustomProperty(signal.get());
 });
 ----
 
@@ -88,7 +86,7 @@ Computed signals derive their values from other signals. They automatically upda
 [source,java]
 ----
 Signal<String> fullName = Signal.computed(() -> {
-    return firstNameSignal.value() + " " + lastNameSignal.value();
+    return firstNameSignal.get() + " " + lastNameSignal.get();
 });
 ----
 
@@ -106,13 +104,13 @@ ValueSignal<Double> quantity = new ValueSignal<>(2.0);
 ValueSignal<Double> taxRate = new ValueSignal<>(0.1);
 
 Signal<Double> total = Signal.computed(() -> {
-    double subtotal = price.value() * quantity.value();
-    return subtotal * (1 + taxRate.value());
+    double subtotal = price.get() * quantity.get();
+    return subtotal * (1 + taxRate.get());
 });
-// total.value() returns 220.0
+// total.get() returns 220.0
 
-quantity.value(3.0);
-// total.value() now returns 330.0
+quantity.set(3.0);
+// total.get() now returns 330.0
 ----
 
 
@@ -124,12 +122,12 @@ Computed signals cache their value and only recalculate when dependencies change
 ----
 Signal<Integer> expensiveComputation = Signal.computed(() -> {
     // This only runs when dependencies change
-    return performExpensiveCalculation(inputSignal.value());
+    return performExpensiveCalculation(inputSignal.get());
 });
 
 // Multiple reads return the cached value
-expensiveComputation.value(); // Computes once
-expensiveComputation.value(); // Returns cached value
+expensiveComputation.get(); // Computes once
+expensiveComputation.get(); // Returns cached value
 ----
 
 
@@ -151,7 +149,7 @@ Use [methodname]`map()` for single-signal transformations. For transformations d
 
 [TIP]
 ====
-The read-only [methodname]`map()` method shown above creates a one-way transformation. For two-way binding scenarios where changes need to flow in both directions (for example, binding a checkbox to a property of a record), use [methodname]`map(getter, merger)` or [methodname]`mapMutable(getter, modifier)`. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for details.
+The read-only [methodname]`map()` method shown above creates a one-way transformation. For two-way binding scenarios where changes need to flow in both directions (for example, binding a checkbox to a property of a record), use [methodname]`updater()` or [methodname]`modifier()`. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for details.
 ====
 
 
@@ -177,9 +175,9 @@ Use [methodname]`peek()` to read a signal's value without registering a dependen
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
-    // value() registers a dependency - effect will re-run when nameSignal changes
-    String name = nameSignal.value();
+Signal.effect(component, () -> {
+    // get() registers a dependency - effect will re-run when nameSignal changes
+    String name = nameSignal.get();
 
     // peek() doesn't register a dependency - effect won't re-run when countSignal changes
     int count = countSignal.peek();
@@ -193,13 +191,13 @@ The [methodname]`Signal.untracked()` method executes a block of code without tra
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
+Signal.effect(component, () -> {
     // This read is tracked
-    String trackedValue = trackedSignal.value();
+    String trackedValue = trackedSignal.get();
 
     // Everything inside untracked() is not tracked
     Signal.untracked(() -> {
-        String untrackedValue = anotherSignal.value(); // Not tracked
+        String untrackedValue = anotherSignal.get(); // Not tracked
         processValue(untrackedValue);
     });
 });
@@ -214,16 +212,16 @@ A standalone signal effect can be used for effects that aren't related to any UI
 
 [source,java]
 ----
-CleanupCallback cleanup = Signal.effect(() -> {
-    System.out.println("Counter updated to " + counter.value());
+Registration cleanup = Signal.unboundEffect(() -> {
+    System.out.println("Counter updated to " + counter.get());
 });
 
 // Later, when the effect is no longer needed
-cleanup.cleanup();
+cleanup.remove();
 ----
 
 [WARNING]
-Standalone effects can lead to memory leaks through any instances referenced by the closure of the effect callback. Always store and call the cleanup function when the effect is no longer needed.
+Standalone effects can lead to memory leaks through any instances referenced by the closure of the effect callback. Always store the [classname]`Registration` and call [methodname]`remove()` when the effect is no longer needed.
 
 
 == Dependency Tracking
@@ -236,13 +234,13 @@ ValueSignal<Boolean> showDetails = new ValueSignal<>(false);
 ValueSignal<String> summary = new ValueSignal<>("");
 ValueSignal<String> details = new ValueSignal<>("");
 
-ComponentEffect.effect(component, () -> {
-    if (showDetails.value()) {
+Signal.effect(component, () -> {
+    if (showDetails.get()) {
         // Both showDetails and details are dependencies
-        component.setText(details.value());
+        component.setText(details.get());
     } else {
         // Only showDetails and summary are dependencies
-        component.setText(summary.value());
+        component.setText(summary.get());
     }
 });
 ----
@@ -263,7 +261,7 @@ Use component binding methods for property updates. Effects are for custom logic
 label.bindText(signal);
 
 // Avoid: Effect for simple property binding
-ComponentEffect.effect(label, () -> label.setText(signal.value()));
+Signal.effect(label, () -> label.setText(signal.get()));
 ----
 
 See <<building-ui#,Component Bindings>> for available binding methods.
@@ -279,7 +277,7 @@ Use a computed signal when one signal's value depends on another:
 ----
 // Good: Use computed signal for derived values
 Signal<String> derivedValue = Signal.computed(() -> {
-    return sourceSignal.value().toUpperCase();
+    return sourceSignal.get().toUpperCase();
 });
 ----
 
@@ -287,13 +285,13 @@ If you must modify a signal from an effect and are certain there's no risk of in
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
-    String value = oneSignal.value();
+Signal.effect(component, () -> {
+    String value = oneSignal.get();
 
     // WARNING: This might lead to infinite loops.
     // Do this only if absolutely necessary.
     Signal.runWithoutTransaction(() -> {
-        otherSignal.value(value);
+        otherSignal.set(value);
     });
 });
 ----
@@ -312,9 +310,9 @@ nameLabel.bindText(userSignal.map(User::name));
 ageLabel.bindText(userSignal.map(u -> String.valueOf(u.age())));
 
 // Avoid: One large effect doing multiple things
-ComponentEffect.effect(container, () -> {
-    nameLabel.setText(userSignal.value().name());
-    ageLabel.setText(String.valueOf(userSignal.value().age()));
+Signal.effect(container, () -> {
+    nameLabel.setText(userSignal.get().name());
+    ageLabel.setText(String.valueOf(userSignal.get().age()));
     // ... more updates
 });
 ----

@@ -47,8 +47,8 @@ Use [methodname]`bindValue()` to connect signals to form fields:
 
 [source,java]
 ----
-accountTypeSelect.bindValue(accountTypeSignal);
-ageField.bindValue(ageSignal);
+accountTypeSelect.bindValue(accountTypeSignal, accountTypeSignal::set);
+ageField.bindValue(ageSignal, ageSignal::set);
 ----
 
 This creates a two-way connection: when the user changes the field, the signal updates, and when code updates the signal, the field updates. See <<../local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details about bidirectional bindings.
@@ -61,8 +61,8 @@ Create a computed signal that derives the validation result from multiple signal
 [source,java]
 ----
 Signal<Boolean> ageValidSignal = Signal.computed(() -> {
-    Integer age = ageSignal.value();
-    AccountType accountType = accountTypeSignal.value();
+    Integer age = ageSignal.get();
+    AccountType accountType = accountTypeSignal.get();
     if (age == null) {
         return false;
     }
@@ -80,8 +80,8 @@ Reference the computed signal in your Binder validator:
 [source,java]
 ----
 binder.forField(ageField)
-    .withValidator(value -> ageValidSignal.value(), value -> {
-        AccountType accountType = accountTypeSignal.value();
+    .withValidator(value -> ageValidSignal.get(), value -> {
+        AccountType accountType = accountTypeSignal.get();
         return accountType == AccountType.BUSINESS
             ? "Business accounts require age 18 or older"
             : "Personal accounts require age 13 or older";
@@ -89,7 +89,7 @@ binder.forField(ageField)
     .bind("age");
 ----
 
-The validator checks [methodname]`ageValidSignal.value()` and provides a dynamic error message based on the current account type. When the user changes the account type, Binder automatically re-runs validation because the signal value changed.
+The validator checks [methodname]`ageValidSignal.get()` and provides a dynamic error message based on the current account type. When the user changes the account type, Binder automatically re-runs validation because the signal value changed.
 
 
 === Cross-Field Validation with Binding Values
@@ -110,7 +110,7 @@ binder.forField(confirmPasswordField)
     .bind("confirmPassword");
 ----
 
-You can mix [methodname]`binding.value()` and [methodname]`signal.value()` in the same validator - Binder re-validates whenever any referenced binding or signal value changes. Use signals when you need to share validation state across multiple components or derive complex logic from multiple sources.
+You can mix [methodname]`binding.value()` and [methodname]`signal.get()` in the same validator - Binder re-validates whenever any referenced binding or signal value changes. Use signals when you need to share validation state across multiple components or derive complex logic from multiple sources.
 
 
 === Reactive Submit Button
