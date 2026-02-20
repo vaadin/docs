@@ -1,0 +1,370 @@
+---
+title: Generate PDF Reports
+page-title: How to generate PDF reports in a Vaadin application | Vaadin Docs
+description: Learn how to generate PDF reports and embed them in a Vaadin view.
+meta-description: Generate PDF reports in Vaadin using OpenPDF, display them with IFrame or PDF.js, and choose the right viewer for your use case.
+order: 36
+---
+
+
+= Generate PDF Reports
+:toclevels: 2
+
+This article shows how to generate a PDF document using OpenPDF and display it in a Vaadin view. It covers two approaches: using the browser's built-in PDF viewer via `IFrame`, and rendering with PDF.js for more control. For serving files as downloads instead, see <<handle-downloads#,Handle File Downloads>>.
+
+
+== Add the OpenPDF Dependency
+
+OpenPDF is an open-source PDF library for Java (LGPL/MPL license). Add it to your project's `pom.xml` (check https://central.sonatype.com/artifact/com.github.librepdf/openpdf[Maven Central] for the latest version):
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.github.librepdf</groupId>
+    <artifactId>openpdf</artifactId>
+    <version>3.0.1</version>
+</dependency>
+----
+
+
+== Display with IFrame (Browser PDF Viewer)
+
+The simplest approach is to embed the PDF in an `IFrame`, which uses the browser's built-in PDF viewer. This gives users familiar controls for page navigation, zoom, and printing with no extra dependencies.
+
+A self-contained view that generates a simple PDF report and embeds it inline:
+
+[source,java]
+----
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+
+import org.openpdf.text.Document;
+import org.openpdf.text.FontFactory;
+import org.openpdf.text.Paragraph;
+import org.openpdf.text.pdf.PdfWriter;
+
+import com.vaadin.flow.component.html.IFrame;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
+
+@Route("pdf-report")
+public class PdfReportView extends VerticalLayout {
+
+    public PdfReportView() {
+        IFrame pdfViewer = new IFrame( // <1>
+                DownloadHandler.fromInputStream(event -> { // <2>
+                    try {
+                        byte[] pdf = generateReport();
+                        return new DownloadResponse(
+                                new ByteArrayInputStream(pdf),
+                                "report.pdf",
+                                "application/pdf",
+                                pdf.length);
+                    } catch (Exception e) {
+                        return DownloadResponse.error(500);
+                    }
+                }));
+        pdfViewer.setWidth("100%");
+        pdfViewer.setHeight("800px"); // <3>
+
+        add(pdfViewer);
+    }
+
+    private byte[] generateReport() { // <4>
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document document = new Document();
+        PdfWriter.getInstance(document, out);
+        document.open();
+        document.add(new Paragraph("Monthly Report",
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)));
+        document.add(new Paragraph("Generated: " + LocalDate.now()));
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph(
+                "This is a sample report. Replace this with your own content."));
+        document.close();
+        return out.toByteArray();
+    }
+}
+----
+<1> `IFrame` displays the PDF inline using the browser's built-in PDF viewer. It automatically sets the content disposition to `inline`.
+<2> `DownloadHandler.fromInputStream()` provides the PDF bytes when the browser loads the iframe.
+<3> Set an explicit height — iframes don't grow with their content.
+<4> OpenPDF's `Document` / `PdfWriter` API. Replace this method with your own report logic.
+
+
+== Offering the PDF as a Download
+
+To add a download link alongside the embedded viewer, reuse the same generation logic with an `Anchor`:
+
+[source,java]
+----
+Anchor downloadLink = new Anchor(
+        DownloadHandler.fromInputStream(event -> {
+            byte[] pdf = generateReport();
+            return new DownloadResponse(
+                    new ByteArrayInputStream(pdf),
+                    "report.pdf",
+                    "application/pdf",
+                    pdf.length);
+        }), "Download PDF");
+----
+
+See <<handle-downloads#,Handle File Downloads>> for more download patterns.
+
+
+== Display with PDF.js (Custom Viewer)
+
+https://mozilla.github.io/pdf.js/[PDF.js] is Mozilla's JavaScript PDF renderer. It draws PDF pages onto HTML `<canvas>` elements, giving you full control over the viewing experience. This is useful when you need a consistent look across browsers, want to build custom viewer controls, or need to integrate features like text search or annotations.
+
+This approach requires a client-side LitElement web component and a server-side Java wrapper.
+
+=== Client-Side Component
+
+Create a `pdf-viewer.ts` file in your `src/main/frontend/` directory:
+
+[source,typescript]
+----
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL( // <1>
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).href;
+
+@customElement('pdf-viewer')
+export class PdfViewer extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      overflow: auto;
+      background: var(--lumo-contrast-90pct, #525659);
+      font-family: var(--lumo-font-family, sans-serif);
+    }
+    canvas {
+      display: block;
+      margin: var(--lumo-space-s, 8px) auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .error {
+      color: var(--lumo-primary-contrast-color, white);
+      padding: var(--lumo-space-m, 16px);
+      text-align: center;
+    }
+    .truncated {
+      color: var(--lumo-contrast-30pct, #ccc);
+      padding: var(--lumo-space-m, 16px) var(--lumo-space-m, 16px) var(--lumo-space-l, 24px);
+      text-align: center;
+      font-size: var(--lumo-font-size-s, 14px);
+    }
+  `;
+
+  @property() src = ''; // <2>
+  @property({ type: Number, attribute: 'max-pages' }) maxPages = 50; // <3>
+  @state() private _error = '';
+  @state() private _truncated = false;
+  @state() private _totalPages = 0;
+
+  private _loadTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
+
+  render() {
+    if (this._error) {
+      return html`<div class="error">${this._error}</div>`;
+    }
+    return html`
+      <div id="pages"></div>
+      ${this._truncated
+        ? html`<div class="truncated">
+            Showing ${this.maxPages} of ${this._totalPages} pages.
+            Download the PDF to see the full document.
+          </div>`
+        : ''}
+    `;
+  }
+
+  disconnectedCallback() { // <4>
+    super.disconnectedCallback();
+    if (this._loadTask) {
+      this._loadTask.destroy();
+      this._loadTask = null;
+    }
+  }
+
+  protected updated(changed: PropertyValues) {
+    if (changed.has('src') && this.src) {
+      this._loadPdf();
+    }
+  }
+
+  private async _loadPdf() {
+    if (this._loadTask) {
+      this._loadTask.destroy();
+      this._loadTask = null;
+    }
+
+    this._error = '';
+    this._truncated = false;
+    this._totalPages = 0;
+    await this.updateComplete;
+    const container = this.shadowRoot!.querySelector('#pages') as HTMLDivElement;
+    if (!container) return;
+    container.innerHTML = '';
+
+    try {
+      this._loadTask = pdfjsLib.getDocument(this.src);
+      const pdf = await this._loadTask.promise;
+
+      this._totalPages = pdf.numPages;
+      const pagesToRender = Math.min(pdf.numPages, this.maxPages);
+      this._truncated = pdf.numPages > this.maxPages;
+
+      const availableWidth = this.clientWidth - 32; // <5>
+
+      for (let i = 1; i <= pagesToRender; i++) {
+        const page = await pdf.getPage(i);
+        const unscaled = page.getViewport({ scale: 1 });
+        const scale = availableWidth > 0
+          ? availableWidth / unscaled.width
+          : 1.5;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        container.appendChild(canvas);
+
+        await page.render({
+          canvas,
+          canvasContext: canvas.getContext('2d')!,
+          viewport,
+        }).promise;
+      }
+    } catch (err: any) {
+      if (err?.name !== 'RenderingCancelledException') {
+        this._error = `Failed to load PDF: ${err?.message || err}`;
+      }
+    }
+  }
+}
+----
+<1> PDF.js uses a Web Worker for parsing. The worker source must be set before loading any documents.
+<2> The `src` property receives a URL to the PDF. Vaadin sets this attribute from the server side.
+<3> Hard upper limit on rendered pages. All pages are rendered up-front onto canvas elements, so a large PDF would consume a lot of memory. The default of 50 is a safe ceiling for most report-viewing use cases.
+<4> PDF.js holds document data in the Web Worker's memory. Calling `destroy()` when the component is removed from the DOM prevents a memory leak.
+<5> The scale is computed from the container width so pages fit without horizontal scrolling. The 32px margin leaves room for the box shadow.
+
+NOTE: The CSS uses <</styling/themes/lumo/lumo-style-properties#,Lumo>> theme custom properties (e.g., `--lumo-contrast-90pct`, `--lumo-font-family`). If your application uses the <</styling/themes/aura#,Aura>> theme, replace these with the corresponding Aura custom properties.
+
+=== Server-Side Java Component
+
+Create a `PdfViewer.java` wrapper that maps to the custom element:
+
+[source,java]
+----
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasSize;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.server.streams.DownloadHandler;
+
+@Tag("pdf-viewer")
+@NpmPackage(value = "pdfjs-dist", version = "5.4.624") // <1>
+@JsModule("./pdf-viewer.ts") // <2>
+public class PdfViewer extends Component implements HasSize {
+
+    public PdfViewer() {
+    }
+
+    public PdfViewer(DownloadHandler downloadHandler) {
+        setSrc(downloadHandler);
+    }
+
+    public void setSrc(DownloadHandler downloadHandler) {
+        getElement().setAttribute("src", downloadHandler); // <3>
+    }
+
+    public void setMaxPages(int maxPages) {
+        getElement().setProperty("maxPages", maxPages); // <4>
+    }
+}
+----
+<1> `@NpmPackage` tells Vaadin to install `pdfjs-dist` from npm during the build.
+<2> `@JsModule` links to the LitElement file created above.
+<3> Vaadin converts a `DownloadHandler` to a URL when set as an element attribute. This is the same mechanism `IFrame` uses internally.
+<4> Sets the page limit on the client-side component. The default is 50.
+
+=== Using the Component
+
+The `PdfViewer` component is a drop-in replacement for `IFrame`:
+
+[source,java]
+----
+PdfViewer pdfViewer = new PdfViewer(
+        DownloadHandler.fromInputStream(event -> {
+            try {
+                byte[] pdf = generateReport();
+                return new DownloadResponse(
+                        new ByteArrayInputStream(pdf),
+                        "report.pdf",
+                        "application/pdf",
+                        pdf.length);
+            } catch (Exception e) {
+                return DownloadResponse.error(500);
+            }
+        }));
+pdfViewer.setWidth("100%");
+pdfViewer.setHeight("800px");
+
+add(pdfViewer);
+----
+
+The server-side API is identical to the `IFrame` version. The difference is entirely in how the browser renders the PDF.
+
+
+== Choosing Between IFrame and PDF.js
+
+[cols="1,1,1",options="header"]
+|===
+| | IFrame (Browser Viewer) | PDF.js (Custom Viewer)
+| Setup
+| No extra dependencies
+| Requires a LitElement component + npm package
+
+| UI controls
+| Browser-provided (zoom, page nav, print, download)
+| You build your own (or start minimal)
+
+| Cross-browser consistency
+| Varies — each browser has a different PDF viewer
+| Identical rendering everywhere
+
+| Customization
+| None — the viewer is a browser black box
+| Full control over layout, styling, and behavior
+
+| Text search
+| Built into most browser viewers
+| Requires PDF.js text layer (extra code)
+
+| Mobile
+| Some mobile browsers don't render PDFs inline
+| Works on all browsers that support `<canvas>`
+
+| Bundle size
+| Zero
+| ~400 KB (PDF.js library + worker)
+|===
+
+Use `IFrame` when you want a quick, zero-dependency solution and the browser's built-in viewer is good enough. Use PDF.js when you need a consistent viewer across browsers, want custom controls, or need to support mobile browsers that don't handle inline PDFs well.
+
+
+== Beyond the Basics
+
+- *Tables and styling* — OpenPDF supports tables (`PdfPTable`), fonts, colors, and page layouts for richer reports.
+- *Streaming large reports* — for large documents, write directly to the `OutputStream` from `DownloadEvent` instead of buffering in memory. See <<handle-downloads#,Handle File Downloads>> for streaming patterns.
+- *Alternative libraries* — Apache PDFBox and iText are popular alternatives with different trade-offs in API style and licensing.
