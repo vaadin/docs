@@ -11,7 +11,7 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.slider.Slider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.signals.impl.Effect;
+import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 
 @Route("map-scale-control")
@@ -32,11 +32,11 @@ public class MapScaleControl extends Div {
         scaleControl.setMinWidth(175);
 
         // Update control when data changes
-        Effect.effect(map, () -> {
+        Signal.effect(map, () -> {
             scaleControl.setUnits(units.get());
             scaleControl.setDisplayMode(showAsBar.get() ? ScaleControl.DisplayMode.BAR : ScaleControl.DisplayMode.LINE);
             scaleControl.setScaleBarSteps(barSteps.get().intValue());
-            scaleControl.setScaleBarTextVisible(showRatio.get());
+            scaleControl.setScaleBarRatioVisible(showRatio.get());
         });
 
         // Configure unit of measurement
