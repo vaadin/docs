@@ -1,24 +1,22 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
+import { Badge, HorizontalLayout, VerticalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (
     // tag::snippet[]
     <VerticalLayout theme="spacing">
       <HorizontalLayout theme="spacing">
-        <span {...{ theme: 'badge ' }}>Pending</span>
-        <span {...{ theme: 'badge success ' }}>Confirmed</span>
-        <span {...{ theme: 'badge warning ' }}>Warning</span>
-        <span {...{ theme: 'badge error ' }}>Denied</span>
-        <span {...{ theme: 'badge contrast ' }}>On hold</span>
+        <Badge>Pending</Badge>
+        <Badge theme="success">Confirmed</Badge>
+        <Badge theme="warning">Warning</Badge>
+        <Badge theme="error">Denied</Badge>
       </HorizontalLayout>
       <HorizontalLayout theme="spacing">
-        <span {...{ theme: 'badge primary ' }}>Pending</span>
-        <span {...{ theme: 'badge success primary ' }}>Confirmed</span>
-        <span {...{ theme: 'badge warning primary ' }}>Warning</span>
-        <span {...{ theme: 'badge error primary ' }}>Denied</span>
-        <span {...{ theme: 'badge contrast primary ' }}>On hold</span>
+        <Badge theme="filled">Pending</Badge>
+        <Badge theme="success filled">Confirmed</Badge>
+        <Badge theme="warning filled">Warning</Badge>
+        <Badge theme="error filled">Denied</Badge>
       </HorizontalLayout>
     </VerticalLayout>
     // end::snippet[]

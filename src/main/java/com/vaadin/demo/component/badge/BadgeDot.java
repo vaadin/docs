@@ -6,27 +6,28 @@ import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("badge-basic")
-public class BadgeBasic extends HorizontalLayout {
+@Route("badge-dot")
+public class BadgeDot extends HorizontalLayout {
 
-    public BadgeBasic() {
+    public BadgeDot() {
         // tag::snippet[]
         Badge pending = new Badge("Pending");
+        pending.addThemeVariants(BadgeVariant.DOT);
 
         Badge confirmed = new Badge("Confirmed");
-        confirmed.addThemeVariants(BadgeVariant.SUCCESS);
+        confirmed.addThemeVariants(BadgeVariant.DOT, BadgeVariant.SUCCESS);
 
         Badge warning = new Badge("Warning");
-        warning.addThemeVariants(BadgeVariant.WARNING);
+        warning.addThemeVariants(BadgeVariant.DOT, BadgeVariant.WARNING);
 
         Badge denied = new Badge("Denied");
-        denied.addThemeVariants(BadgeVariant.ERROR);
+        denied.addThemeVariants(BadgeVariant.DOT, BadgeVariant.ERROR);
 
         // end::snippet[]
 
         add(pending, confirmed, warning, denied);
     }
 
-    public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-source-line
+    public static class Exporter extends DemoExporter<BadgeDot> { // hidden-source-line
     } // hidden-source-line
 }

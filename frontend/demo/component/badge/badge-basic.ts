@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -16,11 +17,10 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <span theme="badge">Pending</span>
-        <span theme="badge success">Confirmed</span>
-        <span theme="badge warning">Warning</span>
-        <span theme="badge error">Denied</span>
-        <span theme="badge contrast">On hold</span>
+        <vaadin-badge>Pending</vaadin-badge>
+        <vaadin-badge theme="success">Confirmed</vaadin-badge>
+        <vaadin-badge theme="warning">Warning</vaadin-badge>
+        <vaadin-badge theme="error">Denied</vaadin-badge>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;
