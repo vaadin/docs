@@ -27,23 +27,29 @@ public class UploadManagerDropZone extends Div {
         // Create the manager
         var manager = new UploadManager(this, handler);
         manager.setMaxFiles(10);
-        manager.setAcceptedMimeTypes("image/*");
 
         // Create the upload button
         var uploadButton = new UploadButton("Browse", manager);
 
         // Create drop zone content
         var icon = VaadinIcon.UPLOAD.create();
-        var label = new Span("Drop images here or");
+        var label = new Span("Drop files here or");
         var dropContent = new HorizontalLayout(icon, label, uploadButton);
         dropContent.setAlignItems(FlexComponent.Alignment.CENTER);
+        dropContent.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         dropContent.setSpacing(true);
 
         // Create the drop zone with the content inside
         var dropZone = new UploadDropZone(dropContent, manager);
+        dropZone.setWidthFull();
+        dropZone.getStyle().set("border", "1px dashed var(--lumo-contrast-30pct)");
+        dropZone.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
+        dropZone.getStyle().set("padding", "var(--lumo-space-l)");
+        dropZone.getStyle().set("box-sizing", "border-box");
 
         // Create the file list
         var fileList = new UploadFileList(manager);
+        fileList.setWidthFull();
 
         // Layout the components
         var layout = new VerticalLayout(dropZone, fileList);

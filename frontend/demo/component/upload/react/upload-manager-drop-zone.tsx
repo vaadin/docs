@@ -18,21 +18,29 @@ function Example() {
       new UploadManager({
         target: '/api/fileupload',
         maxFiles: 10,
-        accept: 'image/*',
       }),
     []
   );
 
   return (
-    <VerticalLayout theme="spacing">
-      <UploadDropZone manager={manager}>
-        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
+    <VerticalLayout theme="spacing" style={{ width: '100%' }}>
+      <UploadDropZone
+        manager={manager}
+        style={{
+          border: '1px dashed var(--lumo-contrast-30pct)',
+          borderRadius: 'var(--lumo-border-radius-l)',
+          padding: 'var(--lumo-space-l)',
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center', justifyContent: 'center' }}>
           <Icon icon="vaadin:upload" />
-          <span>Drop images here or</span>
+          <span>Drop files here or</span>
           <UploadButton manager={manager}>Browse</UploadButton>
         </HorizontalLayout>
       </UploadDropZone>
-      <UploadFileList manager={manager} />
+      <UploadFileList manager={manager} style={{ width: '100%' }} />
     </VerticalLayout>
   );
   // end::snippet[]

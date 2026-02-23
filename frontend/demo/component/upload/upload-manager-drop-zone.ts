@@ -25,20 +25,28 @@ export class Example extends LitElement {
   private manager = new UploadManager({
     target: '/api/fileupload',
     maxFiles: 10,
-    accept: 'image/*',
   });
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout theme="spacing">
-        <vaadin-upload-drop-zone .manager="${this.manager}">
-          <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+      <vaadin-vertical-layout theme="spacing" style="width: 100%">
+        <vaadin-upload-drop-zone
+          .manager="${this.manager}"
+          style="border: 1px dashed var(--lumo-contrast-30pct); border-radius: var(--lumo-border-radius-l); padding: var(--lumo-space-l); width: 100%; box-sizing: border-box"
+        >
+          <vaadin-horizontal-layout
+            theme="spacing"
+            style="align-items: center; justify-content: center"
+          >
             <vaadin-icon icon="vaadin:upload"></vaadin-icon>
-            <span>Drop images here or</span>
+            <span>Drop files here or</span>
             <vaadin-upload-button .manager="${this.manager}">Browse</vaadin-upload-button>
           </vaadin-horizontal-layout>
         </vaadin-upload-drop-zone>
-        <vaadin-upload-file-list .manager="${this.manager}"></vaadin-upload-file-list>
+        <vaadin-upload-file-list
+          .manager="${this.manager}"
+          style="width: 100%"
+        ></vaadin-upload-file-list>
       </vaadin-vertical-layout>
     `;
   }
