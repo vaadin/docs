@@ -15,7 +15,7 @@ function Example() {
         accept="application/pdf,.pdf"
         maxFiles={1}
         onFileReject={(event) => {
-          Notification.show(event.detail.error);
+          Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
         }}
       />
       {/* end::snippet[] */}

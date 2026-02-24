@@ -7,7 +7,7 @@ import type { UploadFileRejectEvent } from '@vaadin/react-components/Upload.js';
 import { Upload } from '@vaadin/react-components/Upload.js';
 
 const fileRejectHandler = (event: UploadFileRejectEvent) => {
-  Notification.show(event.detail.error);
+  Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
 };
 
 function Example() {
