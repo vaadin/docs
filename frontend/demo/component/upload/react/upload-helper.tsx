@@ -37,7 +37,7 @@ function Example() {
   return (
     <>
       <h4>Upload spreadsheet</h4>
-      <p>
+      <p style={{ color: 'var(--vaadin-text-color-secondary)' }}>
         File size must be less than or equal to {maxFileSizeInMB} MB.
         <br />
         Only Excel and CSV files are accepted.

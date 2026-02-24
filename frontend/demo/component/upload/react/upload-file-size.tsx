@@ -11,7 +11,9 @@ function Example() {
   return (
     <>
       <h4>Upload file</h4>
-      <p>Maximum file size: {maxFileSizeInMB} MB</p>
+      <p style={{ color: 'var(--vaadin-text-color-secondary)' }}>
+        Maximum file size: {maxFileSizeInMB} MB
+      </p>
       <Upload
         maxFiles={1}
         maxFileSize={maxFileSizeInBytes}

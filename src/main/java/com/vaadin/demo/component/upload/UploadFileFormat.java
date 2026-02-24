@@ -38,9 +38,8 @@ public class UploadFileFormat extends Div {
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload report");
-        title.getStyle().set("margin-top", "0");
         Paragraph hint = new Paragraph("Accepted file formats: PDF (.pdf)");
-        hint.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        hint.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 
         add(title, hint, upload);
     }

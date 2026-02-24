@@ -8,7 +8,9 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <h4>Upload report</h4>
-      <p>Accepted file formats: PDF (.pdf)</p>
+      <p style={{ color: 'var(--vaadin-text-color-secondary)' }}>
+        Accepted file formats: PDF (.pdf)
+      </p>
       <Upload
         accept="application/pdf,.pdf"
         maxFiles={1}

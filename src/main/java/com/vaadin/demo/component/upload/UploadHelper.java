@@ -42,8 +42,7 @@ public class UploadHelper extends Div {
         add(title, hint, upload);
         // end::snippet[]
 
-        title.getStyle().set("margin-top", "0");
-        hint.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        hint.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 
         upload.addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();

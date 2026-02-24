@@ -10,12 +10,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 @customElement('upload-file-size')
 export class Example extends LitElement {
   static override styles = css`
-    h4 {
-      margin-top: 0;
-    }
-
     p {
-      color: var(--lumo-secondary-text-color);
+      color: var(--vaadin-text-color-secondary);
     }
   `;
 

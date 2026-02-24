@@ -10,7 +10,9 @@ function Example() {
   return (
     <>
       <h4>Upload files</h4>
-      <p>Maximum of {maxFiles} files allowed</p>
+      <p style={{ color: 'var(--vaadin-text-color-secondary)' }}>
+        Maximum of {maxFiles} files allowed
+      </p>
       <Upload
         maxFiles={maxFiles}
         onFileReject={(event) => {

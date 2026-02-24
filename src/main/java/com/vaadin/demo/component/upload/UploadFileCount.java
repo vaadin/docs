@@ -36,9 +36,8 @@ public class UploadFileCount extends Div {
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload files");
-        title.getStyle().set("margin-top", "0");
         Paragraph hint = new Paragraph("Maximum of 3 files allowed");
-        hint.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        hint.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 
         add(title, hint, upload);
     }

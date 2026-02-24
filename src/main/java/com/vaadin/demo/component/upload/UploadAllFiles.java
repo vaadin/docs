@@ -21,7 +21,7 @@ public class UploadAllFiles extends Div {
         upload.setAutoUpload(false);
 
         Button uploadAllButton = new Button("Upload All Files");
-        uploadAllButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        uploadAllButton.addThemeVariants(ButtonVariant.PRIMARY);
         uploadAllButton.addClickListener(event -> {
             // No explicit Flow API for this at the moment
             upload.getElement().callJsFunction("uploadFiles");
