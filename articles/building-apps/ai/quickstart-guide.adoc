@@ -10,7 +10,7 @@ section-nav: badge-flow
 
 = Quick Start-Guide: Add an AI Chat Bot to a Vaadin + Spring Boot Application [badge-flow]#Flow#
 
-This guide shows how to connect a Large Language Model (LLM) into a Vaadin application using Spring AI and Spring Boot. You'll build a minimal chat UI with Vaadin provided components **MessageList** and **MessageInput**, stream responses token-by-token, and keep a conversational tone in the dialog with the AI.
+This guide shows how to connect a Large Language Model (LLM) into a Vaadin application using Spring AI, Spring Boot, and the <<{articles}/components/ai-components#,AI Components>>. You'll build a minimal chat UI with **MessageList** and **MessageInput**, stream responses token-by-token, and keep a conversational tone in the dialog with the AI -- all without writing boilerplate wiring code.
 
 image::images/chatbot-image.png[role=text-center]
 
@@ -19,9 +19,9 @@ image::images/chatbot-image.png[role=text-center]
 
 == Prerequisites
 
-* Java 17+
-* Spring Boot 3.5+ (or newer)
-* Vaadin 24.8+
+* Java 21+
+* Spring Boot 4+ (or newer)
+* Vaadin 25.1+ (currently in preview)
 * An OpenAI API key (`OPENAI_API_KEY`)
 
 
@@ -48,7 +48,7 @@ Add the Spring AI BOM and the OpenAI starter to import the necessary dependencie
     <dependency>
       <groupId>org.springframework.ai</groupId>
       <artifactId>spring-ai-bom</artifactId>
-      <version>1.0.1</version><!-- use the latest stable -->
+      <version>2.0.0-M2</version><!-- use the latest stable -->
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -110,160 +110,88 @@ public class Application implements AppShellConfigurator {
 ----
 
 
-== 5. Create the Chat service (Spring AI)
+== 5. Build the Chat UI with AI Components
 
-Create a new class called **ChatService** and annotate it with `@Service`. This service builds a `ChatClient` with a **ChatMemory** advisor in the constructor and exposes a **reactive stream** of tokens.
+The <<{articles}/components/ai-components#,AI Orchestrator>> connects your UI components to the LLM. It handles message display, token streaming, conversation memory, and UI updates automatically. You don't need to write a separate service class -- the orchestrator manages the Spring AI integration directly.
 
-[source,java]
-----
-// src/main/java/org/vaadin/example/ChatService.java
-package org.vaadin.example;
-
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
-@Service
-public class ChatService {
-
-    private final ChatClient chatClient;
-
-    public ChatService(ChatClient.Builder chatClientBuilder,
-                       ChatMemory chatMemory) {
-        // Add a memory advisor to the chat client
-        var chatMemoryAdvisor = MessageChatMemoryAdvisor
-                .builder(chatMemory)
-                .build();
-
-        // Build the chat client
-        chatClient = chatClientBuilder
-                .defaultAdvisors(chatMemoryAdvisor)
-                .build();
-    }
-
-    public Flux<String> chatStream(String userInput, String chatId) {
-        return chatClient.prompt()
-                .advisors(advisorSpec ->
-                    advisorSpec.param(ChatMemory.CONVERSATION_ID, chatId)
-                )
-                .user(userInput)
-                .stream()
-                .content();
-    }
-}
-
-----
-
-Why a chat memory? **ChatMemory** keeps context of the conversations so users don't have to repeat themselves. The `chatId` keeps the context for a specific chat and doesn't share it with other chats and users.
-
-
-== 6. Build the Chat UI with Vaadin
-
-Use `MessageList` to render the conversation as Markdown and `MessageInput` to handle the user prompts. Wrap the list in a `Scroller` so long chats don't grow the layout beyond the browser window:
+Use `MessageList` to render the conversation and `MessageInput` for user prompts. Wrap the list in a `Scroller` so long chats don't grow the layout beyond the browser window. Then wire everything together with the orchestrator's builder:
 
 [source,java]
 ----
 // src/main/java/org/vaadin/example/MainView.java
-package com.example.application.views.chatbot;
+package org.vaadin.example;
 
-import com.example.application.services.ChatService;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.ai.orchestrator.AIOrchestrator;
+import com.vaadin.flow.component.ai.provider.LLMProvider;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
-import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import org.springframework.ai.chat.model.ChatModel;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @PageTitle("Chat Bot")
 @Route("")
 @RouteAlias("chat-bot")
 @Menu(order = 0, icon = LineAwesomeIconUrl.ROBOT_SOLID)
-public class ChatBotView extends Composite<VerticalLayout> {
+public class MainView extends Composite<VerticalLayout> {
 
-    private final ChatService chatService;
-    private final MessageList messageList;
-    private final String chatId = UUID.randomUUID().toString();
+    public MainView(ChatModel chatModel) {
+        // Create UI components
+        var messageList = new MessageList();
+        var messageInput = new MessageInput();
 
-    public ChatBotView(ChatService chatService) {
-        this.chatService = chatService;
+        // Create the LLM provider
+        var provider = LLMProvider.from(chatModel);
 
-        //Create a scrolling MessageList
-        messageList = new MessageList();
+        // Wire everything together
+        AIOrchestrator.builder(provider,
+                        "You are a helpful assistant.")
+                .withMessageList(messageList)
+                .withInput(messageInput)
+                .build();
+
+        // Add UI components to the layout
         var scroller = new Scroller(messageList);
         scroller.setHeightFull();
         getContent().addAndExpand(scroller);
-
-        //create a MessageInput and set a submit-listener
-        var messageInput = new MessageInput();
-        messageInput.addSubmitListener(this::onSubmit);
-        messageInput.setWidthFull();
-
         getContent().add(messageInput);
     }
-
-    private void onSubmit(MessageInput.SubmitEvent submitEvent) {
-        //create and handle a prompt message
-        var promptMessage = new MessageListItem(submitEvent.getValue(), Instant.now(), "User");
-        promptMessage.setUserColorIndex(0);
-        messageList.addItem(promptMessage);
-
-        //create and handle the response message
-        var responseMessage = new MessageListItem("", Instant.now(), "Bot");
-        responseMessage.setUserColorIndex(1);
-        messageList.addItem(responseMessage);
-
-        //append a response message to the existing UI
-        var userPrompt = submitEvent.getValue();
-        var uiOptional = submitEvent.getSource().getUI();
-        var ui = uiOptional.orElse(null); //implementation via ifPresent also possible
-
-        if (ui != null) {
-            chatService.chatStream(userPrompt, chatId)
-                    .subscribe(token ->
-                            ui.access(() ->
-                                    responseMessage.appendText(token)));
-        }
-    }
 }
-
 ----
 
-**Key UI patterns used here:**
+The orchestrator takes care of:
 
-* **Dialog character:** display prompts and responses separately so the difference remains visible.
-* **Streaming output:** show tokens as they arrive for perceived performance.
-* **Markdown rendering:** richer answers (lists, code blocks, emojis).
-* **Sticky scroll:** keep the latest answer in view.
+* **Displaying messages:** user prompts and assistant responses appear in the Message List automatically.
+* **Streaming output:** tokens are pushed to the UI as they arrive from the LLM.
+* **Conversation memory:** the provider maintains a 30-message context window, so the assistant remembers earlier messages.
+* **Markdown rendering:** responses render as rich text (lists, code blocks, links).
+* **Sticky scroll:** the Message List keeps the latest answer in view.
 
 
-== 7. Run & Iterate
+== 6. Run & Iterate
 
 Start the application, open the browser, and try your first prompts.
 
 
 == What You Built
 
-* A production-ready **chat bot** using Vaadin components
+* A production-ready **chat bot** using Vaadin AI Components
 * **Token-by-token streaming** with Vaadin Push
-* **Conversation memory** via Spring AI advisors
+* **Conversation memory** managed by the LLM provider
 
 
 == Next Possible Steps
 
-* Add a **system prompt** field to steer the assistant (e.g., tone, persona).
-* Add **clear chat** and **export** actions.
-* Add **feedback** to evaluate responses
-* Support **attachments** and **tool calls** (retrieval, functions).
+* Customize the **system prompt** to steer the assistant (e.g., tone, persona).
+* Add **file attachments** with `UploadManager` via <<{articles}/components/ai-components#file-attachments,`withFileReceiver()`>>.
+* Support **tool calls** via <<{articles}/components/ai-components#tool-calling,`withTools()`>>.
+* **Persist conversation history** via <<{articles}/components/ai-components#conversation-history,`ResponseCompleteListener`>>.
 * Log prompts/responses for observability.
 
 
@@ -275,10 +203,9 @@ Start the application, open the browser, and try your first prompts.
 
 == Complete File List Recap
 
-* `src/main/java/org/vaadin/example/Application.java` — Spring Boot + `@Push`
-* `src/main/java/org/vaadin/example/ChatService.java` — Spring AI client + memory
-* `src/main/java/org/vaadin/example/MainView.java` — Vaadin chat UI
-* `src/main/resources/application.properties` — OpenAI config
-* `pom.xml` — Vaadin + Spring AI dependencies
+* `src/main/java/org/vaadin/example/Application.java` -- Spring Boot + `@Push`
+* `src/main/java/org/vaadin/example/MainView.java` -- AI Components + Vaadin chat UI
+* `src/main/resources/application.properties` -- OpenAI config
+* `pom.xml` -- Vaadin + Spring AI dependencies
 
-That's it — your Vaadin application now speaks AI. 🚀
+That's it -- your Vaadin application now speaks AI.
