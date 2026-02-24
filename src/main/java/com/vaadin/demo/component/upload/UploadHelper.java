@@ -49,7 +49,7 @@ public class UploadHelper extends Div {
 
             Notification notification = Notification.show(errorMessage, 5000,
                     Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notification.addThemeVariants(NotificationVariant.ERROR);
         });
 
     }
