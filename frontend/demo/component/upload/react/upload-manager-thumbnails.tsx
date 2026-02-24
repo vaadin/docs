@@ -1,10 +1,10 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { UploadButton } from '@vaadin/react-components/UploadButton.js';
 import { UploadFileList } from '@vaadin/react-components/UploadFileList.js';
-import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
+import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 
 function Example() {
   // tag::snippet[]

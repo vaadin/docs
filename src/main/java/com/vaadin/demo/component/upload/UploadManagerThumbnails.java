@@ -16,7 +16,7 @@ public class UploadManagerThumbnails extends Div {
     public UploadManagerThumbnails() {
         // tag::snippet[]
         var handler = UploadHandler.inMemory((metadata, data) -> {
-            // Process the uploaded image
+            // Process the uploaded file
         });
 
         var manager = new UploadManager(this, handler);

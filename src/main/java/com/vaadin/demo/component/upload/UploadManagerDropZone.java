@@ -36,15 +36,17 @@ public class UploadManagerDropZone extends Div {
         var label = new Span("Drop files here or");
         var dropContent = new HorizontalLayout(icon, label, uploadButton);
         dropContent.setAlignItems(FlexComponent.Alignment.CENTER);
-        dropContent.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        dropContent
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         dropContent.setSpacing(true);
 
         // Create the drop zone with the content inside
         var dropZone = new UploadDropZone(dropContent, manager);
         dropZone.setWidthFull();
-        dropZone.getStyle().set("border", "1px dashed var(--lumo-contrast-30pct)");
-        dropZone.getStyle().set("border-radius", "var(--lumo-border-radius-l)");
-        dropZone.getStyle().set("padding", "var(--lumo-space-l)");
+        dropZone.getStyle().set("border",
+                "1px dashed var(--vaadin-border-color-secondary)");
+        dropZone.getStyle().set("border-radius", "var(--vaadin-radius-l)");
+        dropZone.getStyle().set("padding", "var(--vaadin-padding-l)");
         dropZone.getStyle().set("box-sizing", "border-box");
 
         // Create the file list

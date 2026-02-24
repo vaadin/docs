@@ -8,7 +8,7 @@ import '@vaadin/upload/vaadin-upload-drop-zone.js';
 import '@vaadin/upload/vaadin-upload-file-list.js';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
@@ -21,8 +21,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @state()
-  private manager = new UploadManager({
+  private readonly manager = new UploadManager({
     target: '/api/fileupload',
     maxFiles: 10,
   });
@@ -32,7 +31,7 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing" style="width: 100%">
         <vaadin-upload-drop-zone
           .manager="${this.manager}"
-          style="border: 1px dashed var(--lumo-contrast-30pct); border-radius: var(--lumo-border-radius-l); padding: var(--lumo-space-l); width: 100%; box-sizing: border-box"
+          style="border: 1px dashed var(--vaadin-border-color-secondary); border-radius: var(--vaadin-radius-l); padding: var(--vaadin-padding-l); width: 100%; box-sizing: border-box"
         >
           <vaadin-horizontal-layout
             theme="spacing"

@@ -1,14 +1,14 @@
-import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import './upload-demo-helpers'; // hidden-source-line
+import '@vaadin/icons';
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { UploadButton } from '@vaadin/react-components/UploadButton.js';
 import { UploadDropZone } from '@vaadin/react-components/UploadDropZone.js';
 import { UploadFileList } from '@vaadin/react-components/UploadFileList.js';
-import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
-import '@vaadin/icons';
+import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 
 function Example() {
   // tag::snippet[]
@@ -27,14 +27,17 @@ function Example() {
       <UploadDropZone
         manager={manager}
         style={{
-          border: '1px dashed var(--lumo-contrast-30pct)',
-          borderRadius: 'var(--lumo-border-radius-l)',
-          padding: 'var(--lumo-space-l)',
+          border: '1px dashed var(--vaadin-border-color-secondary)',
+          borderRadius: 'var(--vaadin-radius-l)',
+          padding: 'var(--vaadin-padding-l)',
           width: '100%',
           boxSizing: 'border-box',
         }}
       >
-        <HorizontalLayout theme="spacing" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <HorizontalLayout
+          theme="spacing"
+          style={{ alignItems: 'center', justifyContent: 'center' }}
+        >
           <Icon icon="vaadin:upload" />
           <span>Drop files here or</span>
           <UploadButton manager={manager}>Browse</UploadButton>

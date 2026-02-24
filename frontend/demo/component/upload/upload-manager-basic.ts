@@ -4,7 +4,7 @@ import '@vaadin/upload/vaadin-upload-button.js';
 import '@vaadin/upload/vaadin-upload-file-list.js';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
@@ -17,8 +17,7 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  @state()
-  private manager = new UploadManager({
+  private readonly manager = new UploadManager({
     target: '/api/fileupload',
     maxFiles: 5,
     maxFileSize: 10 * 1024 * 1024, // 10 MB
