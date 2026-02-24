@@ -37,7 +37,7 @@ export class Example extends LitElement {
         .maxFiles="${maxFiles}"
         .i18n="${this.uploadI18n}"
         @file-reject="${(event: UploadFileRejectEvent) => {
-          Notification.show(event.detail.error);
+          Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
         }}"
       ></vaadin-upload>
     `;
