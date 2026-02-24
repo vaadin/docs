@@ -64,6 +64,6 @@ export class Example extends LitElement {
   // end::snippet[]
 
   fileRejectHandler(event: UploadFileRejectEvent) {
-    Notification.show(event.detail.error);
+    Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
   }
 }

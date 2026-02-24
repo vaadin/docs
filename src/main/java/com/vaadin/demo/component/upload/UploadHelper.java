@@ -32,6 +32,9 @@ public class UploadHelper extends Div {
                 // Comma-separated values (.csv)
                 "text/csv", ".csv");
 
+        int maxFileSizeInBytes = 1 * 1024 * 1024; // 1MB
+        upload.setMaxFileSize(maxFileSizeInBytes);
+
         UploadExamplesI18N i18n = new UploadExamplesI18N();
         i18n.getAddFiles().setOne("Upload Spreadsheet...");
         i18n.getDropFiles().setOne("Drop spreadsheet here");

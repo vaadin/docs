@@ -48,7 +48,7 @@ function Example() {
         accept={acceptedTypes.join(',')}
         i18n={uploadI18n.value}
         onFileReject={(event) => {
-          Notification.show(event.detail.error);
+          Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
         }}
       />
     </>
