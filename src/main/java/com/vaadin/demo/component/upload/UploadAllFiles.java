@@ -22,6 +22,7 @@ public class UploadAllFiles extends Div {
 
         Button uploadAllButton = new Button("Upload All Files");
         uploadAllButton.addThemeVariants(ButtonVariant.PRIMARY);
+        uploadAllButton.getStyle().set("margin-top", "var(--vaadin-gap-s)");
         uploadAllButton.addClickListener(event -> {
             // No explicit Flow API for this at the moment
             upload.getElement().callJsFunction("uploadFiles");
