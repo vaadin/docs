@@ -9,50 +9,26 @@ order: 10
 
 = Getting Started with Browserless Testing
 
-To start creating browserless tests in an existing project, you need to add the browserless testing dependency (`com.vaadin`/`vaadin-testbench-unit`) with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need to do is add the following:
-
-[.example]
---
-[source,xml]
-----
-<source-info group="JUnit 4"></source-info>
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-testbench-unit</artifactId>
-    <scope>test</scope>
-</dependency>
-<!-- Required for Vaadin 25+ with Spring Boot 4 (JUnit 6) -->
-<dependency>
-    <groupId>org.junit.vintage</groupId>
-    <artifactId>junit-vintage-engine</artifactId>
-    <scope>test</scope>
-</dependency>
-----
+To start creating browserless tests in an existing project, you need to add the `browserless-test-junit6` dependency with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need to do is add the following:
 
 [source,xml]
 ----
-<source-info group="JUnit 5/6"></source-info>
 <dependency>
     <groupId>com.vaadin</groupId>
-    <artifactId>vaadin-testbench-unit-junit6</artifactId> <!-- or vaadin-testbench-unit-junit5 -->
+    <artifactId>browserless-test-junit6</artifactId>
     <scope>test</scope>
 </dependency>
 ----
---
 
 [NOTE]
 ====
-Starting with Vaadin 25 and Spring Boot 4, the default test framework is JUnit 6 (JUnit Platform). JUnit 6 maintains API compatibility with JUnit 5, so `vaadin-testbench-unit-junit5` and `vaadin-testbench-unit-junit6` work with both, but have transitive JUnit dependencies aligned with the respective versions.
-
-For JUnit 4 tests using [classname]`UIUnit4Test`, the `junit-vintage-engine` dependency is required because JUnit 6 doesn't natively execute JUnit 4 tests. Without it, tests won't be detected or executed.
-
-This wasn't required in Vaadin 24.x because Spring Boot 3 bundled the Vintage Engine with JUnit 5 by default.
+If you have existing JUnit 4 tests using [classname]`UIUnit4Test`, you can continue using the legacy `vaadin-testbench-unit` artifact together with the `junit-vintage-engine` dependency. New tests should use `browserless-test-junit6` with [classname]`BrowserlessTest`.
 ====
 
 
 == First Browserless Test
 
-To start unit testing your Vaadin UIs, create a class that extends [classname]`UIUnitTest` (for JUnit 5) or [classname]`UIUnit4Test` (for JUnit 4). The base class instantiates a UI along with all the necessary Vaadin environment, which is available to your test methods.
+To start unit testing your Vaadin UIs, create a class that extends [classname]`BrowserlessTest`. The base class instantiates a UI along with all the necessary Vaadin environment, which is available to your test methods.
 
 .Testing with Spring
 [TIP]
@@ -61,7 +37,7 @@ This guide shows how to implement browserless tests in plain Java projects. For 
 
 [source,java]
 ----
-class HelloWorldViewTest extends UIUnitTest {
+class HelloWorldViewTest extends BrowserlessTest {
 
     @Test
     public void setText_clickButton_notificationIsShown() {
@@ -87,18 +63,18 @@ By default, the base class scans whole classpath for routes and error views, but
 [source,java]
 ----
 @ViewPackages(classes={ MyView.class, OtherView.class })
-class MyViewTest extends UIUnitTest {
+class MyViewTest extends BrowserlessTest {
 }
 
 @ViewPackages(packages={ "com.example.app.pgk1", "com.example.app.pgk2" })
-class MyViewTest extends UIUnitTest {
+class MyViewTest extends BrowserlessTest {
 }
 
 @ViewPackages(
     classes={ MyView.class, OtherView.class },
     packages={ "com.example.app.pgk1", "com.example.app.pgk2" }
 )
-class MyViewTest extends UIUnitTest {
+class MyViewTest extends BrowserlessTest {
 }
 ----
 
@@ -108,21 +84,21 @@ Using the annotation without providing [methodname]`classes()` or [methodname]`p
 [source,java]
 ----
 @ViewPackages // same as @ViewPackages(classes=MyViewTest.class)
-class MyViewTest extends UIUnitTest {
+class MyViewTest extends BrowserlessTest {
 }
 ----
 
 
 == Running Tests
 
-Testing with [classname]`UIUnitTest` does don't require any particular setup to be executed. Run the test directly from your IDE or use Maven, for example by typing `mvn test` on the terminal.
+Testing with [classname]`BrowserlessTest` does don't require any particular setup to be executed. Run the test directly from your IDE or use Maven, for example by typing `mvn test` on the terminal.
 
 
 == Navigating in Unit Tests
 
 On test initialization, the loaded view is the root view.
 
-To navigate to another registered view, the [classname]`UIUnitTest` base class contains [methodname]`navigate()` methods that support navigation to different supported views.
+To navigate to another registered view, the [classname]`BrowserlessTest` base class contains [methodname]`navigate()` methods that support navigation to different supported views.
 
 - For a normal view with only a path defined
 +
@@ -166,7 +142,7 @@ Assertions.assertEquals("User input", input.changeText.getText());
 
 The aim of browserless testing isn't to test the components as is, but to simulate user actions and data "seen" on the client side.
 
-To help with actions and getting data, there are testers for components that have methods for use with components. In a [classname]`UIUnitTest` class, you can get a tester for a component with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`. Helper methods for commercial components such as [classname]`Chart` are defined in the separated [interfacename]`CommercialTesterWrappers` interface that the test class can implement.
+To help with actions and getting data, there are testers for components that have methods for use with components. In a [classname]`BrowserlessTest` class, you can get a tester for a component with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`.
 
 - [methodname]`test(component)` returns a component-specific tester, if one can be determined for the given component, or the [classname]`ComponentTester` generic tester.
 - [methodname]`test(Tester.class, component)` always returns an instance of the given tester.
@@ -204,12 +180,12 @@ public class HelloWorldView extends HorizontalLayout {
 ----
 
 [NOTE]
-The components are package-protected, so that we can use them directly in the [classname]`UIUnitTest`.
+The components are package-protected, so that we can use them directly in the [classname]`BrowserlessTest`.
 
 .`HelloWorldViewTest.java`
 [source,java]
 ----
-class HelloWorldViewTest extends UIUnitTest {
+class HelloWorldViewTest extends BrowserlessTest {
 
     @Test
     public void setText_clickButton_notificationIsShown() {
