@@ -10,12 +10,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 @customElement('upload-file-count')
 export class Example extends LitElement {
   static override styles = css`
-    h4 {
-      margin-top: 0;
-    }
-
     p {
-      color: var(--lumo-secondary-text-color);
+      color: var(--vaadin-text-color-secondary);
     }
   `;
 
@@ -41,7 +37,7 @@ export class Example extends LitElement {
         .maxFiles="${maxFiles}"
         .i18n="${this.uploadI18n}"
         @file-reject="${(event: UploadFileRejectEvent) => {
-          Notification.show(event.detail.error);
+          Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
         }}"
       ></vaadin-upload>
     `;
