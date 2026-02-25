@@ -161,7 +161,7 @@ Why a chat memory? **ChatMemory** keeps context of the conversations so users do
 
 == 6. Build the Chat UI with Vaadin
 
-Use `MessageList` to render the conversation as Markdown and `MessageInput` to handle the user prompts:
+Use `MessageList` to render the conversation as Markdown and `MessageInput` to handle the user prompts. Wrap the list in a `Scroller` so long chats don't grow the layout beyond the browser window:
 
 [source,java]
 ----
@@ -173,6 +173,7 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
@@ -196,12 +197,13 @@ public class ChatBotView extends Composite<VerticalLayout> {
     public ChatBotView(ChatService chatService) {
         this.chatService = chatService;
 
-        // Create a MessageList
+        //Create a scrolling MessageList
         messageList = new MessageList();
-        messageList.setSizeFull();
-        getContent().addAndExpand(messageList);
+        var scroller = new Scroller(messageList);
+        scroller.setHeightFull();
+        getContent().addAndExpand(scroller);
 
-        // Create a MessageInput and set a submit-listener
+        //create a MessageInput and set a submit-listener
         var messageInput = new MessageInput();
         messageInput.addSubmitListener(this::onSubmit);
         messageInput.setWidthFull();
@@ -210,20 +212,20 @@ public class ChatBotView extends Composite<VerticalLayout> {
     }
 
     private void onSubmit(MessageInput.SubmitEvent submitEvent) {
-        // Create and handle a prompt message
+        //create and handle a prompt message
         var promptMessage = new MessageListItem(submitEvent.getValue(), Instant.now(), "User");
         promptMessage.setUserColorIndex(0);
         messageList.addItem(promptMessage);
 
-        // Create and handle the response message
+        //create and handle the response message
         var responseMessage = new MessageListItem("", Instant.now(), "Bot");
         responseMessage.setUserColorIndex(1);
         messageList.addItem(responseMessage);
 
-        // Append a response message to the existing UI
+        //append a response message to the existing UI
         var userPrompt = submitEvent.getValue();
         var uiOptional = submitEvent.getSource().getUI();
-        var ui = uiOptional.orElse(null); // implementation via ifPresent also possible
+        var ui = uiOptional.orElse(null); //implementation via ifPresent also possible
 
         if (ui != null) {
             chatService.chatStream(userPrompt, chatId)
