@@ -22,21 +22,29 @@ import com.vaadin.flow.signals.local.ValueSignal;
 @Route("shopping-cart-with-signals")
 public class ShoppingCartSignals extends VerticalLayout {
 
-    record Product(String id, String name, BigDecimal price) {}
+    record Product(String id, String name, BigDecimal price) {
+    }
+
     record CartItem(Product product, int quantity) {
         CartItem withQuantity(int newQuantity) {
             return new CartItem(this.product, newQuantity);
         }
     }
-    record DiscountCode(String code, BigDecimal percentage) {}
-    enum ShippingOption { STANDARD, EXPRESS, OVERNIGHT }
+
+    record DiscountCode(String code, BigDecimal percentage) {
+    }
+
+    enum ShippingOption {
+        STANDARD, EXPRESS, OVERNIGHT
+    }
 
     public ShoppingCartSignals() {
         // tag::signals[]
         // Create signals for cart state
         ListSignal<CartItem> cartItemsSignal = new ListSignal<>();
         ValueSignal<String> discountCodeSignal = new ValueSignal<>("");
-        ValueSignal<ShippingOption> shippingOptionSignal = new ValueSignal<>(ShippingOption.STANDARD);
+        ValueSignal<ShippingOption> shippingOptionSignal = new ValueSignal<>(
+                ShippingOption.STANDARD);
         // end::signals[]
 
         // tag::computed-subtotal[]
@@ -77,8 +85,8 @@ public class ShoppingCartSignals extends VerticalLayout {
 
         // tag::computed-total[]
         // Computed signal for grand total
-        Signal<BigDecimal> totalSignal = Signal.computed(() -> subtotalSignal.get()
-                .subtract(discountSignal.get()).add(shippingSignal.get())
+        Signal<BigDecimal> totalSignal = Signal.computed(() -> subtotalSignal
+                .get().subtract(discountSignal.get()).add(shippingSignal.get())
                 .add(taxSignal.get()).setScale(2, RoundingMode.HALF_UP));
         // end::computed-total[]
 
@@ -120,10 +128,11 @@ public class ShoppingCartSignals extends VerticalLayout {
         // end::discount-field[]
 
         // tag::shipping-select[]
-        ComboBox<ShippingOption> shippingSelect = new ComboBox<>("Shipping Method",
-                ShippingOption.values());
+        ComboBox<ShippingOption> shippingSelect = new ComboBox<>(
+                "Shipping Method", ShippingOption.values());
         shippingSelect.setValue(ShippingOption.STANDARD);
-        shippingSelect.bindValue(shippingOptionSignal, shippingOptionSignal::set);
+        shippingSelect.bindValue(shippingOptionSignal,
+                shippingOptionSignal::set);
         // end::shipping-select[]
 
         optionsLayout.add(discountField, shippingSelect);
@@ -184,8 +193,8 @@ public class ShoppingCartSignals extends VerticalLayout {
         HorizontalLayout row = new HorizontalLayout();
 
         Span nameLabel = new Span(itemSignal.map(item -> item.product().name()
-                + " - $" + item.product().price().setScale(2,
-                        RoundingMode.HALF_UP)));
+                + " - $"
+                + item.product().price().setScale(2, RoundingMode.HALF_UP)));
 
         IntegerField quantityField = new IntegerField();
         quantityField.setMin(1);
@@ -205,10 +214,9 @@ public class ShoppingCartSignals extends VerticalLayout {
             }
         });
 
-        Span itemTotalLabel = new Span(itemSignal.map(item -> "$"
-                + item.product().price()
-                        .multiply(BigDecimal.valueOf(item.quantity()))
-                        .setScale(2, RoundingMode.HALF_UP)));
+        Span itemTotalLabel = new Span(itemSignal.map(item -> "$" + item
+                .product().price().multiply(BigDecimal.valueOf(item.quantity()))
+                .setScale(2, RoundingMode.HALF_UP)));
 
         Button removeButton = new Button("Remove", e -> {
             cartItemsSignal.remove(itemSignal);

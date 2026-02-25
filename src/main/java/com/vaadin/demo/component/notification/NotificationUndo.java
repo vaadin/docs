@@ -39,7 +39,8 @@ public class NotificationUndo extends Div {
             notification.close();
         });
 
-        HorizontalLayout layout = new HorizontalLayout(new Text("5 tasks deleted"));
+        HorizontalLayout layout = new HorizontalLayout(
+                new Text("5 tasks deleted"));
         layout.addToEnd(undoButton, new CloseButton());
         layout.setAlignItems(Alignment.CENTER);
         layout.setMinWidth("300px");
