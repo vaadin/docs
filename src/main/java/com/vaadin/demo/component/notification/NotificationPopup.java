@@ -2,9 +2,11 @@ package com.vaadin.demo.component.notification;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.theme.lumo.LumoIcon;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
@@ -16,19 +18,20 @@ public class NotificationPopup extends Div {
 
     public NotificationPopup() {
         // tag::snippet[]
+
+
+        // tag::snippet[]
         var bellBtn = new MessagesButton();
         bellBtn.setUnreadMessages(4);
+        bellBtn.setAriaLabel("notifications");
 
-        ContextMenu menu = new ContextMenu();
-        menu.setOpenOnClick(true);
-        menu.setTarget(bellBtn);
-        menu.addItem("This is ContextMenu");
-        menu.addItem("Consider Using");
-        menu.addItem("ContextMenu");
-        menu.addItem("Instead of Notifications");
+        Popover popover = new Popover();
+        popover.setTarget(bellBtn);
+        Div content = new Div("Show notifications here");
+        popover.add(content);
         // end::snippet[]
 
-        add(bellBtn);
+        add(bellBtn, popover);
     }
 
     // tag::messagesBtn[]
@@ -38,11 +41,12 @@ public class NotificationPopup extends Div {
         private final Element numberOfNotifications;
 
         public MessagesButton() {
-            super(VaadinIcon.BELL_O.create());
+            super(LumoIcon.BELL.create());
+            addThemeVariants(ButtonVariant.TERTIARY);
             numberOfNotifications = new Element("span");
             numberOfNotifications.getStyle()
                     .setPosition(Style.Position.ABSOLUTE)
-                    .setTransform("translate(-40%, -85%)");
+                    .setTransform("translate(-40%, -30%)");
             numberOfNotifications.getThemeList().addAll(Arrays.asList("badge",
                     "error", "primary", "small", "pill"));
         }

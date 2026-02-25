@@ -34,12 +34,13 @@ public class NotificationKeyboardA11y extends Div {
     public Notification show() {
         Notification notification = new Notification();
         notification.setDuration(10000);
-        notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+        notification.addThemeVariants(NotificationVariant.WARNING);
 
         Div statusText = new Div(new Text("5 tasks deleted"));
 
-        var layout = new HorizontalLayout(statusText,
-                new CloseButtonWithShortcutHint());
+        HorizontalLayout layout = new HorizontalLayout(statusText);
+        layout.addToEnd(new CloseButtonWithShortcutHint());
+        layout.setMinWidth("300px");
         layout.setAlignItems(Alignment.CENTER);
 
         notification.add(layout);
@@ -57,8 +58,6 @@ public class NotificationKeyboardA11y extends Div {
     public class CloseButtonWithShortcutHint extends Button {
 
         public CloseButtonWithShortcutHint() {
-            addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            getStyle().set("margin-left", "var(--lumo-space-xl)");
             getElement().executeJs(
                     """
                             const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);
