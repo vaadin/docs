@@ -2,7 +2,6 @@ package com.vaadin.demo.component.aicomponents;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
