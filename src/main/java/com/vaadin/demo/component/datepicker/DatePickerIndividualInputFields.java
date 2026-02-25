@@ -31,7 +31,7 @@ public class DatePickerIndividualInputFields extends Div {
                 .range(now.getYear() - 99, now.getYear() + 1).boxed().toList();
 
         yearPicker = new ComboBox<>("Year", selectableYears);
-        yearPicker.setWidth(6, Unit.EM);
+        yearPicker.setWidth(7, Unit.EM);
         yearPicker.addValueChangeListener(e -> {
             updateMonthPicker();
             updateDayPicker();
@@ -40,14 +40,14 @@ public class DatePickerIndividualInputFields extends Div {
         monthPicker = new ComboBox<>("Month", Month.values());
         monthPicker.setItemLabelGenerator(
                 m -> m.getDisplayName(TextStyle.FULL, Locale.getDefault()));
-        monthPicker.setWidth(9, Unit.EM);
+        monthPicker.setWidth(10, Unit.EM);
         monthPicker.addValueChangeListener(e -> {
             updateDayPicker();
         });
         monthPicker.setEnabled(false);
 
         dayPicker = new ComboBox<>("Day");
-        dayPicker.setWidth(5, Unit.EM);
+        dayPicker.setWidth(6, Unit.EM);
         dayPicker.setEnabled(false);
 
         add(new HorizontalLayout(yearPicker, monthPicker, dayPicker));

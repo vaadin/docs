@@ -6,7 +6,7 @@ function Example() {
   return (
     // tag::snippet[]
     <TimePicker
-      theme="align-right small helper-above-field"
+      theme="align-right helper-above-field"
       label="Label"
       helperText="Helper text"
       value="07:00"
