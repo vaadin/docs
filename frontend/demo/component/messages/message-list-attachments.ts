@@ -8,8 +8,8 @@ import landscapeImage from '../../../../src/main/resources/images/reindeer.jpg?u
 
 @customElement('message-list-attachments')
 export class Example extends LitElement {
-  private yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd HH:mm');
-  private fiftyMinutesAgo = format(subMinutes(new Date(), 50), 'yyyy-MM-dd HH:mm');
+  private readonly yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd HH:mm');
+  private readonly fiftyMinutesAgo = format(subMinutes(new Date(), 50), 'yyyy-MM-dd HH:mm');
 
   @state()
   private statusText = 'Click an attachment to see its name here.';

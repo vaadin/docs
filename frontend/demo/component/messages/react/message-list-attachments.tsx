@@ -1,10 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { format, subDays, subMinutes } from 'date-fns';
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { MessageList } from '@vaadin/react-components/MessageList.js';
 import landscapeImage from '../../../../../src/main/resources/images/reindeer.jpg?url';
 
 function Example() {
+  useSignals(); // hidden-source-line
+
   // tag::snippet[]
   const isoMinutes = 'yyyy-MM-dd HH:mm';
   const yesterday = format(subDays(new Date(), 1), isoMinutes);
@@ -44,19 +48,25 @@ function Example() {
     },
   ];
 
-  const [statusText, setStatusText] = useState(
-    'Click an attachment to see its name here.'
-  );
+  const statusText = useSignal('Click an attachment to see its name here.');
 
   return (
     <>
       <MessageList
         items={items}
-        onAttachmentClick={(e) => {
-          setStatusText('Clicked: ' + e.detail.attachment.name);
+        ref={(messageList) => {
+          if (messageList) {
+            messageList.addEventListener('attachment-click', (e: CustomEvent) => {
+              statusText.value = 'Clicked: ' + e.detail.attachment.name;
+            });
+          }
         }}
+        // Switch to using onAttachmentClick once https://github.com/vaadin/web-components/pull/11189 is available in a release.
+        // onAttachmentClick={(e) => {
+        //   statusText.value = 'Clicked: ' + e.detail.attachment.name;
+        // }}
       />
-      <span>{statusText}</span>
+      <span>{statusText.value}</span>
     </>
   );
   // end::snippet[]
