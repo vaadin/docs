@@ -9,7 +9,7 @@ order: 10
 
 = Getting Started with Browserless Testing
 
-To start creating browserless tests in an existing project, you need to add the `browserless-test-junit6` dependency with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need to do is add the following:
+To start creating browserless tests in an existing project, you need to add the `browserless-test-junit6` dependency with a `test` scope. For Spring Boot projects, also ensure the Spring Boot test starter is present. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
 
 [source,xml]
 ----
@@ -18,26 +18,27 @@ To start creating browserless tests in an existing project, you need to add the 
     <artifactId>browserless-test-junit6</artifactId>
     <scope>test</scope>
 </dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
 ----
-
-[NOTE]
-====
-If you have existing JUnit 4 tests using [classname]`UIUnit4Test`, you can continue using the legacy `vaadin-testbench-unit` artifact together with the `junit-vintage-engine` dependency. New tests should use `browserless-test-junit6` with [classname]`BrowserlessTest`.
-====
 
 
 == First Browserless Test
 
-To start unit testing your Vaadin UIs, create a class that extends [classname]`BrowserlessTest`. The base class instantiates a UI along with all the necessary Vaadin environment, which is available to your test methods.
+In Spring Boot projects, views typically use dependency injection for services and other components. To handle this correctly, browserless testing provides a specialized base class: [classname]`SpringBrowserlessTest`. Annotate your test class with [annotationname]`@SpringBootTest` so that the full application context is available.
 
-.Testing with Spring
+.Non-Spring Projects
 [TIP]
-This guide shows how to implement browserless tests in plain Java projects. For information about testing with Spring or Spring Boot, consult the <<spring#, Browserless Testing with Spring>>.
+This guide assumes a Spring Boot project. If you aren't using Spring, see <<spring#, Non-Spring Projects>> for a simpler setup.
 
 
 [source,java]
 ----
-class HelloWorldViewTest extends BrowserlessTest {
+@SpringBootTest
+class HelloWorldViewTest extends SpringBrowserlessTest {
 
     @Test
     public void setText_clickButton_notificationIsShown() {
@@ -57,24 +58,56 @@ class HelloWorldViewTest extends BrowserlessTest {
 }
 ----
 
+Subclasses of [classname]`SpringBrowserlessTest` can rely on all features offered by the Spring Testing Framework. The test class can also be annotated with [annotationname]`@ContextConfiguration` to provide a reduced [classname]`ApplicationContext` for faster startup.
+
+.Using a Reduced Application Context
+[source,java]
+----
+@ContextConfiguration(classes = ViewTestConfig.class)
+class ViewTest extends SpringBrowserlessTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = $(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+
+@Configuration
+class ViewTestConfig {
+
+        @Bean
+        GreetingService myService() {
+                return new TestingGreetingService();
+        }
+}
+----
+
 By default, the base class scans whole classpath for routes and error views, but this behavior can be changed for a faster bootstrap. To restrict the scan to specific packages and their sub-packages, annotate the test class with [annotationname]`ViewPackages` and specify the package by filling the [methodname]`classes()` array with classes that are members of the desired packages, or by providing the packages with fully qualified names in the [methodname]`packages()` property. Using [methodname]`classes()` is the preferred way, since it plays well with IDEs refactoring when moving classes to different packages.
 
 .Package Scan Examples
 [source,java]
 ----
+@SpringBootTest
 @ViewPackages(classes={ MyView.class, OtherView.class })
-class MyViewTest extends BrowserlessTest {
+class MyViewTest extends SpringBrowserlessTest {
 }
 
+@SpringBootTest
 @ViewPackages(packages={ "com.example.app.pgk1", "com.example.app.pgk2" })
-class MyViewTest extends BrowserlessTest {
+class MyViewTest extends SpringBrowserlessTest {
 }
 
+@SpringBootTest
 @ViewPackages(
     classes={ MyView.class, OtherView.class },
     packages={ "com.example.app.pgk1", "com.example.app.pgk2" }
 )
-class MyViewTest extends BrowserlessTest {
+class MyViewTest extends SpringBrowserlessTest {
 }
 ----
 
@@ -83,15 +116,16 @@ Using the annotation without providing [methodname]`classes()` or [methodname]`p
 
 [source,java]
 ----
+@SpringBootTest
 @ViewPackages // same as @ViewPackages(classes=MyViewTest.class)
-class MyViewTest extends BrowserlessTest {
+class MyViewTest extends SpringBrowserlessTest {
 }
 ----
 
 
 == Running Tests
 
-Testing with [classname]`BrowserlessTest` does don't require any particular setup to be executed. Run the test directly from your IDE or use Maven, for example by typing `mvn test` on the terminal.
+Testing with [classname]`SpringBrowserlessTest` doesn't require any particular setup beyond the dependencies above. Run the test directly from your IDE or use Maven, for example by typing `mvn test` in the terminal.
 
 
 == Navigating in Unit Tests
@@ -140,9 +174,9 @@ Assertions.assertEquals("User input", input.changeText.getText());
 
 === Testing Components
 
-The aim of browserless testing isn't to test the components as is, but to simulate user actions and data "seen" on the client side.
+The goal of browserless testing isn't to test the components themselves, but to simulate user actions and verify the data that would be visible on the client side.
 
-To help with actions and getting data, there are testers for components that have methods for use with components. In a [classname]`BrowserlessTest` class, you can get a tester for a component with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`.
+Component testers provide methods to interact with and inspect components. In a [classname]`BrowserlessTest` class, you can get a tester for a component with [methodname]`test(component)` or [methodname]`test(Tester.class, component)`.
 
 - [methodname]`test(component)` returns a component-specific tester, if one can be determined for the given component, or the [classname]`ComponentTester` generic tester.
 - [methodname]`test(Tester.class, component)` always returns an instance of the given tester.
@@ -185,7 +219,8 @@ The components are package-protected, so that we can use them directly in the [c
 .`HelloWorldViewTest.java`
 [source,java]
 ----
-class HelloWorldViewTest extends BrowserlessTest {
+@SpringBootTest
+class HelloWorldViewTest extends SpringBrowserlessTest {
 
     @Test
     public void setText_clickButton_notificationIsShown() {
