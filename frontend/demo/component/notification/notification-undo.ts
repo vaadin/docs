@@ -29,7 +29,6 @@ export class Example extends LitElement {
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        theme="warning"
         duration="10000"
         position="middle"
         .opened="${this.notificationOpened}"

@@ -5,7 +5,6 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
@@ -33,7 +32,6 @@ public class NotificationUndo extends Div {
         // tag::snippet[]
         Notification notification = new Notification();
         notification.setDuration(10000);
-        notification.addThemeVariants(NotificationVariant.WARNING);
 
         Button undoButton = new UndoButton();
         undoButton.addClickListener(event -> {

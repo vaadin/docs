@@ -5,7 +5,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
@@ -34,7 +33,6 @@ public class NotificationKeyboardA11y extends Div {
     public Notification show() {
         Notification notification = new Notification();
         notification.setDuration(10000);
-        notification.addThemeVariants(NotificationVariant.WARNING);
 
         Div statusText = new Div(new Text("5 tasks deleted"));
 

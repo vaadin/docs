@@ -18,9 +18,6 @@ public class NotificationPopup extends Div {
 
     public NotificationPopup() {
         // tag::snippet[]
-
-
-        // tag::snippet[]
         var bellBtn = new MessagesButton();
         bellBtn.setUnreadMessages(4);
         bellBtn.setAriaLabel("notifications");

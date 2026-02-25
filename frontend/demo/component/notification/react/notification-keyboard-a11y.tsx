@@ -42,7 +42,6 @@ function Example() {
       </Button>
 
       <Notification
-        theme="warning"
         duration={10000}
         position="middle"
         opened={notificationOpened.value}
