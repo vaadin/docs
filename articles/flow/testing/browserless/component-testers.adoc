@@ -9,7 +9,9 @@ order: 18
 
 = Component Testers
 
-Component testers simulate user interactions in browserless tests. Each tester wraps a specific component type and provides methods that mirror what a real user can do -- clicking, typing, selecting items, and reading displayed values.
+Component testers simulate user interactions in browserless tests. Each tester wraps a specific component type and provides methods that mirror what a real user can do -- clicking, typing, and selecting items.
+
+Testers focus on actions that simulate user behavior, such as [methodname]`setValue()`, [methodname]`click()`, and [methodname]`selectItem()`. To read component state -- like getting a value or checking visibility -- use the component's Java API directly. This separation keeps tester methods focused on simulating real user interactions that also perform usability checks.
 
 
 == Using Component Testers
@@ -20,7 +22,9 @@ Wrap any component with `test()` to get a tester for it:
 ----
 test(textField).setValue("Jane");
 test(button).click();
-String text = test(notification).getText();
+
+// Reading state is done via the component API directly
+String value = textField.getValue();
 ----
 
 The `test()` method returns a tester matched to the component's type. You can also request a specific tester type explicitly:
@@ -52,13 +56,13 @@ The following table shows frequently used testers and their key methods:
 | Component | Key Tester Methods
 
 | [classname]`TextField`
-| [methodname]`setValue(String)`, [methodname]`getValue()`
+| [methodname]`setValue(String)`, [methodname]`clear()`
 
 | [classname]`Button`
 | [methodname]`click()`
 
 | [classname]`Checkbox`
-| [methodname]`setChecked(boolean)`
+| [methodname]`click()` (toggles checked state)
 
 | [classname]`ComboBox`
 | [methodname]`selectItem(value)`, [methodname]`getSuggestionItems()`
@@ -68,6 +72,40 @@ The following table shows frequently used testers and their key methods:
 
 | [classname]`Notification`
 | [methodname]`getText()`
+
+| [classname]`Dialog`
+| [methodname]`open()`, [methodname]`close()`
+
+| [classname]`ConfirmDialog`
+| [methodname]`open()`, [methodname]`confirm()`, [methodname]`cancel()`, [methodname]`reject()`
+
+| [classname]`Upload`
+| [methodname]`upload(File)`, [methodname]`uploadAll(File...)`
+|===
+
+
+=== Base Methods
+
+All testers inherit from [classname]`ComponentTester`, which provides methods useful across component types:
+
+[cols="1,2"]
+|===
+| Method | Description
+
+| [methodname]`click()`, [methodname]`rightClick()`, [methodname]`middleClick()`
+| Click the component. All variants accept optional [classname]`MetaKeys` for modifier keys.
+
+| [methodname]`isUsable()`
+| Returns `true` if the component is visible, enabled, and attached. Use this to check state without throwing an exception.
+
+| [methodname]`roundTrip()`
+| Simulates a server round-trip, processing any pending client-server communication.
+
+| [methodname]`fireDomEvent(String)`
+| Fires a DOM event on the component, such as `"blur"` or `"focus"`.
+
+| [methodname]`find(Class)`
+| Creates a component query scoped to the children of the wrapped component.
 |===
 
 
@@ -130,6 +168,11 @@ static class PhoneNumberField extends CustomField<String> {
 ----
 
 Custom testers can use other testers internally, as shown above with `ComboBoxTester` and `TextFieldTester`.
+
+.Generic Components
+[TIP]
+The [annotationname]`@Tests` annotation also has an [methodname]`fqn` attribute that accepts fully qualified class names as strings. Use this when the component type uses generics that prevent it from being passed as a class literal:
+`@Tests(fqn = "com.example.MyField")`.
 
 
 === Registering Custom Testers
