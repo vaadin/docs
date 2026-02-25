@@ -5,7 +5,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
@@ -34,12 +33,12 @@ public class NotificationKeyboardA11y extends Div {
     public Notification show() {
         Notification notification = new Notification();
         notification.setDuration(10000);
-        notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 
         Div statusText = new Div(new Text("5 tasks deleted"));
 
-        var layout = new HorizontalLayout(statusText,
-                new CloseButtonWithShortcutHint());
+        HorizontalLayout layout = new HorizontalLayout(statusText);
+        layout.addToEnd(new CloseButtonWithShortcutHint());
+        layout.setMinWidth("300px");
         layout.setAlignItems(Alignment.CENTER);
 
         notification.add(layout);
@@ -57,8 +56,6 @@ public class NotificationKeyboardA11y extends Div {
     public class CloseButtonWithShortcutHint extends Button {
 
         public CloseButtonWithShortcutHint() {
-            addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-            getStyle().set("margin-left", "var(--lumo-space-xl)");
             getElement().executeJs(
                     """
                             const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.platform);

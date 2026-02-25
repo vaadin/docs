@@ -8,7 +8,6 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.map.Map;
 import com.vaadin.flow.component.map.configuration.Coordinate;
-import com.vaadin.flow.component.map.configuration.controls.ScaleControl;
 import com.vaadin.flow.component.map.configuration.feature.LineStringFeature;
 import com.vaadin.flow.router.Route;
 
@@ -37,8 +36,8 @@ public class MapLines extends Div {
             GeoJsonRoute geoJson = mapper.readValue(stream, GeoJsonRoute.class);
             List<double[]> rawCoordinates = geoJson.getFeatures().get(0)
                     .getGeometry().getCoordinates();
-            return rawCoordinates.stream().map(coord -> new Coordinate(coord[0], coord[1]))
-                    .toList();
+            return rawCoordinates.stream()
+                    .map(coord -> new Coordinate(coord[0], coord[1])).toList();
         } catch (Exception e) {
             return List.of();
         }
