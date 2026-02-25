@@ -1,0 +1,97 @@
+---
+title: Migrating from UI Unit Testing
+page-title: How to migrate from UI Unit Testing to Browserless Testing | Vaadin
+description: Steps for migrating existing tests from the old UI Unit Testing module to the new Browserless Testing module.
+meta-description: Migrate Vaadin UI Unit Tests to Browserless Testing. Covers dependency changes, base class replacements, and TestBench coexistence.
+order: 15
+---
+
+
+= Migrating from UI Unit Testing
+
+Browserless testing replaces the older UI Unit Testing module. The testing API is the same; only the dependency and base class names have changed.
+
+
+== Update Dependencies
+
+Replace your existing UI Unit Testing dependency with `browserless-test-junit6`. Depending on your project, the old artifact may be either `vaadin-testbench-unit` (JUnit 4) or `vaadin-testbench-unit-junit5`:
+
+.Before (JUnit 4)
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-unit</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+.Before (JUnit 5)
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-testbench-unit-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+.After
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+For Quarkus-based projects, also add `browserless-test-quarkus`. See <<quarkus#, Browserless Testing in Quarkus-based Projects>> for details.
+
+
+== Replace Base Classes
+
+Rename the test base classes as follows:
+
+[cols="1,1,1"]
+|===
+| Old Class (JUnit 4) | Old Class (JUnit 5) | New Class
+
+| [classname]`UIUnit4Test`
+| [classname]`UIUnitTest`
+| [classname]`BrowserlessTest`
+
+| [classname]`SpringUIUnit4Test`
+| [classname]`SpringUIUnitTest`
+| [classname]`SpringBrowserlessTest`
+
+| [classname]`QuarkusUIUnit4Test`
+| [classname]`QuarkusUIUnitTest`
+| [classname]`QuarkusBrowserlessTest`
+|===
+
+No other code changes are needed. The test API -- including [methodname]`navigate()`, [methodname]`test()`, and the [methodname]`$()` query methods -- remains the same.
+
+
+== TestBench End-to-End Coexistence
+
+Browserless tests and TestBench end-to-end tests can coexist in the same project. The two modules use separate package namespaces, so having both `browserless-test-junit6` and `vaadin-testbench` on the test classpath doesn't cause conflicts.
+
+
+== Keeping JUnit 4 Tests
+
+If you have existing JUnit 4 tests that extend [classname]`UIUnit4Test`, you don't have to migrate them immediately. Keep the `vaadin-testbench-unit` dependency alongside `browserless-test-junit6` and add the JUnit Vintage engine so that JUnit 5 can run JUnit 4 tests:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.junit.vintage</groupId>
+    <artifactId>junit-vintage-engine</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+New tests should use `browserless-test-junit6` with [classname]`BrowserlessTest`.
+
+
+[discussion-id]`migration-ui-unit-to-browserless`
