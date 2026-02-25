@@ -23,16 +23,19 @@ import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
+// @formatter:off hidden-source-line
 /**
  * Real-time dashboard demonstrating signal-based architecture.
  *
- * Key design principles: - Backend service doesn't work with signals directly -
- * Service calls a callback with plain data objects - View provides callback
- * that only updates signals - No state stored in regular fields, only in
- * signals - No manual listeners or UI.access() calls needed - Charts update via
- * separate effects watching signals
+ * Key design principles:
+ * - Backend service doesn't work with signals directly
+ * - Service calls a callback with plain data objects
+ * - View provides callback that only updates signals
+ * - No state stored in regular fields, only in signals
+ * - No manual listeners or UI.access() calls needed
+ * - Charts update via separate effects watching signals
  */
-
+// @formatter:on hidden-source-line
 @Route("real-time-dashboard-with-signals")
 public class RealtimeDashboard extends VerticalLayout {
 
