@@ -32,6 +32,9 @@ public class UploadHelper extends Div {
                 // Comma-separated values (.csv)
                 "text/csv", ".csv");
 
+        int maxFileSizeInBytes = 1 * 1024 * 1024; // 1MB
+        upload.setMaxFileSize(maxFileSizeInBytes);
+
         UploadExamplesI18N i18n = new UploadExamplesI18N();
         i18n.getAddFiles().setOne("Upload Spreadsheet...");
         i18n.getDropFiles().setOne("Drop spreadsheet here");
@@ -42,15 +45,14 @@ public class UploadHelper extends Div {
         add(title, hint, upload);
         // end::snippet[]
 
-        title.getStyle().set("margin-top", "0");
-        hint.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        hint.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 
         upload.addFileRejectedListener(event -> {
             String errorMessage = event.getErrorMessage();
 
             Notification notification = Notification.show(errorMessage, 5000,
                     Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notification.addThemeVariants(NotificationVariant.ERROR);
         });
 
     }
