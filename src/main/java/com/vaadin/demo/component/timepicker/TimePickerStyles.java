@@ -17,9 +17,8 @@ public class TimePickerStyles extends HorizontalLayout {
 
         // tag::snippet[]
         TimePicker field = new TimePicker();
-        field.addThemeVariants(TimePickerVariant.LUMO_SMALL,
-                TimePickerVariant.LUMO_ALIGN_RIGHT,
-                TimePickerVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.addThemeVariants(TimePickerVariant.ALIGN_RIGHT,
+                TimePickerVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

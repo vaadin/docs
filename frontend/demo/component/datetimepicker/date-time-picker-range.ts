@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-time-picker';
+import '@vaadin/form-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DateTimePickerValueChangedEvent } from '@vaadin/date-time-picker';
@@ -25,7 +26,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <div>
+      <vaadin-form-layout auto-responsive column-width="20rem">
         <vaadin-date-time-picker
           label="Start date and time"
           .value="${this.startDateTime}"
@@ -42,7 +43,7 @@ export class Example extends LitElement {
             this.endDateTime = event.detail.value;
           }}"
         ></vaadin-date-time-picker>
-      </div>
+      </vaadin-form-layout>
       <!-- end::snippet[] -->
     `;
   }
