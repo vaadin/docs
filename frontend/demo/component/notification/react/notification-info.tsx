@@ -3,12 +3,12 @@ import React, { useEffect } from 'react';
 import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
+  // tag::snippet[]
   useEffect(() => {
-    // tag::snippet[]
-    const notification = Notification.show('5 tasks deleted', {
+    const notification = Notification.show('New project plan available', {
       position: 'middle',
       duration: 0,
-      theme: 'contrast',
+      theme: 'info',
     });
     // end::snippet[]
   }, []);
