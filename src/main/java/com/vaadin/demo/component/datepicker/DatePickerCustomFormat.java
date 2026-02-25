@@ -12,16 +12,17 @@ import java.time.ZoneId;
 public class DatePickerCustomFormat extends Div {
     public DatePickerCustomFormat() {
         // tag::snippet[]
-        // Setup date picker with a primary format and additional parsing formats
+        // Setup date picker with a primary format and additional parsing
+        // formats
         // Date is always displayed using the primary format `yyyy-MM-dd`.
         // When parsing user input, the date picker first attempts to match the
         // input with the primary format `yyyy-MM-dd`, then `MM/dd/yyyy`, and
         // finally `dd.MM.yyyy`.
-        // You can also use DatePickerI18n#setDateFormat() if you need to support
+        // You can also use DatePickerI18n#setDateFormat() if you need to
+        // support
         // only a single format.
         DatePicker.DatePickerI18n datePickerI18n = new DatePicker.DatePickerI18n();
-        datePickerI18n.setDateFormats("yyyy-MM-dd", "MM/dd/yyyy",
-                "dd.MM.yyyy");
+        datePickerI18n.setDateFormats("yyyy-MM-dd", "MM/dd/yyyy", "dd.MM.yyyy");
 
         DatePicker datePicker = new DatePicker("Select a date:");
         datePicker.setI18n(datePickerI18n);
