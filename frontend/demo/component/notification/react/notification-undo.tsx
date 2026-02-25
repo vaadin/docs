@@ -28,7 +28,6 @@ function Example() {
 
       {/* tag::snippet[] */}
       <Notification
-        theme="contrast"
         duration={10000}
         position="middle"
         opened={notificationOpened.value}
@@ -36,17 +35,16 @@ function Example() {
           notificationOpened.value = false;
         }}
       >
-        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '300px' }}>
           <div>5 tasks deleted</div>
           <Button
-            theme="tertiary-inline"
-            style={{ marginLeft: 'var(--lumo-space-xl)' }}
+            slot="end"
             onClick={close}
           >
             Undo
           </Button>
 
-          <Button theme="tertiary-inline" aria-label="Close" onClick={close}>
+          <Button slot="end" theme="icon" aria-label="Close" onClick={close}>
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>
