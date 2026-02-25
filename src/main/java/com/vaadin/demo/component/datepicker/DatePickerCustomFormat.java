@@ -19,8 +19,7 @@ public class DatePickerCustomFormat extends Div {
         // input with the primary format `yyyy-MM-dd`, then `MM/dd/yyyy`, and
         // finally `dd.MM.yyyy`.
         // You can also use DatePickerI18n#setDateFormat() if you need to
-        // support
-        // only a single format.
+        // support only a single format.
         DatePicker.DatePickerI18n datePickerI18n = new DatePicker.DatePickerI18n();
         datePickerI18n.setDateFormats("yyyy-MM-dd", "MM/dd/yyyy", "dd.MM.yyyy");
 
