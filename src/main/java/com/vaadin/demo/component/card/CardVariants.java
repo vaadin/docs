@@ -21,13 +21,14 @@ public class CardVariants extends Div {
         // end::snippet[]
 
         cardDefault.setTitle("Default");
-        cardDefault.add("This is the default card style.");
+        cardDefault.add(new Div("This is the default card style."));
 
         cardOutlined.setTitle("Outlined");
-        cardOutlined.add("Adds a solid outline around the card.");
+        cardOutlined.add(new Div("Adds a solid outline around the card."));
 
         cardElevated.setTitle("Elevated");
-        cardElevated.add("This variant works better on a shaded background.");
+        cardOutlined.add(
+                new Div("This variant works better on a shaded background."));
 
         Div cardVariantsLayout = new Div(cardDefault, cardOutlined,
                 cardElevated);

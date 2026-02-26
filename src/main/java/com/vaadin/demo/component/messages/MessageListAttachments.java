@@ -28,8 +28,6 @@ public class MessageListAttachments extends Div {
 
         MessageList list = new MessageList();
 
-        
-
         Instant yesterday = LocalDateTime.now().minusDays(1)
                 .toInstant(ZoneOffset.UTC);
         Instant fiftyMinsAgo = LocalDateTime.now().minusMinutes(50)
@@ -37,39 +35,34 @@ public class MessageListAttachments extends Div {
 
         // tag::snippet[]
         MessageListItem message1 = new MessageListItem(
-                "Here are the documents for the project.",
-                yesterday, "Matt Mambo");
+                "Here are the documents for the project.", yesterday,
+                "Matt Mambo");
         message1.setUserColorIndex(1);
-        
+
         message1.addAttachment(new MessageListItem.Attachment(
                 "project-proposal.pdf",
-                "https://example.com/files/proposal.pdf",
-                "application/pdf"));
+                "https://example.com/files/proposal.pdf", "application/pdf"));
         // end::snippet[]
         message1.addAttachment(new MessageListItem.Attachment(
-                "budget-overview.xlsx",
-                "https://example.com/files/budget.xlsx",
+                "budget-overview.xlsx", "https://example.com/files/budget.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
         MessageListItem message2 = new MessageListItem(
-                "Thanks! Here's a photo from the offsite.",
-                fiftyMinsAgo, "Linsey Listy");
+                "Thanks! Here's a photo from the offsite.", fiftyMinsAgo,
+                "Linsey Listy");
         message2.setUserColorIndex(2);
 
         String imageDataUrl = toThumbnailDataUrl(
                 getClass().getResourceAsStream("/images/reindeer.jpg"));
-        message2.addAttachment(new MessageListItem.Attachment(
-                "landscape.jpg",
-                imageDataUrl,
-                "image/jpeg"));
+        message2.addAttachment(new MessageListItem.Attachment("landscape.jpg",
+                imageDataUrl, "image/jpeg"));
 
         // tag::snippet[]
         list.setItems(Arrays.asList(message1, message2));
 
         var status = new Span("Click an attachment to see its name here.");
         list.addAttachmentClickListener(event -> {
-            status.setText("Clicked: "
-                    + event.getAttachment().name());
+            status.setText("Clicked: " + event.getAttachment().name());
         });
         // end::snippet[]
 
@@ -84,8 +77,7 @@ public class MessageListAttachments extends Div {
             var originalWidth = originalImage.getWidth();
             var originalHeight = originalImage.getHeight();
 
-            var scale = Math.min(
-                    (double) THUMBNAIL_MAX_SIZE / originalWidth,
+            var scale = Math.min((double) THUMBNAIL_MAX_SIZE / originalWidth,
                     (double) THUMBNAIL_MAX_SIZE / originalHeight);
             var scaledWidth = (int) (originalWidth * scale);
             var scaledHeight = (int) (originalHeight * scale);
@@ -95,15 +87,13 @@ public class MessageListAttachments extends Div {
             var g2d = scaledImage.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                     RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight,
-                    null);
+            g2d.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
             g2d.dispose();
 
             var outputStream = new ByteArrayOutputStream();
             ImageIO.write(scaledImage, "jpg", outputStream);
-            return "data:image/jpeg;base64,"
-                    + Base64.getEncoder()
-                            .encodeToString(outputStream.toByteArray());
+            return "data:image/jpeg;base64," + Base64.getEncoder()
+                    .encodeToString(outputStream.toByteArray());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
