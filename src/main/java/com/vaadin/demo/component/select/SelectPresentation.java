@@ -22,7 +22,8 @@ public class SelectPresentation extends Div {
         Select<Person> select = new Select<>();
         select.setLabel("Choose doctor");
         select.setRenderer(new ComponentRenderer<>(person -> {
-            Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
 

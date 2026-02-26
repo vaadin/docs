@@ -71,7 +71,8 @@ public class ContextMenuPresentation extends Div {
 
     // tag::snippet3[]
     private Component createPersonItem(Person person) {
-        Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+        Avatar avatar = new Avatar(person.getFullName(),
+                person.getPictureUrl());
         Span name = new Span(person.getFullName());
         Span profession = new Span(person.getProfession());
 

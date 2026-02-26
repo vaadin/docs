@@ -608,10 +608,6 @@ window.customElements.whenDefined('vaadin-upload').then(() => {
   Object.getPrototypeOf(document.createElement('vaadin-upload'))._createXhr = mockXhrGenerator;
 });
 
-// Monkey-patch UploadManager prototype to use MockHttpRequest
-import { UploadManager } from '@vaadin/upload/vaadin-upload-manager.js';
-(UploadManager.prototype as any)._createXhr = mockXhrGenerator;
-
 declare global {
   interface Window {
     OriginalHttpRequest?: typeof XMLHttpRequest;
