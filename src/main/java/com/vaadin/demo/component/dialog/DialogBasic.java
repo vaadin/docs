@@ -3,9 +3,8 @@ package com.vaadin.demo.component.dialog;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -19,7 +18,7 @@ public class DialogBasic extends Div {
 
         dialog.setHeaderTitle("New employee");
 
-        VerticalLayout dialogLayout = createDialogLayout();
+        FormLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
 
         Button saveButton = createSaveButton(dialog);
@@ -40,17 +39,15 @@ public class DialogBasic extends Div {
                 .set("align-items", "center").set("justify-content", "center");
     }
 
-    private static VerticalLayout createDialogLayout() {
+    private static FormLayout createDialogLayout() {
 
         TextField firstNameField = new TextField("First name");
         TextField lastNameField = new TextField("Last name");
 
-        VerticalLayout dialogLayout = new VerticalLayout(firstNameField,
-                lastNameField);
-        dialogLayout.setPadding(false);
-        dialogLayout.setSpacing(false);
-        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
+        FormLayout dialogLayout = new FormLayout(firstNameField, lastNameField);
+        dialogLayout.setAutoResponsive(true);
+        dialogLayout.setColumnWidth("18rem");
+        dialogLayout.setExpandFields(true);
 
         return dialogLayout;
     }

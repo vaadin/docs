@@ -7,9 +7,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -23,7 +22,7 @@ public class DialogHeader extends Div {
         Dialog dialog = new Dialog();
         dialog.getElement().setAttribute("aria-label", "Add note");
 
-        VerticalLayout dialogLayout = createDialogLayout(dialog);
+        FormLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
         // tag::snippet1[]
         dialog.setHeaderTitle("User details");
@@ -38,7 +37,7 @@ public class DialogHeader extends Div {
         add(dialog, button);
     }
 
-    private VerticalLayout createDialogLayout(Dialog dialog) {
+    private FormLayout createDialogLayout() {
         TextField nameField = new TextField("Name", user.getFullName(),
                 "Full name");
         nameField.setReadOnly(true);
@@ -55,12 +54,11 @@ public class DialogHeader extends Div {
                 "Street XX, City, Country");
         addressField.setReadOnly(true);
 
-        VerticalLayout fieldLayout = new VerticalLayout(nameField, emailField,
+        FormLayout fieldLayout = new FormLayout(nameField, emailField,
                 addressField);
-        fieldLayout.setSpacing(false);
-        fieldLayout.setPadding(false);
-        fieldLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        fieldLayout.getStyle().set("width", "300px").set("max-width", "100%");
+        fieldLayout.setAutoResponsive(true);
+        fieldLayout.setColumnWidth("18rem");
+        fieldLayout.setExpandFields(true);
 
         return fieldLayout;
     }

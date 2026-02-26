@@ -4,10 +4,9 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -22,7 +21,7 @@ public class DialogDraggable extends Div {
         dialog.getHeader().add(createHeaderLayout());
         createFooter(dialog);
 
-        VerticalLayout dialogLayout = createDialogLayout();
+        FormLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
         // tag::snippet1[]
         dialog.setModal(false);
@@ -45,16 +44,15 @@ public class DialogDraggable extends Div {
         return headline;
     }
 
-    private static VerticalLayout createDialogLayout() {
+    private static FormLayout createDialogLayout() {
 
         TextField titleField = new TextField("Title");
         TextArea descriptionArea = new TextArea("Description");
-        VerticalLayout fieldLayout = new VerticalLayout(titleField,
-                descriptionArea);
-        fieldLayout.setSpacing(false);
-        fieldLayout.setPadding(false);
-        fieldLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        fieldLayout.getStyle().set("width", "300px").set("max-width", "100%");
+
+        FormLayout fieldLayout = new FormLayout(titleField, descriptionArea);
+        fieldLayout.setAutoResponsive(true);
+        fieldLayout.setColumnWidth("18rem");
+        fieldLayout.setExpandFields(true);
 
         return fieldLayout;
     }
