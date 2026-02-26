@@ -2,10 +2,8 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
 import '@vaadin/context-menu';
 import '@vaadin/grid';
-import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
-import '@vaadin/vertical-layout';
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { ContextMenuItem } from '@vaadin/context-menu';
@@ -86,23 +84,14 @@ export class Example extends LitElement {
       }
       render(
         html`
-          <vaadin-horizontal-layout
-            style="align-items: center; line-height: var(--lumo-line-height-m)"
-            theme="spacing"
-          >
+          <div class="person-item">
             <vaadin-avatar
-              .img=${person.pictureUrl}
-              .name=${`${person.firstName} ${person.lastName}`}
+              .img="${person.pictureUrl}"
+              .name="${`${person.firstName} ${person.lastName}`}"
             ></vaadin-avatar>
-            <vaadin-vertical-layout>
-              <span> ${person.firstName} ${person.lastName} </span>
-              <span
-                style="color: var(--lumo-secondary-text-color); font-size: var(--lumo-font-size-s);"
-              >
-                ${Math.floor(Math.random() * 20) + 1} applications
-              </span>
-            </vaadin-vertical-layout>
-          </vaadin-horizontal-layout>
+            <span>${person.firstName} ${person.lastName}</span>
+            <span>${person.profession}</span>
+          </div>
         `,
         item
       );

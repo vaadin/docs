@@ -29,7 +29,6 @@ export class Example extends LitElement {
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        theme="contrast"
         duration="10000"
         position="middle"
         .opened="${this.notificationOpened}"
@@ -44,16 +43,10 @@ export class Example extends LitElement {
 
   // tag::renderer[]
   renderer: NotificationLitRenderer = () => html`
-    <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+    <vaadin-horizontal-layout theme="spacing" style="align-items: center; min-width: 300px">
       <div>5 tasks deleted</div>
-      <vaadin-button
-        theme="tertiary-inline"
-        style="margin-left: var(--lumo-space-xl);"
-        @click="${this.close}"
-      >
-        Undo
-      </vaadin-button>
-      <vaadin-button theme="tertiary-inline" aria-label="Close" @click="${this.close}">
+      <vaadin-button slot="end" @click="${this.close}">Undo</vaadin-button>
+      <vaadin-button slot="end" theme="icon" aria-label="Close" @click="${this.close}">
         <vaadin-icon icon="lumo:cross"></vaadin-icon>
       </vaadin-button>
     </vaadin-horizontal-layout>

@@ -3,10 +3,8 @@ package com.vaadin.demo.component.notification;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
@@ -34,7 +32,6 @@ public class NotificationUndo extends Div {
         // tag::snippet[]
         Notification notification = new Notification();
         notification.setDuration(10000);
-        notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 
         Button undoButton = new UndoButton();
         undoButton.addClickListener(event -> {
@@ -42,9 +39,11 @@ public class NotificationUndo extends Div {
             notification.close();
         });
 
-        var layout = new HorizontalLayout(new Text("5 tasks deleted"),
-                undoButton, new CloseButton());
+        HorizontalLayout layout = new HorizontalLayout(
+                new Text("5 tasks deleted"));
+        layout.addToEnd(undoButton, new CloseButton());
         layout.setAlignItems(Alignment.CENTER);
+        layout.setMinWidth("300px");
         notification.add(layout);
 
         notification.open();
@@ -58,15 +57,12 @@ public class NotificationUndo extends Div {
     public class UndoButton extends Button {
         public UndoButton() {
             super("Undo");
-            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
         }
     }
 
     public class CloseButton extends Button {
         public CloseButton() {
             super(new Icon("lumo", "cross"));
-            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             setAriaLabel("Close");
             addClickListener(e -> findAncestor(Notification.class).close());
         }
