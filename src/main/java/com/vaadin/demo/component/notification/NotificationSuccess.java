@@ -12,7 +12,7 @@ public class NotificationSuccess extends Div {
     public NotificationSuccess() {
         // tag::snippet[]
         Notification notification = Notification.show("Application submitted!");
-        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notification.addThemeVariants(NotificationVariant.SUCCESS);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);
         notification.setDuration(0);

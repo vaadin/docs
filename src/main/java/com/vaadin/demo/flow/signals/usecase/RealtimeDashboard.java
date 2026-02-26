@@ -23,6 +23,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
+// @formatter:off hidden-source-line
 /**
  * Real-time dashboard demonstrating signal-based architecture.
  *
@@ -34,7 +35,7 @@ import org.springframework.stereotype.Service;
  * - No manual listeners or UI.access() calls needed
  * - Charts update via separate effects watching signals
  */
-
+// @formatter:on hidden-source-line
 @Route("real-time-dashboard-with-signals")
 public class RealtimeDashboard extends VerticalLayout {
 
@@ -54,11 +55,11 @@ public class RealtimeDashboard extends VerticalLayout {
     // tag::constructor[]
     public RealtimeDashboard(SchedulerService schedulerService) {
         // Create UI components bound to signals
-        add(
-            createHighlightCard("Current users", currentUsersSignal, this::formatNumber),
-            createHighlightCard("View events", viewEventsSignal, this::formatCompactNumber),
-            createViewEventsChart()
-        );
+        add(createHighlightCard("Current users", currentUsersSignal,
+                this::formatNumber),
+                createHighlightCard("View events", viewEventsSignal,
+                        this::formatCompactNumber),
+                createViewEventsChart());
 
         // Register with scheduler - service will call our callback
         // No need for UI.access() - signals handle thread safety
@@ -68,9 +69,9 @@ public class RealtimeDashboard extends VerticalLayout {
 
     // tag::callback[]
     /**
-     * Callback invoked by the scheduler service with new dashboard data.
-     * This method ONLY updates signals - no UI manipulation, no listeners.
-     * UI updates happen automatically via effects.
+     * Callback invoked by the scheduler service with new dashboard data. This
+     * method ONLY updates signals - no UI manipulation, no listeners. UI
+     * updates happen automatically via effects.
      */
     private void onDataUpdate(DashboardData data) {
         // Update simple value signals
@@ -83,17 +84,19 @@ public class RealtimeDashboard extends VerticalLayout {
         updateTimelineSignal(newYorkTimelineSignal, data.newYorkValue());
 
         // Update categories
-        if (timelineCategoriesSignal.get().size() >= TIMELINE_POINTS) {
-            timelineCategoriesSignal.remove(timelineCategoriesSignal.get().getFirst());
+        if (timelineCategoriesSignal.peek().size() >= TIMELINE_POINTS) {
+            timelineCategoriesSignal
+                    .remove(timelineCategoriesSignal.peek().getFirst());
         }
         timelineCategoriesSignal.insertLast(data.timestamp());
     }
     // end::callback[]
 
     // tag::update-helper[]
-    private void updateTimelineSignal(ListSignal<Number> signal, Number newValue) {
-        if (signal.get().size() >= TIMELINE_POINTS) {
-            signal.remove(signal.get().getFirst());
+    private void updateTimelineSignal(ListSignal<Number> signal,
+            Number newValue) {
+        if (signal.peek().size() >= TIMELINE_POINTS) {
+            signal.remove(signal.peek().getFirst());
         }
         signal.insertLast(newValue);
     }
@@ -101,8 +104,8 @@ public class RealtimeDashboard extends VerticalLayout {
 
     // tag::chart[]
     /**
-     * Creates a chart that updates automatically when signals change.
-     * No manual chart.drawChart() calls needed - effects handle it.
+     * Creates a chart that updates automatically when signals change. No manual
+     * chart.drawChart() calls needed - effects handle it.
      */
     private Component createViewEventsChart() {
         Chart chart = new Chart(ChartType.AREASPLINE);
@@ -122,10 +125,8 @@ public class RealtimeDashboard extends VerticalLayout {
         bindChartData(chart, newYorkSeries, newYorkTimelineSignal);
 
         // Effect to update x-axis categories
-        Signal.effect(chart, () ->
-            xAxis.setCategories(timelineCategoriesSignal.get()
-                .stream().map(Signal::get).toArray(String[]::new))
-        );
+        Signal.effect(chart, () -> xAxis.setCategories(timelineCategoriesSignal
+                .get().stream().map(Signal::get).toArray(String[]::new)));
 
         conf.addSeries(berlinSeries);
         conf.addSeries(londonSeries);
@@ -150,9 +151,8 @@ public class RealtimeDashboard extends VerticalLayout {
      */
     private static void bindChartData(Chart chart, ListSeries series,
             ListSignal<Number> signal) {
-        Signal.effect(chart, () -> series.setData(signal.get().stream()
-            .map(Signal::get)
-            .toArray(Number[]::new)));
+        Signal.effect(chart, () -> series.setData(
+                signal.get().stream().map(Signal::get).toArray(Number[]::new)));
     }
     // end::bind-data[]
 
@@ -163,15 +163,15 @@ public class RealtimeDashboard extends VerticalLayout {
      */
     private static final class HighlightCard extends VerticalLayout {
         // Internal record tracking previous and current values
-        record Change(double previous, double current) {}
+        record Change(double previous, double current) {
+        }
 
         private HighlightCard(String title, ValueSignal<Number> signal,
                 Function<Number, String> format) {
 
             // Create a signal to track previous-current value pairs
-            ValueSignal<Change> changeSignal = new ValueSignal<>(
-                new Change(signal.peek().doubleValue(), signal.peek().doubleValue())
-            );
+            ValueSignal<Change> changeSignal = new ValueSignal<>(new Change(
+                    signal.peek().doubleValue(), signal.peek().doubleValue()));
 
             // Effect: Update changeSignal when the main signal changes
             // This tracks the previous value to calculate percentage change
@@ -182,14 +182,15 @@ public class RealtimeDashboard extends VerticalLayout {
             });
 
             // Computed signal: Calculate percentage change from Change record
-            Signal<Double> percentageSignal = changeSignal.map(change ->
-                calculatePercentageChange(change.current(), change.previous())
-            );
+            Signal<Double> percentageSignal = changeSignal
+                    .map(change -> calculatePercentageChange(change.current(),
+                            change.previous()));
 
             // Derived signals: Map percentage to display properties
             Signal<String> prefixSignal = percentageSignal.map(this::getPrefix);
             Signal<VaadinIcon> iconSignal = percentageSignal.map(this::getIcon);
-            Signal<Boolean> successSignal = percentageSignal.map(percentage -> percentage > 0);
+            Signal<Boolean> successSignal = percentageSignal
+                    .map(percentage -> percentage > 0);
 
             // Build UI components
             H2 h2 = new H2(title);
@@ -203,9 +204,8 @@ public class RealtimeDashboard extends VerticalLayout {
 
             // Bind percentage text with prefix
             Span percentageSpan = new Span();
-            percentageSpan.bindText(prefixSignal.map(prefix ->
-                prefix + percentageSignal.get()
-            ));
+            percentageSpan.bindText(prefixSignal
+                    .map(prefix -> prefix + percentageSignal.get()));
 
             // Bind icon to computed signal
             Icon icon = new Icon(iconSignal);
@@ -217,7 +217,8 @@ public class RealtimeDashboard extends VerticalLayout {
             badge.add(icon, percentageSpan);
             badge.getElement().getThemeList().add("badge");
             badge.getElement().getThemeList().bind("success", successSignal);
-            badge.getElement().getThemeList().bind("error", Signal.not(successSignal));
+            badge.getElement().getThemeList().bind("error",
+                    Signal.not(successSignal));
 
             add(h2, valueSpan, badge);
             getStyle().setGap("5px");
@@ -237,11 +238,13 @@ public class RealtimeDashboard extends VerticalLayout {
             return percentage < 0 ? VaadinIcon.ARROW_DOWN : VaadinIcon.ARROW_UP;
         }
 
-        private double calculatePercentageChange(double current, double previous) {
+        private double calculatePercentageChange(double current,
+                double previous) {
             if (previous == 0.0) {
                 return 0.0;
             }
-            double percent = ((current - previous) / Math.abs(previous)) * 100.0;
+            double percent = ((current - previous) / Math.abs(previous))
+                    * 100.0;
             return Math.round(percent * 10.0) / 10.0;
         }
     }
@@ -268,13 +271,14 @@ public class RealtimeDashboard extends VerticalLayout {
     // Using Spring's DI in this example
     @Service
     static class SchedulerService {
-        private final java.util.concurrent.ScheduledExecutorService scheduler =
-            java.util.concurrent.Executors.newScheduledThreadPool(1);
+        private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors
+                .newScheduledThreadPool(1);
         private final java.util.Random random = new java.util.Random();
-        private final java.time.format.DateTimeFormatter timeFormatter =
-            java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+        private final java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter
+                .ofPattern("HH:mm:ss");
 
-        void scheduleDashboardDataUpdate(java.util.function.Consumer<DashboardData> callback) {
+        void scheduleDashboardDataUpdate(
+                java.util.function.Consumer<DashboardData> callback) {
             // Schedule periodic updates every 2 seconds
             scheduler.scheduleAtFixedRate(() -> {
                 DashboardData data = generateData();
@@ -283,13 +287,12 @@ public class RealtimeDashboard extends VerticalLayout {
         }
 
         private DashboardData generateData() {
-            return new DashboardData(
-                randomBetween(650, 820),           // currentUsers
-                randomBetween(42000, 62000),       // viewEvents
-                java.time.LocalTime.now().format(timeFormatter), // timestamp
-                randomBetween(480, 920),           // berlinValue
-                randomBetween(420, 820),           // londonValue
-                randomBetween(220, 520)            // newYorkValue
+            return new DashboardData(randomBetween(650, 820), // currentUsers
+                    randomBetween(42000, 62000), // viewEvents
+                    java.time.LocalTime.now().format(timeFormatter), // timestamp
+                    randomBetween(480, 920), // berlinValue
+                    randomBetween(420, 820), // londonValue
+                    randomBetween(220, 520) // newYorkValue
             );
         }
 
@@ -298,12 +301,7 @@ public class RealtimeDashboard extends VerticalLayout {
         }
     }
 
-    record DashboardData(
-        int currentUsers,
-        int viewEvents,
-        String timestamp,
-        int berlinValue,
-        int londonValue,
-        int newYorkValue
-    ) {}
+    record DashboardData(int currentUsers, int viewEvents, String timestamp,
+            int berlinValue, int londonValue, int newYorkValue) {
+    }
 }

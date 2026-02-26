@@ -3,6 +3,7 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { DateTimePicker } from '@vaadin/react-components/DateTimePicker.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
@@ -14,7 +15,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <div>
+    <FormLayout autoResponsive columnWidth="20rem">
       <DateTimePicker
         label="Start date and time"
         value={startDateTime.value}
@@ -31,7 +32,7 @@ function Example() {
           endDateTime.value = event.detail.value;
         }}
       />
-    </div>
+    </FormLayout>
     // end::snippet[]
   );
 }

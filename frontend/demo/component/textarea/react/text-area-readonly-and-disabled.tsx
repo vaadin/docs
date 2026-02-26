@@ -1,17 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { TextArea } from '@vaadin/react-components/TextArea.js';
+import { FormLayout, TextArea } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
-      <TextArea readonly label="Read-only" value="Value" style={{ width: '100%' }} />
+      <TextArea readonly label="Read-only" value="Value" />
 
-      <TextArea disabled label="Disabled" style={{ width: '100%' }} />
+      <TextArea disabled label="Disabled" />
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

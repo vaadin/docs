@@ -11,7 +11,6 @@ import {
 } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridTreeToggle } from '@vaadin/react-components/GridTreeToggle.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -86,22 +85,14 @@ function Example() {
           }
         }}
       >
-        <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
-          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
-          <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
-            <span>
-              {person.firstName} {person.lastName}
-            </span>
-            <span
-              style={{
-                fontSize: 'var(--lumo-font-size-s)',
-                color: 'var(--lumo-secondary-text-color)',
-              }}
-            >
-              {person.profession}
-            </span>
-          </VerticalLayout>
-        </HorizontalLayout>
+        <div className='person-item'>
+          <Avatar
+            img={person.pictureUrl}
+            name={`${person.firstName} ${person.lastName}`}
+          />
+          <span>{person.firstName} {person.lastName}</span>
+          <span>{person.profession}</span>
+        </div>
       </GridTreeToggle>
     ),
     []
