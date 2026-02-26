@@ -230,11 +230,11 @@ public class ShoppingCartSignals extends VerticalLayout {
     // tag::add-to-cart[]
     private void addToCart(Product product,
             ListSignal<CartItem> cartItemsSignal) {
-        cartItemsSignal.get().stream().filter(
-                signal -> signal.get().product().id().equals(product.id()))
+        cartItemsSignal.peek().stream().filter(
+                signal -> signal.peek().product().id().equals(product.id()))
                 .findFirst().ifPresentOrElse(
-                        existing -> existing.set(existing.get()
-                                .withQuantity(existing.get().quantity() + 1)),
+                        existing -> existing.set(existing.peek()
+                                .withQuantity(existing.peek().quantity() + 1)),
                         () -> cartItemsSignal
                                 .insertLast(new CartItem(product, 1)));
     }

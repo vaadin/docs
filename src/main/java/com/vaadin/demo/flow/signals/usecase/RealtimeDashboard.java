@@ -84,9 +84,9 @@ public class RealtimeDashboard extends VerticalLayout {
         updateTimelineSignal(newYorkTimelineSignal, data.newYorkValue());
 
         // Update categories
-        if (timelineCategoriesSignal.get().size() >= TIMELINE_POINTS) {
+        if (timelineCategoriesSignal.peek().size() >= TIMELINE_POINTS) {
             timelineCategoriesSignal
-                    .remove(timelineCategoriesSignal.get().getFirst());
+                    .remove(timelineCategoriesSignal.peek().getFirst());
         }
         timelineCategoriesSignal.insertLast(data.timestamp());
     }
@@ -95,8 +95,8 @@ public class RealtimeDashboard extends VerticalLayout {
     // tag::update-helper[]
     private void updateTimelineSignal(ListSignal<Number> signal,
             Number newValue) {
-        if (signal.get().size() >= TIMELINE_POINTS) {
-            signal.remove(signal.get().getFirst());
+        if (signal.peek().size() >= TIMELINE_POINTS) {
+            signal.remove(signal.peek().getFirst());
         }
         signal.insertLast(newValue);
     }
