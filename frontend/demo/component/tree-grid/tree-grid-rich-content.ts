@@ -3,7 +3,6 @@ import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-toggle.js';
-import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
@@ -55,20 +54,14 @@ export class Example extends LitElement {
       }}"
       .expanded="${!!model.expanded}"
     >
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <div class="person-item">
         <vaadin-avatar
-          img="${person.pictureUrl}"
-          name="${`${person.firstName} ${person.lastName}`}"
+          .img="${person.pictureUrl}"
+          .name="${`${person.firstName} ${person.lastName}`}"
         ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span>${person.firstName} ${person.lastName}</span>
-          <span
-            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-          >
-            ${person.profession}
-          </span>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
+        <span>${person.firstName} ${person.lastName}</span>
+        <span>${person.profession}</span>
+      </div>
     </vaadin-grid-tree-toggle>
   `;
 
