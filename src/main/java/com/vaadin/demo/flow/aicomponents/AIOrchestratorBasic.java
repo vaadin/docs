@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.aicomponents;
+package com.vaadin.demo.flow.aicomponents;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.flow.component.ai.orchestrator.AIOrchestrator;

@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.aicomponents;
+package com.vaadin.demo.flow.aicomponents;
 
 import java.time.Duration;
 import java.util.List;
