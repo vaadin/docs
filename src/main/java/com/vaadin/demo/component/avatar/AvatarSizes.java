@@ -18,16 +18,16 @@ public class AvatarSizes extends HorizontalLayout {
 
         // tag::snippet[]
         Avatar xl = new Avatar(name);
-        xl.addThemeVariants(AvatarVariant.LUMO_XLARGE);
+        xl.addThemeVariants(AvatarVariant.XLARGE);
 
         Avatar l = new Avatar(name);
-        l.addThemeVariants(AvatarVariant.LUMO_LARGE);
+        l.addThemeVariants(AvatarVariant.LARGE);
 
         Avatar s = new Avatar(name);
-        s.addThemeVariants(AvatarVariant.LUMO_SMALL);
+        s.addThemeVariants(AvatarVariant.SMALL);
 
         Avatar xs = new Avatar(name);
-        xs.addThemeVariants(AvatarVariant.LUMO_XSMALL);
+        xs.addThemeVariants(AvatarVariant.XSMALL);
         // end::snippet[]
 
         add(xl, l, s, xs);
