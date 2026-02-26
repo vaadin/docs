@@ -30,7 +30,7 @@ public class DialogHeader extends Div {
 
         Button closeButton = new Button(new Icon("lumo", "cross"),
                 (e) -> dialog.close());
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         dialog.getHeader().add(closeButton);
         // end::snippet1[]
 

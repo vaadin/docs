@@ -40,7 +40,7 @@ public class DialogDraggable extends Div {
         // end::snippet2[]
         headline.getStyle().set("margin", "0").set("font-size", "1.5em")
                 .set("font-weight", "bold").set("cursor", "move")
-                .set("padding", "var(--lumo-space-m) 0").set("flex", "1");
+                .set("padding", "var(--vaadin-gap-m) 0").set("flex", "1");
 
         return headline;
     }
@@ -62,7 +62,7 @@ public class DialogDraggable extends Div {
     private static void createFooter(Dialog dialog) {
         Button cancelButton = new Button("Cancel", e -> dialog.close());
         Button saveButton = new Button("Add note", e -> dialog.close());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         dialog.getFooter().add(cancelButton);
         dialog.getFooter().add(saveButton);

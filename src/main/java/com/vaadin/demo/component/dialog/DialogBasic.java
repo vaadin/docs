@@ -57,7 +57,7 @@ public class DialogBasic extends Div {
 
     private static Button createSaveButton(Dialog dialog) {
         Button saveButton = new Button("Add", e -> dialog.close());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         return saveButton;
     }
