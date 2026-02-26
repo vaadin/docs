@@ -162,22 +162,34 @@ This is useful when you need to reference the newly inserted item immediately af
 
 === TransactionOperation
 
-When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction. The [methodname]`returnValue()` method returns a [classname]`SignalOperation` that can be used to check the transaction result:
+When running transactions, [methodname]`Signal.runInTransaction()` returns a [classname]`TransactionOperation` that tracks the entire transaction. [classname]`TransactionOperation` extends [classname]`SignalOperation<Void>`, so you can check the transaction status via the inherited [methodname]`result()` method:
 
 [source,java]
 ----
-TransactionOperation txOp = Signal.runInTransaction(() -> {
+TransactionOperation<Void> txOp = Signal.runInTransaction(() -> {
     firstNameSignal.set("John");
     lastNameSignal.set("Doe");
 });
 
-// Get the underlying SignalOperation to check transaction status
-SignalOperation<?> signalOp = txOp.returnValue();
-CompletableFuture<?> result = signalOp.result();
+// Check transaction status via the inherited result()
+CompletableFuture<SignalOperation.ResultOrError<Void>> result = txOp.result();
 
 if (result.isDone()) {
     System.out.println("Transaction committed successfully");
 }
+----
+
+Transactions can also return a value. The [methodname]`returnValue()` method provides direct access to the value returned by the transaction callback:
+
+[source,java]
+----
+TransactionOperation<String> txOp = Signal.runInTransaction(() -> {
+    statusSignal.verifyValue("pending");
+    statusSignal.set("confirmed");
+    return "Order confirmed";
+});
+
+String returnValue = txOp.returnValue(); // "Order confirmed"
 ----
 
 
