@@ -23,6 +23,7 @@ export class Example extends LitElement {
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
+    // eslint-disable-next-line
     this.person = people[0];
   }
 
@@ -66,19 +67,12 @@ export class Example extends LitElement {
     const nickName = `@${firstName}${lastName}`.toLowerCase();
 
     return html`
-      <vaadin-horizontal-layout class="userMenuHeader">
-        <vaadin-avatar
-          tabindex="-1"
-          .img="${pictureUrl}"
-          .name="${`${firstName} ${lastName}`}"
-          theme="large"
-        ></vaadin-avatar>
-        <vaadin-vertical-layout>
-          <div style="font-weight: bold;">${firstName} ${lastName}</div>
-          <div class="userMenuNickname">${nickName}</div>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
-      <vaadin-vertical-layout class="userMenuLinks">
+      <div class="person-item" style="padding: var(--vaadin-padding-s);">
+        <vaadin-avatar .img="${pictureUrl}" .name="${`${firstName} ${lastName}`}"></vaadin-avatar>
+        <span>${firstName} ${lastName}</span>
+        <span>${nickName}</span>
+      </div>
+      <vaadin-vertical-layout class="userMenuLinks" style="align-items:stretch; width:100%;">
         <a href="#" role="menuitem">User profile</a>
         <a href="#" role="menuitem">Preferences</a>
         <a href="#" role="menuitem">Sign out</a>

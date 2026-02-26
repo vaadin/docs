@@ -42,26 +42,13 @@ export class Example extends LitElement {
       ${this.people.map(
         (person) => html`
           <vaadin-item value="${person.id}">
-            <!--
-            NOTE
-            We are using inline styles here to keep the example simple.
-            We recommend placing CSS in a separate style sheet and
-            encapsulating the styling in a new component.
-          -->
-            <div style="display: flex; align-items: center;">
-              <img
-                src="${person.pictureUrl}"
-                alt="Portrait of ${person.firstName} ${person.lastName}"
-                style="width: 2.25rem; margin-right: var(--lumo-space-s);"
-              />
-              <div>
-                ${person.firstName} ${person.lastName}
-                <div
-                  style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-                >
-                  ${person.profession}
-                </div>
-              </div>
+            <div class="person-item">
+              <vaadin-avatar
+                .img="${person.pictureUrl}"
+                .name="${`${person.firstName} ${person.lastName}`}"
+              ></vaadin-avatar>
+              <span>${person.firstName} ${person.lastName}</span>
+              <span>${person.profession}</span>
             </div>
           </vaadin-item>
         `
