@@ -49,7 +49,7 @@ import com.vaadin.flow.signals.shared.SharedValueSignal;
 
 SharedValueSignal<String> name = new SharedValueSignal<>(String.class);
 name.set("John Doe"); // Set the value
-String currentName = name.get(); // Get the value
+String currentName = name.peek(); // Get the value outside reactive contexts
 ----
 
 
@@ -65,7 +65,7 @@ SharedNumberSignal counter = new SharedNumberSignal();
 counter.set(5); // Set the value
 counter.incrementBy(1); // Increment by 1
 counter.incrementBy(-2); // Decrement by 2
-int count = counter.valueAsInt(); // Get the value as int
+int count = counter.getAsInt(); // Get the value as int
 ----
 
 
@@ -80,9 +80,56 @@ import com.vaadin.flow.signals.shared.SharedListSignal;
 SharedListSignal<Person> persons = new SharedListSignal<>(Person.class);
 persons.insertFirst(new Person("Jane", 25)); // Add to the beginning
 persons.insertLast(new Person("John", 30)); // Add to the end
-persons.insert(1, new Person("Bob", 20)); // Insert at specific index
-List<SharedValueSignal<Person>> personList = persons.get(); // Get all persons
+List<SharedValueSignal<Person>> personList = persons.peek(); // Get all persons
 personList.get(0).set(new Person("Alice", 22)); // Update the value of a child signal
+----
+
+
+==== Positioning Items with ListPosition
+
+[classname]`SharedListSignal` uses [classname]`ListPosition` to specify where items should be inserted. The [methodname]`insertFirst()` and [methodname]`insertLast()` methods are convenience shortcuts for the most common cases. For precise positioning, use [methodname]`insertAt()` with a [classname]`ListPosition`:
+
+[source,java]
+----
+import com.vaadin.flow.signals.shared.SharedListSignal.ListPosition;
+
+SharedListSignal<String> items = new SharedListSignal<>(String.class);
+var first = items.insertFirst("First");
+var last = items.insertLast("Last");
+
+// Insert after a specific entry
+items.insertAt("After First", ListPosition.after(first));
+
+// Insert before a specific entry
+items.insertAt("Before Last", ListPosition.before(last));
+
+// Insert between two adjacent entries
+items.insertAt("Between", ListPosition.between(first, last));
+
+// Equivalent to insertFirst / insertLast
+items.insertAt("New First", ListPosition.first());
+items.insertAt("New Last", ListPosition.last());
+----
+
+
+==== Reordering Items with moveTo
+
+Use [methodname]`moveTo()` to change the position of an existing list entry without removing and re-inserting it:
+
+[source,java]
+----
+SharedListSignal<String> items = new SharedListSignal<>(String.class);
+var a = items.insertLast("A");
+var b = items.insertLast("B");
+var c = items.insertLast("C");
+
+// Move C to the beginning
+items.moveTo(c, ListPosition.first());
+// List is now: ["C", "A", "B"]
+
+// Move A after B
+items.moveTo(a, ListPosition.after(b));
+// List is now: ["C", "B", "A"]
 ----
 
 
@@ -97,8 +144,8 @@ import com.vaadin.flow.signals.shared.SharedMapSignal;
 SharedMapSignal<String> properties = new SharedMapSignal<>(String.class);
 properties.put("name", "John"); // Add or update a property
 properties.putIfAbsent("age", "30"); // Add only if not present
-SharedValueSignal<String> nameSignal = properties.get("name"); // Get signal for a key
-Map<String, SharedValueSignal<String>> propertyMap = properties.get(); // Get all properties
+SharedValueSignal<String> nameSignal = properties.peek().get("name"); // Get signal for a key
+Map<String, SharedValueSignal<String>> propertyMap = properties.peek(); // Get all properties
 properties.remove("age"); // Remove an entry
 ----
 
@@ -116,12 +163,12 @@ user.putChildWithValue("name", "John Doe"); // Add a map child
 user.putChildWithValue("age", 30); // Add another map child
 user.insertChildWithValue("Reading", ListPosition.last()); // Add a hobby as a list child
 
-user.get().mapChildren().get("name").asValue(String.class).get(); // Access 'John Doe'
-user.get().mapChildren().get("age").asValue(Integer.class).get(); // Access 30
-user.get().listChildren().getLast().asValue(String.class).get(); // Access 'Reading'
+user.peek().mapChildren().get("name").asValue(String.class).peek(); // Access 'John Doe'
+user.peek().mapChildren().get("age").asValue(Integer.class).peek(); // Access 30
+user.peek().listChildren().getLast().asValue(String.class).peek(); // Access 'Reading'
 
 SharedMapSignal<String> mapChildren = user.asMap(String.class); // Access all map children
-mapChildren.get().get("name"); // Alternative way of accessing 'John Doe'
+mapChildren.peek().get("name"); // Alternative way of accessing 'John Doe'
 ----
 
 
@@ -130,12 +177,17 @@ mapChildren.get().get("name"); // Alternative way of accessing 'John Doe'
 
 === Getting the Current Value
 
-The `get()` method returns the current locally-known value of the signal:
+Shared signals provide two methods for reading values:
+
+* `get()` - reads the value and registers a reactive dependency. This must only be called inside a reactive context such as an effect, a computed signal, or a transaction. Calling `get()` outside a reactive context throws [classname]`IllegalStateException`.
+* `peek()` - reads the current locally-known value without registering a dependency. Use this for one-time reads in click listeners, initialization code, or any code outside a reactive context.
 
 [source,java]
 ----
 SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
-String current = signal.get();
+
+// Read current value outside reactive contexts
+String current = signal.peek();
 ----
 
 
@@ -162,13 +214,13 @@ The `peekConfirmed()` method returns the last value that has been confirmed by t
 SharedValueSignal<String> signal = new SharedValueSignal<>(String.class);
 
 // Get the locally-known value (may include optimistic updates)
-String optimistic = signal.get();
+String optimistic = signal.peek();
 
 // Get only the cluster-confirmed value
 String confirmed = signal.peekConfirmed();
 ----
 
-In single-server deployments, `peekConfirmed()` typically returns the same value as `get()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
+In single-server deployments, `peekConfirmed()` typically returns the same value as `peek()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
 
 == Writing Values
@@ -219,7 +271,7 @@ SharedValueSignal<User> user = new SharedValueSignal<>(User.class);
 user.update(u -> new User(u.getName(), u.getAge() + 1));
 
 // Bad: Modifying the object directly
-User u = user.get();
+User u = user.peek();
 u.setAge(u.getAge() + 1); // This won't trigger reactivity!
 ----
 

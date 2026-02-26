@@ -21,6 +21,7 @@ export class Example extends LitElement {
           indeterminate
           aria-labelledby="pblbl"
           aria-describedby="sublbl"
+          style="margin: var(--vaadin-gap-s) 0"
         ></vaadin-progress-bar>
         <span id="sublbl" style="font-size: 0.8125rem">
           Process can take upwards of 10 minutes
