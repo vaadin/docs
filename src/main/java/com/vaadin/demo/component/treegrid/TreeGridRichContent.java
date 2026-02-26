@@ -26,7 +26,8 @@ public class TreeGridRichContent extends Div {
 
         // tag::snippet[]
         treeGrid.addComponentHierarchyColumn(person -> {
-            Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
 
