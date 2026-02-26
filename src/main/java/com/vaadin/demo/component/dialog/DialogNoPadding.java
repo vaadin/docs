@@ -36,7 +36,8 @@ public class DialogNoPadding extends Div {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(Person::getFullName).setHeader("Name");
 
-        grid.getStyle().set("width", "500px").set("max-width", "100%");
+        grid.getStyle().set("width", "500px").set("max-width", "100%")
+                .set("border-radius", "0");
 
         return grid;
     }
