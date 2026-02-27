@@ -19,6 +19,8 @@ public class CheckboxGroupStyles extends HorizontalLayout {
         field.setLabel("Label");
         field.setHelperText("Helper text");
         field.setItems("Item 1", "Item 2", "Item 3");
+        // Only for Lumo
+        field.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
 
         add(field);
     }

@@ -15,10 +15,11 @@ public class CheckboxDisabled extends Div {
         disabledCheckGroup.setLabel("Departments");
         disabledCheckGroup.setItems("Engineering", "Human Resources",
                 "Marketing", "Operations", "Sales");
-        disabledCheckGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL); // Only for Lumo
         disabledCheckGroup.setEnabled(false);
         add(disabledCheckGroup);
         // end::snippet[]
+        // Only for Lumo
+        disabledCheckGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<CheckboxDisabled> { // hidden-source-line

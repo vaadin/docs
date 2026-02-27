@@ -18,9 +18,10 @@ public class CheckboxReadonly extends Div {
                 "Status");
         checkboxGroup.select("Order ID", "Customer");
         checkboxGroup.setReadOnly(true);
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL); // Only for Lumo
         add(checkboxGroup);
         // end::snippet[]
+        // Only for Lumo
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<CheckboxReadonly> { // hidden-source-line

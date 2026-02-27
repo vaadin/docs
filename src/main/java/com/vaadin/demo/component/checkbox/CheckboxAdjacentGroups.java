@@ -17,15 +17,17 @@ public class CheckboxAdjacentGroups extends VerticalLayout {
         CheckboxGroup<String> manufacturer = new CheckboxGroup<>();
         manufacturer.setLabel("Manufacturer");
         manufacturer.setItems("Akuchi", "Broek", "Wulf");
-        manufacturer.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL); // Only for Lumo
 
         CheckboxGroup<String> status = new CheckboxGroup<>();
         status.setLabel("Status");
         status.setItems("In progress", "Done", "Cancelled");
-        manufacturer.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL); // Only for Lumo
 
         add(manufacturer, status);
         // end::snippet[]
+
+        // Only for Lumo
+        manufacturer.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        status.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<CheckboxAdjacentGroups> { // hidden-source-line
