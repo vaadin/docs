@@ -6,7 +6,6 @@ import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    // "horizontal" only for Aura
     <CheckboxGroup label="Permissions" theme="horizontal">
       <Checkbox value="read" label="Read" />
       <Checkbox value="edit" label="Edit" />

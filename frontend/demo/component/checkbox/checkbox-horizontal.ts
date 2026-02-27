@@ -16,7 +16,6 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      // "horizontal" only for Aura
       <vaadin-checkbox-group label="Permissions" theme="horizontal">
         <vaadin-checkbox value="read" label="Read"></vaadin-checkbox>
         <vaadin-checkbox value="edit" label="Edit"></vaadin-checkbox>

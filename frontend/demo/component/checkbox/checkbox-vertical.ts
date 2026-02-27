@@ -16,7 +16,6 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      // "vertical" only for Lumo
       <vaadin-checkbox-group label="Working days" theme="vertical">
         <vaadin-checkbox value="mon" label="Monday"></vaadin-checkbox>
         <vaadin-checkbox value="tue" label="Tuesday"></vaadin-checkbox>

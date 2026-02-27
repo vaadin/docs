@@ -6,7 +6,6 @@ import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    // "vertical" only for Lumo
     <CheckboxGroup label="Working days" theme="vertical">
       <Checkbox value="mon" label="Monday" />
       <Checkbox value="tue" label="Tuesday" />
