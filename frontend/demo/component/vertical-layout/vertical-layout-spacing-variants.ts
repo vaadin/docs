@@ -8,11 +8,6 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('vertical-layout-spacing-variants')
 export class Example extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    this.classList.add('basic-layouts-example');
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -25,15 +20,17 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout
-        theme="${this.themeVariant} padding"
-        class="height-5xl"
-        style="align-items: stretch"
-      >
-        <div class="example-item">Item 1</div>
-        <div class="example-item">Item 2</div>
-        <div class="example-item">Item 3</div>
-      </vaadin-vertical-layout>
+      <div class="basic-layouts-example">
+        <vaadin-vertical-layout
+          theme="${this.themeVariant} padding"
+          class="height-5xl"
+          style="align-items: stretch"
+        >
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+        </vaadin-vertical-layout>
+      </div>
       <vaadin-radio-group
         label="Spacing variant"
         .value="${this.themeVariant}"
