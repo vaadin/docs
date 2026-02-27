@@ -1,12 +1,18 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/horizontal-layout';
 import '@vaadin/login/vaadin-login-form.js';
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('login-rich-content')
 export class Example extends LitElement {
+  static override styles = css`
+    :host {
+      color-scheme: dark;
+    }
+  `;
+
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
