@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/dialog';
+import '@vaadin/form-layout';
 import '@vaadin/text-field';
-import '@vaadin/vertical-layout';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
@@ -58,10 +58,10 @@ export class Example extends LitElement {
   }
 
   private renderDialog = () => html`
-    <vaadin-vertical-layout style="align-items: stretch; width: 18rem; max-width: 100%;">
+    <vaadin-form-layout auto-responsive column-width="18rem" expand-fields>
       <vaadin-text-field label="First name"></vaadin-text-field>
       <vaadin-text-field label="Last name"></vaadin-text-field>
-    </vaadin-vertical-layout>
+    </vaadin-form-layout>
   `;
 
   private renderFooter = () => html`

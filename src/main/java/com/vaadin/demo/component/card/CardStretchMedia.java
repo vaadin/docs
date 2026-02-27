@@ -31,8 +31,8 @@ public class CardStretchMedia extends Div {
 
         imageCard.setTitle(new Div("Lapland"));
         imageCard.setSubtitle(new Div("The Exotic North"));
-        imageCard.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        imageCard.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
 
         // Card with stretched icon
         Card iconCard = new Card();
@@ -44,8 +44,8 @@ public class CardStretchMedia extends Div {
 
         iconCard.setTitle(new Div("Lapland"));
         iconCard.setSubtitle(new Div("The Exotic North"));
-        iconCard.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        iconCard.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
         // end::snippet[]
 
         layout.add(imageCard, iconCard);
