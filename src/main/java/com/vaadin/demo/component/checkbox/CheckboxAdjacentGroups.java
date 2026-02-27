@@ -11,7 +11,7 @@ public class CheckboxAdjacentGroups extends VerticalLayout {
 
     public CheckboxAdjacentGroups() {
         setPadding(false);
-        setSpacing(false);
+        setSpacing("15px");
 
         // tag::snippet[]
         CheckboxGroup<String> manufacturer = new CheckboxGroup<>();
