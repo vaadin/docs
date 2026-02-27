@@ -8,7 +8,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <CheckboxGroup label="Export data" value={value} readonly theme="vertical">
+    <CheckboxGroup label="Export data" value={value} readonly>
       <Checkbox value="0" label="Order ID" />
       <Checkbox value="1" label="Product name" />
       <Checkbox value="2" label="Customer" />

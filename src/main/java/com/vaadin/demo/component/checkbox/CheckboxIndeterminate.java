@@ -2,7 +2,6 @@ package com.vaadin.demo.component.checkbox;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
-import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -29,7 +28,6 @@ public class CheckboxIndeterminate extends VerticalLayout {
         checkboxGroup.setItemLabelGenerator(
                 person -> person.getFirstName() + " " + person.getLastName());
         checkboxGroup.setItems(items);
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         checkboxGroup.addValueChangeListener(event -> {
             if (event.getValue().size() == items.size()) {
                 checkbox.setValue(true);

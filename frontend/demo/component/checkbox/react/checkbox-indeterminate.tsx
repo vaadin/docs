@@ -38,7 +38,6 @@ function Example() {
 
       <CheckboxGroup
         label="Users to notify"
-        theme="vertical"
         value={selectedIds.value}
         onValueChanged={(event) => {
           selectedIds.value = event.detail.value;

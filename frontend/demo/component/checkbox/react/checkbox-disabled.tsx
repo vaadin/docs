@@ -6,7 +6,7 @@ import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    <CheckboxGroup label="Departments" theme="vertical" disabled>
+    <CheckboxGroup label="Departments" disabled>
       <Checkbox value="engineering" label="Engineering" />
       <Checkbox value="human-resources" label="Human Resources" />
       <Checkbox value="marketing" label="Marketing" />

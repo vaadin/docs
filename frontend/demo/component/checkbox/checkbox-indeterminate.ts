@@ -48,7 +48,6 @@ export class Example extends LitElement {
 
         <vaadin-checkbox-group
           label="Users to notify"
-          theme="vertical"
           .value="${this.selectedIds}"
           @value-changed="${(event: CheckboxGroupValueChangedEvent) => {
             this.selectedIds = event.detail.value;

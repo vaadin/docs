@@ -14,7 +14,7 @@ public class CheckboxGroupStyles extends HorizontalLayout {
 
         // tag::snippet[]
         CheckboxGroup<String> field = new CheckboxGroup<>();
-        field.addThemeVariants(CheckboxGroupVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.addThemeVariants(CheckboxGroupVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

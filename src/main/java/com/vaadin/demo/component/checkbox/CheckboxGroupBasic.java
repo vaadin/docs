@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.checkbox;
 
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
-import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
@@ -17,7 +16,6 @@ public class CheckboxGroupBasic extends Div {
         checkboxGroup.setItems("Order ID", "Product name", "Customer",
                 "Status");
         checkboxGroup.select("Order ID", "Customer");
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         add(checkboxGroup);
         // end::snippet[]
     }
