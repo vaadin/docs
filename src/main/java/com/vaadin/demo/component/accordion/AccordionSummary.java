@@ -66,7 +66,7 @@ public class AccordionSummary extends Div {
                     .setSummary(createCompletedSummary(CUSTOMER_DETAILS));
         });
         // end::snippet[]
-        customDetailsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        customDetailsButton.addThemeVariants(ButtonVariant.PRIMARY);
         customerDetailsLayout.add(customDetailsButton);
 
         // Billing address fields
@@ -86,7 +86,7 @@ public class AccordionSummary extends Div {
             billingAddressPanel
                     .setSummary(createCompletedSummary(BILLING_ADDRESS));
         });
-        billingAddressButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        billingAddressButton.addThemeVariants(ButtonVariant.PRIMARY);
         billingAddressLayout.add(billingAddressButton);
 
         // Payment fields
@@ -102,7 +102,7 @@ public class AccordionSummary extends Div {
             paymentPanel.setOpened(false);
             paymentPanel.setSummary(createCompletedSummary(PAYMENT));
         });
-        paymentButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        paymentButton.addThemeVariants(ButtonVariant.PRIMARY);
         paymentLayout.add(paymentButton);
 
         add(accordion);
@@ -125,7 +125,7 @@ public class AccordionSummary extends Div {
         layout.add(title);
 
         Icon icon = VaadinIcon.CHECK.create();
-        icon.getStyle().set("color", "var(--lumo-success-text-color)");
+        icon.getStyle().set("color", "currentColor");
         icon.getStyle().set("--vaadin-icon-size", "1rem");
         layout.add(icon);
 

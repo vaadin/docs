@@ -66,7 +66,7 @@ export class Example extends LitElement {
                 ? html`
                     <vaadin-icon
                       icon="vaadin:check"
-                      style="color: var(--lumo-success-text-color); --vaadin-icon-size: 1rem"
+                      style="color: currentColor; --vaadin-icon-size: 1rem"
                     ></vaadin-icon>
                   `
                 : nothing}
@@ -101,7 +101,7 @@ export class Example extends LitElement {
                 ? html`
                     <vaadin-icon
                       icon="vaadin:check"
-                      style="color: var(--lumo-success-text-color); --vaadin-icon-size: 1rem"
+                      style="color: currentColor; --vaadin-icon-size: 1rem"
                     ></vaadin-icon>
                   `
                 : nothing}
@@ -140,7 +140,7 @@ export class Example extends LitElement {
                 ? html`
                     <vaadin-icon
                       icon="vaadin:check"
-                      style="color: var(--lumo-success-text-color); --vaadin-icon-size: 1rem"
+                      style="color: currentColor; --vaadin-icon-size: 1rem"
                     ></vaadin-icon>
                   `
                 : nothing}

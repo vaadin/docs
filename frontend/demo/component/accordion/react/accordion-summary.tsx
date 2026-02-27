@@ -54,7 +54,7 @@ function Example() {
             {customerComplete.value && (
               <Icon
                 icon="vaadin:check"
-                style={{ color: 'var(--lumo-success-text-color)', '--vaadin-icon-size': '1rem' }}
+                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
               />
             )}
           </HorizontalLayout>
@@ -86,7 +86,7 @@ function Example() {
             {billingComplete.value && (
               <Icon
                 icon="vaadin:check"
-                style={{ color: 'var(--lumo-success-text-color)', '--vaadin-icon-size': '1rem' }}
+                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
               />
             )}
           </HorizontalLayout>
@@ -123,7 +123,7 @@ function Example() {
             {paymentComplete.value && (
               <Icon
                 icon="vaadin:check"
-                style={{ color: 'var(--lumo-success-text-color)', '--vaadin-icon-size': '1rem' }}
+                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
               />
             )}
           </HorizontalLayout>
