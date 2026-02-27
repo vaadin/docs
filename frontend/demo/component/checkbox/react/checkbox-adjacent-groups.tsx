@@ -8,13 +8,13 @@ function Example() {
   return (
     // tag::snippet[]
     <VerticalLayout>
-      <CheckboxGroup label="Manufacturer">
+      <CheckboxGroup label="Manufacturer" theme="vertical">
         <Checkbox value="0" label="Akuchi" />
         <Checkbox value="1" label="Broek" />
         <Checkbox value="2" label="Wulf" />
       </CheckboxGroup>
 
-      <CheckboxGroup label="Status">
+      <CheckboxGroup label="Status" theme="vertical">
         <Checkbox value="0" label="In progress" />
         <Checkbox value="1" label="Done" />
         <Checkbox value="2" label="Cancelled" />

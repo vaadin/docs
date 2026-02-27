@@ -19,7 +19,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-checkbox-group label="Export data" .value="${this.value}" readonly>
+      <vaadin-checkbox-group label="Export data" .value="${this.value}" readonly theme="vertical">
         <vaadin-checkbox value="0" label="Order ID"></vaadin-checkbox>
         <vaadin-checkbox value="1" label="Product name"></vaadin-checkbox>
         <vaadin-checkbox value="2" label="Customer"></vaadin-checkbox>

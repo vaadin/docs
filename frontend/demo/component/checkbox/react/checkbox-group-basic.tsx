@@ -17,6 +17,7 @@ function Example() {
       onValueChanged={(event) => {
         exportData.value = event.detail.value;
       }}
+      theme="vertical"
     >
       <Checkbox value="0" label="Order ID" />
       <Checkbox value="1" label="Product name" />
