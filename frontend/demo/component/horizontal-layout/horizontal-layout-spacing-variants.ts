@@ -8,42 +8,37 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('horizontal-layout-spacing-variants')
 export class Example extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    this.classList.add('basic-layouts-example');
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
     return root;
   }
 
-  // tag::snippet[]
   @state()
   private themeVariant = 'spacing-xl';
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="${this.themeVariant} padding" style="align-items: stretch">
-        <div class="example-item">Item 1</div>
-        <div class="example-item">Item 2</div>
-        <div class="example-item">Item 3</div>
-      </vaadin-horizontal-layout>
-      <vaadin-radio-group
-        label="Spacing variant"
-        .value="${this.themeVariant}"
-        @value-changed="${(event: RadioGroupValueChangedEvent) => {
-          this.themeVariant = event.detail.value;
-        }}"
-      >
-        <vaadin-radio-button value="spacing-xs" label="spacing-xs"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-s" label="spacing-s"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing" label="spacing"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-l" label="spacing-l"></vaadin-radio-button>
-        <vaadin-radio-button value="spacing-xl" label="spacing-xl"></vaadin-radio-button>
-      </vaadin-radio-group>
+      <div class="basic-layouts-example">
+        <vaadin-horizontal-layout theme="${this.themeVariant} padding" style="align-items: stretch">
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+        </vaadin-horizontal-layout>
+        <vaadin-radio-group
+          label="Spacing variant"
+          .value="${this.themeVariant}"
+          @value-changed="${(event: RadioGroupValueChangedEvent) => {
+            this.themeVariant = event.detail.value;
+          }}"
+        >
+          <vaadin-radio-button value="spacing-xs" label="spacing-xs"></vaadin-radio-button>
+          <vaadin-radio-button value="spacing-s" label="spacing-s"></vaadin-radio-button>
+          <vaadin-radio-button value="spacing" label="spacing"></vaadin-radio-button>
+          <vaadin-radio-button value="spacing-l" label="spacing-l"></vaadin-radio-button>
+          <vaadin-radio-button value="spacing-xl" label="spacing-xl"></vaadin-radio-button>
+        </vaadin-radio-group>
+      </div>
     `;
   }
-  // end::snippet[]
 }
