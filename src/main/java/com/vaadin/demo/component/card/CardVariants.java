@@ -27,7 +27,7 @@ public class CardVariants extends Div {
         cardOutlined.add(new Div("Adds a solid outline around the card."));
 
         cardElevated.setTitle("Elevated");
-        cardOutlined.add(
+        cardElevated.add(
                 new Div("This variant works better on a shaded background."));
 
         Div cardVariantsLayout = new Div(cardDefault, cardOutlined,
