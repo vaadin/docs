@@ -4,9 +4,9 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { TextArea } from '@vaadin/react-components/TextArea.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -40,7 +40,7 @@ function Example() {
               margin: 0,
               fontSize: '1.5em',
               fontWeight: 'bold',
-              padding: 'var(--lumo-space-m) 0',
+              padding: 'var(--vaadin-gap-m) 0',
             }}
           >
             Add note
@@ -55,15 +55,10 @@ function Example() {
           </>
         )}
       >
-        <VerticalLayout
-          theme="spacing"
-          style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
-        >
-          <VerticalLayout style={{ alignItems: 'stretch' }}>
-            <TextField label="Title" />
-            <TextArea label="Description" />
-          </VerticalLayout>
-        </VerticalLayout>
+        <FormLayout autoResponsive columnWidth="18rem" expandFields>
+          <TextField label="Title" />
+          <TextArea label="Description" />
+        </FormLayout>
       </Dialog>
       {/* end::snippet[] */}
       <Button onClick={open}>Show dialog</Button>

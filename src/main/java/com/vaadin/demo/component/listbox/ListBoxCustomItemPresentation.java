@@ -6,9 +6,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -25,7 +22,8 @@ public class ListBoxCustomItemPresentation extends Div {
         listBox.setItems(items);
         // tag::snippet[]
         listBox.setRenderer(new ComponentRenderer<>(person -> {
-            Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
 
