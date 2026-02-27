@@ -94,7 +94,7 @@ The validator checks [methodname]`ageValidSignal.get()` and provides a dynamic e
 
 === Cross-Field Validation with Binding Values
 
-For simpler cross-field validation that doesn't need separate signals, use [classname]`Binder.Binding.valueSignal()` - the binding validator re-runs whenever a referenced binding value changes:
+For simpler cross-field validation that doesn't need signals, use [classname]`Binder.Binding.value()` - binding validator re-runs always when a binding value changes:
 
 [source,java]
 ----
@@ -105,15 +105,12 @@ Binder.Binding<UserRegistration, String> pwBinding = binder
     .bind("password");
 
 binder.forField(confirmPasswordField)
-    .withValidator(value -> value != null
-            && value.equals(pwBinding.valueSignal().get()),
+    .withValidator(value -> value != null && value.equals(pwBinding.value()),
         "Passwords do not match")
     .bind("confirmPassword");
 ----
 
-The [methodname]`valueSignal()` method returns a [classname]`ValueSignal` holding the current converted and validated value of the binding's field. When called inside a validator with [methodname]`get()`, Binder automatically tracks the dependency and re-validates when the referenced field changes.
-
-You can mix [methodname]`binding.valueSignal().get()` and [methodname]`signal.get()` in the same validator - Binder re-validates whenever any referenced binding or signal value changes. Use signals when you need to share validation state across multiple components or derive complex logic from multiple sources.
+You can mix [methodname]`binding.value()` and [methodname]`signal.get()` in the same validator - Binder re-validates whenever any referenced binding or signal value changes. Use signals when you need to share validation state across multiple components or derive complex logic from multiple sources.
 
 
 === Reactive Submit Button
@@ -123,10 +120,10 @@ Enable the submit button only when the form is valid using [methodname]`bindEnab
 [source,java]
 ----
 submitButton.bindEnabled(
-    binder.validationStatusSignal().map(BinderValidationStatus::isOk));
+    binder.getValidationStatus().map(BinderValidationStatus::isOk));
 ----
 
-The [methodname]`validationStatusSignal()` method returns a signal that updates whenever validation state changes. The [methodname]`map()` method transforms it to a boolean that controls the button's enabled state.
+The [methodname]`getValidationStatus()` method returns a signal that updates whenever validation state changes. The [methodname]`map()` method transforms it to a boolean that controls the button's enabled state.
 
 
 === Reactive Status Display
@@ -136,10 +133,10 @@ Show form status with reactive text and styling:
 [source,java]
 ----
 Span statusLabel = new Span();
-statusLabel.bindText(binder.validationStatusSignal()
+statusLabel.bindText(binder.getValidationStatus()
     .map(status -> status.isOk() ? "Form is valid - Ready to submit"
         : "Please complete all required fields correctly"));
-statusLabel.getStyle().bind("color", binder.validationStatusSignal()
+statusLabel.getStyle().bind("color", binder.getValidationStatus()
     .map(status -> status.isOk() ? "green" : "orange"));
 ----
 

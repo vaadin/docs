@@ -65,10 +65,10 @@ public class BinderIntegrationExample extends VerticalLayout {
                         "Password must be at least 8 characters")
                 .bind("password");
 
-        // Cross-field validation using Binder.Binding.valueSignal()
+        // Cross-field validation using Binder.Binding.value()
         // Runs each time the password field changes
         binder.forField(confirmPasswordField).withValidator(
-                value -> value != null && value.equals(pwBinding.valueSignal().get()),
+                value -> value != null && value.equals(pwBinding.value()),
                 "Passwords do not match").bind("confirmPassword");
 
         binder.forField(accountTypeSelect).bind("accountType");
@@ -94,15 +94,15 @@ public class BinderIntegrationExample extends VerticalLayout {
             // Handle registration...
         });
         submitButton.bindEnabled(
-                binder.validationStatusSignal().map(BinderValidationStatus::isOk));
+                binder.getValidationStatus().map(BinderValidationStatus::isOk));
 
         // Form status display with reactive styling
         Div statusDiv = new Div();
         Span statusLabel = new Span();
-        statusLabel.bindText(binder.validationStatusSignal()
+        statusLabel.bindText(binder.getValidationStatus()
                 .map(status -> status.isOk() ? "Form is valid - Ready to submit"
                         : "Please complete all required fields correctly"));
-        statusLabel.getStyle().bind("color", binder.validationStatusSignal()
+        statusLabel.getStyle().bind("color", binder.getValidationStatus()
                 .map(status -> status.isOk() ? "green" : "orange"));
         statusDiv.add(statusLabel);
 
