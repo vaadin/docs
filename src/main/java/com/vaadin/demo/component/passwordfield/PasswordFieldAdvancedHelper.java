@@ -32,6 +32,7 @@ public class PasswordFieldAdvancedHelper extends Div {
         // tag::snippet[]
         PasswordField passwordField = new PasswordField();
         passwordField.setLabel("Password");
+        passwordField.setWidth("14em");
 
         Icon checkIcon = VaadinIcon.CHECK.create();
         checkIcon.setClassName("strong");
@@ -40,6 +41,7 @@ public class PasswordFieldAdvancedHelper extends Div {
 
         Span passwordStrength = new Span();
         Signal.effect(passwordStrength, () -> {
+            passwordStrength.setText(strength.get());
             passwordStrength.setClassName(strength.get());
         });
         passwordField.setHelperComponent(
