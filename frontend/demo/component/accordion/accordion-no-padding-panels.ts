@@ -2,18 +2,12 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/accordion';
 import '@vaadin/text-field';
 import '@vaadin/vertical-layout';
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('accordion-content')
+@customElement('accordion-no-padding-panels')
 export class Example extends LitElement {
-  static override styles = css`
-    a {
-      text-decoration: none;
-    }
-  `;
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -24,27 +18,28 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-accordion>
-        <vaadin-accordion-panel summary="Analytics">
+        <vaadin-accordion-panel summary="Personal information" theme="no-padding">
           <vaadin-vertical-layout>
-            <a href="#">Dashboard</a>
-            <a href="#">Reports</a>
-            <a href="#">Data sources</a>
+            <span>Sophia Williams</span>
+            <span>sophia.williams@company.com</span>
+            <span>(501) 555-9128</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
         <!-- end::snippet[] -->
 
-        <vaadin-accordion-panel summary="Customers">
+        <vaadin-accordion-panel summary="Billing address" theme="no-padding">
           <vaadin-vertical-layout>
-            <a href="#">Accounts</a>
-            <a href="#">Contacts</a>
+            <span>4027 Amber Lake Canyon</span>
+            <span>72333-5884 Cozy Nook</span>
+            <span>Arkansas</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
 
-        <vaadin-accordion-panel summary="Finances">
+        <vaadin-accordion-panel summary="Payment" theme="no-padding">
           <vaadin-vertical-layout>
-            <a href="#">Invoices</a>
-            <a href="#">Transactions</a>
-            <a href="#">Statements</a>
+            <span>MasterCard</span>
+            <span>1234 5678 9012 3456</span>
+            <span>Expires 06/21</span>
           </vaadin-vertical-layout>
         </vaadin-accordion-panel>
         <!-- tag::snippet[] -->
