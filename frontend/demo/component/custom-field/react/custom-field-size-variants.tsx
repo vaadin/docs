@@ -8,7 +8,7 @@ import { TextField } from '@vaadin/react-components/TextField.js';
 function Example() {
   return (
     // tag::snippet[]
-    <CustomField label="Price" theme="small">
+    <CustomField label="Price" errorMessage="Error message" invalid theme="small">
       <HorizontalLayout theme="spacing-s">
         <TextField accessibleName="Amount" theme="small" />
         <Select
