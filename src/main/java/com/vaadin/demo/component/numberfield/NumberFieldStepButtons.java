@@ -32,8 +32,7 @@ public class NumberFieldStepButtons extends FormLayout {
         children.setText("Children");
         Div childrenExplainer = new Div();
         childrenExplainer.setText("Age 2-12");
-        childrenExplainer.getStyle().set("font-size",
-                "var(--lumo-font-size-xxs)");
+        childrenExplainer.getStyle().set("font-size", "0.75rem");
         childrenExplainer.getStyle().set("position", "absolute");
 
         addFormItem(childrenField, new Div(children, childrenExplainer));

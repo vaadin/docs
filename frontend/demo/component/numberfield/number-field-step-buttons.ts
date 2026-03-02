@@ -41,7 +41,7 @@ export class Example extends LitElement {
         <vaadin-form-item>
           <label slot="label">
             <div>Children</div>
-            <div style="font-size: var(--lumo-font-size-xxs); position: absolute;">Age 2-12</div>
+            <div style="font-size: 0.75rem; position: absolute;">Age 2-12</div>
           </label>
           <vaadin-integer-field
             value="2"

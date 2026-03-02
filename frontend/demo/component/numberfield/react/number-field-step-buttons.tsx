@@ -25,7 +25,7 @@ export default reactExample(() => (
     <FormItem>
       <label slot="label">
         <div>Children</div>
-        <div style={{ fontSize: 'var(--lumo-font-size-xxs)', position: 'absolute' }}>Age 2-12</div>
+        <div style={{ fontSize: '0.75rem', position: 'absolute' }}>Age 2-12</div>
       </label>
 
       <IntegerField value="2" stepButtonsVisible min={0} max={9} />
