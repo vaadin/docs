@@ -58,6 +58,7 @@ export class Example extends LitElement {
         <vaadin-avatar
           .img="${person.pictureUrl}"
           .name="${`${person.firstName} ${person.lastName}`}"
+          style="--vaadin-avatar-size: 2.25rem"
         ></vaadin-avatar>
         <span>${person.firstName} ${person.lastName}</span>
         <span>${person.profession}</span>
@@ -66,20 +67,18 @@ export class Example extends LitElement {
   `;
 
   private contactRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
-    <vaadin-vertical-layout
-      style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
-    >
+    <vaadin-vertical-layout style="font-size: .875rem; line-height: 1.625;">
       <a href="mailto:${person.email}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:envelope"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="width: 1.25em; height: 1.25em; margin-inline-end: var(--vaadin-gap-s);"
         ></vaadin-icon>
         <span>${person.email}</span>
       </a>
       <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:phone"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="width: 1.25em; height: 1.25em; margin-inline-end: var(--vaadin-gap-s);"
         ></vaadin-icon>
         <span>${person.address.phone}</span>
       </a>
