@@ -1,19 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { FormItem } from '@vaadin/react-components/FormItem.js';
-import { FormLayout, type FormLayoutResponsiveStep } from '@vaadin/react-components/FormLayout.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { IntegerField } from '@vaadin/react-components/IntegerField';
 
-const layoutSteps: FormLayoutResponsiveStep[] = [
-  {
-    minWidth: 0,
-    columns: 1,
-    labelsPosition: 'aside',
-  },
-];
-
 export default reactExample(() => (
-  <FormLayout responsiveSteps={layoutSteps}>
+  <FormLayout autoResponsive labelsAside>
     <FormItem>
       <label slot="label">Adults</label>
 
@@ -25,7 +17,7 @@ export default reactExample(() => (
     <FormItem>
       <label slot="label">
         <div>Children</div>
-        <div style={{ fontSize: '0.75rem', position: 'absolute' }}>Age 2-12</div>
+        <div style={{ fontSize: '0.75em', position: 'absolute' }}>Age 2-12</div>
       </label>
 
       <IntegerField value="2" stepButtonsVisible min={0} max={9} />

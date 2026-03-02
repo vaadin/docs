@@ -4,16 +4,7 @@ import '@vaadin/form-layout/vaadin-form-item.js';
 import '@vaadin/integer-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import { applyTheme } from 'Frontend/demo/theme';
-
-const layoutSteps: FormLayoutResponsiveStep[] = [
-  {
-    minWidth: 0,
-    columns: 1,
-    labelsPosition: 'aside',
-  },
-];
 
 @customElement('number-field-step-buttons')
 export class Example extends LitElement {
@@ -25,7 +16,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-form-layout .responsiveSteps="${layoutSteps}">
+      <vaadin-form-layout auto-responsive labels-aside>
         <vaadin-form-item>
           <label slot="label">Adults</label>
           <!-- tag::snippet[] -->
@@ -41,7 +32,7 @@ export class Example extends LitElement {
         <vaadin-form-item>
           <label slot="label">
             <div>Children</div>
-            <div style="font-size: 0.75rem; position: absolute;">Age 2-12</div>
+            <div style="font-size: 0.75em; position: absolute">Age 2-12</div>
           </label>
           <vaadin-integer-field
             value="2"

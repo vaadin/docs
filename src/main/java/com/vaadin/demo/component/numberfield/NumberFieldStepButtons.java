@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.numberfield;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep.LabelsPosition;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
@@ -11,7 +10,8 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 public class NumberFieldStepButtons extends FormLayout {
 
     public NumberFieldStepButtons() {
-        setResponsiveSteps(new ResponsiveStep("0", 1, LabelsPosition.ASIDE));
+        setAutoResponsive(true);
+        setLabelsAside(true);
 
         // tag::snippet[]
         IntegerField adultsField = new IntegerField();
@@ -28,11 +28,10 @@ public class NumberFieldStepButtons extends FormLayout {
         childrenField.setMin(0);
         childrenField.setMax(9);
 
-        Div children = new Div();
-        children.setText("Children");
+        Div children = new Div("Children");
         Div childrenExplainer = new Div();
         childrenExplainer.setText("Age 2-12");
-        childrenExplainer.getStyle().set("font-size", "0.75rem");
+        childrenExplainer.getStyle().set("font-size", "0.75em");
         childrenExplainer.getStyle().set("position", "absolute");
 
         addFormItem(childrenField, new Div(children, childrenExplainer));
