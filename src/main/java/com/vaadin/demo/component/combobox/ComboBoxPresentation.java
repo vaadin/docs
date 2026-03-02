@@ -1,14 +1,14 @@
 package com.vaadin.demo.component.combobox;
 
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.domain.DataService;
+import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.ComboBox.ItemFilter;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.demo.domain.DataService;
-import com.vaadin.demo.domain.Person;
 
 @Route("combo-box-presentation")
 public class ComboBoxPresentation extends Div {
@@ -32,15 +32,15 @@ public class ComboBoxPresentation extends Div {
 
     // tag::renderer[]
     private Renderer<Person> createRenderer() {
-        StringBuilder tpl = new StringBuilder();
-        tpl.append("<div class=\"person-item\">");
-        tpl.append(
-                "  <img src=\"${item.pictureUrl}\" alt=\"Portrait of ${item.firstName} ${item.lastName}\" style=\"width: 2.25rem;\" />");
-        tpl.append("  <span>${item.firstName} ${item.lastName}</span>");
-        tpl.append("  <span>${item.profession}</span>");
-        tpl.append("</div>");
-
-        return LitRenderer.<Person> of(tpl.toString())
+        return LitRenderer
+                .<Person>of(
+                        """
+                                <div class="person-item">
+                                  <img src="${item.pictureUrl}" alt="Portrait of ${item.firstName} ${item.lastName}" style="width: 2.25rem;" />
+                                  <span>${item.firstName} ${item.lastName}</span>
+                                  <span>${item.profession}</span>
+                                </div>
+                                """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("firstName", Person::getFirstName)
                 .withProperty("lastName", Person::getLastName)
