@@ -14,15 +14,13 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Item({ person }: { person: Person }) {
   useSignals(); // hidden-source-line
   return (
-    <div className='person-item'>
-      <Avatar
-        img={person.pictureUrl}
-        name={`${person.firstName} ${person.lastName}`}
-      />
-      <span>{person.firstName} {person.lastName}</span>
+    <div className="person-item">
+      <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+      <span>
+        {person.firstName} {person.lastName}
+      </span>
       <span>{person.profession}</span>
     </div>
-
   );
 }
 

@@ -40,15 +40,11 @@ public class GridContent extends Div {
         return LitRenderer
                 .<Person> of(
                         """
-                                <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" alt="User avatar"></vaadin-avatar>
-                                  <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-                                    <span> ${item.fullName} </span>
-                                    <span style="font-size: 0.875rem; color: var(--lumo-secondary-text-color);">
-                                      ${item.email}
-                                    </span>
-                                  </vaadin-vertical-layout>
-                                </vaadin-horizontal-layout>
+                                <div class="person-item">
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <span>${item.fullName}</span>
+                                  <span>${item.email}</span>
+                                </div>
                                 """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName)

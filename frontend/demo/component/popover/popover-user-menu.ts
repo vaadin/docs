@@ -58,10 +58,6 @@ export class Example extends LitElement {
     `;
   }
 
-  // NOTE
-  // We are using inline styles here to keep the example simple.
-  // We recommend placing CSS in a separate style sheet and
-  // encapsulating the styling in a new component.
   renderUserMenu(person?: Person) {
     const { firstName, lastName, pictureUrl } = person ?? {};
     const nickName = `@${firstName}${lastName}`.toLowerCase();

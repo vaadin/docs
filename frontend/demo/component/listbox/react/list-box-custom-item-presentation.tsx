@@ -28,16 +28,12 @@ function Example() {
       }}
     >
       {items.value.map((person) => (
-        <Item
-          value={String(items.value.indexOf(person))}
-          key={items.value.indexOf(person)}
-        >
-          <div className='person-item'>
-            <Avatar
-              img={person.pictureUrl}
-              name={`${person.firstName} ${person.lastName}`}
-            />
-            <span>{person.firstName} {person.lastName}</span>
+        <Item value={String(items.value.indexOf(person))} key={items.value.indexOf(person)}>
+          <div className="person-item">
+            <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+            <span>
+              {person.firstName} {person.lastName}
+            </span>
             <span>{person.profession}</span>
           </div>
         </Item>
