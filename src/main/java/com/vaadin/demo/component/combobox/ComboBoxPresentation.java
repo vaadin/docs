@@ -33,7 +33,7 @@ public class ComboBoxPresentation extends Div {
     // tag::renderer[]
     private Renderer<Person> createRenderer() {
         return LitRenderer
-                .<Person>of(
+                .<Person> of(
                         """
                                 <div class="person-item">
                                   <img src="${item.pictureUrl}" alt="Portrait of ${item.firstName} ${item.lastName}" style="width: 2.25rem;" />
