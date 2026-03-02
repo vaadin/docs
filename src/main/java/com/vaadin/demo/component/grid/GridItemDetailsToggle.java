@@ -53,7 +53,7 @@ public class GridItemDetailsToggle extends Div {
                         @click="${handleClick}"
                     >
                         <vaadin-icon
-                        .icon="${model.detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                        .icon="${model.detailsOpened ? 'vaadin:angle-down' : 'vaadin:angle-right'}"
                         ></vaadin-icon>
                     </vaadin-button>
                 """)

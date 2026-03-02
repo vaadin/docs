@@ -99,7 +99,7 @@ export class Example extends LitElement {
                 }}"
               >
                 <vaadin-icon
-                  .icon="${detailsOpened ? 'lumo:angle-down' : 'lumo:angle-right'}"
+                  .icon="${detailsOpened ? 'vaadin:angle-down' : 'vaadin:angle-right'}"
                 ></vaadin-icon>
               </vaadin-button>
             `,
