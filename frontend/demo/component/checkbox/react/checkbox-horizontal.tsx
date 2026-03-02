@@ -6,7 +6,7 @@ import { CheckboxGroup } from '@vaadin/react-components/CheckboxGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    <CheckboxGroup label="Permissions">
+    <CheckboxGroup label="Permissions" theme="horizontal">
       <Checkbox value="read" label="Read" />
       <Checkbox value="edit" label="Edit" />
       <Checkbox value="delete" label="Delete" />

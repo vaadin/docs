@@ -26,7 +26,9 @@ public class TreeGridRichContent extends Div {
 
         // tag::snippet[]
         treeGrid.addComponentHierarchyColumn(person -> {
-            Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
+            avatar.getStyle().set("--vaadin-avatar-size", "2.25rem");
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
 
@@ -56,7 +58,7 @@ public class TreeGridRichContent extends Div {
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
             column.getStyle().set("font-size", "0.875rem").set("line-height",
-                    "var(--lumo-line-height-m)");
+                    "1.625");
             column.setPadding(false);
             column.setSpacing(false);
             return column;
@@ -68,8 +70,8 @@ public class TreeGridRichContent extends Div {
 
     private Icon createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("margin-inline-end", "var(--lumo-space-s)");
-        icon.setSize("var(--lumo-icon-size-s)");
+        icon.getStyle().set("margin-inline-end", "var(--vaadin-gap-s)");
+        icon.setSize("1.25em");
         return icon;
     }
 

@@ -51,13 +51,11 @@ public class PopoverUserMenu extends HorizontalLayout {
         popover.addThemeVariants(PopoverVariant.LUMO_NO_PADDING);
         // end::snippet[]
 
-
-        Avatar userAvatar = new Avatar(person.getFullName(), person.getPictureUrl());
+        Avatar userAvatar = new Avatar(person.getFullName(),
+                person.getPictureUrl());
         Span userName = new Span(person.getFullName());
-        Span userHandle = new Span("@"
-            + person.getFirstName().toLowerCase()
-            + person.getLastName().toLowerCase()
-        );
+        Span userHandle = new Span("@" + person.getFirstName().toLowerCase()
+                + person.getLastName().toLowerCase());
         Div personItem = new Div(userAvatar, userName, userHandle);
         personItem.addClassName("person-item");
         personItem.getStyle().setPadding("var(--vaadin-padding-s");
