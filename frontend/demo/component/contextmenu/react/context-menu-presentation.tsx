@@ -14,15 +14,13 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Item({ person }: { person: Person }) {
   useSignals(); // hidden-source-line
   return (
-    <div className='person-item'>
-      <Avatar
-        img={person.pictureUrl}
-        name={`${person.firstName} ${person.lastName}`}
-      />
-      <span>{person.firstName} {person.lastName}</span>
+    <div className="person-item">
+      <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+      <span>
+        {person.firstName} {person.lastName}
+      </span>
       <span>{person.profession}</span>
     </div>
-
   );
 }
 
@@ -32,9 +30,9 @@ function createItem(iconName: string, text: string) {
       <Icon
         icon={iconName}
         style={{
-          color: 'var(--lumo-secondary-text-color)',
-          marginInlineEnd: 'var(--lumo-space-s)',
-          padding: 'var(--lumo-space-xs)',
+          color: 'var(--vaadin-text-color-secondary)',
+          marginInlineEnd: 'var(--vaadin-gap-s)',
+          '--vaadin-icon-visual-size': '80%',
         }}
       />
       {text}

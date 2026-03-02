@@ -50,16 +50,14 @@ function Example() {
         aria-label="User menu"
         theme="no-padding"
       >
-        <div className='person-item' style={{padding: 'var(--vaadin-padding-s)'}}>
-          <Avatar
-            img={pictureUrl}
-            name={`${firstName} ${lastName}`}
-          />
-          <span>{firstName} {lastName}</span>
+        <div className="person-item" style={{ padding: 'var(--vaadin-padding-s)' }}>
+          <Avatar img={pictureUrl} name={`${firstName} ${lastName}`} />
+          <span>
+            {firstName} {lastName}
+          </span>
           <span>{nickName}</span>
         </div>
-        <VerticalLayout className="userMenuLinks"
-          style={{alignItems:'stretch', width:'100%'}}>
+        <VerticalLayout className="userMenuLinks" style={{ alignItems: 'stretch', width: '100%' }}>
           <a href="#" role="menuitem">
             User profile
           </a>
