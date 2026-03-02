@@ -27,22 +27,22 @@ public class CardMedia extends Div {
         Image image = new Image(imageHandler, "");
         image.setWidth("100px");
         imageCard.setMedia(image);
-        imageCard.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        imageCard.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
 
         // Card with icon media
         Card iconCard = new Card();
         Icon icon = LumoIcon.PHOTO.create();
         iconCard.setMedia(icon);
-        iconCard.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        iconCard.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
 
         // Card with avatar media
         Card avatarCard = new Card();
         Avatar avatar = new Avatar("Lapland");
         avatarCard.setMedia(avatar);
-        avatarCard.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        avatarCard.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
         // end::snippet[]
 
         layout.add(imageCard, iconCard, avatarCard);

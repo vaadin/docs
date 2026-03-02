@@ -6,27 +6,18 @@ import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
 const employeeRenderer = ({ item: person }: { item: Person }) => (
-  <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
+  <div className="person-item">
     <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
-
-    <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
-      <span>
-        {person.firstName} {person.lastName}
-      </span>
-      <span
-        style={{ fontSize: 'var(--lumo-font-size-s)', color: 'var(--lumo-secondary-text-color)' }}
-      >
-        {person.email}
-      </span>
-    </VerticalLayout>
-  </HorizontalLayout>
+    <span>
+      {person.firstName} {person.lastName}
+    </span>
+    <span>{person.email}</span>
+  </div>
 );
 
 const statusRenderer = ({ item: person }: { item: Person }) => (

@@ -3,8 +3,6 @@ import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
-import '@vaadin/horizontal-layout';
-import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { GridColumnBodyLitRenderer } from '@vaadin/grid/lit.js';
@@ -51,18 +49,14 @@ export class Example extends LitElement {
   }
 
   private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
-    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+    <div class="person-item">
       <vaadin-avatar
         img="${person.pictureUrl}"
         name="${person.firstName} ${person.lastName}"
       ></vaadin-avatar>
-      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-        <span>${person.firstName} ${person.lastName}</span>
-        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-          ${person.email}
-        </span>
-      </vaadin-vertical-layout>
-    </vaadin-horizontal-layout>
+      <span>${person.firstName} ${person.lastName}</span>
+      <span>${person.email}</span>
+    </div>
   `;
 
   private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => html`

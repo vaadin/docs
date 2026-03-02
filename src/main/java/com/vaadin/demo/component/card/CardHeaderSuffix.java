@@ -19,8 +19,8 @@ public class CardHeaderSuffix extends Div {
         badge.getElement().getThemeList().add("badge success");
         card.setHeaderSuffix(badge);
 
-        card.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        card.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
         // end::snippet[]
 
         card.setMaxWidth("300px");

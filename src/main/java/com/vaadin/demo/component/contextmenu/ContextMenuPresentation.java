@@ -63,15 +63,16 @@ public class ContextMenuPresentation extends Div {
 
     private Component createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("margin-inline-end", "var(--lumo-space-s")
-                .set("padding", "var(--lumo-space-xs");
+        icon.getStyle().set("color", "var(--vaadin-text-color-secondary)")
+                .set("margin-inline-end", "var(--vaadin-gap-s")
+                .set("--vaadin-icon-visual-size", "80%");
         return icon;
     }
 
     // tag::snippet3[]
     private Component createPersonItem(Person person) {
-        Avatar avatar = new Avatar(person.getFullName(), person.getPictureUrl());
+        Avatar avatar = new Avatar(person.getFullName(),
+                person.getPictureUrl());
         Span name = new Span(person.getFullName());
         Span profession = new Span(person.getProfession());
 
