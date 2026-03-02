@@ -31,21 +31,13 @@ public class ComboBoxPresentation extends Div {
     }
 
     // tag::renderer[]
-    // NOTE
-    // We are using inline styles here to keep the example simple.
-    // We recommend placing CSS in a separate style sheet and to
-    // encapsulating the styling in a new component.
-
     private Renderer<Person> createRenderer() {
         StringBuilder tpl = new StringBuilder();
-        tpl.append("<div style=\"display: flex;\">");
+        tpl.append("<div class=\"person-item\">");
         tpl.append(
-                "  <img style=\"height: 2.25rem; margin-right: var(--lumo-space-s);\" src=\"${item.pictureUrl}\" alt=\"Portrait of ${item.firstName} ${item.lastName}\" />");
-        tpl.append("  <div>");
-        tpl.append("    ${item.firstName} ${item.lastName}");
-        tpl.append(
-                "    <div style=\"font-size: 0.875rem; color: var(--lumo-secondary-text-color);\">${item.profession}</div>");
-        tpl.append("  </div>");
+                "  <img src=\"${item.pictureUrl}\" alt=\"Portrait of ${item.firstName} ${item.lastName}\" style=\"width: 2.25rem;\" />");
+        tpl.append("  <span>${item.firstName} ${item.lastName}</span>");
+        tpl.append("  <span>${item.profession}</span>");
         tpl.append("</div>");
 
         return LitRenderer.<Person> of(tpl.toString())
