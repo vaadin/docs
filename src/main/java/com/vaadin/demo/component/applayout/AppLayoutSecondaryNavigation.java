@@ -23,7 +23,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         H1 appTitle = new H1("MyApp");
         appTitle.getStyle().set("font-size", "1.125rem")
                 .set("line-height", "2.75rem")
-                .set("margin", "0 var(--lumo-space-m)");
+                .set("margin", "0 var(--vaadin-padding-m)");
 
         SideNav views = getPrimaryNavigation();
         views.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
