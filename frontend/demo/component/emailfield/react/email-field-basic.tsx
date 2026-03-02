@@ -1,11 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { EmailField } from '@vaadin/react-components/EmailField.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { EmailField, FormLayout } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
       <EmailField
         label="Email address"
@@ -24,7 +23,7 @@ function Example() {
         invalid
       />
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

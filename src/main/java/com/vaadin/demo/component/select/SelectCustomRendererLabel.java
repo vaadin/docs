@@ -5,8 +5,7 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
@@ -32,35 +31,20 @@ public class SelectCustomRendererLabel extends Div {
         add(select);
     }
 
-    private static ComponentRenderer<FlexLayout, Person> createPersonRenderer() {
+    private static ComponentRenderer<Div, Person> createPersonRenderer() {
         return new ComponentRenderer<>(person -> {
-            FlexLayout wrapper = new FlexLayout();
-            wrapper.setAlignItems(FlexComponent.Alignment.CENTER);
-
-            // NOTE
-            // We are using inline styles here to keep the example simple.
-            // We recommend placing CSS in a separate style sheet and to
-            // encapsulating the styling in a new component.
-
             Image image = new Image();
             image.setSrc(person.getPictureUrl());
             image.setAlt("Portrait of " + person.getFirstName() + " "
                     + person.getLastName());
             image.setWidth("2.25rem");
-            image.getStyle().set("margin-right", "var(--lumo-space-s)");
 
-            Div info = new Div();
-            info.setText(person.getFirstName() + " " + person.getLastName());
+            Span name = new Span(person.getFullName());
+            Span profession = new Span(person.getProfession());
 
-            Div profession = new Div();
-            profession.setText(person.getProfession());
-            profession.getStyle()
-                    .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "0.875rem");
-            info.add(profession);
-
-            wrapper.add(image, info);
-            return wrapper;
+            Div personItem = new Div(image, name, profession);
+            personItem.addClassName("person-item");
+            return personItem;
         });
     }
 
