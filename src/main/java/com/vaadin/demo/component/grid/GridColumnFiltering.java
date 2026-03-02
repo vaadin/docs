@@ -120,7 +120,7 @@ public class GridColumnFiltering extends Div {
                         """
                                 <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
                                   <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
-                                  <span> ${item.fullName} </span>
+                                  <span>${item.fullName}</span>
                                 </vaadin-horizontal-layout>
                                 """)
                 .withProperty("pictureUrl", Person::getPictureUrl)

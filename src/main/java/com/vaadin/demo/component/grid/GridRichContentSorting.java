@@ -35,10 +35,10 @@ public class GridRichContentSorting extends Div {
 
     private static Renderer<Person> createEmployeeRenderer() {
         return LitRenderer
-                .<Person> of(
+                .<Person>of(
                         """
                                 <div class="person-item">
-                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" style="--vaadin-avatar-size: 2.25rem"></vaadin-avatar>
                                   <span>${item.fullName}</span>
                                   <span>${item.email}</span>
                                 </div>
@@ -50,14 +50,12 @@ public class GridRichContentSorting extends Div {
 
     private static Renderer<Person> createBirthdayRenderer() {
         return LitRenderer
-                .<Person> of(
+                .<Person>of(
                         """
-                                <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-                                  <span>${item.birthday}</span>
-                                  <span style="font-size: 0.875rem; color: var(--lumo-secondary-text-color);">
-                                    Age: ${item.age}
-                                  </span>
-                                </vaadin-vertical-layout>
+                                <div>${item.birthday}</div>
+                                <div style="font-size: .875rem; color: var(--vaadin-text-color-secondary);">
+                                  Age: ${item.age}
+                                </div>
                                 """)
                 .withProperty("birthday",
                         GridRichContentSorting::getFormattedPersonBirthday)

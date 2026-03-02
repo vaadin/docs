@@ -91,20 +91,9 @@ public class GridManualPagination extends VerticalLayout {
             dataProvider.setFilter(e.getValue());
         });
 
-        add(searchField, wrapWithVerticalLayout(grid, paginationControls));
+        add(searchField, grid, paginationControls);
     }
     // end::snippet[]
-
-    @NotNull
-    private VerticalLayout wrapWithVerticalLayout(Component component1,
-            Component component2) {
-        var gridWithPaginationLayout = new VerticalLayout(component1,
-                component2);
-        gridWithPaginationLayout.setPadding(false);
-        gridWithPaginationLayout.setSpacing(false);
-        gridWithPaginationLayout.getThemeList().add("spacing-xs");
-        return gridWithPaginationLayout;
-    }
 
     @NotNull
     private TextField createSearchField() {
@@ -161,8 +150,6 @@ public class GridManualPagination extends VerticalLayout {
         private Component createPageSizeField() {
             Select<Integer> select = new Select<>();
             select.addThemeVariants(SelectVariant.LUMO_SMALL);
-            select.getStyle().set("--vaadin-input-field-value-font-size",
-                    "0.875rem");
             select.setWidth("4.8rem");
             select.setItems(10, 15, 25, 50, 100);
             select.setValue(pageSize);
@@ -172,12 +159,10 @@ public class GridManualPagination extends VerticalLayout {
             });
             var label = new Span("Page size");
             label.setId("page-size-label");
-            label.getStyle().set("font-size", "0.875rem");
             select.setAriaLabelledBy("page-size-label");
             final HorizontalLayout layout = new HorizontalLayout(
                     Alignment.CENTER, label, select);
-            layout.setSpacing(false);
-            layout.getThemeList().add("spacing-s");
+            layout.setSpacing("var(--vaadin-gap-s)");
             return layout;
         }
 
@@ -185,8 +170,9 @@ public class GridManualPagination extends VerticalLayout {
 
         public PaginationControls() {
             setDefaultVerticalComponentAlignment(Alignment.CENTER);
-            setSpacing("0.3rem");
+            setSpacing("var(--vaadin-gap-s)");
             setWidthFull();
+            getStyle().set("font-size", "0.875rem");
             addToStart(createPageSizeField());
             addToEnd(firstPageButton, goToPreviousPageButton, currentPageLabel,
                     goToNextPageButton, lastPageButton);
@@ -251,8 +237,8 @@ public class GridManualPagination extends VerticalLayout {
 
         private Span currentPageLabel() {
             var label = new Span();
-            label.getStyle().set("font-size", "0.875rem").set("padding",
-                    "0 0.5rem");
+            label.getStyle().set("padding",
+                    "0 var(--vaadin-padding-xs)");
             return label;
         }
 

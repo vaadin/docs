@@ -6,7 +6,6 @@ import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridSortColumn } from '@vaadin/react-components/GridSortColumn.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -14,7 +13,11 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function employeeRenderer({ item: person }: { item: Person }) {
   return (
     <div className="person-item">
-      <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+      <Avatar
+        img={person.pictureUrl}
+        name={`${person.firstName} ${person.lastName}`}
+        style={{ '--vaadin-avatar-size': '2.25rem' }}
+      />
       <span>
         {person.firstName} {person.lastName}
       </span>
@@ -26,14 +29,12 @@ function employeeRenderer({ item: person }: { item: Person }) {
 function birthdayRenderer({ item: person }: { item: Person }) {
   const birthday = parseISO(person.birthday);
   return (
-    <VerticalLayout style={{ lineHeight: 'var(--lumo-line-height-m)' }}>
-      <span>{format(birthday, 'P')}</span>
-      <span
-        style={{ fontSize: 'var(--lumo-font-size-s)', color: 'var(--lumo-secondary-text-color)' }}
-      >
+    <>
+      <div>{format(birthday, 'P')}</div>
+      <div style={{ fontSize: '.875rem', color: 'var(--vaadin-text-color-secondary)' }}>
         Age: {Math.floor((Date.now() - birthday.getTime()) / (1000 * 60 * 60 * 24 * 365.25))}
-      </span>
-    </VerticalLayout>
+      </div>
+    </>
   );
 }
 

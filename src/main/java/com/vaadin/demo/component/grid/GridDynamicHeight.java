@@ -55,6 +55,7 @@ public class GridDynamicHeight extends Div {
         grid = new Grid<>(Person.class, false);
         grid.setAllRowsVisible(true);
         // end::snippet[]
+        grid.getStyle().set("margin-top", "var(--vaadin-gap-s)");
         grid.addColumn(Person::getFullName).setHeader("Name");
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(person -> person.getAddress().getPhone())
@@ -72,9 +73,9 @@ public class GridDynamicHeight extends Div {
 
         hint = new Div();
         hint.setText("No invitation has been sent");
-        hint.getStyle().set("padding", "2.75rem").set("text-align", "center")
-                .set("font-style", "italic")
-                .set("color", "var(--lumo-contrast-70pct)");
+        hint.getStyle().set("padding", "var(--vaadin-padding-xl)")
+                .set("text-align", "center").set("font-style", "italic")
+                .set("color", "var(--vaadin-text-color-secondary)");
 
         add(hint, grid);
     }
