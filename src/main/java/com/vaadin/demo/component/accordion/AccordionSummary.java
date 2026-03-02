@@ -125,7 +125,6 @@ public class AccordionSummary extends Div {
         layout.add(title);
 
         Icon icon = VaadinIcon.CHECK.create();
-        icon.getStyle().set("color", "currentColor");
         icon.getStyle().set("--vaadin-icon-size", "1rem");
         layout.add(icon);
 

@@ -52,10 +52,7 @@ function Example() {
           <HorizontalLayout theme="spacing">
             Customer details
             {customerComplete.value && (
-              <Icon
-                icon="vaadin:check"
-                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
-              />
+              <Icon icon="vaadin:check" style={{ '--vaadin-icon-size': '1rem' }} />
             )}
           </HorizontalLayout>
         </AccordionHeading>
@@ -84,10 +81,7 @@ function Example() {
           <HorizontalLayout theme="spacing">
             Billing address
             {billingComplete.value && (
-              <Icon
-                icon="vaadin:check"
-                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
-              />
+              <Icon icon="vaadin:check" style={{ '--vaadin-icon-size': '1rem' }} />
             )}
           </HorizontalLayout>
         </AccordionHeading>
@@ -121,10 +115,7 @@ function Example() {
           <HorizontalLayout theme="spacing">
             Payment
             {paymentComplete.value && (
-              <Icon
-                icon="vaadin:check"
-                style={{ color: 'currentColor', '--vaadin-icon-size': '1rem' }}
-              />
+              <Icon icon="vaadin:check" style={{ '--vaadin-icon-size': '1rem' }} />
             )}
           </HorizontalLayout>
         </AccordionHeading>

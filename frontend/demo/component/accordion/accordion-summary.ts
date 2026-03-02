@@ -64,10 +64,7 @@ export class Example extends LitElement {
               Customer details
               ${this.customerComplete
                 ? html`
-                    <vaadin-icon
-                      icon="vaadin:check"
-                      style="color: currentColor; --vaadin-icon-size: 1rem"
-                    ></vaadin-icon>
+                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
                   `
                 : nothing}
             </vaadin-horizontal-layout>
@@ -99,10 +96,7 @@ export class Example extends LitElement {
               Billing address
               ${this.billingComplete
                 ? html`
-                    <vaadin-icon
-                      icon="vaadin:check"
-                      style="color: currentColor; --vaadin-icon-size: 1rem"
-                    ></vaadin-icon>
+                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
                   `
                 : nothing}
             </vaadin-horizontal-layout>
@@ -138,10 +132,7 @@ export class Example extends LitElement {
               Payment
               ${this.paymentComplete
                 ? html`
-                    <vaadin-icon
-                      icon="vaadin:check"
-                      style="color: currentColor; --vaadin-icon-size: 1rem"
-                    ></vaadin-icon>
+                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
                   `
                 : nothing}
             </vaadin-horizontal-layout>
