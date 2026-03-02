@@ -85,12 +85,11 @@ function Example() {
           }
         }}
       >
-        <div className='person-item'>
-          <Avatar
-            img={person.pictureUrl}
-            name={`${person.firstName} ${person.lastName}`}
-          />
-          <span>{person.firstName} {person.lastName}</span>
+        <div className="person-item">
+          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+          <span>
+            {person.firstName} {person.lastName}
+          </span>
           <span>{person.profession}</span>
         </div>
       </GridTreeToggle>
