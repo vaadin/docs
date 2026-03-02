@@ -16,7 +16,7 @@ public class GridProThemeHighlightReadOnlyCells extends Div {
     public GridProThemeHighlightReadOnlyCells() {
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
-        grid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_READ_ONLY_CELLS);
+        grid.addThemeVariants(GridProVariant.HIGHLIGHT_READ_ONLY_CELLS);
         // end::snippet[]
 
         grid.addColumn(Person::getFirstName).setHeader("First name");

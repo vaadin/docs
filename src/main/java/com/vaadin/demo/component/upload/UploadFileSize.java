@@ -28,7 +28,7 @@ public class UploadFileSize extends Div {
 
             Notification notification = Notification.show(errorMessage, 5000,
                     Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            notification.addThemeVariants(NotificationVariant.ERROR);
         });
         // end::snippet[]
 
@@ -38,9 +38,8 @@ public class UploadFileSize extends Div {
         upload.setI18n(i18n);
 
         H4 title = new H4("Upload file");
-        title.getStyle().set("margin-top", "0");
         Paragraph hint = new Paragraph("Maximum file size: 10 MB");
-        hint.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        hint.getStyle().set("color", "var(--vaadin-text-color-secondary)");
 
         add(title, hint, upload);
     }

@@ -5,6 +5,7 @@ import { useSignal } from '@vaadin/hilla-react-signals';
 import { Item } from '@vaadin/react-components/Item.js';
 import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { Select } from '@vaadin/react-components/Select.js';
+import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -24,24 +25,12 @@ function Example() {
       <ListBox>
         {people.value.map((person) => (
           <Item value={String(person.id)} key={person.id}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <img
-                src={person.pictureUrl}
-                alt={`Portrait of ${person.firstName} ${person.lastName}`}
-                style={{ width: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
-              />
-
-              <div>
+            <div className="person-item">
+              <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+              <span>
                 {person.firstName} {person.lastName}
-                <div
-                  style={{
-                    fontSize: 'var(--lumo-font-size-s)',
-                    color: 'var(--lumo-secondary-text-color)',
-                  }}
-                >
-                  {person.profession}
-                </div>
-              </div>
+              </span>
+              <span>{person.profession}</span>
             </div>
           </Item>
         ))}

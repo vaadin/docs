@@ -13,7 +13,7 @@ public class NotificationError extends Div {
         // tag::snippet[]
         Notification notification = Notification
                 .show("Failed to generate report");
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);
         notification.setDuration(0);

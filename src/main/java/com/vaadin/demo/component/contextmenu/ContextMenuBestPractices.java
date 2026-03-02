@@ -23,7 +23,7 @@ public class ContextMenuBestPractices extends Div {
         // tag::snippet[]
         grid.addComponentColumn(file -> {
             MenuBar menuBar = new MenuBar();
-            menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY);
+            menuBar.addThemeVariants(MenuBarVariant.TERTIARY);
             menuBar.addItem("Preview", event -> {
             });
             menuBar.addItem("Edit", event -> {

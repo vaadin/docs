@@ -42,7 +42,7 @@ function Example(): React.JSX.Element {
           </Button>
         }
       >
-        <Grid items={people.value} style={{ width: '500px', maxWidth: '100%' }}>
+        <Grid items={people.value} style={{ width: '500px', maxWidth: '100%', borderRadius: '0' }}>
           <GridSelectionColumn />
           <GridColumn header="Name">
             {({ item }) => (

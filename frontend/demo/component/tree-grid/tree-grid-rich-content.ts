@@ -3,7 +3,6 @@ import '@vaadin/avatar';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-tree-toggle.js';
-import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/vertical-layout';
@@ -55,38 +54,31 @@ export class Example extends LitElement {
       }}"
       .expanded="${!!model.expanded}"
     >
-      <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+      <div class="person-item">
         <vaadin-avatar
-          img="${person.pictureUrl}"
-          name="${`${person.firstName} ${person.lastName}`}"
+          .img="${person.pictureUrl}"
+          .name="${`${person.firstName} ${person.lastName}`}"
+          style="--vaadin-avatar-size: 2.25rem"
         ></vaadin-avatar>
-        <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-          <span>${person.firstName} ${person.lastName}</span>
-          <span
-            style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-          >
-            ${person.profession}
-          </span>
-        </vaadin-vertical-layout>
-      </vaadin-horizontal-layout>
+        <span>${person.firstName} ${person.lastName}</span>
+        <span>${person.profession}</span>
+      </div>
     </vaadin-grid-tree-toggle>
   `;
 
   private contactRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
-    <vaadin-vertical-layout
-      style="font-size: var(--lumo-font-size-s); line-height: var(--lumo-line-height-m);"
-    >
+    <vaadin-vertical-layout style="font-size: .875rem; line-height: 1.625;">
       <a href="mailto:${person.email}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:envelope"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="width: 1.25em; height: 1.25em; margin-inline-end: var(--vaadin-gap-s);"
         ></vaadin-icon>
         <span>${person.email}</span>
       </a>
       <a href="tel:${person.address.phone}" style="align-items: center; display: flex;">
         <vaadin-icon
           icon="vaadin:phone"
-          style="height: var(--lumo-icon-size-s); margin-inline-end: var(--lumo-space-s); width: var(--lumo-icon-size-s);"
+          style="width: 1.25em; height: 1.25em; margin-inline-end: var(--vaadin-gap-s);"
         ></vaadin-icon>
         <span>${person.address.phone}</span>
       </a>

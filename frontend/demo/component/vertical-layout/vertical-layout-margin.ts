@@ -7,11 +7,6 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('vertical-layout-margin')
 export class Example extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    this.classList.add('basic-layouts-example');
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -20,32 +15,34 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" style="border: 0">
-        <div style="width: 100%">
-          <p>Vertical layout without margin:</p>
-          <div class="container">
-            <vaadin-vertical-layout theme="spacing padding" style="align-items: stretch">
-              <div class="example-item">Item 1</div>
-              <div class="example-item">Item 2</div>
-              <div class="example-item">Item 3</div>
-            </vaadin-vertical-layout>
+      <div class="basic-layouts-example">
+        <vaadin-horizontal-layout theme="spacing" style="border: 0">
+          <div style="width: 100%">
+            <p>Vertical layout without margin:</p>
+            <div class="container">
+              <vaadin-vertical-layout theme="spacing padding" style="align-items: stretch">
+                <div class="example-item">Item 1</div>
+                <div class="example-item">Item 2</div>
+                <div class="example-item">Item 3</div>
+              </vaadin-vertical-layout>
+            </div>
           </div>
-        </div>
-        <div style="width: 100%">
-          <p>Vertical layout with margin:</p>
-          <div class="container">
-            <!-- tag::snippet[] -->
-            <vaadin-vertical-layout theme="margin spacing padding" style="align-items: stretch">
-              <!-- end::snippet[] -->
-              <div class="example-item">Item 1</div>
-              <div class="example-item">Item 2</div>
-              <div class="example-item">Item 3</div>
+          <div style="width: 100%">
+            <p>Vertical layout with margin:</p>
+            <div class="container">
               <!-- tag::snippet[] -->
-            </vaadin-vertical-layout>
-            <!-- end::snippet[] -->
+              <vaadin-vertical-layout theme="margin spacing padding" style="align-items: stretch">
+                <!-- end::snippet[] -->
+                <div class="example-item">Item 1</div>
+                <div class="example-item">Item 2</div>
+                <div class="example-item">Item 3</div>
+                <!-- tag::snippet[] -->
+              </vaadin-vertical-layout>
+              <!-- end::snippet[] -->
+            </div>
           </div>
-        </div>
-      </vaadin-horizontal-layout>
+        </vaadin-horizontal-layout>
+      </div>
     `;
   }
 }
