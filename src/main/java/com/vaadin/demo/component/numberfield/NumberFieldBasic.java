@@ -1,16 +1,17 @@
 package com.vaadin.demo.component.numberfield;
 
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-basic")
-public class NumberFieldBasic extends HorizontalLayout {
+public class NumberFieldBasic extends FormLayout {
 
     public NumberFieldBasic() {
-        setPadding(false);
+        setAutoResponsive(true);
+        setAutoRows(true);
 
         // tag::snippet[]
         NumberField dollarField = new NumberField();
