@@ -33,7 +33,7 @@ public class AppLayoutHeightFull extends AppLayout {
 
         getElement().getStyle().set("height", "100%");
         grid.setHeight("100%");
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        grid.addThemeVariants(GridVariant.NO_BORDER);
         // hidden-source-line - TODO: workaround to get the exported WC
         // hidden-source-line - height to take all the space within DSP
         getElement().executeJs("this.getRootNode().host.style.height='100vh'"); // hidden-source-line
