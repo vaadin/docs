@@ -6,10 +6,10 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <Badge>Pending</Badge>
-      <Badge theme="success">Confirmed</Badge>
-      <Badge theme="warning">Warning</Badge>
-      <Badge theme="error">Denied</Badge>
+      <Badge theme="dot">Pending</Badge>
+      <Badge theme="dot success">Confirmed</Badge>
+      <Badge theme="dot warning">Warning</Badge>
+      <Badge theme="dot error">Denied</Badge>
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

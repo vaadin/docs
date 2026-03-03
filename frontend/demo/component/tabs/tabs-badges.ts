@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -8,8 +9,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = [
     css`
-      span[theme~='badge'] {
-        margin-inline-start: var(--lumo-space-xs);
+      vaadin-badge {
+        margin-inline-start: var(--vaadin-gap-xs);
       }
     `,
   ];
@@ -23,21 +24,18 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <!--
-        NOTE: You need import the 'lumo-badge' style sheets to use theme="badge"
-      -->
       <vaadin-tabs>
         <vaadin-tab>
           <span>Open</span>
-          <span theme="badge small contrast">24</span>
+          <vaadin-badge number="24" theme="filled"></vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Completed</span>
-          <span theme="badge small contrast">439</span>
+          <vaadin-badge number="49" theme="filled"></vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Cancelled</span>
-          <span theme="badge small contrast">5</span>
+          <vaadin-badge number="5" theme="filled"></vaadin-badge>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->
