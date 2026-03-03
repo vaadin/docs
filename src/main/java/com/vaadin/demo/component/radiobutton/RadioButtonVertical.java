@@ -12,7 +12,8 @@ public class RadioButtonVertical extends Div {
     public RadioButtonVertical() {
         // tag::snippet[]
         RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
-        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL); // Only for Lumo
+        // Only for Lumo
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         radioGroup.setLabel("Status");
         radioGroup.setItems("Pending", "Submitted", "Confirmed");
         radioGroup.setValue("Pending");

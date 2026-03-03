@@ -60,6 +60,7 @@ public class AccordionNoPaddingPanels extends Div {
         add(accordion);
     }
 
-    public static class Exporter extends DemoExporter<AccordionNoPaddingPanels> { // hidden-source-line
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<AccordionNoPaddingPanels> { // hidden-source-line
     } // hidden-source-line
 }
