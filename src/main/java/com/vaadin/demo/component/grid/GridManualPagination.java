@@ -237,8 +237,7 @@ public class GridManualPagination extends VerticalLayout {
 
         private Span currentPageLabel() {
             var label = new Span();
-            label.getStyle().set("padding",
-                    "0 var(--vaadin-padding-xs)");
+            label.getStyle().set("padding", "0 var(--vaadin-padding-xs)");
             return label;
         }
 
