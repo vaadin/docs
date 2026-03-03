@@ -13,7 +13,6 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.dom.Style.TextAlign;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
@@ -56,7 +55,7 @@ public class GridDynamicHeight extends Div {
         grid = new Grid<>(Person.class, false);
         grid.setAllRowsVisible(true);
         // end::snippet[]
-        grid.getStyle().setMarginTop("var(--vaadin-gap-s)");
+        grid.getStyle().set("margin-top", "var(--vaadin-gap-s)");
         grid.addColumn(Person::getFullName).setHeader("Name");
         grid.addColumn(Person::getEmail).setHeader("Email");
         grid.addColumn(person -> person.getAddress().getPhone())
@@ -74,10 +73,9 @@ public class GridDynamicHeight extends Div {
 
         hint = new Div();
         hint.setText("No invitation has been sent");
-        hint.getStyle().setPadding("var(--vaadin-padding-xl)")
-                .setTextAlign(TextAlign.CENTER)
-                .setColor("var(--vaadin-text-color-secondary)")
-                .set("font-style", "italic");
+        hint.getStyle().set("padding", "var(--vaadin-padding-xl)")
+                .set("text-align", "center").set("font-style", "italic")
+                .set("color", "var(--vaadin-text-color-secondary)");
 
         add(hint, grid);
     }
