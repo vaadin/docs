@@ -44,9 +44,9 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-horizontal-layout style="align-items: center; height: 3.5rem;" theme="spacing">
-        <h3 style="flex-grow: 1; margin: 0;">Employee</h3>
-        <vaadin-button @click="${this.expandAll}">Expand All</vaadin-button>
-        <vaadin-button @click="${this.collapseAll}">Collapse All</vaadin-button>
+        <h3>Employee</h3>
+        <vaadin-button slot="end" @click="${this.expandAll}">Expand All</vaadin-button>
+        <vaadin-button slot="end" @click="${this.collapseAll}">Collapse All</vaadin-button>
       </vaadin-horizontal-layout>
 
       <vaadin-grid
