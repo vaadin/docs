@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { Badge } from '@vaadin/react-components/Badge.js';
 import { Grid } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { GridSelectionColumn } from '@vaadin/react-components/GridSelectionColumn.js';
@@ -21,9 +22,7 @@ const employeeRenderer = ({ item: person }: { item: Person }) => (
 );
 
 const statusRenderer = ({ item: person }: { item: Person }) => (
-  <span {...{ theme: `badge ${person.status === 'Available' ? 'success' : 'error'}` }}>
-    {person.status}
-  </span>
+  <Badge theme={person.status === 'Available' ? 'success' : 'error'}>{person.status}</Badge>
 );
 
 function Example() {

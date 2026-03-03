@@ -26,7 +26,6 @@ public class RadioButtonCustomOption extends VerticalLayout {
 
         // tag::snippet[]
         RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
-        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         radioGroup.setLabel("Payment method");
 
         List<Card> cards = new ArrayList<>(DataService.getCards());
@@ -54,6 +53,8 @@ public class RadioButtonCustomOption extends VerticalLayout {
 
         add(radioGroup, textField);
         // end::snippet[]
+        // Only for Lumo
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<RadioButtonCustomOption> { // hidden-source-line
