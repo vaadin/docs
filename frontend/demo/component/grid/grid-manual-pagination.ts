@@ -175,7 +175,7 @@ export class GridPaginationControls extends LitElement {
             aria-labelledby="page-size-label"
             style="width: 4.8rem;"
             .items="${['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}"
-            value="${this.pageSize}"
+            .value="${this.pageSize}"
             @value-changed="${(e: CustomEvent) => {
               this.pageSize = parseInt(e.detail.value);
               this.updatePageCount();
