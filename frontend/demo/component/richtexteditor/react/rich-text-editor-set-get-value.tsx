@@ -64,11 +64,10 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(
-  Example,
-  css`
-    :host([theme~='aura']) [has-label] {
-      padding-top: var(--vaadin-padding-m);
-    }
-  `
-); // hidden-source-line
+const hostStyles = css`
+  :host([theme~='aura']) [has-label] {
+    padding-top: var(--vaadin-padding-m);
+  }
+`;
+
+export default reactExample(Example, hostStyles); // hidden-source-line
