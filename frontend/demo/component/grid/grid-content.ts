@@ -54,6 +54,7 @@ export class Example extends LitElement {
       <vaadin-avatar
         img="${person.pictureUrl}"
         name="${person.firstName} ${person.lastName}"
+        style="--vaadin-avatar-size: 2.25rem"
       ></vaadin-avatar>
       <span>${person.firstName} ${person.lastName}</span>
       <span>${person.email}</span>

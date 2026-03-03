@@ -13,7 +13,11 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 // tag::snippet[]
 const employeeRenderer = ({ item: person }: { item: Person }) => (
   <div className="person-item">
-    <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+    <Avatar
+      img={person.pictureUrl}
+      name={`${person.firstName} ${person.lastName}`}
+      style={{ '--vaadin-avatar-size': '2.25rem' }}
+    />
     <span>
       {person.firstName} {person.lastName}
     </span>
