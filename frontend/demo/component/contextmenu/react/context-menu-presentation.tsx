@@ -30,9 +30,9 @@ function createItem(iconName: string, text: string) {
       <Icon
         icon={iconName}
         style={{
-          color: 'var(--lumo-secondary-text-color)',
-          marginInlineEnd: 'var(--lumo-space-s)',
-          padding: 'var(--lumo-space-xs)',
+          color: 'var(--vaadin-text-color-secondary)',
+          marginInlineEnd: 'var(--vaadin-gap-s)',
+          '--vaadin-icon-visual-size': '80%',
         }}
       />
       {text}
