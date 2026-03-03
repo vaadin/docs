@@ -3,7 +3,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { Grid, GridColumn, type GridColumnElement, Icon } from '@vaadin/react-components';
+import { Badge, Grid, GridColumn, type GridColumnElement, Icon } from '@vaadin/react-components';
 import { getUserPermissions } from 'Frontend/demo/domain/DataService';
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions';
 
@@ -40,13 +40,10 @@ function Example() {
     }
 
     return (
-      <Icon
-        aria-label={title}
-        icon={icon}
-        style={{ padding: 'var(--lumo-space-xs)' }}
-        theme={`badge ${theme}`}
-        title={title}
-      />
+      <Badge theme={`${theme} icon-only`}>
+        <Icon icon={icon} slot="icon" />
+        {title}
+      </Badge>
     );
   };
 

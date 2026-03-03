@@ -3,9 +3,10 @@ package com.vaadin.demo.component.badge;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.UserPermissions;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.router.Route;
 
@@ -19,11 +20,11 @@ public class BadgeIconsOnlyTable extends Div {
 
         // tag::snippet1[]
         grid.addColumn(UserPermissions::getName).setHeader("Name");
-        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+        grid.addComponentColumn(userPermissions -> createPermissionBadge(
                 userPermissions.getView())).setHeader("View");
-        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+        grid.addComponentColumn(userPermissions -> createPermissionBadge(
                 userPermissions.getComment())).setHeader("Comment");
-        grid.addComponentColumn(userPermissions -> createPermissionIcon(
+        grid.addComponentColumn(userPermissions -> createPermissionBadge(
                 userPermissions.getEdit())).setHeader("Edit");
         // end::snippet1[]
 
@@ -35,26 +36,17 @@ public class BadgeIconsOnlyTable extends Div {
     }
 
     // tag::snippet2[]
-    private Icon createPermissionIcon(boolean hasPermission) {
-        Icon icon;
+    private Badge createPermissionBadge(boolean hasPermission) {
+        Badge badge;
         if (hasPermission) {
-            icon = createIcon(VaadinIcon.CHECK, "Yes");
-            icon.getElement().getThemeList().add("badge success");
+            badge = new Badge("Yes", VaadinIcon.CHECK.create());
+            badge.addThemeVariants(BadgeVariant.SUCCESS,
+                    BadgeVariant.ICON_ONLY);
         } else {
-            icon = createIcon(VaadinIcon.CLOSE_SMALL, "No");
-            icon.getElement().getThemeList().add("badge error");
+            badge = new Badge("No", VaadinIcon.CLOSE_SMALL.create());
+            badge.addThemeVariants(BadgeVariant.ERROR, BadgeVariant.ICON_ONLY);
         }
-        return icon;
-    }
-
-    private Icon createIcon(VaadinIcon vaadinIcon, String label) {
-        Icon icon = vaadinIcon.create();
-        icon.getStyle().set("padding", "var(--lumo-space-xs");
-        // Accessible label
-        icon.getElement().setAttribute("aria-label", label);
-        // Tooltip
-        icon.getElement().setAttribute("title", label);
-        return icon;
+        return badge;
     }
 
     // end::snippet2[]
