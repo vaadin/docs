@@ -15,8 +15,7 @@ public class ComboBoxStyles extends HorizontalLayout {
         // tag::snippet[]
         ComboBox<String> field = new ComboBox<>();
         field.addThemeVariants(ComboBoxVariant.SMALL,
-                ComboBoxVariant.ALIGN_RIGHT,
-                ComboBoxVariant.HELPER_ABOVE);
+                ComboBoxVariant.ALIGN_RIGHT, ComboBoxVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
