@@ -24,13 +24,13 @@ public class ButtonDialog extends VerticalLayout {
         formLayout.setColspan(emailField, 2);
 
         Button delete = new Button("Delete");
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        delete.addThemeVariants(ButtonVariant.ERROR);
         delete.getStyle().set("margin-inline-end", "auto");
 
         Button cancel = new Button("Cancel");
 
         Button createAccount = new Button("Create account");
-        createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createAccount.addThemeVariants(ButtonVariant.PRIMARY);
 
         HorizontalLayout buttonLayout = new HorizontalLayout(delete);
         buttonLayout.addToEnd(cancel, createAccount);

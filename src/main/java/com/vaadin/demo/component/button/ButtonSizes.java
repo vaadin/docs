@@ -12,12 +12,12 @@ public class ButtonSizes extends Div {
     public ButtonSizes() {
         // tag::snippet[]
         Button largeButton = new Button("Large");
-        largeButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
+        largeButton.addThemeVariants(ButtonVariant.LARGE);
 
         Button normalButton = new Button("Normal");
 
         Button smallButton = new Button("Small");
-        smallButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        smallButton.addThemeVariants(ButtonVariant.SMALL);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton,

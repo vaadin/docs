@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Tab } from '@vaadin/react-components/Tab.js';
-import { Tabs } from '@vaadin/react-components/Tabs.js';
+import { Badge, Tab, Tabs } from '@vaadin/react-components';
 
 const badgeStyle = {
-  marginInlineStart: 'var(--lumo-space-xs)',
+  marginInlineStart: 'var(--vaadin-gap-xs)',
 };
 
 function Example() {
@@ -13,23 +12,17 @@ function Example() {
     <Tabs>
       <Tab>
         <span>Open</span>
-        <span {...{ theme: 'badge small contrast' }} style={badgeStyle}>
-          24
-        </span>
+        <Badge number={24} theme="filled" style={badgeStyle} />
       </Tab>
 
       <Tab>
         <span>Completed</span>
-        <span {...{ theme: 'badge small contrast' }} style={badgeStyle}>
-          439
-        </span>
+        <Badge number={49} theme="filled" style={badgeStyle} />
       </Tab>
 
       <Tab>
         <span>Cancelled</span>
-        <span {...{ theme: 'badge small contrast' }} style={badgeStyle}>
-          5
-        </span>
+        <Badge number={5} theme="filled" style={badgeStyle} />
       </Tab>
     </Tabs>
     // end::snippet[]

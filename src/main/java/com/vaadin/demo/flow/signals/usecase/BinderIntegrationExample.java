@@ -65,11 +65,14 @@ public class BinderIntegrationExample extends VerticalLayout {
                         "Password must be at least 8 characters")
                 .bind("password");
 
-        // Cross-field validation using Binder.Binding.value()
+        // Cross-field validation using Binder.Binding.valueSignal()
         // Runs each time the password field changes
-        binder.forField(confirmPasswordField).withValidator(
-                value -> value != null && value.equals(pwBinding.value()),
-                "Passwords do not match").bind("confirmPassword");
+        binder.forField(confirmPasswordField)
+                .withValidator(
+                        value -> value != null
+                                && value.equals(pwBinding.valueSignal().get()),
+                        "Passwords do not match")
+                .bind("confirmPassword");
 
         binder.forField(accountTypeSelect).bind("accountType");
 
@@ -93,16 +96,16 @@ public class BinderIntegrationExample extends VerticalLayout {
             binder.writeBeanIfValid(userRegistration);
             // Handle registration...
         });
-        submitButton.bindEnabled(
-                binder.getValidationStatus().map(BinderValidationStatus::isOk));
+        submitButton.bindEnabled(binder.validationStatusSignal()
+                .map(BinderValidationStatus::isOk));
 
         // Form status display with reactive styling
         Div statusDiv = new Div();
         Span statusLabel = new Span();
-        statusLabel.bindText(binder.getValidationStatus()
+        statusLabel.bindText(binder.validationStatusSignal()
                 .map(status -> status.isOk() ? "Form is valid - Ready to submit"
                         : "Please complete all required fields correctly"));
-        statusLabel.getStyle().bind("color", binder.getValidationStatus()
+        statusLabel.getStyle().bind("color", binder.validationStatusSignal()
                 .map(status -> status.isOk() ? "green" : "orange"));
         statusDiv.add(statusLabel);
 
