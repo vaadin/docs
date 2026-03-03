@@ -12,12 +12,12 @@ public class ButtonStyles extends Div {
     public ButtonStyles() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        primaryButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button secondaryButton = new Button("Secondary");
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        tertiaryButton.addThemeVariants(ButtonVariant.TERTIARY);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,

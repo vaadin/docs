@@ -29,7 +29,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field label="Price" theme="small">
+      <vaadin-custom-field label="Price" error-message="Error message" invalid theme="small">
         <vaadin-horizontal-layout theme="spacing-s">
           <vaadin-text-field accessible-name="Amount" theme="small"></vaadin-text-field>
           <vaadin-select
