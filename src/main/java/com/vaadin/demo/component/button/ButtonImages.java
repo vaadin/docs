@@ -18,7 +18,6 @@ public class ButtonImages extends Div {
         img.setWidth("100px");
 
         Button imgButton = new Button(img);
-        imgButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         // end::snippet[]
 
         add(imgButton);

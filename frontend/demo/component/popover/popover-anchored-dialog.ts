@@ -47,8 +47,8 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-horizontal-layout style="align-items: baseline">
-        <h3 style="flex: 1;">Employees</h3>
-        <vaadin-button id="toggle-columns" theme="icon" aria-label="Show / hide columns">
+        <h3>Employees</h3>
+        <vaadin-button id="toggle-columns" slot="end" theme="icon" aria-label="Show / hide columns">
           <vaadin-icon icon="vaadin:grid-h"></vaadin-icon>
         </vaadin-button>
       </vaadin-horizontal-layout>
