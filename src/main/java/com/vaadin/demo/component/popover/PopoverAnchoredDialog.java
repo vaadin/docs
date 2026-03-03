@@ -46,6 +46,7 @@ public class PopoverAnchoredDialog extends Div {
                 .setHeader("Profession");
         // end::gridsnippet[]
 
+        grid.getStyle().set("margin-top", "var(--vaadin-gap-s)");
         grid.setItems(DataService.getPeople());
 
         H3 title = new H3("Employees");
@@ -67,7 +68,6 @@ public class PopoverAnchoredDialog extends Div {
 
         Div heading = new Div("Configure columns");
         heading.getStyle().set("font-weight", "600");
-        heading.getStyle().set("padding", "var(--lumo-space-xs)");
 
         List<String> columns = List.of("firstName", "lastName", "email",
                 "phone", "birthday", "profession");
@@ -75,6 +75,7 @@ public class PopoverAnchoredDialog extends Div {
 
         CheckboxGroup<String> group = new CheckboxGroup<>();
         group.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        group.getStyle().set("padding", "0").set("margin", "var(--vaadin-gap-s) 0");
         group.setItems(columns);
         group.setItemLabelGenerator((item) -> {
             String label = StringUtils
@@ -103,7 +104,7 @@ public class PopoverAnchoredDialog extends Div {
         reset.addThemeVariants(ButtonVariant.LUMO_SMALL);
 
         HorizontalLayout footer = new HorizontalLayout(showAll, reset);
-        footer.setSpacing(false);
+        footer.setSpacing("var(--vaadin-gap-xs)");
         footer.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
         popover.add(heading, group, footer);
