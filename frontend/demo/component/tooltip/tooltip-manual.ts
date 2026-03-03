@@ -32,7 +32,8 @@ export class Example extends LitElement {
         ></vaadin-tooltip>
         <vaadin-button
           slot="suffix"
-          theme="tertiary-inline icon"
+          theme="tertiary"
+          style="padding: 0; border: 0; min-width: 0; height: 1.25rem;"
           @click="${() => {
             this.tooltipOpened = !this.tooltipOpened;
           }}"
