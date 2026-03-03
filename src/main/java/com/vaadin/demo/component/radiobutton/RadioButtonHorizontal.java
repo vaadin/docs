@@ -2,6 +2,7 @@ package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -11,6 +12,7 @@ public class RadioButtonHorizontal extends Div {
     public RadioButtonHorizontal() {
         // tag::snippet[]
         RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
+        radioGroup.addThemeVariants(RadioGroupVariant.AURA_HORIZONTAL); // Only for Aura
         radioGroup.setLabel("Status");
         radioGroup.setItems("Pending", "Submitted", "Confirmed");
         radioGroup.setValue("Pending");
