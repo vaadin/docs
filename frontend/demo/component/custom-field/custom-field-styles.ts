@@ -7,7 +7,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('custom-field-size-variants')
+@customElement('custom-field-styles')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -29,7 +29,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field label="Price" error-message="Error message" invalid theme="small">
+      <vaadin-custom-field label="Price" helper-text="Helper text" theme="small helper-above-field">
         <vaadin-horizontal-layout style="gap: var(--vaadin-gap-s);">
           <vaadin-text-field accessible-name="Amount" theme="small"></vaadin-text-field>
           <vaadin-select
