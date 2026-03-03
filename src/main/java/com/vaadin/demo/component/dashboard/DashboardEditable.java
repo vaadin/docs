@@ -71,7 +71,7 @@ public class DashboardEditable extends Div {
 
     private void createToolbar() {
         MenuBar toolbar = new MenuBar();
-        toolbar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+        toolbar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS); // hidden-source-line
 
         MenuItem edit = toolbar.addItem("Edit");
         edit.addThemeNames("primary");

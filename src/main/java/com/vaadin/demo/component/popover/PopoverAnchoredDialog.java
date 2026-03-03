@@ -54,9 +54,9 @@ public class PopoverAnchoredDialog extends Div {
         button.addThemeVariants(ButtonVariant.LUMO_ICON);
         button.setAriaLabel("Show / hide columns");
 
-        HorizontalLayout headerLayout = new HorizontalLayout(title, button);
+        HorizontalLayout headerLayout = new HorizontalLayout(title);
+        headerLayout.addToEnd(button);
         headerLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
-        headerLayout.setFlexGrow(1, title);
 
         // tag::snippet[]
         Popover popover = new Popover();
