@@ -15,7 +15,7 @@ public class CheckboxVertical extends Div {
         checkboxGroup.setLabel("Working days");
         checkboxGroup.setItems("Monday", "Tuesday", "Wednesday", "Thursday",
                 "Friday", "Saturday", "Sunday");
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL); // Only for Lumo
         add(checkboxGroup);
         // end::snippet[]
     }
