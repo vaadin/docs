@@ -1,6 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { css } from 'lit'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
@@ -63,4 +64,11 @@ function Example() {
   // end::snippet[]
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(
+  Example,
+  css`
+    :host([theme~='aura']) [has-label] {
+      padding-top: var(--vaadin-padding-m);
+    }
+  `
+); // hidden-source-line

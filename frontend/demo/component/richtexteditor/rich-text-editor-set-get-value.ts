@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/rich-text-editor';
 import '@vaadin/text-area';
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type {
   RichTextEditor,
@@ -13,6 +13,12 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('rich-text-editor-set-get-value')
 export class Example extends LitElement {
+  static override styles = css`
+    :host([theme~='aura']) [has-label] {
+      padding-top: var(--vaadin-padding-m);
+    }
+  `;
+
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
