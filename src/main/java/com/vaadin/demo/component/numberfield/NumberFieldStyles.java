@@ -14,7 +14,8 @@ public class NumberFieldStyles extends HorizontalLayout {
 
         // tag::snippet[]
         NumberField field = new NumberField();
-        field.addThemeVariants(TextFieldVariant.ALIGN_RIGHT,
+        field.addThemeVariants(TextFieldVariant.SMALL,
+                TextFieldVariant.ALIGN_RIGHT,
                 TextFieldVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
