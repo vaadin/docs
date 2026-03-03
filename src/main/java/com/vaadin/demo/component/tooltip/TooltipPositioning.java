@@ -17,7 +17,8 @@ public class TooltipPositioning extends AppLayout {
 
         SideNav nav = getSideNav();
         nav.getElement().executeJs("window.patchSideNavNavigation(this);"); // hidden-source-line
-        nav.getStyle().set("margin", "0 var(--vaadin-gap-xs)").set("--vaadin-icon-size", "1.5rem");
+        nav.getStyle().set("margin", "0 var(--vaadin-gap-xs)")
+                .set("--vaadin-icon-size", "1.5rem");
 
         addToDrawer(nav);
         addToNavbar(toggle);
@@ -37,8 +38,7 @@ public class TooltipPositioning extends AppLayout {
     private SideNavItem createItem(VaadinIcon viewIcon, String viewName,
             String path) {
         // tag::snippet[]
-        SideNavItem item = new SideNavItem(viewName, path,
-                viewIcon.create());
+        SideNavItem item = new SideNavItem(viewName, path, viewIcon.create());
         item.setTooltipText(viewName).withPosition(TooltipPosition.END);
         // end::snippet[]
         return item;

@@ -12,7 +12,8 @@ public class RadioButtonHorizontal extends Div {
     public RadioButtonHorizontal() {
         // tag::snippet[]
         RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
-        radioGroup.addThemeVariants(RadioGroupVariant.AURA_HORIZONTAL); // Only for Aura
+        // Only for Aura
+        radioGroup.addThemeVariants(RadioGroupVariant.AURA_HORIZONTAL);
         radioGroup.setLabel("Status");
         radioGroup.setItems("Pending", "Submitted", "Confirmed");
         radioGroup.setValue("Pending");

@@ -1,13 +1,13 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
-import { getReports, ReportStatus } from 'Frontend/demo/domain/DataService';
+import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
-import type Report from 'Frontend/generated/com/vaadin/demo/domain/Report';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -62,13 +62,13 @@ export class Example extends LitElement {
                 title = 'Cancelled';
                 theme = 'error';
                 break;
-              default:
+              case ReportStatus.ON_HOLD:
                 title = 'On hold';
-                theme = 'contrast';
+                theme = 'warning';
                 break;
             }
 
-            return html`<span theme="badge ${theme} primary">${title}</span>`;
+            return html`<vaadin-badge theme="${theme} filled">${title}</vaadin-badge>`;
           }, [])}
         ></vaadin-grid-column>
       </vaadin-grid>

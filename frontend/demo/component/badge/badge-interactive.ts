@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/button';
 import '@vaadin/combo-box';
 import '@vaadin/horizontal-layout';
@@ -49,19 +50,19 @@ export class Example extends LitElement {
             this.selectedProfessions,
             (profession) => profession,
             (profession) => html`
-              <span theme="badge pill contrast">
+              <vaadin-badge style="padding-right: 0">
                 <span>${profession}</span>
                 <vaadin-button
                   aria-label="Clear filter: ${profession}"
                   data-profession="${profession}"
-                  theme="contrast tertiary-inline"
+                  theme="tertiary"
                   title="Clear filter: ${profession}"
-                  style="margin-inline-start: var(--lumo-space-xs)"
+                  style="height: 1.5rem; min-width: 1.5rem; margin: 0; padding: 0"
                   @click="${this.onClick}"
                 >
                   <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
                 </vaadin-button>
-              </span>
+              </vaadin-badge>
             `
           )}
         </vaadin-horizontal-layout>
