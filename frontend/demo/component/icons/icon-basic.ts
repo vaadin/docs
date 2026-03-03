@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -18,7 +19,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing" style="align-items: center">
         <!-- tag::snippet[] -->
-        <vaadin-icon icon="vaadin:picture"></vaadin-icon>
+        <vaadin-icon icon="lumo:photo"></vaadin-icon>
         <vaadin-icon icon="vaadin:phone"></vaadin-icon>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>

@@ -8,7 +8,7 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
       {/* tag::snippet[] */}
-      <Icon icon="vaadin:picture" />
+      <Icon icon="lumo:photo" />
       <Icon icon="vaadin:phone" />
       {/* end::snippet[] */}
     </HorizontalLayout>
