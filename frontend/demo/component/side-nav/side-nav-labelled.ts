@@ -25,7 +25,7 @@ export class Example extends LitElement {
     return html`
       <div class="side-nav-sample">
         <!-- tag::snippet[] -->
-        <vaadin-vertical-layout theme="spacing">
+        <vaadin-vertical-layout style="gap: 1em">
           <vaadin-side-nav style="width:100%">
             <span slot="label">Messages</span>
             <vaadin-side-nav-item path="/inbox">

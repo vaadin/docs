@@ -27,7 +27,7 @@ const Example = () => {
   return (
     <div className="side-nav-sample">
       {/* tag::snippet[] */}
-      <VerticalLayout theme="spacing">
+      <VerticalLayout style={{ gap: '1em' }}>
         <SideNav style={{ width: '100%' }} ref={sideNavRef}>
           <span slot="label">Messages</span>
           <SideNavItem path="/inbox">
