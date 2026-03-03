@@ -30,7 +30,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-custom-field label="Price" error-message="Error message" invalid theme="small">
-        <vaadin-horizontal-layout theme="spacing-s">
+        <vaadin-horizontal-layout style="gap: var(--vaadin-gap-s);">
           <vaadin-text-field accessible-name="Amount" theme="small"></vaadin-text-field>
           <vaadin-select
             accessible-name="Currency"

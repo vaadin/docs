@@ -11,7 +11,7 @@ public class CustomFieldSizeVariants extends Div {
     public CustomFieldSizeVariants() {
         // tag::snippet[]
         MoneyField moneyField = new MoneyField("Price");
-        moneyField.addThemeVariant(CustomFieldVariant.LUMO_SMALL);
+        moneyField.addThemeVariant(CustomFieldVariant.SMALL);
         // end::snippet[]
         moneyField.setErrorMessage("Error message");
         moneyField.setInvalid(true);

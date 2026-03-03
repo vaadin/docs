@@ -9,7 +9,7 @@ function Example() {
   return (
     // tag::snippet[]
     <CustomField label="Price" errorMessage="Error message" invalid theme="small">
-      <HorizontalLayout theme="spacing-s">
+      <HorizontalLayout style={{ gap: 'var(--vaadin-gap-s)' }}>
         <TextField accessibleName="Amount" theme="small" />
         <Select
           accessibleName="Currency"
