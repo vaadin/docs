@@ -35,7 +35,7 @@ public class GridRichContentSorting extends Div {
 
     private static Renderer<Person> createEmployeeRenderer() {
         return LitRenderer
-                .<Person>of(
+                .<Person> of(
                         """
                                 <div class="person-item">
                                   <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" style="--vaadin-avatar-size: 2.25rem"></vaadin-avatar>
@@ -50,7 +50,7 @@ public class GridRichContentSorting extends Div {
 
     private static Renderer<Person> createBirthdayRenderer() {
         return LitRenderer
-                .<Person>of(
+                .<Person> of(
                         """
                                 <div>${item.birthday}</div>
                                 <div style="font-size: .875rem; color: var(--vaadin-text-color-secondary);">
