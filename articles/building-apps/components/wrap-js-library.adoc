@@ -9,7 +9,7 @@ order: 45
 = Wrap a JavaScript Library
 :toclevels: 2
 
-This article shows how to wrap a plain JavaScript library — one that doesn't expose a web component or React component — as a Vaadin component. The approach uses `@JsModule` to load a small connector file that initializes the library on a DOM element, and the Element API (`callJsFunction`, `@ClientCallable`) to communicate between server and client. For libraries that provide a custom element, see <<wrap-web-component#,Wrap a Web Component>>. For React components, see <<wrap-react-component#,Wrap a React Component>>.
+This article shows how to wrap a plain JavaScript library — one that doesn't expose a web component or React component — as a Vaadin component. The approach uses `@JsModule` to load a small connector file that initializes the library on a DOM element, and the Element API, `callJsFunction` and `@ClientCallable`, to communicate between server and client. For libraries that offer a custom element, see <<wrap-web-component#,Wrap a Web Component>>. For React components, see <<wrap-react-component#,Wrap a React Component>>.
 
 
 == Copy-Paste Example
@@ -137,7 +137,7 @@ public class NouiSlider extends Component implements HasSize {
 
 == How It Works
 
-The Java class uses `@Tag("div")` to create a plain `<div>` element in the browser. `@JsModule` loads the connector file, and `@NpmPackage` declares the npm dependency. In `onAttach()`, the component calls the connector's `init` function through `executeJs()`, which creates the slider on the element. Communication from client to server happens through DOM events (`CustomEvent`) captured by `@DomEvent`.
+The Java class uses `@Tag("div")` to create a plain `<div>` element in the browser. `@JsModule` loads the connector file, and `@NpmPackage` declares the npm dependency. In `onAttach()`, the component calls the connector's `init` function through `executeJs()`, which creates the slider on the element. Communication from client to server happens through DOM events, `CustomEvent`, captured by `@DomEvent`.
 
 ----
 Java (server)  ──executeJs──>  Connector JS  ──library API──>  JS Library
@@ -153,7 +153,7 @@ The connector is a small JavaScript file that bridges the Vaadin element and the
 - *`update(element, ...)`* or per-property setters — updates the library instance when server-side state changes.
 - *`destroy(element)`* — tears down the library instance and removes event listeners.
 
-Attaching the library instance to the element (e.g., `element._slider`) keeps things self-contained and makes cleanup straightforward.
+Attaching the library instance to the element — for example, `element._slider` — keeps things self-contained and makes cleanup straightforward.
 
 
 == Sending Data to the Client
@@ -180,7 +180,7 @@ See <</flow/component-internals/element-api/calling-javascript#,Calling JavaScri
 
 == Receiving Data from the Server
 
-There are two approaches for sending data from client to server:
+Two approaches exist for sending data from client to server:
 
 *DOM events* — dispatch a `CustomEvent` from JavaScript. The Java side picks it up with `@DomEvent` and `@EventData`:
 
@@ -224,15 +224,15 @@ private void onSelectionChanged(String itemId) {
 element.$server.onSelectionChanged(selectedId);
 ----
 
-DOM events are simpler for most cases. Use `@ClientCallable` when you need to send structured data or trigger server logic that doesn't map naturally to an event. See <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> for the full reference.
+DOM events are simpler for most cases. Use `@ClientCallable` when you need to send structured data or trigger server logic that does not map to an event. See <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> for the full reference.
 
 
 == Pitfalls
 
 *Initialize in `onAttach`, not in the constructor.* The DOM element doesn't exist in the browser until the component is attached. Calling `executeJs()` in the constructor queues the call, but the element may not be ready for the library to use. Use `onAttach()` to ensure the element is in the DOM.
 
-*Clean up in `onDetach`.* Many JavaScript libraries allocate event listeners, timers, or resize observers. If you don't destroy the instance when the component is removed, you get memory leaks. Always pair `init` with `destroy`.
+*Clean up in `onDetach`.* Many JavaScript libraries assign event listeners, timers, or resize observers. If you don't destroy the instance when the component is removed, you get memory leaks. Always pair `init` with `destroy`.
 
-*Guard against double initialization.* If a component is detached and reattached (e.g., during navigation), `onAttach()` runs again. Check whether the library is already initialized before creating a new instance.
+*Guard against double initialization.* If a component is detached and reattached — for example, during navigation — `onAttach()` runs again. Check whether the library is already initialized before creating a new instance.
 
-*Use `$0`, `$1` placeholders instead of string concatenation.* Never build JavaScript strings with user-provided values. The placeholder syntax in `executeJs()` handles escaping and type conversion safely.
+*Use `$0`, `$1` placeholders instead of string concatenation.* Never build JavaScript strings with user-provided values. The placeholder syntax in `executeJs()` handles escaping and type conversion for you.
