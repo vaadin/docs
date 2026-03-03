@@ -14,7 +14,8 @@ public class CheckboxHorizontal extends Div {
         CheckboxGroup<String> checkboxGroup = new CheckboxGroup<>();
         checkboxGroup.setLabel("Permissions");
         checkboxGroup.setItems("Read", "Edit", "Delete");
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL); // Only for Aura
+        // Only for Aura
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.AURA_HORIZONTAL);
         add(checkboxGroup);
         // end::snippet[]
     }

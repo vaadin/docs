@@ -1,0 +1,271 @@
+---
+title: Build a Component
+page-title: How to build a custom Vaadin component
+description: Learn how to create reusable custom components with a clean API.
+meta-description: Create custom Vaadin components by extending existing components or using Composite. Define APIs with setters, events, and callbacks.
+order: 10
+---
+
+= Build a Component
+:toclevels: 2
+
+This article shows how to create a custom component from scratch — from choosing a base class to defining a public API. The focus is on reusable components that you create as part of your application. For wrapping third-party web components, see <<wrap-web-component#,Wrap a Web Component>>. For general composition techniques, see <<../ui-basics/compose#,Compose with Components>>.
+
+
+== Copy-Paste Example
+
+A reusable `StatusBadge` component that displays a label with a colored indicator:
+
+[source,java]
+----
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+
+public class StatusBadge extends Composite<HorizontalLayout> {
+
+    public enum Status { SUCCESS, WARNING, ERROR }
+
+    private final Span indicator = new Span();
+    private final Span label = new Span();
+
+    public StatusBadge(String text, Status status) {
+        addClassName("status-badge");
+        indicator.addClassName("status-badge-indicator");
+        label.setText(text);
+        setStatus(status);
+        getContent().add(indicator, label);
+    }
+
+    public void setStatus(Status status) {
+        indicator.removeClassNames(
+                "status-success", "status-warning", "status-error");
+        indicator.addClassName("status-" + status.name().toLowerCase());
+    }
+
+    public void setLabel(String text) {
+        label.setText(text);
+    }
+}
+----
+
+Pair it with CSS in your stylesheet:
+
+[source,css]
+----
+.status-badge {
+    align-items: center;
+    gap: var(--lumo-space-xs);
+}
+
+.status-badge-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-success { background: var(--lumo-success-color); }
+.status-warning { background: var(--lumo-warning-color); }
+.status-error { background: var(--lumo-error-color); }
+----
+
+
+== When to Create a Component
+
+Create a component when you notice any of the following:
+
+- *Need for a clean API* — other parts of the code should interact with this section through setters and events, not by reaching into its internals.
+- *Complex sections* — a part of a view has grown large and has its own internal logic.
+- *Repeated patterns* — the same group of elements appears in multiple places.
+
+Creating components is primarily about structuring code, not reuse. Even one-off components, like a detail panel used only inside one view, are worth extracting — they keep each class focused, give the section a name, and define a clear boundary for its behavior. See <<../ui-basics/compose#,Compose with Components>> for more on decomposition.
+
+
+== Choosing a Base Class
+
+You have two main approaches: extending an existing component, and using `Composite`.
+
+=== Extending an Existing Component
+
+The simplest option is to extend an existing component. This can be an HTML element wrapper like `Div` or `Span` for basic containers, or a higher-level Vaadin component like `Button` or `VerticalLayout` for specializations:
+
+[source,java]
+----
+public class InfoCard extends Div {
+    public InfoCard(String title, String content) {
+        addClassName("info-card");
+        add(new H3(title), new Paragraph(content));
+    }
+}
+----
+
+[source,java]
+----
+public class PrimaryButton extends Button {
+    public PrimaryButton(String text) {
+        super(text);
+        addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+    }
+}
+----
+
+This is straightforward, but every public method of the parent — like `add()`, `removeAll()`, `setText()` — is available to callers. That means external code can modify the component's internal structure. Be cautious about extending layout components like `VerticalLayout` — you inherit all layout methods, and callers can rearrange your internals.
+
+=== Using Composite (Recommended for Reusable Components)
+
+`Composite` wraps a root component and hides its API. Only methods you explicitly define are available to callers:
+
+[source,java]
+----
+public class SearchField extends Composite<HorizontalLayout> {
+    private final TextField field = new TextField();
+    private final Button button = new Button("Search");
+
+    public SearchField() {
+        getContent().add(field, button);
+    }
+
+    public void setPlaceholder(String placeholder) {
+        field.setPlaceholder(placeholder);
+    }
+
+    public Registration addSearchListener(
+            ComponentEventListener<ClickEvent<Button>> listener) {
+        return button.addClickListener(listener);
+    }
+}
+----
+
+Callers see `setPlaceholder()` and `addSearchListener()`, but not `add()`, `removeAll()`, or other `HorizontalLayout` methods. This encapsulation prevents accidental misuse and makes the component easier to evolve.
+
+[TIP]
+.When to Use Each Approach
+Use `Composite` when the component is intended for reuse. Use direct extension when you want quick access to the parent's API and encapsulation isn't a concern.
+
+
+== Defining a Component API
+
+A component's API is how other code interacts with it. Keep it minimal and intention-revealing.
+
+=== Setters and Getters
+
+Use setters to accept data and getters to expose state:
+
+[source,java]
+----
+public void setEmployee(Employee employee) {
+    nameLabel.setText(employee.getName());
+    emailLabel.setText(employee.getEmail());
+}
+----
+
+Name setters after the domain concept (`setEmployee`), not the internal implementation (`setNameLabelText`).
+
+=== Signals
+
+Signals are a reactive alternative to setters. Instead of the parent calling a setter on the child, the component binds its UI elements to a signal. When the signal value changes, the UI updates automatically:
+
+[source,java]
+----
+public class EmployeeDetail extends Composite<VerticalLayout> {
+    private final Span nameLabel = new Span();
+    private final Span emailLabel = new Span();
+
+    public EmployeeDetail(ValueSignal<Employee> employee) {
+        nameLabel.bindText(employee.map(Employee::getName));
+        emailLabel.bindText(employee.map(Employee::getEmail));
+        getContent().add(nameLabel, emailLabel);
+    }
+}
+----
+
+Signals reduce boilerplate when multiple components depend on the same data — changing the signal updates all bound components at once. They also work well with computed values and conditional visibility through `bindEnabled()` and `bindVisible()`.
+
+Use setters when updates are triggered by specific events and the flow is easy to follow. Use signals when multiple components share the same state and you want to avoid manual coordination. See <</flow/ui-state#,Signals>> for the full reference.
+
+=== Events
+
+Use events when callers need to react to user interactions. Define a custom event class and a listener registration method:
+
+[source,java]
+----
+public Registration addSelectionListener(
+        ComponentEventListener<SelectionEvent> listener) {
+    return addListener(SelectionEvent.class, listener);
+}
+----
+
+Events are the right choice for reusable components. They are type-safe and follow the standard Vaadin pattern. See <</flow/component-internals/events#,Events>> for the full reference.
+
+=== Callbacks
+
+Use callbacks — `Runnable`, `Consumer<T>`, or a custom interface you define — for one-off components where defining an event class would be overkill:
+
+[source,java]
+----
+public class ConfirmDialog extends Composite<Div> {
+    public ConfirmDialog(String message, Runnable onConfirm) {
+        // ...
+        confirmButton.addClickListener(e -> onConfirm.run());
+    }
+}
+----
+
+See <<../ui-basics/compose#,Compose with Components>> for guidance on choosing between events and callbacks.
+
+
+== Lifecycle Hooks
+
+Override `onAttach()` and `onDetach()` to run code when the component is added to or removed from the UI:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent event) {
+    super.onAttach(event);
+    // Initialize resources, start polling
+}
+
+@Override
+protected void onDetach(DetachEvent event) {
+    super.onDetach(event);
+    // Clean up resources, stop polling
+}
+----
+
+Always call the `super` method first. See <</flow/component-internals/basic#,Component Basics>> for more on the component lifecycle.
+
+
+== Mixin Interfaces
+
+Vaadin provides mixin interfaces that add standard functionality to your component:
+
+- `HasSize` — adds `setWidth()`, `setHeight()`, and related sizing methods
+- `HasStyle` — adds `addClassName()`, `getStyle()`, and CSS class management (included by default in `Component`)
+- `HasComponents` — adds `add()`, `remove()`, and child component management
+- `HasText` — adds `setText()` and `getText()`
+- `HasEnabled` — adds `setEnabled()` for enabling and disabling the component
+- `HasTheme` — adds theme attribute support for theme variants
+
+Implement only the mixins your component needs:
+
+[source,java]
+----
+public class StatusBadge extends Composite<HorizontalLayout>
+        implements HasSize {
+    // Now callers can use setWidth(), setHeight(), etc.
+}
+----
+
+See <</flow/component-internals/mixins#,Mixin Interfaces>> for the full list.
+
+
+== Pitfalls
+
+*Don't expose the root component's API unintentionally.* If you extend `Div`, callers can call `add()`, `removeAll()`, and `setText()` to break your component's internal structure. Use `Composite` to prevent this.
+
+*Keep component scope narrow.* A component should do one thing well. If it's growing beyond a couple of hundred lines, split it into smaller components. The component shouldn't know about other components' internals.
+
+*Don't put business logic in components.* Components handle UI concerns — displaying data, collecting input, and forwarding user actions. Business logic like validation rules, calculations, and service calls belongs in <<../business-logic/add-service#,services>> or the view that coordinates them.
+
+*Use constructor parameters for required data.* If a component can't function without certain data, require it in the constructor. Use setters for data that can change after creation or that has sensible defaults.

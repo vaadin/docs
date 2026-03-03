@@ -16,12 +16,12 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout>
+      <vaadin-vertical-layout style="gap: 10px">
         <!-- tag::snippet[] -->
         <vaadin-checkbox checked>
           <label slot="label">Reply All by default (unchecked state not clear)</label>
         </vaadin-checkbox>
-        <vaadin-radio-group label="Default reply behavior">
+        <vaadin-radio-group label="Default reply behavior" theme="horizontal">
           <vaadin-radio-button label="Reply" checked></vaadin-radio-button>
           <vaadin-radio-button label="Reply to all"></vaadin-radio-button>
         </vaadin-radio-group>

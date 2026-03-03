@@ -1,0 +1,257 @@
+---
+title: Style a Component
+page-title: How to style a custom Vaadin component
+description: Learn how to add consistent, maintainable styling to your custom components.
+meta-description: Style custom Vaadin components with CSS class names, theme properties, theme variants, and custom CSS properties.
+order: 20
+---
+
+= Style a Component
+:toclevels: 2
+
+This article shows how to add styling to custom components you've built. The focus is on creating maintainable, theme-consistent styles that work in both light and dark mode. For general styling guidance, see <<../ui-basics/add-styling#,Add Styling>>. For the full styling reference, see the <</styling#,Styling>> documentation.
+
+
+== Copy-Paste Example
+
+A styled `InfoCard` component with its matching stylesheet:
+
+[source,java]
+----
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+public class InfoCard extends Composite<VerticalLayout> {
+
+    public InfoCard(String title, String description) {
+        addClassName("info-card");
+        getContent().setPadding(false);
+        getContent().setSpacing(false);
+        getContent().add(new H3(title), new Paragraph(description));
+    }
+}
+----
+
+[source,css]
+----
+.info-card {
+    background: var(--vaadin-background-color);
+    border: 1px solid var(--vaadin-border-color-secondary);
+    border-radius: var(--vaadin-radius-l);
+    padding: var(--vaadin-padding-m) var(--vaadin-padding-l);
+    max-width: 400px;
+}
+
+.info-card h3 {
+    margin: 0 0 var(--vaadin-gap-xs) 0;
+    color: var(--vaadin-text-color);
+}
+
+.info-card p {
+    margin: 0;
+    color: var(--vaadin-text-color-secondary);
+}
+----
+
+
+== Add a Class Name to Your Component
+
+Every custom component should have a CSS class name set in its constructor. This gives you a stable styling hook:
+
+[source,java]
+----
+public class StatusBadge extends Composite<HorizontalLayout> {
+    public StatusBadge() {
+        addClassName("status-badge");
+    }
+}
+----
+
+Use a semantic, kebab-case name that describes what the component *is*, not how it looks. Prefer `status-badge` over `small-green-label`.
+
+For internal sub-elements, add class names to them as well:
+
+[source,java]
+----
+public StatusBadge() {
+    addClassName("status-badge");
+    indicator.addClassName("status-badge-indicator");
+    label.addClassName("status-badge-label");
+}
+----
+
+Prefix sub-element class names with the component name to avoid clashes with other components.
+
+
+== Style with CSS
+
+Put each component's styles in its own CSS file under `src/main/resources/META-INF/resources/`. For example, create `status-badge.css`:
+
+[source,css]
+----
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--vaadin-gap-xs);
+    padding: var(--vaadin-padding-xs) var(--vaadin-padding-s);
+    border-radius: var(--vaadin-radius-m);
+    background: var(--vaadin-background-container);
+}
+----
+
+Then load the stylesheet in one of two ways:
+
+*Import it from the main stylesheet* — add an `@import` rule in `styles.css`. The styles load globally on startup:
+
+[source,css]
+----
+/* src/main/resources/META-INF/resources/styles.css */
+@import "status-badge.css";
+----
+
+*Annotate the component class directly* — use `@StyleSheet` on the component. The styles load lazily when the component is first used:
+
+[source,java]
+----
+@StyleSheet("status-badge.css")
+public class StatusBadge extends Composite<HorizontalLayout> {
+    // ...
+}
+----
+
+The lazy approach is useful for components with significant CSS that isn't needed on every page. For small, often-used components, importing from `styles.css` is simpler. Either way, scope rules to the component's class name so they don't leak. See <<{articles}/styling/stylesheets#,Stylesheets>> for more details.
+
+[NOTE]
+.Add-On JAR Packaging
+If you're packaging the component as a reusable add-on JAR, CSS files go in `META-INF/resources/frontend/` and are loaded with `@CssImport` instead. See <<package-component#,Package a Component>> for details.
+
+=== Use Theme Custom Properties
+
+Use theme custom properties instead of hardcoded values. This keeps your component visually consistent with the rest of the application and ensures it adapts to dark mode automatically.
+
+Vaadin provides three levels of custom properties:
+
+*Base properties* (`--vaadin-*`) work with any theme. Use these when you want your component to be theme-agnostic:
+
+[cols="1,1",options="header"]
+|===
+| Instead of | Use
+
+| `#333`
+| `var(--vaadin-text-color)`
+
+| `16px` (gap)
+| `var(--vaadin-gap-m)`
+
+| `16px` (padding)
+| `var(--vaadin-padding-m)`
+
+| `8px` (radius)
+| `var(--vaadin-radius-m)`
+|===
+
+See <</styling/themes/base#,Base Styles>> for the full list.
+
+*Lumo properties* (`--lumo-*`) offer a richer set of properties for applications using the <<{articles}/styling/themes/lumo#,Lumo>> theme:
+
+[cols="1,1",options="header"]
+|===
+| Instead of | Use
+
+| `#1676f3`
+| `var(--lumo-primary-color)`
+
+| `14px`
+| `var(--lumo-font-size-s)`
+
+| `#333`
+| `var(--lumo-body-text-color)`
+|===
+
+See <</styling/themes/lumo/lumo-style-properties#,Lumo Style Properties>> for the full list.
+
+*Aura properties* (`--aura-*`) are for applications using the <<{articles}/styling/themes/aura#,Aura>> theme, which defines its own color system and maps it to the base properties.
+
+[TIP]
+.Choosing the Right Properties
+If your component is only used within your own application, use the properties of whichever theme your application uses. If you're building a reusable add-on that should work with any theme, prefer the base `--vaadin-*` properties.
+
+
+== Expose Style Variants
+
+If your component has distinct visual modes, expose them as theme variants. This follows the same pattern Vaadin components use for variants like `ButtonVariant.LUMO_PRIMARY`:
+
+[source,java]
+----
+public class StatusBadge extends Composite<HorizontalLayout> {
+
+    public void setCompact(boolean compact) {
+        getElement().getThemeList().set("compact", compact);
+    }
+}
+----
+
+Then style the variant in CSS using the `[theme~="..."]` attribute selector:
+
+[source,css]
+----
+.status-badge[theme~="compact"] {
+    padding: var(--vaadin-padding-xs);
+    font-size: 0.75rem;
+}
+----
+
+For a fixed set of variants, consider using an enum:
+
+[source,java]
+----
+public enum StatusBadgeVariant {
+    COMPACT, PILL, OUTLINED
+}
+
+public void addThemeVariants(StatusBadgeVariant... variants) {
+    for (StatusBadgeVariant variant : variants) {
+        getElement().getThemeList()
+                .add(variant.name().toLowerCase());
+    }
+}
+----
+
+
+== Expose Custom CSS Properties
+
+For values that users of your component might want to customize, define CSS custom properties with defaults:
+
+[source,css]
+----
+.status-badge {
+    padding: var(--status-badge-padding, var(--vaadin-padding-xs) var(--vaadin-padding-s));
+    border-radius: var(--status-badge-radius, var(--vaadin-radius-m));
+    font-size: var(--status-badge-font-size, 0.8125rem);
+}
+----
+
+Users of the component can override these properties without modifying the component's stylesheet:
+
+[source,css]
+----
+.status-badge {
+    --status-badge-padding: var(--vaadin-padding-s) var(--vaadin-padding-m);
+    --status-badge-radius: var(--vaadin-radius-l);
+}
+----
+
+Prefix custom property names with the component name to avoid clashes.
+
+
+== Pitfalls
+
+*Use theme properties, not hardcoded values.* Hardcoded colors, sizes, and fonts break theme consistency and don't adapt to dark mode. Use `--vaadin-*` base properties for theme-agnostic components, or `--lumo-*` / `--aura-*` properties if you target a specific theme.
+
+*Use semantic class names.* Name classes after what the element represents, not its appearance. `notification-banner` is better than `yellow-box` — the color might change, but the purpose won't.
+
+*Test in both light and dark mode.* If you use theme properties consistently, dark mode tends to work automatically. But verify, in particular for borders, shadows, and backgrounds.
+
+*Don't mix too many styling approaches.* Pick one primary approach (CSS classes for most cases) and use others sparingly. A component styled partly with utility classes, partly with inline styles, and partly with CSS is hard to maintain.

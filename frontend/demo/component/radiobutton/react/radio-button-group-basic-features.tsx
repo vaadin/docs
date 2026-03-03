@@ -7,7 +7,7 @@ import { Tooltip } from '@vaadin/react-components/Tooltip.js';
 function Example() {
   return (
     // tag::snippet[]
-    <RadioGroup label="Label" helperText="Helper text">
+    <RadioGroup label="Label" helperText="Helper text" theme="vertical">
       <Tooltip slot="tooltip" text="Tooltip text" />
 
       <RadioButton value="1" label="Item 1" />

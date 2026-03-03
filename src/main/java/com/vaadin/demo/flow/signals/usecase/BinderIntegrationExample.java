@@ -67,9 +67,12 @@ public class BinderIntegrationExample extends VerticalLayout {
 
         // Cross-field validation using Binder.Binding.valueSignal()
         // Runs each time the password field changes
-        binder.forField(confirmPasswordField).withValidator(
-                value -> value != null && value.equals(pwBinding.valueSignal().get()),
-                "Passwords do not match").bind("confirmPassword");
+        binder.forField(confirmPasswordField)
+                .withValidator(
+                        value -> value != null
+                                && value.equals(pwBinding.valueSignal().get()),
+                        "Passwords do not match")
+                .bind("confirmPassword");
 
         binder.forField(accountTypeSelect).bind("accountType");
 
@@ -93,8 +96,8 @@ public class BinderIntegrationExample extends VerticalLayout {
             binder.writeBeanIfValid(userRegistration);
             // Handle registration...
         });
-        submitButton.bindEnabled(
-                binder.validationStatusSignal().map(BinderValidationStatus::isOk));
+        submitButton.bindEnabled(binder.validationStatusSignal()
+                .map(BinderValidationStatus::isOk));
 
         // Form status display with reactive styling
         Div statusDiv = new Div();
