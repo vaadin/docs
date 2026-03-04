@@ -75,7 +75,8 @@ public class PopoverAnchoredDialog extends Div {
 
         CheckboxGroup<String> group = new CheckboxGroup<>();
         group.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
-        group.getStyle().set("padding", "0").set("margin", "var(--vaadin-gap-s) 0");
+        group.getStyle().set("padding", "0").set("margin",
+                "var(--vaadin-gap-s) 0");
         group.setItems(columns);
         group.setItemLabelGenerator((item) -> {
             String label = StringUtils
