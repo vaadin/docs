@@ -13,7 +13,7 @@ public class MapNoBorder extends Div {
         Map map = new Map();
         add(map);
         // tag::snippet[]
-        map.addThemeVariants(MapVariant.LUMO_NO_BORDER);
+        map.addThemeVariants(MapVariant.NO_BORDER);
         // end::snippet[]
     }
 

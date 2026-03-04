@@ -6,9 +6,9 @@ import { MenuBar, type MenuBarItem } from '@vaadin/react-components/MenuBar.js';
 
 function createItem(iconName: string, text: string, isChild = false) {
   const iconStyle: React.CSSProperties = {
-    width: isChild ? 'var(--lumo-icon-size-s)' : '',
-    height: isChild ? 'var(--lumo-icon-size-s)' : '',
-    marginRight: isChild ? 'var(--lumo-space-s)' : '',
+    width: isChild ? '1.25rem' : '',
+    height: isChild ? '1.25rem' : '',
+    marginRight: isChild ? 'var(--vaadin-gap-s)' : '',
   };
 
   let ariaLabel = '';

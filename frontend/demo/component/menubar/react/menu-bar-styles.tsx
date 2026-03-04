@@ -5,7 +5,7 @@ import { MenuBar } from '@vaadin/react-components/MenuBar.js';
 
 function Example() {
   return (
-    <HorizontalLayout>
+    <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
       <MenuBar items={[{ text: 'Default', children: [{ text: 'Item' }] }]} />
       <MenuBar theme="tertiary" items={[{ text: 'Tertiary', children: [{ text: 'Item' }] }]} />
