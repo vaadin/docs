@@ -31,8 +31,7 @@ public class MockLLMProvider implements LLMProvider {
     @Override
     public Flux<String> stream(LLMRequest request) {
         var tokens = MOCK_RESPONSE.split(" ");
-        return Flux.fromArray(tokens)
-                .delaySubscription(Duration.ofSeconds(1))
+        return Flux.fromArray(tokens).delaySubscription(Duration.ofSeconds(1))
                 .delayElements(Duration.ofMillis(100))
                 .map(token -> token + " ");
     }

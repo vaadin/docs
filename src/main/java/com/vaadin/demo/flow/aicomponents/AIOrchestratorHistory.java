@@ -28,12 +28,9 @@ public class AIOrchestratorHistory extends Div {
         List<ChatMessage> savedHistory = getHistory();
         Map<String, List<AIAttachment>> savedAttachments = getSavedAttachments();
 
-        AIOrchestrator.builder(provider,
-                        "You are a helpful assistant.")
-                .withMessageList(messageList)
-                .withInput(messageInput)
-                .withHistory(savedHistory, savedAttachments)
-                .build();
+        AIOrchestrator.builder(provider, "You are a helpful assistant.")
+                .withMessageList(messageList).withInput(messageInput)
+                .withHistory(savedHistory, savedAttachments).build();
 
         add(messageList, messageInput);
         // end::snippet[]
@@ -52,8 +49,7 @@ public class AIOrchestratorHistory extends Div {
     private List<ChatMessage> getHistory() {
         return List.of(
                 new ChatMessage(ChatMessage.Role.USER,
-                        "What can you help me with?",
-                        "msg-1", Instant.now()),
+                        "What can you help me with?", "msg-1", Instant.now()),
                 new ChatMessage(ChatMessage.Role.ASSISTANT,
                         "I can help with coding, writing, "
                                 + "and answering questions!",

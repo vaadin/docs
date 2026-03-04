@@ -18,11 +18,8 @@ public class AIOrchestratorBasic extends Div {
 
         LLMProvider provider = getLLMProvider();
 
-        AIOrchestrator.builder(provider,
-                        "You are a helpful assistant.")
-                .withMessageList(messageList)
-                .withInput(messageInput)
-                .build();
+        AIOrchestrator.builder(provider, "You are a helpful assistant.")
+                .withMessageList(messageList).withInput(messageInput).build();
 
         add(messageList, messageInput);
         // end::snippet[]

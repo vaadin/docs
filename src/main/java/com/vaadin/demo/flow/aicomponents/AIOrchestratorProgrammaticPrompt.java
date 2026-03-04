@@ -19,12 +19,10 @@ public class AIOrchestratorProgrammaticPrompt extends Div {
 
         AIOrchestrator orchestrator = AIOrchestrator
                 .builder(provider, "You are a helpful assistant.")
-                .withMessageList(messageList)
-                .build();
+                .withMessageList(messageList).build();
 
         Button button = new Button("Summarize",
-                event -> orchestrator.prompt(
-                        "Summarize the key features"));
+                event -> orchestrator.prompt("Summarize the key features"));
 
         add(button, messageList);
         // end::snippet[]
