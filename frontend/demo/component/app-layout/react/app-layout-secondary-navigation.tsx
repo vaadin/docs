@@ -96,7 +96,7 @@ function Example() {
 
       <div slot="navbar">
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <DrawerToggle />
+          <DrawerToggle style={{ marginInlineEnd: 'var(--vaadin-gap-s)' }} />
           <h2 style={h2Style}>Orders</h2>
         </div>
 

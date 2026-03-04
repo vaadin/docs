@@ -80,7 +80,9 @@ export class Example extends LitElement {
         </vaadin-scroller>
         <vaadin-vertical-layout slot="navbar">
           <vaadin-horizontal-layout style="align-items: center;">
-            <vaadin-drawer-toggle></vaadin-drawer-toggle>
+            <vaadin-drawer-toggle
+              style="margin-inline-end: var(--vaadin-gap-s)"
+            ></vaadin-drawer-toggle>
             <h2>Orders</h2>
           </vaadin-horizontal-layout>
           <vaadin-horizontal-layout

@@ -32,6 +32,7 @@ public class AppLayoutSecondaryNavigation extends AppLayout {
         Scroller scroller = new Scroller(views);
 
         DrawerToggle toggle = new DrawerToggle();
+        toggle.getStyle().set("margin-inline-end", "var(--vaadin-gap-s)");
 
         H2 viewTitle = new H2("Orders");
         viewTitle.getStyle().set("font-size", "1.125rem").set("margin", "0");
