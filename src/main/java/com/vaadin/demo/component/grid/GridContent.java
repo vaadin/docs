@@ -42,7 +42,7 @@ public class GridContent extends Div {
                 .<Person> of(
                         """
                                 <div class="person-item">
-                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" style="--vaadin-avatar-size: 2.25rem"></vaadin-avatar>
                                   <span>${item.fullName}</span>
                                   <span>${item.email}</span>
                                 </div>

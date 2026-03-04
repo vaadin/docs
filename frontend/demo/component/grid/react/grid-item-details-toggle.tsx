@@ -53,7 +53,7 @@ function Example() {
             : [...detailsOpenedItems.value, person];
         }}
       >
-        <Icon icon={isExpanded ? 'lumo:angle-down' : 'lumo:angle-right'} />
+        <Icon icon={isExpanded ? 'vaadin:angle-down' : 'vaadin:angle-right'} />
       </Button>
     );
   }, []);

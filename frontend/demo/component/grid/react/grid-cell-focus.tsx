@@ -51,14 +51,12 @@ function Example() {
         <GridColumn path="profession" />
       </Grid>
 
-      <div>
-        <TextArea
-          label="Cell focus event information"
-          readonly
-          value={eventSummary.value}
-          style={{ width: '100%' }}
-        />
-      </div>
+      <TextArea
+        style={{ marginTop: 'var(--vaadin-gap-l)', padding: '0' }}
+        label="Cell focus event information"
+        readonly
+        value={eventSummary.value}
+      />
     </>
   );
 }
