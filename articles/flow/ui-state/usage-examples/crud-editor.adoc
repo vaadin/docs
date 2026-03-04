@@ -1,0 +1,152 @@
+---
+title: Crud Form Editor
+description: Building an form editor CRUD interface for creating and updating data in a grid using signals.
+order: 25
+---
+
+= Crud Form Editor using Signals
+
+This guide demonstrates how to create a reactive CRUD (Create, Read, Update, Delete) form editor that synchronizes with a grid using signals. The approach eliminates complex event handling chains while maintaining robust functionality.
+
+== The Use Case
+
+We want to create an interface where users can:
+
+- View items in a grid
+- Select an item for editing
+- See immediate form updates based on selection
+- Create new or update existing items
+- Save changes with proper validation feedback
+
+The key challenge is managing the selected item state reactively, ensuring UI components stay perfectly synchronized without manual coordination.
+
+== Architecture Overview
+
+Our solution leverages three core concepts with clean separation of concerns:
+
+- *Signals* for reactive state management (especially for the selected item)
+- *Binder* for form-to-data binding and validation
+- *Effects* to synchronize data between grid selection and form
+
+== Implementation Steps
+
+=== 1. Create the Item Grid and Form
+
+First, we need a data model class that represents our items:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=data-model,indent=0]
+// Constructor, getters, and setters are omitted for brevity
+----
+
+Set up a grid to display items and manage selection:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=grid-setup,indent=0]
+----
+
+Create and bind the form fields using the binder:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=form,indent=0]
+----
+
+=== 2. Synchronize Grid Selection and the Form using a Signal
+
+Use [classname]`ValueSignal` to track the currently selected item:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=item-signal,indent=0]
+----
+
+This signal will hold either a real selected item (for editing) or a special `NEW_ITEM` placeholder for creating new items.
+The new item is the initial value, as nothing is selected by default.
+
+Now create bidirectional synchronization between grid selection and the signal:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=selection,indent=0]
+----
+
+Next, add an effect to update the binder with the selected item data:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=binder-signal,indent=0]
+----
+
+[NOTE]
+====
+We use [methodname]`Binder::readBean(bean)` to update the form data using
+a signal. This is the preferred approach.
+
+Avoid using [methodname]`Binder::setBean(beanInstance)` with signals, as this
+enables the binder to change the bean properties directly using setter methods.
+Such changes are not detected by signals.
+
+To update the signal with the changes from the binder,
+use [methodname]`Binder::writeBean(bean)` combined with the `signal.set(bean)`,
+see the example below.
+====
+
+Now create and bind individual form fields:
+
+=== 3. Create a Dynamic Save Button
+
+Add a derived boolean signal to distinguish between creating a new and exiting
+an existing item selected in the grid.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=derived-signal,indent=0]
+----
+
+Add the save button with reactive label and behavior depending on whether a new
+or existing item is being edited:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=save-snippet,indent=0]
+----
+
+Combine all components and add them to your view:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/CrudEditorExample.java[tags=layout,indent=0]
+----
+
+== Key Takeaways
+
+**Using signals for UI state**::
+    The `selectedItemSignal` becomes the single source of truth for "which item
+    is being edited". All components that need to display/edit this item can
+    react to changes in this signal. The grid and form stay perfectly
+    synchronized without manual coordination.
+**Adding derived signals for computed logic**::
+    The `creatingItemSignal` tells us whether we're editing a new (unsaved)
+    item or an existing one. This drives dynamic behavior like button labels
+    and data persistence logic.
+**Using effects for UI reactivity**::
+    [methodname]`Signal.effect()` performs reactive UI updates based on signal
+    dependencies.
+[methodname]`Binder::readBean(bean)` and [methodname]`Biner::writeBean(bean)`::
+    Used to synchronize the form state between the binder and the bean state
+    signal.
+**When to use `Signal::peek()`**::
+    When you need the current value but don't want to create a dependency on
+    the signal. For example, in event handlers where you just need the current
+    state without subscribing to changes.
+
+== Related Topics
+
+- <<./binder-integration#,Form Binding with Dynamic Validation>> - Combining Binder with signals for forms with dynamic validation logic
+- <<../local-signals#,Local Signals>> - Understanding ValueSignal and two-way binding
+- <<../effects-computed#,Effects and Computed Signals>> - Creating derived values
+- <<../building-ui#,Component Bindings>> - Binding signals to component properties
+- <<../../components/grid#,Grid>> - Reference documentation for Grid component
