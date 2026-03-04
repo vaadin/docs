@@ -1,0 +1,96 @@
+---
+title: LLM Providers
+description: Connect the AIOrchestrator to Spring AI, LangChain4j, or a custom LLM framework using the LLMProvider interface.
+meta-description: Learn how to configure LLM providers for the Vaadin AIOrchestrator, including Spring AI, LangChain4j, and custom implementations.
+order: 20
+---
+
+
+= LLM Providers
+
+ifdef::flow[]
+
+The orchestrator uses the [classname]`LLMProvider` interface to communicate with LLM frameworks. Use the static [methodname]`LLMProvider.from(...)` factory methods to create a provider from a vendor-specific model or client object. Two implementations are provided: one for Spring AI and one for LangChain4j.
+
+.Memory Window Limit
+[IMPORTANT]
+Both built-in providers maintain a 30-message memory window. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
+
+
+== Spring AI
+
+[classname]`SpringAILLMProvider` supports both streaming and synchronous Spring AI models.
+
+[source,java]
+----
+// From ChatModel - use an implementation of Spring AI ChatModel
+ChatModel chatModel = OpenAiChatModel.builder()
+    .openAiApi(...).defaultOptions(...).build();
+SpringAILLMProvider provider = LLMProvider.from(chatModel);
+
+// From ChatClient - use a Spring AI ChatClient
+ChatClient chatClient = ChatClient.builder(...)
+    .defaultAdvisors(...).build();
+SpringAILLMProvider provider = LLMProvider.from(chatClient);
+----
+
+When created from a [classname]`ChatModel`, the provider manages its own conversation memory using a 30-message window. When created from a [classname]`ChatClient`, memory must be configured externally on the client.
+
+Streaming is enabled by default. To disable it, call [methodname]`setStreaming(false)`:
+
+[source,java]
+----
+provider.setStreaming(false);
+----
+
+.History Restoration with ChatClient
+[NOTE]
+History restoration via [methodname]`withHistory()` is only supported when creating the provider from a [classname]`ChatModel`. Providers created from a [classname]`ChatClient` do not provide access to internal memory, so calling [methodname]`setHistory()` throws an [classname]`UnsupportedOperationException`. Use [methodname]`LLMProvider.from(chatModel)` if you need to restore conversation history across sessions.
+
+
+== LangChain4j
+
+[classname]`LangChain4JLLMProvider` supports both streaming and synchronous LangChain4j models. The mode is determined by the model type passed to the factory method:
+
+[source,java]
+----
+// Streaming mode - use an implementation of LangChain4j StreamingChatModel
+StreamingChatModel streamingChatModel = OpenAiStreamingChatModel.builder()
+    .apiKey(...).modelName(...).build();
+LangChain4JLLMProvider provider = LLMProvider.from(streamingChatModel);
+
+// Synchronous mode - use an implementation of LangChain4j ChatModel
+ChatModel chatModel = OpenAiChatModel.builder()
+    .apiKey(...).modelName(...).build();
+LangChain4JLLMProvider provider = LLMProvider.from(chatModel);
+----
+
+The provider manages its own conversation memory using a 30-message window.
+
+
+== Custom LLM Providers
+
+Implement the [classname]`LLMProvider` interface to connect to any LLM framework:
+
+[source,java]
+----
+public class MyLLMProvider implements LLMProvider {
+
+    @Override
+    public Flux<String> stream(LLMRequest request) {
+        // Return a reactive stream of response tokens
+        // request.userMessage()  -- the user's prompt
+        // request.attachments()  -- any file attachments
+        // request.systemPrompt() -- the system prompt
+        // request.tools()        -- registered tool objects
+    }
+
+    @Override
+    public void setHistory(List<ChatMessage> history,
+            Map<String, List<AIAttachment>> attachmentsByMessageId) {
+        // Restore conversation context
+    }
+}
+----
+
+endif::flow[]
