@@ -40,7 +40,7 @@ public class SideNavLabelled extends Div {
         // end::snippet[]
 
         VerticalLayout navWrapper = new VerticalLayout(messagesNav, adminNav);
-        navWrapper.setSpacing("1em");
+        navWrapper.setSpacing(true);
         navWrapper.setSizeUndefined();
         messagesNav.setWidthFull();
         adminNav.setWidthFull();
