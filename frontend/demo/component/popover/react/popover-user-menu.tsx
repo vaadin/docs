@@ -27,15 +27,15 @@ function Example() {
 
   return (
     <>
-      <HorizontalLayout style={{ background: 'var(--lumo-contrast-5pct)' }}>
+      <HorizontalLayout style={{ background: 'var(--vaadin-background-container)' }}>
         <Button
           id="avatar"
-          theme="icon tertiary-inline"
-          style={{ margin: 'var(--lumo-space-s)', marginInlineStart: 'auto', borderRadius: '50%' }}
+          theme="icon tertiary"
+          style={{ margin: 'var(--vaadin-gap-s)', marginInlineStart: 'auto', borderRadius: '50%', padding: 0 }}
         >
           <Avatar
             tabIndex={-1}
-            style={{ display: 'block', cursor: 'pointer' }}
+            style={{ display: 'block', cursor: 'var(--vaadin-clickable-cursor)' }}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
           />
