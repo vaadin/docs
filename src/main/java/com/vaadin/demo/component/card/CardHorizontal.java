@@ -12,7 +12,7 @@ public class CardHorizontal extends Div {
     public CardHorizontal() {
         // tag::snippet[]
         Card card = new Card();
-        card.addThemeVariants(CardVariant.LUMO_HORIZONTAL);
+        card.addThemeVariants(CardVariant.HORIZONTAL);
 
         card.setMedia(new Avatar("Lapland"));
         card.setTitle(new Div("Lapland"));
