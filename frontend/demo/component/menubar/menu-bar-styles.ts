@@ -1,17 +1,12 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/horizontal-layout';
 import '@vaadin/menu-bar';
-import { css, html, LitElement } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('menu-bar-styles')
 export class Example extends LitElement {
-  static override styles = css`
-    vaadin-menu-bar {
-      display: inline-block;
-    }
-  `;
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -20,23 +15,25 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-menu-bar
-        .items="${[{ text: 'Default', children: [{ text: 'Item' }] }]}"
-      ></vaadin-menu-bar>
-      <vaadin-menu-bar
-        theme="tertiary"
-        .items="${[{ text: 'Tertiary', children: [{ text: 'Item' }] }]}"
-      ></vaadin-menu-bar>
-      <vaadin-menu-bar
-        theme="primary"
-        .items="${[{ text: 'Primary', children: [{ text: 'Item' }] }]}"
-      ></vaadin-menu-bar>
-      <vaadin-menu-bar
-        theme="small"
-        .items="${[{ text: 'Small', children: [{ text: 'Item' }] }]}"
-      ></vaadin-menu-bar>
-      <!-- end::snippet[] -->
+      <vaadin-horizontal-layout theme="spacing">
+        <!-- tag::snippet[] -->
+        <vaadin-menu-bar
+          .items="${[{ text: 'Default', children: [{ text: 'Item' }] }]}"
+        ></vaadin-menu-bar>
+        <vaadin-menu-bar
+          theme="tertiary"
+          .items="${[{ text: 'Tertiary', children: [{ text: 'Item' }] }]}"
+        ></vaadin-menu-bar>
+        <vaadin-menu-bar
+          theme="primary"
+          .items="${[{ text: 'Primary', children: [{ text: 'Item' }] }]}"
+        ></vaadin-menu-bar>
+        <vaadin-menu-bar
+          theme="small"
+          .items="${[{ text: 'Small', children: [{ text: 'Item' }] }]}"
+        ></vaadin-menu-bar>
+        <!-- end::snippet[] -->
+      </vaadin-horizontal-layout>
     `;
   }
 }

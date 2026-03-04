@@ -5,7 +5,6 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 const anchorStyle = {
   textDecoration: 'none',
-  color: 'var(--lumo-primary-text-color)',
 };
 
 function Example() {
