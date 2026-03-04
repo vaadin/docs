@@ -97,12 +97,12 @@ public class PopoverAnchoredDialog extends Div {
         Button showAll = new Button("Show all", (e) -> {
             group.setValue(new HashSet<String>(columns));
         });
-        showAll.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        showAll.addThemeVariants(ButtonVariant.SMALL);
 
         Button reset = new Button("Reset", (e) -> {
             group.setValue(defaultColumns);
         });
-        reset.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        reset.addThemeVariants(ButtonVariant.SMALL);
 
         HorizontalLayout footer = new HorizontalLayout(showAll, reset);
         footer.setSpacing("var(--vaadin-gap-xs)");
