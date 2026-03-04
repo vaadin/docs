@@ -43,9 +43,9 @@ export class Example extends LitElement {
     const icon = document.createElement('vaadin-icon');
 
     if (isChild) {
-      icon.style.width = 'var(--lumo-icon-size-s)';
-      icon.style.height = 'var(--lumo-icon-size-s)';
-      icon.style.marginRight = 'var(--lumo-space-s)';
+      icon.style.width = '1.25rem';
+      icon.style.height = '1.25rem';
+      icon.style.marginRight = 'var(--vaadin-gap-s)';
     }
 
     if (iconName === 'copy') {
