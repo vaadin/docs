@@ -18,7 +18,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-button aria-label="Close dialog" theme="icon">
-        <vaadin-icon icon="vaadin:close" slot="prefix"></vaadin-icon>
+        <vaadin-icon icon="vaadin:close"></vaadin-icon>
       </vaadin-button>
       <!-- end::snippet[] -->
     `;

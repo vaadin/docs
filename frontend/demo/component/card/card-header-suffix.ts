@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/card';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -19,7 +20,7 @@ export class Example extends LitElement {
         <div slot="title">Lapland</div>
         <div slot="subtitle">The Exotic North</div>
         <!-- tag::[] -->
-        <span slot="header-suffix" theme="badge success">Arctic</span>
+        <vaadin-badge slot="header-suffix" theme="success">Arctic</vaadin-badge>
         <!-- end::[] -->
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
       </vaadin-card>

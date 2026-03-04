@@ -1,5 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
+import '@vaadin/badge';
 import '@vaadin/button';
 import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
@@ -53,6 +54,7 @@ export class Example extends LitElement {
       <vaadin-avatar
         img="${person.pictureUrl}"
         name="${person.firstName} ${person.lastName}"
+        style="--vaadin-avatar-size: 2.25rem"
       ></vaadin-avatar>
       <span>${person.firstName} ${person.lastName}</span>
       <span>${person.email}</span>
@@ -60,7 +62,7 @@ export class Example extends LitElement {
   `;
 
   private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => html`
-    <span theme="badge ${status === 'Available' ? 'success' : 'error'}">${status}</span>
+    <vaadin-badge theme="${status === 'Available' ? 'success' : 'error'}">${status}</vaadin-badge>
   `;
   // end::snippet[]
 }
