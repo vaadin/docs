@@ -38,7 +38,7 @@ public class GridDynamicHeight extends Div {
         comboBox.setItemLabelGenerator(Person::getFullName);
 
         Button button = new Button("Send invite");
-        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        button.addThemeVariants(ButtonVariant.PRIMARY);
         button.addClickListener(e -> {
             sendInvitation(comboBox.getValue());
             comboBox.setValue(null);
@@ -62,9 +62,8 @@ public class GridDynamicHeight extends Div {
                 .setHeader("Phone");
         grid.addColumn(
                 new ComponentRenderer<>(Button::new, (button, person) -> {
-                    button.addThemeVariants(ButtonVariant.LUMO_ICON,
-                            ButtonVariant.LUMO_ERROR,
-                            ButtonVariant.LUMO_TERTIARY);
+                    button.addThemeVariants(ButtonVariant.ERROR,
+                            ButtonVariant.TERTIARY);
                     button.addClickListener(e -> this.removeInvitation(person));
                     button.setIcon(new Icon(VaadinIcon.TRASH));
                 })).setHeader("Manage");

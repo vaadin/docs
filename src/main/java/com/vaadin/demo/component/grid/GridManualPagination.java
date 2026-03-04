@@ -149,7 +149,7 @@ public class GridManualPagination extends VerticalLayout {
 
         private Component createPageSizeField() {
             Select<Integer> select = new Select<>();
-            select.addThemeVariants(SelectVariant.LUMO_SMALL);
+            select.addThemeVariants(SelectVariant.SMALL);
             select.setWidth("4.8rem");
             select.setItems(10, 15, 25, 50, 100);
             select.setValue(pageSize);
@@ -244,8 +244,7 @@ public class GridManualPagination extends VerticalLayout {
         private Button createIconButton(VaadinIcon icon, String ariaLabel,
                 Runnable onClickListener) {
             Button button = new Button(new Icon(icon));
-            button.addThemeVariants(ButtonVariant.LUMO_ICON,
-                    ButtonVariant.LUMO_SMALL);
+            button.addThemeVariants(ButtonVariant.SMALL);
             button.addClickListener(e -> {
                 onClickListener.run();
                 updateControls();
