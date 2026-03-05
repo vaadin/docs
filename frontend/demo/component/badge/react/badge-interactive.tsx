@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
+  Badge,
   Button,
   type ButtonElement,
   ComboBox,
@@ -53,19 +54,19 @@ function Example() {
 
       <HorizontalLayout theme="spacing wrap">
         {selectedProfessions.value.map((profession) => (
-          <span key={profession} {...{ theme: 'badge pill contrast' }}>
+          <Badge key={profession} style={{ paddingRight: '0' }}>
             <span>{profession}</span>
             <Button
               aria-label={`Clear filter: ${profession}`}
               data-profession={profession}
-              theme="contrast tertiary-inline"
+              theme="tertiary"
               title={`Clear filter: ${profession}`}
-              style={{ marginInlineStart: 'var(--lumo-space-xs)' }}
+              style={{ height: '1.5rem', minWidth: '1.5rem', margin: '0', padding: '0' }}
               onClick={onClick}
             >
               <Icon icon="vaadin:close-small" />
             </Button>
-          </span>
+          </Badge>
         ))}
       </HorizontalLayout>
     </VerticalLayout>

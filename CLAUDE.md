@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the Vaadin Documentation repository. It contains documentation for all Vaadin products, both open source and commercial.
 
+The main branch is `main`. Always target `main` when creating pull requests, unless explicitly told to target another branch. Do not target `latest` — it is a tag, not a branch.
+
 ## Directories
 
 * .github/styles/ - Configuration files for Vale, which define the writing style guide and formatting rules for the documentation.

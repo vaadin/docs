@@ -16,7 +16,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-button theme="icon">
+      <vaadin-button>
         <img src="${img}" width="100" alt="Vaadin logo" />
       </vaadin-button>
       <!-- end::snippet[] -->

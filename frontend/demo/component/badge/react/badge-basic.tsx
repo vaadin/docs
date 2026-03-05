@@ -1,18 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
+import { Badge, HorizontalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      {/* Since a native span element does not know about the theme attribute, as a workaround, you
-        can use the spread operator to pass the theme attribute to the span element. */}
-      <span {...{ theme: 'badge' }}>Pending</span>
-      <span {...{ theme: 'badge success' }}>Confirmed</span>
-      <span {...{ theme: 'badge warning' }}>Warning</span>
-      <span {...{ theme: 'badge error' }}>Denied</span>
-      <span {...{ theme: 'badge contrast' }}>On hold</span>
+      <Badge>Pending</Badge>
+      <Badge theme="success">Confirmed</Badge>
+      <Badge theme="warning">Warning</Badge>
+      <Badge theme="error">Denied</Badge>
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

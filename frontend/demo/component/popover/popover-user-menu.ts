@@ -29,15 +29,15 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout style="background: var(--lumo-contrast-5pct);">
+      <vaadin-horizontal-layout style="background: var(--vaadin-background-container);">
         <vaadin-button
           id="avatar"
-          theme="icon tertiary-inline"
-          style="margin: var(--lumo-space-s); margin-inline-start: auto; border-radius: 50%;"
+          theme="icon tertiary"
+          style="margin: var(--vaadin-gap-s); margin-inline-start: auto; padding: 0; border-radius: 50%;"
         >
           <vaadin-avatar
             tabindex="-1"
-            style="display: block; cursor:pointer;"
+            style="display: block; cursor: var(--vaadin-clickable-cursor);"
             .img="${this.person?.pictureUrl}"
             .name="${`${this.person?.firstName} ${this.person?.lastName}`}"
           ></vaadin-avatar>
@@ -58,10 +58,6 @@ export class Example extends LitElement {
     `;
   }
 
-  // NOTE
-  // We are using inline styles here to keep the example simple.
-  // We recommend placing CSS in a separate style sheet and
-  // encapsulating the styling in a new component.
   renderUserMenu(person?: Person) {
     const { firstName, lastName, pictureUrl } = person ?? {};
     const nickName = `@${firstName}${lastName}`.toLowerCase();

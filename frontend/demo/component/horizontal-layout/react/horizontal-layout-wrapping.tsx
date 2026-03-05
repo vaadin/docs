@@ -1,10 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import { HorizontalLayout } from '@vaadin/react-components';
-import layoutExampleStyle from './layoutExampleStyle'; // hidden-source-line
 
 function Example() {
   return (
-    <>
+    <div className="basic-layouts-example">
       <p>Horizontal layout without wrapping:</p>
       <HorizontalLayout
         theme="spacing margin padding"
@@ -31,8 +30,8 @@ function Example() {
         {/* tag::snippet[] */}
       </HorizontalLayout>
       {/* end::snippet[] */}
-    </>
+    </div>
   );
 }
 
-export default reactExample(Example, layoutExampleStyle); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

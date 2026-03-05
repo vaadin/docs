@@ -13,10 +13,10 @@ public class CardVariants extends Div {
         Card cardDefault = new Card();
 
         Card cardOutlined = new Card();
-        cardOutlined.addThemeVariants(CardVariant.LUMO_OUTLINED);
+        cardOutlined.addThemeVariants(CardVariant.OUTLINED);
 
         Card cardElevated = new Card();
-        cardElevated.addThemeVariants(CardVariant.LUMO_ELEVATED);
+        cardElevated.addThemeVariants(CardVariant.ELEVATED);
 
         // end::snippet[]
 
@@ -27,7 +27,7 @@ public class CardVariants extends Div {
         cardOutlined.add(new Div("Adds a solid outline around the card."));
 
         cardElevated.setTitle("Elevated");
-        cardOutlined.add(
+        cardElevated.add(
                 new Div("This variant works better on a shaded background."));
 
         Div cardVariantsLayout = new Div(cardDefault, cardOutlined,

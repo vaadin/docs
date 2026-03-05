@@ -27,15 +27,20 @@ function Example() {
 
   return (
     <>
-      <HorizontalLayout style={{ background: 'var(--lumo-contrast-5pct)' }}>
+      <HorizontalLayout style={{ background: 'var(--vaadin-background-container)' }}>
         <Button
           id="avatar"
-          theme="icon tertiary-inline"
-          style={{ margin: 'var(--lumo-space-s)', marginInlineStart: 'auto', borderRadius: '50%' }}
+          theme="icon tertiary"
+          style={{
+            margin: 'var(--vaadin-gap-s)',
+            marginInlineStart: 'auto',
+            borderRadius: '50%',
+            padding: 0,
+          }}
         >
           <Avatar
             tabIndex={-1}
-            style={{ display: 'block', cursor: 'pointer' }}
+            style={{ display: 'block', cursor: 'var(--vaadin-clickable-cursor)' }}
             img={pictureUrl}
             name={`${firstName} ${lastName}`}
           />
@@ -50,16 +55,14 @@ function Example() {
         aria-label="User menu"
         theme="no-padding"
       >
-        <div className='person-item' style={{padding: 'var(--vaadin-padding-s)'}}>
-          <Avatar
-            img={pictureUrl}
-            name={`${firstName} ${lastName}`}
-          />
-          <span>{firstName} {lastName}</span>
+        <div className="person-item" style={{ padding: 'var(--vaadin-padding-s)' }}>
+          <Avatar img={pictureUrl} name={`${firstName} ${lastName}`} />
+          <span>
+            {firstName} {lastName}
+          </span>
           <span>{nickName}</span>
         </div>
-        <VerticalLayout className="userMenuLinks"
-          style={{alignItems:'stretch', width:'100%'}}>
+        <VerticalLayout className="userMenuLinks" style={{ alignItems: 'stretch', width: '100%' }}>
           <a href="#" role="menuitem">
             User profile
           </a>

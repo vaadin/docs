@@ -1,46 +1,20 @@
 ---
 title: Snapshots
 page-title: How to use snapshots in Vaadin browserless testing
-description: About the snapshots returned by a failing browserless test.
-meta-description: Learn how to capture and compare snapshots during Vaadin browserless testing.
+description: Use UI snapshots to debug failing browserless tests.
+meta-description: Learn how to enable and use UI snapshots to debug failing Vaadin browserless tests by inspecting the component tree.
 order: 30
 ---
 
 
-= Snapshots in Browserless Testing
+= Debugging with UI Snapshots
 
-A failing [classname]`BrowserlessTest` can return a text representation of the user interface, a "UI snapshot". The snapshot represents the state of the UI at the moment the test failed.
-
-.An example of a UI snapshot
-----
-└── UI[]
-    ├── MainLayout[primarySection='drawer']
-    │   ├── Header[@class='view-header', @slot='navbar touch-optimized']
-    │   │   ├── DrawerToggle[@aria-label='Menu toggle', @class='view-toggle', @theme='contrast']
-    │   │   └── H1[text='Hello World', @class='view-title']
-    │   ├── Section[@class='drawer-section', @slot='drawer']
-    │   │   ├── H2[text='My App', @class='app-name']
-    │   │   ├── Nav[@aria-labelledby='views', @class='menu-item-container']
-    │   │   │   └── UnorderedList[@class='navigation-list']
-    │   │   │       ├── MenuItemInfo[]
-    │   │   │       │   └── RouterLink[@class='menu-item-link']
-    │   │   │       │       ├── LineAwesomeIcon[@class='menu-item-icon la la-globe']
-    │   │   │       │       └── Span[text='Hello World', @class='menu-item-text']
-    │   │   │       └── MenuItemInfo[]
-    │   │   │           └── RouterLink[@class='menu-item-link']
-    │   │   │               ├── LineAwesomeIcon[@class='menu-item-icon la la-file']
-    │   │   │               └── Span[text='About', @class='menu-item-text']
-    │   │   └── Footer[@class='footer']
-    │   └── HelloWorldView[@theme='margin spacing']
-    │       ├── TextField[label='Your name', value='', @style='align-self:flex-end']
-    │       └── Button[caption='Say hello', @style='align-self:flex-end']
-    └── Notification[duration='5000', opened='true', position='bottom-start']
-----
+When a browserless test fails, it can be hard to tell why. The assertion message might say a component wasn't found or had an unexpected value, but it doesn't show you what the UI _actually_ looked like. UI snapshots solve this by printing a text representation of the entire component tree at the moment of failure, so you can see exactly what was on screen.
 
 
-== Enabling UI Snapshots
+== Enabling Snapshots
 
-UI snapshots aren't enabled by default. To enable them, add the [annotationname]`@ExtendWith(TreeOnFailureExtension.class)` annotation to the test class:
+Snapshots aren't enabled by default. Add the [annotationname]`@ExtendWith(TreeOnFailureExtension.class)` annotation to your test class:
 
 [source,java]
 ----
@@ -50,7 +24,90 @@ class HelloWorldViewTest extends BrowserlessTest {
 }
 ----
 
-When a test fails, the extension automatically prints the UI tree to the test output.
+When any test in the class fails, the extension automatically prints the UI tree to the test output alongside the failure message.
+
+
+== Reading a Snapshot
+
+A snapshot is a tree showing every component currently in the UI, with its properties and attributes:
+
+----
+└── UI[]
+    └── HelloWorldView[@theme='margin spacing']
+        ├── TextField[label='Your name', value='', @style='align-self:flex-end']
+        └── Button[caption='Say hello', @style='align-self:flex-end']
+----
+
+Each line represents a component. The information in brackets tells you about its state:
+
+- **Component type** -- the class name at the start of each line (e.g., `TextField`, `Button`).
+- **Properties** -- server-side values like `label`, `value`, `caption`, and `opened`. These reflect the component's Java API state.
+- **Attributes** -- prefixed with `@` (e.g., `@class`, `@style`, `@theme`). These are the HTML element attributes set on the component.
+- **Nesting** -- the tree structure shows parent-child relationships, matching how components are added to layouts in your code.
+
+
+== Using Snapshots to Debug Failures
+
+Suppose you have a view like this:
+
+[source,java]
+----
+@Route("")
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            if (!name.getValue().isEmpty()) {
+                Notification.show("Hello " + name.getValue());
+            }
+        });
+        add(name, sayHello);
+    }
+}
+----
+
+And a test for it:
+
+[source,java]
+----
+@Test
+public void clickSayHello_showsGreeting() {
+    HelloWorldView view = navigate(HelloWorldView.class);
+    test(view.sayHello).click();
+    Notification notification = $(Notification.class).single();
+    assertEquals("Hello World", test(notification).getText());
+}
+----
+
+The test fails because no [classname]`Notification` was found. The assertion error alone doesn't explain why. With snapshots enabled, the test output includes the UI tree:
+
+----
+└── UI[]
+    └── HelloWorldView[@theme='margin spacing']
+        ├── TextField[label='Your name', value='']
+        └── Button[caption='Say hello']
+----
+
+Now you can see:
+
+- There's no [classname]`Notification` in the tree -- the click didn't produce one.
+- The [classname]`TextField` has `value=''` -- the name field is empty.
+- Looking back at the view code, the greeting is `"Hello " + name.getValue()`. The test forgot to set a name first, and an empty greeting might have been suppressed or the logic depends on a non-empty name.
+
+Without the snapshot, you'd have to guess. With it, the empty `value=''` points you straight to the problem.
+
+
+== Tips
+
+- **Look for what's missing.** If a query like `$(Notification.class).single()` fails, the snapshot shows you that the component simply isn't there. Check the tree for clues about why it wasn't created.
+- **Check property values.** When an assertion on a component's text or value fails, find that component in the tree and compare its actual properties to what you expected.
+- **Watch for unexpected components.** If `$(Button.class).single()` fails because multiple buttons were found, the snapshot shows you all of them so you can narrow your query.
+- **Inspect the layout hierarchy.** If a component appears in the tree but a scoped query like `$view(TextField.class)` can't find it, the snapshot helps you see whether the component is nested inside the expected parent.
 
 
 [discussion-id]`99487CB3-54AB-4C0A-8A46-926A527EB381`

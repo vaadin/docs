@@ -14,9 +14,8 @@ public class PasswordFieldStyles extends HorizontalLayout {
 
         // tag::snippet[]
         PasswordField field = new PasswordField();
-        field.addThemeVariants(TextFieldVariant.LUMO_SMALL,
-                TextFieldVariant.LUMO_ALIGN_RIGHT,
-                TextFieldVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.addThemeVariants(TextFieldVariant.SMALL,
+                TextFieldVariant.ALIGN_RIGHT, TextFieldVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

@@ -1,15 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
+import { Badge, HorizontalLayout } from '@vaadin/react-components';
 
 function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <Button theme="primary contrast">Primary</Button>
-      <Button theme="secondary contrast">Secondary</Button>
-      <Button theme="tertiary contrast">Tertiary (avoid)</Button>
+      <Badge theme="dot">Pending</Badge>
+      <Badge theme="dot success">Confirmed</Badge>
+      <Badge theme="dot warning">Warning</Badge>
+      <Badge theme="dot error">Denied</Badge>
       {/* end::snippet[] */}
     </HorizontalLayout>
   );

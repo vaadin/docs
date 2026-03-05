@@ -1,10 +1,11 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('badge-shape')
+@customElement('badge-number')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -16,11 +17,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <span theme="badge pill">Pending</span>
-        <span theme="badge success pill">Confirmed</span>
-        <span theme="badge warning pill">Warning</span>
-        <span theme="badge error pill">Denied</span>
-        <span theme="badge contrast pill">On hold</span>
+        <vaadin-badge .number="${12}">Inbox</vaadin-badge>
+        <vaadin-badge .number="${3}" theme="success">Completed</vaadin-badge>
+        <vaadin-badge .number="${1}" theme="error">Failed</vaadin-badge>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

@@ -1,9 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
 import '@vaadin/grid';
-import '@vaadin/grid/vaadin-grid-sorter.js';
-import '@vaadin/horizontal-layout';
-import '@vaadin/vertical-layout';
+import '@vaadin/grid/vaadin-grid-sort-column.js';
 import { differenceInYears, format, parseISO } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -47,18 +45,15 @@ export class Example extends LitElement {
   }
 
   private employeeRenderer: GridColumnBodyLitRenderer<Person> = (person) => html`
-    <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+    <div class="person-item">
       <vaadin-avatar
         img="${person.pictureUrl}"
         name="${person.firstName} ${person.lastName}"
+        style="--vaadin-avatar-size: 2.25rem"
       ></vaadin-avatar>
-      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-        <span>${person.firstName} ${person.lastName}</span>
-        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-          ${person.email}
-        </span>
-      </vaadin-vertical-layout>
-    </vaadin-horizontal-layout>
+      <span>${person.firstName} ${person.lastName}</span>
+      <span>${person.email}</span>
+    </div>
   `;
 
   private birthdayHeaderRenderer = () => html`
@@ -68,12 +63,10 @@ export class Example extends LitElement {
   private birthdayRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
     const birthday = parseISO(person.birthday);
     return html`
-      <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-        <span> ${format(birthday, 'P')} </span>
-        <span style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-          Age: ${differenceInYears(Date.now(), birthday)}
-        </span>
-      </vaadin-vertical-layout>
+      <div>${format(birthday, 'P')}</div>
+      <div style="font-size: .875rem; color: var(--vaadin-text-color-secondary);">
+        Age: ${differenceInYears(Date.now(), birthday)}
+      </div>
     `;
   };
   // end::snippet[]
