@@ -25,27 +25,19 @@ export class Example extends LitElement {
       <vaadin-tabs>
         <vaadin-tab>
           <span>Inbox</span>
-          <vaadin-badge .number="${12}" theme="filled number-only">
-            unread messages
-          </vaadin-badge>
+          <vaadin-badge .number="${12}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Important</span>
-          <vaadin-badge .number="${3}" theme="filled number-only">
-            unread messages
-          </vaadin-badge>
+          <vaadin-badge .number="${3}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Spam</span>
-          <vaadin-badge .number="${45}" theme="filled number-only">
-            unread messages
-          </vaadin-badge>
+          <vaadin-badge .number="${45}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Archive</span>
-          <vaadin-badge .number="${23}" theme="filled number-only">
-            unread messages
-          </vaadin-badge>
+          <vaadin-badge .number="${23}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->

@@ -6,7 +6,6 @@ import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import dialogBasicStyles from './dialog-basic-styles';
 
 function Example() {
