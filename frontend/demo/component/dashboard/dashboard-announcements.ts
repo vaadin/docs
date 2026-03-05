@@ -37,6 +37,16 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
 };
 
+const widgetRenderers: Record<WidgetType, () => ReturnType<typeof html>> = {
+  [WidgetType.VISITORS]: renderVisitorsWidget,
+  [WidgetType.DOWNLOADS]: renderDownloadsWidget,
+  [WidgetType.CONVERSIONS]: renderConversionsWidget,
+  [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
+  [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
+  [WidgetType.TRAFFIC_SOURCES]: renderTrafficSourcesWidget,
+  [WidgetType.VISITORS_PER_MONTH]: renderVisitorsPerMonthWidget,
+};
+
 @customElement('dashboard-announcements')
 export class Example extends LitElement {
   @state()
@@ -153,19 +163,10 @@ export class Example extends LitElement {
   // end::snippet[]
 
   renderWidget(root: HTMLElement, _dashboard: Dashboard, { item }: { item: WidgetConfig }) {
-    const renderers: Record<WidgetType, () => ReturnType<typeof html>> = {
-      [WidgetType.VISITORS]: renderVisitorsWidget,
-      [WidgetType.DOWNLOADS]: renderDownloadsWidget,
-      [WidgetType.CONVERSIONS]: renderConversionsWidget,
-      [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
-      [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
-      [WidgetType.TRAFFIC_SOURCES]: renderTrafficSourcesWidget,
-      [WidgetType.VISITORS_PER_MONTH]: renderVisitorsPerMonthWidget,
-    };
     render(
       html`
         <vaadin-dashboard-widget .widgetTitle="${widgetTitles[item.type]}">
-          ${renderers[item.type]()}
+          ${widgetRenderers[item.type]()}
         </vaadin-dashboard-widget>
       `,
       root

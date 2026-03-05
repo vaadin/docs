@@ -35,6 +35,16 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
 };
 
+const widgetComponents: Record<WidgetType, React.FC> = {
+  [WidgetType.VISITORS]: VisitorsWidget,
+  [WidgetType.DOWNLOADS]: DownloadsWidget,
+  [WidgetType.CONVERSIONS]: ConversionsWidget,
+  [WidgetType.VISITORS_BY_COUNTRY]: VisitorsByCountryWidget,
+  [WidgetType.BROWSER_DISTRIBUTION]: BrowsersWidget,
+  [WidgetType.TRAFFIC_SOURCES]: TrafficSourcesWidget,
+  [WidgetType.VISITORS_PER_MONTH]: VisitorsPerMonthWidget,
+};
+
 function Example() {
   useSignals(); // hidden-source-line
   const widgets = useSignal<WidgetConfig[]>([
@@ -46,23 +56,14 @@ function Example() {
     { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
     { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
   ]);
-  const widgetContent: Record<WidgetType, React.ReactNode> = {
-    [WidgetType.VISITORS]: <VisitorsWidget />,
-    [WidgetType.DOWNLOADS]: <DownloadsWidget />,
-    [WidgetType.CONVERSIONS]: <ConversionsWidget />,
-    [WidgetType.VISITORS_BY_COUNTRY]: <VisitorsByCountryWidget />,
-    [WidgetType.BROWSER_DISTRIBUTION]: <BrowsersWidget />,
-    [WidgetType.TRAFFIC_SOURCES]: <TrafficSourcesWidget />,
-    [WidgetType.VISITORS_PER_MONTH]: <VisitorsPerMonthWidget />,
-  };
-  const renderWidget = useCallback(
-    ({ item }: DashboardReactRendererProps<WidgetConfig>) => (
+  const renderWidget = useCallback(({ item }: DashboardReactRendererProps<WidgetConfig>) => {
+    const Content = widgetComponents[item.type];
+    return (
       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-        {widgetContent[item.type]}
+        <Content />
       </DashboardWidget>
-    ),
-    []
-  );
+    );
+  }, []);
 
   // tag::snippet[]
   const announcement = useSignal('');
