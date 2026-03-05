@@ -171,7 +171,7 @@ const SCRIPTS = {
           '--kill-others',
           '--raw',
           `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
-          `"mvn -C -Dspring-boot.run.arguments=--server.port=${docsPort}"`,
+          `"mvn -C -Pproduction -Dspring-boot.run.arguments=--server.port=${docsPort}"`,
         ],
         phases: [
           {
