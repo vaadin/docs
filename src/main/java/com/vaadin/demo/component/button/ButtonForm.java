@@ -25,7 +25,7 @@ public class ButtonForm extends VerticalLayout {
         formLayout.setColspan(emailField, 2);
 
         Button createAccount = new Button("Create account");
-        createAccount.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createAccount.addThemeVariants(ButtonVariant.PRIMARY);
         Button cancel = new Button("Cancel");
 
         HorizontalLayout buttonLayout = new HorizontalLayout(createAccount,

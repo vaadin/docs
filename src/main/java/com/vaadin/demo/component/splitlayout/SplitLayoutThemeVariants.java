@@ -15,7 +15,7 @@ public class SplitLayoutThemeVariants extends Div {
         DetailContent detail = new DetailContent();
 
         SplitLayout splitLayout = new SplitLayout(master, detail);
-        splitLayout.addThemeVariants(SplitLayoutVariant.LUMO_SMALL);
+        splitLayout.addThemeVariants(SplitLayoutVariant.SMALL);
         // end::snippet[]
 
         splitLayout.setMaxHeight("280px");

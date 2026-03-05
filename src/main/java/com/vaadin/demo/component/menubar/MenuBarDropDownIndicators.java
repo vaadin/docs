@@ -14,6 +14,7 @@ public class MenuBarDropDownIndicators extends Div {
     public MenuBarDropDownIndicators() {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
+        // Only for Lumo
         menuBar.addThemeVariants(MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
         // end::snippet[]
 

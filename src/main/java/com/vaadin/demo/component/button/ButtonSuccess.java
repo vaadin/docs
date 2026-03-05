@@ -12,15 +12,15 @@ public class ButtonSuccess extends Div {
     public ButtonSuccess() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
-                ButtonVariant.LUMO_SUCCESS);
+        primaryButton.addThemeVariants(ButtonVariant.PRIMARY,
+                ButtonVariant.SUCCESS);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+        secondaryButton.addThemeVariants(ButtonVariant.SUCCESS);
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
-                ButtonVariant.LUMO_SUCCESS);
+        tertiaryButton.addThemeVariants(ButtonVariant.TERTIARY,
+                ButtonVariant.SUCCESS);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,

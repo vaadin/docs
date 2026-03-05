@@ -3,9 +3,10 @@ package com.vaadin.demo.component.badge;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Report;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.Route;
 
@@ -35,24 +36,22 @@ public class BadgeHighlight extends Div {
     }
 
     // tag::snippet2[]
-    private Span createStatusBadge(String status) {
-        String theme;
+    private Badge createStatusBadge(String status) {
+        Badge badge = new Badge(status);
+        badge.addThemeVariants(BadgeVariant.FILLED);
         switch (status) {
-        case "In progress":
-            theme = "badge primary";
-            break;
         case "Completed":
-            theme = "badge success primary";
+            badge.addThemeVariants(BadgeVariant.SUCCESS);
             break;
         case "Cancelled":
-            theme = "badge error primary";
+            badge.addThemeVariants(BadgeVariant.ERROR);
+            break;
+        case "On hold":
+            badge.addThemeVariants(BadgeVariant.WARNING);
             break;
         default:
-            theme = "badge contrast primary";
             break;
         }
-        Span badge = new Span(status);
-        badge.getElement().getThemeList().add(theme);
         return badge;
     }
     // end::snippet2[]

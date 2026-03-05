@@ -1,9 +1,9 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Tab, Tabs } from '@vaadin/react-components';
+import { Badge, Tab, Tabs } from '@vaadin/react-components';
 
 const badgeStyle = {
-  marginInlineStart: 'var(--lumo-space-s)',
+  marginInlineStart: 'var(--vaadin-gap-s)',
 };
 
 function Example() {
@@ -12,47 +12,27 @@ function Example() {
     <Tabs>
       <Tab>
         <span>Inbox</span>
-        <span
-          {...{ theme: 'badge contrast pill small' }}
-          style={badgeStyle}
-          aria-label="12 unread messages"
-          title="12 unread messages"
-        >
-          12
-        </span>
+        <Badge number={12} theme="filled number-only" style={badgeStyle}>
+          unread messages
+        </Badge>
       </Tab>
       <Tab>
         <span>Important</span>
-        <span
-          {...{ theme: 'badge contrast pill small' }}
-          style={badgeStyle}
-          aria-label="3 unread messages"
-          title="3 unread messages"
-        >
-          3
-        </span>
+        <Badge number={3} theme="filled number-only" style={badgeStyle}>
+          unread messages
+        </Badge>
       </Tab>
       <Tab>
         <span>Spam</span>
-        <span
-          {...{ theme: 'badge contrast pill small' }}
-          style={badgeStyle}
-          aria-label="45 unread messages"
-          title="45 unread messages"
-        >
-          45
-        </span>
+        <Badge number={45} theme="filled number-only" style={badgeStyle}>
+          unread messages
+        </Badge>
       </Tab>
       <Tab>
         <span>Archive</span>
-        <span
-          {...{ theme: 'badge contrast pill small' }}
-          style={badgeStyle}
-          aria-label="23 unread messages"
-          title="23 unread messages"
-        >
-          23
-        </span>
+        <Badge number={23} theme="filled number-only" style={badgeStyle}>
+          unread messages
+        </Badge>
       </Tab>
     </Tabs>
     // end::snippet[]

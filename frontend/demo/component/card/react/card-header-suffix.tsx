@@ -1,5 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
+import { Badge } from '@vaadin/react-components/Badge.js';
 import { Card } from '@vaadin/react-components/Card.js';
 
 function Example() {
@@ -10,9 +11,9 @@ function Example() {
         <div slot="title">Lapland</div>
         <div slot="subtitle">The Exotic North</div>
         {/* tag::[] */}
-        <span slot="header-suffix" {...{ theme: 'badge success' }}>
+        <Badge slot="header-suffix" theme="success">
           Arctic
-        </span>
+        </Badge>
         {/* end::[] */}
         <div>Lapland is the northern-most region of Finland and an active outdoor destination.</div>
       </Card>

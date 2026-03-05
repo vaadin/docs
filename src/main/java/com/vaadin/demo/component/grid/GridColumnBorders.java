@@ -24,7 +24,7 @@ public class GridColumnBorders extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
 
-        grid.addThemeVariants(GridVariant.LUMO_COLUMN_BORDERS);
+        grid.addThemeVariants(GridVariant.COLUMN_BORDERS);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();
