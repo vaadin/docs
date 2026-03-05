@@ -145,27 +145,23 @@ public class DashboardEditable extends Div {
     }
 
     private CustomWidget createWidget(WidgetConfig config) {
-        // In this example all widget types have the same content, and the title
-        // is stored in the enum, so we can use generic logic to create a widget
+        // Create a widget with the appropriate content based on the type
         CustomWidget widget = new CustomWidget(config.getType(),
                 config.getType().getLabel());
-        widget.setContent(createWidgetContent());
+        widget.setContent(switch (config.getType()) {
+            case VISITORS -> MockWidgets.createVisitorsWidget();
+            case DOWNLOADS -> MockWidgets.createDownloadsWidget();
+            case CONVERSIONS -> MockWidgets.createConversionsWidget();
+            case VISITORS_BY_COUNTRY ->
+                    MockWidgets.createVisitorsByCountryWidget();
+            case BROWSER_DISTRIBUTION -> MockWidgets.createBrowsersWidget();
+            case CAT_IMAGE -> MockWidgets.createTrafficSourcesWidget();
+            case VISITORS_BY_BROWSER ->
+                    MockWidgets.createVisitorsPerMonthWidget();
+        });
         widget.setColspan(config.getColspan());
         widget.setRowspan(config.getRowspan());
 
-        // In practice, different widget types will have different content. In
-        // that case you can use a switch statement to create the widget content
-        // based on the type.
-        //
-        // @formatter:off hidden-source-line
-        // switch (config.type()) {
-        //     case VISITORS:
-        //         widget.setTitle("Visitors");
-        //         widget.setContent(new VisitorsWidgetContent());
-        //         break;
-        //     ...
-        // }
-        // @formatter:on hidden-source-line
         return widget;
     }
 
@@ -185,12 +181,6 @@ public class DashboardEditable extends Div {
         applyConfiguration(defaultConfig);
     }
     // end::snippet[]
-
-    private Div createWidgetContent() {
-        Div content = new Div();
-        content.setClassName("dashboard-widget-content");
-        return content;
-    }
 
     public static class Exporter extends DemoExporter<DashboardEditable> { // hidden-source-line
     } // hidden-source-line

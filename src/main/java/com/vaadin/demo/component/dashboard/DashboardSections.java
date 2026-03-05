@@ -20,15 +20,15 @@ public class DashboardSections extends Div {
                 .addSection("Monthly Funnel Stats");
 
         DashboardWidget visitors = new DashboardWidget("Visitors");
-        visitors.setContent(createWidgetContent());
+        visitors.setContent(MockWidgets.createVisitorsWidget());
         statsSection.add(visitors);
 
         DashboardWidget downloads = new DashboardWidget("Downloads");
-        downloads.setContent(createWidgetContent());
+        downloads.setContent(MockWidgets.createDownloadsWidget());
         statsSection.add(downloads);
 
         DashboardWidget conversions = new DashboardWidget("Conversions");
-        conversions.setContent(createWidgetContent());
+        conversions.setContent(MockWidgets.createConversionsWidget());
         statsSection.add(conversions);
         // end::snippet[]
 
@@ -36,32 +36,30 @@ public class DashboardSections extends Div {
                 .addSection("Visitor Details");
         DashboardWidget visitorsByCountry = new DashboardWidget(
                 "Visitors by country");
-        visitorsByCountry.setContent(createWidgetContent());
+        visitorsByCountry.setContent(
+                MockWidgets.createVisitorsByCountryWidget());
         visitorsByCountry.setRowspan(2);
         detailsSection.add(visitorsByCountry);
 
-        DashboardWidget browserDistribution = new DashboardWidget("Browsers");
-        browserDistribution.setContent(createWidgetContent());
-        detailsSection.add(browserDistribution);
+        DashboardWidget browsers = new DashboardWidget("Browsers");
+        browsers.setContent(MockWidgets.createBrowsersWidget());
+        detailsSection.add(browsers);
 
-        DashboardWidget catImage = new DashboardWidget("A kittykat!");
-        catImage.setContent(createWidgetContent());
-        detailsSection.add(catImage);
+        DashboardWidget trafficSources = new DashboardWidget(
+                "Traffic sources");
+        trafficSources.setContent(MockWidgets.createTrafficSourcesWidget());
+        detailsSection.add(trafficSources);
 
-        DashboardWidget visitorsByBrowser = new DashboardWidget(
-                "Visitors by browser");
-        visitorsByBrowser.setContent(createWidgetContent());
-        visitorsByBrowser.setColspan(2);
-        detailsSection.add(visitorsByBrowser);
+        DashboardWidget visitorsPerMonth = new DashboardWidget(
+                "Visitors per month");
+        visitorsPerMonth.setContent(
+                MockWidgets.createVisitorsPerMonthWidget());
+        visitorsPerMonth.setColspan(2);
+        detailsSection.add(visitorsPerMonth);
 
         add(dashboard);
     }
 
-    private Div createWidgetContent() {
-        Div content = new Div();
-        content.setClassName("dashboard-widget-content");
-        return content;
-    }
 
     public static class Exporter extends DemoExporter<DashboardSections> { // hidden-source-line
     } // hidden-source-line
