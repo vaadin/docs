@@ -1,0 +1,184 @@
+---
+title: Geolocation API
+page-title: How to use the Geolocation API in Vaadin
+description: Using the Geolocation API to access device location from the server.
+meta-description: Learn how to access device geolocation in Vaadin applications using the server-side Geolocation API.
+order: 115
+---
+
+
+= Geolocation API
+:toc:
+
+The [classname]`Geolocation` API allows you to access the https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API[browser Geolocation API] from server-side Java code. It provides two modes: one-shot position requests with callbacks, and continuous position tracking with reactive Signals.
+
+[NOTE]
+The browser prompts the user for permission to share their location. Geolocation requires a secure context (HTTPS), except on `localhost` during development.
+
+
+== Getting the Current Position
+
+Use the static [methodname]`Geolocation.get()` method to request the device's current position. The callback runs on the UI thread.
+
+[source,java]
+----
+Geolocation.get(position -> {
+    double lat = position.coords().latitude();
+    double lon = position.coords().longitude();
+    Notification.show("Location: " + lat + ", " + lon);
+});
+----
+
+To handle errors, pass a second callback:
+
+[source,java]
+----
+Geolocation.get(
+    position -> {
+        double lat = position.coords().latitude();
+        double lon = position.coords().longitude();
+        map.setCenter(lat, lon);
+    },
+    error -> Notification.show("Location error: " + error)
+);
+----
+
+
+== Options
+
+You can configure the position request with [classname]`GeolocationOptions`:
+
+enableHighAccuracy:: Requests GPS-level accuracy. Uses more power and may take longer. Default: `false`.
+timeout:: Maximum time in milliseconds to wait for a position. Default: no limit.
+maximumAge:: Maximum age in milliseconds of a cached position that's acceptable to return. Default: `0` (always request a fresh position).
+
+[source,java]
+----
+var options = new GeolocationOptions(true, 5000, null);
+
+Geolocation.get(options, position -> {
+    map.setCenter(position.coords().latitude(), position.coords().longitude());
+});
+----
+
+Pass `null` for any option to use the browser default.
+
+
+== Tracking Position Changes
+
+Use [methodname]`Geolocation.track()` to continuously monitor position changes. It returns a [classname]`Geolocation` instance with reactive Signals that update whenever the device's position changes.
+
+[source,java]
+----
+Geolocation geo = Geolocation.track(this);
+----
+
+Read the position in a [classname]`ComponentEffect` to reactively update the UI:
+
+[source,java]
+----
+Geolocation geo = Geolocation.track(this);
+
+ComponentEffect.effect(this, () -> {
+    GeolocationPosition pos = geo.value().get();
+    if (pos != null) {
+        map.setCenter(pos.coords().latitude(), pos.coords().longitude());
+    }
+});
+----
+
+Tracking stops automatically when the owner component detaches. You can also pass [classname]`GeolocationOptions` to control accuracy and caching:
+
+[source,java]
+----
+Geolocation geo = Geolocation.track(this, new GeolocationOptions(true, null, null));
+----
+
+
+== Handling Errors
+
+Error handling differs between the two modes.
+
+With [methodname]`get()`, the error callback receives a `String` message:
+
+[source,java]
+----
+Geolocation.get(
+    position -> showOnMap(position),
+    error -> Notification.show("Error: " + error)
+);
+----
+
+With [methodname]`track()`, errors are available as a [classname]`Signal<GeolocationError>` with a numeric code and a message. The error signal is cleared to `null` whenever a successful position update arrives.
+
+[source,java]
+----
+Geolocation geo = Geolocation.track(this);
+
+ComponentEffect.effect(this, () -> {
+    GeolocationError err = geo.error().get();
+    if (err != null) {
+        if (err.code() == GeolocationError.PERMISSION_DENIED) {
+            Notification.show("Please allow location access");
+        }
+    }
+});
+----
+
+The error codes are:
+
+[cols="1,2"]
+|===
+| Code | Description
+
+| `GeolocationError.PERMISSION_DENIED`
+| The user denied the location permission request.
+
+| `GeolocationError.POSITION_UNAVAILABLE`
+| The device couldn't determine its position.
+
+| `GeolocationError.TIMEOUT`
+| The request exceeded the configured timeout.
+|===
+
+
+== Position Data
+
+A [classname]`GeolocationPosition` contains [classname]`GeolocationCoordinates` and a timestamp (milliseconds since Unix epoch).
+
+The coordinates include:
+
+[cols="1,1,2"]
+|===
+| Field | Type | Description
+
+| `latitude()`
+| `double`
+| Latitude in decimal degrees.
+
+| `longitude()`
+| `double`
+| Longitude in decimal degrees.
+
+| `accuracy()`
+| `double`
+| Accuracy of latitude and longitude in meters.
+
+| `altitude()`
+| `Double`
+| Altitude in meters above the WGS84 ellipsoid, or `null`.
+
+| `altitudeAccuracy()`
+| `Double`
+| Accuracy of the altitude in meters, or `null`.
+
+| `heading()`
+| `Double`
+| Direction of travel in degrees (0-360), or `null`.
+
+| `speed()`
+| `Double`
+| Speed in meters per second, or `null`.
+|===
+
+Fields that return `Double` (boxed) may be `null` when the device doesn't provide that data.
