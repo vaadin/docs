@@ -11,10 +11,6 @@ order: 60
 
 Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together, ensuring data consistency.
 
-:preview-feature: Signals
-:feature-flag: com.vaadin.experimental.flowFullstackSignals
-include::{articles}/_preview-banner.adoc[opts=optional]
-
 
 == Basic Transactions
 
@@ -24,9 +20,9 @@ Use [methodname]`Signal.runInTransaction()` to execute multiple signal operation
 ----
 Signal.runInTransaction(() -> {
     // All operations here will be committed atomically
-    firstNameSignal.value("John");
-    lastNameSignal.value("Doe");
-    ageSignal.value(30);
+    firstNameSignal.set("John");
+    lastNameSignal.set("Doe");
+    ageSignal.set(30);
 });
 ----
 
@@ -58,8 +54,8 @@ Signal.runInTransaction(() -> {
     statusSignal.verifyValue("pending");
 
     // Only executed if verification passes
-    statusSignal.value("processing");
-    processedBySignal.value(currentUser);
+    statusSignal.set("processing");
+    processedBySignal.set(currentUser);
 });
 ----
 
@@ -71,30 +67,30 @@ The `verifyPosition()` method verifies that an item is at a specific position in
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    SharedValueSignal<Todo> firstItem = todoList.value().get(0);
+    ValueSignal<Todo> firstItem = todoList.get().get(0);
 
     // Verify the item we want to update is still first
     todoList.verifyPosition(firstItem, ListPosition.first());
 
     // Update only if verification passes
-    firstItem.value(new Todo("Updated first item", false));
+    firstItem.set(new Todo("Updated first item", false));
 });
 ----
 
 
 === Verifying Child Exists
 
-The `verifyChild()` method on [classname]`SharedListSignal` verifies that a child signal is still part of the list:
+The `verifyChild()` method on [classname]`ListSignal` verifies that a child signal is still part of the list:
 
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    SharedValueSignal<Todo> itemSignal = todoList.value().get(0);
+    ValueSignal<Todo> itemSignal = todoList.get().get(0);
 
     // Verify the child signal still exists in the list before updating
     todoList.verifyChild(itemSignal);
 
-    itemSignal.value(updatedValue);
+    itemSignal.set(updatedValue);
 });
 ----
 
@@ -110,7 +106,7 @@ The base interface for all signal operations. Operations return a [classname]`Co
 
 [source,java]
 ----
-SignalOperation<String> op = stringSignal.value("new value");
+SignalOperation<String> op = stringSignal.set("new value");
 
 // Get the result as a CompletableFuture
 CompletableFuture<SignalOperation.ResultOrError<String>> result = op.result();
@@ -150,12 +146,12 @@ List insert operations return an [classname]`InsertOperation` that provides imme
 
 [source,java]
 ----
-SharedListSignal<Todo> todoList = new SharedListSignal<>(Todo.class);
+ListSignal<Todo> todoList = new ListSignal<>();
 
 InsertOperation<Todo> op = todoList.insertLast(new Todo("New task", false));
 
 // Get the signal for the inserted item immediately
-SharedValueSignal<Todo> insertedSignal = op.signal();
+ValueSignal<Todo> insertedSignal = op.signal();
 
 // You can start working with the signal right away
 insertedSignal.update(todo -> new Todo(todo.text(), true));
@@ -166,22 +162,34 @@ This is useful when you need to reference the newly inserted item immediately af
 
 === TransactionOperation
 
-When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction. The [methodname]`returnValue()` method returns a [classname]`SignalOperation` that can be used to check the transaction result:
+When running transactions, [methodname]`Signal.runInTransaction()` returns a [classname]`TransactionOperation` that tracks the entire transaction. [classname]`TransactionOperation` extends [classname]`SignalOperation<Void>`, so you can check the transaction status via the inherited [methodname]`result()` method:
 
 [source,java]
 ----
-TransactionOperation txOp = Signal.runInTransaction(() -> {
-    firstNameSignal.value("John");
-    lastNameSignal.value("Doe");
+TransactionOperation<Void> txOp = Signal.runInTransaction(() -> {
+    firstNameSignal.set("John");
+    lastNameSignal.set("Doe");
 });
 
-// Get the underlying SignalOperation to check transaction status
-SignalOperation<?> signalOp = txOp.returnValue();
-CompletableFuture<?> result = signalOp.result();
+// Check transaction status via the inherited result()
+CompletableFuture<SignalOperation.ResultOrError<Void>> result = txOp.result();
 
 if (result.isDone()) {
     System.out.println("Transaction committed successfully");
 }
+----
+
+Transactions can also return a value. The [methodname]`returnValue()` method provides direct access to the value returned by the transaction callback:
+
+[source,java]
+----
+TransactionOperation<String> txOp = Signal.runInTransaction(() -> {
+    statusSignal.verifyValue("pending");
+    statusSignal.set("confirmed");
+    return "Order confirmed";
+});
+
+String returnValue = txOp.returnValue(); // "Order confirmed"
 ----
 
 
@@ -191,13 +199,13 @@ Effect and computed signal callbacks run inside a read-only transaction to preve
 
 [source,java]
 ----
-ComponentEffect.effect(component, () -> {
-    String value = sourceSignal.value();
+Signal.effect(component, () -> {
+    String value = sourceSignal.get();
 
     // WARNING: This might lead to infinite loops.
     // Do this only if absolutely necessary.
     Signal.runWithoutTransaction(() -> {
-        derivedSignal.value(transformValue(value));
+        derivedSignal.set(transformValue(value));
     });
 });
 ----
@@ -217,15 +225,15 @@ When multiple signals should be updated together, use a transaction:
 ----
 // Good: Related updates in a transaction
 Signal.runInTransaction(() -> {
-    orderStatusSignal.value("shipped");
-    shippedAtSignal.value(Instant.now());
-    trackingNumberSignal.value(tracking);
+    orderStatusSignal.set("shipped");
+    shippedAtSignal.set(Instant.now());
+    trackingNumberSignal.set(tracking);
 });
 
 // Avoid: Separate updates that might leave inconsistent state
-orderStatusSignal.value("shipped");
-shippedAtSignal.value(Instant.now()); // What if this fails?
-trackingNumberSignal.value(tracking);
+orderStatusSignal.set("shipped");
+shippedAtSignal.set(Instant.now()); // What if this fails?
+trackingNumberSignal.set(tracking);
 ----
 
 
@@ -240,8 +248,8 @@ Signal.runInTransaction(() -> {
     statusSignal.verifyValue("pending");
     quantitySignal.verifyValue(expectedQuantity);
 
-    statusSignal.value("confirmed");
-    quantitySignal.value(newQuantity);
+    statusSignal.set("confirmed");
+    quantitySignal.set(newQuantity);
 });
 ----
 
@@ -257,7 +265,7 @@ counter.update(v -> v + 1);
 
 // Transaction is overkill for single updates
 Signal.runInTransaction(() -> {
-    counter.value(counter.value() + 1);
+    counter.set(counter.get() + 1);
 });
 ----
 
@@ -270,16 +278,16 @@ Transactions hold resources while executing. Keep them focused on the minimal se
 ----
 // Good: Small, focused transaction
 Signal.runInTransaction(() -> {
-    userSignal.value(updatedUser);
-    lastModifiedSignal.value(Instant.now());
+    userSignal.set(updatedUser);
+    lastModifiedSignal.set(Instant.now());
 });
 
 // Avoid: Large transactions with unrelated operations
 Signal.runInTransaction(() -> {
-    userSignal.value(updatedUser);
-    lastModifiedSignal.value(Instant.now());
+    userSignal.set(updatedUser);
+    lastModifiedSignal.set(Instant.now());
     // Don't include unrelated updates
     analyticsCounterSignal.incrementBy(1);
-    logSignal.value(logMessage);
+    logSignal.set(logMessage);
 });
 ----

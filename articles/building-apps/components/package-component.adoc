@@ -1,0 +1,186 @@
+---
+title: Package a Component
+page-title: How to package a Vaadin component as a reusable add-on
+description: Learn how to package a custom component as a JAR that can be shared across projects.
+meta-description: Package a custom Vaadin component as a reusable JAR add-on with the right Maven configuration, frontend resources, and testing setup.
+order: 30
+---
+
+= Package a Component
+:toclevels: 2
+
+A component that lives inside your application is a regular Java class — you create it, style it, and use it alongside all your other code. No special project setup is needed. This article covers the extra steps required when you want to extract a component into its own project and distribute it as a standalone JAR.
+
+Packaging a component as its own project gives you several benefits: a cleaner application project, a separate test and release cycle for the component, better separation of concerns, and easy reuse across multiple projects. Consuming applications add it as a dependency and Vaadin picks up its Java classes and frontend resources automatically. The tradeoff is more project infrastructure — a dedicated POM, a specific directory layout for frontend resources, and test-scoped dependencies to avoid bundling Vaadin itself.
+
+
+== When to Package a Component
+
+Package a component as a separate JAR when:
+
+- *Multiple applications* need the same component.
+- *Separate teams* develop the component and the applications that consume it.
+- *You plan to publish it* on the https://vaadin.com/directory[Vaadin Directory] or Maven Central.
+
+If the component is only used in one project, keep it in your application's source code. Premature extraction adds complexity without benefit.
+
+
+== Getting Started
+
+Start from the https://github.com/vaadin/addon-starter-flow[Vaadin Add-on Starter]. It provides a ready-made Maven project with the correct directory layout, dependency scopes, Jetty for testing, and Maven profiles for publishing to the Vaadin Directory. The rest of this article explains what the starter gives you and how to customize it.
+
+The starter project has this structure:
+
+----
+my-component/
+├── src/
+│   ├── main/
+│   │   ├── assembly/           <1>
+│   │   │   ├── assembly.xml
+│   │   │   └── MANIFEST.MF
+│   │   ├── frontend/           <2>
+│   │   ├── java/
+│   │   │   └── org/vaadin/addons/mygroup/
+│   │   │       └── TheAddon.java
+│   │   └── resources/
+│   │       └── META-INF/
+│   │           └── resources/
+│   │               └── frontend/
+│   └── test/
+│       └── java/
+│           └── org/vaadin/addons/mygroup/
+│               └── AddonView.java  <3>
+└── pom.xml
+----
+<1> Assembly descriptor and manifest for Vaadin Directory publishing (see <<directory-profile>>).
+<2> Frontend files (TypeScript, CSS) for development. Vaadin picks these up automatically.
+<3> A demo view in `test` scope — not included in the published JAR.
+
+
+== Maven Configuration
+
+The starter POM is pre-configured. This section explains the key parts you may want to customize.
+
+=== Dependencies
+
+The starter declares `vaadin-core` as a compile-time dependency and uses the `maven-jar-plugin` to exclude Vaadin's build metadata from the published JAR. This prevents version conflicts in consuming applications. If your add-on only needs a subset of Vaadin, you can replace `vaadin-core` with a more specific dependency like `flow-server`:
+
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-core</artifactId>
+    </dependency>
+</dependencies>
+----
+
+The Vaadin BOM in `<dependencyManagement>` controls the version. Update `vaadin.version` in `<properties>` to target a different Vaadin release.
+
+[[directory-profile]]
+=== Directory Profile
+
+The starter includes a `directory` Maven profile that builds a ZIP file for the https://vaadin.com/directory[Vaadin Directory]. It uses the `maven-assembly-plugin` with a descriptor at `src/main/assembly/assembly.xml` and a manifest at `src/main/assembly/MANIFEST.MF`. The profile also attaches source and Javadoc JARs. You don't need to modify these files unless you want to include extra files in the ZIP.
+
+
+== Frontend Resources
+
+If your add-on includes CSS, JavaScript, or TypeScript files, place them under:
+
+----
+src/main/resources/META-INF/resources/frontend/
+----
+
+Files in this location are automatically discovered by Vaadin when the add-on JAR is on the classpath. Reference them from your Java component with `@JsModule` or `@CssImport`:
+
+[source,java]
+----
+@CssImport("./my-component/status-badge.css")
+public class StatusBadge extends Composite<HorizontalLayout> {
+    // ...
+}
+----
+
+The `./` prefix maps to the `frontend/` directory on the classpath, which includes your `META-INF/resources/frontend/` files.
+
+Add-ons use `@CssImport` rather than `@StyleSheet` because their frontend resources are placed in `META-INF/resources/frontend/`, which is processed by the Vite build pipeline. `@StyleSheet` resolves against the static resources root, `META-INF/resources/`, and is the standard approach for application code — see <<style-component#,Style a Component>>.
+
+During development, you can also use `src/main/frontend/` for convenience — Vaadin picks up files from there as well. However, only files in `META-INF/resources/frontend/` are included in the published JAR.
+
+
+== Including Stylesheets
+
+For components that need CSS, you have two options:
+
+*Application-scoped CSS* — use `@CssImport` to load a stylesheet into the application:
+
+[source,java]
+----
+@CssImport("./my-component/status-badge.css")
+----
+
+*Component-scoped CSS for Vaadin components* — to inject styles into a Vaadin component's shadow DOM, use the `themeFor` attribute:
+
+[source,java]
+----
+@CssImport(value = "./my-component/my-grid-styles.css",
+           themeFor = "vaadin-grid")
+----
+
+See <</styling/styling-components#,Styling Components>> for details on shadow DOM styling.
+
+
+== Testing the Add-On
+
+The starter includes Jetty and is configured with `<defaultGoal>jetty:run</defaultGoal>`, so you can start a local server by running:
+
+[source,terminal]
+----
+mvn
+----
+
+This starts Jetty with the `test` classpath, which means classes in `src/test/java` are available as routes. The starter includes an `AddonView` demo view — replace it with your own:
+
+[source,java]
+----
+@Route("")
+public class DemoView extends VerticalLayout {
+    public DemoView() {
+        StatusBadge success = new StatusBadge("Active", Status.SUCCESS);
+        StatusBadge error = new StatusBadge("Failed", Status.ERROR);
+        add(success, error);
+    }
+}
+----
+
+Because the demo view is in `src/test/java`, it is not included in the published JAR.
+
+
+== Building the JAR
+
+Build the add-on JAR with:
+
+[source,terminal]
+----
+mvn clean install
+----
+
+To build the ZIP for the Vaadin Directory:
+
+[source,terminal]
+----
+mvn clean install -Pdirectory
+----
+
+The resulting JAR (or ZIP) can be used as a dependency in any Vaadin application.
+
+
+== Pitfalls
+
+*Don't bundle Vaadin in the add-on JAR.* The consuming application provides Vaadin at runtime. The starter's `maven-jar-plugin` configuration excludes Vaadin's build metadata from the JAR. If you add dependencies, make sure they don't pull in a second copy of Vaadin.
+
+*Don't bundle application themes.* Your add-on should not include a full Vaadin theme. It should supply its own styles that work with any theme. Use Lumo custom properties for consistency.
+
+*Test with the Vaadin versions you support.* If your add-on claims compatibility with a range of Vaadin versions, test it with each. Differences in APIs or behavior between versions can cause subtle bugs.
+
+*Keep the JAR small.* Don't include test classes, demo applications, or unnecessary resources in the published JAR. The starter keeps demo views in `src/test/java` for this reason.

@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/tabs';
 import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -7,8 +8,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 @customElement('badge-counter')
 export class Example extends LitElement {
   static override styles = css`
-    span[theme~='badge'] {
-      margin-inline-start: var(--lumo-space-s);
+    vaadin-badge {
+      margin-inline-start: var(--vaadin-gap-s);
     }
   `;
 
@@ -24,43 +25,19 @@ export class Example extends LitElement {
       <vaadin-tabs>
         <vaadin-tab>
           <span>Inbox</span>
-          <span
-            theme="badge contrast pill small"
-            aria-label="12 unread messages"
-            title="12 unread messages"
-          >
-            12
-          </span>
+          <vaadin-badge .number="${12}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Important</span>
-          <span
-            theme="badge contrast pill small"
-            aria-label="3 unread messages"
-            title="3 unread messages"
-          >
-            3
-          </span>
+          <vaadin-badge .number="${3}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Spam</span>
-          <span
-            theme="badge contrast pill small"
-            aria-label="45 unread messages"
-            title="45 unread messages"
-          >
-            45
-          </span>
+          <vaadin-badge .number="${45}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
         <vaadin-tab>
           <span>Archive</span>
-          <span
-            theme="badge contrast pill small"
-            aria-label="23 unread messages"
-            title="23 unread messages"
-          >
-            23
-          </span>
+          <vaadin-badge .number="${23}" theme="filled number-only"> unread messages </vaadin-badge>
         </vaadin-tab>
       </vaadin-tabs>
       <!-- end::snippet[] -->

@@ -12,8 +12,8 @@ public class CardFooter extends Div {
         // tag::snippet[]
         Card card = new Card();
         card.setTitle(new Div("Lapland"));
-        card.add(
-                "Lapland is the northern-most region of Finland and an active outdoor destination.");
+        card.add(new Div(
+                "Lapland is the northern-most region of Finland and an active outdoor destination."));
 
         Button bookVacationButton = new Button("Book Vacation");
         Button learnMoreButton = new Button("Learn More");
