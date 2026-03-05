@@ -380,6 +380,11 @@ The [methodname]`updater()` method creates a write callback that enables direct 
 When you update a todo item using [methodname]`todoSignal.update()`, only the bound properties (text content, styling) are updated. The component itself is not recreated, maintaining its position and identity in the DOM.
 
 
+=== Named-Slot Children
+
+The [methodname]`bindChildren()` method manages only the default-slot children of the component. Named-slot children (those with a `slot` attribute) are not affected and can be added or removed freely while the binding is active. However, the component must not contain any default-slot children that are not part of the bound list.
+
+
 === Efficiency
 
 The factory function runs once per list item. When you modify the list:
@@ -388,6 +393,47 @@ The factory function runs once per list item. When you modify the list:
 - *Removing items*: Only removed items are detached
 - *Reordering*: Components are moved, not recreated
 - *Updating values*: Item bindings update, but components aren't recreated
+
+
+== Binding Items to Data View Components
+
+Use [methodname]`bindItems()` to bind a list signal to data view components like [classname]`Grid`, [classname]`ComboBox`, or any component implementing [interfacename]`HasDataView`. This enables reactive updates to the data without manual data provider management:
+
+[source,java]
+----
+import com.vaadin.flow.signals.local.ListSignal;
+
+ListSignal<String> items = new ListSignal<>();
+items.insertLast("Item 1");
+items.insertLast("Item 2");
+
+Grid<String> grid = new Grid<>();
+grid.addColumn(item -> item).setHeader("Name");
+grid.bindItems(items);
+
+// Structural change - triggers full refresh
+items.insertLast("Item 3");
+
+// Item value change - refreshes only the affected row
+items.peek().get(0).set("Updated Item 1");
+----
+
+The method works with both [classname]`ListSignal` (for local, single-user scenarios) and [classname]`SharedListSignal` (for multi-user, real-time scenarios).
+
+
+=== How It Works
+
+The [methodname]`bindItems()` method creates effects that track two levels of changes:
+
+- *Structural changes* (adding, removing, reordering items): Triggers [methodname]`refreshAll()` on the data view
+- *Individual item changes* (updating a value within a signal): Triggers [methodname]`refreshItem()` for only the affected item
+
+This two-level tracking means individual item updates are efficient—only the affected row is refreshed in a Grid, for example.
+
+
+=== Difference from bindChildren
+
+Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`bindItems()` when you want to populate a data view component (e.g., [classname]`Grid`, [classname]`ComboBox`) that manages its own rendering.
 
 
 == Complete Example
