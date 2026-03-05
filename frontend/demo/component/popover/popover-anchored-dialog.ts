@@ -59,7 +59,7 @@ export class Example extends LitElement {
       <!-- end::snippet[] -->
 
       <!-- tag::gridsnippet[] -->
-      <vaadin-grid .items="${this.items}">
+      <vaadin-grid .items="${this.items}" style="margin-top: var(--vaadin-gap-s);">
         ${this.gridColumns.map(
           (column) => html`
             <vaadin-grid-column
@@ -78,8 +78,12 @@ export class Example extends LitElement {
     const visibleColumns = columns.filter((column) => column.visible).map((column) => column.key);
 
     return html`
-      <div style="font-weight: 600; padding: var(--lumo-space-xs);">Configure columns</div>
-      <vaadin-checkbox-group theme="vertical" .value="${visibleColumns}">
+      <div style="font-weight: 600;">Configure columns</div>
+      <vaadin-checkbox-group
+        theme="vertical"
+        .value="${visibleColumns}"
+        style="padding: 0; margin: var(--vaadin-gap-s) 0;"
+      >
         ${columns.map(
           (column) => html`
             <vaadin-checkbox
@@ -90,7 +94,7 @@ export class Example extends LitElement {
           `
         )}
       </vaadin-checkbox-group>
-      <vaadin-horizontal-layout style="justify-content: space-between;">
+      <vaadin-horizontal-layout style="justify-content: space-between; gap: var(--vaadin-gap-s);">
         <vaadin-button theme="small" @click="${this.showAllColumns}">Show all</vaadin-button>
         <vaadin-button theme="small" @click="${this.resetColumns}">Reset</vaadin-button>
       </vaadin-horizontal-layout>

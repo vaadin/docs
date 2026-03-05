@@ -38,7 +38,7 @@ public class PopoverNotificationPanel extends Div {
         popover.setTarget(button);
         popover.setWidth("300px");
         popover.addThemeVariants(PopoverVariant.ARROW,
-                PopoverVariant.LUMO_NO_PADDING);
+                PopoverVariant.NO_PADDING);
         popover.setPosition(PopoverPosition.BOTTOM);
         popover.setModal(true);
         popover.setAriaLabelledBy("notifications-heading");
@@ -102,7 +102,7 @@ public class PopoverNotificationPanel extends Div {
             });
         });
         markRead.getStyle().set("margin", "0 0 0 auto");
-        markRead.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        markRead.addThemeVariants(ButtonVariant.SMALL);
 
         HorizontalLayout layout = new HorizontalLayout(heading, markRead);
         layout.setSpacing(false);
