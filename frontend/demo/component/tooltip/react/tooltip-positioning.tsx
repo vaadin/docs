@@ -5,7 +5,6 @@ import {
   AppLayout,
   DrawerToggle,
   Icon,
-  Scroller,
   SideNav,
   type SideNavElement,
   SideNavItem,
@@ -25,9 +24,7 @@ function Example() {
 
   return (
     <AppLayout theme="narrow-drawer">
-      <DrawerToggle slot="navbar">
-        <Tooltip slot="tooltip" text="Expand menu" position="end" />
-      </DrawerToggle>
+      <DrawerToggle slot="navbar" />
 
       <SideNav
         slot="drawer"
