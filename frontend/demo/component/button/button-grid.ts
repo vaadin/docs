@@ -36,8 +36,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
         <vaadin-horizontal-layout style="align-items: center;">
-          <h2 style="margin: 0 auto 0 0;">Users</h2>
-          <vaadin-button>Add user</vaadin-button>
+          <h2>Users</h2>
+          <vaadin-button slot="end">Add user</vaadin-button>
         </vaadin-horizontal-layout>
 
         <vaadin-grid
