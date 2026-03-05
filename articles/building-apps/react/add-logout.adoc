@@ -1,0 +1,80 @@
+---
+title: Hilla
+page-title: How to logout from a Vaadin Hilla application
+meta-description: Learn to implement logout functionality with Hilla views using the useAuth hook. This guide covers logout handling, redirect, and best practices.
+order: 10
+---
+
+
+= Hilla Logout
+:toclevels: 2
+
+In this guide, you'll learn how to implement logout functionality in a Vaadin application with Hilla views.
+
+
+== Logging Out
+
+Vaadin provides a React hook `useAuth`, which includes a `logout()` function. Calling this function *logs out the user* and *redirects* them to a preconfigured *logout success URL*.
+
+[NOTE]
+You configured the `useAuth` hook in the <<../add-login/hilla#,Add Login>> guide.
+
+You typically call `logout()` from a *button* or *menu item* click listener. Here's how to add a logout button to a view:
+
+[source,tsx]
+----
+import { Button } from '@vaadin/react-components';
+import { useAuth } from "Frontend/security/auth";
+
+export default function LogoutView() {
+    const { logout } = useAuth();
+    return (
+        <main>
+            <Button onClick={logout}>Logout</Button>
+        </main>
+    );
+}
+----
+
+
+== Configuring the Logout Success URL
+
+By default, users are redirected to the root URL (`/`) after logging out. To change this, *specify a custom logout success URL* in your security configuration:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Configure Vaadin's security using VaadinSecurityConfigurer
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.loginView("/login", "/logged-out.html"); // <1>
+// end::snippet[]
+        });
+        return http.build();
+    }
+    ...
+}
+----
+
+<1> Sets `/logged-out.html` as the *logout success URL*.
+
+If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
+
+
+=== Absolute vs. Relative URLs
+
+The logout success URL can be either absolute or relative.
+
+* *Absolute URLs* -- Start with `https://` or `http://` (e.g., `\https://example.com/logged-out`).
+* *Relative URLs* -- Start with `/` (e.g., `/logged-out.html`).
+
+.Relative logout URLs must include the context path
+[IMPORTANT]
+If your application is deployed at `\https://example.com/app`, the logout URL should be `/app/logged-out.html`.
+
