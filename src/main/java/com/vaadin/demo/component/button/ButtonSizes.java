@@ -3,6 +3,7 @@ package com.vaadin.demo.component.button;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -22,6 +23,7 @@ public class ButtonSizes extends Div {
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton,
                 normalButton, smallButton);
+        horizontalLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         add(horizontalLayout);
     }
 
