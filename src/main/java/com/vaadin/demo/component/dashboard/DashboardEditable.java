@@ -49,8 +49,7 @@ public class DashboardEditable extends Div {
             new WidgetConfig(WidgetConfig.WidgetType.BROWSER_DISTRIBUTION, 1,
                     1),
             new WidgetConfig(WidgetConfig.WidgetType.TRAFFIC_SOURCES, 1, 1),
-            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_PER_MONTH, 2,
-                    1));
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_PER_MONTH, 2, 1));
 
     public DashboardEditable(DashboardStorage dashboardStorage) {
         this.dashboardStorage = dashboardStorage;
@@ -149,15 +148,13 @@ public class DashboardEditable extends Div {
         CustomWidget widget = new CustomWidget(config.getType(),
                 config.getType().getLabel());
         widget.setContent(switch (config.getType()) {
-            case VISITORS -> MockWidgets.createVisitorsWidget();
-            case DOWNLOADS -> MockWidgets.createDownloadsWidget();
-            case CONVERSIONS -> MockWidgets.createConversionsWidget();
-            case VISITORS_BY_COUNTRY ->
-                    MockWidgets.createVisitorsByCountryWidget();
-            case BROWSER_DISTRIBUTION -> MockWidgets.createBrowsersWidget();
-            case TRAFFIC_SOURCES -> MockWidgets.createTrafficSourcesWidget();
-            case VISITORS_PER_MONTH ->
-                    MockWidgets.createVisitorsPerMonthWidget();
+        case VISITORS -> MockWidgets.createVisitorsWidget();
+        case DOWNLOADS -> MockWidgets.createDownloadsWidget();
+        case CONVERSIONS -> MockWidgets.createConversionsWidget();
+        case VISITORS_BY_COUNTRY -> MockWidgets.createVisitorsByCountryWidget();
+        case BROWSER_DISTRIBUTION -> MockWidgets.createBrowsersWidget();
+        case TRAFFIC_SOURCES -> MockWidgets.createTrafficSourcesWidget();
+        case VISITORS_PER_MONTH -> MockWidgets.createVisitorsPerMonthWidget();
         });
         widget.setColspan(config.getColspan());
         widget.setRowspan(config.getRowspan());

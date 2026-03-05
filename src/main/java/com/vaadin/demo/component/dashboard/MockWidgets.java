@@ -14,11 +14,14 @@ import java.util.List;
 
 public class MockWidgets {
 
-    record KpiData(String value, String trend, boolean trendUp) {}
+    record KpiData(String value, String trend, boolean trendUp) {
+    }
 
-    record CountryData(String flag, String name, int visitors) {}
+    record CountryData(String flag, String name, int visitors) {
+    }
 
-    record ShareData(String name, String share) {}
+    record ShareData(String name, String share) {
+    }
 
     private static final List<KpiData> KPI_WIDGETS = List.of(
             new KpiData("54,238", "+12.3%", true),
@@ -34,17 +37,13 @@ public class MockWidgets {
             new CountryData("\uD83C\uDDE7\uD83C\uDDF7", "Brazil", 1764));
 
     private static final List<ShareData> BROWSER_DATA = List.of(
-            new ShareData("Chrome", "64%"),
-            new ShareData("Firefox", "18%"),
-            new ShareData("Safari", "12%"),
-            new ShareData("Edge", "4%"),
+            new ShareData("Chrome", "64%"), new ShareData("Firefox", "18%"),
+            new ShareData("Safari", "12%"), new ShareData("Edge", "4%"),
             new ShareData("Other", "2%"));
 
     private static final List<ShareData> TRAFFIC_DATA = List.of(
-            new ShareData("Organic", "43%"),
-            new ShareData("Direct", "27%"),
-            new ShareData("Social", "18%"),
-            new ShareData("Referral", "12%"));
+            new ShareData("Organic", "43%"), new ShareData("Direct", "27%"),
+            new ShareData("Social", "18%"), new ShareData("Referral", "12%"));
 
     public static Component createVisitorsWidget() {
         return createKpiWidget(KPI_WIDGETS.get(0));
@@ -71,11 +70,9 @@ public class MockWidgets {
             Div header = new Div();
             header.addClassName("country-header");
 
-            Span name = new Span(
-                    country.flag() + " " + country.name());
+            Span name = new Span(country.flag() + " " + country.name());
             name.addClassName("country-name");
-            Span count = new Span(
-                    String.format("%,d", country.visitors()));
+            Span count = new Span(String.format("%,d", country.visitors()));
             count.addClassName("country-count");
             header.add(name, count);
 

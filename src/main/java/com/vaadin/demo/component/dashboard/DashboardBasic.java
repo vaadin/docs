@@ -29,8 +29,8 @@ public class DashboardBasic extends Div {
 
         DashboardWidget visitorsByCountry = new DashboardWidget(
                 "Visitors by country");
-        visitorsByCountry.setContent(
-                MockWidgets.createVisitorsByCountryWidget());
+        visitorsByCountry
+                .setContent(MockWidgets.createVisitorsByCountryWidget());
         visitorsByCountry.setRowspan(2);
         dashboard.add(visitorsByCountry);
 
@@ -38,22 +38,19 @@ public class DashboardBasic extends Div {
         browsers.setContent(MockWidgets.createBrowsersWidget());
         dashboard.add(browsers);
 
-        DashboardWidget trafficSources = new DashboardWidget(
-                "Traffic sources");
+        DashboardWidget trafficSources = new DashboardWidget("Traffic sources");
         trafficSources.setContent(MockWidgets.createTrafficSourcesWidget());
         dashboard.add(trafficSources);
 
         DashboardWidget visitorsPerMonth = new DashboardWidget(
                 "Visitors per month");
-        visitorsPerMonth.setContent(
-                MockWidgets.createVisitorsPerMonthWidget());
+        visitorsPerMonth.setContent(MockWidgets.createVisitorsPerMonthWidget());
         visitorsPerMonth.setColspan(2);
         dashboard.add(visitorsPerMonth);
 
         add(dashboard);
         // end::snippet[]
     }
-
 
     public static class Exporter extends DemoExporter<DashboardBasic> { // hidden-source-line
     } // hidden-source-line
