@@ -86,8 +86,8 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout
         style="align-items: center; padding: var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)"
       >
-        <h4 style="margin: 0" id="notifications-heading">Notifications</h4>
-        <vaadin-button theme="small" style="margin: 0 0 0 auto;" @click="${this.markAllRead}">
+        <h4 id="notifications-heading">Notifications</h4>
+        <vaadin-button slot="end" theme="small" @click="${this.markAllRead}">
           Mark all read
         </vaadin-button>
       </vaadin-horizontal-layout>
