@@ -1,0 +1,212 @@
+---
+title: Nullability Checks
+page-title: Nullability Checks with JSpecify in Vaadin Flow
+description: Using JSpecify annotations for type-parameter-level nullability checks in Vaadin Flow.
+meta-description: Learn how Vaadin Flow uses JSpecify for type-parameter-level nullability annotations to improve type safety.
+order: 820
+---
+
+
+= Nullability Checks
+
+Vaadin Flow uses https://jspecify.dev/[JSpecify] annotations to provide precise nullability information at the type parameter level. This allows the type system to distinguish between nullable and non-nullable generic types, improving type safety and reducing null pointer errors.
+
+
+== Overview
+
+Traditional nullability annotations like `@Nullable` and `@NonNull` apply to method return types and parameters, but they cannot express nullability constraints on type parameters. For example, you cannot distinguish between a generic type holding non-null values versus one that may hold null values without type-parameter-level annotations.
+
+https://jspecify.dev/docs/user-guide/[JSpecify] provides a standard way to annotate type parameters with nullability information using the `<T extends @Nullable Object>` bound pattern. This allows generic types like `List<E>` to express whether their elements are nullable (`List<@Nullable String>`) or non-null (`List<String>`). The nullability flows from the type argument rather than being hardcoded in method signatures.
+
+
+== Benefits
+
+Type-parameter-level nullability allows the type system to enforce nullability constraints at compile time, catching potential null pointer errors before runtime. Method signatures remain clean because the nullability flows from the type parameter rather than requiring repetitive `@Nullable` annotations on every method. This approach provides better IDE support and static analysis, as modern tools can use these annotations to provide nullability-aware warnings and auto-completion.
+
+
+== @NullMarked Annotation
+
+The `@NullMarked` annotation from JSpecify marks a class or package as having non-null types by default. This means all type usages are considered non-null unless explicitly annotated with `@Nullable`.
+
+=== Class-Level @NullMarked
+
+Apply `@NullMarked` to a class to make all its types non-null by default:
+
+[source,java]
+----
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+@NullMarked
+public class UserService {
+    // Returns non-null String
+    public String getName() {
+        return "John";
+    }
+
+    // Must explicitly mark nullable returns
+    public @Nullable String getMiddleName() {
+        return null; // Allowed
+    }
+
+    // Parameter is non-null by default
+    public void setName(String name) {
+        // name cannot be null
+    }
+
+    // Must explicitly mark nullable parameters
+    public void setMiddleName(@Nullable String middleName) {
+        // middleName can be null
+    }
+}
+----
+
+=== Package-Level @NullMarked
+
+Apply `@NullMarked` to an entire package by creating a `package-info.java` file:
+
+[source,java]
+----
+@NullMarked
+package com.example.myapp.services;
+
+import org.jspecify.annotations.NullMarked;
+----
+
+This makes all classes in the package and its subpackages non-null by default. Individual classes can still use `@Nullable` where needed:
+
+[source,java]
+----
+package com.example.myapp.services;
+
+import org.jspecify.annotations.Nullable;
+
+// Inherits @NullMarked from package
+public class CustomerService {
+    // Returns non-null Customer
+    public Customer findById(Long id) { ... }
+
+    // Explicitly nullable return
+    public @Nullable Customer findByEmail(String email) { ... }
+}
+----
+
+== Future Expansion
+
+Type-parameter-level nullability is currently used exclusively in Signal APIs, but it will be expanded more broadly across Vaadin Flow in the future.
+
+
+== Current Usage: Signals
+
+Type-parameter-level nullability is currently used in Vaadin's Signal APIs. All signal types use the bounded type parameter pattern `<T extends @Nullable Object>`, which means the type parameter `T` can be nullable or non-null depending on the caller's type argument.
+
+By default, signals hold non-null values:
+
+[source,java]
+----
+// Non-null String signal
+ValueSignal<String> nameSignal = new ValueSignal<>("John");
+String name = nameSignal.get(); // Returns non-null String
+----
+
+To create a signal that can hold null values, explicitly annotate the type parameter with `@Nullable`:
+
+[source,java]
+----
+import org.jspecify.annotations.Nullable;
+
+// Nullable String signal
+ValueSignal<@Nullable String> optionalName = new ValueSignal<>(null);
+@Nullable String maybeName = optionalName.get(); // May return null
+
+// Handle potential null when reading
+if (maybeName != null) {
+    System.out.println(maybeName.toUpperCase());
+}
+----
+
+When binding nullable signals to components, account for null values:
+
+[source,java]
+----
+ValueSignal<@Nullable String> optionalText = new ValueSignal<>(null);
+
+TextField field = new TextField();
+field.bindValue(
+    optionalText.map(text -> text != null ? text : ""),
+    value -> optionalText.set(value.isEmpty() ? null : value)
+);
+----
+
+== List and Collection Types
+
+Type-parameter-level nullability also applies to collection types. You can specify nullability for both the collection itself and its elements:
+
+[source,java]
+----
+// List that cannot be null, containing non-null strings
+Signal<List<String>> nonNullList = new ValueSignal<>(List.of("a", "b"));
+
+// List that cannot be null, containing potentially null strings
+Signal<List<@Nullable String>> listWithNullableElements = new ValueSignal<>(List.of("a", null, "b"));
+
+// List that can be null, containing non-null strings
+Signal<@Nullable List<String>> nullableList = new ValueSignal<>(null);
+
+// Both list and elements can be null
+Signal<@Nullable List<@Nullable String>> fullyNullable = new ValueSignal<>(null);
+----
+
+
+== Best Practices
+
+*Use Non-Null by Default*: Prefer non-nullable type parameters unless null is a meaningful value in your domain model.
+
+[source,java]
+----
+// Preferred
+ValueSignal<String> name = new ValueSignal<>("");
+
+// Only when null is meaningful
+ValueSignal<@Nullable String> optionalName = new ValueSignal<>(null);
+----
+
+*Be Explicit with Nullability*: When working with nullable signals, always import and use `@Nullable` annotations:
+
+[source,java]
+----
+import org.jspecify.annotations.Nullable;
+
+ValueSignal<@Nullable String> signal = new ValueSignal<>(null);
+----
+
+*Handle Null in Transformations*: When mapping signals, account for potential null values:
+
+[source,java]
+----
+ValueSignal<@Nullable String> input = new ValueSignal<>(null);
+
+// Safe transformation
+Signal<String> output = input.map(str -> str != null ? str.toUpperCase() : "");
+
+// Or use Optional pattern
+Signal<Optional<String>> wrapped = input.map(Optional::ofNullable);
+----
+
+*Validate Component Bindings*: When binding nullable signals to UI components, ensure components handle null appropriately or transform the signal first:
+
+[source,java]
+----
+ValueSignal<@Nullable User> userSignal = new ValueSignal<>(null);
+
+Span nameLabel = new Span();
+// Transform to non-null before binding
+nameLabel.bindText(userSignal.map(u -> u != null ? u.getName() : "Guest"));
+----
+
+
+== Related Topics
+
+* <<../ui-state/local-signals#,Local Signals>>
+* <<../ui-state/shared-signals#,Shared Signals>>
+* <<../ui-state/effects-computed#,Effects and Computed Signals>>
