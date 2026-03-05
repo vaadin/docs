@@ -53,8 +53,12 @@ function Example() {
       {/* tag::snippet[] */}
       <HorizontalLayout style={{ alignItems: 'center', height: '3.5rem' }} theme="spacing">
         <h3>Employee</h3>
-        <Button slot="end" onClick={expandAll}>Expand All</Button>
-        <Button slot="end" onClick={collapseAll}>Collapse All</Button>
+        <Button slot="end" onClick={expandAll}>
+          Expand All
+        </Button>
+        <Button slot="end" onClick={collapseAll}>
+          Collapse All
+        </Button>
       </HorizontalLayout>
 
       <Grid

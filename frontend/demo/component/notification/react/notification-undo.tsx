@@ -37,10 +37,7 @@ function Example() {
       >
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '300px' }}>
           <div>5 tasks deleted</div>
-          <Button
-            slot="end"
-            onClick={close}
-          >
+          <Button slot="end" onClick={close}>
             Undo
           </Button>
 
