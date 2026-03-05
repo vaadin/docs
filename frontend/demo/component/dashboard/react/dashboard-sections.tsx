@@ -1,6 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { DashboardLayout, DashboardSection, DashboardWidget } from '@vaadin/react-components-pro';
+import {
+  BrowsersWidget,
+  ConversionsWidget,
+  DownloadsWidget,
+  TrafficSourcesWidget,
+  VisitorsByCountryWidget,
+  VisitorsPerMonthWidget,
+  VisitorsWidget,
+} from './mock-widgets';
 
 function Example() {
   return (
@@ -13,13 +22,13 @@ function Example() {
     >
       <DashboardSection sectionTitle="Monthly Funnel Stats">
         <DashboardWidget widgetTitle="Visitors">
-          <div className="dashboard-widget-content"></div>
+          <VisitorsWidget />
         </DashboardWidget>
         <DashboardWidget widgetTitle="Downloads">
-          <div className="dashboard-widget-content"></div>
+          <DownloadsWidget />
         </DashboardWidget>
         <DashboardWidget widgetTitle="Conversions">
-          <div className="dashboard-widget-content"></div>
+          <ConversionsWidget />
         </DashboardWidget>
       </DashboardSection>
       {/* end::snippet[] */}
@@ -29,19 +38,19 @@ function Example() {
           widgetTitle="Visitors by country"
           style={{ '--vaadin-dashboard-widget-rowspan': '2' }}
         >
-          <div className="dashboard-widget-content"></div>
+          <VisitorsByCountryWidget />
         </DashboardWidget>
         <DashboardWidget widgetTitle="Browsers">
-          <div className="dashboard-widget-content"></div>
+          <BrowsersWidget />
         </DashboardWidget>
-        <DashboardWidget widgetTitle="A kittykat!">
-          <div className="dashboard-widget-content"></div>
+        <DashboardWidget widgetTitle="Traffic sources">
+          <TrafficSourcesWidget />
         </DashboardWidget>
         <DashboardWidget
-          widgetTitle="Visitors by browser"
+          widgetTitle="Visitors per month"
           style={{ '--vaadin-dashboard-widget-colspan': '2' }}
         >
-          <div className="dashboard-widget-content"></div>
+          <VisitorsPerMonthWidget />
         </DashboardWidget>
       </DashboardSection>
       {/* tag::snippet[] */}

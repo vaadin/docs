@@ -15,6 +15,15 @@ import {
 } from '@vaadin/react-components-pro';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
+import {
+  BrowsersWidget,
+  ConversionsWidget,
+  DownloadsWidget,
+  TrafficSourcesWidget,
+  VisitorsByCountryWidget,
+  VisitorsPerMonthWidget,
+  VisitorsWidget,
+} from './mock-widgets';
 
 const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.VISITORS]: 'Visitors',
@@ -22,8 +31,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.CAT_IMAGE]: 'Traffic sources',
+  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
 };
 
 function Example() {
@@ -37,10 +46,19 @@ function Example() {
     { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
     { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
   ]);
+  const widgetContent: Record<WidgetType, React.ReactNode> = {
+    [WidgetType.VISITORS]: <VisitorsWidget />,
+    [WidgetType.DOWNLOADS]: <DownloadsWidget />,
+    [WidgetType.CONVERSIONS]: <ConversionsWidget />,
+    [WidgetType.VISITORS_BY_COUNTRY]: <VisitorsByCountryWidget />,
+    [WidgetType.BROWSER_DISTRIBUTION]: <BrowsersWidget />,
+    [WidgetType.CAT_IMAGE]: <TrafficSourcesWidget />,
+    [WidgetType.VISITORS_BY_BROWSER]: <VisitorsPerMonthWidget />,
+  };
   const renderWidget = useCallback(
     ({ item }: DashboardReactRendererProps<WidgetConfig>) => (
       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-        <div className="dashboard-widget-content" />
+        {widgetContent[item.type]}
       </DashboardWidget>
     ),
     []

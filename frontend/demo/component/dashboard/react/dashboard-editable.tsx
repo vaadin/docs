@@ -11,6 +11,15 @@ import {
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
+import {
+  BrowsersWidget,
+  ConversionsWidget,
+  DownloadsWidget,
+  TrafficSourcesWidget,
+  VisitorsByCountryWidget,
+  VisitorsPerMonthWidget,
+  VisitorsWidget,
+} from './mock-widgets';
 
 // tag::snippet[]
 // NOTE: This example uses the additional classes WidgetConfig and DashboardService,
@@ -36,8 +45,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.CAT_IMAGE]: 'Traffic sources',
+  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
 };
 
 // Helper type to allow defining a custom action for a menu item
@@ -93,28 +102,57 @@ function Example() {
     // It is called by Dashboard once for each config in the widgets array
     // and should return a React element. Note that the colspan and rowspan
     // from the widget config are automatically applied by Dashboard.
-    // In this example all widget types have the same content, so we can use
-    // generic logic to render a widget.
-    const widget = (
-      <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-        <div className="dashboard-widget-content" />
-      </DashboardWidget>
-    );
-
-    // In practice, different widget types will have different content.
-    // In that case you can use a switch statement to render the widget
-    // content based on the type.
-    //
-    // switch (item.type) {
-    //   case WidgetType.Visitors:
-    //     return (
-    //       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-    //         <VisitorsWidgetContent />
-    //       </DashboardWidget>
-    //     );
-    //   ...
-    // }
-    return widget;
+    const title = widgetTitles[item.type];
+    switch (item.type) {
+      case WidgetType.VISITORS:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <VisitorsWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.DOWNLOADS:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <DownloadsWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.CONVERSIONS:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <ConversionsWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.VISITORS_BY_COUNTRY:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <VisitorsByCountryWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.BROWSER_DISTRIBUTION:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <BrowsersWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.CAT_IMAGE:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <TrafficSourcesWidget />
+          </DashboardWidget>
+        );
+      case WidgetType.VISITORS_BY_BROWSER:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <VisitorsPerMonthWidget />
+          </DashboardWidget>
+        );
+      default:
+        return (
+          <DashboardWidget widgetTitle={title}>
+            <div className="dashboard-widget-content" />
+          </DashboardWidget>
+        );
+    }
   }, []);
 
   // Load the initial configuration of the dashboard

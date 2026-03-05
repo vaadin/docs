@@ -1,6 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
 import { DashboardLayout, DashboardWidget } from '@vaadin/react-components-pro';
+import {
+  BrowsersWidget,
+  ConversionsWidget,
+  DownloadsWidget,
+  TrafficSourcesWidget,
+  VisitorsByCountryWidget,
+  VisitorsPerMonthWidget,
+  VisitorsWidget,
+} from './mock-widgets';
 
 function Example() {
   return (
@@ -12,31 +21,31 @@ function Example() {
       }}
     >
       <DashboardWidget widgetTitle="Visitors">
-        <div className="dashboard-widget-content" />
+        <VisitorsWidget />
       </DashboardWidget>
       <DashboardWidget widgetTitle="Downloads">
-        <div className="dashboard-widget-content" />
+        <DownloadsWidget />
       </DashboardWidget>
       <DashboardWidget widgetTitle="Conversions">
-        <div className="dashboard-widget-content" />
+        <ConversionsWidget />
       </DashboardWidget>
       <DashboardWidget
         widgetTitle="Visitors by country"
         style={{ '--vaadin-dashboard-widget-rowspan': '2' }}
       >
-        <div className="dashboard-widget-content" />
+        <VisitorsByCountryWidget />
       </DashboardWidget>
       <DashboardWidget widgetTitle="Browsers">
-        <div className="dashboard-widget-content" />
+        <BrowsersWidget />
       </DashboardWidget>
-      <DashboardWidget widgetTitle="A kittykat!">
-        <div className="dashboard-widget-content" />
+      <DashboardWidget widgetTitle="Traffic sources">
+        <TrafficSourcesWidget />
       </DashboardWidget>
       <DashboardWidget
-        widgetTitle="Visitors by browser"
+        widgetTitle="Visitors per month"
         style={{ '--vaadin-dashboard-widget-colspan': '2' }}
       >
-        <div className="dashboard-widget-content" />
+        <VisitorsPerMonthWidget />
       </DashboardWidget>
     </DashboardLayout>
     // end::snippet[]
