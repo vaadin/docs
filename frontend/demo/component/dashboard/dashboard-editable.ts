@@ -15,6 +15,15 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
 import { DashboardService } from 'Frontend/generated/endpoints';
+import {
+  renderBrowsersWidget,
+  renderConversionsWidget,
+  renderDownloadsWidget,
+  renderTrafficSourcesWidget,
+  renderVisitorsByCountryWidget,
+  renderVisitorsPerMonthWidget,
+  renderVisitorsWidget,
+} from './mock-widgets';
 
 // tag::snippet[]
 // NOTE: This example uses the additional classes WidgetConfig and DashboardService,
@@ -40,8 +49,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.CAT_IMAGE]: 'Traffic sources',
+  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
 };
 
 // Helper type to allow defining a custom action for a menu item
@@ -173,35 +182,23 @@ export class Example extends LitElement {
     // array and should render content into the provided root element. Note
     // that the colspan and rowspan from the widget config are
     // automatically applied by vaadin-dashboard.
-    // In this example all widget types have the same content, so we can
-    // use generic logic to render a widget.
+    const renderers: Record<WidgetType, () => ReturnType<typeof html>> = {
+      [WidgetType.VISITORS]: renderVisitorsWidget,
+      [WidgetType.DOWNLOADS]: renderDownloadsWidget,
+      [WidgetType.CONVERSIONS]: renderConversionsWidget,
+      [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
+      [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
+      [WidgetType.CAT_IMAGE]: renderTrafficSourcesWidget,
+      [WidgetType.VISITORS_BY_BROWSER]: renderVisitorsPerMonthWidget,
+    };
     render(
       html`
         <vaadin-dashboard-widget .widgetTitle="${widgetTitles[item.type]}">
-          <div class="dashboard-widget-content"></div>
+          ${renderers[item.type]()}
         </vaadin-dashboard-widget>
       `,
       root
     );
-
-    // In practice, different widget types will have different content.
-    // In that case you can use a switch statement to render the widget
-    // content based on the type.
-    //
-    // let widget: TemplateResult;
-    //
-    // switch (item.type) {
-    //   case WidgetType.Visitors:
-    //     widget = html`
-    //       <vaadin-dashboard-widget .widgetTitle="Visitors">
-    //         <visitors-widget-content></visitors-widget-content>
-    //       </vaadin-dashboard-widget>
-    //     `;
-    //     break;
-    //   ...
-    // }
-    //
-    // render(widget, root);
   }
 }
 

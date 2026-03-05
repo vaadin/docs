@@ -16,6 +16,15 @@ import type {
 import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
+import {
+  renderBrowsersWidget,
+  renderConversionsWidget,
+  renderDownloadsWidget,
+  renderTrafficSourcesWidget,
+  renderVisitorsByCountryWidget,
+  renderVisitorsPerMonthWidget,
+  renderVisitorsWidget,
+} from './mock-widgets';
 
 // Define a mapping from widget types to human-readable titles
 const widgetTitles: Record<WidgetType, string> = {
@@ -24,8 +33,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.CAT_IMAGE]: 'Traffic sources',
+  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
 };
 
 @customElement('dashboard-announcements')
@@ -144,10 +153,19 @@ export class Example extends LitElement {
   // end::snippet[]
 
   renderWidget(root: HTMLElement, _dashboard: Dashboard, { item }: { item: WidgetConfig }) {
+    const renderers: Record<WidgetType, () => ReturnType<typeof html>> = {
+      [WidgetType.VISITORS]: renderVisitorsWidget,
+      [WidgetType.DOWNLOADS]: renderDownloadsWidget,
+      [WidgetType.CONVERSIONS]: renderConversionsWidget,
+      [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
+      [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
+      [WidgetType.CAT_IMAGE]: renderTrafficSourcesWidget,
+      [WidgetType.VISITORS_BY_BROWSER]: renderVisitorsPerMonthWidget,
+    };
     render(
       html`
         <vaadin-dashboard-widget .widgetTitle="${widgetTitles[item.type]}">
-          <div class="dashboard-widget-content"></div>
+          ${renderers[item.type]()}
         </vaadin-dashboard-widget>
       `,
       root
