@@ -34,8 +34,8 @@ const defaultConfig: WidgetConfig[] = [
   { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
   { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
   { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
-  { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
-  { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
+  { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
+  { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
 ];
 
 // Define a mapping from widget types to human-readable titles
@@ -45,8 +45,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'Traffic sources',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
+  [WidgetType.TRAFFIC_SOURCES]: 'Traffic sources',
+  [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
 };
 
 // Helper type to allow defining a custom action for a menu item
@@ -75,9 +75,7 @@ function Example() {
     // service. If there is no configuration saved, we use a copy of the default
     // configuration.
     let config = await DashboardService.loadDashboard();
-    if (!config) {
-      config = [...defaultConfig];
-    }
+    config ??= [...defaultConfig];
     widgets.value = config;
   }
 
@@ -134,13 +132,13 @@ function Example() {
             <BrowsersWidget />
           </DashboardWidget>
         );
-      case WidgetType.CAT_IMAGE:
+      case WidgetType.TRAFFIC_SOURCES:
         return (
           <DashboardWidget widgetTitle={title}>
             <TrafficSourcesWidget />
           </DashboardWidget>
         );
-      case WidgetType.VISITORS_BY_BROWSER:
+      case WidgetType.VISITORS_PER_MONTH:
         return (
           <DashboardWidget widgetTitle={title}>
             <VisitorsPerMonthWidget />

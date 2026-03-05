@@ -31,8 +31,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'Traffic sources',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
+  [WidgetType.TRAFFIC_SOURCES]: 'Traffic sources',
+  [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
 };
 
 function Example() {
@@ -43,8 +43,8 @@ function Example() {
     { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
     { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
     { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
-    { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
-    { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
+    { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
+    { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
   ]);
   const widgetContent: Record<WidgetType, React.ReactNode> = {
     [WidgetType.VISITORS]: <VisitorsWidget />,
@@ -52,8 +52,8 @@ function Example() {
     [WidgetType.CONVERSIONS]: <ConversionsWidget />,
     [WidgetType.VISITORS_BY_COUNTRY]: <VisitorsByCountryWidget />,
     [WidgetType.BROWSER_DISTRIBUTION]: <BrowsersWidget />,
-    [WidgetType.CAT_IMAGE]: <TrafficSourcesWidget />,
-    [WidgetType.VISITORS_BY_BROWSER]: <VisitorsPerMonthWidget />,
+    [WidgetType.TRAFFIC_SOURCES]: <TrafficSourcesWidget />,
+    [WidgetType.VISITORS_PER_MONTH]: <VisitorsPerMonthWidget />,
   };
   const renderWidget = useCallback(
     ({ item }: DashboardReactRendererProps<WidgetConfig>) => (

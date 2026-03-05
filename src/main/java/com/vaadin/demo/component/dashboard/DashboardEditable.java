@@ -48,8 +48,8 @@ public class DashboardEditable extends Div {
             new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_COUNTRY, 1, 2),
             new WidgetConfig(WidgetConfig.WidgetType.BROWSER_DISTRIBUTION, 1,
                     1),
-            new WidgetConfig(WidgetConfig.WidgetType.CAT_IMAGE, 1, 1),
-            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_BROWSER, 2,
+            new WidgetConfig(WidgetConfig.WidgetType.TRAFFIC_SOURCES, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_PER_MONTH, 2,
                     1));
 
     public DashboardEditable(DashboardStorage dashboardStorage) {
@@ -155,8 +155,8 @@ public class DashboardEditable extends Div {
             case VISITORS_BY_COUNTRY ->
                     MockWidgets.createVisitorsByCountryWidget();
             case BROWSER_DISTRIBUTION -> MockWidgets.createBrowsersWidget();
-            case CAT_IMAGE -> MockWidgets.createTrafficSourcesWidget();
-            case VISITORS_BY_BROWSER ->
+            case TRAFFIC_SOURCES -> MockWidgets.createTrafficSourcesWidget();
+            case VISITORS_PER_MONTH ->
                     MockWidgets.createVisitorsPerMonthWidget();
         });
         widget.setColspan(config.getColspan());

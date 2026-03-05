@@ -38,8 +38,8 @@ const defaultConfig: WidgetConfig[] = [
   { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
   { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
   { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
-  { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
-  { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
+  { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
+  { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
 ];
 
 // Define a mapping from widget types to human-readable titles
@@ -49,8 +49,8 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'Traffic sources',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors per month',
+  [WidgetType.TRAFFIC_SOURCES]: 'Traffic sources',
+  [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
 };
 
 // Helper type to allow defining a custom action for a menu item
@@ -188,8 +188,8 @@ export class Example extends LitElement {
       [WidgetType.CONVERSIONS]: renderConversionsWidget,
       [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
       [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
-      [WidgetType.CAT_IMAGE]: renderTrafficSourcesWidget,
-      [WidgetType.VISITORS_BY_BROWSER]: renderVisitorsPerMonthWidget,
+      [WidgetType.TRAFFIC_SOURCES]: renderTrafficSourcesWidget,
+      [WidgetType.VISITORS_PER_MONTH]: renderVisitorsPerMonthWidget,
     };
     render(
       html`
