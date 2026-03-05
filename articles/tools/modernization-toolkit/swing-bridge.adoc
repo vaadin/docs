@@ -1,0 +1,287 @@
+---
+title: SwingBridge
+page-title: How to Use SwingBridge | Vaadin Tools
+description: Wrap your Swing application to serve UI over web.
+meta-description: Learn how to install and use SwingBridge
+order: 140
+---
+
+= [since:com.vaadin:vaadin@V25.1]#SwingBridge#
+
+pass:[<!-- vale Vaadin.ProductName = NO -->]
+
+Your existing Swing application runs in a web browser without requiring you to rewrite any of your Swing code. Users interact with it through their browser while the actual Swing application runs on the server.
+
+The following guide helps you utilize SwingBridge to integrate your Swing applications into a modern web interface.
+
+== License Installation
+
+SwingBridge requires a commercial Vaadin subscription or a trial license. You can obtain one automatically or install it manually. Automatic license installation is the preferred choice. You are asked to either create a new vaadin.com account or login to an existing one in the following process.
+
+=== Automated Installation
+
+Once you launch your application that utilizes SwingBridge or any other commercial Vaadin component, you are asked to login to https://vaadin.com/[Vaadin.com] This process downloads the relevant files to the directory shown below and the application proceeds to execute the commercial components automatically. You may proceed with the Project Installation section if you prefer this approach.
+
+[.example]
+--
+[source,filesystem]
+----
+<source-info group="Windows"></source-info>
+%userprofile%\.vaadin\proKey
+----
+
+[source,filesystem]
+----
+<source-info group="macOS/Linux"></source-info>
+~/.vaadin/proKey
+----
+--
+
+=== Manual Installation
+
+Create a Vaadin account if you don’t have one by visiting https://vaadin.com/register
+
+Under the menu:My Account[Licences] section, click Start Trial button to start a trial License if you don’t have an active subscription.
+
+Follow the instructions on “Licenses” section after logging in to your account to make sure you have a valid license, or at least a trial license (`proKey` and `userKey` files) in the following directory:
+
+
+[.example]
+--
+[source,filesystem]
+----
+<source-info group="Windows"></source-info>
+%userprofile%\.vaadin\
+----
+
+[source,filesystem]
+----
+<source-info group="macOS/Linux"></source-info>
+~/.vaadin/
+----
+--
+
+For more information about Licensing please see https://vaadin.com/docs/latest/flow/configuration/licenses[Licensing Documentation]
+
+== Project Setup
+
+You can set up a SwingBridge project in two ways: start from the skeleton starter project, which includes sample applications and preconfigured settings, or set up a project from scratch.
+
+=== Using the Skeleton Starter
+
+Clone or download the skeleton starter project from GitHub:
+
+[source,terminal]
+----
+git clone https://github.com/vaadin/skeleton-starter-vaadin-swing-bridge.git
+cd skeleton-starter-vaadin-swing-bridge
+----
+
+This project comes with sample Swing applications and all necessary Maven configuration ready to go. Run the project in development mode:
+
+[source,terminal]
+----
+mvn spring-boot:run
+----
+
+Visit `http://localhost:8080` to see the sample applications running inside SwingBridge.
+
+The project uses an `applibs` directory where Swing application JAR files and their dependencies are placed. All files in this folder are automatically available on the SwingBridge classpath.
+
+[NOTE]
+====
+The `applibs` directory name is case-sensitive. To use a custom directory, pass `-Dapplibs.dir=<path>` on the command line or configure it in the `<systemPropertyVariables>` section of your `pom.xml`.
+====
+
+=== Setting Up from Scratch
+
+Add the following parent section, properties, and dependencies to your `pom.xml`:
+
+.`pom.xml`
+[source,xml]
+----
+<properties>
+  <maven.compiler.source>21</maven.compiler.source>
+  <maven.compiler.target>21</maven.compiler.target>
+  <vaadin.version>24.9.10</vaadin.version>
+  <swing-bridge.version>1.0.0</swing-bridge.version>
+  <swing-bridge.path>${settings.localRepository}/com/vaadin</swing-bridge.path>
+</properties>
+
+<parent>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <version>3.5.3</version>
+  <relativePath/>
+</parent>
+
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
+<dependencies>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-patch</artifactId>
+    <version>${swing-bridge.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-graphics</artifactId>
+    <version>${swing-bridge.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-flow</artifactId>
+    <version>${swing-bridge.version}</version>
+  </dependency>
+
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-spring-boot-starter</artifactId>
+  </dependency>
+
+</dependencies>
+----
+
+To launch the application through Maven CLI, add the following build plugin to your `pom.xml`:
+
+.`pom.xml`
+[source,xml]
+----
+<build>
+  <defaultGoal>spring-boot:run</defaultGoal>
+  <plugins>
+    <plugin>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-maven-plugin</artifactId>
+      <version>${vaadin.version}</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>prepare-frontend</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+      <configuration>
+        <!-- all JVM flags as one space-separated string -->
+        <jvmArguments>
+          --patch-module java.desktop=${swing-bridge.path}/swing-bridge-patch/${swing-bridge.version}/swing-bridge-patch-${swing-bridge.version}.jar
+          -Xbootclasspath/a:${swing-bridge.path}/swing-bridge-graphics/${swing-bridge.version}/swing-bridge-graphics-${swing-bridge.version}.jar
+          --add-reads=java.desktop=ALL-UNNAMED
+          --add-exports=java.desktop/sun.font=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.dnd=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.dnd.peer=ALL-UNNAMED
+          --add-exports=java.base/sun.nio.cs=ALL-UNNAMED
+          --add-exports=java.desktop/sun.java2d=ALL-UNNAMED
+          --add-exports=java.desktop/sun.java2d.pipe=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.datatransfer=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.image=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.peer=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.dnd=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.dnd.peer=ALL-UNNAMED
+          --add-exports=java.desktop/sun.print=ALL-UNNAMED
+          --add-exports=java.desktop/sun.swing=ALL-UNNAMED
+          --add-opens=java.desktop/java.awt.event=ALL-UNNAMED
+          --add-opens=java.desktop/sun.awt=ALL-UNNAMED
+          -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        </jvmArguments>
+
+        <systemPropertyVariables>
+          <java.awt.headless>false</java.awt.headless>
+        </systemPropertyVariables>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+== Add Your Swing Application
+
+The following applies to both cases above: either you cloned from GitHub or created from scratch.
+
+Copy your Swing application’s main jar binary and all its dependencies into the `applibs` folder in the project you created in the first section. The sample Swing application’s jar file is included if you cloned the skeleton project directly from GitHub. All files placed in this folder are visible on the SwingBridge classpath.
+
+== Create a Vaadin View for Your Swing Application
+
+Refer to the class that contains the main() method of your Swing application inside a Vaadin View.
+
+[source,java]
+----
+@Route("myapp")
+public class MyAppView extends VerticalLayout {
+    
+    public MyAppView() {
+        add(new SwingBridge("com.mycompany.swingapp.MySwingAppMain"));
+        setSizeFull();
+    }
+}
+
+----
+
+Start the server
+
+[source,terminal]
+----
+mvn spring-boot:run
+----
+
+== What Happens Under the Hood
+
+Once you've set up your SwingBridge subclass, the framework handles:
+
+- Launching your Swing application in the background when the component attaches
+- Capturing the UI as images and streaming them to the browser
+- Handling user interactions like clicks, keyboard input, and window resizing
+- Managing dialogs and popups that your Swing application creates
+- Updating the display continuously so users see a live view of your application
+
+[.collapsible-list]
+== Frequently Asked Questions
+
+.What is SwingBridge?
+[%collapsible]
+====
+SwingBridge is a Vaadin component that allows you to run existing Swing applications in a web browser without rewriting them. It captures the Swing UI as images and streams them to the browser while handling user interactions.
+====
+
+.Does the existing Swing code need modification?
+[%collapsible]
+====
+Swing applications originally are designed and built with single tenancy in mind. Local resource usages like filesystem access, serial devices etc. should be refactored in order to achieve full multi-tenancy. Vaadin has relevant tooling to automate code refactoring.
+====
+
+.What Swing components are supported?
+[%collapsible]
+====
+All standard Swing components are supported, as well as your customized Swing components.
+- `JFrame`, `JDialog`, `JWindow`
+- JPopupMenu and combo box popups
+- JFileChooser (with special upload handling)
+- Tooltips
+- All standard Swing widgets (buttons, text fields, tables, etc.)
+====
+
+.How does SwingBridge work?
+[%collapsible]
+====
+SwingBridge runs your Swing application on the server and continuously inspects the Swing UI for changes. As soon as a change is detected, dirty regions are streamed to the browser to keep the updates as lightweight as possible. User interactions (clicks, keyboard input) are sent back to the server and replayed on the actual Swing components. 
+====
+
