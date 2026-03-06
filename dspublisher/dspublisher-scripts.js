@@ -187,7 +187,7 @@ const SCRIPTS = {
             lastPhase: true,
           },
         ],
-        ignoredLogSignals: ['New version of Astro available'],
+        ignoredLogSignals: ['New version of Astro available', 'Observability agent is not running'],
       },
     ].filter((p) => !!p),
   },
