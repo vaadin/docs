@@ -229,59 +229,96 @@ my-app-v1-f87bfcbb4-rxvjb       1/1     Running   0             22s
 ----
 
 
-== Ingress Rules
+== Gateway
 
-To access the application, you need to provide some ingress rules. If you don't already have `ingress-nginx` installed in your cluster, install it with the following command:
+To access the application from outside the cluster, you need to set up a gateway. This tutorial uses https://gateway.envoyproxy.io/[Envoy Gateway] as the https://gateway-api.sigs.k8s.io/[Gateway API] implementation, which provides built-in support for session persistence -- a requirement for Vaadin applications running with multiple replicas.
+
+.Ingress NGINX Retirement
+[IMPORTANT]
+====
+The Kubernetes community has https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/[announced] that the Ingress NGINX controller is being retired, with best-effort maintenance only until March 2026. The Gateway API is the recommended replacement. This tutorial uses Envoy Gateway as the Gateway API implementation, but other implementations that support session persistence should also work.
+====
+
+Install Envoy Gateway in your cluster using Helm:
 
 [source,terminal]
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml
+helm install eg oci://docker.io/envoyproxy/gateway-helm --version v1.6.0 -n envoy-gateway-system --create-namespace
 
-Then create an ingress rule manifest file like so:
+Then create a gateway manifest:
 
-.`ingress-v1.yaml`
+.`gateway.yaml`
 [source,yaml]
 ----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
 metadata:
-  name: my-app
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    # --- Optional ---
-    # If server Push is enabled in the application and uses Websocket for transport,
-    # these settings replace the default Websocket connection timeouts in Nginx.
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
-    # ---
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+  name: eg
 spec:
-  rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: my-app-v1
-                port:
-                  number: 80
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+spec:
+  gatewayClassName: eg
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
 ----
 
-Deploy the manifest to your cluster with the following command:
+Deploy it to your cluster:
 
 [source,terminal]
-kubectl apply -f ingress-v1.yaml
+kubectl apply -f gateway.yaml
+
+Next, create an HTTP route manifest to direct traffic to the application with cookie-based session persistence:
+
+.`route-v1.yaml`
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: my-app
+spec:
+  parentRefs:
+    - name: public-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-app-v1
+          port: 80
+      sessionPersistence:
+        type: Cookie
+----
+
+Deploy the manifest to your cluster:
+
+[source,terminal]
+kubectl apply -f route-v1.yaml
 
 The application should now be available at `http://localhost`.
 
 .Accessing Application Locally
 [NOTE]
 ====
-To access the application from your local machine, it may be necessary to use the `port-forward` utility. In this case use the following command:
+To access the application from your local machine, it may be necessary to use the `port-forward` utility. First, find the Envoy proxy service:
 
 [source,terminal]
-kubectl port-forward -n ingress-nginx service/ingress-nginx-controller 8080:80
+export ENVOY_SERVICE=$(kubectl get svc -l gateway.envoyproxy.io/owning-gateway-name=public-gateway -o jsonpath='{.items[0].metadata.name}')
+
+Then forward a local port:
+
+[source,terminal]
+kubectl port-forward service/${ENVOY_SERVICE} 8080:80
 
 The application should now be available at `http://localhost:8080`.
 ====
