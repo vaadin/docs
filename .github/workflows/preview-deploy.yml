@@ -34,15 +34,27 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+      - name: Generate fly.toml
+        run: |
+          cat > fly.toml <<EOF
+          app = "${{ env.FLY_APP }}"
+
+          [build]
+            dockerfile = "Dockerfile.preview"
+
+          [http_service]
+            internal_port = 8210
+            force_https = true
+
+          [[vm]]
+            size = "shared-cpu-1x"
+            memory = "256mb"
+          EOF
+
       - name: Deploy to Fly.io
         run: |
           flyctl deploy \
-            --app "${{ env.FLY_APP }}" \
-            --dockerfile Dockerfile.preview \
             --ha=false \
-            --vm-size shared-cpu-1x \
-            --vm-memory 256 \
-            --internal-port 8210 \
             --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
