@@ -25,7 +25,6 @@ public class NotificationRich extends HorizontalLayout {
         openNotification(this::createSubmitSuccess);
         openNotification(this::createReportError);
         openNotification(this::createMentionNotification);
-        openNotification(this::createUploadSuccess);
     }
 
     private void openNotification(Supplier<Notification> notificationSupplier) {
@@ -38,16 +37,17 @@ public class NotificationRich extends HorizontalLayout {
     // tag::snippet[]
     public Notification createSubmitSuccess() {
         Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notification.addThemeVariants(NotificationVariant.SUCCESS);
 
         Icon icon = VaadinIcon.CHECK_CIRCLE.create();
 
         Button viewBtn = new Button("View");
-        viewBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        var layout = new HorizontalLayout(icon,
-                new Text("Application submitted!"), viewBtn, createCloseBtn());
+        HorizontalLayout layout = new HorizontalLayout(icon,
+                new Text("Application submitted!"));
+        layout.addToEnd(viewBtn, createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setMinWidth("350px");
 
         notification.add(layout);
 
@@ -56,16 +56,16 @@ public class NotificationRich extends HorizontalLayout {
 
     public Notification createReportError() {
         Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
 
         Icon icon = VaadinIcon.WARNING.create();
         Button retryBtn = new Button("Retry");
-        retryBtn.getStyle().setMargin("0 0 0 var(--lumo-space-l)");
 
-        var layout = new HorizontalLayout(icon,
-                new Text("Failed to generate report!"), retryBtn,
-                createCloseBtn());
+        HorizontalLayout layout = new HorizontalLayout(icon,
+                new Text("Failed to generate report!"));
+        layout.addToEnd(retryBtn, createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setMinWidth("350px");
 
         notification.add(layout);
 
@@ -83,38 +83,10 @@ public class NotificationRich extends HorizontalLayout {
         Div info = new Div(name, new Text(" mentioned you in "),
                 new Anchor("#", "Project Q4"));
 
-        HorizontalLayout layout = new HorizontalLayout(avatar, info,
-                createCloseBtn());
+        HorizontalLayout layout = new HorizontalLayout(avatar, info);
+        layout.addToEnd(createCloseBtn());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
-
-        notification.add(layout);
-
-        return notification;
-    }
-
-    public Notification createUploadSuccess() {
-        Notification notification = new Notification();
-
-        Icon icon = VaadinIcon.CHECK_CIRCLE.create();
-        icon.setColor("var(--lumo-success-color)");
-
-        Div uploadSuccessful = new Div(new Text("Upload successful"));
-        uploadSuccessful.getStyle().set("font-weight", "600")
-                .setColor("var(--lumo-success-text-color)");
-
-        Span fileName = new Span("Financials.xlsx");
-        fileName.getStyle().set("font-size", "0.875rem").set("font-weight",
-                "600");
-
-        Div info = new Div(uploadSuccessful,
-                new Div(fileName, new Text(" is now available in "),
-                        new Anchor("#", "Documents")));
-
-        info.getStyle().set("font-size", "0.875rem")
-                .setColor("var(--lumo-secondary-text-color)");
-
-        var layout = new HorizontalLayout(icon, info, createCloseBtn());
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setMinWidth("350px");
 
         notification.add(layout);
 
@@ -123,7 +95,6 @@ public class NotificationRich extends HorizontalLayout {
 
     public static Button createCloseBtn() {
         Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create());
-        closeBtn.addThemeVariants(LUMO_TERTIARY_INLINE);
 
         return closeBtn;
     }

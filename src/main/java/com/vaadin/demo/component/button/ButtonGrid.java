@@ -18,9 +18,9 @@ public class ButtonGrid extends VerticalLayout {
     public ButtonGrid() {
         // tag::snippet[]
         H2 users = new H2("Users");
-        users.getStyle().set("margin", "0 auto 0 0");
         Button addUser = new Button("Add user");
-        HorizontalLayout header = new HorizontalLayout(users, addUser);
+        HorizontalLayout header = new HorizontalLayout(users);
+        header.addToEnd(addUser);
         header.setAlignItems(Alignment.CENTER);
         header.getThemeList().clear();
 
@@ -35,8 +35,7 @@ public class ButtonGrid extends VerticalLayout {
 
         Button delete = new Button("Delete");
         delete.setEnabled(false);
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        delete.getStyle().set("margin-inline-start", "auto");
+        delete.addThemeVariants(ButtonVariant.ERROR);
 
         Grid<Person> grid = new Grid<>(Person.class, false);
         grid.setSelectionMode(Grid.SelectionMode.MULTI);

@@ -102,7 +102,7 @@ function Example() {
           style={{ width: '100%' }}
           onChange={onPresetChange}
         />
-        <HorizontalLayout theme="spacing-s" style={{ alignItems: 'baseline' }}>
+        <HorizontalLayout style={{ alignItems: 'baseline', gap: 'var(--vaadin-gap-s)' }}>
           <DatePicker
             label="From"
             value={from.value}

@@ -9,12 +9,6 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
 
-const StrengthColor: Record<PasswordStrength, string> = {
-  weak: 'var(--lumo-error-color)',
-  moderate: '#e7c200',
-  strong: 'var(--lumo-success-color)',
-};
-
 @customElement('password-field-advanced-helper')
 export class Example extends LitElement {
   protected override createRenderRoot() {
@@ -23,32 +17,41 @@ export class Example extends LitElement {
     return root;
   }
 
-  @state()
-  private strengthText: PasswordStrength = 'weak';
-
-  @state()
-  private strengthColor = StrengthColor.weak;
-
   private pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$';
 
+  @state()
+  private password = '';
+
   protected override render() {
+    let strength: PasswordStrength;
+    if (this.password.length > 9) {
+      strength = 'strong';
+    } else if (this.password.length > 5) {
+      strength = 'moderate';
+    } else {
+      strength = 'weak';
+    }
+
     return html`
       <!-- tag::snippet[] -->
       <vaadin-password-field
         label="Password"
+        .value="${this.password}"
         @value-changed="${this.onPasswordChanged}"
         pattern="${this.pattern}"
         error-message="Not a valid password"
+        style="width: 14em"
       >
         <vaadin-icon
           icon="vaadin:check"
           slot="suffix"
-          style="color:${StrengthColor.strong}"
-          ?hidden="${this.strengthText !== 'strong'}"
+          class="${strength}"
+          ?hidden="${strength !== 'strong'}"
         ></vaadin-icon>
+
         <div slot="helper">
           Password strength:
-          <span style="color:${this.strengthColor}">${this.strengthText}</span>
+          <span class="${strength}">${strength}</span>
         </div>
       </vaadin-password-field>
       <!-- end::snippet[] -->
@@ -56,16 +59,6 @@ export class Example extends LitElement {
   }
 
   private onPasswordChanged(event: PasswordFieldValueChangedEvent) {
-    let strength: PasswordStrength = 'weak';
-    const { value } = event.detail;
-    if (value) {
-      if (value.length > 9) {
-        strength = 'strong';
-      } else if (value.length > 5) {
-        strength = 'moderate';
-      }
-    }
-    this.strengthText = strength;
-    this.strengthColor = StrengthColor[strength];
+    this.password = event.detail.value;
   }
 }

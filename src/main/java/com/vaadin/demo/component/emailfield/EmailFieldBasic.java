@@ -1,16 +1,16 @@
 package com.vaadin.demo.component.emailfield;
 
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("email-field-basic")
-public class EmailFieldBasic extends HorizontalLayout {
+public class EmailFieldBasic extends FormLayout {
 
     public EmailFieldBasic() {
-        setPadding(false);
-        setAlignItems(Alignment.BASELINE);
+        setAutoResponsive(true);
+        setAutoRows(true);
 
         // tag::snippet[]
         EmailField validEmailField = new EmailField();

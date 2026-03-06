@@ -76,12 +76,12 @@ function Example() {
             padding: 'var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)',
           }}
         >
-          <h4 style={{ margin: 0 }} id="notifications-heading">
+          <h4 id="notifications-heading">
             Notifications
           </h4>
           <Button
+            slot="end"
             theme="small"
-            style={{ margin: '0 0 0 auto' }}
             onClick={() => {
               unreadNotifications.value = [];
             }}

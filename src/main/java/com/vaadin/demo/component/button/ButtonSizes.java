@@ -3,6 +3,7 @@ package com.vaadin.demo.component.button;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -12,16 +13,17 @@ public class ButtonSizes extends Div {
     public ButtonSizes() {
         // tag::snippet[]
         Button largeButton = new Button("Large");
-        largeButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
+        largeButton.addThemeVariants(ButtonVariant.LARGE);
 
         Button normalButton = new Button("Normal");
 
         Button smallButton = new Button("Small");
-        smallButton.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        smallButton.addThemeVariants(ButtonVariant.SMALL);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(largeButton,
                 normalButton, smallButton);
+        horizontalLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         add(horizontalLayout);
     }
 

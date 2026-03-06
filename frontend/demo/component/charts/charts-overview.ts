@@ -19,26 +19,12 @@ export class Example extends LitElement {
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       background-color: var(--docs-surface-color-2);
       padding: 0.5rem;
-      padding-top: 1.5rem;
-      position: relative;
+      box-sizing: border-box;
     }
 
     vaadin-chart {
       padding: 0.5rem;
       box-sizing: border-box;
-    }
-
-    label {
-      position: absolute;
-      z-index: 1;
-      top: 0.5rem;
-      left: 1rem;
-      font-size: var(--docs-font-size-2xs);
-      font-weight: var(--docs-font-weight-emphasis);
-    }
-
-    select {
-      font: inherit;
     }
   `;
 
@@ -118,12 +104,6 @@ export class Example extends LitElement {
     },
   };
 
-  changeTheme(e: InputEvent) {
-    [...this.renderRoot.querySelectorAll('vaadin-chart')].forEach((chart) => {
-      chart.setAttribute('theme', (e.target as HTMLSelectElement).value);
-    });
-  }
-
   // tag::snippet[]
   protected override render() {
     return html`
@@ -143,7 +123,6 @@ export class Example extends LitElement {
         .categories="${this.months}"
         .additionalOptions="${this.areaOptions}"
         tooltip
-        no-legend
       >
         <vaadin-chart-series
           title="United States dollar"
@@ -179,16 +158,6 @@ export class Example extends LitElement {
         <vaadin-chart-series type="area" title="Area" .values="${[1, 8, 2, 7, 3, 6, 4, 5]}">
         </vaadin-chart-series>
       </vaadin-chart>
-
-      <label>
-        Theme:
-        <select @change="${this.changeTheme}">
-          <option value="">Default</option>
-          <option value="gradient">Gradient</option>
-          <option value="monotone">Monotone</option>
-          <option value="classic">Classic</option>
-        </select>
-      </label>
     `;
     // end::snippet[]
   }

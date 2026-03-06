@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { Grid, GridColumn } from '@vaadin/react-components';
+import { Badge, Grid, GridColumn } from '@vaadin/react-components';
 import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/DataService';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -33,13 +33,13 @@ function renderStatus({ item: report }: { item: Report }) {
       title = 'Cancelled';
       theme = 'error';
       break;
-    default:
+    case ReportStatus.ON_HOLD:
       title = 'On hold';
-      theme = 'contrast';
+      theme = 'warning';
       break;
   }
 
-  return <span {...{ theme: `badge ${theme} primary` }}>{title}</span>;
+  return <Badge theme={`${theme} filled`}>{title}</Badge>;
 }
 
 function Example() {
