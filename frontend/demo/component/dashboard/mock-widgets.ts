@@ -11,7 +11,7 @@ const countryData = [
   { flag: '🇧🇷', name: 'Brazil', visitors: 1764 },
 ];
 
-const maxVisitors = countryData[0].visitors;
+const totalVisitors = countryData.reduce((sum, c) => sum + c.visitors, 0);
 
 const browserData = [
   { name: 'Chrome', share: '64%' },
@@ -62,7 +62,7 @@ export function renderVisitorsByCountryWidget() {
               <span class="country-name">${flag} ${name}</span>
               <span class="country-count">${visitors.toLocaleString()}</span>
             </div>
-            <vaadin-progress-bar .value="${visitors / maxVisitors}"></vaadin-progress-bar>
+            <vaadin-progress-bar .value="${visitors / totalVisitors}"></vaadin-progress-bar>
           </div>
         `
       )}

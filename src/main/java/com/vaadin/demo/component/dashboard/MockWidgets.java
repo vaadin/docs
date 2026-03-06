@@ -61,7 +61,8 @@ public class MockWidgets {
         Div list = new Div();
         list.addClassName("dashboard-country-list-widget");
 
-        int maxVisitors = COUNTRY_DATA.getFirst().visitors();
+        int totalVisitors = COUNTRY_DATA.stream()
+                .mapToInt(CountryData::visitors).sum();
 
         for (CountryData country : COUNTRY_DATA) {
             Div row = new Div();
@@ -77,7 +78,7 @@ public class MockWidgets {
             header.add(name, count);
 
             ProgressBar bar = new ProgressBar(0, 1,
-                    (double) country.visitors() / maxVisitors);
+                    (double) country.visitors() / totalVisitors);
 
             row.add(header, bar);
             list.add(row);

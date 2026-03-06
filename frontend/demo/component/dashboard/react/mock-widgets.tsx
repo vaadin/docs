@@ -48,7 +48,7 @@ const countryData = [
   { flag: '🇧🇷', name: 'Brazil', visitors: 1764 },
 ];
 
-const maxVisitors = countryData[0].visitors;
+const totalVisitors = countryData.reduce((sum, c) => sum + c.visitors, 0);
 
 export function VisitorsByCountryWidget() {
   return (
@@ -61,7 +61,7 @@ export function VisitorsByCountryWidget() {
             </span>
             <span className="country-count">{visitors.toLocaleString()}</span>
           </div>
-          <ProgressBar value={visitors / maxVisitors} />
+          <ProgressBar value={visitors / totalVisitors} />
         </div>
       ))}
     </div>
