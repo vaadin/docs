@@ -1,56 +1,17 @@
 # Dockerfile.preview
-# Builds only the AsciiDoc documentation (no Java/Flow compilation)
-# and serves it with nginx.
+# Builds and serves the AsciiDoc documentation using DSPublisher's dev server.
 
-# Stage 1: Build the static documentation site
-FROM node:20-alpine AS build
+FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy package files for dependency installation
 COPY package.json package-lock.json* ./
-
-# Install dependencies
 RUN npm ci --ignore-scripts
 
-# Copy documentation sources and DSPublisher config
 COPY articles/ articles/
 COPY dspublisher/ dspublisher/
 COPY frontend/ frontend/
 
-# Build the static site using DSPublisher only (skip Maven/Flow)
-ENV NO_PROGRESS_LOG=1
-RUN npx -y @vaadin/dspublisher@3.0.0-alpha.13 --build
+EXPOSE 8210
 
-# Stage 2: Serve with nginx
-FROM nginx:1.27-alpine
-
-# Copy the built static site
-COPY --from=build /app/dspublisher/out/public /usr/share/nginx/html
-
-# Custom nginx config for SPA-style routing
-COPY <<'NGINX_CONF' /etc/nginx/nginx.conf
-worker_processes auto;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    include mime.types;
-
-    server {
-        listen 80;
-        root /usr/share/nginx/html;
-        error_page 404 /404/index.html;
-
-        location / {
-            try_files $uri $uri/index.html $uri.html =404;
-        }
-    }
-}
-NGINX_CONF
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "run", "dspublisher:start"]
