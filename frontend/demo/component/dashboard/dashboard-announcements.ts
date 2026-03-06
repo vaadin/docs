@@ -16,6 +16,15 @@ import type {
 import { applyTheme } from 'Frontend/demo/theme';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
+import {
+  renderBrowsersWidget,
+  renderConversionsWidget,
+  renderDownloadsWidget,
+  renderTrafficSourcesWidget,
+  renderVisitorsByCountryWidget,
+  renderVisitorsPerMonthWidget,
+  renderVisitorsWidget,
+} from './mock-widgets';
 
 // Define a mapping from widget types to human-readable titles
 const widgetTitles: Record<WidgetType, string> = {
@@ -24,8 +33,18 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.TRAFFIC_SOURCES]: 'Traffic sources',
+  [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
+};
+
+const widgetRenderers: Record<WidgetType, () => ReturnType<typeof html>> = {
+  [WidgetType.VISITORS]: renderVisitorsWidget,
+  [WidgetType.DOWNLOADS]: renderDownloadsWidget,
+  [WidgetType.CONVERSIONS]: renderConversionsWidget,
+  [WidgetType.VISITORS_BY_COUNTRY]: renderVisitorsByCountryWidget,
+  [WidgetType.BROWSER_DISTRIBUTION]: renderBrowsersWidget,
+  [WidgetType.TRAFFIC_SOURCES]: renderTrafficSourcesWidget,
+  [WidgetType.VISITORS_PER_MONTH]: renderVisitorsPerMonthWidget,
 };
 
 @customElement('dashboard-announcements')
@@ -37,8 +56,8 @@ export class Example extends LitElement {
     { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
     { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
     { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
-    { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
-    { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
+    { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
+    { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
   ];
 
   // tag::snippet[]
@@ -147,7 +166,7 @@ export class Example extends LitElement {
     render(
       html`
         <vaadin-dashboard-widget .widgetTitle="${widgetTitles[item.type]}">
-          <div class="dashboard-widget-content"></div>
+          ${widgetRenderers[item.type]()}
         </vaadin-dashboard-widget>
       `,
       root
