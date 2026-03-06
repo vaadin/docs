@@ -7,8 +7,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('notification-popup')
-export class Example extends LitElement {
+export @customElement('notification-popup')
+class Example extends LitElement {
   static override styles = [
     css`
       vaadin-badge {

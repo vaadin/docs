@@ -11,8 +11,8 @@ import type { TextFieldValueChangedEvent } from '@vaadin/text-field';
 import { applyTheme } from 'Frontend/demo/theme';
 import template from './dashboard-template.json';
 
-@customElement('new-relic-dashboard-generator')
-export class DashboardGenerator extends LitElement {
+export @customElement('new-relic-dashboard-generator')
+class DashboardGenerator extends LitElement {
   static override styles = css`
     .json-result {
       width: 100%;

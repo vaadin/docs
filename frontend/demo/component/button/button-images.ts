@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/vaadin-logo-dark.png?url';
 
-@customElement('button-images')
-export class Example extends LitElement {
+export @customElement('button-images')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

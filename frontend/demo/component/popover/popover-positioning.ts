@@ -9,8 +9,8 @@ import type { PopoverPosition } from '@vaadin/popover';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('popover-positioning')
-export class Example extends LitElement {
+export @customElement('popover-positioning')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

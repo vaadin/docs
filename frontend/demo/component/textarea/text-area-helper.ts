@@ -6,8 +6,8 @@ import type { TextAreaValueChangedEvent } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/demo/theme';
 import templates from '../../../../src/main/resources/data/templates.json';
 
-@customElement('text-area-helper-2')
-export class Example extends LitElement {
+export @customElement('text-area-helper-2')
+class Example extends LitElement {
   static override styles = css`
     vaadin-text-area {
       width: 100%;

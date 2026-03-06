@@ -15,8 +15,8 @@ function createFakeFiles() {
   ]);
 }
 
-@customElement('upload-start-button')
-export class Example extends LitElement {
+export @customElement('upload-start-button')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

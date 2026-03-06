@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('combo-box-custom-entry-1')
-export class Example extends LitElement {
+export @customElement('combo-box-custom-entry-1')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

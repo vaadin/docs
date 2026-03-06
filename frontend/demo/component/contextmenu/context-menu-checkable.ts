@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('context-menu-checkable')
-export class Example extends LitElement {
+export @customElement('context-menu-checkable')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

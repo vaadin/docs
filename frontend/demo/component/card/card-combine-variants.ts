@@ -6,8 +6,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/lapland.avif?url';
 
-@customElement('card-combine-variants')
-export class Example extends LitElement {
+export @customElement('card-combine-variants')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -8,8 +8,8 @@ import { customElement } from 'lit/decorators.js';
 import type { FormLayoutResponsiveStep } from '@vaadin/form-layout';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('form-layout-steps-basic')
-export class Example extends LitElement {
+export @customElement('form-layout-steps-basic')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

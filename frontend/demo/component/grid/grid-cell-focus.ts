@@ -8,8 +8,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-@customElement('grid-cell-focus')
-export class Example extends LitElement {
+export @customElement('grid-cell-focus')
+class Example extends LitElement {
   static override styles = css`
     vaadin-text-area {
       width: 100%;

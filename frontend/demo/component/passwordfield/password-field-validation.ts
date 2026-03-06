@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { PasswordField, PasswordFieldValidatedEvent } from '@vaadin/password-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('password-field-validation')
-export class Example extends LitElement {
+export @customElement('password-field-validation')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

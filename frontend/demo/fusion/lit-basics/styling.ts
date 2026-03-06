@@ -2,7 +2,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import myComponentStyles from './my-component.css?inline';
 
-@customElement('my-component')
+export @customElement('my-component')
 class MyComponent extends LitElement {
   static styles = [
     myComponentStyles,

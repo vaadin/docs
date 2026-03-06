@@ -9,8 +9,8 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
-@customElement('multi-select-combo-box-selection-change')
-export class Example extends LitElement {
+export @customElement('multi-select-combo-box-selection-change')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { TabsSelectedChangedEvent } from '@vaadin/tabs';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('tabs-content')
-export class Example extends LitElement {
+export @customElement('tabs-content')
+class Example extends LitElement {
   @state()
   private content = '';
 

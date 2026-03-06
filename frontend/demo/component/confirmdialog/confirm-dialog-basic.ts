@@ -6,8 +6,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('confirm-dialog-basic')
-export class Example extends LitElement {
+export @customElement('confirm-dialog-basic')
+class Example extends LitElement {
   static override styles = css`
     /* Center the button within the example */
     :host {

@@ -10,8 +10,8 @@ import { getCards } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Card from 'Frontend/generated/com/vaadin/demo/domain/Card';
 
-@customElement('radio-button-custom-option')
-export class Example extends LitElement {
+export @customElement('radio-button-custom-option')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

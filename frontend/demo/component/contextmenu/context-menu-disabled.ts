@@ -11,8 +11,8 @@ interface FileItem {
   size: string;
 }
 
-@customElement('context-menu-disabled')
-export class Example extends LitElement {
+export @customElement('context-menu-disabled')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

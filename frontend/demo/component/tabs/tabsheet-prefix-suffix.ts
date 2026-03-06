@@ -8,8 +8,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('tabsheet-prefix-suffix')
-export class Example extends LitElement {
+export @customElement('tabsheet-prefix-suffix')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

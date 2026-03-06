@@ -7,8 +7,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { PopoverTrigger } from '@vaadin/popover';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('popover-interactive-tooltip')
-export class Example extends LitElement {
+export @customElement('popover-interactive-tooltip')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

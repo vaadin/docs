@@ -7,8 +7,8 @@ import type {
 } from '@vaadin/router';
 import { isLoggedIn } from './auth';
 
-@customElement('protected-view')
-export class ProtectedView extends LitElement implements WebComponentInterface {
+export @customElement('protected-view')
+class ProtectedView extends LitElement implements WebComponentInterface {
   render() {
     return html` I am a protected `;
   }

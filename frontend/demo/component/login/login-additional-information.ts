@@ -5,8 +5,8 @@ import { customElement, query } from 'lit/decorators.js';
 import type { LoginOverlay } from '@vaadin/login';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('login-additional-information')
-export class Example extends LitElement {
+export @customElement('login-additional-information')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

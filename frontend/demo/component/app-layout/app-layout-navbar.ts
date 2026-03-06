@@ -9,8 +9,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import { patchAppLayoutNavigation } from './app-layout-helper'; // hidden-source-line
 
-@customElement('app-layout-navbar')
-export class Example extends LitElement {
+export @customElement('app-layout-navbar')
+class Example extends LitElement {
   static override styles = css`
     h1 {
       font-size: 1.125rem;

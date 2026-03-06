@@ -18,8 +18,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-@customElement('tree-grid-scroll-to-index')
-export class Example extends LitElement {
+export @customElement('tree-grid-scroll-to-index')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

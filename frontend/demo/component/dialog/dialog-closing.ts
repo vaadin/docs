@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('dialog-closing')
-export class Example extends LitElement {
+export @customElement('dialog-closing')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

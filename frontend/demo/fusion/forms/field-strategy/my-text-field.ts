@@ -5,8 +5,8 @@ import { customElement, property } from 'lit/decorators.js';
 import type { CustomFieldValueChangedEvent } from '@vaadin/custom-field';
 
 // tag::snippet[]
-@customElement('my-text-field')
-export class MyTextField extends LitElement {
+export @customElement('my-text-field')
+class MyTextField extends LitElement {
   @property({ type: String }) label = '';
   @property({ type: String }) value = '';
 

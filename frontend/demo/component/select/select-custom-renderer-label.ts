@@ -11,8 +11,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 const formatPersonFullName = (person: Person) => `${person.firstName} ${person.lastName}`;
 
-@customElement('select-custom-renderer-label')
-export class Example extends LitElement {
+export @customElement('select-custom-renderer-label')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

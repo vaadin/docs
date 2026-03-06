@@ -5,8 +5,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('badge-counter')
-export class Example extends LitElement {
+export @customElement('badge-counter')
+class Example extends LitElement {
   static override styles = css`
     vaadin-badge {
       margin-inline-start: var(--vaadin-gap-s);

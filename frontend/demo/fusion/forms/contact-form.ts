@@ -9,8 +9,8 @@ import type Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contac
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
 import { ContactEndpoint } from 'Frontend/generated/endpoints';
 
-@customElement('contact-form')
-export class ContactForm extends LitElement {
+export @customElement('contact-form')
+class ContactForm extends LitElement {
   private binder = new Binder(this, ContactModel);
 
   @property({ type: Object })

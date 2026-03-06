@@ -19,8 +19,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 type PersonEnhanced = Person & { displayName: string };
 
-@customElement('grid-manual-pagination')
-export class Example extends LitElement {
+export @customElement('grid-manual-pagination')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -110,8 +110,8 @@ export class Example extends LitElement {
   `;
 }
 
-@customElement('grid-pagination-controls')
-export class GridPaginationControls extends LitElement {
+export @customElement('grid-pagination-controls')
+class GridPaginationControls extends LitElement {
   @property()
   totalItemCount = 0;
 

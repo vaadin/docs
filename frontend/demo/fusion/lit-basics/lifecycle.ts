@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-@customElement('my-button')
+export @customElement('my-button')
 class MyButton extends LitElement {
   constructor() {
     super();

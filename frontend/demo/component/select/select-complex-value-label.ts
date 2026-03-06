@@ -6,8 +6,8 @@ import type { SelectItem } from '@vaadin/select';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('select-complex-value-label')
-export class Example extends LitElement {
+export @customElement('select-complex-value-label')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

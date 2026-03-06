@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('date-time-picker-readonly-and-disabled')
-export class Example extends LitElement {
+export @customElement('date-time-picker-readonly-and-disabled')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -6,8 +6,8 @@ import type { MessageInputSubmitEvent } from '@vaadin/message-input';
 import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('message-input-component')
-export class Example extends LitElement {
+export @customElement('message-input-component')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

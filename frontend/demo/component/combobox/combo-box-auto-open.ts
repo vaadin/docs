@@ -6,8 +6,8 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
-@customElement('combo-box-auto-open')
-export class Example extends LitElement {
+export @customElement('combo-box-auto-open')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -3,8 +3,8 @@ import { customElement } from 'lit/decorators.js';
 import type { LoginResult } from '@vaadin/hilla-frontend';
 import { Router } from '@vaadin/router';
 
-@customElement('login-view')
-export class LoginView extends LitElement {
+export @customElement('login-view')
+class LoginView extends LitElement {
   private returnUrl = '/';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

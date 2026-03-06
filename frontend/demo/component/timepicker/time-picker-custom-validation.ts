@@ -6,8 +6,8 @@ import { Binder, field } from '@vaadin/hilla-lit-form';
 import { applyTheme } from 'Frontend/demo/theme';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
-@customElement('time-picker-custom-validation')
-export class Example extends LitElement {
+export @customElement('time-picker-custom-validation')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

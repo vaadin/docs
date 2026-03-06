@@ -8,8 +8,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { EmailFieldValueChangedEvent } from '@vaadin/email-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('button-labels')
-export class Example extends LitElement {
+export @customElement('button-labels')
+class Example extends LitElement {
   static override styles = css`
     vaadin-horizontal-layout {
       align-items: baseline;

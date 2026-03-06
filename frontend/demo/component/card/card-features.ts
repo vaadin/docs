@@ -16,8 +16,8 @@ import type { CheckboxGroup } from '@vaadin/checkbox-group';
 import type { Select } from '@vaadin/select';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('card-features')
-export class Example extends LitElement {
+export @customElement('card-features')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

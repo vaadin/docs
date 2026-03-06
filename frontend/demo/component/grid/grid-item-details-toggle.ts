@@ -13,8 +13,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-@customElement('grid-item-details-toggle')
-export class Example extends LitElement {
+export @customElement('grid-item-details-toggle')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

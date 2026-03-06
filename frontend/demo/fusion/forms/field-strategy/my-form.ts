@@ -5,8 +5,8 @@ import { field } from '@vaadin/hilla-lit-form';
 import SamplePersonModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/fieldstrategy/SamplePersonModel';
 import { MyBinder } from './my-binder';
 
-@customElement('person-form-view')
-export class PersonFormViewElement extends LitElement {
+export @customElement('person-form-view')
+class PersonFormViewElement extends LitElement {
   private binder = new MyBinder(this, SamplePersonModel);
 
   render() {

@@ -10,8 +10,8 @@ import type { CheckboxChangeEvent } from '@vaadin/checkbox';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('dashboard-variants')
-export class Example extends LitElement {
+export @customElement('dashboard-variants')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

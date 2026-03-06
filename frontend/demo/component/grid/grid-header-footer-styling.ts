@@ -13,8 +13,8 @@ interface PersonWithRating extends Person {
   customerRating: number;
 }
 
-@customElement('grid-header-footer-styling')
-export class Example extends LitElement {
+export @customElement('grid-header-footer-styling')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

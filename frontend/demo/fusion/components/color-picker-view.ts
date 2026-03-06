@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, query } from 'lit/decorators.js';
 import type { TextField } from '@vaadin/text-field';
 
-@customElement('color-picker-view')
-export class ColorPickerView extends LitElement {
+export @customElement('color-picker-view')
+class ColorPickerView extends LitElement {
   @query('#hex')
   hex!: TextField;
 

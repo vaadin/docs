@@ -11,8 +11,8 @@ import type {
 import type { TextAreaChangeEvent } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('rich-text-editor-set-get-value')
-export class Example extends LitElement {
+export @customElement('rich-text-editor-set-get-value')
+class Example extends LitElement {
   static override styles = css`
     :host([theme~='aura']) [has-label] {
       padding-top: var(--vaadin-padding-m);

@@ -65,8 +65,8 @@ async function fetchPeople(params: {
 }
 // end::snippet[]
 
-@customElement('grid-data-provider')
-export class Example extends LitElement {
+export @customElement('grid-data-provider')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

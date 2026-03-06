@@ -6,8 +6,8 @@ import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-@customElement('fusion-application-icons-basic')
-export class IconsBasic extends LitElement {
+export @customElement('fusion-application-icons-basic')
+class IconsBasic extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->

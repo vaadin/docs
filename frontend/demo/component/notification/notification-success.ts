@@ -3,8 +3,8 @@ import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 
-@customElement('notification-success')
-export class Example extends LitElement {
+export @customElement('notification-success')
+class Example extends LitElement {
   firstUpdated() {
     // tag::snippet[]
     const notification = Notification.show('Application submitted!', {

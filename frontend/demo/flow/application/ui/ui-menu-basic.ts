@@ -4,8 +4,8 @@ import '@vaadin/tabs';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-@customElement('fusion-application-ui-menu')
-export class UiMenu extends LitElement {
+export @customElement('fusion-application-ui-menu')
+class UiMenu extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->

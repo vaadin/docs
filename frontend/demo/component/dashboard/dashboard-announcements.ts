@@ -47,8 +47,8 @@ const widgetRenderers: Record<WidgetType, () => ReturnType<typeof html>> = {
   [WidgetType.VISITORS_PER_MONTH]: renderVisitorsPerMonthWidget,
 };
 
-@customElement('dashboard-announcements')
-export class Example extends LitElement {
+export @customElement('dashboard-announcements')
+class Example extends LitElement {
   @state()
   widgets: WidgetConfig[] = [
     { type: WidgetType.VISITORS, colspan: 1, rowspan: 1 },

@@ -8,8 +8,8 @@ import { Binder, field, Required } from '@vaadin/hilla-lit-form';
 import { applyTheme } from 'Frontend/demo/theme';
 import UserPermissionsModel from 'Frontend/generated/com/vaadin/demo/domain/UserPermissionsModel';
 
-@customElement('checkbox-required')
-export class Example extends LitElement {
+export @customElement('checkbox-required')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

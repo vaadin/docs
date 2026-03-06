@@ -6,8 +6,8 @@ import type { NotificationPosition } from '@vaadin/notification';
 import { Notification } from '@vaadin/notification';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('notification-position')
-export class Example extends LitElement {
+export @customElement('notification-position')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

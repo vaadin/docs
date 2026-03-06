@@ -10,8 +10,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-@customElement('grid-wrap-cell-content')
-export class Example extends LitElement {
+export @customElement('grid-wrap-cell-content')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

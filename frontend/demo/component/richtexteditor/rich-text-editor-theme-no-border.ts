@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import templates from '../../../../src/main/resources/data/templates.json';
 
-@customElement('rich-text-editor-no-border')
-export class Example extends LitElement {
+export @customElement('rich-text-editor-no-border')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

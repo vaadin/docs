@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxCustomValueSetEvent } from '@vaadin/combo-box';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('combo-box-custom-entry-2')
-export class Example extends LitElement {
+export @customElement('combo-box-custom-entry-2')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

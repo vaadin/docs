@@ -8,8 +8,8 @@ import { Notification } from '@vaadin/notification';
 import type { UploadFileRejectEvent, UploadMaxFilesReachedChangedEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('upload-button-theme-variant')
-export class Example extends LitElement {
+export @customElement('upload-button-theme-variant')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

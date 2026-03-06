@@ -15,8 +15,8 @@ import {
   renderVisitorsWidget,
 } from './mock-widgets';
 
-@customElement('dashboard-basic')
-export class Example extends LitElement {
+export @customElement('dashboard-basic')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

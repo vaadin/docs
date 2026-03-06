@@ -4,8 +4,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('multi-select-combo-box-item-class-name')
-export class Example extends LitElement {
+export @customElement('multi-select-combo-box-item-class-name')
+class Example extends LitElement {
   static override styles = css`
     vaadin-multi-select-combo-box {
       width: 300px;

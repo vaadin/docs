@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { NumberField, NumberFieldValidatedEvent } from '@vaadin/number-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('number-field-step')
-export class Example extends LitElement {
+export @customElement('number-field-step')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

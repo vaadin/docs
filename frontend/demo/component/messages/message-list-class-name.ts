@@ -7,8 +7,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-@customElement('message-list-class-name')
-export class Example extends LitElement {
+export @customElement('message-list-class-name')
+class Example extends LitElement {
   private person: Person | undefined;
   private isoMinutes = 'yyyy-MM-dd HH:mm';
   private yesterday = format(subDays(new Date(), 1), this.isoMinutes);

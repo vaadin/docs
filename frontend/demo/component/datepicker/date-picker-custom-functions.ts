@@ -7,8 +7,8 @@ import { customElement, query, state } from 'lit/decorators.js';
 import type { DatePicker, DatePickerChangeEvent, DatePickerDate } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('date-picker-custom-functions')
-export class Example extends LitElement {
+export @customElement('date-picker-custom-functions')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

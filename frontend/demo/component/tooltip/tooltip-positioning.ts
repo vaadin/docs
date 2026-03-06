@@ -10,8 +10,8 @@ import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('tooltip-positioning')
-export class Example extends LitElement {
+export @customElement('tooltip-positioning')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

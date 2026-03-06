@@ -3,8 +3,8 @@ import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 
-@customElement('notification-error')
-export class Example extends LitElement {
+export @customElement('notification-error')
+class Example extends LitElement {
   firstUpdated() {
     // tag::snippet[]
     const notification = Notification.show('Failed to generate report', {

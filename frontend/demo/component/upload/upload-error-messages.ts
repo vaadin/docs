@@ -13,8 +13,8 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: '540px', columns: 2, labelsPosition: 'top' },
 ];
 
-@customElement('upload-error-messages')
-export class Example extends LitElement {
+export @customElement('upload-error-messages')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

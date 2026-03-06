@@ -8,8 +8,8 @@ import { customElement, query, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import type { FakeProgressBar } from './fake-progress-bar';
 
-@customElement('button-disable-long-action')
-export class Example extends LitElement {
+export @customElement('button-disable-long-action')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

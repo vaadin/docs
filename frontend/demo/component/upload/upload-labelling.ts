@@ -7,8 +7,8 @@ import { Notification } from '@vaadin/notification';
 import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('upload-labelling')
-export class Example extends LitElement {
+export @customElement('upload-labelling')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

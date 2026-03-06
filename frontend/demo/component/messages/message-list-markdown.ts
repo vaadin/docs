@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { MessageListItem } from '@vaadin/message-list';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('message-list-markdown')
-export class Example extends LitElement {
+export @customElement('message-list-markdown')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

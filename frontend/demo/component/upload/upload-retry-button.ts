@@ -11,8 +11,8 @@ function createFakeFiles() {
   ]);
 }
 
-@customElement('upload-retry-button')
-export class Example extends LitElement {
+export @customElement('upload-retry-button')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

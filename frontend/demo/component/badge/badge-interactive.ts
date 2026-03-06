@@ -17,8 +17,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 type Profession = string;
 
-@customElement('badge-interactive')
-export class Example extends LitElement {
+export @customElement('badge-interactive')
+class Example extends LitElement {
   @state()
   private items: readonly Profession[] = [];
 

@@ -8,8 +8,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('scroller-mobile')
-export class Example extends LitElement {
+export @customElement('scroller-mobile')
+class Example extends LitElement {
   static override styles = css`
     section {
       border: solid 1px var(--vaadin-border-color);

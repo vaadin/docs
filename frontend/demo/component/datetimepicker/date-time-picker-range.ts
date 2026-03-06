@@ -9,8 +9,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 const initialStartValue = '2020-08-25T20:00';
 const initialEndValue = '2020-09-01T20:00';
 
-@customElement('date-time-picker-range')
-export class Example extends LitElement {
+export @customElement('date-time-picker-range')
+class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

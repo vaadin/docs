@@ -5,8 +5,8 @@ import { convertToEnumName, generateVaadinIconset } from './iconset-helpers';
 
 const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 
-@customElement('iconset-generator')
-export class IconsetGenerator extends LitElement {
+export @customElement('iconset-generator')
+class IconsetGenerator extends LitElement {
   static override styles = css`
     :host {
       margin: var(--docs-space-xl) 0;

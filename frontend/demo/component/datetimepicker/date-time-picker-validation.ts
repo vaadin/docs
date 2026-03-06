@@ -8,8 +8,8 @@ import type { DateTimePicker, DateTimePickerValidatedEvent } from '@vaadin/date-
 import type { TimePicker } from '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
-@customElement('date-time-picker-validation')
-export class Example extends LitElement {
+export @customElement('date-time-picker-validation')
+class Example extends LitElement {
   @state()
   private errorMessage = '';
 

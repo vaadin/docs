@@ -7,8 +7,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-@customElement('app-layout-height-full')
-export class Example extends LitElement {
+export @customElement('app-layout-height-full')
+class Example extends LitElement {
   static override styles = css`
     :host {
       height: 100vh;
