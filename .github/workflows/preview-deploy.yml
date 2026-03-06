@@ -1,0 +1,73 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  FLY_APP: docs-preview-pr-${{ github.event.pull_request.number }}
+  FLY_ORG: ${{ vars.FLY_ORG || 'personal' }}
+
+jobs:
+  build-and-deploy:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Create Fly app (if not exists)
+        run: |
+          flyctl apps create "${{ env.FLY_APP }}" --org "${{ env.FLY_ORG }}" 2>/dev/null || true
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io
+        run: |
+          flyctl deploy \
+            --app "${{ env.FLY_APP }}" \
+            --dockerfile Dockerfile.preview \
+            --ha=false \
+            --vm-size shared-cpu-1x \
+            --vm-memory 256 \
+            --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Comment preview URL on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-deploy
+          message: |
+            ### Preview Deployment
+
+            This PR has been deployed for preview.
+
+            **URL:** https://${{ env.FLY_APP }}.fly.dev
+
+            _Built from ${{ github.sha }}_
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Destroy Fly app
+        run: |
+          flyctl apps destroy "${{ env.FLY_APP }}" --yes 2>/dev/null || true
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
