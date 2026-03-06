@@ -12,13 +12,72 @@ order: 10
 
 Vaadin uses the Node.js runtime in development mode to run the Vite development server, as well as the Node.js package manager (i.e., `npm`) and package runner (i.e., `npx`) to fetch, install, and run frontend packages.
 
-Node.js can be installed in three ways: First, it can be installed automatically into the user's home directory (i.e., `~/.vaadin/node`). Second, it can be installed globally with a downloaded installer or package manager, such as Homebrew. Or you can use project-local installation (i.e., `_project_dir_/node`) using the https://github.com/eirslett/frontend-maven-plugin[`frontend-maven-plugin`].
 
-For the second method, installing globally, Node.js can be downloaded from `https://nodejs.org/en/download/`.  When installing Node.js, you're installing in the process the command-line tools, `npm` and `npx`.
+== Installation
 
-If Node.js is found globally, Vaadin validates that it's a supported version. If it's too old, it'll install a compatible version into `~/.vaadin`. You should use the latest Long-Term Support (LTS) version. Incidentally, a project-local installation always takes precedence over a global or `~/.vaadin` installation.
+Node.js can be installed in two ways: it can be installed automatically by Vaadin into the user's home directory, or it can be installed globally with a downloaded installer or package manager, such as Homebrew.
 
-You can force a Node.js installation in the `~/.vaadin` folder via the `require.home.node` property. Since this sets the Maven `requireHomeNodeExec` parameter value, you can configure the Maven goal using `<requireHomeNodeExec>true</requireHomeNodeExec>`. To force node installation into the home directory in development mode, you should use the `vaadin.require.home.node` system property, or the `require.home.node` web initialized parameter.
+For global installation, Node.js can be downloaded from `https://nodejs.org/en/download/`. You should use the latest Long-Term Support (LTS) version.
+
+
+=== Automatic Installation
+
+When Vaadin installs Node.js automatically, it extracts the complete Node.js distribution into a version-specific directory under `~/.vaadin/`. For example, if the requested version is `v22.13.1`, it's installed into `~/.vaadin/node-v22.13.1/`.
+
+The full distribution is extracted, including `node`, `npm`, `npx`, and `corepack` on Unix, or `node.exe`, `npm.cmd`, `npx.cmd`, and `corepack.cmd` on Windows. This means you can use `npm`, `npx`, and `corepack` directly from the installation directory if needed. For example:
+
+[source,terminal]
+----
+~/.vaadin/node-v22.13.1/bin/npm install some-package
+~/.vaadin/node-v22.13.1/bin/npx some-tool
+----
+
+On Windows, the executables are in the root of the installation directory:
+
+[source,terminal]
+----
+%USERPROFILE%\.vaadin\node-v22.13.1\npm.cmd install some-package
+%USERPROFILE%\.vaadin\node-v22.13.1\npx.cmd some-tool
+----
+
+Since each version is installed into its own directory, multiple Node.js versions can coexist side by side under `~/.vaadin/`.
+
+
+=== Resolution Order
+
+Vaadin resolves which Node.js installation to use in the following order:
+
+. If <<node-folder,`node.folder`>> is set, use exclusively that directory. If the Node.js binary isn't found there, the build fails with no fallback.
+. If `require.home.node` is _not_ set, check for a suitable global Node.js on the system `PATH`.
+. Check `~/.vaadin/` for the exact requested version (e.g., `~/.vaadin/node-v22.13.1/`).
+. Fall back to any compatible installed version found in `~/.vaadin/`.
+. If nothing is found, download and install the requested version into `~/.vaadin/node-v<version>/`.
+
+You can force Vaadin to skip global Node.js and use its own installation by setting the `require.home.node` property to `true`. See <<../properties#,Configuration Properties>> for more information.
+
+
+[[node-folder]]
+=== Custom Node.js Folder
+
+You can point Vaadin to a specific Node.js installation directory by setting the `node.folder` property. When this property is set, Vaadin uses Node.js exclusively from the specified folder. No fallback to `~/.vaadin/` or global Node.js occurs -- if the binary isn't found in the given folder, the build fails.
+
+This is useful when you want full control over which Node.js installation is used, for example in CI/CD environments or when using a Node.js version manager.
+
+To set this as a system property:
+
+[source,bash]
+----
+mvn jetty:run -Dvaadin.node.folder=/usr/local/custom-node
+----
+
+Or as a Maven plugin configuration:
+
+[source,xml]
+----
+<configuration>
+    <nodeFolder>/usr/local/custom-node</nodeFolder>
+</configuration>
+----
 
 
 == Proxy Settings for Downloading Frontend Toolchain
@@ -73,18 +132,6 @@ Starting from Java 8u111, basic authentication for HTTPS tunneling is disabled b
 
 To get the download to work, it's necessary to add the `-Djdk.http.auth.tunneling.disabledSchemes=""` system property to the IDE application run configuration, or to the build tool -- Maven or Gradle -- command-line.
 ====
-
-
-== Building an Application Using Travis CI
-
-If you're using https://travis-ci.org/[Travis] as a Continuous Integration server, there are two options to install a proper Node.js version:
-
-- Specify the version via Travis configuration in [filename]`.travis.yml`; or
-- Install Node.js automatically through Vaadin.
-
-See the link:https://docs.travis-ci.com/user/languages/javascript-with-nodejs/#specifying-nodejs-versions[Specifying Node.js Versions] in the Travis documentation for information on how to specify the Node version via the [filename]`.travis.yml` file.
-
-You can force Node.js installation into the `~/.vaadin` folder, as described in the section <<node.installation>>.
 
 
 [discussion-id]`33A25C64-2E6E-4F6F-9C0E-5EEFD244D4B3`
