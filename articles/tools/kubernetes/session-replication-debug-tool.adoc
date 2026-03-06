@@ -82,7 +82,9 @@ java \
 
 include::_shared.adoc[tag=extended-debug-info]
 
-The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it, manually. Configure the provided <<{articles}/flow/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
+The debug tool is installed automatically on Spring Boot projects by Kubernetes Kit autoconfiguration. No manual registration is required.
+
+For other project types, the debug tool must be installed manually. Configure the provided <<{articles}/flow/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
 
 Additionally, the HTTP filter must be registered either as a Spring bean, or with a [classname]`ServletContextListener`.
 
@@ -91,7 +93,7 @@ Additionally, the HTTP filter must be registered either as a Spring bean, or wit
 .`AppConfig.java`
 [source,java]
 ----
-<source-info group="Spring add-on"></source-info>
+<source-info group="Spring (no Spring Boot)"></source-info>
 @Configuration
 class AppConfig {
 
@@ -103,8 +105,10 @@ class AppConfig {
     @Bean
     @Order(Integer.MIN_VALUE)
     FilterRegistrationBean<SerializationDebugRequestHandler.Filter> sessionSerializationDebugToolFilter() {
-        return new FilterRegistrationBean<>(
-                new SerializationDebugRequestHandler.Filter());
+        FilterRegistrationBean<SerializationDebugRequestHandler.Filter> registration =
+            new FilterRegistrationBean<>(new SerializationDebugRequestHandler.Filter());
+        registration.setAsyncSupported(true);
+        return registration;
     }
 }
 ----
@@ -121,12 +125,14 @@ com.vaadin.kubernetes.starter.sessiontracker.serialization.SerializationDebugReq
 ----
 <source-info group="Plain Java"></source-info>
 @WebListener
-private static class SerializationDebugToolFilterRegistration implements ServletContextListener {
+public class SerializationDebugToolFilterRegistration implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        sce.getServletContext()
-          .addFilter(SerializationDebugRequestHandler.Filter.class.getName(), SerializationDebugRequestHandler.Filter.class)
-          .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+        var registration = sce.getServletContext()
+            .addFilter(SerializationDebugRequestHandler.Filter.class.getName(),
+                       SerializationDebugRequestHandler.Filter.class);
+        registration.setAsyncSupported(true);
+        registration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
     }
 }
 ----

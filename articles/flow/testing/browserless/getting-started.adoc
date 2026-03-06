@@ -1,5 +1,195 @@
 ---
 title: Getting Started
-section-nav: hidden
+page-title: How to get started with Vaadin browserless testing
+description: Tutorial to create and run a browserless test.
+meta-description: A beginner-friendly guide on how to set up and run a browserless test in Vaadin.
+order: 10
 ---
-This page has moved: <<../ui-unit/getting-started#,Getting Started With UI Unit Testing>>
+
+
+= Getting Started with Browserless Testing
+
+To start creating browserless tests in an existing project, you need to add the `browserless-test-junit6` dependency with a `test` scope. For Spring Boot projects, also ensure the Spring Boot test starter is present. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+
+== First Browserless Test
+
+In Spring Boot projects, views typically use dependency injection for services and other components. To handle this correctly, browserless testing provides a specialized base class: [classname]`SpringBrowserlessTest`. Annotate your test class with [annotationname]`@SpringBootTest` so that the full application context is available.
+
+.Non-Spring Projects
+[TIP]
+This guide assumes a Spring Boot project. If you aren't using Spring, see <<non-spring#, Non-Spring Projects>> for a simpler setup.
+
+Given a simple view like this:
+
+.`HelloWorldView.java`
+[source,java]
+----
+@Route("")
+public class HelloWorldView extends HorizontalLayout {
+
+    TextField name;
+    Button sayHello;
+
+    public HelloWorldView() {
+        name = new TextField("Your name");
+        sayHello = new Button("Say hello");
+        sayHello.addClickListener(e -> {
+            Notification.show("Hello " + name.getValue());
+        });
+        add(name, sayHello);
+    }
+}
+----
+
+A browserless test for it looks like this:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+@SpringBootTest
+class HelloWorldViewTest extends SpringBrowserlessTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = $(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+
+}
+----
+
+The following sections break down what this test does.
+
+
+=== Navigating to a View
+
+The [methodname]`navigate()` method opens a view, just as a user would navigate to it in the browser. It returns the view instance so you can interact with it directly.
+
+[source,java]
+----
+final HelloWorldView helloView = navigate(HelloWorldView.class);
+----
+
+
+=== Using the Java API Directly
+
+Since you're running on the server side, you have direct access to the Java component API. In the example above, the [classname]`TextField` and [classname]`Button` fields are package-protected. This means the test class can access them directly, as long as it's in the same Java package -- for example, if the view is in `src/main/java/com/example/app/`, put the test in `src/test/java/com/example/app/`.
+
+[source,java]
+----
+// Read a component's value directly
+String currentValue = helloView.name.getValue();
+
+// Check component state
+boolean isEnabled = helloView.sayHello.isEnabled();
+boolean isVisible = helloView.name.isVisible();
+----
+
+
+=== Simulating User Actions with Testers
+
+To simulate how a user interacts with a component, wrap it with [methodname]`test()`. This returns a component-specific tester that provides methods like [methodname]`setValue()`, [methodname]`click()`, and [methodname]`getText()`. Unlike calling the Java API directly, tester methods also verify that the component is in a usable state -- visible, enabled, and attached to the UI.
+
+[source,java]
+----
+// Simulate typing into a text field
+test(helloView.name).setValue("Test");
+
+// Simulate clicking a button
+test(helloView.sayHello).click();
+
+// Read the text a user would see
+String text = test(notification).getText();
+----
+
+Each Vaadin component has a tester tailored to its behavior. For example, a [classname]`CheckboxTester` uses [methodname]`click()` to toggle checked state, a [classname]`ComboBoxTester` has [methodname]`selectItem()`, and a [classname]`GridTester` has [methodname]`getRow()`. See <<component-testers#, Component Testers>> for a full overview and how to build testers for your own components.
+
+
+=== Finding Components
+
+Not every component is stored in a view field. For example, the [classname]`Notification` in the test above is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`$()` query method to find components in the UI by their type:
+
+[source,java]
+----
+// Find the single Notification currently open
+Notification notification = $(Notification.class).single();
+----
+
+The query API supports filtering by properties, predicates, and scoping to specific parts of the component tree. See <<component-query#, Querying Components>> for details.
+
+
+== Running Tests
+
+Testing with [classname]`SpringBrowserlessTest` doesn't require any particular setup beyond the dependencies above. Run the test directly from your IDE or use Maven, for example by typing `mvn test` in the terminal.
+
+
+== Navigating to Views
+
+On test initialization, the loaded view is the root view.
+
+To navigate to another registered view, use the [methodname]`navigate()` methods provided by the base class:
+
+- For a normal view with only a path defined
++
+[methodname]`navigate(MyView.class)`
++
+[methodname]`navigate("myView", MyView.class)`
+- For a view with [interfacename]`HasUrlParameter`
++
+[methodname]`navigate(MyParam.class, "parameter")`
++
+[methodname]`navigate("myParam/parameter", MyParam.class)`
+- For a view with URL template `@Route("template/:param")`
++
+[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
++
+[methodname]`navigate("template/myParam", Template.class)`
+
+All navigation methods return the instantiated view, so that its fields can be used directly for testing.
+
+[NOTE]
+Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
+
+You can also retrieve the current view at any time with [methodname]`getCurrentView()`:
+
+[source,java]
+----
+HasElement view = getCurrentView();
+----
+
+
+== Simulating Keyboard Shortcuts
+
+Use [methodname]`fireShortcut()` to simulate keyboard shortcuts registered with Vaadin's shortcut API:
+
+[source,java]
+----
+// Simulate pressing Enter
+fireShortcut(Key.ENTER);
+
+// Simulate Ctrl+S
+fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
+----
+
+
+[discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`

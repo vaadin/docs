@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/horizontal-layout';
+import '@vaadin/form-layout';
 import '@vaadin/number-field';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -15,13 +15,13 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
+      <vaadin-form-layout auto-responsive auto-rows>
         <!-- tag::snippet[] -->
         <vaadin-number-field readonly label="Read-only" value="200"></vaadin-number-field>
 
         <vaadin-number-field disabled label="Disabled"></vaadin-number-field>
         <!-- end::snippet[] -->
-      </vaadin-horizontal-layout>
+      </vaadin-form-layout>
     `;
   }
 }

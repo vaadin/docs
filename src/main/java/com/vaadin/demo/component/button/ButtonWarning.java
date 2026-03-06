@@ -12,15 +12,15 @@ public class ButtonWarning extends Div {
     public ButtonWarning() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
-                ButtonVariant.LUMO_WARNING);
+        primaryButton.addThemeVariants(ButtonVariant.PRIMARY,
+                ButtonVariant.WARNING);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeVariants(ButtonVariant.LUMO_WARNING);
+        secondaryButton.addThemeVariants(ButtonVariant.WARNING);
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
-                ButtonVariant.LUMO_WARNING);
+        tertiaryButton.addThemeVariants(ButtonVariant.TERTIARY,
+                ButtonVariant.WARNING);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,

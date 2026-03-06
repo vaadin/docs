@@ -45,16 +45,10 @@ export class Example extends LitElement {
 
   // tag::renderer[]
   renderer: NotificationLitRenderer = () => html`
-    <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
+    <vaadin-horizontal-layout theme="spacing" style="align-items: center; min-width: 350px;">
       <div>Failed to generate report</div>
-      <vaadin-button
-        theme="tertiary-inline"
-        style="margin-left: var(--lumo-space-xl);"
-        @click="${this.close}"
-      >
-        Retry
-      </vaadin-button>
-      <vaadin-button theme="tertiary-inline icon" @click="${this.close}" aria-label="Close">
+      <vaadin-button slot="end" @click="${this.close}">Retry</vaadin-button>
+      <vaadin-button slot="end" theme="icon" @click="${this.close}" aria-label="Close">
         <vaadin-icon icon="lumo:cross"></vaadin-icon>
       </vaadin-button>
     </vaadin-horizontal-layout>

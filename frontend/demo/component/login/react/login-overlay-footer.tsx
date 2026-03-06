@@ -5,7 +5,7 @@ import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 function Example() {
   return (
     // tag::snippet[]
-    <LoginOverlay>
+    <LoginOverlay opened no-autofocus>
       <p slot="footer" style={{ textAlign: 'center' }}>
         Never tell your password to anyone
       </p>

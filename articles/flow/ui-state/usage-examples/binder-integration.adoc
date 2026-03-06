@@ -1,0 +1,174 @@
+---
+title: Form Binding with Dynamic Validation
+description: Combine Vaadin Binder with signals for forms where validation rules depend on other field values, enabling reactive cross-field validation with dynamic error messages.
+order: 10
+---
+
+
+= Form Binding with Dynamic Validation
+
+This guide shows how to combine Vaadin Binder with signals for forms that have validation rules depending on other field values. You'll learn how to use signals for cross-field validation and bind UI elements to validation status, all while leveraging Binder's built-in validation features.
+
+
+== The Use Case
+
+Forms often need validation rules that depend on other field values. For example, a registration form where age requirements change based on account type: personal accounts need users to be 14 or older, while business accounts require 18 or older. Additionally, you want to show real-time validation status and enable the submit button only when all fields are valid.
+
+Signals simplify this by making validation rules and UI state reactive. When a user changes the account type, validation rules automatically update and the UI reflects the new state immediately—no manual coordination needed.
+
+
+== The Solution
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/BinderIntegrationExample.java[tags=snippet,indent=0]
+----
+
+
+== How It Works
+
+
+=== Signals for Dynamic Values
+
+Create [classname]`ValueSignal` instances for fields that affect validation logic:
+
+[source,java]
+----
+ValueSignal<AccountType> accountTypeSignal = new ValueSignal<>(AccountType.PERSONAL);
+ValueSignal<Integer> ageSignal = new ValueSignal<>(0);
+----
+
+These signals track the current values of fields that other validation rules depend on. When these values change, dependent validations update automatically.
+
+
+=== Two-Way Binding with Form Fields
+
+Use [methodname]`bindValue()` to connect signals to form fields:
+
+[source,java]
+----
+accountTypeSelect.bindValue(accountTypeSignal, accountTypeSignal::set);
+ageField.bindValue(ageSignal, ageSignal::set);
+----
+
+This creates a two-way connection: when the user changes the field, the signal updates, and when code updates the signal, the field updates. See <<../local-signals#two-way-mapping,Two-Way Signal Mapping>> for more details about bidirectional bindings.
+
+
+=== Computed Signals for Dynamic Validation
+
+Create a computed signal that derives the validation result from multiple signals:
+
+[source,java]
+----
+Signal<Boolean> ageValidSignal = Signal.computed(() -> {
+    Integer age = ageSignal.get();
+    AccountType accountType = accountTypeSignal.get();
+    if (age == null) {
+        return false;
+    }
+    return accountType == AccountType.BUSINESS ? age >= 18 : age >= 13;
+});
+----
+
+This signal automatically recalculates whenever `ageSignal` or `accountTypeSignal` changes. The validation logic is centralized and reactive.
+
+
+=== Using Signals in Binder Validators
+
+Reference the computed signal in your Binder validator:
+
+[source,java]
+----
+binder.forField(ageField)
+    .withValidator(value -> ageValidSignal.get(), value -> {
+        AccountType accountType = accountTypeSignal.get();
+        return accountType == AccountType.BUSINESS
+            ? "Business accounts require age 18 or older"
+            : "Personal accounts require age 13 or older";
+    })
+    .bind("age");
+----
+
+The validator checks [methodname]`ageValidSignal.get()` and provides a dynamic error message based on the current account type. When the user changes the account type, Binder automatically re-runs validation because the signal value changed.
+
+
+=== Cross-Field Validation with Binding Values
+
+For simpler cross-field validation that doesn't need signals, use [classname]`Binder.Binding.valueSignal()` - binding validator re-runs always when a binding signal value changes:
+
+[source,java]
+----
+Binder.Binding<UserRegistration, String> pwBinding = binder
+    .forField(passwordField)
+    .withValidator(value -> value != null && value.length() >= 8,
+        "Password must be at least 8 characters")
+    .bind("password");
+
+binder.forField(confirmPasswordField)
+    .withValidator(value -> value != null && value.equals(pwBinding.valueSignal().get()),
+        "Passwords do not match")
+    .bind("confirmPassword");
+----
+
+You can mix [methodname]`binding.valueSignal()` and [methodname]`signal.get()` in the same validator - Binder re-validates whenever any referenced binding signal or outer signal value changes. Use signals when you need to share validation state across multiple components or derive complex logic from multiple sources.
+
+
+=== Reactive Submit Button
+
+Enable the submit button only when the form is valid using [methodname]`bindEnabled()`:
+
+[source,java]
+----
+submitButton.bindEnabled(
+    binder.validationStatusSignal().map(BinderValidationStatus::isOk));
+----
+
+The [methodname]`validationStatusSignal()` method returns a signal that updates whenever validation state changes. The [methodname]`map()` method transforms it to a boolean that controls the button's enabled state.
+
+
+=== Reactive Status Display
+
+Show form status with reactive text and styling:
+
+[source,java]
+----
+Span statusLabel = new Span();
+statusLabel.bindText(binder.validationStatusSignal()
+    .map(status -> status.isOk() ? "Form is valid - Ready to submit"
+        : "Please complete all required fields correctly"));
+statusLabel.getStyle().bind("color", binder.validationStatusSignal()
+    .map(status -> status.isOk() ? "green" : "orange"));
+----
+
+Multiple bindings to the same signal are efficient - the signal value is cached and shared across all dependent components.
+
+
+== Key Patterns
+
+*Use signals for dynamic validation*:: When validation rules depend on other field values, use a binding value or a signal that holds a dependency state. Binder automatically re-validates when binding or signal values change.
+
+*Two-way binding with [methodname]`bindValue()`*:: Connect form fields to signals so changes flow in both directions automatically.
+
+*Computed signals for derived logic*:: Create computed signals that derive validation state from multiple source signals. This centralizes logic and makes dependencies explicit.
+
+*Reactive UI elements*:: Bind buttons, labels, and styles to Binder's validation status for real-time feedback.
+
+
+== When to Use This Pattern
+
+This pattern is ideal when:
+
+- Validation rules depend on other form fields
+- Error messages need to be dynamic based on field values
+- You want real-time validation feedback as users type
+- You need to enable/disable submit buttons based on form validity
+
+For simpler forms with static validation rules, standard Binder validators without signals may be sufficient.
+
+
+== Related Topics
+
+- <<../local-signals#,Local Signals>> - Understanding ValueSignal and two-way binding
+- <<../effects-computed#,Effects and Computed Signals>> - Creating derived values
+- <<../building-ui#,Component Bindings>> - Binding signals to component properties
+- <<../../binding-data/components-binder-validation#,Binder Validation>> - Reference documentation for Binder validation patterns

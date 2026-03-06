@@ -38,20 +38,14 @@ export class Example extends LitElement {
                   <!-- tag::snippet[] -->
                   <!-- Use the label attribute to display full name of the person as selected value label -->
                   <vaadin-item value="${person.id}" label="${formatPersonFullName(person)}">
-                    <div style="display: flex; align-items: center;">
+                    <div class="person-item">
                       <img
                         src="${person.pictureUrl}"
                         alt="Portrait of ${formatPersonFullName(person)}"
-                        style="width: 2.25rem; margin-right: var(--lumo-space-s);"
+                        style="width: 2.25rem;"
                       />
-                      <div>
-                        ${formatPersonFullName(person)}
-                        <div
-                          style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);"
-                        >
-                          ${person.profession}
-                        </div>
-                      </div>
+                      <span>${formatPersonFullName(person)}</span>
+                      <span>${person.profession}</span>
                     </div>
                   </vaadin-item>
                   <!-- end::snippet[] -->

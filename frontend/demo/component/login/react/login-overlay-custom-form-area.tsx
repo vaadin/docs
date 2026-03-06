@@ -6,7 +6,7 @@ import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
 function Example() {
   return (
     // tag::snippet[]
-    <LoginOverlay opened>
+    <LoginOverlay opened no-autofocus>
       <IntegerField slot="custom-form-area" name="code" label="One-time code" />
     </LoginOverlay>
     // end::snippet[]

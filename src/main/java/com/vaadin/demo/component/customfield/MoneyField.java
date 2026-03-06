@@ -30,18 +30,18 @@ public class MoneyField extends CustomField<Money> {
         currency.setAriaLabel("Currency");
 
         HorizontalLayout layout = new HorizontalLayout(amount, currency);
-        // Removes default spacing
-        layout.setSpacing(false);
         // Adds small amount of space between the components
-        layout.getThemeList().add("spacing-s");
+        layout.setSpacing("var(--vaadin-gap-s)");
 
         add(layout);
     }
 
-    public void addThemeVariant(CustomFieldVariant variant) {
-        super.addThemeVariants(variant);
-        amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
-        currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
+    public void addThemeVariants(CustomFieldVariant... variants) {
+        super.addThemeVariants(variants);
+        for (CustomFieldVariant variant : variants) {
+            amount.addThemeVariants(TextFieldVariant.valueOf(variant.name()));
+            currency.addThemeVariants(SelectVariant.valueOf(variant.name()));
+        }
     }
 
     @Override

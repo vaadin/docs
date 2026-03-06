@@ -44,16 +44,20 @@ function Example() {
   return (
     <>
       <HorizontalLayout style={{ alignItems: 'baseline' }}>
-        <h3 style={{ flex: 1 }}>Employees</h3>
-        <Button id="toggle-columns" theme="icon" aria-label="Show / hide columns">
+        <h3>Employees</h3>
+        <Button id="toggle-columns" slot="end" theme="icon" aria-label="Show / hide columns">
           <Icon icon="vaadin:grid-h" />
         </Button>
       </HorizontalLayout>
 
       {/* tag::snippet[] */}
       <Popover for="toggle-columns" modal withBackdrop position="bottom-end">
-        <div style={{ fontWeight: '600', padding: 'var(--lumo-space-xs)' }}>Configure columns</div>
-        <CheckboxGroup theme="vertical" value={visibleColumns.value}>
+        <div style={{ fontWeight: '600' }}>Configure columns</div>
+        <CheckboxGroup
+          theme="vertical"
+          value={visibleColumns.value}
+          style={{ padding: '0', margin: 'var(--vaadin-gap-s) 0' }}
+        >
           {columns.value.map((item) => (
             <Checkbox
               label={item.label}
@@ -68,7 +72,7 @@ function Example() {
             />
           ))}
         </CheckboxGroup>
-        <HorizontalLayout style={{ justifyContent: 'space-between' }}>
+        <HorizontalLayout style={{ justifyContent: 'space-between', gap: 'var(--vaadin-gap-s)' }}>
           <Button
             theme="small"
             onClick={() => {
@@ -93,7 +97,7 @@ function Example() {
       {/* end::snippet[] */}
 
       {/* tag::gridsnippet[] */}
-      <Grid items={items.value}>
+      <Grid items={items.value} style={{ marginTop: 'var(--vaadin-gap-s)' }}>
         {columns.value.map((item) => (
           <GridColumn path={item.key} hidden={!item.visible} key={item.key} />
         ))}

@@ -1,6 +1,8 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.tabs.Tab;
@@ -22,13 +24,9 @@ public class BadgeCounter extends Div {
     // tag::snippet2[]
     private static Tab createTab(String labelText, int messageCount) {
         Span label = new Span(labelText);
-        Span counter = new Span(String.valueOf(messageCount));
-        counter.getElement().getThemeList().add("badge pill small contrast");
-        counter.getStyle().set("margin-inline-start", "var(--lumo-space-s)");
-        // Accessible badge label
-        String counterLabel = String.format("%d unread messages", messageCount);
-        counter.getElement().setAttribute("aria-label", counterLabel);
-        counter.getElement().setAttribute("title", counterLabel);
+        Badge counter = new Badge("unread messages", messageCount);
+        counter.addThemeVariants(BadgeVariant.FILLED, BadgeVariant.NUMBER_ONLY);
+        counter.getStyle().set("margin-inline-start", "var(--vaadin-gap-s)");
 
         return new Tab(label, counter);
     }

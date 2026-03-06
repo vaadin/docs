@@ -35,7 +35,7 @@ public class ButtonGrid extends VerticalLayout {
 
         Button delete = new Button("Delete");
         delete.setEnabled(false);
-        delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        delete.addThemeVariants(ButtonVariant.ERROR);
         delete.getStyle().set("margin-inline-start", "auto");
 
         Grid<Person> grid = new Grid<>(Person.class, false);

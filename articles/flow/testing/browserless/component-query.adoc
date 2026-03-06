@@ -1,0 +1,188 @@
+---
+title: Querying Components
+page-title: How to query Vaadin components in browserless tests
+description: Details and examples on accessing components within a browserless test.
+meta-description: Learn how to use component queries for effective browserless testing in Vaadin applications. Ensure quality and precision.
+order: 20
+---
+
+
+= Querying Components in Browserless Tests
+
+The [classname]`BrowserlessTest` base class can get the instantiated view, but child components may not always be directly accessible. For example, components may be stored in private fields or may not be referenced at all in the view class.
+
+To overcome this limitation, [classname]`BrowserlessTest` provides a component query functionality that lets you search the component tree for the components you need to interact with in test methods.
+
+
+== Component Queries
+
+You can get a [classname]`ComponentQuery` object by calling the [methodname]`$()` method, specifying the type of the component you are searching for.
+
+Once the query is ready with all conditions configured, use a terminal operator to retrieve the components that it found. Examples of terminal operators are [methodname]`single()`, [methodname]`last()`, [methodname]`atIndex()`, [methodname]`all()`, and [methodname]`id()`.
+
+[source,java]
+----
+// Get the TextField
+TextField nameField = $(TextField.class).single();
+----
+
+
+=== Scoping Queries
+
+You can also restrict search scope to the children of the current view by using the [methodname]`$view()` method, or even to another component by using [methodname]`$(MyComponent.class, rootComponent)`.
+
+[source,java]
+----
+// Get the TextField in the current view
+TextField nameField = $view(TextField.class).single();
+
+// Get the TextField nested in a container
+TextField nameField = $(TextField.class, view.formLayout).single();
+----
+
+The query object has many filtering methods that can be used to refine the search.
+
+[source,java]
+----
+// Get the TextField with the given label
+TextField nameField = $view(TextField.class)
+        .withPropertyValue(TextField::getLabel, "First name")
+        .single();
+
+// Get all TextFields in the view that satisfy the conditions
+Predicate<TextField> fieldHasNotValue = field -> field.getOptionalValue().isEmpty();
+Predicate<TextField> fieldIsInvalid = TextField::isInvalid;
+List<TextField> textField = $view(TextField.class)
+        .withCondition(fieldHasNotValue.or(fieldIsInvalid))
+        .all();
+----
+
+
+=== Filtering Methods
+
+The following table lists all available filter methods, grouped by category:
+
+[cols="1,2"]
+|===
+| Method | Description
+
+2+h| Text & Caption
+
+| [methodname]`withText(String)`
+| Matches components whose text content equals the given string exactly.
+
+| [methodname]`withTextContaining(String)`
+| Matches components whose text content contains the given substring.
+
+| [methodname]`withCaption(String)`
+| Matches components whose caption equals the given string exactly.
+
+| [methodname]`withCaptionContaining(String)`
+| Matches components whose caption contains the given substring.
+
+2+h| CSS Classes & Themes
+
+| [methodname]`withClassName(String...)`
+| Matches components that have all of the given CSS class names.
+
+| [methodname]`withoutClassName(String...)`
+| Excludes components that have any of the given CSS class names.
+
+| [methodname]`withTheme(String)`
+| Matches components whose theme attribute contains the given value.
+
+| [methodname]`withoutTheme(String)`
+| Excludes components whose theme attribute contains the given value.
+
+2+h| Attributes
+
+| [methodname]`withAttribute(String)`
+| Matches components that have the given attribute, regardless of value.
+
+| [methodname]`withAttribute(String, String)`
+| Matches components that have the given attribute with the specified value.
+
+| [methodname]`withoutAttribute(String)`
+| Excludes components that have the given attribute.
+
+2+h| Value & Properties
+
+| [methodname]`withValue(V)`
+| Matches [interfacename]`HasValue` components whose current value equals the given value.
+
+| [methodname]`withPropertyValue(Function, V)`
+| Matches components where the given getter returns the expected value.
+
+| [methodname]`withCondition(Predicate)`
+| Matches components that satisfy a custom predicate.
+
+2+h| Identity
+
+| [methodname]`withId(String)`
+| Matches the component with the given `id`.
+|===
+
+Here are a few examples:
+
+[source,java]
+----
+// Find a button by its text
+Button save = $(Button.class).withText("Save").single();
+
+// Find a TextField by CSS class
+TextField styled = $(TextField.class).withClassName("highlighted").single();
+
+// Find checkboxes with a specific value
+Checkbox checked = $(Checkbox.class).withValue(true).single();
+----
+
+
+=== Checking Existence
+
+Use [methodname]`exists()` to check whether a query has results without throwing an exception when none are found:
+
+[source,java]
+----
+if ($(Notification.class).exists()) {
+    // A notification is open
+}
+----
+
+
+=== Result Count Assertions
+
+You can assert the number of results directly in the query chain:
+
+[source,java]
+----
+// Expect exactly 3 text fields
+List<TextField> fields = $(TextField.class).withResultsSize(3).all();
+
+// Expect between 1 and 5 results
+List<Button> buttons = $(Button.class).withResultsSize(1, 5).all();
+
+// Expect at least 1 result
+List<Grid> grids = $(Grid.class).withMinResults(1).all();
+----
+
+
+=== Chaining Queries
+
+You may sometimes need to do a query for components nested inside the UI, in a hierarchy composed of many different types of components. To simplify such situations, the query object offers methods to chain a new query starting with a found component, so that a complex query can be created in a fluent way. The [methodname]`thenOn()` method and its variants, for example [methodname]`thenOnFirst()`, provide you with a new query object for the given component type, setting the search scope to the component selected from the current query.
+
+.Chained Query Example
+[source,java]
+----
+
+// Search for all 'VerticalLayout's in the view
+TextField textField = $view(VerticalLayout.class)
+        // take the second one and start searching for 'TextField's
+        .thenOn(2, TextField.class)
+        // filter for disabled 'TextField's
+        .withCondition(tf -> !tf.isEnabled())
+        // and get the last one
+        .last();
+----
+
+
+[discussion-id]`DDC7D136-1A56-44FC-B256-C15DB7645EDC`

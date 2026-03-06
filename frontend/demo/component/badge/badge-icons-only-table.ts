@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -43,13 +44,10 @@ export class Example extends LitElement {
       }
 
       return html`
-        <vaadin-icon
-          aria-label="${title}"
-          icon="${icon}"
-          style="padding: var(--lumo-space-xs)"
-          theme="badge ${theme}"
-          title="${title}"
-        ></vaadin-icon>
+        <vaadin-badge theme="${theme} icon-only">
+          <vaadin-icon icon="${icon}" slot="icon"></vaadin-icon>
+          ${title}
+        </vaadin-badge>
       `;
     };
 
