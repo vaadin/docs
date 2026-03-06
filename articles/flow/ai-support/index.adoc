@@ -1,0 +1,105 @@
+---
+title: AI Support
+description: Vaadin provides UI interfaces and an AI orchestrator for building AI-powered UIs with Vaadin, handling streaming, history, attachments, and tool calling.
+meta-description: Use Vaadin AI support features to build AI-powered interfaces by connecting Message List, Message Input, and Upload components to Spring AI or LangChain4j.
+section-nav: badge-preview
+order: 213
+layout: index
+page-links:
+  - 'API: https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/ai/orchestrator/AIOrchestrator.html[Java]'
+  - 'Source: https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-ai-components-flow-parent[Java]'
+---
+
+
+= [since:com.vaadin:vaadin@V25.1]#AI Support#
+
+// tag::description[]
+Vaadin provides a set of UI interfaces and a coordination engine for building AI-powered UIs. The [classname]`AIOrchestrator` wires UI components to an LLM provider, handling streaming responses, conversation history, file attachments, and tool calling behind a simple builder API.
+// end::description[]
+
+:preview-feature: AI support features
+:feature-flag: com.vaadin.experimental.aiComponents
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+ifdef::flow[]
+
+
+== Overview
+
+The AI support module consists of three parts:
+
+* **Orchestrator** -- [classname]`AIOrchestrator` is a non-visual coordination engine that connects UI components to an LLM provider. It has no DOM element and should not be added to a layout.
+* **Provider** -- [classname]`LLMProvider` is the interface for communicating with LLM frameworks. Use the static [methodname]`LLMProvider.from(...)` factory methods to create a provider from a Spring AI or LangChain4j model. You can also implement this interface to connect to any other LLM framework.
+* **Component interfaces** -- [classname]`AIInput`, [classname]`AIMessageList`, [classname]`AIMessage`, and [classname]`AIFileReceiver` define contracts for UI components that the orchestrator can work with. The builder also accepts standard Vaadin components ([classname]`MessageInput`, [classname]`MessageList`, [classname]`UploadManager`, [classname]`Upload`) directly.
+
+Add the UI components to your layout and pass them to the orchestrator through its builder. The orchestrator wires them together and manages the LLM interaction.
+
+
+== Basic Usage
+
+Create an AI Orchestrator by passing an LLM provider and optional UI components to the builder. The following example uses a mock provider -- replace it with a real provider via [methodname]`LLMProvider.from(...)` in production (see <<llm-providers#,LLM Providers>>).
+
+[.example.show-code]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/flow/aicomponents/ai-orchestrator-basic.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AIOrchestratorBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+When the user submits a message through the Message Input, the orchestrator automatically:
+
+. Displays the user message in the Message List
+. Sends the message to the LLM provider
+. Streams the response tokens into the Message List in real time
+. Records the exchange in the conversation history
+
+By default, user messages are labeled "You" and assistant messages are labeled "Assistant". Use [methodname]`withUserName()` and [methodname]`withAssistantName()` on the builder to customize these display names.
+
+
+== Server Push
+
+Streaming mode pushes partial responses to the UI as tokens arrive. This requires server push to be enabled. Annotate your application shell with [annotationname]`@Push`:
+
+[source,java]
+----
+@Push
+@SpringBootApplication
+public class Application implements AppShellConfigurator {
+}
+----
+
+[TIP]
+Synchronous mode does not require push. If push is not available in your environment, disable streaming on the provider. A warning is logged at runtime if push is not enabled when using streaming mode.
+
+
+== Topics
+
+section_outline::[]
+
+
+endif::flow[]
+
+== Related Components
+
+[cols="1,2"]
+|===
+|Component |Usage recommendations
+
+|<<{articles}/components/message-input#,Message Input>>
+|Text input for user messages. Pass to the orchestrator with [methodname]`withInput()`.
+
+|<<{articles}/components/message-list#,Message List>>
+|Displays messages. Pass to the orchestrator with [methodname]`withMessageList()`.
+
+|<<{articles}/components/upload#,Upload>>
+|File uploads via [classname]`UploadManager`. Pass to the orchestrator with [methodname]`withFileReceiver()`.
+
+|===

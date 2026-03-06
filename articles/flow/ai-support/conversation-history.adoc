@@ -1,0 +1,104 @@
+---
+title: Conversation History & Session Persistence
+description: Persist and restore conversation history, and reconnect the AIOrchestrator after session deserialization.
+meta-description: Learn how to persist, restore, and manage conversation history in the Vaadin AIOrchestrator, including session persistence and reconnection.
+order: 50
+---
+
+
+= Conversation History & Session Persistence
+
+ifdef::flow[]
+
+The orchestrator tracks conversation history internally. Use [methodname]`getHistory()` to get a snapshot and [methodname]`withHistory()` to restore it.
+
+
+== Persisting History
+
+Use [classname]`ResponseCompleteListener` to persist conversation state after each successful exchange:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withResponseCompleteListener(event -> {
+            var history = orchestrator.getHistory();
+            saveToDatabase(sessionId, history);
+        })
+        .build();
+----
+
+The listener is not called when the response fails, times out, is empty, or when history is restored.
+
+.UI Updates from ResponseCompleteListener
+[IMPORTANT]
+The listener runs on a background thread. It is safe to perform blocking I/O (such as database writes) directly. However, to update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+
+
+== Restoring History
+
+Restore a previously saved conversation when creating a new orchestrator. The following example pre-populates the message list with a saved exchange:
+
+[.example.show-code]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/flow/aicomponents/ai-orchestrator-history.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AIOrchestratorHistory.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+This replays messages into the LLM provider's memory, populates the Message List UI, and rebuilds internal mappings for attachment click handling.
+
+[NOTE]
+[methodname]`getHistory()` returns a point-in-time snapshot. If called while a streaming response is in progress, the snapshot may include the user message without its corresponding assistant response. Use [classname]`ResponseCompleteListener` to capture history at the right time.
+
+
+== Data Model
+
+Conversation history is represented as a list of [classname]`ChatMessage` records with four fields:
+
+- [methodname]`role()` -- `USER` or `ASSISTANT`
+- [methodname]`content()` -- the text content
+- [methodname]`messageId()` -- UUID assigned to user messages; `null` for assistant messages. Used as the correlation key for attachments.
+- [methodname]`time()` -- timestamp; may be `null`
+
+File attachments are represented as [classname]`AIAttachment` records with [methodname]`name()`, [methodname]`mimeType()`, and [methodname]`data()` (raw bytes). Attachments are not stored in [classname]`ChatMessage` -- they are correlated separately via the message ID.
+
+
+== Session Persistence
+
+[classname]`AIOrchestrator` is serializable. Conversation history, UI component bindings, listener registrations, and display names are preserved across serialization. However, the LLM provider and tool objects are transient -- they are not serialized and must be restored after deserialization.
+
+=== Reconnecting After Deserialization
+
+After the session is restored, call [methodname]`reconnect(LLMProvider)` to supply a new provider and optionally restore tools and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
+
+[source,java]
+----
+// After session restore, reconnect the orchestrator
+LLMProvider provider = getNewLLMProvider();
+Map<String, List<AIAttachment>> savedAttachments =
+        getSavedAttachments();
+
+orchestrator.reconnect(provider)
+        .withTools(new WeatherTools())      // optional
+        .withAttachments(savedAttachments)  // optional
+        .apply();
+----
+
+If [methodname]`prompt()` is called before reconnecting, it throws an [classname]`IllegalStateException`.
+
+.LLMProvider Implementations
+[NOTE]
+[classname]`LLMProvider` implementations are not serializable. Always create a new provider instance after session restore and pass it to [methodname]`reconnect()`.
+
+endif::flow[]

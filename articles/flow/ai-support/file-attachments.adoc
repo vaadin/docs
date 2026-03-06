@@ -1,0 +1,62 @@
+---
+title: File Attachments
+description: Enable file uploads in the AIOrchestrator to send attachments to the LLM with user prompts.
+meta-description: Learn how to configure file attachments in the Vaadin AIOrchestrator using UploadManager, Upload, or custom AIFileReceiver implementations.
+order: 30
+---
+
+
+= File Attachments
+
+ifdef::flow[]
+
+Enable file uploads by passing an [classname]`UploadManager`, [classname]`Upload`, or any custom [classname]`AIFileReceiver` implementation to the builder via [methodname]`withFileReceiver()`. Uploaded files are sent to the LLM as attachments with the next prompt.
+
+[source,java]
+----
+var uploadManager = new UploadManager(this);
+var uploadButton = new UploadButton(uploadManager);
+
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withFileReceiver(uploadManager)
+        .build();
+----
+
+.Upload Handler Conflict
+[NOTE]
+When using [classname]`UploadManager` or [classname]`Upload`, the component must not already have an upload handler or receiver set. The orchestrator installs its own in-memory handler. If one is already set, an [classname]`IllegalArgumentException` is thrown at build time. This restriction does not apply to custom [classname]`AIFileReceiver` implementations.
+
+.Supported Attachment Types
+[NOTE]
+The following MIME type categories are supported: images (`image/*`), text (`text/*`), PDF (`application/pdf`), audio (`audio/*`), and video (`video/*`). Attachments with other MIME types are silently dropped and not sent to the LLM.
+
+.Duplicate File Names
+[NOTE]
+Uploading multiple files with the same name in a single batch throws an [classname]`IllegalArgumentException`. Ensure each file has a unique name.
+
+To persist attachment data externally (since attachments are not stored in the conversation history), use the [methodname]`withAttachmentSubmitListener()` and [methodname]`withAttachmentClickListener()` callbacks:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withFileReceiver(uploadManager)
+        .withAttachmentSubmitListener(event -> {
+            // Store attachments keyed by message ID
+            saveAttachments(event.getMessageId(),
+                    event.getAttachments());
+        })
+        .withAttachmentClickListener(event -> {
+            // Retrieve and display the attachment
+            showAttachment(event.getMessageId(),
+                    event.getAttachmentIndex());
+        })
+        .build();
+----
+
+endif::flow[]
