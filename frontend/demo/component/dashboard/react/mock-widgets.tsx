@@ -3,42 +3,6 @@ import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 
-export function VisitorsWidget() {
-  return (
-    <div className="dashboard-kpi-widget">
-      <span className="kpi-value">54,238</span>
-      <div className="kpi-footer">
-        <span className="kpi-trend-up">+12.3%</span>
-        <span>vs last month</span>
-      </div>
-    </div>
-  );
-}
-
-export function DownloadsWidget() {
-  return (
-    <div className="dashboard-kpi-widget">
-      <span className="kpi-value">11,842</span>
-      <div className="kpi-footer">
-        <span className="kpi-trend-down">-3.8%</span>
-        <span>vs last month</span>
-      </div>
-    </div>
-  );
-}
-
-export function ConversionsWidget() {
-  return (
-    <div className="dashboard-kpi-widget">
-      <span className="kpi-value">1,025</span>
-      <div className="kpi-footer">
-        <span className="kpi-trend-up">+8.1%</span>
-        <span>vs last month</span>
-      </div>
-    </div>
-  );
-}
-
 const countryData = [
   { flag: '🇺🇸', name: 'United States', visitors: 12847 },
   { flag: '🇬🇧', name: 'United Kingdom', visitors: 6211 },
@@ -49,6 +13,45 @@ const countryData = [
 ];
 
 const totalVisitors = countryData.reduce((sum, c) => sum + c.visitors, 0);
+
+const browserData = [
+  { name: 'Chrome', share: 64 },
+  { name: 'Firefox', share: 18 },
+  { name: 'Safari', share: 12 },
+  { name: 'Edge', share: 4 },
+  { name: 'Other', share: 2 },
+];
+
+const trafficData = [
+  { name: 'Organic', share: 43 },
+  { name: 'Direct', share: 27 },
+  { name: 'Social', share: 18 },
+  { name: 'Referral', share: 12 },
+];
+
+function KpiWidget({ value, trend, trendUp }: { value: string; trend: string; trendUp: boolean }) {
+  return (
+    <div className="dashboard-kpi-widget">
+      <span className="kpi-value">{value}</span>
+      <div className="kpi-footer">
+        <span className={trendUp ? 'kpi-trend-up' : 'kpi-trend-down'}>{trend}</span>
+        <span>vs last month</span>
+      </div>
+    </div>
+  );
+}
+
+export function VisitorsWidget() {
+  return <KpiWidget value="54,238" trend="+12.3%" trendUp />;
+}
+
+export function DownloadsWidget() {
+  return <KpiWidget value="11,842" trend="-3.8%" trendUp={false} />;
+}
+
+export function ConversionsWidget() {
+  return <KpiWidget value="1,025" trend="+8.1%" trendUp />;
+}
 
 export function VisitorsByCountryWidget() {
   return (
@@ -68,14 +71,6 @@ export function VisitorsByCountryWidget() {
   );
 }
 
-const browserData = [
-  { name: 'Chrome', share: 64 },
-  { name: 'Firefox', share: 18 },
-  { name: 'Safari', share: 12 },
-  { name: 'Edge', share: 4 },
-  { name: 'Other', share: 2 },
-];
-
 export function BrowsersWidget() {
   return (
     <div className="dashboard-share-list-widget">
@@ -88,13 +83,6 @@ export function BrowsersWidget() {
     </div>
   );
 }
-
-const trafficData = [
-  { name: 'Organic', share: 43 },
-  { name: 'Direct', share: 27 },
-  { name: 'Social', share: 18 },
-  { name: 'Referral', share: 12 },
-];
 
 export function TrafficSourcesWidget() {
   return (

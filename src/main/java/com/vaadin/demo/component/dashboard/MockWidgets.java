@@ -23,11 +23,6 @@ public class MockWidgets {
     record ShareData(String name, String share) {
     }
 
-    private static final List<KpiData> KPI_WIDGETS = List.of(
-            new KpiData("54,238", "+12.3%", true),
-            new KpiData("11,842", "-3.8%", false),
-            new KpiData("1,025", "+8.1%", true));
-
     private static final List<CountryData> COUNTRY_DATA = List.of(
             new CountryData("\uD83C\uDDFA\uD83C\uDDF8", "United States", 12847),
             new CountryData("\uD83C\uDDEC\uD83C\uDDE7", "United Kingdom", 6211),
@@ -46,15 +41,15 @@ public class MockWidgets {
             new ShareData("Social", "18%"), new ShareData("Referral", "12%"));
 
     public static Component createVisitorsWidget() {
-        return createKpiWidget(KPI_WIDGETS.get(0));
+        return createKpiWidget(new KpiData("54,238", "+12.3%", true));
     }
 
     public static Component createDownloadsWidget() {
-        return createKpiWidget(KPI_WIDGETS.get(1));
+        return createKpiWidget(new KpiData("11,842", "-3.8%", false));
     }
 
     public static Component createConversionsWidget() {
-        return createKpiWidget(KPI_WIDGETS.get(2));
+        return createKpiWidget(new KpiData("1,025", "+8.1%", true));
     }
 
     public static Component createVisitorsByCountryWidget() {
