@@ -300,6 +300,66 @@ progressBar.getStyle().bind("background-color", progress.map(p ->
 ----
 
 
+== Binding Items to Data Components
+
+Use [methodname]`bindItems()` to bind a list signal to data components like [classname]`Grid`, [classname]`ComboBox`, or other in-memory data components. The component automatically updates when items are added, removed, or updated in the signal:
+
+[source,java]
+----
+import com.vaadin.flow.signals.local.ListSignal;
+
+record Person(String firstName, String lastName, String email, int age) {}
+
+ListSignal<Person> people = new ListSignal<>();
+
+// Add initial data
+people.insertLast(new Person("Alice", "Smith", "alice@example.com", 25));
+people.insertLast(new Person("Bob", "Johnson", "bob@example.com", 30));
+
+// Bind to Grid
+Grid<Person> grid = new Grid<>(Person.class);
+grid.setColumns("firstName", "lastName", "email", "age");
+grid.bindItems(people);
+// Grid displays 2 rows
+
+// Add more items
+people.insertLast(new Person("Charlie", "Brown", "charlie@example.com", 35));
+// Grid automatically updates to show 3 rows
+
+// Update an item - get the item signal and modify it
+Signal<Person> firstPerson = people.peek().getFirst();
+firstPerson.update(person -> new Person(person.firstName(), person.lastName(),
+    "newemail@example.com", 31));
+// Grid automatically updates the first row with new email and age
+
+// Remove an item
+people.remove(people.peek().getFirst());
+// Grid automatically updates to show 2 rows
+----
+
+[classname]`ComboBox` additionally provides an overload method that takes a custom user filter converter. In the following example, countries in a [classname]`ComboBox` can be dynamically filtered based on user input. Bind a [classname]`ListSignal` to the [classname]`ComboBox` and provide a filter function:
+
+[source,java]
+----
+ListSignal<String> countries = new ListSignal<>();
+countries.insertLast("USA");
+countries.insertLast("UK");
+countries.insertLast("Germany");
+
+ComboBox<String> countrySelect = new ComboBox<>("Country");
+countrySelect.bindItems(countries,
+    filterText -> country -> country.toLowerCase().contains(filterText.toLowerCase()));
+
+// or use a default filter that checks if the item contains the filter text
+countrySelect.bindItems(countries);
+
+// Add more options dynamically
+countries.insertLast("France");
+// ComboBox automatically includes the new option
+----
+
+Use [classname]`ListSignal` for single-user scenarios (see <<local-signals#_listsignal,Local Signals>>). Use [classname]`SharedListSignal` when multiple users need to see the same data in real-time (see <<shared-signals#,Shared Signals>>). Alternatively, use a generic [classname]`Signal<List<Signal<T>>>` when you need a custom list structure or want to work with standard Java collections while maintaining per-item reactivity.
+
 == Rendering Lists of Components
 
 Use [methodname]`bindChildren()` to efficiently render a list of components from a list signal. This method handles additions, removals, and reordering without recreating all children:
@@ -325,7 +385,7 @@ items.insertLast("Second item");
 ----
 
 [NOTE]
-Use [classname]`ListSignal` for single-user scenarios (dynamic form fields, local selections). Use [classname]`SharedListSignal` when multiple users need to see the same list in real-time or when you need transactional guarantees. See <<local-signals#listsignal,ListSignal>> for more details.
+Use [classname]`ListSignal` for single-user scenarios (dynamic form fields, local selections). Use [classname]`SharedListSignal` when multiple users need to see the same list in real-time or when you need transactional guarantees (see <<shared-signals#,Shared Signals>>). Alternatively, use a generic [classname]`Signal<List<Signal<T>>>` when you need a custom list structure or want to work with standard Java collections while maintaining per-item reactivity. See <<local-signals#_listsignal,ListSignal>> for more details.
 
 
 === Complex List Items
