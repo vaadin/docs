@@ -4,8 +4,8 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -15,7 +15,7 @@ function Example() {
   return (
     <>
       {/* tag::snippet[] */}
-      <VerticalLayout>
+      <FormLayout autoResponsive>
         <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
           <EmailField
             label="Primary email address"
@@ -49,7 +49,7 @@ function Example() {
             Remove
           </Button>
         </HorizontalLayout>
-      </VerticalLayout>
+      </FormLayout>
       {/* end::snippet[] */}
     </>
   );

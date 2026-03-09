@@ -116,12 +116,7 @@ function Example() {
         />
       </Chart>
 
-      <Chart
-        style={chartStyle}
-        type="pie"
-        tooltip
-        additionalOptions={pieOptions}
-      >
+      <Chart style={chartStyle} type="pie" tooltip additionalOptions={pieOptions}>
         <ChartSeries title="Brands" values={pieValues} />
       </Chart>
 

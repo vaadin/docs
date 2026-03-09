@@ -31,7 +31,12 @@ function Example() {
         <Button
           id="avatar"
           theme="icon tertiary"
-          style={{ margin: 'var(--vaadin-gap-s)', marginInlineStart: 'auto', borderRadius: '50%', padding: 0 }}
+          style={{
+            margin: 'var(--vaadin-gap-s)',
+            marginInlineStart: 'auto',
+            borderRadius: '50%',
+            padding: 0,
+          }}
         >
           <Avatar
             tabIndex={-1}
