@@ -10,8 +10,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 import { ComboBoxCountryService } from 'Frontend/generated/endpoints';
 
-export @customElement('combo-box-lazy-loading')
-class Example extends LitElement {
+@customElement('combo-box-lazy-loading')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

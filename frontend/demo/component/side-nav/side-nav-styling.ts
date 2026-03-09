@@ -7,8 +7,8 @@ import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('side-nav-styling')
-class Example extends LitElement {
+@customElement('side-nav-styling')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

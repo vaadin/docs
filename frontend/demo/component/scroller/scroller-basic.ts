@@ -7,8 +7,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('scroller-basic')
-class Example extends LitElement {
+@customElement('scroller-basic')
+export class Example extends LitElement {
   private eventDetails = `
 **Date & Time**
 

@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import templates from '../../../../src/main/resources/data/templates.json';
 
-export @customElement('text-area-auto-height')
-class Example extends LitElement {
+@customElement('text-area-auto-height')
+export class Example extends LitElement {
   static override styles = css`
     vaadin-text-area {
       width: 100%;

@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('horizontal-layout-wrapping')
-class Example extends LitElement {
+@customElement('horizontal-layout-wrapping')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

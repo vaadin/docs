@@ -10,8 +10,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-export @customElement('tree-grid-column')
-class Example extends LitElement {
+@customElement('tree-grid-column')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

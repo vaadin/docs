@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { DatePicker, DatePickerValidatedEvent } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('date-picker-validation')
-class Example extends LitElement {
+@customElement('date-picker-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

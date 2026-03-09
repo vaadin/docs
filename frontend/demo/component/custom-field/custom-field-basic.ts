@@ -8,8 +8,8 @@ import { Binder, field } from '@vaadin/hilla-lit-form';
 import { applyTheme } from 'Frontend/demo/theme';
 import AppointmentModel from 'Frontend/generated/com/vaadin/demo/domain/AppointmentModel';
 
-export @customElement('custom-field-basic')
-class Example extends LitElement {
+@customElement('custom-field-basic')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

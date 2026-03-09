@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import landscapeImage from '../../../../src/main/resources/images/reindeer.jpg?url';
 
-export @customElement('message-list-attachments')
-class Example extends LitElement {
+@customElement('message-list-attachments')
+export class Example extends LitElement {
   private readonly yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd HH:mm');
   private readonly fiftyMinutesAgo = format(subMinutes(new Date(), 50), 'yyyy-MM-dd HH:mm');
 

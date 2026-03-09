@@ -4,8 +4,8 @@ import { LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 
-export @customElement('notification-info')
-class Example extends LitElement {
+@customElement('notification-info')
+export class Example extends LitElement {
   firstUpdated() {
     // tag::snippet[]
     const notification = Notification.show('New project plan available', {

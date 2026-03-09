@@ -16,8 +16,8 @@ function createItem(text: string, assistant = false): MessageListItem {
   };
 }
 
-export @customElement('message-list-ai-chat')
-class Example extends LitElement {
+@customElement('message-list-ai-chat')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

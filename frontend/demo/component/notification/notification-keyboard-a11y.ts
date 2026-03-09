@@ -8,8 +8,8 @@ import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { notificationRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('notification-keyboard-a11y')
-class Example extends LitElement {
+@customElement('notification-keyboard-a11y')
+export class Example extends LitElement {
   @state()
   private notificationOpened = true;
 

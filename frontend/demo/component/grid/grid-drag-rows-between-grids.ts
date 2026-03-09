@@ -8,8 +8,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-export @customElement('grid-drag-rows-between-grids')
-class Example extends LitElement {
+@customElement('grid-drag-rows-between-grids')
+export class Example extends LitElement {
   static override styles = css`
     .grids-container {
       display: flex;

@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('button-success')
-class Example extends LitElement {
+@customElement('button-success')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

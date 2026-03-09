@@ -12,8 +12,8 @@ import type { Notification } from '@vaadin/notification';
 import { notificationRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('notification-rich')
-class Example extends LitElement {
+@customElement('notification-rich')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

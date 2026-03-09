@@ -11,8 +11,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 const formatPersonFullName = (person: Person) => `${person.firstName} ${person.lastName}`;
 
-export @customElement('select-overlay-width')
-class Example extends LitElement {
+@customElement('select-overlay-width')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

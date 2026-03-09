@@ -9,8 +9,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { dialogFooterRenderer, dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('dialog-draggable')
-class Example extends LitElement {
+@customElement('dialog-draggable')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

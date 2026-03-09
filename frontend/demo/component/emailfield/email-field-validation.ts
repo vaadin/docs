@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { EmailField, EmailFieldValidatedEvent } from '@vaadin/email-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('email-field-validation')
-class Example extends LitElement {
+@customElement('email-field-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

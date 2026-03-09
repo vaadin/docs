@@ -6,8 +6,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-export @customElement('avatar-group-bg-color')
-class Example extends LitElement {
+@customElement('avatar-group-bg-color')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -8,8 +8,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
 // tag::snippet[]
-export @customElement('combo-box-filtering-2')
-class Example extends LitElement {
+@customElement('combo-box-filtering-2')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -6,8 +6,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import codeBranch from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
-export @customElement('icons-sizing')
-class Example extends LitElement {
+@customElement('icons-sizing')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

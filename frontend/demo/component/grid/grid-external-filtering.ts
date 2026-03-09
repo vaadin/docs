@@ -17,8 +17,8 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 type PersonEnhanced = Person & { displayName: string };
 
-export @customElement('grid-external-filtering')
-class Example extends LitElement {
+@customElement('grid-external-filtering')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

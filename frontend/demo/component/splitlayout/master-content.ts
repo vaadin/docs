@@ -1,8 +1,8 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-export @customElement('master-content')
-class MasterContent extends LitElement {
+@customElement('master-content')
+export class MasterContent extends LitElement {
   protected override createRenderRoot() {
     return this;
   }

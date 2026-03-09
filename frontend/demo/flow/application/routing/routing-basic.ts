@@ -6,8 +6,8 @@ import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-export @customElement('routing-login')
-class LoginView extends LitElement {
+@customElement('routing-login')
+export class LoginView extends LitElement {
   protected override render() {
     return html`
       <vaadin-vertical-layout style="width: 15em">

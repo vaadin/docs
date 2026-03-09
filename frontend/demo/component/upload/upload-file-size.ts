@@ -7,8 +7,8 @@ import { Notification } from '@vaadin/notification';
 import type { UploadFileRejectEvent } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('upload-file-size')
-class Example extends LitElement {
+@customElement('upload-file-size')
+export class Example extends LitElement {
   static override styles = css`
     p {
       color: var(--vaadin-text-color-secondary);

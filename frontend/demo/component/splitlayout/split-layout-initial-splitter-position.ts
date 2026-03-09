@@ -6,8 +6,8 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('split-layout-initial-splitter-position')
-class Example extends LitElement {
+@customElement('split-layout-initial-splitter-position')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

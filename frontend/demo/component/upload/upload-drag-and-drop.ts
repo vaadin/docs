@@ -12,8 +12,8 @@ const layoutSteps: FormLayoutResponsiveStep[] = [
   { minWidth: '520px', columns: 2, labelsPosition: 'top' },
 ];
 
-export @customElement('upload-drag-and-drop')
-class Example extends LitElement {
+@customElement('upload-drag-and-drop')
+export class Example extends LitElement {
   static override styles = css`
     label {
       font-weight: 600;

@@ -17,8 +17,8 @@ const IconSets = {
 
 export type IconSetType = 'lumo' | 'vaadin';
 
-export @customElement('icons-preview')
-class IconsPreview extends LitElement {
+@customElement('icons-preview')
+export class IconsPreview extends LitElement {
   @state()
   iconNames: string[] | undefined;
 

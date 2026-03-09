@@ -6,8 +6,8 @@ import { customElement, property } from 'lit/decorators.js';
 import type { Subscription } from '@vaadin/hilla-frontend';
 import { ReactiveEndpoint } from 'Frontend/generated/endpoints';
 
-export @customElement('reactive-view')
-class ReactiveView extends LitElement {
+@customElement('reactive-view')
+export class ReactiveView extends LitElement {
   @property()
   serverTime = '';
 

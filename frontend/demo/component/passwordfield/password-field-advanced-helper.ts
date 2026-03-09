@@ -9,8 +9,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
 
-export @customElement('password-field-advanced-helper')
-class Example extends LitElement {
+@customElement('password-field-advanced-helper')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

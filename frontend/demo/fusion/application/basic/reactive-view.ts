@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 // tag::snippet[]
-export @customElement('reactive-view')
-class ReactiveView extends LitElement {
+@customElement('reactive-view')
+export class ReactiveView extends LitElement {
   // The data
   @property({ type: Number })
   count = 0;

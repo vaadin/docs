@@ -13,8 +13,8 @@ interface FileItem {
   size: string;
 }
 
-export @customElement('context-menu-best-practices')
-class Example extends LitElement {
+@customElement('context-menu-best-practices')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -6,8 +6,8 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
-export @customElement('multi-select-combo-box-read-only')
-class Example extends LitElement {
+@customElement('multi-select-combo-box-read-only')
+export class Example extends LitElement {
   static override styles = css`
     vaadin-multi-select-combo-box {
       width: 300px;

@@ -7,8 +7,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/lapland.avif?url';
 
-export @customElement('card-stretch-media')
-class Example extends LitElement {
+@customElement('card-stretch-media')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

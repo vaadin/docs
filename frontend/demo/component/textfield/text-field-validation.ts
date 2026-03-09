@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { TextField, TextFieldValidatedEvent } from '@vaadin/text-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('text-field-validation')
-class Example extends LitElement {
+@customElement('text-field-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

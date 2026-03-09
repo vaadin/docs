@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import codeBranchIcon from '../../../../src/main/resources/META-INF/resources/icons/code-branch.svg?url';
 
-export @customElement('svg-standalone')
-class Example extends LitElement {
+@customElement('svg-standalone')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

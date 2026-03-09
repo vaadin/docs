@@ -6,8 +6,8 @@ import { isAuthorizedViewRoute, routes } from './routes';
 
 export const router = new Router(document.querySelector('#outlet'));
 
-export @customElement('main-view')
-class MainView extends LitElement {
+@customElement('main-view')
+export class MainView extends LitElement {
   protected render() {
     return html`
       <nav>

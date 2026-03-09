@@ -14,8 +14,8 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
-export @customElement('virtual-list-basic')
-class Example extends LitElement {
+@customElement('virtual-list-basic')
+export class Example extends LitElement {
   static override styles = css`
     vaadin-avatar {
       height: 64px;

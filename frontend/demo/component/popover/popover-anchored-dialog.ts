@@ -24,8 +24,8 @@ const DEFAULT_COLUMNS = [
   { label: 'Profession', key: 'profession', visible: true },
 ];
 
-export @customElement('popover-anchored-dialog')
-class Example extends LitElement {
+@customElement('popover-anchored-dialog')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

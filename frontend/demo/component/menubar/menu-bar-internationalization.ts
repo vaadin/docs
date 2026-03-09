@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { MenuBarI18n } from '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('menu-bar-internationalization')
-class Example extends LitElement {
+@customElement('menu-bar-internationalization')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

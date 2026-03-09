@@ -15,8 +15,8 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
 });
 
-export @customElement('badge-highlight')
-class Example extends LitElement {
+@customElement('badge-highlight')
+export class Example extends LitElement {
   @state()
   private items: readonly Report[] = [];
 

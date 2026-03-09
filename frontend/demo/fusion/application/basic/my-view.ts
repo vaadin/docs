@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { Notification } from '@vaadin/notification';
 
 // tag::snippet[]
-export @customElement('my-view')
-class MyView extends LitElement {
+@customElement('my-view')
+export class MyView extends LitElement {
   render() {
     return html`<vaadin-button @click="${this.sayHello}">Say hello</vaadin-button>`;
   }

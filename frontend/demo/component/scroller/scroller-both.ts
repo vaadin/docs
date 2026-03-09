@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import img from '../../../../src/main/resources/images/reindeer.jpg?url';
 
-export @customElement('scroller-both')
-class Example extends LitElement {
+@customElement('scroller-both')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

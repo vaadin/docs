@@ -8,8 +8,8 @@ import { customElement, state } from 'lit/decorators.js';
 import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('dialog-basic')
-class Example extends LitElement {
+@customElement('dialog-basic')
+export class Example extends LitElement {
   static override styles = css`
     /* Center the button within the example */
     :host {

@@ -5,8 +5,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('tabs-badges')
-class Example extends LitElement {
+@customElement('tabs-badges')
+export class Example extends LitElement {
   static override styles = [
     css`
       vaadin-badge {

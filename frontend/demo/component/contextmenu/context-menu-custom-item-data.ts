@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('context-menu-custom-item-data')
-class Example extends LitElement {
+@customElement('context-menu-custom-item-data')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

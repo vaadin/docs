@@ -17,8 +17,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-export @customElement('tree-grid-drag-drop')
-class Example extends LitElement {
+@customElement('tree-grid-drag-drop')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     // Apply custom theme (only supported if your app uses one)

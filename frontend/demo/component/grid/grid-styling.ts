@@ -15,8 +15,8 @@ interface PersonWithRating extends Person {
   customerRating: number;
 }
 
-export @customElement('grid-styling')
-class Example extends LitElement {
+@customElement('grid-styling')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

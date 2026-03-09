@@ -8,8 +8,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 // tag::snippet[]
-export @customElement('grid-column-reordering-resizing')
-class Example extends LitElement {
+@customElement('grid-column-reordering-resizing')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

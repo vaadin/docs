@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { CheckboxGroupValueChangedEvent } from '@vaadin/checkbox-group';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('checkbox-group-basic')
-class Example extends LitElement {
+@customElement('checkbox-group-basic')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

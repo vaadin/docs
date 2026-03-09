@@ -4,8 +4,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('login-basic')
-class Example extends LitElement {
+@customElement('login-basic')
+export class Example extends LitElement {
   static override styles = css`
     :host {
       display: flex !important;

@@ -10,8 +10,8 @@ import { customElement } from 'lit/decorators.js';
 import { patchSideNavNavigation } from 'Frontend/demo/component/side-nav/side-nav-helper'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('app-layout-drawer')
-class Example extends LitElement {
+@customElement('app-layout-drawer')
+export class Example extends LitElement {
   static override styles = css`
     h1 {
       font-size: 1.125rem;

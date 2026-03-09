@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { TextArea, TextAreaValidatedEvent } from '@vaadin/text-area';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('text-area-validation')
-class Example extends LitElement {
+@customElement('text-area-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

@@ -5,8 +5,8 @@ import type { LoginResult } from '@vaadin/hilla-frontend';
 import type { RouterLocation, WebComponentInterface } from '@vaadin/router';
 import { login } from './auth';
 
-export @customElement('login-view')
-class LoginView extends LitElement implements WebComponentInterface {
+@customElement('login-view')
+export class LoginView extends LitElement implements WebComponentInterface {
   @state()
   private error = false;
 

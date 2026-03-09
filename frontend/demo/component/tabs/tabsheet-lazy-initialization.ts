@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { TabSheetSelectedChangedEvent } from '@vaadin/tabsheet';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('tabsheet-lazy-initialization')
-class Example extends LitElement {
+@customElement('tabsheet-lazy-initialization')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

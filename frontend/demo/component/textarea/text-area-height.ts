@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
 import templates from '../../../../src/main/resources/data/templates.json';
 
-export @customElement('text-area-height')
-class Example extends LitElement {
+@customElement('text-area-height')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

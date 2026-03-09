@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { TimePicker, TimePickerValidatedEvent } from '@vaadin/time-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('time-picker-validation')
-class Example extends LitElement {
+@customElement('time-picker-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

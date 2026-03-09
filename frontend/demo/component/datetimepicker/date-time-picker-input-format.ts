@@ -8,8 +8,8 @@ import type { DatePickerDate } from '@vaadin/date-picker';
 import type { DateTimePicker } from '@vaadin/date-time-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('date-time-picker-input-format')
-class Example extends LitElement {
+@customElement('date-time-picker-input-format')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

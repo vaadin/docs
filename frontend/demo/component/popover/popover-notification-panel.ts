@@ -13,8 +13,8 @@ import type { MessageListItem } from '@vaadin/message-list';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('popover-notifications-panel')
-class Example extends LitElement {
+@customElement('popover-notifications-panel')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

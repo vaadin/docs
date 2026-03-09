@@ -8,8 +8,8 @@ import type { MessageListItem } from '@vaadin/message-list';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('message-basic')
-class Example extends LitElement {
+@customElement('message-basic')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

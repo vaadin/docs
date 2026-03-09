@@ -5,8 +5,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 // tag::snippet[]
-export @customElement('value-changed-view')
-class ValueChangedView extends LitElement {
+@customElement('value-changed-view')
+export class ValueChangedView extends LitElement {
   @state()
   private name = '';
 

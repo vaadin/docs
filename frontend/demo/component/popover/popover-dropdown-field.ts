@@ -13,8 +13,8 @@ import type { DatePickerChangeEvent } from '@vaadin/date-picker';
 import type { SelectChangeEvent } from '@vaadin/select';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('popover-dropdown-field')
-class Example extends LitElement {
+@customElement('popover-dropdown-field')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

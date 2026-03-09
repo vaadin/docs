@@ -5,8 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import type { LoginI18n } from '@vaadin/login';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('login-internationalization')
-class Example extends LitElement {
+@customElement('login-internationalization')
+export class Example extends LitElement {
   static override styles = css`
     :host {
       display: flex !important;

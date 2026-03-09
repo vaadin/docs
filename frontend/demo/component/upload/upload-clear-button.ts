@@ -16,8 +16,8 @@ function createFakeFiles() {
   ]);
 }
 
-export @customElement('upload-clear-button')
-class Example extends LitElement {
+@customElement('upload-clear-button')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

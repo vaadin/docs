@@ -7,8 +7,8 @@ import type { Upload } from '@vaadin/upload';
 import { applyTheme } from 'Frontend/demo/theme';
 import { createFakeFilesUploadAllFiles } from './upload-demo-mock-files'; // hidden-source-line
 
-export @customElement('upload-all-files')
-class Example extends LitElement {
+@customElement('upload-all-files')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

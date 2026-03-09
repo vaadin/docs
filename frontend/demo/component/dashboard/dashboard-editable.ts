@@ -58,8 +58,8 @@ type CustomMenuItem = MenuBarItem & {
   action?(): unknown;
 };
 
-export @customElement('dashboard-editable')
-class Example extends LitElement {
+@customElement('dashboard-editable')
+export class Example extends LitElement {
   @state()
   widgets: WidgetConfig[] = [];
 

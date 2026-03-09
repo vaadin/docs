@@ -22,8 +22,8 @@ const responsiveSteps: FormLayoutResponsiveStep[] = [
   { minWidth: '20em', columns: 2 },
 ];
 
-export @customElement('accordion-summary')
-class Example extends LitElement {
+@customElement('accordion-summary')
+export class Example extends LitElement {
   @state()
   private countries: Country[] = [];
 

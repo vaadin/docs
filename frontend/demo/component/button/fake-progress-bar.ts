@@ -2,8 +2,8 @@ import '@vaadin/progress-bar';
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-export @customElement('fake-progress-bar')
-class FakeProgressBar extends LitElement {
+@customElement('fake-progress-bar')
+export class FakeProgressBar extends LitElement {
   static override styles = css`
     :host {
       width: 100%;

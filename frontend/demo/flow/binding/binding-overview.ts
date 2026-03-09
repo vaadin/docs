@@ -10,8 +10,8 @@ import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-export @customElement('binding-overview')
-class DataBindingExample extends LitElement {
+@customElement('binding-overview')
+export class DataBindingExample extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->

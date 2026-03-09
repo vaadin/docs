@@ -4,8 +4,8 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { ComboBoxValueChangedEvent } from '@vaadin/combo-box';
 
-export @customElement('greeting-view')
-class GreetingView extends LitElement {
+@customElement('greeting-view')
+export class GreetingView extends LitElement {
   @state()
   private greetings = ['Hi', 'Hello', 'Dear'];
 

@@ -6,8 +6,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { CustomFieldChangeEvent } from '@vaadin/custom-field';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('custom-field-native-input')
-class Example extends LitElement {
+@customElement('custom-field-native-input')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

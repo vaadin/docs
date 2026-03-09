@@ -10,8 +10,8 @@ import type { NotificationLitRenderer } from '@vaadin/notification/lit.js';
 import { notificationRenderer } from '@vaadin/notification/lit.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('notification-retry')
-class Example extends LitElement {
+@customElement('notification-retry')
+export class Example extends LitElement {
   @state()
   private notificationOpened = true;
 

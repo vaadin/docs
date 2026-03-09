@@ -11,8 +11,8 @@ interface FileItem {
   size: string;
 }
 
-export @customElement('context-menu-hierarchical')
-class Example extends LitElement {
+@customElement('context-menu-hierarchical')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

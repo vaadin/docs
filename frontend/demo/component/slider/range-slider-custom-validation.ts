@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { RangeSliderChangeEvent } from '@vaadin/slider/vaadin-range-slider.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('range-slider-custom-validation')
-class Example extends LitElement {
+@customElement('range-slider-custom-validation')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

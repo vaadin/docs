@@ -5,8 +5,8 @@ import { customElement, state } from 'lit/decorators.js';
 import type { MenuBarItemSelectedEvent, SubMenuItem } from '@vaadin/menu-bar';
 import { applyTheme } from 'Frontend/demo/theme';
 
-export @customElement('menu-bar-checkable')
-class Example extends LitElement {
+@customElement('menu-bar-checkable')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

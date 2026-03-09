@@ -10,8 +10,8 @@ import { applyTheme } from 'Frontend/demo/theme';
 const startOfNextMonth = startOfMonth(addMonths(new Date(), 1));
 const startOfNextMonthISOString = formatISO(startOfNextMonth, { representation: 'date' });
 
-export @customElement('date-time-picker-initial-position')
-class Example extends LitElement {
+@customElement('date-time-picker-initial-position')
+export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);

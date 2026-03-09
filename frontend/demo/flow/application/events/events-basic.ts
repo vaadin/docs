@@ -3,9 +3,9 @@ import '@vaadin/horizontal-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
+@customElement('fusion-application-events-basic')
 // tag::snippet[]
-export @customElement('fusion-application-events-basic')
-class EventsBasic extends LitElement {
+export class EventsBasic extends LitElement {
   @state()
   private caption = 'Click me!';
 

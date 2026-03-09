@@ -11,8 +11,8 @@ import { getUserPermissions } from 'Frontend/demo/domain/DataService'; // hidden
 import { applyTheme } from 'Frontend/demo/theme';
 import type UserPermissions from 'Frontend/generated/com/vaadin/demo/domain/UserPermissions'; // hidden-source-line
 
-export @customElement('badge-icons-only-table')
-class Example extends LitElement {
+@customElement('badge-icons-only-table')
+export class Example extends LitElement {
   @state()
   private items: readonly UserPermissions[] = [];
 
