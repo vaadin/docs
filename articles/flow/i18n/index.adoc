@@ -1,0 +1,314 @@
+---
+title: Localization
+page-title: How to Localize Vaadin Applications - Vaadin Docs
+description: Translate strings, switch languages, localize numbers and dates.
+meta-description: Learn how to internationalize and localize Vaadin applications with translation strings, locale selection, component i18n, and number and date formatting.
+order: 75
+---
+
+
+= Localization
+
+Vaadin has built-in support for localizing applications. This page covers translating strings, letting users pick a language, translating Vaadin component labels, and formatting numbers and dates for different locales.
+
+
+== Translation Strings
+
+Store translation properties files in `src/main/resources/vaadin-i18n/` with the filename prefix `translations`:
+
+- `translations.properties` -- default translations (fallback)
+- `translations_en.properties` -- English
+- `translations_fi.properties` -- Finnish
+- `translations_de.properties` -- German
+
+The filename supports up to three parts: `translations_language_country_variant.properties` (e.g., `translations_en_US.properties`).
+
+.translations.properties
+[source,properties]
+----
+app.title=My Application
+greeting=Hello, {0}!
+items.count=You have {0} items.
+----
+
+.translations_fi.properties
+[source,properties]
+----
+app.title=Sovellukseni
+greeting=Hei, {0}!
+items.count=Sinulla on {0} kohdetta.
+----
+
+[NOTE]
+Translation files are discovered automatically at runtime. You don't need to register them -- just place them in `src/main/resources/vaadin-i18n/`.
+
+
+=== Using Translations in Views
+
+Call `getTranslation()` from any Vaadin component to look up a translation key for the current locale. Parameters are substituted into `{0}`, `{1}`, etc. placeholders using `MessageFormat`:
+
+[source,java]
+----
+Span title = new Span(getTranslation("app.title"));
+Span greeting = new Span(getTranslation("greeting", user.getName()));
+----
+
+=== Reacting to Locale Changes
+
+Implement `LocaleChangeObserver` to update translations when the locale changes. The observer is called on navigation when the component is attached, but before `onAttach()`:
+
+[source,java]
+----
+public class MainView extends VerticalLayout implements LocaleChangeObserver {
+
+    private final Span title = new Span();
+    private final Span greeting = new Span();
+
+    public MainView() {
+        add(title, greeting);
+    }
+
+    @Override
+    public void localeChange(LocaleChangeEvent event) {
+        title.setText(getTranslation("app.title"));
+        greeting.setText(getTranslation("greeting", "World"));
+    }
+}
+----
+
+[TIP]
+Use Copilot to automate extraction of static strings into translation files. See <<{articles}/tools/copilot/i18n#,Internationalization in Copilot>>.
+
+
+[[locale-selection]]
+== Language Selection
+
+=== Automatic Locale from Browser
+
+The initial locale is determined by matching the locales in your translation files against the `Accept-Language` header from the browser:
+
+1. If an exact match (language + country) is found, it's used.
+2. Otherwise, a language-only match is tried.
+3. If no match, the first provided locale is used.
+4. If no locales are provided, `Locale.getDefault()` is used.
+
+
+=== Changing the Locale Programmatically
+
+Set the locale for the current session with:
+
+[source,java]
+----
+UI.getCurrent().setLocale(new Locale("fi"));
+----
+
+This triggers a `LocaleChangeEvent` on all attached components that implement `LocaleChangeObserver`.
+
+
+=== Language Switcher Example
+
+A language switcher lets users choose their preferred language:
+
+[source,java]
+----
+public class LanguageSwitcher extends Select<Locale> {
+
+    public LanguageSwitcher() {
+        setItems(
+            Locale.ENGLISH,
+            Locale.FRENCH,
+            Locale.GERMAN,
+            new Locale("fi")
+        );
+        setItemLabelGenerator(locale -> locale.getDisplayLanguage(locale));
+        setValue(UI.getCurrent().getLocale());
+
+        addValueChangeListener(event ->
+            UI.getCurrent().setLocale(event.getValue())
+        );
+    }
+}
+----
+
+
+== Translating Vaadin Component Strings
+
+Many Vaadin components have built-in strings for labels, error messages, and accessibility text (e.g., Upload, Login, DatePicker). These are localized using a component-specific i18n object passed to `setI18n()`.
+
+Each component defines its own i18n class. Create an instance, set the translated strings, and apply it:
+
+[source,java]
+----
+Upload upload = new Upload();
+
+UploadI18N i18n = new UploadI18N();
+i18n.getAddFiles().setOne(getTranslation("upload.add.file"));
+i18n.getAddFiles().setMany(getTranslation("upload.add.files"));
+i18n.getDropFiles().setOne(getTranslation("upload.drop.file"));
+i18n.getDropFiles().setMany(getTranslation("upload.drop.files"));
+i18n.getError().setFileIsTooBig(getTranslation("upload.error.file.too.big"));
+upload.setI18n(i18n);
+----
+
+To update component i18n when the locale changes, do it inside `localeChange()`:
+
+[source,java]
+----
+@Override
+public void localeChange(LocaleChangeEvent event) {
+    UploadI18N i18n = new UploadI18N();
+    i18n.getAddFiles().setOne(getTranslation("upload.add.file"));
+    // ... set other strings
+    upload.setI18n(i18n);
+}
+----
+
+See the documentation for each component for its specific i18n properties and keys.
+
+
+[[formatting-numbers-dates]]
+== Formatting Numbers and Dates
+
+Java provides comprehensive locale-aware formatting for numbers, currency, and dates.
+
+
+=== Number Formatting
+
+Use `NumberFormat` to format numbers according to locale conventions (decimal separators, grouping, etc.):
+
+[source,java]
+----
+Locale locale = UI.getCurrent().getLocale();
+
+NumberFormat numberFormat = NumberFormat.getInstance(locale);
+String formatted = numberFormat.format(1234567.89);
+// en_US: "1,234,567.89"
+// de_DE: "1.234.567,89"
+// fi_FI: "1 234 567,89"
+----
+
+
+=== Currency Formatting
+
+[source,java]
+----
+NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(locale);
+String price = currencyFormat.format(49.99);
+// en_US: "$49.99"
+// de_DE: "49,99 €"
+// ja_JP: "￥50"
+----
+
+For a specific currency regardless of locale:
+
+[source,java]
+----
+NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(locale);
+currencyFormat.setCurrency(Currency.getInstance("EUR"));
+String price = currencyFormat.format(49.99);
+// en_US: "€49.99"
+// de_DE: "49,99 €"
+----
+
+
+=== Custom Number Patterns
+
+Use `DecimalFormat` for custom patterns:
+
+[source,java]
+----
+DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(locale);
+DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
+String result = format.format(1234.5);
+// Uses locale-specific grouping and decimal separators
+----
+
+
+=== Date and Time Formatting
+
+Use `DateTimeFormatter` with locale for localized date and time output:
+
+[source,java]
+----
+LocalDate date = LocalDate.now();
+Locale locale = UI.getCurrent().getLocale();
+
+// Localized styles
+DateTimeFormatter shortDate = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
+    .withLocale(locale);
+DateTimeFormatter longDate = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
+    .withLocale(locale);
+
+String shortFormatted = date.format(shortDate);
+// en_US: "3/10/26"
+// de_DE: "10.03.26"
+
+String longFormatted = date.format(longDate);
+// en_US: "March 10, 2026"
+// de_DE: "10. März 2026"
+----
+
+For date-time values:
+
+[source,java]
+----
+LocalDateTime dateTime = LocalDateTime.now();
+
+DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+    .withLocale(locale);
+String formatted = dateTime.format(formatter);
+----
+
+
+=== Custom Date Patterns
+
+[source,java]
+----
+DateTimeFormatter custom = DateTimeFormatter.ofPattern("dd MMM yyyy", locale);
+String formatted = LocalDate.now().format(custom);
+// en_US: "10 Mar 2026"
+// de_DE: "10 Mär 2026"
+----
+
+
+=== Vaadin Components and Formatting
+
+Some Vaadin components, such as Date Picker and Date Time Picker, handle their own date format localization through their i18n objects. You don't typically need to format dates manually for those components -- configure them through `setI18n()` and the component's locale. See the component documentation for details.
+
+
+== Right-to-Left Languages
+
+Vaadin components support right-to-left (RTL) text direction out of the box. To enable it, set the UI direction based on the locale:
+
+[source,java]
+----
+UI ui = UI.getCurrentOrThrow();
+if ("ar".equals(ui.getLocale().getLanguage())) {
+    ui.setDirection(Direction.RIGHT_TO_LEFT);
+} else {
+    ui.setDirection(Direction.LEFT_TO_RIGHT);
+}
+----
+
+For reactive locale switching, set the direction inside `localeChange()`:
+
+[source,java]
+----
+@Override
+public void localeChange(LocaleChangeEvent event) {
+    if ("ar".equals(event.getLocale().getLanguage())) {
+        event.getUI().setDirection(Direction.RIGHT_TO_LEFT);
+    } else {
+        event.getUI().setDirection(Direction.LEFT_TO_RIGHT);
+    }
+}
+----
+
+For details on adding RTL support to custom elements and custom styles, see <<custom-i18n-provider#adding-rtl-support, Adding Right-to-Left Support>>.
+
+
+== Custom I18N Provider
+
+The default translation file mechanism covers most use cases. If you need more control -- for example, loading translations from a database or using a different file structure -- you can implement a custom `I18NProvider`. See <<custom-i18n-provider#, Custom I18N Provider>> for details.
+
+[discussion-id]`722E7AE4-191E-4DE8-90F1-CAE8AE6CD3DF`
