@@ -98,6 +98,7 @@ public class MockWidgets {
         conf.getLegend().setEnabled(false);
         conf.getyAxis().setTitle((String) null);
         conf.getTooltip().setValueSuffix(" visitors");
+        conf.getChart().setStyledMode(true);
 
         XAxis xAxis = new XAxis();
         xAxis.setCategories("Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
