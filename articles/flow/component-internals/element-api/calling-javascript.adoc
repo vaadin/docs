@@ -124,4 +124,44 @@ If the return value is a JavaScript `Promise`, the client only sends the return 
 // TODO What happens if the Promise is rejected?
 
 
+=== Deserializing Generic Types with TypeReference
+
+The [methodname]`then()` method accepts a [classname]`Class` parameter for simple types, but this doesn't work for generic types like `List<Person>` due to Java type erasure. For these cases, use the Jackson [classname]`TypeReference` overloads.
+
+.Deserializing a JavaScript array into a `List<Person>`
+[example]
+====
+[source,java]
+----
+getElement().executeJs("return this.getItems()")
+        .then(new TypeReference<List<Person>>() {},
+                items -> {
+                    // items is List<Person>
+                    items.forEach(person ->
+                            System.out.println(person.getName()));
+                });
+----
+====
+
+An error handler can be provided as a second callback:
+
+[source,java]
+----
+getElement().executeJs("return this.getItems()")
+        .then(new TypeReference<List<Person>>() {},
+                items -> processItems(items),
+                error -> handleError(error));
+----
+
+You can also use [methodname]`toCompletableFuture(TypeReference)` to get the result as a [classname]`CompletableFuture`:
+
+[source,java]
+----
+CompletableFuture<Map<String, Person>> future = getElement()
+        .executeJs("return this.getPersonMap()")
+        .toCompletableFuture(
+                new TypeReference<Map<String, Person>>() {});
+----
+
+
 [discussion-id]`AB7EDF45-DB22-4560-AF27-FF1DC6944482`
