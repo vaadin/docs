@@ -1,25 +1,26 @@
 # Dockerfile.preview
-# Builds the AsciiDoc documentation and serves the static output.
+# Builds and serves the AsciiDoc documentation using DSPublisher's dev server.
 
-FROM node:24-alpine AS build
+FROM node:24-alpine
+
+RUN apk add --no-cache openjdk21 maven
 
 WORKDIR /app
+
+COPY pom.xml ./
+RUN mvn dependency:go-offline -P dspublisher-license-check -B
 
 COPY package.json package-lock.json* ./
 RUN npm ci --ignore-scripts
 
+COPY vite.config.ts vite.dspublisher.ts tsconfig.json ./
+COPY src/ src/
 COPY articles/ articles/
 COPY dspublisher/ dspublisher/
 COPY frontend/ frontend/
 
-RUN npx -y @vaadin/dspublisher@3.0.0-alpha.13 --build
-
-FROM node:24-alpine
-
-RUN npm install -g serve
-
-COPY --from=build /app/dspublisher/out/public /app/public
+RUN mvn vaadin:prepare-frontend -B
 
 EXPOSE 8210
 
-CMD ["serve", "-s", "/app/public", "-l", "8210"]
+CMD sh -c 'mkdir -p ~/.vaadin && echo "{\"proKey\":\"$VAADIN_PRO_KEY\"}" > ~/.vaadin/proKey && npm run dspublisher:start'
