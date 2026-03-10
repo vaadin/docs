@@ -88,6 +88,22 @@ fullName.bindText(Signal.computed(() ->
 Both variants execute the callback when a dependency signal value changes. The difference is that the lambda variant recalculates the result every time someone reads the lambda signal value, while an explicit computed signal (using [methodname]`Signal.computed()`) caches the result until any dependency signal value changes. For simple operations like [methodname]`String::length`, a lambda is enough. However, for complex or expensive computations, use an explicit computed signal to avoid unnecessary recalculations when the value is read multiple times.
 
 
+[TIP]
+====
+HTML components like [classname]`Paragraph`, [classname]`Span`, [classname]`H1`–[classname]`H6`, and others have signal-based constructors as a shorthand for creating a component and binding its text in one step:
+
+[source,java]
+----
+// Shorthand
+Paragraph p = new Paragraph(signal);
+
+// Equivalent to
+Paragraph p = new Paragraph();
+p.bindText(signal);
+----
+====
+
+
 == Binding Visibility
 
 Use [methodname]`bindVisible()` to show or hide components based on a boolean signal:
@@ -300,6 +316,116 @@ progressBar.getStyle().bind("background-color", progress.map(p ->
 ----
 
 
+== Binding Size
+
+Use [methodname]`bindWidth()` and [methodname]`bindHeight()` to bind a component's size to signals. These are available on components that implement [interfacename]`HasSize`:
+
+[source,java]
+----
+ValueSignal<String> width = new ValueSignal<>("200px");
+ValueSignal<String> height = new ValueSignal<>("100px");
+
+Div panel = new Div();
+panel.bindWidth(width);
+panel.bindHeight(height);
+
+// Resize the panel
+width.set("400px");
+height.set("250px");
+----
+
+
+== Binding Placeholder
+
+Use [methodname]`bindPlaceholder()` to bind a component's placeholder text to a signal. This is available on components that implement [interfacename]`HasPlaceholder`:
+
+[source,java]
+----
+ValueSignal<String> placeholder = new ValueSignal<>("Search...");
+
+TextField searchField = new TextField();
+searchField.bindPlaceholder(placeholder);
+
+// Update placeholder text
+placeholder.set("Type to filter results...");
+----
+
+
+== Binding Helper Text
+
+Use [methodname]`bindHelperText()` to bind a component's helper text to a signal. This is available on components that implement [interfacename]`HasHelper`:
+
+[source,java]
+----
+ValueSignal<Integer> remaining = new ValueSignal<>(100);
+
+TextArea textArea = new TextArea("Comment");
+textArea.bindHelperText(remaining.map(r -> r + " characters remaining"));
+----
+
+
+== Binding CSS Class Names
+
+Use [methodname]`bindClassName()` and [methodname]`bindClassNames()` to bind CSS class names to signals. These are component-level convenience methods available on components that implement [interfacename]`HasStyle`:
+
+[source,java]
+----
+ValueSignal<Boolean> highlighted = new ValueSignal<>(false);
+
+Div panel = new Div();
+
+// Toggle a single class name based on a boolean signal
+panel.bindClassName("highlighted", highlighted);
+----
+
+To bind a dynamic list of class names, use [methodname]`bindClassNames()`:
+
+[source,java]
+----
+ValueSignal<List<String>> classes = new ValueSignal<>(List.of("card", "elevated"));
+
+Div panel = new Div();
+panel.bindClassNames(classes);
+
+// Update all class names at once
+classes.set(List.of("card", "flat", "bordered"));
+----
+
+[NOTE]
+These are convenience shortcuts for [methodname]`getElement().getClassList().bind()`. For Element-level class bindings, see <<element-bindings#classlist-binding,ClassList Binding>>.
+
+
+== Binding Theme Names
+
+Use [methodname]`bindThemeName()` and [methodname]`bindThemeNames()` to bind theme names to signals. These are component-level convenience methods available on components that implement [interfacename]`HasTheme`:
+
+[source,java]
+----
+ValueSignal<Boolean> compact = new ValueSignal<>(false);
+
+Grid<Person> grid = new Grid<>();
+
+// Toggle a single theme name based on a boolean signal
+grid.bindThemeName("compact", compact);
+----
+
+To bind a dynamic list of theme names, use [methodname]`bindThemeNames()`:
+
+[source,java]
+----
+ValueSignal<List<String>> themes = new ValueSignal<>(List.of("row-stripes"));
+
+Grid<Person> grid = new Grid<>();
+grid.bindThemeNames(themes);
+
+// Update all theme names at once
+themes.set(List.of("row-stripes", "compact", "no-border"));
+----
+
+[NOTE]
+These are convenience shortcuts for [methodname]`getThemeList().bind()`. For Element-level theme bindings, see <<element-bindings#themelist-binding,ThemeList Binding>>.
+
+
 == Rendering Lists of Components
 
 Use [methodname]`bindChildren()` to efficiently render a list of components from a list signal. This method handles additions, removals, and reordering without recreating all children:
@@ -434,6 +560,59 @@ This two-level tracking means individual item updates are efficient—only the a
 === Difference from bindChildren
 
 Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`bindItems()` when you want to populate a data view component (e.g., [classname]`Grid`, [classname]`ComboBox`) that manages its own rendering.
+
+
+== Built-In Signal Sources
+
+Vaadin provides several built-in signals that expose framework-level state reactively.
+
+
+=== Window Size Signal
+
+Use [methodname]`Page.windowSizeSignal()` to get a read-only signal that tracks the browser window size. The signal provides a [classname]`WindowSize` record with [methodname]`width()` and [methodname]`height()` values in pixels:
+
+[source,java]
+----
+Signal<WindowSize> windowSize = UI.getCurrent().getPage().windowSizeSignal();
+
+Span dimensions = new Span();
+dimensions.bindText(windowSize.map(ws ->
+    String.format("Window: %d x %d", ws.width(), ws.height())));
+
+// Create a responsive layout
+VerticalLayout content = new VerticalLayout();
+content.bindClassName("mobile-layout", windowSize.map(ws -> ws.width() < 768));
+----
+
+[NOTE]
+The signal is lazily initialized. The actual window dimensions are available from the initial browser connection through extended client details, so the signal has correct values from the start. It also updates automatically on browser window resize.
+
+
+=== UI Locale Signal
+
+Use [methodname]`UI.localeSignal()` to get a writable signal that tracks the UI's locale:
+
+[source,java]
+----
+ValueSignal<Locale> locale = UI.getCurrent().localeSignal();
+
+Span greeting = new Span();
+greeting.bindText(locale.map(loc ->
+    loc.getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
+----
+
+[WARNING]
+Writing directly to this signal does not notify [interfacename]`LocaleChangeObserver` implementations. If you need observers to be notified, use [methodname]`UI.setLocale()` instead.
+
+
+=== Session Locale Signal
+
+Use [methodname]`VaadinSession.localeSignal()` to get a shared, writable signal that tracks the session-level locale. UIs that have not had their locale explicitly overridden derive their locale from this signal:
+
+[source,java]
+----
+SharedValueSignal<Locale> sessionLocale = VaadinSession.getCurrent().localeSignal();
+----
 
 
 == Complete Example
