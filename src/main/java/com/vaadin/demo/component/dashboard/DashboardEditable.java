@@ -48,9 +48,8 @@ public class DashboardEditable extends Div {
             new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_COUNTRY, 1, 2),
             new WidgetConfig(WidgetConfig.WidgetType.BROWSER_DISTRIBUTION, 1,
                     1),
-            new WidgetConfig(WidgetConfig.WidgetType.CAT_IMAGE, 1, 1),
-            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_BY_BROWSER, 2,
-                    1));
+            new WidgetConfig(WidgetConfig.WidgetType.TRAFFIC_SOURCES, 1, 1),
+            new WidgetConfig(WidgetConfig.WidgetType.VISITORS_PER_MONTH, 2, 1));
 
     public DashboardEditable(DashboardStorage dashboardStorage) {
         this.dashboardStorage = dashboardStorage;
@@ -145,27 +144,21 @@ public class DashboardEditable extends Div {
     }
 
     private CustomWidget createWidget(WidgetConfig config) {
-        // In this example all widget types have the same content, and the title
-        // is stored in the enum, so we can use generic logic to create a widget
+        // Create a widget with the appropriate content based on the type
         CustomWidget widget = new CustomWidget(config.getType(),
                 config.getType().getLabel());
-        widget.setContent(createWidgetContent());
+        widget.setContent(switch (config.getType()) {
+        case VISITORS -> MockWidgets.createVisitorsWidget();
+        case DOWNLOADS -> MockWidgets.createDownloadsWidget();
+        case CONVERSIONS -> MockWidgets.createConversionsWidget();
+        case VISITORS_BY_COUNTRY -> MockWidgets.createVisitorsByCountryWidget();
+        case BROWSER_DISTRIBUTION -> MockWidgets.createBrowsersWidget();
+        case TRAFFIC_SOURCES -> MockWidgets.createTrafficSourcesWidget();
+        case VISITORS_PER_MONTH -> MockWidgets.createVisitorsPerMonthWidget();
+        });
         widget.setColspan(config.getColspan());
         widget.setRowspan(config.getRowspan());
 
-        // In practice, different widget types will have different content. In
-        // that case you can use a switch statement to create the widget content
-        // based on the type.
-        //
-        // @formatter:off hidden-source-line
-        // switch (config.type()) {
-        //     case VISITORS:
-        //         widget.setTitle("Visitors");
-        //         widget.setContent(new VisitorsWidgetContent());
-        //         break;
-        //     ...
-        // }
-        // @formatter:on hidden-source-line
         return widget;
     }
 
@@ -185,12 +178,6 @@ public class DashboardEditable extends Div {
         applyConfiguration(defaultConfig);
     }
     // end::snippet[]
-
-    private Div createWidgetContent() {
-        Div content = new Div();
-        content.setClassName("dashboard-widget-content");
-        return content;
-    }
 
     public static class Exporter extends DemoExporter<DashboardEditable> { // hidden-source-line
     } // hidden-source-line
