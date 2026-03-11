@@ -91,7 +91,6 @@ public class PopoverNotificationPanel extends Div {
 
         H4 heading = new H4("Notifications");
         heading.setId("notifications-heading");
-        heading.getStyle().set("margin", "0");
 
         Button markRead = new Button("Mark all read", (e) -> {
             unreadContent.removeAll();
@@ -101,10 +100,10 @@ public class PopoverNotificationPanel extends Div {
                 }
             });
         });
-        markRead.getStyle().set("margin", "0 0 0 auto");
         markRead.addThemeVariants(ButtonVariant.SMALL);
 
-        HorizontalLayout layout = new HorizontalLayout(heading, markRead);
+        HorizontalLayout layout = new HorizontalLayout(heading);
+        layout.addToEnd(markRead);
         layout.setSpacing(false);
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.getStyle().set("padding",

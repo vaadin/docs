@@ -13,8 +13,8 @@ public class WidgetConfig {
         CONVERSIONS("Conversions"),
         VISITORS_BY_COUNTRY("Visitors by country"),
         BROWSER_DISTRIBUTION("Browser distribution"),
-        CAT_IMAGE("Cat image"),
-        VISITORS_BY_BROWSER("Visitors by browser");
+        TRAFFIC_SOURCES("Traffic sources"),
+        VISITORS_PER_MONTH("Visitors per month");
 
         private final String label;
 

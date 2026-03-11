@@ -25,12 +25,10 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <vaadin-app-layout theme="narrow-drawer">
-        <vaadin-drawer-toggle slot="navbar"
-          ><vaadin-tooltip slot="tooltip" text="Expand menu" position="end"></vaadin-tooltip
-        ></vaadin-drawer-toggle>
+        <vaadin-drawer-toggle slot="navbar"></vaadin-drawer-toggle>
         <vaadin-side-nav
           slot="drawer"
-          style="margin: 0 var(--vaadin-gap-xs); --vaadin-icon-size: 1.5rem "
+          style="margin: 0 var(--vaadin-gap-xs); --vaadin-icon-size: 1.5rem;"
         >
           <!-- tag::snippet[] -->
           <vaadin-side-nav-item path="/dashboard">
