@@ -23,12 +23,13 @@ RUN mvn compile vaadin:prepare-frontend -B
 
 RUN --mount=type=secret,id=VAADIN_PRO_KEY \
     mkdir -p ~/.vaadin && \
-    echo "Secret length: $(wc -c < /run/secrets/VAADIN_PRO_KEY)" && \
-    echo "{\"username\":\"\",\"proKey\":\"$(cat /run/secrets/VAADIN_PRO_KEY)\"}" > ~/.vaadin/proKey && \
-    cat ~/.vaadin/proKey | sed 's/pro-[a-z0-9-]*/pro-REDACTED/' && \
+    SECRET="$(cat /run/secrets/VAADIN_PRO_KEY)" && \
+    USERNAME="${SECRET%%/*}" && \
+    PROKEY="${SECRET#*/}" && \
+    echo "{\"username\":\"$USERNAME\",\"proKey\":\"$PROKEY\"}" > ~/.vaadin/proKey && \
     mvn vaadin:build-frontend -B && \
     rm -f ~/.vaadin/proKey
 
 EXPOSE 8210
 
-CMD sh -c 'mkdir -p ~/.vaadin && echo "{\"username\":\"\",\"proKey\":\"$VAADIN_PRO_KEY\"}" > ~/.vaadin/proKey && HOST=0.0.0.0 npx -y @vaadin/dspublisher@3.0.0-alpha.14 --develop'
+CMD sh -c 'mkdir -p ~/.vaadin && USERNAME="${VAADIN_PRO_KEY%%/*}" && PROKEY="${VAADIN_PRO_KEY#*/}" && echo "{\"username\":\"$USERNAME\",\"proKey\":\"$PROKEY\"}" > ~/.vaadin/proKey && HOST=0.0.0.0 npx -y @vaadin/dspublisher@3.0.0-alpha.14 --develop'
