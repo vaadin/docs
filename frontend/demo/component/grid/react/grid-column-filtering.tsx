@@ -14,7 +14,7 @@ type PersonEnhanced = Person & { displayName: string };
 const nameRenderer = ({ item: person }: { item: PersonEnhanced }) => (
   <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing">
     <Avatar img={person.pictureUrl} name={person.displayName} />
-    <span> {person.displayName} </span>
+    <span>{person.displayName}</span>
   </HorizontalLayout>
 );
 

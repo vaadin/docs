@@ -1,15 +1,16 @@
 package com.vaadin.demo.component.passwordfield;
 
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("password-field-readonly-and-disabled")
-public class PasswordFieldReadonlyAndDisabled extends HorizontalLayout {
+public class PasswordFieldReadonlyAndDisabled extends FormLayout {
 
     public PasswordFieldReadonlyAndDisabled() {
-        setPadding(false);
+        setAutoResponsive(true);
+        setAutoRows(true);
 
         // tag::snippet[]
         PasswordField readonlyField = new PasswordField();

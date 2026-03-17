@@ -17,11 +17,11 @@ import com.vaadin.flow.data.provider.SortDirection;
 // tag::snippet[]
 public class PersonDataProvider
         extends AbstractBackEndDataProvider<Person, String> {
-    private static final List<Person> DATABASE = new ArrayList<>(DataService.getPeople());
+    private static final List<Person> DATABASE = new ArrayList<>(
+            DataService.getPeople());
 
     @Override
-    protected Stream<Person> fetchFromBackEnd(
-            Query<Person, String> query) {
+    protected Stream<Person> fetchFromBackEnd(Query<Person, String> query) {
         // A real app should use a real database or a service to fetch,
         // filter and sort data.
 
@@ -53,10 +53,12 @@ public class PersonDataProvider
 
     private Predicate<Person> createPredicate(Optional<String> filter) {
         return (person) -> filter.map(searchTerm -> {
-            if (person.getFullName().toLowerCase().contains(searchTerm.toLowerCase())) {
+            if (person.getFullName().toLowerCase()
+                    .contains(searchTerm.toLowerCase())) {
                 return true;
             }
-            if (person.getProfession().toLowerCase().contains(searchTerm.toLowerCase())) {
+            if (person.getProfession().toLowerCase()
+                    .contains(searchTerm.toLowerCase())) {
                 return true;
             }
 
@@ -64,12 +66,13 @@ public class PersonDataProvider
         }).orElse(true);
     }
 
-    private Comparator<Person> createComparator(List<QuerySortOrder> sortOrders) {
+    private Comparator<Person> createComparator(
+            List<QuerySortOrder> sortOrders) {
         return sortOrders.stream().map(sortOrder -> {
             Comparator<Person> comparator = switch (sortOrder.getSorted()) {
-                case "name" -> Comparator.comparing(Person::getFullName);
-                case "profession" -> Comparator.comparing(Person::getProfession);
-                default -> (p0, p1) -> 0;
+            case "name" -> Comparator.comparing(Person::getFullName);
+            case "profession" -> Comparator.comparing(Person::getProfession);
+            default -> (p0, p1) -> 0;
             };
 
             return sortOrder.getDirection().equals(SortDirection.ASCENDING)

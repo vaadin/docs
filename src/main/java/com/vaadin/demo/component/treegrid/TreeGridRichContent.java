@@ -9,8 +9,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.router.Route;
@@ -28,26 +26,15 @@ public class TreeGridRichContent extends Div {
 
         // tag::snippet[]
         treeGrid.addComponentHierarchyColumn(person -> {
-            Avatar avatar = new Avatar();
-            avatar.setName(person.getFullName());
-            avatar.setImage(person.getPictureUrl());
-
-            Span fullName = new Span(person.getFullName());
-
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
+            avatar.getStyle().set("--vaadin-avatar-size", "2.25rem");
+            Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
-            profession.getStyle()
-                    .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "0.875rem");
 
-            VerticalLayout column = new VerticalLayout(fullName, profession);
-            column.getStyle().set("line-height", "var(--lumo-line-height-m)");
-            column.setPadding(false);
-            column.setSpacing(false);
-
-            HorizontalLayout row = new HorizontalLayout(avatar, column);
-            row.setAlignItems(FlexComponent.Alignment.CENTER);
-            row.setSpacing(true);
-            return row;
+            Div personItem = new Div(avatar, name, profession);
+            personItem.addClassName("person-item");
+            return personItem;
         }).setHeader("Employee");
 
         treeGrid.addComponentColumn(person -> {
@@ -71,7 +58,7 @@ public class TreeGridRichContent extends Div {
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
             column.getStyle().set("font-size", "0.875rem").set("line-height",
-                    "var(--lumo-line-height-m)");
+                    "1.625");
             column.setPadding(false);
             column.setSpacing(false);
             return column;
@@ -83,8 +70,8 @@ public class TreeGridRichContent extends Div {
 
     private Icon createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("margin-inline-end", "var(--lumo-space-s)");
-        icon.setSize("var(--lumo-icon-size-s)");
+        icon.getStyle().set("margin-inline-end", "var(--vaadin-gap-s)");
+        icon.setSize("1.25em");
         return icon;
     }
 

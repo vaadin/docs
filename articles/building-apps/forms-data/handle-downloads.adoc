@@ -1,0 +1,131 @@
+---
+title: Handle File Downloads
+page-title: How to handle file downloads | Vaadin Docs
+description: Learn how to serve file downloads from a Vaadin application.
+meta-description: Serve file downloads from your Vaadin application using DownloadHandler for static files, generated content, and database-backed exports.
+order: 35
+---
+
+
+= Handle File Downloads
+
+This article shows how to serve files for download from a Vaadin application using `DownloadHandler` and the `Anchor` component. It covers generated content, files from disk, and service-backed downloads. For progress tracking, inline rendering, and advanced features, see the <</flow/advanced/downloads#,Downloads>> reference.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that generates and serves a CSV file for download:
+
+[source,java]
+----
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
+
+@Route("download-example")
+public class DownloadExampleView extends VerticalLayout {
+
+    public DownloadExampleView() {
+        Anchor downloadLink = new Anchor( // <1>
+                DownloadHandler.fromInputStream(event -> { // <2>
+                    try {
+                        byte[] csv = generateCsv(); // <3>
+                        return new DownloadResponse( // <4>
+                                new ByteArrayInputStream(csv),
+                                "report.csv",
+                                "text/csv",
+                                csv.length);
+                    } catch (Exception e) {
+                        return DownloadResponse.error(500); // <5>
+                    }
+                }), "Download Report");
+
+        add(downloadLink);
+    }
+
+    private byte[] generateCsv() {
+        // Replace with your report generation logic
+        String csv = "Name,Email\nAlice,alice@example.com\n";
+        return csv.getBytes(StandardCharsets.UTF_8);
+    }
+}
+----
+<1> `Anchor` renders a regular HTML link. The browser handles the download natively — no JavaScript needed.
+<2> `DownloadHandler.fromInputStream()` accepts a callback that runs when the user clicks the link.
+<3> Generates the content. Replace this with your own logic.
+<4> `DownloadResponse` bundles the `InputStream`, filename, content type, and content length.
+<5> Returns an error response if content generation fails.
+
+.Memory usage
+[NOTE]
+This example builds the entire file in memory as a `byte[]` before serving it. This is fine for small files and low concurrency. For large files or many concurrent users, have your service return an `InputStream` that streams content directly — see <<fetching-content-from-a-service>>.
+
+
+== Downloading a File from Disk
+
+When a file already exists on the server's filesystem, use `DownloadHandler.forFile()`:
+
+[source,java]
+----
+Anchor download = new Anchor(
+        DownloadHandler.forFile(
+                new File("/data/exports/report.pdf")),
+        "Download Report");
+----
+
+The filename and content type are inferred from the `File` object.
+
+
+[[fetching-content-from-a-service]]
+== Fetching Content from a Service
+
+In a typical application, the download content comes from a Spring service — generating a report, reading from a database, or fetching from cloud storage. Inject the service through the constructor and have it return an `InputStream` so that content is streamed directly to the browser without buffering the entire file in server memory:
+
+[source,java]
+----
+@Route("report-download")
+public class ReportDownloadView extends VerticalLayout {
+
+    public ReportDownloadView(ReportService reportService) {
+        Anchor downloadLink = new Anchor(
+                DownloadHandler.fromInputStream(event -> {
+                    try {
+                        return new DownloadResponse(
+                                reportService.generateMonthlyReport(), // <1>
+                                "monthly-report.pdf",
+                                "application/pdf",
+                                -1); // <2>
+                    } catch (Exception e) {
+                        return DownloadResponse.error(500);
+                    }
+                }), "Download Monthly Report");
+
+        add(downloadLink);
+    }
+}
+----
+<1> The service returns an `InputStream`. The content is streamed directly to the client without loading it all into memory first.
+<2> Pass `-1` when the content length isn't known in advance. The browser won't show a progress percentage, but memory usage stays low regardless of file size.
+
+== When to Use Each Approach
+
+- *`forFile()`* — the file already exists on disk. Simplest option, handles content type and filename automatically.
+- *`fromInputStream()`* — content is generated dynamically or comes from a database, external API, or cloud storage. This is the most common approach.
+- *Lambda with `DownloadEvent`* — you need full control over the response, such as setting custom headers, writing directly to the output stream, or updating the UI after the download completes.
+
+
+== Beyond the Basics
+
+This article covers the fundamentals, but Vaadin's download API offers more:
+
+- *Progress tracking* — show a progress bar during large downloads using the fluent `whenStart()`, `onProgress()`, and `whenComplete()` callbacks
+- *Inline rendering* — display content in the browser instead of downloading it by calling `inline()` on the handler
+- *Static resources* — serve files from the classpath or servlet context with `forClassResource()` and `forServletResource()`
+- *Custom headers* — set cache control, content disposition, and other response headers using the `DownloadEvent` API
+
+See the <</flow/advanced/downloads#,Downloads>> reference for details on these features.

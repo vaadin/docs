@@ -71,7 +71,7 @@ public class GridProPreventSave extends Div {
     private static void showErrorNotification(String msg) {
         Notification notification = new Notification(msg, 5000,
                 Notification.Position.BOTTOM_CENTER);
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
         notification.open();
     }
 

@@ -1,7 +1,8 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -10,23 +11,20 @@ public class BadgeBasic extends HorizontalLayout {
 
     public BadgeBasic() {
         // tag::snippet[]
-        Span pending = new Span("Pending");
-        pending.getElement().getThemeList().add("badge");
+        Badge pending = new Badge("Pending");
 
-        Span confirmed = new Span("Confirmed");
-        confirmed.getElement().getThemeList().add("badge success");
+        Badge confirmed = new Badge("Confirmed");
+        confirmed.addThemeVariants(BadgeVariant.SUCCESS);
 
-        Span warning = new Span("Warning");
-        warning.getElement().getThemeList().add("badge warning");
+        Badge warning = new Badge("Warning");
+        warning.addThemeVariants(BadgeVariant.WARNING);
 
-        Span denied = new Span("Denied");
-        denied.getElement().getThemeList().add("badge error");
+        Badge denied = new Badge("Denied");
+        denied.addThemeVariants(BadgeVariant.ERROR);
 
-        Span onHold = new Span("On hold");
-        onHold.getElement().getThemeList().add("badge contrast");
         // end::snippet[]
 
-        add(pending, confirmed, warning, denied, onHold);
+        add(pending, confirmed, warning, denied);
     }
 
     public static class Exporter extends DemoExporter<BadgeBasic> { // hidden-source-line

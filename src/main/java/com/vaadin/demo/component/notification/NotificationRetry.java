@@ -3,10 +3,10 @@ package com.vaadin.demo.component.notification;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -32,7 +32,7 @@ public class NotificationRetry extends Div {
     private Notification show() {
         // tag::snippet[]
         Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
 
         // this is the default, 0 or negative means the Notification
         // is not closed automatically
@@ -42,8 +42,11 @@ public class NotificationRetry extends Div {
         Button retryButton = new RetryButton();
         Button closeButton = new CloseButton();
 
-        var layout = new HorizontalLayout(new Text("Failed to generate report"),
-                retryButton, closeButton);
+        HorizontalLayout layout = new HorizontalLayout(
+                new Text("Failed to generate report"));
+        layout.addToEnd(retryButton, closeButton);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.setMinWidth("350px");
         notification.add(layout);
 
         notification.open();
@@ -57,8 +60,6 @@ public class NotificationRetry extends Div {
     public class RetryButton extends Button {
         public RetryButton() {
             super("Retry");
-            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-            getElement().getStyle().set("margin-left", "var(--lumo-space-xl)");
             addClickListener(e -> findAncestor(Notification.class).close());
         }
     }
@@ -66,7 +67,6 @@ public class NotificationRetry extends Div {
     public class CloseButton extends Button {
         public CloseButton() {
             super(new Icon("lumo", "cross"));
-            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
             setAriaLabel("Close");
             addClickListener(e -> findAncestor(Notification.class).close());
         }

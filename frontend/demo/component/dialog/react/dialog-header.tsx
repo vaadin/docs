@@ -6,9 +6,9 @@ import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { EmailField } from '@vaadin/react-components/EmailField.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -52,21 +52,16 @@ function Example() {
           </Button>
         }
       >
-        <VerticalLayout
-          theme="spacing"
-          style={{ width: '300px', maxWidth: '100%', alignItems: 'stretch' }}
-        >
-          <VerticalLayout style={{ alignItems: 'stretch' }}>
-            <TextField
-              label="Name"
-              value={`${user.value?.firstName} ${user.value?.lastName}`}
-              readonly
-              style={{ paddingTop: 0 }}
-            />
-            <EmailField label="Email" value={user.value?.email} readonly />
-            <TextField label="Address" value={addressDescription.value} readonly />
-          </VerticalLayout>
-        </VerticalLayout>
+        <FormLayout autoResponsive columnWidth="18rem" expandFields>
+          <TextField
+            label="Name"
+            value={`${user.value?.firstName} ${user.value?.lastName}`}
+            readonly
+            style={{ paddingTop: 0 }}
+          />
+          <EmailField label="Email" value={user.value?.email} readonly />
+          <TextField label="Address" value={addressDescription.value} readonly />
+        </FormLayout>
       </Dialog>
       <Button onClick={open}>Show dialog</Button>
       {/* end::snippet[] */}

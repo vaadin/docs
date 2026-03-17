@@ -46,7 +46,6 @@ public class AccordionContent extends Div {
 
     private Anchor createStyledAnchor(String href, String text) {
         Anchor anchor = new Anchor(href, text);
-        anchor.getStyle().set("color", "var(--lumo-primary-text-color)");
         anchor.getStyle().set("text-decoration", "none");
 
         return anchor;

@@ -6,11 +6,6 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('horizontal-layout-basic')
 export class Example extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    this.classList.add('basic-layouts-example');
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -19,13 +14,15 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout theme="spacing padding">
-        <div class="example-item">Item 1</div>
-        <div class="example-item">Item 2</div>
-        <div class="example-item">Item 3</div>
-      </vaadin-horizontal-layout>
-      <!-- end::snippet[] -->
+      <div class="basic-layouts-example">
+        <!-- tag::snippet[] -->
+        <vaadin-horizontal-layout theme="spacing padding">
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+        </vaadin-horizontal-layout>
+        <!-- end::snippet[] -->
+      </div>
     `;
   }
 }

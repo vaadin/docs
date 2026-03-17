@@ -27,24 +27,14 @@ function Example() {
         {people.value.map((person) => (
           // Use the label attribute to display full name of the person as selected value label
           <Item value={String(person.id)} key={person.id} label={formatPersonFullName(person)}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div className="person-item">
               <img
                 src={person.pictureUrl}
-                alt={`Portrait of ${person.firstName} ${person.lastName}`}
-                style={{ width: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
+                alt={`Portrait of ${formatPersonFullName(person)}`}
+                style={{ width: '2.25rem' }}
               />
-
-              <div>
-                {person.firstName} {person.lastName}
-                <div
-                  style={{
-                    fontSize: 'var(--lumo-font-size-s)',
-                    color: 'var(--lumo-secondary-text-color)',
-                  }}
-                >
-                  {person.profession}
-                </div>
-              </div>
+              <span>{formatPersonFullName(person)}</span>
+              <span>{person.profession}</span>
             </div>
           </Item>
         ))}
