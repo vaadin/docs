@@ -410,9 +410,9 @@ The factory function runs once per list item. When you modify the list:
 - *Updating values*: Item bindings update, but components aren't recreated
 
 
-== Binding Items to Data View Components
+== Binding Items to Data Components
 
-Use [methodname]`bindItems()` to bind a list signal to data view components like [classname]`Grid`, [classname]`ComboBox`, or any component implementing [interfacename]`HasDataView`. This enables reactive updates to the data without manual data provider management:
+Use [methodname]`Signal.effect()` and [classname]`ListSignal` to bind data items to components like [classname]`Grid`, [classname]`ComboBox`, or any component implementing [interfacename]`HasDataView` or [interfacename]`HasDataProvider`. This enables reactive updates to the data without manual data provider management:
 
 [source,java]
 ----
@@ -424,31 +424,21 @@ items.insertLast("Item 2");
 
 Grid<String> grid = new Grid<>();
 grid.addColumn(item -> item).setHeader("Name");
-grid.bindItems(items);
 
-// Structural change - triggers full refresh
+Signal.effect(grid, () -> grid.setItems(items.getValues().toList()));
+
+// Adding or updating an item triggers a full refresh
 items.insertLast("Item 3");
-
-// Item value change - refreshes only the affected row
 items.peek().get(0).set("Updated Item 1");
 ----
 
-The method works with both [classname]`ListSignal` (for local, single-user scenarios) and [classname]`SharedListSignal` (for multi-user, real-time scenarios).
+This pattern refreshes the entire data set with [methodname]`DataProvider.refreshAll()` when any change occurs to the list signal's structure or individual item signal. The framework doesn't yet provide a dedicated helper for binding items to data components. A support for more efficient item's granular updates and lazy loaded items bindings is planned in future releases.
 
-
-=== How It Works
-
-The [methodname]`bindItems()` method creates effects that track two levels of changes:
-
-- *Structural changes* (adding, removing, reordering items): Triggers [methodname]`refreshAll()` on the data view
-- *Individual item changes* (updating a value within a signal): Triggers [methodname]`refreshItem()` for only the affected item
-
-This two-level tracking means individual item updates are efficient—only the affected row is refreshed in a Grid, for example.
-
+This approach works with both [classname]`ListSignal` (for local, single-user scenarios) and [classname]`SharedListSignal` (for multi-user, real-time scenarios).
 
 === Difference from bindChildren
 
-Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`bindItems()` when you want to populate a data view component (e.g., [classname]`Grid`, [classname]`ComboBox`) that manages its own rendering.
+Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`Signal.effect()` with [methodname]`setItems()` when you want to populate a data items component (e.g., [classname]`Grid`, [classname]`VirtualList`) that manages its own rendering.
 
 
 == Complete Example
