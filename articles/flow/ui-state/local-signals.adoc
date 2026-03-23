@@ -43,6 +43,33 @@ ValueSignal<User> userSignal = new ValueSignal<>();
 ----
 
 
+=== Custom Equality Checkers
+
+By default, signals use [methodname]`Objects.equals()` to determine whether a value has changed. You can provide a custom equality checker to control when updates are skipped:
+
+[source,java]
+----
+// Skip updates when strings are equal ignoring case
+ValueSignal<String> name = new ValueSignal<>("John",
+    (a, b) -> a != null && a.equalsIgnoreCase(b));
+
+name.set("john"); // No update triggered — considered equal
+name.set("Jane"); // Update triggered
+----
+
+For [classname]`ListSignal`, the equality checker is applied to all entry [classname]`ValueSignal` instances within the list:
+
+[source,java]
+----
+// All entries use the custom equality checker
+ListSignal<String> items = new ListSignal<>(
+    (a, b) -> a != null && a.equalsIgnoreCase(b));
+
+ValueSignal<String> entry = items.insertLast("Hello");
+entry.set("hello"); // No update triggered
+----
+
+
 == Reading and Writing Values
 
 Signals provide two methods for reading values:
@@ -139,6 +166,25 @@ items.remove(entry);
 // Remove all entries
 items.clear();
 ----
+
+
+=== Reordering Items
+
+Use [methodname]`moveTo()` to move an entry to a new position within the list without removing and re-inserting it:
+
+[source,java]
+----
+ListSignal<String> items = new ListSignal<>();
+ValueSignal<String> a = items.insertLast("A");
+items.insertLast("B");
+items.insertLast("C");
+// List is: ["A", "B", "C"]
+
+items.moveTo(a, 2);
+// List is now: ["B", "C", "A"]
+----
+
+This is more efficient than removing and re-inserting, and preserves the entry's signal identity. Components bound to the moved entry are not recreated — they are repositioned in the DOM.
 
 
 === Reading List Contents
@@ -238,6 +284,40 @@ ValueSignal<String> status = new ValueSignal<>("pending");
 
 // Only replaces if current value matches expected
 boolean replaced = status.replace("pending", "complete");
+----
+
+
+== Read-Only Signal Views
+
+Use [methodname]`asReadonly()` to create a read-only view of a [classname]`ValueSignal`. The returned [classname]`Signal` reflects all changes to the original signal, but cannot be written to:
+
+[source,java]
+----
+ValueSignal<String> editable = new ValueSignal<>("Hello");
+Signal<String> readOnly = editable.asReadonly();
+
+// Changes to the original are visible through the read-only view
+editable.set("World");
+// readOnly now returns "World"
+----
+
+This is useful for exposing signal values to other parts of the application without allowing modifications:
+
+[source,java]
+----
+public class UserService {
+    private final ValueSignal<User> currentUser = new ValueSignal<>(null);
+
+    // Expose a read-only signal to the UI
+    public Signal<User> currentUser() {
+        return currentUser.asReadonly();
+    }
+
+    // Only the service can modify the signal
+    public void login(User user) {
+        currentUser.set(user);
+    }
+}
 ----
 
 
