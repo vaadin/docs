@@ -68,6 +68,60 @@ If you want your TestBench tests to work transparently with the recording proxy 
 This JUnit 5 extension works with end-to-end tests that extends [classname]`BrowserTestBase`. It auto-detects when the recording proxy is active and configures the browser driver accordingly. Tests continue to run normally outside of recording mode.
 
 
+[[writing-tests]]
+== Writing Tests for Load Testing
+
+Standard TestBench integration tests define user workflows. The same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
+
+[source,java]
+----
+public class HelloWorldIT extends BrowserTestBase {
+
+    @BrowserTest
+    public void helloWorldWorkflow() {
+        // Enter name in text field
+        TextFieldElement nameField = $(TextFieldElement.class).first();
+        nameField.setValue("Test User");
+
+        // Click button
+        $(ButtonElement.class).first().click();
+
+        // Verify result
+        $(NotificationElement.class).waitForFirst();
+    }
+
+    public String getViewName() {
+        return "";  // Root path
+    }
+}
+----
+
+In practice, you may want to select certain scenarios from your existing E2E test suite, or create dedicated scenarios that reuse your page object classes.
+
+[NOTE]
+====
+Be aware that load test scenarios run many times concurrently across multiple virtual users. If a scenario modifies shared state -- such as editing and saving a record in a database -- subsequent runs may encounter different application state than the original E2E test expected. For example, a scenario that clicks a button to save a form may work the first time, but on the next run the button could be disabled (because the record was already modified), causing the test to fail or log a warning when the framework blocks the interaction.
+
+Design load test scenarios to be *repeatable*: prefer read-only workflows, use scenarios that create new data rather than editing existing records, or ensure the application state resets between runs. For test methods that modify shared state in ways that cannot be safely replayed, use the <<destructive,`@Destructive`>> annotation to exclude them from recording.
+====
+
+
+[[destructive]]
+=== Excluding Destructive Tests
+
+Some test methods modify shared state in ways that cannot be safely replayed by multiple virtual users (for example, deleting a specific entity). Annotate these methods with `@Destructive` to skip them during recording:
+
+[source,java]
+----
+@BrowserTest
+@Destructive
+public void deletePatient() {
+    // This test is skipped during k6 recording
+    // but runs normally in regular test execution
+}
+----
+
+
 [[server-lifecycle]]
 == Starting and Stopping the Server
 
@@ -199,59 +253,6 @@ The plugin uses hash-based caching: if the test source code has not changed sinc
 | `false`
 | Force re-recording even if test sources are unchanged.
 |===
-
-
-=== Writing Tests for Load Testing
-
-Standard TestBench integration tests define user workflows. The same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
-
-[source,java]
-----
-public class HelloWorldIT extends BrowserTestBase {
-
-    @BrowserTest
-    public void helloWorldWorkflow() {
-        // Enter name in text field
-        TextFieldElement nameField = $(TextFieldElement.class).first();
-        nameField.setValue("Test User");
-
-        // Click button
-        $(ButtonElement.class).first().click();
-
-        // Verify result
-        $(NotificationElement.class).waitForFirst();
-    }
-
-    public String getViewName() {
-        return "";  // Root path
-    }
-}
-----
-
-In practice, you may want to select certain scenarios from your existing E2E test suite, or create dedicated scenarios that reuse your page object classes.
-
-[NOTE]
-====
-Be aware that load test scenarios run many times concurrently across multiple virtual users. If a scenario modifies shared state -- such as editing and saving a record in a database -- subsequent runs may encounter different application state than the original E2E test expected. For example, a scenario that clicks a button to save a form may work the first time, but on the next run the button could be disabled (because the record was already modified), causing the test to fail or log a warning when the framework blocks the interaction.
-
-Design load test scenarios to be *repeatable*: prefer read-only workflows, use scenarios that create new data rather than editing existing records, or ensure the application state resets between runs. For test methods that modify shared state in ways that cannot be safely replayed, use the <<destructive,`@Destructive`>> annotation to exclude them from recording.
-====
-
-
-[[destructive]]
-==== Excluding Destructive Tests
-
-Some test methods modify shared state in ways that cannot be safely replayed by multiple virtual users (for example, deleting a specific entity). Annotate these methods with `@Destructive` to skip them during recording:
-
-[source,java]
-----
-@BrowserTest
-@Destructive
-public void deletePatient() {
-    // This test is skipped during k6 recording
-    // but runs normally in regular test execution
-}
-----
 
 
 [[converting]]
