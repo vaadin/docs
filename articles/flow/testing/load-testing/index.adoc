@@ -429,9 +429,20 @@ Only include this dependency in builds used for load testing. It changes error h
 [[error-handler]]
 === Error Visibility
 
-By default, Vaadin catches server-side exceptions during request processing and shows a notification in the browser. The HTTP response remains a 200 with valid UIDL, which means k6 cannot detect that an error occurred.
+The generated k6 scripts include built-in validation checks that verify each server response:
 
-The load test helper replaces the default error handler with one that re-throws exceptions, causing Vaadin to return an error meta response (for example, `{"meta":{"appError":...}}`). k6 checks can then detect and fail on these errors.
+- *init request succeeded* -- The initial page load returned HTTP 200.
+- *valid init response* -- The init response contains a UI ID and security key.
+- *session is valid* -- The response does not indicate an expired session.
+- *security key valid* -- The CSRF security key was accepted.
+- *UIDL request succeeded* -- Subsequent UIDL requests returned HTTP 200.
+- *valid UIDL response* -- The UIDL response contains a valid sync ID.
+- *no server error* -- The response does not contain an `appError` meta field.
+- *no exception* -- The response body does not contain an exception.
+
+If any check fails, k6 reports it in the test results.
+
+By default, Vaadin catches server-side exceptions during request processing and shows a notification in the browser. The HTTP response remains a 200 with valid UIDL, which makes certain failures invisible to the checks above. The load test helper replaces the default error handler with one that re-throws exceptions, causing Vaadin to return an error meta response (for example, `{"meta":{"appError":...}}`) that the *no server error* and *no exception* checks can detect.
 
 
 [[metrics]]
