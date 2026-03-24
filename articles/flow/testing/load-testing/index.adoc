@@ -54,7 +54,7 @@ Add the plugin to your Maven project:
 </plugin>
 ----
 
-If you want your TestBench tests to work transparently with the recording proxy (without any code changes to the tests), add the load test support library as a test dependency:
+To enable the `@Destructive` annotation and automatic WebDriver cleanup during recording, add the load test support library as a test dependency:
 
 [source,xml]
 ----
@@ -65,36 +65,13 @@ If you want your TestBench tests to work transparently with the recording proxy 
 </dependency>
 ----
 
-This JUnit 5 extension works with end-to-end tests that extends [classname]`BrowserTestBase`. It auto-detects when the recording proxy is active and configures the browser driver accordingly. Tests continue to run normally outside of recording mode.
+This JUnit 5 extension auto-detects when the recording proxy is active and skips tests annotated with <<destructive,`@Destructive`>>. It also ensures the WebDriver is properly closed after each test to prevent orphaned browser processes during recording.
 
 
 [[writing-tests]]
 == Writing Tests for Load Testing
 
 Standard TestBench integration tests define user workflows. The same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
-
-[source,java]
-----
-public class HelloWorldIT extends BrowserTestBase {
-
-    @BrowserTest
-    public void helloWorldWorkflow() {
-        // Enter name in text field
-        TextFieldElement nameField = $(TextFieldElement.class).first();
-        nameField.setValue("Test User");
-
-        // Click button
-        $(ButtonElement.class).first().click();
-
-        // Verify result
-        $(NotificationElement.class).waitForFirst();
-    }
-
-    public String getViewName() {
-        return "";  // Root path
-    }
-}
-----
 
 In practice, you may want to select certain scenarios from your existing E2E test suite, or create dedicated scenarios that reuse your page object classes.
 
@@ -104,6 +81,80 @@ Be aware that load test scenarios run many times concurrently across multiple vi
 
 Design load test scenarios to be *repeatable*: prefer read-only workflows, use scenarios that create new data rather than editing existing records, or ensure the application state resets between runs. For test methods that modify shared state in ways that cannot be safely replayed, use the <<destructive,`@Destructive`>> annotation to exclude them from recording.
 ====
+
+
+=== Proxy Configuration
+
+During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy. The browser driver must be configured to use this proxy. Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
+
+Create a base class for your load test scenarios that handles proxy configuration. The following base class checks whether the `k6.proxy.host` system property is set. When it is, it replaces the default driver with one configured to route traffic through the recording proxy. When the property is not set, the tests run normally without a proxy:
+
+[source,java]
+----
+public abstract class AbstractIT extends BrowserTestBase {
+
+    @BeforeEach
+    public void open() {
+        String proxyHost = System.getProperty("k6.proxy.host");
+        if (proxyHost != null && !proxyHost.isEmpty()) {
+            // Replace the default driver with a proxy-configured one
+            WebDriver defaultDriver = getDriver();
+            if (defaultDriver != null) {
+                defaultDriver.quit();
+            }
+            setDriver(createProxyDriver(proxyHost));
+        }
+
+        String host = System.getProperty("server.host", "localhost");
+        int port = Integer.parseInt(
+                System.getProperty("server.port", "8080"));
+        getDriver().get("http://" + host + ":" + port
+                + "/" + getViewName());
+    }
+
+    private WebDriver createProxyDriver(String proxyHost) {
+        ChromeOptions options = new ChromeOptions();
+
+        Proxy proxy = new Proxy();
+        proxy.setHttpProxy(proxyHost);
+        proxy.setSslProxy(proxyHost);
+        options.setProxy(proxy);
+
+        // Required for MITM proxy to work with HTTPS
+        options.addArguments("--ignore-certificate-errors");
+        // Force localhost traffic through proxy (don't bypass loopback)
+        options.addArguments("--proxy-bypass-list=<-loopback>");
+        options.setAcceptInsecureCerts(true);
+
+        return TestBench.createDriver(new ChromeDriver(options));
+    }
+
+    abstract public String getViewName();
+}
+----
+
+Test classes extend this base class and provide the view name and test logic:
+
+[source,java]
+----
+public class HelloWorldIT extends AbstractIT {
+
+    @BrowserTest
+    public void helloWorldWorkflow() {
+        TextFieldElement nameField = $(TextFieldElement.class).first();
+        nameField.setValue("Test User");
+
+        $(ButtonElement.class).first().click();
+
+        $(NotificationElement.class).waitForFirst();
+    }
+
+    @Override
+    public String getViewName() {
+        return "";  // Root path
+    }
+}
+----
 
 
 [[destructive]]
