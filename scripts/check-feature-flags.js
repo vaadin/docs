@@ -52,22 +52,28 @@ function gitShow(repoPath, path) {
   }
 }
 
-function gitLsTree(repoPath, pattern) {
-  try {
-    return execSync(`git --git-dir=${repoPath} ls-tree -r --name-only HEAD`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
-      .split('\n')
-      .filter((l) => l.includes(pattern));
-  } catch {
-    return [];
+const treeCache = new Map();
+
+function gitFindFiles(repoPath, pathSuffix) {
+  if (!treeCache.has(repoPath)) {
+    try {
+      const tree = execSync(`git --git-dir=${repoPath} ls-tree -r --name-only HEAD`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      })
+        .split('\n')
+        .filter(Boolean);
+      treeCache.set(repoPath, tree);
+    } catch {
+      treeCache.set(repoPath, []);
+    }
   }
+  return treeCache.get(repoPath).filter((l) => l.endsWith(pathSuffix));
 }
 
 // Find all SPI service files and return the provider class names listed in them
 function findProviderClasses(repoPath) {
-  const spiFiles = gitLsTree(repoPath, SPI_SERVICE);
+  const spiFiles = gitFindFiles(repoPath, SPI_SERVICE);
   const classes = [];
   for (const spiFile of spiFiles) {
     // Skip test resources
@@ -93,7 +99,7 @@ function fqcnToPathSuffix(fqcn) {
 // Find the full path for a Java class in the repo tree
 function resolveClassPath(repoPath, fqcn) {
   const suffix = fqcnToPathSuffix(fqcn);
-  const matches = gitLsTree(repoPath, suffix);
+  const matches = gitFindFiles(repoPath, suffix);
   // Prefer src/main/java over test sources
   return matches.find((m) => m.includes('src/main/java')) ?? matches[0];
 }
