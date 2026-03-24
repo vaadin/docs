@@ -507,10 +507,83 @@ mvn k6:run -Dk6.testDir=target/k6/tests \
 The plugin collects a baseline before the load test starts, then samples metrics at the configured interval. After the test, it reports a time-series table with system metrics (CPU, heap, sessions) and per-view counts, along with summary statistics such as heap delta, session delta, and average/peak CPU usage.
 
 
+[[server-lifecycle]]
+== Starting and Stopping the Server
+
+The `k6:record` and `k6:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `k6:start-server` and `k6:stop-server` goals.
+
+The `k6:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `k6:stop-server` goal retrieves that handle and shuts the server down gracefully.
+
+[source,xml]
+----
+<execution>
+    <id>start-server</id>
+    <goals>
+        <goal>start-server</goal>
+    </goals>
+    <configuration>
+        <serverJar>${project.build.directory}/my-app.jar</serverJar>
+        <serverPort>8081</serverPort>
+        <managementPort>8082</managementPort>
+    </configuration>
+</execution>
+----
+
+By default, `k6:start-server` runs in the `pre-integration-test` phase and `k6:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
+
+
+=== Start Server Parameters
+
+[cols="2,1,4"]
+|===
+| Parameter | Default | Description
+
+| `k6.serverJar`
+| (required)
+| Path to the executable JAR file to start.
+
+| `k6.serverPort`
+| `8080`
+| Application server port.
+
+| `k6.managementPort`
+| `8082`
+| Spring Boot Actuator management port.
+
+| `k6.jvmArgs`
+|
+| Extra JVM arguments (for example, `-Xmx512m`).
+
+| `k6.appArgs`
+|
+| Extra application arguments.
+
+| `k6.startupTimeout`
+| `120`
+| Maximum time to wait for server startup, in seconds.
+
+| `k6.healthPollInterval`
+| `2`
+| Interval for polling the health endpoint, in seconds.
+|===
+
+
+=== Stop Server Parameters
+
+[cols="2,1,4"]
+|===
+| Parameter | Default | Description
+
+| `k6.gracePeriod`
+| `10`
+| Time to wait for graceful shutdown before force-killing, in seconds.
+|===
+
+
 [[full-example]]
 == Full Maven Configuration Example
 
-Below is a complete example that records two TestBench scenarios and runs them as a combined load test:
+Below is a complete example that starts the application server, records two TestBench scenarios, runs them as a combined load test, and stops the server:
 
 [source,xml]
 ----
@@ -519,6 +592,19 @@ Below is a complete example that records two TestBench scenarios and runs them a
     <artifactId>testbench-converter-plugin</artifactId>
     <version>${vaadin.version}</version>
     <executions>
+        <!-- Start the application server -->
+        <execution>
+            <id>start-server</id>
+            <goals>
+                <goal>start-server</goal>
+            </goals>
+            <configuration>
+                <serverJar>${project.build.directory}/my-app.jar</serverJar>
+                <serverPort>8081</serverPort>
+                <managementPort>8082</managementPort>
+            </configuration>
+        </execution>
+
         <!-- Record TestBench scenarios -->
         <execution>
             <id>record-scenarios</id>
@@ -549,13 +635,25 @@ Below is a complete example that records two TestBench scenarios and runs them a
                 <virtualUsers>100</virtualUsers>
                 <duration>2m</duration>
                 <appPort>8081</appPort>
+                <managementPort>8082</managementPort>
+                <collectVaadinMetrics>true</collectVaadinMetrics>
                 <combineScenarios>true</combineScenarios>
                 <scenarioWeights>helloWorld:70,crudExample:30</scenarioWeights>
             </configuration>
         </execution>
+
+        <!-- Stop the application server -->
+        <execution>
+            <id>stop-server</id>
+            <goals>
+                <goal>stop-server</goal>
+            </goals>
+        </execution>
     </executions>
 </plugin>
 ----
+
+Running `mvn verify` with this configuration executes the full workflow: start server, record scenarios, run load tests, and stop server.
 
 
 [[remote-testing]]
