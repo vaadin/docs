@@ -241,14 +241,15 @@ async function main() {
   console.log(`Reading article from ${ARTICLE_PATH}...`);
   const adoc = readArticle();
   const articleFlags = parseArticleFlags(adoc);
+  for (const id of EXCLUDED_FLAGS) {
+    articleFlags.delete(id);
+  }
   console.log(`  article: found ${articleFlags.size} feature flag(s)`);
 
   // Compare
   const repoFlagSet = new Set(allRepoFlags);
-  const undocumented = allRepoFlags.filter(
-    (id) => !articleFlags.has(id) && !EXCLUDED_FLAGS.has(id)
-  );
-  const stale = [...articleFlags].filter((id) => !repoFlagSet.has(id) && !EXCLUDED_FLAGS.has(id));
+  const undocumented = allRepoFlags.filter((id) => !articleFlags.has(id));
+  const stale = [...articleFlags].filter((id) => !repoFlagSet.has(id));
   let failed = false;
 
   if (undocumented.length > 0) {
