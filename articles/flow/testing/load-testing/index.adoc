@@ -411,26 +411,92 @@ Disable think times when:
 - Your TestBench tests already include realistic pauses, and you prefer not to add extra delays.
 
 
-[[error-handler]]
-== Error Visibility in Load Tests
+[[load-test-helper]]
+== Load Test Helper
 
-By default, Vaadin catches server-side exceptions during request processing and shows a notification in the browser. The HTTP response remains a 200 with valid UIDL, which means k6 cannot detect that an error occurred.
-
-To make server-side errors visible to k6, add the load test error handler dependency to your application:
+The `loadtest-helper` library is a drop-in dependency that enhances your Vaadin application for load testing. It provides two features: error propagation (so k6 can detect server-side failures) and Vaadin-specific metrics (exposed via Spring Boot Actuator). It auto-registers via ServiceLoader -- no code changes are needed.
 
 [source,xml]
 ----
 <dependency>
     <groupId>com.vaadin</groupId>
-    <artifactId>loadtest-error-handler</artifactId>
+    <artifactId>loadtest-helper</artifactId>
     <scope>runtime</scope>
 </dependency>
 ----
 
-This registers an error handler via ServiceLoader that re-throws exceptions, causing Vaadin to return an error response that k6 checks can detect. No code changes are needed.
-
 [NOTE]
-Only include this dependency in builds used for load testing. It changes error handling behavior, which is not desirable in production.
+Only include this dependency in builds used for load testing. It changes error handling behavior and adds metrics instrumentation, which may not be desirable in production.
+
+
+[[error-handler]]
+=== Error Visibility
+
+By default, Vaadin catches server-side exceptions during request processing and shows a notification in the browser. The HTTP response remains a 200 with valid UIDL, which means k6 cannot detect that an error occurred.
+
+The load test helper replaces the default error handler with one that re-throws exceptions, causing Vaadin to return an error meta response (for example, `{"meta":{"appError":...}}`). k6 checks can then detect and fail on these errors.
+
+
+[[metrics]]
+=== Server Metrics with Spring Boot Actuator
+
+The load test helper tracks active Vaadin UIs and view instances, and exposes them as Micrometer gauges via Spring Boot Actuator. This allows you to monitor server-side state during load tests alongside k6 client-side metrics.
+
+The following metrics are registered:
+
+- `vaadin.view.count` -- Total number of active Vaadin UI instances.
+- `vaadin.view.count` (tagged with `view`) -- Number of active instances per view class (for example, `view=MainView`).
+
+If Micrometer is not on the classpath, the helper still tracks UIs internally but does not expose metrics.
+
+
+==== Enabling Actuator
+
+To expose metrics, your application needs Spring Boot Actuator configured. Add the dependency if not already present:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+----
+
+Configure Actuator to expose the metrics endpoint on a separate management port. This keeps metrics accessible to the load test plugin without exposing them on the application port:
+
+[source,properties]
+----
+management.server.port=8082
+management.endpoints.web.exposure.include=health,metrics
+----
+
+
+==== Collecting Metrics During Load Tests
+
+The `k6:run` goal can collect server metrics from Actuator during the load test. It fetches CPU usage, memory, heap, active sessions, and Vaadin view counts at regular intervals and displays a summary after the test.
+
+Enable metrics collection via the plugin configuration:
+
+[source,xml]
+----
+<configuration>
+    <managementPort>8082</managementPort>
+    <collectVaadinMetrics>true</collectVaadinMetrics>
+    <metricsInterval>10</metricsInterval>
+</configuration>
+----
+
+Or via command line:
+
+[source,bash]
+----
+mvn k6:run -Dk6.testDir=target/k6/tests \
+    -Dk6.managementPort=8082 \
+    -Dk6.collectVaadinMetrics=true \
+    -Dk6.metricsInterval=10
+----
+
+The plugin collects a baseline before the load test starts, then samples metrics at the configured interval. After the test, it reports a time-series table with system metrics (CPU, heap, sessions) and per-view counts, along with summary statistics such as heap delta, session delta, and average/peak CPU usage.
 
 
 [[full-example]]
