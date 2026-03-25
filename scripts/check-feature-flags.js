@@ -6,13 +6,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const BRANCH = 'main';
-
 const REPOS = [
-  { name: 'flow', url: 'https://github.com/vaadin/flow.git' },
+  { name: 'flow', url: 'https://github.com/vaadin/flow.git', artifact: 'com.vaadin:flow-server' },
   {
     name: 'flow-components',
     url: 'https://github.com/vaadin/flow-components.git',
+    artifact: 'com.vaadin:vaadin-flow-components-base',
   },
 ];
 
@@ -22,6 +21,7 @@ const EXCLUDED_FLAGS = new Set(['copilotExperimentalFeatures']);
 const SPI_SERVICE = 'META-INF/services/com.vaadin.experimental.FeatureFlagProvider';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_DIR = join(__dirname, '..');
 const ARTICLE_PATH = join(
   __dirname,
   '..',
@@ -31,13 +31,35 @@ const ARTICLE_PATH = join(
   'feature-flags.adoc'
 );
 
-function cloneRepo(url, branch, dest) {
+function resolveVersions() {
+  console.log('Resolving dependency versions...');
+  const tree = execSync('mvn dependency:tree -DoutputType=text', {
+    encoding: 'utf-8',
+    cwd: PROJECT_DIR,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  const versions = {};
+  for (const repo of REPOS) {
+    const match = new RegExp(
+      `${repo.artifact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:jar:([^:]+):`
+    ).exec(tree);
+    if (!match) {
+      throw new Error(`Could not resolve version for ${repo.artifact} from Maven dependency tree`);
+    }
+    // eslint-disable-next-line @typescript-eslint/prefer-destructuring
+    versions[repo.name] = match[1];
+    console.log(`  ${repo.artifact} -> ${match[1]}`);
+  }
+  return versions;
+}
+
+function cloneRepo(url, tag, dest) {
   try {
-    execSync(`git clone --bare --single-branch --branch ${branch} --depth 1 ${url} ${dest}`, {
+    execSync(`git clone --bare --single-branch --branch ${tag} --depth 1 ${url} ${dest}`, {
       stdio: 'pipe',
     });
   } catch (e) {
-    throw new Error(`Failed to clone ${url} (branch: ${branch}): ${e.stderr?.toString().trim()}`);
+    throw new Error(`Failed to clone ${url} (tag: ${tag}): ${e.stderr?.toString().trim()}`);
   }
 }
 
@@ -221,13 +243,17 @@ async function main() {
     process.exit(2);
   });
 
+  // Resolve versions from Maven dependency tree
+  const versions = resolveVersions();
+
   // Clone repos and extract feature flags
-  console.log(`Cloning repos (branch: ${BRANCH})...`);
+  console.log('Cloning repos...');
   const allRepoFlags = [];
   for (const repo of REPOS) {
+    const tag = versions[repo.name];
     const dest = join(tmpDir, `${repo.name}.git`);
-    cloneRepo(repo.url, BRANCH, dest);
-    console.log(`  ${repo.name}:`);
+    cloneRepo(repo.url, tag, dest);
+    console.log(`  ${repo.name} (${tag}):`);
     const flags = extractRepoFeatureFlags(dest, repo.name);
     console.log(`  ${repo.name}: found ${flags.length} feature flag(s)`);
     allRepoFlags.push(...flags);
