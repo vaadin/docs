@@ -54,6 +54,17 @@ Add the plugin to your Maven project:
 </plugin>
 ----
 
+Add the load test helper as a test dependency. It provides [classname]`LoadTestItHelper` for <<proxy-configuration,proxy driver configuration>> in your tests:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>loadtest-helper</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
 To enable the `@Destructive` annotation and automatic WebDriver cleanup during recording, add the load test support library as a test dependency:
 
 [source,xml]
@@ -83,50 +94,29 @@ Design load test scenarios to be *repeatable*: prefer read-only workflows, use s
 ====
 
 
+[[proxy-configuration]]
 === Proxy Configuration
 
 During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy. The browser driver must be configured to use this proxy. Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
 
-Create a base class for your load test scenarios that handles proxy configuration. The following base class checks whether the `k6.proxy.host` system property is set. When it is, it replaces the default driver with one configured to route traffic through the recording proxy. When the property is not set, the tests run normally without a proxy:
+The [classname]`LoadTestItHelper` class (from the `loadtest-helper` dependency) handles proxy driver configuration. Its [methodname]`openWithProxy()` method checks whether the `k6.proxy.host` system property is set. When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support. When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
+
+Create a base class for your load test scenarios that calls [methodname]`openWithProxy()` in a `@BeforeEach` method. The [methodname]`getRootURL()` helper builds the server base URL from the `HOSTNAME` environment variable (defaults to `localhost`) and the `server.port` system property (defaults to `8080`):
 
 [source,java]
 ----
+import com.vaadin.testbench.BrowserTestBase;
+import com.vaadin.testbench.loadtest.LoadTestItHelper;
+import org.junit.jupiter.api.BeforeEach;
+
 public abstract class AbstractIT extends BrowserTestBase {
 
     @BeforeEach
     public void open() {
-        String proxyHost = System.getProperty("k6.proxy.host");
-        if (proxyHost != null && !proxyHost.isEmpty()) {
-            // Replace the default driver with a proxy-configured one
-            WebDriver defaultDriver = getDriver();
-            if (defaultDriver != null) {
-                defaultDriver.quit();
-            }
-            setDriver(createProxyDriver(proxyHost));
-        }
-
-        String host = System.getProperty("server.host", "localhost");
-        int port = Integer.parseInt(
-                System.getProperty("server.port", "8080"));
-        getDriver().get("http://" + host + ":" + port
-                + "/" + getViewName());
-    }
-
-    private WebDriver createProxyDriver(String proxyHost) {
-        ChromeOptions options = new ChromeOptions();
-
-        Proxy proxy = new Proxy();
-        proxy.setHttpProxy(proxyHost);
-        proxy.setSslProxy(proxyHost);
-        options.setProxy(proxy);
-
-        // Required for MITM proxy to work with HTTPS
-        options.addArguments("--ignore-certificate-errors");
-        // Force localhost traffic through proxy (don't bypass loopback)
-        options.addArguments("--proxy-bypass-list=<-loopback>");
-        options.setAcceptInsecureCerts(true);
-
-        return TestBench.createDriver(new ChromeDriver(options));
+        String viewUrl = LoadTestItHelper.getRootURL()
+                + "/" + getViewName();
+        setDriver(LoadTestItHelper.openWithProxy(
+                getDriver(), viewUrl));
     }
 
     abstract public String getViewName();
