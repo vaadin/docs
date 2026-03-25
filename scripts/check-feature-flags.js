@@ -198,39 +198,7 @@ function readArticle() {
   return readFileSync(ARTICLE_PATH, 'utf-8');
 }
 
-async function postToSlack(webhookUrl, undocumented, stale) {
-  const lines = [
-    '⚠️ The list of feature flags in the documentation is out of sync with the features defined in the codebase.',
-  ];
-  if (undocumented.length > 0) {
-    lines.push(`\nUndocumented feature flags:`);
-    for (const id of undocumented) {
-      lines.push(`• \`${id}\``);
-    }
-  }
-  if (stale.length > 0) {
-    lines.push(`\nStale feature flags:`);
-    for (const id of stale) {
-      lines.push(`• \`${id}\``);
-    }
-  }
-  const response = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: lines.join('\n') }),
-  });
-  if (!response.ok) {
-    throw new Error(`Slack webhook failed (HTTP ${response.status})`);
-  }
-}
-
-async function main() {
-  const slackWebhookUrl = process.argv.includes('--slack') ? process.env.SLACK_WEBHOOK_URL : null;
-  if (process.argv.includes('--slack') && !slackWebhookUrl) {
-    console.error('Error: --slack requires SLACK_WEBHOOK_URL environment variable');
-    process.exit(1);
-  }
-
+function main() {
   const tmpDir = mkdtempSync(join(tmpdir(), 'vaadin-feature-flags-'));
   const cleanup = () => {
     try {
@@ -292,12 +260,6 @@ async function main() {
       console.error(`  - ${id}`);
     }
     failed = true;
-  }
-
-  if (failed && slackWebhookUrl) {
-    console.log('\nPosting results to Slack...');
-    await postToSlack(slackWebhookUrl, undocumented, stale);
-    console.log('Posted to Slack.');
   }
 
   if (failed) {
