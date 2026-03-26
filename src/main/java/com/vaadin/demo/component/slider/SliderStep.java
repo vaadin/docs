@@ -10,7 +10,8 @@ public class SliderStep extends Div {
 
     public SliderStep() {
         // tag::snippet[]
-        Slider slider = new Slider("Volume", 0, 10, 5);
+        Slider slider = new Slider("Volume", 0, 10);
+        slider.setValue(5.0);
         slider.setStep(0.5);
         add(slider);
         // end::snippet[]

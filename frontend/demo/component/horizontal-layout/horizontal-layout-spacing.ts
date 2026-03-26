@@ -6,11 +6,6 @@ import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('horizontal-layout-spacing')
 export class Example extends LitElement {
-  connectedCallback() {
-    super.connectedCallback();
-    this.classList.add('basic-layouts-example');
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -19,23 +14,25 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <p>Horizontal layout without spacing:</p>
-      <vaadin-horizontal-layout theme="padding">
-        <div class="example-item">Item 1</div>
-        <div class="example-item">Item 2</div>
-        <div class="example-item">Item 3</div>
-      </vaadin-horizontal-layout>
+      <div class="basic-layouts-example">
+        <p>Horizontal layout without spacing:</p>
+        <vaadin-horizontal-layout theme="padding">
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+        </vaadin-horizontal-layout>
 
-      <p>Horizontal layout with spacing:</p>
-      <!-- tag::snippet[] -->
-      <vaadin-horizontal-layout theme="spacing padding">
-        <!-- end::snippet[] -->
-        <div class="example-item">Item 1</div>
-        <div class="example-item">Item 2</div>
-        <div class="example-item">Item 3</div>
+        <p>Horizontal layout with spacing:</p>
         <!-- tag::snippet[] -->
-      </vaadin-horizontal-layout>
-      <!-- end::snippet[] -->
+        <vaadin-horizontal-layout theme="spacing padding">
+          <!-- end::snippet[] -->
+          <div class="example-item">Item 1</div>
+          <div class="example-item">Item 2</div>
+          <div class="example-item">Item 3</div>
+          <!-- tag::snippet[] -->
+        </vaadin-horizontal-layout>
+        <!-- end::snippet[] -->
+      </div>
     `;
   }
 }

@@ -80,8 +80,7 @@ public class PopoverDropdownField extends Div {
 
         HorizontalLayout layout = new HorizontalLayout(fromPicker, new Div("−"),
                 toPicker);
-        layout.setSpacing(false);
-        layout.getThemeList().add("spacing-s");
+        layout.setSpacing("var(--vaadin-gap-s)");
         layout.setAlignItems(FlexComponent.Alignment.BASELINE);
 
         popover.add(rangeSelector, layout);

@@ -1,8 +1,8 @@
 package com.vaadin.demo.component.sidenav;
 
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -20,20 +20,17 @@ public class SideNavSuffix extends Div {
 
         SideNavItem inboxLink = new SideNavItem("Inbox", InboxView.class,
                 VaadinIcon.ENVELOPE.create());
-        Span inboxCounter = new Span("12");
-        inboxCounter.getElement().getThemeList().add("badge contrast pill");
-        inboxCounter.getElement().setAttribute("aria-label",
-                "12 unread messages");
+        Badge inboxCounter = new Badge("unread messages", 12);
+        inboxCounter.addThemeVariants(BadgeVariant.FILLED,
+                BadgeVariant.NUMBER_ONLY);
         inboxLink.setSuffixComponent(inboxCounter);
 
         SideNavItem calendarLink = new SideNavItem("Calendar",
                 CalendarView.class, VaadinIcon.CALENDAR.create());
-        Icon calendarNotification = VaadinIcon.BELL.create();
-        calendarNotification.getElement().getThemeList()
-                .add("badge error pill");
-        calendarNotification.getStyle().set("padding", "var(--lumo-space-xs");
-        calendarNotification.getElement().setAttribute("aria-label",
-                "Upcoming appointment");
+        Badge calendarNotification = new Badge("Upcoming appointment");
+        calendarNotification.setIcon(VaadinIcon.BELL.create());
+        calendarNotification.addThemeVariants(BadgeVariant.ERROR,
+                BadgeVariant.ICON_ONLY);
         calendarLink.setSuffixComponent(calendarNotification);
 
         nav.addItem(inboxLink, calendarLink);

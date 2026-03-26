@@ -1,0 +1,84 @@
+---
+title: Optimizing Tests
+page-title: How to optimize Vaadin browserless tests for faster execution
+description: Speed up browserless tests by restricting package scanning and using reduced application contexts.
+meta-description: Optimize Vaadin browserless tests with package scanning restrictions and reduced Spring application contexts.
+order: 85
+---
+
+
+= Optimizing Browserless Tests
+
+By default, browserless tests scan the entire classpath for routes and error views and, in Spring Boot projects, load the full application context. For large projects this can slow down test startup. The following techniques help reduce bootstrap time.
+
+
+== Restricting Package Scanning
+
+To restrict the scan to specific packages and their sub-packages, annotate the test class with [annotationname]`@ViewPackages` and specify the packages by filling the [methodname]`classes()` array with classes that are members of the desired packages, or by providing the packages with fully qualified names in the [methodname]`packages()` property. Using [methodname]`classes()` is the preferred way, since it plays well with IDE refactoring when moving classes to different packages.
+
+.Package Scan Examples
+[source,java]
+----
+@SpringBootTest
+@ViewPackages(classes={ MyView.class, OtherView.class })
+class MyViewTest extends SpringBrowserlessTest {
+}
+
+@SpringBootTest
+@ViewPackages(packages={ "com.example.app.pgk1", "com.example.app.pgk2" })
+class MyViewTest extends SpringBrowserlessTest {
+}
+
+@SpringBootTest
+@ViewPackages(
+    classes={ MyView.class, OtherView.class },
+    packages={ "com.example.app.pgk1", "com.example.app.pgk2" }
+)
+class MyViewTest extends SpringBrowserlessTest {
+}
+----
+
+
+Using the annotation without providing [methodname]`classes()` or [methodname]`packages()` acts as a shortcut for restricting the scan to the current test class package and sub-packages.
+
+[source,java]
+----
+@SpringBootTest
+@ViewPackages // same as @ViewPackages(classes=MyViewTest.class)
+class MyViewTest extends SpringBrowserlessTest {
+}
+----
+
+
+== Using a Reduced Application Context
+
+Instead of [annotationname]`@SpringBootTest`, which loads the full application context, you can annotate the test with [annotationname]`@ContextConfiguration` to provide only the beans needed for the test. This is useful when you want to replace real services with test doubles.
+
+[source,java]
+----
+@ContextConfiguration(classes = ViewTestConfig.class)
+class ViewTest extends SpringBrowserlessTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = $(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+
+@Configuration
+class ViewTestConfig {
+
+        @Bean
+        GreetingService myService() {
+                return new TestingGreetingService();
+        }
+}
+----
+
+
+[discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`

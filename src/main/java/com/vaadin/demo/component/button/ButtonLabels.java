@@ -1,16 +1,18 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("button-labels")
-public class ButtonLabels extends VerticalLayout {
+public class ButtonLabels extends FormLayout {
     public ButtonLabels() {
+        setAutoResponsive(true);
+
         EmailField emailField = new EmailField("Primary email address");
         emailField.setValue("foo@example.com");
 
@@ -37,7 +39,7 @@ public class ButtonLabels extends VerticalLayout {
         horizontalLayout1.setAlignItems(FlexComponent.Alignment.BASELINE);
         horizontalLayout2.setAlignItems(FlexComponent.Alignment.BASELINE);
         horizontalLayout2.getStyle().set("margin-top", "0");
-        setPadding(false);
+
         add(horizontalLayout1, horizontalLayout2);
     }
 

@@ -1,6 +1,6 @@
 package com.vaadin.demo.flow.signals.usecase;
 
-import com.vaadin.flow.component.ComponentEffect;
+import com.vaadin.flow.router.Route;
 import java.util.List;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -12,6 +12,7 @@ import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 import java.util.Objects;
 
+@Route("grid-filtering-with-signals")
 public class GridFilteringExample extends VerticalLayout {
 
     // tag::snippet[]
@@ -31,19 +32,19 @@ public class GridFilteringExample extends VerticalLayout {
             boolean inStockOnly = inStockOnlySignal.get();
 
             return allProducts.stream()
-                .filter(p -> category.equals("All")
-                    || p.category().equals(category))
-                .filter(p -> searchTerm.isEmpty()
-                    || p.name().toLowerCase().contains(searchTerm)
-                    || p.id().toLowerCase().contains(searchTerm))
-                .filter(p -> !inStockOnly || p.stock() > 0)
-                .toList();
+                    .filter(p -> category.equals("All")
+                            || p.category().equals(category))
+                    .filter(p -> searchTerm.isEmpty()
+                            || p.name().toLowerCase().contains(searchTerm)
+                            || p.id().toLowerCase().contains(searchTerm))
+                    .filter(p -> !inStockOnly || p.stock() > 0).toList();
         });
 
         // Filter UI components
         ComboBox<String> categoryFilter = new ComboBox<>("Category", List.of(
                 "All", "Electronics", "Clothing", "Books", "Home & Garden"));
-        categoryFilter.bindValue(categoryFilterSignal, categoryFilterSignal::set);
+        categoryFilter.bindValue(categoryFilterSignal,
+                categoryFilterSignal::set);
 
         TextField searchField = new TextField("Search");
         searchField.setPlaceholder("Search by name or ID");
@@ -55,9 +56,9 @@ public class GridFilteringExample extends VerticalLayout {
         // Data grid
         Grid<Product> productGrid = new Grid<>(Product.class);
         productGrid.setColumns("id", "name", "category", "price", "stock");
-        ComponentEffect.effect(productGrid, () -> {
+        Signal.effect(productGrid, () -> {
             productGrid.setItems(Objects.requireNonNullElseGet(
-                filteredProductsSignal.get(), List::of));
+                    filteredProductsSignal.get(), List::of));
         });
 
         add(categoryFilter, searchField, inStockCheckbox, productGrid);
@@ -66,8 +67,7 @@ public class GridFilteringExample extends VerticalLayout {
 
     private List<Product> loadProducts() {
         // Returns sample product data
-        return List.of(
-                new Product("P001", "Laptop", "Electronics", 999.99, 15),
+        return List.of(new Product("P001", "Laptop", "Electronics", 999.99, 15),
                 new Product("P002", "T-Shirt", "Clothing", 19.99, 50),
                 new Product("P003", "Java Programming Book", "Books", 49.99, 0),
                 new Product("P004", "Garden Hose", "Home & Garden", 29.99, 30),

@@ -8,7 +8,12 @@ function Example() {
     <div>
       <label id="pblbl">Generating report...</label>
 
-      <ProgressBar indeterminate aria-labelledby="pblbl" aria-describedby="sublbl" />
+      <ProgressBar
+        indeterminate
+        aria-labelledby="pblbl"
+        aria-describedby="sublbl"
+        style={{ margin: 'var(--vaadin-gap-s) 0' }}
+      />
 
       <span id="sublbl" style={{ fontSize: '0.8125rem' }}>
         Process can take upwards of 10 minutes

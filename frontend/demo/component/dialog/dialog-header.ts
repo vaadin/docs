@@ -2,10 +2,10 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/dialog';
 import '@vaadin/email-field';
+import '@vaadin/form-layout';
 import '@vaadin/icon';
 import '@vaadin/text-field';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
@@ -58,29 +58,24 @@ export class Example extends LitElement {
   }
 
   private renderDialog = () => html`
-    <vaadin-vertical-layout
-      theme="spacing"
-      style="width: 300px; max-width: 100%; align-items: stretch;"
-    >
-      <vaadin-vertical-layout style="align-items: stretch;">
-        <vaadin-text-field
-          label="Name"
-          value="${`${this.user?.firstName} ${this.user?.lastName}`}"
-          readonly
-          style="padding-top: 0;"
-        ></vaadin-text-field>
-        <vaadin-email-field
-          label="Email"
-          value="${ifDefined(this.user?.email)}"
-          readonly
-        ></vaadin-email-field>
-        <vaadin-text-field
-          label="Address"
-          value="${this.addressDescription()}"
-          readonly
-        ></vaadin-text-field>
-      </vaadin-vertical-layout>
-    </vaadin-vertical-layout>
+    <vaadin-form-layout auto-responsive column-width="18rem" expand-fields>
+      <vaadin-text-field
+        label="Name"
+        value="${`${this.user?.firstName} ${this.user?.lastName}`}"
+        readonly
+        style="padding-top: 0;"
+      ></vaadin-text-field>
+      <vaadin-email-field
+        label="Email"
+        value="${ifDefined(this.user?.email)}"
+        readonly
+      ></vaadin-email-field>
+      <vaadin-text-field
+        label="Address"
+        value="${this.addressDescription()}"
+        readonly
+      ></vaadin-text-field>
+    </vaadin-form-layout>
   `;
 
   addressDescription() {

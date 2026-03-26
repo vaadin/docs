@@ -13,9 +13,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -66,33 +63,22 @@ public class ContextMenuPresentation extends Div {
 
     private Component createIcon(VaadinIcon vaadinIcon) {
         Icon icon = vaadinIcon.create();
-        icon.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("margin-inline-end", "var(--lumo-space-s")
-                .set("padding", "var(--lumo-space-xs");
+        icon.getStyle().set("color", "var(--vaadin-text-color-secondary)")
+                .set("margin-inline-end", "var(--vaadin-gap-s")
+                .set("--vaadin-icon-visual-size", "80%");
         return icon;
     }
 
     // tag::snippet3[]
     private Component createPersonItem(Person person) {
-        Avatar avatar = new Avatar();
-        avatar.setImage(person.getPictureUrl());
-        avatar.setName(person.getFirstName());
-
+        Avatar avatar = new Avatar(person.getFullName(),
+                person.getPictureUrl());
         Span name = new Span(person.getFullName());
-        Span apps = new Span(getApplicationCount());
-        apps.getStyle().set("color", "var(--lumo-secondary-text-color)")
-                .set("font-size", "0.875rem");
+        Span profession = new Span(person.getProfession());
 
-        VerticalLayout verticalLayout = new VerticalLayout(name, apps);
-        verticalLayout.setPadding(false);
-        verticalLayout.setSpacing(false);
-
-        HorizontalLayout horizontalLayout = new HorizontalLayout(avatar,
-                verticalLayout);
-        horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        horizontalLayout.getStyle().set("line-height",
-                "var(--lumo-line-height-m)");
-        return horizontalLayout;
+        Div personItem = new Div(avatar, name, profession);
+        personItem.addClassName("person-item");
+        return personItem;
     }
     // end::snippet3[]
 

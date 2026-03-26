@@ -1,6 +1,8 @@
 package com.vaadin.demo.component.tabs;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.tabs.Tab;
@@ -13,7 +15,7 @@ public class TabsBadges extends Div {
     public TabsBadges() {
         // tag::snippet[]
         Tab open = new Tab(new Span("Open"), createBadge(24));
-        Tab completed = new Tab(new Span("Completed"), createBadge(439));
+        Tab completed = new Tab(new Span("Completed"), createBadge(49));
         Tab cancelled = new Tab(new Span("Cancelled"), createBadge(5));
 
         Tabs tabs = new Tabs(open, completed, cancelled);
@@ -24,10 +26,11 @@ public class TabsBadges extends Div {
     /**
      * Helper method for creating a badge.
      */
-    private Span createBadge(int value) {
-        Span badge = new Span(String.valueOf(value));
-        badge.getElement().getThemeList().add("badge small contrast");
-        badge.getStyle().set("margin-inline-start", "var(--lumo-space-xs)");
+    private Badge createBadge(int value) {
+        Badge badge = new Badge();
+        badge.setNumber(value);
+        badge.addThemeVariants(BadgeVariant.FILLED);
+        badge.getStyle().set("margin-inline-start", "var(--vaadin-gap-xs)");
         return badge;
     }
 

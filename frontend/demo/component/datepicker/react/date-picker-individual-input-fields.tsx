@@ -50,7 +50,7 @@ function Example() {
     <HorizontalLayout theme="spacing">
       <ComboBox
         label="Year"
-        style={{ width: '6em' }}
+        style={{ width: '7em' }}
         items={years.value}
         value={String(selectedYear.value)}
         onValueChanged={(e) => {
@@ -62,7 +62,7 @@ function Example() {
 
       <ComboBox
         label="Month"
-        style={{ width: '9em' }}
+        style={{ width: '10em' }}
         items={months.value}
         value={selectedMonth.value}
         disabled={!selectedYear.value}
@@ -74,7 +74,7 @@ function Example() {
 
       <ComboBox
         label="Day"
-        style={{ width: '5em' }}
+        style={{ width: '6em' }}
         items={selectableDays.value}
         value={String(selectedDay.value)}
         disabled={!selectedYear.value || !selectedMonth.value}

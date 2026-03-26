@@ -18,7 +18,7 @@ public class LoginOverlayBasic extends Div {
         Button login = new Button("Log in");
         login.addClickListener(event -> loginOverlay.setOpened(true));
         // end::snippet[]
-        login.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        login.addThemeVariants(ButtonVariant.PRIMARY);
         add(login);
     }
 
