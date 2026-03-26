@@ -10,7 +10,6 @@ export class Example extends LitElement {
   static override styles = css`
     a {
       text-decoration: none;
-      color: var(--lumo-primary-text-color);
     }
   `;
 

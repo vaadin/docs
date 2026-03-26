@@ -2,6 +2,7 @@ package com.vaadin.demo.component.checkbox;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -23,6 +24,8 @@ public class CheckboxGroupBasicFeatures extends VerticalLayout {
         field.setTooltipText("Tooltip text");
         // end::snippet[]
         field.setItems("Item 1", "Item 2", "Item 3");
+        // Only for Lumo
+        field.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
 
         add(checkbox, field);
     }

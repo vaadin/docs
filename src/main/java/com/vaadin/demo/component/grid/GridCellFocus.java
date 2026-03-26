@@ -29,9 +29,10 @@ public class GridCellFocus extends Div {
         grid.setItems(people);
 
         TextArea textArea = new TextArea();
+        textArea.getStyle().set("margin-top", "var(--vaadin-gap-l)")
+                .set("padding", "0");
         textArea.setLabel("Cell focus event information");
         textArea.setReadOnly(true);
-        textArea.setWidthFull();
 
         // tag::snippet[]
         grid.addCellFocusListener(event -> {

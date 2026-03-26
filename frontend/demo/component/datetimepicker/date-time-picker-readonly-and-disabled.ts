@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/vertical-layout';
 import '@vaadin/date-time-picker';
+import '@vaadin/form-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -15,14 +15,14 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout>
+      <vaadin-form-layout auto-responsive column-width="20rem">
         <!-- tag::snippet[] -->
         <vaadin-date-time-picker readonly label="Read-only" value="2020-06-12T12:30">
         </vaadin-date-time-picker>
 
         <vaadin-date-time-picker disabled label="Disabled"></vaadin-date-time-picker>
         <!-- end::snippet[] -->
-      </vaadin-vertical-layout>
+      </vaadin-form-layout>
     `;
   }
 }

@@ -13,7 +13,7 @@ public class RichTextEditorSetGetValue extends Div {
     public RichTextEditorSetGetValue() {
         // tag::snippet[]
         RichTextEditor rte = new RichTextEditor();
-        rte.getStyle().set("max-height", "400px");
+        rte.getStyle().set("height", "400px");
         rte.setValueChangeMode(ValueChangeMode.TIMEOUT);
 
         // HTML value

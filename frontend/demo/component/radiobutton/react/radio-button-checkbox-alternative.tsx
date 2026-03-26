@@ -7,7 +7,7 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
   return (
-    <VerticalLayout>
+    <VerticalLayout style={{ gap: '10px' }}>
       {/* tag::snippet[] */}
       <Checkbox checked>
         <label slot="label">Reply All by default (unchecked state not clear)</label>

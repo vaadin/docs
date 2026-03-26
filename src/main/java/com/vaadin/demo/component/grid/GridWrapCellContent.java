@@ -25,7 +25,7 @@ public class GridWrapCellContent extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(GridWrapCellContent::formatAddress).setHeader("Address");
 
-        grid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+        grid.addThemeVariants(GridVariant.WRAP_CELL_CONTENT);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();

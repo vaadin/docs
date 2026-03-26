@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/icon';
 import '@vaadin/icons';
 import '@vaadin/side-nav';
@@ -28,20 +29,17 @@ export class Example extends LitElement {
             <vaadin-side-nav-item path="/inbox">
               <vaadin-icon icon="vaadin:envelope" slot="prefix"></vaadin-icon>
               Inbox
-              <span theme="badge contrast pill" aria-label="12 unread messages" slot="suffix"
-                >12</span
-              >
+              <vaadin-badge number="12" theme="filled number-only" slot="suffix">
+                unread messages
+              </vaadin-badge>
             </vaadin-side-nav-item>
             <vaadin-side-nav-item path="/calendar">
               <vaadin-icon icon="vaadin:calendar" slot="prefix"></vaadin-icon>
               Calendar
-              <vaadin-icon
-                icon="vaadin:bell"
-                theme="badge error pill"
-                style="padding:var(--lumo-space-xs)"
-                aria-label="Upcoming appointment"
-                slot="suffix"
-              ></vaadin-icon>
+              <vaadin-badge theme="error icon-only" slot="suffix">
+                <vaadin-icon icon="vaadin:bell" slot="icon"></vaadin-icon>
+                Upcoming appointment
+              </vaadin-badge>
             </vaadin-side-nav-item>
           </vaadin-side-nav>
           <!-- end::snippet[] -->

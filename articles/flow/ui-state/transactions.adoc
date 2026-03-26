@@ -67,7 +67,7 @@ The `verifyPosition()` method verifies that an item is at a specific position in
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    ValueSignal<Todo> firstItem = todoList.get().get(0);
+    SharedValueSignal<Todo> firstItem = todoList.get().get(0);
 
     // Verify the item we want to update is still first
     todoList.verifyPosition(firstItem, ListPosition.first());
@@ -80,12 +80,12 @@ Signal.runInTransaction(() -> {
 
 === Verifying Child Exists
 
-The `verifyChild()` method on [classname]`ListSignal` verifies that a child signal is still part of the list:
+The `verifyChild()` method on [classname]`SharedListSignal` verifies that a child signal is still part of the list:
 
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    ValueSignal<Todo> itemSignal = todoList.get().get(0);
+    SharedValueSignal<Todo> itemSignal = todoList.get().get(0);
 
     // Verify the child signal still exists in the list before updating
     todoList.verifyChild(itemSignal);
@@ -146,12 +146,12 @@ List insert operations return an [classname]`InsertOperation` that provides imme
 
 [source,java]
 ----
-ListSignal<Todo> todoList = new ListSignal<>();
+SharedListSignal<Todo> todoList = new SharedListSignal<>(Todo.class);
 
-InsertOperation<Todo> op = todoList.insertLast(new Todo("New task", false));
+InsertOperation<SharedValueSignal<Todo>> op = todoList.insertLast(new Todo("New task", false));
 
 // Get the signal for the inserted item immediately
-ValueSignal<Todo> insertedSignal = op.signal();
+SharedValueSignal<Todo> insertedSignal = op.signal();
 
 // You can start working with the signal right away
 insertedSignal.update(todo -> new Todo(todo.text(), true));
@@ -162,22 +162,34 @@ This is useful when you need to reference the newly inserted item immediately af
 
 === TransactionOperation
 
-When running transactions, you can get a [classname]`TransactionOperation` that tracks the entire transaction. The [methodname]`returnValue()` method returns a [classname]`SignalOperation` that can be used to check the transaction result:
+When running transactions, [methodname]`Signal.runInTransaction()` returns a [classname]`TransactionOperation` that tracks the entire transaction. [classname]`TransactionOperation` extends [classname]`SignalOperation<Void>`, so you can check the transaction status via the inherited [methodname]`result()` method:
 
 [source,java]
 ----
-TransactionOperation txOp = Signal.runInTransaction(() -> {
+TransactionOperation<Void> txOp = Signal.runInTransaction(() -> {
     firstNameSignal.set("John");
     lastNameSignal.set("Doe");
 });
 
-// Get the underlying SignalOperation to check transaction status
-SignalOperation<?> signalOp = txOp.returnValue();
-CompletableFuture<?> result = signalOp.result();
+// Check transaction status via the inherited result()
+CompletableFuture<SignalOperation.ResultOrError<Void>> result = txOp.result();
 
 if (result.isDone()) {
     System.out.println("Transaction committed successfully");
 }
+----
+
+Transactions can also return a value. The [methodname]`returnValue()` method provides direct access to the value returned by the transaction callback:
+
+[source,java]
+----
+TransactionOperation<String> txOp = Signal.runInTransaction(() -> {
+    statusSignal.verifyValue("pending");
+    statusSignal.set("confirmed");
+    return "Order confirmed";
+});
+
+String returnValue = txOp.returnValue(); // "Order confirmed"
 ----
 
 
