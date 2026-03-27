@@ -14,6 +14,13 @@ Your existing Swing application runs in a web browser without requiring you to r
 
 The following guide helps you utilize SwingBridge to integrate your Swing applications into a modern web interface.
 
+== Prerequisites
+
+Before getting started, ensure that the following requirements are met:
+
+- **Java 21 or later**: SwingBridge requires Java 21 as the minimum supported version, consistent with the Vaadin 25+ series.
+- **Maven** (optional): Required only if you choose to <<setting-up-from-scratch,set up a project from scratch>>. The <<using-the-skeleton-starter,skeleton starter project>> includes Maven Wrapper scripts, so a separate Maven installation is not needed for that approach.
+
 == License Installation
 
 SwingBridge requires a commercial Vaadin subscription or a trial license. You can obtain one automatically or install it manually. Automatic license installation is the preferred choice. You are asked to either create a new vaadin.com account or login to an existing one in the following process.
@@ -65,11 +72,12 @@ For more information about Licensing please see https://vaadin.com/docs/latest/f
 
 == Project Setup
 
-You can set up a SwingBridge project in two ways: start from the skeleton starter project, which includes sample applications and preconfigured settings, or set up a project from scratch.
+You can set up a SwingBridge project in two ways: <<using-the-skeleton-starter,use the skeleton starter project>>, which includes sample applications and preconfigured settings, or <<setting-up-from-scratch,set up a project from scratch>>. The skeleton starter is the recommended approach when experiencing SwingBridge for the first time. It includes Maven Wrapper scripts and binaries, so you do not need to install Maven separately.
 
+[[using-the-skeleton-starter]]
 === Using the Skeleton Starter
 
-Clone or download the skeleton starter project from GitHub:
+Clone or download the https://github.com/vaadin/skeleton-starter-vaadin-swing-bridge[skeleton starter project] from GitHub:
 
 [source,terminal]
 ----
@@ -77,14 +85,24 @@ git clone https://github.com/vaadin/skeleton-starter-vaadin-swing-bridge.git
 cd skeleton-starter-vaadin-swing-bridge
 ----
 
-This project comes with sample Swing applications and all necessary Maven configuration ready to go. Run the project in development mode:
+This project comes with sample Swing applications, Maven Wrapper, and all necessary Maven configuration ready to go. Run the project in development mode:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="macOS/Linux"></source-info>
+./mvnw spring-boot:run
+----
 
 [source,terminal]
 ----
-mvn spring-boot:run
+<source-info group="Windows"></source-info>
+mvnw.cmd spring-boot:run
 ----
+--
 
-Visit `http://localhost:8080` to see the sample applications running inside SwingBridge.
+Visit `http://localhost:8888` to see the sample applications running inside SwingBridge.
 
 The project uses an `applibs` directory where Swing application JAR files and their dependencies are placed. All files in this folder are automatically available on the SwingBridge classpath.
 
@@ -93,6 +111,7 @@ The project uses an `applibs` directory where Swing application JAR files and th
 The `applibs` directory name is case-sensitive. To use a custom directory, pass `-Dapplibs.dir=<path>` on the command line or configure it in the `<systemPropertyVariables>` section of your `pom.xml`.
 ====
 
+[[setting-up-from-scratch]]
 === Setting Up from Scratch
 
 Add the following parent section, properties, and dependencies to your `pom.xml`:
@@ -102,8 +121,8 @@ Add the following parent section, properties, and dependencies to your `pom.xml`
 ----
 <properties>
   <maven.compiler.source>21</maven.compiler.source>
-  <vaadin.version>25.1.0-beta1</vaadin.version>
-  <swing-bridge.version>1.0.0</swing-bridge.version>
+  <vaadin.version>25.1.0</vaadin.version>
+  <swing-bridge.version>1.1.0</swing-bridge.version>
   <swing-bridge.path>${settings.localRepository}/com/vaadin</swing-bridge.path>
 </properties>
 
@@ -122,6 +141,13 @@ Add the following parent section, properties, and dependencies to your `pom.xml`
       <version>${vaadin.version}</version>
       <type>pom</type>
       <scope>import</scope>
+    </dependency>
+    <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>3.1.0</version>
+        <type>pom</type>
+        <scope>import</scope>
     </dependency>
   </dependencies>
 </dependencyManagement>
@@ -162,10 +188,6 @@ Add the following parent section, properties, and dependencies to your `pom.xml`
     <artifactId>vaadin-dev</artifactId>
     <optional>true</optional>
   </dependency>
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-devtools</artifactId>
-  </dependency>
 </dependencies>
 ----
 
@@ -190,6 +212,7 @@ SwingBridge requires certain JVM flags so that Maven can access internal Java mo
 --add-exports=java.desktop/sun.swing=ALL-UNNAMED
 --add-opens=java.desktop/java.awt.event=ALL-UNNAMED
 --add-opens=java.desktop/sun.awt=ALL-UNNAMED
+--add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED
 --add-reads=java.desktop=ALL-UNNAMED
 ----
 
@@ -240,6 +263,7 @@ To launch the application through Maven CLI, add the following build plugin to y
           --add-exports=java.desktop/sun.swing=ALL-UNNAMED
           --add-opens=java.desktop/java.awt.event=ALL-UNNAMED
           --add-opens=java.desktop/sun.awt=ALL-UNNAMED
+          --add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED
           -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         </jvmArguments>
 
@@ -276,12 +300,38 @@ public class MyAppView extends VerticalLayout {
 
 ----
 
-Start the server
+Start the server:
 
 [source,terminal]
 ----
 mvn spring-boot:run
 ----
+
+Navigate to `http://localhost:8888` to see the application. If you configured a custom port in your project (the Spring Boot default is `8080`), navigate to that port instead.
+
+== Running and Debugging
+
+=== Running from the Command Line
+
+SwingBridge requires special JVM flags to access internal Java modules. Because of this, running the application by clicking the green play button in IntelliJ IDEA or the equivalent in VS Code is not supported at this time.
+
+To run the application, use Maven from the command line as described in the <<using-the-skeleton-starter,skeleton starter>> or <<setting-up-from-scratch,from scratch>> sections.
+
+[NOTE]
+====
+Hotswap Agent and Spring Boot DevTools automatic restart are not fully supported with SwingBridge yet. If you detect unexpected behavior, try running the application without them.
+====
+
+=== Remote Debugging
+
+After starting the application through Maven, you can debug it using remote debugging. The skeleton starter project already includes the necessary JVM argument for this. If you set up from scratch, add the following to the `<jvmArguments>` section in your `spring-boot-maven-plugin` configuration:
+
+[source]
+----
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+----
+
+For IDE-specific setup instructions, see <<remote-debug-intellij,IntelliJ IDEA>> and <<remote-debug-vscode,VS Code>>.
 
 == What Happens Under the Hood
 
@@ -322,6 +372,52 @@ All standard Swing components are supported, as well as your customized Swing co
 .How does SwingBridge work?
 [%collapsible]
 ====
-SwingBridge runs your Swing application on the server and continuously inspects the Swing UI for changes. As soon as a change is detected, dirty regions are streamed to the browser to keep the updates as lightweight as possible. User interactions (clicks, keyboard input) are sent back to the server and replayed on the actual Swing components. 
+SwingBridge runs your Swing application on the server and continuously inspects the Swing UI for changes. As soon as a change is detected, dirty regions are streamed to the browser to keep the updates as lightweight as possible. User interactions (clicks, keyboard input) are sent back to the server and replayed on the actual Swing components.
+====
+
+[.collapsible-list]
+== IDE Remote Debug Configuration
+
+[[remote-debug-intellij]]
+.IntelliJ IDEA
+[%collapsible]
+====
+To set up remote debugging in IntelliJ IDEA:
+
+. Open menu:Run[Edit Configurations...].
+. Click the btn:[+] button and select *Remote JVM Debug*.
+. Set the *Name* to something descriptive, such as `SwingBridge Remote Debug`.
+. Ensure *Debugger mode* is set to *Attach to remote JVM*.
+. Set *Host* to `localhost` and *Port* to `5005`.
+. Click btn:[OK] to save the configuration.
+
+Start the application through Maven first, then launch this debug configuration. The debugger attaches to the running application, and you can set breakpoints and step through code as usual.
+====
+
+[[remote-debug-vscode]]
+.VS Code
+[%collapsible]
+====
+To set up remote debugging in VS Code:
+
+. Open or create the `.vscode/launch.json` file in your project.
+. Add the following configuration:
++
+[source,json]
+----
+{
+  "type": "java",
+  "name": "SwingBridge Remote Debug",
+  "request": "attach",
+  "hostName": "localhost",
+  "port": 5005
+}
+----
+
+. Start the application through Maven first.
+. Open the *Run and Debug* view and select *SwingBridge Remote Debug*.
+. Click the green play button to attach the debugger.
+
+You can now set breakpoints and debug the running application.
 ====
 
