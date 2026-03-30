@@ -212,6 +212,33 @@ grid.addColumn(
              () -> VaadinIcon.ARROW_LEFT.create()));
 ----
 
+Component renderers allow providing an optional update function that can be used to optimize rendering.
+Without an update function, component renderers recreate components for each item whenever the grid needs to be refreshed.
+This has several downsides:
+
+* It results in a large number of DOM changes in the browser as old elements are removed and new ones are added
+* It results in a larger payload that needs to be sent to the browser
+* Components lose their client-side state, for example, input fields lose their focus or entered text that has not been committed
+
+By providing an update function, the grid can reuse existing components and only update their state. This results in fewer DOM changes, smaller payloads, and better user experience.
+
+The following example shows how to provide an update function to a component renderer:
+
+[source,java]
+----
+grid.addColumn(new ComponentRenderer<>(item -> {
+    // Create the initial component using item name as text
+    return new Badge(item.getName());
+}, (component, item) -> {
+    // Update the component text when the item changes.
+    // Cast is necessary as component renderer is typed
+    // so that it allows the update function to return 
+    // a different component type if desired.
+    ((Badge) component).setText(item.getName());
+    return component;
+}));
+----
+
 You can create complex content for the grid cells by using the component APIs. This example is using [classname]`ComponentRenderer` to create complex content that listens for events and wraps multiple components in layouts:
 
 [source,java]
