@@ -23,7 +23,7 @@ The plugin records browser traffic from TestBench tests, converts it into k6 scr
 The load testing workflow has three stages:
 
 . *Record* -- A TestBench test runs through a recording proxy that captures all HTTP traffic as a https://en.wikipedia.org/wiki/HAR_(file_format)[HAR (HTTP Archive)] file, a standard JSON format for recording browser network activity.
-. *Convert* -- The HAR file is converted into a k6 script, with Vaadin-specific refactoring applied: dynamic session ID extraction, CSRF token handling, UI and Push ID management, and configurable target server.
+. *Convert* -- The HAR file is converted into a k6 script, with Vaadin-specific refactoring applied: dynamic session ID extraction, CSRF token handling, UI and Push ID management, and configurable target server. Form input values are extracted into a CSV data file for per-user variation.
 . *Run* -- The k6 script is executed with a configurable number of virtual users and duration against a target server.
 
 The plugin uses pure Java utilities. No Node.js is required.
@@ -264,7 +264,6 @@ Timeout for test execution, in seconds. Defaults to `300`.
 `k6.forceRecord`::
 Force re-recording even if test sources are unchanged. Defaults to `false`.
 
-
 [[converting]]
 == Converting HAR Files
 
@@ -469,6 +468,41 @@ mvn k6:record -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1
 
 Disable think times when you want to stress test the server at maximum request rate.
 
+[[csv-data]]
+=== Randomized Form Input Data
+
+When a recorded test interacts with form fields (text fields, text areas, and similar input components), the plugin extracts the submitted values and generates a CSV data file alongside the k6 script. For example, recording `CrudExampleIT` produces:
+
+----
+target/k6/tests/
+├── crud-example-generated.js
+└── crud-example-data.csv
+----
+
+The CSV file contains a header row with numbered input columns and one data row with the originally recorded values:
+
+[source,csv]
+----
+input_1,input_2,input_3
+Test User,test@example.com,Some text
+----
+
+The generated k6 script automatically loads this file using k6's `SharedArray` and picks a random row on each iteration.
+
+With only the single recorded row, every virtual user submits identical form data. To simulate realistic traffic with varied input, add more rows to the CSV file:
+
+[source,csv]
+----
+input_1,input_2,input_3
+Test User,test@example.com,Some text
+Jane Smith,jane@example.com,Another message
+Bob Johnson,bob@example.com,Different input
+----
+
+Each virtual user iteration selects a random row, reducing the impact of duplicate data on server-side caches and application state.
+
+[NOTE]
+When using <<running,combined scenarios>>, each scenario's CSV data is loaded with a unique namespace, so input columns from different scripts do not collide.
 
 [[load-test-helper]]
 == Load Test Helper
