@@ -227,6 +227,38 @@ java -jar target/quarkus-app/quarkus-run.jar
 The embedded plugin can be disabled by setting `vaadin.build.enabled=false`. If disabled, to run a production build, the project needs the configuration of Maven or Gradle Vaadin plugin. See <<{articles}/flow/production/production-build#, Production build>> for details about production build, and <<{articles}/flow/configuration/maven#, Maven>> and <<{articles}/flow/configuration/gradle#, Gradle>> Vaadin plugins documentation for configuration options.
 
 
+=== License Validation in Quarkus Builds
+
+If your project uses commercial Vaadin components, the License Checker needs access to the license key during the build. The license key can be provided as a file in the [filename]`.vaadin` directory, a system property, or an environment variable, as described in <<{articles}/flow/configuration/licenses#server-license-key, Validation on CI/CD or Build Server>>.
+
+With Maven, passing the key as a `-D` system property works without additional configuration:
+
+[source,terminal]
+----
+mvn package -Dvaadin.offlineKey=[contents of offlineKey file here]
+----
+
+The Quarkus Gradle plugin, however, runs the build in a forked process (process isolation), so JVM system properties passed via `-D` on the command line are not automatically visible to the License Checker. The file-based and environment variable approaches work without additional configuration, but if you want to pass the key as a system property, you need to forward it to the forked build process using `buildForkOptions` in your [filename]`build.gradle.kts`:
+
+[source,kotlin]
+----
+quarkus {
+    buildForkOptions {
+        System.getProperty("vaadin.offlineKey")?.let { key ->
+            systemProperty("vaadin.offlineKey", key)
+        }
+    }
+}
+----
+
+Then pass the key on the command line:
+
+[source,terminal]
+----
+./gradlew build -Dvaadin.offlineKey=[contents of offlineKey file here]
+----
+
+
 [[quarkus.vaadin.livereload]]
 == Live Reload
 
