@@ -20,6 +20,7 @@ public class SelectPresentation extends Div {
     public SelectPresentation() {
         // tag::snippet[]
         Select<Person> select = new Select<>();
+        select.setWidth("15em");
         select.setLabel("Choose doctor");
         select.setRenderer(new ComponentRenderer<>(person -> {
             Avatar avatar = new Avatar(person.getFullName(),
