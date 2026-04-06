@@ -21,9 +21,7 @@ function Example() {
   return (
     <SplitLayout style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      {/* The master area's size is flexible, and will shrink down to 450px,
-          below which the fixed-size detail area will be rendered as an overlay: */}
-      <MasterDetailLayout masterMinSize="450px" detailSize="250px">
+      <MasterDetailLayout masterSize="450px" detailSize="250px">
         <MasterDetailLayout.Master>
           <PersonList
             people={items.value}
