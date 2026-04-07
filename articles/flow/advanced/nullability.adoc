@@ -64,20 +64,7 @@ Nullability annotations are expected to expand across more Vaadin APIs in the fu
 
 == Enabling Null Checking in Your Project
 
-To enforce nullability at compile time, use https://github.com/uber/NullAway[NullAway] with https://errorprone.info/[Error Prone]. This requires JDK 22 or later.
-
-=== Adding the JSpecify Dependency
-
-Add JSpecify annotations as a dependency:
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.jspecify</groupId>
-    <artifactId>jspecify</artifactId>
-    <version>1.0.0</version>
-</dependency>
-----
+Vaadin's APIs are annotated with JSpecify nullability information. To take advantage of this, enable https://github.com/uber/NullAway[NullAway] with https://errorprone.info/[Error Prone] in your project. This gives you compile-time errors when you misuse Vaadin's nullability contracts — for example, passing `null` where a non-null parameter is expected, or ignoring a `@Nullable` return value. This requires JDK 22 or later.
 
 === Maven Setup
 
@@ -100,7 +87,7 @@ Use the https://github.com/making/nullability-maven-plugin[nullability-maven-plu
 </plugin>
 ----
 
-The plugin configures Error Prone and NullAway for you. By default, it enables JSpecify mode and only checks classes in packages that are explicitly marked with `@NullMarked`.
+The plugin configures Error Prone and NullAway for you. By default, it enables JSpecify mode and checks all code in `@NullMarked` scopes.
 
 === Gradle Setup
 
@@ -115,7 +102,6 @@ plugins {
 dependencies {
     errorprone "com.google.errorprone:error_prone_core:2.36.0"
     errorprone "com.uber.nullaway:nullaway:0.12.6"
-    implementation "org.jspecify:jspecify:1.0.0"
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -128,9 +114,34 @@ tasks.withType(JavaCompile).configureEach {
 }
 ----
 
-=== Marking Your Code as @NullMarked
+=== Checking Vaadin Types
 
-After setting up the tooling, annotate your own code. Apply `@NullMarked` at the package level by creating a `package-info.java` file:
+After adding the tooling, mark classes that use Vaadin APIs with `@NullMarked`. NullAway then enforces Vaadin's nullability contracts in those classes at compile time:
+
+[source,java]
+----
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+@NullMarked
+public class SignalExample extends Div {
+    // Compiler ensures non-null signal is never set to null
+    private final ValueSignal<String> name = new ValueSignal<>("John");
+
+    // Compiler requires null checks when reading nullable signals
+    private final ValueSignal<@Nullable String> nickname = new ValueSignal<>(null);
+
+    public SignalExample() {
+        @Nullable String value = nickname.get();
+        // Compiler error if you call value.toUpperCase() without a null check
+        add(new Span(value != null ? value : "No nickname"));
+    }
+}
+----
+
+=== Extending to Your Own Code
+
+You can go further and apply `@NullMarked` at the package level to get null-safety defaults for your own APIs. Create a `package-info.java` file:
 
 [source,java]
 ----
@@ -156,8 +167,6 @@ public class CustomerService {
     public @Nullable Customer findByEmail(String email) { ... }
 }
 ----
-
-You can also apply `@NullMarked` to individual classes if you prefer a gradual rollout.
 
 
 == Nullability with Signals
