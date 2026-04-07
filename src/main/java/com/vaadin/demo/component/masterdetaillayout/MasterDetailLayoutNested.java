@@ -22,19 +22,23 @@ import com.vaadin.demo.DemoExporter; // hidden-source-line
 @Route("master-detail-layout-nested")
 public class MasterDetailLayoutNested extends Div {
 
-    private Map<String, List<Person>> peopleByProfession = DataService.getPeople()
-            .stream().collect(Collectors.groupingBy(Person::getProfession));
-    private List<String> professions = peopleByProfession.keySet().stream().sorted()
-            .limit(4).toList();
+    private Map<String, List<Person>> peopleByProfession = DataService
+            .getPeople().stream()
+            .collect(Collectors.groupingBy(Person::getProfession));
+    private List<String> professions = peopleByProfession.keySet().stream()
+            .sorted().limit(4).toList();
 
     // Signals for selected profession and person
-    private ValueSignal<String> selectedProfession = new ValueSignal<>(professions.getFirst());
+    private ValueSignal<String> selectedProfession = new ValueSignal<>(
+            professions.getFirst());
     private ValueSignal<Person> selectedPerson = new ValueSignal<>(null);
 
     // Computed signal for persons in the selected profession
     private Signal<List<Person>> persons = Signal.computed(() -> {
         String profession = selectedProfession.get();
-        return profession != null ? peopleByProfession.getOrDefault(profession, List.of()) : List.of();
+        return profession != null
+                ? peopleByProfession.getOrDefault(profession, List.of())
+                : List.of();
     });
 
     public MasterDetailLayoutNested() {
@@ -53,7 +57,8 @@ public class MasterDetailLayoutNested extends Div {
         Grid<String> professionGrid = new Grid<>();
         professionGrid.addColumn(p -> p).setHeader("Profession");
         professionGrid.setItems(professions);
-        professionGrid.asSingleSelect().bindValue(selectedProfession, selectedProfession::set);
+        professionGrid.asSingleSelect().bindValue(selectedProfession,
+                selectedProfession::set);
         professionGrid.setHeightFull();
         professionGrid.addThemeVariants(GridVariant.NO_BORDER);
         outerLayout.setMaster(professionGrid);
@@ -63,8 +68,8 @@ public class MasterDetailLayoutNested extends Div {
         personGrid.addColumn(Person::getFirstName).setHeader("First Name");
         personGrid.addColumn(Person::getLastName).setHeader("Last Name");
         personGrid.addColumn(Person::getEmail).setHeader("Email");
-        personGrid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
-        // personGrid.setItems(persons.peek());
+        personGrid.asSingleSelect().bindValue(selectedPerson,
+                selectedPerson::set);
         personGrid.setHeightFull();
         personGrid.addThemeVariants(GridVariant.NO_BORDER);
         innerLayout.setMaster(personGrid);
@@ -93,6 +98,7 @@ public class MasterDetailLayoutNested extends Div {
 
         Signal.effect(personGrid, () -> {
             personGrid.setItems(persons.get());
+            selectedPerson.set(null);
         });
 
         Signal.effect(outerLayout, () -> {
@@ -114,12 +120,8 @@ public class MasterDetailLayoutNested extends Div {
         innerLayout.addDetailEscapePressListener(
                 event -> selectedPerson.set(null));
         add(outerLayout);
-        setHeightFull();
-
-        // Select first profession and first person by default
-        // selectedProfession.set(professions.get(0));
-        // selectedPerson.set(peopleByProfession.get(selectedProfession.peek()).get(0));
         // end::snippet[]
+        setHeightFull();
     }
 
     public static class Exporter
