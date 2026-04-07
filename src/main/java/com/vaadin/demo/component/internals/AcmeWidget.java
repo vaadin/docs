@@ -7,12 +7,12 @@ import com.vaadin.flow.component.DomEvent;
 import com.vaadin.flow.component.EventData;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.shared.Registration;
 
-// tag::class[]
+// tag::annotations[]
 @Tag("acme-widget-wrapper")
-@NpmPackage(value = "@acme/widget", version = "2.0.0")
+// end::annotations[]
+// tag::body[]
 @JsModule("./component-internals/acme-widget-wrapper.ts")
 public class AcmeWidget extends Component {
 
@@ -70,4 +70,4 @@ public class AcmeWidget extends Component {
         }
     }
 }
-// end::class[]
+// end::body[]
