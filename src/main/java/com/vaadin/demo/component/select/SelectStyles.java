@@ -14,9 +14,8 @@ public class SelectStyles extends HorizontalLayout {
 
         // tag::snippet[]
         Select<String> field = new Select<>();
-        field.addThemeVariants(SelectVariant.LUMO_SMALL,
-                SelectVariant.LUMO_ALIGN_RIGHT,
-                SelectVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.addThemeVariants(SelectVariant.SMALL, SelectVariant.ALIGN_RIGHT,
+                SelectVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

@@ -61,13 +61,12 @@ export class Example extends LitElement {
         <vaadin-grid-column path="email"></vaadin-grid-column>
         <vaadin-grid-column path="profession"></vaadin-grid-column>
       </vaadin-grid>
-      <div>
-        <vaadin-text-area
-          label="Cell focus event information"
-          readonly
-          .value="${this.eventSummary}"
-        ></vaadin-text-area>
-      </div>
+      <vaadin-text-area
+        style="margin-top: var(--vaadin-gap-l); padding: 0;"
+        label="Cell focus event information"
+        readonly
+        .value="${this.eventSummary}"
+      ></vaadin-text-area>
     `;
   }
 

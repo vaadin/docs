@@ -3,9 +3,10 @@ package com.vaadin.demo.component.grid;
 import java.util.List;
 
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -40,32 +41,27 @@ public class GridContent extends Div {
         return LitRenderer
                 .<Person> of(
                         """
-                                <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
-                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" alt="User avatar"></vaadin-avatar>
-                                  <vaadin-vertical-layout style="line-height: var(--lumo-line-height-m);">
-                                    <span> ${item.fullName} </span>
-                                    <span style="font-size: 0.875rem; color: var(--lumo-secondary-text-color);">
-                                      ${item.email}
-                                    </span>
-                                  </vaadin-vertical-layout>
-                                </vaadin-horizontal-layout>
+                                <div class="person-item">
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" style="--vaadin-avatar-size: 2.25rem"></vaadin-avatar>
+                                  <span>${item.fullName}</span>
+                                  <span>${item.email}</span>
+                                </div>
                                 """)
                 .withProperty("pictureUrl", Person::getPictureUrl)
                 .withProperty("fullName", Person::getFullName)
                 .withProperty("email", Person::getEmail);
     }
 
-    private static final SerializableBiConsumer<Span, Person> statusComponentUpdater = (
-            span, person) -> {
+    private static final SerializableBiConsumer<Badge, Person> statusComponentUpdater = (
+            badge, person) -> {
         boolean isAvailable = "Available".equals(person.getStatus());
-        String theme = String.format("badge %s",
-                isAvailable ? "success" : "error");
-        span.getElement().setAttribute("theme", theme);
-        span.setText(person.getStatus());
+        badge.addThemeVariants(
+                isAvailable ? BadgeVariant.SUCCESS : BadgeVariant.ERROR);
+        badge.setText(person.getStatus());
     };
 
-    private static ComponentRenderer<Span, Person> createStatusComponentRenderer() {
-        return new ComponentRenderer<>(Span::new, statusComponentUpdater);
+    private static ComponentRenderer<Badge, Person> createStatusComponentRenderer() {
+        return new ComponentRenderer<>(Badge::new, statusComponentUpdater);
     }
     // end::snippet2[]
 

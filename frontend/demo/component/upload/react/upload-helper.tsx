@@ -37,7 +37,7 @@ function Example() {
   return (
     <>
       <h4>Upload spreadsheet</h4>
-      <p>
+      <p style={{ color: 'var(--vaadin-text-color-secondary)' }}>
         File size must be less than or equal to {maxFileSizeInMB} MB.
         <br />
         Only Excel and CSV files are accepted.
@@ -48,7 +48,7 @@ function Example() {
         accept={acceptedTypes.join(',')}
         i18n={uploadI18n.value}
         onFileReject={(event) => {
-          Notification.show(event.detail.error);
+          Notification.show(event.detail.error, { position: 'middle', theme: 'error' });
         }}
       />
     </>

@@ -86,7 +86,7 @@ export class Example extends LitElement {
 
   private renderNoInvitationAlert = () => html`
     <div
-      style="padding: 2.75rem; text-align: center; font-style: italic; color: var(--lumo-contrast-70pct);"
+      style="padding: var(--vaadin-padding-xl); text-align: center; font-style: italic; color: var(--vaadin-text-color-secondary);"
     >
       No invitation has been sent
     </div>
@@ -94,7 +94,11 @@ export class Example extends LitElement {
 
   private renderInvitedPeopleTable = () => html`
     <!-- tag::snippet[] -->
-    <vaadin-grid .items="${this.invitedPeople}" all-rows-visible>
+    <vaadin-grid
+      .items="${this.invitedPeople}"
+      all-rows-visible
+      style="margin-top: var(--vaadin-gap-s)"
+    >
       <vaadin-grid-column header="Name" path="displayName" auto-width></vaadin-grid-column>
       <vaadin-grid-column path="email"></vaadin-grid-column>
       <vaadin-grid-column path="address.phone"></vaadin-grid-column>

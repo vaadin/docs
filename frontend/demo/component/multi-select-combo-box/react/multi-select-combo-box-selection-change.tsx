@@ -22,7 +22,7 @@ function Example() {
   const selectedCountriesText = selectedCountries.value.map((country) => country.name).join(', ');
 
   return (
-    <HorizontalLayout theme="spacing">
+    <HorizontalLayout theme="spacing" style={{ alignItems: 'baseline' }}>
       <MultiSelectComboBox
         label="Countries"
         itemLabelPath="name"

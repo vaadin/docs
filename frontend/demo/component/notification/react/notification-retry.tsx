@@ -37,17 +37,13 @@ function Example() {
           notificationOpened.value = false;
         }}
       >
-        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '350px' }}>
           <div>Failed to generate report</div>
-          <Button
-            theme="tertiary-inline"
-            style={{ marginLeft: 'var(--lumo-space-xl)' }}
-            onClick={close}
-          >
+          <Button slot="end" onClick={close}>
             Retry
           </Button>
 
-          <Button theme="tertiary-inline icon" onClick={close} aria-label="Close">
+          <Button slot="end" theme="icon" aria-label="Close" onClick={close}>
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>

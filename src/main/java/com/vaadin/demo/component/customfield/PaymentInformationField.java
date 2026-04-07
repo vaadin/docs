@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.customfield;
 
 import com.vaadin.flow.component.customfield.CustomField;
-import com.vaadin.flow.component.customfield.CustomFieldVariant;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
@@ -24,13 +23,9 @@ public class PaymentInformationField extends CustomField<PaymentInformation> {
 
         HorizontalLayout layout = new HorizontalLayout(cardholderName,
                 cardNumber, securityCode);
-        // Removes default spacing
         layout.setSpacing(false);
-        // Adds small amount of space between the components
-        layout.getThemeList().add("spacing-s");
-
-        // Increases padding of field's label
-        addThemeVariants(CustomFieldVariant.LUMO_WHITESPACE);
+        layout.getStyle().set("gap", "0.5rem");
+        layout.getStyle().set("padding-top", "0.25rem");
 
         add(layout);
     }

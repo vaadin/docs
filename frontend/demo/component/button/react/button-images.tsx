@@ -6,7 +6,7 @@ import img from '../../../../../src/main/resources/images/vaadin-logo-dark.png?u
 function Example() {
   return (
     // tag::snippet[]
-    <Button theme="icon">
+    <Button>
       <img src={img} width="100" alt="Vaadin logo" />
     </Button>
     // end::snippet[]

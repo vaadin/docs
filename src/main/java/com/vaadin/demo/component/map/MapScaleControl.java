@@ -22,11 +22,12 @@ public class MapScaleControl extends Div {
         add(map);
 
         // tag::snippet[]
-        ValueSignal<ScaleControl.Unit> units = new ValueSignal<>(ScaleControl.Unit.METRIC);
+        ValueSignal<ScaleControl.Unit> units = new ValueSignal<>(
+                ScaleControl.Unit.METRIC);
         ValueSignal<Boolean> showAsBar = new ValueSignal<>(false);
         ValueSignal<Double> barSteps = new ValueSignal<>(4d);
         ValueSignal<Boolean> showRatio = new ValueSignal<>(false);
-        
+
         ScaleControl scaleControl = map.getControls().getScale();
         scaleControl.setVisible(true);
         scaleControl.setMinWidth(175);
@@ -34,7 +35,9 @@ public class MapScaleControl extends Div {
         // Update control when data changes
         Signal.effect(map, () -> {
             scaleControl.setUnits(units.get());
-            scaleControl.setDisplayMode(showAsBar.get() ? ScaleControl.DisplayMode.BAR : ScaleControl.DisplayMode.LINE);
+            scaleControl.setDisplayMode(
+                    showAsBar.get() ? ScaleControl.DisplayMode.BAR
+                            : ScaleControl.DisplayMode.LINE);
             scaleControl.setScaleBarSteps(barSteps.get().intValue());
             scaleControl.setScaleBarRatioVisible(showRatio.get());
         });
@@ -62,7 +65,8 @@ public class MapScaleControl extends Div {
         ratioTextCheckbox.bindValue(showRatio, showRatio::set);
         // end::snippet[]
 
-        HorizontalLayout layout = new HorizontalLayout(unitSelect, barCheckbox, stepsSlider, ratioTextCheckbox);
+        HorizontalLayout layout = new HorizontalLayout(unitSelect, barCheckbox,
+                stepsSlider, ratioTextCheckbox);
         layout.setWrap(true);
         layout.setAlignItems(FlexComponent.Alignment.BASELINE);
         add(layout);

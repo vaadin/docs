@@ -32,7 +32,13 @@ export class Example extends LitElement {
         .i18n="${this.uploadI18n}"
         .files="${createFakeFilesUploadAllFiles() /* hidden-source-line */}"
       ></vaadin-upload>
-      <vaadin-button theme="primary" @click="${this.uploadFiles}"> Upload All Files</vaadin-button>
+      <vaadin-button
+        theme="primary"
+        style="margin-top: var(--vaadin-gap-s)"
+        @click="${this.uploadFiles}"
+      >
+        Upload All Files
+      </vaadin-button>
     `;
   }
 
