@@ -227,6 +227,38 @@ java -jar target/quarkus-app/quarkus-run.jar
 The embedded plugin can be disabled by setting `vaadin.build.enabled=false`. If disabled, to run a production build, the project needs the configuration of Maven or Gradle Vaadin plugin. See <<{articles}/flow/production/production-build#, Production build>> for details about production build, and <<{articles}/flow/configuration/maven#, Maven>> and <<{articles}/flow/configuration/gradle#, Gradle>> Vaadin plugins documentation for configuration options.
 
 
+=== License Validation in Quarkus Builds
+
+If your project uses commercial Vaadin components, the License Checker needs access to the license key during the build. The license key can be provided as a file in the [filename]`.vaadin` directory, a system property, or an environment variable, as described in <<{articles}/flow/configuration/licenses#server-license-key, Validation on CI/CD or Build Server>>.
+
+With Maven, passing the key as a `-D` system property works without additional configuration:
+
+[source,terminal]
+----
+mvn package -Dvaadin.offlineKey=[contents of offlineKey file here]
+----
+
+The Quarkus Gradle plugin, however, runs the build in a forked process (process isolation), so JVM system properties passed via `-D` on the command line are not automatically visible to the License Checker. The file-based and environment variable approaches work without additional configuration, but if you want to pass the key as a system property, you need to forward it to the forked build process using `buildForkOptions` in your [filename]`build.gradle.kts`:
+
+[source,kotlin]
+----
+quarkus {
+    buildForkOptions {
+        System.getProperty("vaadin.offlineKey")?.let { key ->
+            systemProperty("vaadin.offlineKey", key)
+        }
+    }
+}
+----
+
+Then pass the key on the command line:
+
+[source,terminal]
+----
+./gradlew build -Dvaadin.offlineKey=[contents of offlineKey file here]
+----
+
+
 [[quarkus.vaadin.livereload]]
 == Live Reload
 
@@ -270,31 +302,6 @@ The Vaadin Quarkus plugin doesn't support Hilla because Hilla requires the use o
 
 Quarkus Bill-of-Materials (BOM) may pin libraries to a version that conflicts with Vaadin. This can result in runtime errors or test failures during development because of changes in method signatures.
 
-For example, a common problem is a conflict with the Java Native Access (JNA) version. That may cause runtime errors such as `java.lang.NoClassDefFoundError: com/sun/jna/platform/unix/LibCAPI$size_t$ByReference` or `java.lang.NoSuchMethodError: 'void com.sun.jna.Memory.close()'`, depending on the platform the application is running.
-
-This can be fixed by making sure the Vaadin BOM in the dependency management section of the project's [filename]`pom.xml` file is located immediately above the reference to Quarkus BOM.
-
-[source,xml]
-----
-<dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-bom</artifactId>
-            <type>pom</type>
-            <scope>import</scope>
-            <version>${vaadin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-bom</artifactId>
-            <version>${quarkus.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        ...
-    </dependencies>
-</dependencyManagement>
-----
+If you encounter such errors, try swapping the order of the BOMs in the dependency management section of the project's [filename]`pom.xml` file so that the Vaadin BOM is located immediately above the Quarkus BOM. This ensures that Vaadin's dependency versions take precedence.
 
 [discussion-id]`45A37C7E-2C03-44CA-B59E-C756F05CE3D2`
