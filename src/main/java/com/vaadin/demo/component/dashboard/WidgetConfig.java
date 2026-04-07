@@ -3,7 +3,7 @@ package com.vaadin.demo.component.dashboard;
 import org.jspecify.annotations.NonNull;
 
 // tag::snippet[]
-// In order to save and load the dashboard configuration we need a class for storing
+// To save and load the dashboard configuration we need a class for storing
 // the configuration of individual widgets. In this example we'll use a class that
 // holds the widget type, colspan, and rowspan.
 public class WidgetConfig {

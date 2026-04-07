@@ -276,6 +276,11 @@ public class Application implements AppShellConfigurator {}
 
 The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
+[IMPORTANT]
+====
+The `lumoImports` property in [filename]`theme.json` is silently ignored in Vaadin 25. If your application relied on `lumoImports` to load utility classes (e.g., `"lumoImports": ["utility"]`), views using [classname]`LumoUtility` CSS classes for layout (flex, grid, gap, padding, etc.) will render with broken layouts. The class names are still added to the DOM but have no backing CSS rules. See <<lumo-theme>> for instructions on loading the Lumo Utility stylesheet.
+====
+
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
@@ -318,6 +323,7 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 }
 ----
 
+[[lumo-theme]]
 === Lumo Theme
 
 The Lumo theme is no longer loaded by default, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. If you’re not using [classname]`@Theme`, then add a [classname]`@StyleSheet` annotation to either your application class or a root layout to load the Lumo theme:
@@ -328,14 +334,18 @@ The Lumo theme is no longer loaded by default, except if you’re using the [cla
 public class Application implements AppShellConfigurator {}
 ----
 
-All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. To load the utility classes, add a separate [classname]`@StyleSheet` annotation:
+All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. This applies regardless of whether the theme is loaded through [classname]`@Theme` or [classname]`@StyleSheet`. To load the utility classes, add a [classname]`@StyleSheet` annotation:
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET)
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 public class Application implements AppShellConfigurator {}
 ----
+
+[NOTE]
+====
+If your Vaadin 24 application used `"lumoImports": ["utility"]` in [filename]`theme.json` to load the Lumo Utility Classes, you must add `@StyleSheet(Lumo.UTILITY_STYLESHEET)` when upgrading to Vaadin 25. The [classname]`@Theme` annotation does not load utility classes, and the `lumoImports` property in [filename]`theme.json` is no longer supported. Without this change, any layout built with [classname]`LumoUtility` constants (such as `Display.FLEX`, `FlexDirection.COLUMN`, `Gap.MEDIUM`, etc.) will appear broken, as the CSS class names are present in the HTML but have no associated styles.
+====
 
 The Lumo icon collection is not loaded by default anymore, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. To ensure Lumo icons are included in your application bundle, use the [classname]`LumoIcon` enum instead of the general [classname]`Icon` class:
 
@@ -604,7 +614,7 @@ vaadin-split-layout > * {
 The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
 
 === Spreadsheet
-The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. In order to achieve this, use one of the following constructors:
+The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. To achieve this, use one of the following constructors:
 
 * `CellReference(Cell)`
 * `CellReference(String, int, int, boolean, boolean)`
