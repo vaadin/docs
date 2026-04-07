@@ -30,6 +30,7 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-select
         label="Choose doctor"
+        style="width: 15em;"
         ${selectRenderer(this.renderer, this.people)}
       ></vaadin-select>
       <!-- end::snippet[] -->
