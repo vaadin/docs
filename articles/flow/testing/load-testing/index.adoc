@@ -167,9 +167,9 @@ public void deletePatient() {
 [[server-lifecycle]]
 == Starting and Stopping the Server
 
-The `k6:record` and `k6:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `k6:start-server` and `k6:stop-server` goals.
+The `loadtest:record` and `loadtest:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `loadtest:start-server` and `loadtest:stop-server` goals.
 
-The `k6:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `k6:stop-server` goal retrieves that handle and shuts the server down gracefully.
+The `loadtest:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `loadtest:stop-server` goal retrieves that handle and shuts the server down gracefully.
 
 [source,xml]
 ----
@@ -186,7 +186,7 @@ The `k6:start-server` goal starts a Spring Boot executable JAR, waits for the he
 </execution>
 ----
 
-By default, `k6:start-server` runs in the `pre-integration-test` phase and `k6:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
+By default, `loadtest:start-server` runs in the `pre-integration-test` phase and `loadtest:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
 
 
 === Start Server Parameters
@@ -222,18 +222,18 @@ Time to wait for graceful shutdown before force-killing, in seconds. Defaults to
 [[recording]]
 == Recording Tests
 
-The `k6:record` goal runs one or more TestBench test classes through a recording proxy, captures the HTTP traffic, and converts it into k6 scripts:
+The `loadtest:record` goal runs one or more TestBench test classes through a recording proxy, captures the HTTP traffic, and converts it into k6 scripts:
 
 [source,bash]
 ----
-mvn k6:record -Dk6.testClass=HelloWorldIT -Dk6.appPort=8080
+mvn loadtest:record -Dk6.testClass=HelloWorldIT -Dk6.appPort=8080
 ----
 
 To record multiple tests:
 
 [source,bash]
 ----
-mvn k6:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT
+mvn loadtest:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT
 ----
 
 The plugin uses hash-based caching: if the test source code has not changed since the last recording, the test is skipped. Use `-Dk6.forceRecord=true` to force re-recording.
@@ -272,7 +272,7 @@ If you already have a HAR file (for example, recorded with browser developer too
 
 [source,bash]
 ----
-mvn k6:convert -Dk6.harFile=recording.har
+mvn loadtest:convert -Dk6.harFile=recording.har
 ----
 
 The conversion pipeline:
@@ -303,25 +303,25 @@ Skip Vaadin-specific session handling refactoring. Defaults to `false`.
 [[running]]
 == Running Load Tests
 
-The `k6:run` goal executes k6 scripts with configurable virtual users and duration:
+The `loadtest:run` goal executes k6 scripts with configurable virtual users and duration:
 
 [source,bash]
 ----
-mvn k6:run -Dk6.testFile=target/k6/tests/hello-world.js -Dk6.vus=50 -Dk6.duration=1m
+mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js -Dk6.vus=50 -Dk6.duration=1m
 ----
 
 To run all scripts in a directory:
 
 [source,bash]
 ----
-mvn k6:run -Dk6.testDir=target/k6/tests -Dk6.vus=50 -Dk6.duration=1m
+mvn loadtest:run -Dk6.testDir=target/k6/tests -Dk6.vus=50 -Dk6.duration=1m
 ----
 
 To run against a remote server:
 
 [source,bash]
 ----
-mvn k6:run -Dk6.testFile=target/k6/tests/hello-world.js \
+mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js \
     -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
     -Dk6.vus=100 -Dk6.duration=5m
 ----
@@ -461,10 +461,10 @@ Or via command line:
 [source,bash]
 ----
 # Disable think times for maximum throughput testing
-mvn k6:record -Dk6.thinkTime.enabled=false
+mvn loadtest:record -Dk6.thinkTime.enabled=false
 
 # Custom delays
-mvn k6:record -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1.0
+mvn loadtest:record -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1.0
 ----
 
 Disable think times when you want to stress test the server at maximum request rate.
@@ -580,7 +580,7 @@ management.endpoints.web.exposure.include=health,metrics
 
 ==== Collecting Metrics During Load Tests
 
-The `k6:run` goal can collect server metrics from Actuator during the load test. It fetches CPU usage, memory, heap, active sessions, and Vaadin view counts at regular intervals and displays a summary after the test.
+The `loadtest:run` goal can collect server metrics from Actuator during the load test. It fetches CPU usage, memory, heap, active sessions, and Vaadin view counts at regular intervals and displays a summary after the test.
 
 Enable metrics collection via the plugin configuration:
 
@@ -597,7 +597,7 @@ Or via command line:
 
 [source,bash]
 ----
-mvn k6:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run -Dk6.testDir=target/k6/tests \
     -Dk6.managementPort=8082 \
     -Dk6.collectVaadinMetrics=true \
     -Dk6.metricsInterval=10
@@ -694,10 +694,10 @@ Record tests on a development machine, then run against the target server:
 [source,bash]
 ----
 # Step 1: Record scenarios locally
-mvn k6:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT -Dk6.appPort=8081
+mvn loadtest:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT -Dk6.appPort=8081
 
 # Step 2: Run against remote server
-mvn k6:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run -Dk6.testDir=target/k6/tests \
     -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
     -Dk6.vus=100 -Dk6.duration=5m
 ----
