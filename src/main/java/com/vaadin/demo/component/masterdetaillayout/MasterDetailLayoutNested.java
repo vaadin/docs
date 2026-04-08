@@ -33,8 +33,8 @@ public class MasterDetailLayoutNested extends Div {
             professions.getFirst());
     private ValueSignal<Person> selectedPerson = new ValueSignal<>(null);
 
-    // Computed signal for persons in the selected profession
-    private Signal<List<Person>> persons = Signal.computed(() -> {
+    // Computed signal for people in the selected profession
+    private Signal<List<Person>> people = Signal.computed(() -> {
         String profession = selectedProfession.get();
         return profession != null
                 ? peopleByProfession.getOrDefault(profession, List.of())
@@ -43,12 +43,12 @@ public class MasterDetailLayoutNested extends Div {
 
     public MasterDetailLayoutNested() {
         // tag::snippet[]
-        // Outer layout: professions → persons
+        // Outer layout: professions → people
         MasterDetailLayout outerLayout = new MasterDetailLayout();
         outerLayout.setMasterSize("300px");
         outerLayout.setExpandingArea(MasterDetailLayout.ExpandingArea.DETAIL);
 
-        // Inner layout: persons → person details
+        // Inner layout: people → person details
         MasterDetailLayout innerLayout = new MasterDetailLayout();
         innerLayout.setMasterSize("500px");
         innerLayout.setExpandingArea(MasterDetailLayout.ExpandingArea.DETAIL);
@@ -101,7 +101,7 @@ public class MasterDetailLayoutNested extends Div {
         formLayout.add(firstNameField, lastNameField, emailField, closeButton);
 
         Signal.effect(personGrid, () -> {
-            personGrid.setItems(persons.get());
+            personGrid.setItems(people.get());
             selectedPerson.set(null);
         });
 
@@ -128,7 +128,7 @@ public class MasterDetailLayoutNested extends Div {
         setHeightFull();
     }
 
-    public static class Exporter
+    public static class Exporter // hidden-source-line
             extends DemoExporter<MasterDetailLayoutNested> { // hidden-source-line
     } // hidden-source-line
 }

@@ -35,7 +35,6 @@ function Example() {
     getPeople().then(({ people: allPeople }) => {
       people.value = allPeople;
       professions.value = [...new Set(allPeople.map((p) => p.profession))].toSorted().slice(0, 4);
-      // eslint-disable-next-line @typescript-eslint/prefer-destructuring
       selectedProfession.value = professions.value[0];
     });
   }, []);
