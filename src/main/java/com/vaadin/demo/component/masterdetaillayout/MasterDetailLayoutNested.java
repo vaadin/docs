@@ -77,16 +77,20 @@ public class MasterDetailLayoutNested extends Div {
         // Person detail form (inner detail)
         TextField firstNameField = new TextField("First Name");
         firstNameField.setReadOnly(true);
-        firstNameField.bindValue(selectedPerson.map(Person::getFirstName),
+        firstNameField.bindValue(
+                selectedPerson.map((p) -> p != null ? p.getFirstName() : ""),
                 null);
 
         TextField lastNameField = new TextField("Last Name");
         lastNameField.setReadOnly(true);
-        lastNameField.bindValue(selectedPerson.map(Person::getLastName), null);
+        lastNameField.bindValue(
+                selectedPerson.map((p) -> p != null ? p.getLastName() : ""),
+                null);
 
         EmailField emailField = new EmailField("Email");
         emailField.setReadOnly(true);
-        emailField.bindValue(selectedPerson.map(Person::getEmail), null);
+        emailField.bindValue(
+                selectedPerson.map((p) -> p != null ? p.getEmail() : ""), null);
 
         Button closeButton = new Button("Close",
                 event -> selectedPerson.set(null));
