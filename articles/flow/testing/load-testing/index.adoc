@@ -98,39 +98,37 @@ Design load test scenarios to be *repeatable*: prefer read-only workflows, use s
 [[proxy-configuration]]
 === Proxy Configuration
 
-During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy. The browser driver must be configured to use this proxy. Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
+During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy.
+The browser driver must be configured to use this proxy.
+Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
 
-The [classname]`LoadTestItHelper` class (from the `loadtest-helper` dependency) handles proxy driver configuration. Its [methodname]`openWithProxy()` method checks whether the `k6.proxy.host` system property is set. When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support. When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
+The [classname]`LoadTestItHelper` class (from the `loadtest-helper` dependency) handles proxy driver configuration.
+Its [methodname]`openWithProxy()` method checks whether the `k6.proxy.host` system property is set.
+When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support.
+When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
 
-Create a base class for your load test scenarios that calls [methodname]`openWithProxy()` in a `@BeforeEach` method. The [methodname]`getRootURL()` helper builds the server base URL from the `HOSTNAME` environment variable (defaults to `localhost`) and the `server.port` system property (defaults to `8080`):
+Open the test page with the [methodname]`openWithProxy()` and set the resulting driver as the test driver.
+The helper method will automatically set up a chromedriver with the proxy and open the view.
 
+The [methodname]`getRootURL()` helper builds the server base URL from the `HOSTNAME` environment variable (defaults to `localhost`) and the `server.port` system property (defaults to `8080`):
+
+.Testbench test sample
 [source,java]
 ----
-import com.vaadin.testbench.BrowserTestBase;
 import com.vaadin.testbench.loadtest.LoadTestItHelper;
 import org.junit.jupiter.api.BeforeEach;
 
-public abstract class AbstractIT extends BrowserTestBase {
+public class HelloWorldIT {
 
     @BeforeEach
     public void open() {
         String viewUrl = LoadTestItHelper.getRootURL()
-                + "/" + getViewName();
+                + "/";
         setDriver(LoadTestItHelper.openWithProxy(
                 getDriver(), viewUrl));
     }
 
-    abstract public String getViewName();
-}
-----
-
-Test classes extend this base class and provide the view name and test logic:
-
-[source,java]
-----
-public class HelloWorldIT extends AbstractIT {
-
-    @BrowserTest
+    @Test
     public void helloWorldWorkflow() {
         TextFieldElement nameField = $(TextFieldElement.class).first();
         nameField.setValue("Test User");
@@ -139,14 +137,8 @@ public class HelloWorldIT extends AbstractIT {
 
         $(NotificationElement.class).waitForFirst();
     }
-
-    @Override
-    public String getViewName() {
-        return "";  // Root path
-    }
 }
 ----
-
 
 [[destructive]]
 === Excluding Destructive Tests
