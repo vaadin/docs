@@ -239,7 +239,7 @@ class TocFooter extends LitElement {
               </div>
 
               <div class="toc-footer--img">
-                <img src=${tocBanner.src} alt="Learn by watching"
+                <img src=${tocBanner.src} alt="Learn by watching">
               </div>
             </a>
           </div>
