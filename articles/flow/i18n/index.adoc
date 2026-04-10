@@ -14,11 +14,22 @@ Vaadin has built-in support for localizing applications. This page covers transl
 
 == Translation Strings
 
-Store translation properties files in `src/main/resources/vaadin-i18n/` with the filename prefix `translations`:
+Call `getTranslation()` from any Vaadin component to look up a translation key for the current locale. Parameters are substituted into `{0}`, `{1}`, etc. placeholders using `MessageFormat`:
+
+[source,java]
+----
+Span title = new Span(getTranslation("app.title"));
+Span greeting = new Span(getTranslation("greeting", user.getName()));
+----
+
+
+=== Where Translations Are Stored
+
+By default, translations are loaded from property files in `src/main/resources/vaadin-i18n/`, with the filename prefix `translations`:
 
 - `translations.properties` -- default translations (fallback)
 - `translations_en.properties` -- English
-- `translations_fi.properties` -- Finnish
+- `translations_es.properties` -- Spanish
 - `translations_de.properties` -- German
 
 The filename supports up to three parts: `translations_language_country_variant.properties` (e.g., `translations_en_US.properties`).
@@ -31,27 +42,19 @@ greeting=Hello, {0}!
 items.count=You have {0} items.
 ----
 
-.translations_fi.properties
+.translations_es.properties
 [source,properties]
 ----
-app.title=Sovellukseni
-greeting=Hei, {0}!
-items.count=Sinulla on {0} kohdetta.
+app.title=Mi Aplicación
+greeting=¡Hola, {0}!
+items.count=Tienes {0} artículos.
 ----
 
 [NOTE]
 Translation files are discovered automatically at runtime. You don't need to register them -- just place them in `src/main/resources/vaadin-i18n/`.
 
+To load translations from another source -- such as a database, a remote service, or a different file structure -- implement a custom `I18NProvider`. See <<custom-i18n-provider#, Custom I18N Provider>> for details.
 
-=== Using Translations in Views
-
-Call `getTranslation()` from any Vaadin component to look up a translation key for the current locale. Parameters are substituted into `{0}`, `{1}`, etc. placeholders using `MessageFormat`:
-
-[source,java]
-----
-Span title = new Span(getTranslation("app.title"));
-Span greeting = new Span(getTranslation("greeting", user.getName()));
-----
 
 === Reacting to Locale Changes
 
@@ -85,12 +88,13 @@ Use Copilot to automate extraction of static strings into translation files. See
 
 === Automatic Locale from Browser
 
-The initial locale is determined by matching the locales in your translation files against the `Accept-Language` header from the browser:
+When a session starts, Vaadin picks an initial locale by matching the browser's `Accept-Language` header against the locales reported by the active `I18NProvider` via `getProvidedLocales()`:
 
 1. If an exact match (language + country) is found, it's used.
 2. Otherwise, a language-only match is tried.
-3. If no match, the first provided locale is used.
-4. If no locales are provided, `Locale.getDefault()` is used.
+3. If neither matches, `I18NProvider.getDefaultLocale()` is used, which by default is the first locale in `getProvidedLocales()`.
+
+With the built-in `DefaultI18NProvider`, the provided locales are discovered automatically from the `translations_*.properties` filenames in `src/main/resources/vaadin-i18n/` -- there's no separate list to declare. With a custom `I18NProvider`, you control both lists by implementing `getProvidedLocales()` and optionally `getDefaultLocale()`.
 
 
 === Changing the Locale Programmatically
@@ -99,7 +103,7 @@ Set the locale for the current session with:
 
 [source,java]
 ----
-UI.getCurrent().setLocale(new Locale("fi"));
+UI.getCurrent().setLocale(new Locale("es"));
 ----
 
 This triggers a `LocaleChangeEvent` on all attached components that implement `LocaleChangeObserver`.
@@ -118,7 +122,7 @@ public class LanguageSwitcher extends Select<Locale> {
             Locale.ENGLISH,
             Locale.FRENCH,
             Locale.GERMAN,
-            new Locale("fi")
+            new Locale("es")
         );
         setItemLabelGenerator(locale -> locale.getDisplayLanguage(locale));
         setValue(UI.getCurrent().getLocale());
@@ -184,7 +188,7 @@ NumberFormat numberFormat = NumberFormat.getInstance(locale);
 String formatted = numberFormat.format(1234567.89);
 // en_US: "1,234,567.89"
 // de_DE: "1.234.567,89"
-// fi_FI: "1 234 567,89"
+// es_ES: "1.234.567,89"
 ----
 
 
@@ -308,10 +312,5 @@ public void localeChange(LocaleChangeEvent event) {
 ----
 
 For details on adding RTL support to custom elements and custom styles, see <<custom-element-rtl#, RTL Support for Custom Elements>>.
-
-
-== Custom I18N Provider
-
-The default translation file mechanism covers most use cases. If you need more control -- for example, loading translations from a database or using a different file structure -- you can implement a custom `I18NProvider`. See <<custom-i18n-provider#, Custom I18N Provider>> for details.
 
 [discussion-id]`722E7AE4-191E-4DE8-90F1-CAE8AE6CD3DF`
