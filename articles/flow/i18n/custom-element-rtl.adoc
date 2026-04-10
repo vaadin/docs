@@ -1,0 +1,90 @@
+---
+title: RTL Support for Custom Elements
+page-title: RTL Support for Custom Elements - Vaadin Docs
+description: Adding right-to-left support to custom web components and styles.
+meta-description: Learn how to add right-to-left (RTL) support to custom web components, styles, icons, and keyboard navigation in Vaadin applications.
+order: 20
+---
+
+
+= RTL Support for Custom Elements
+
+Vaadin components support right-to-left (RTL) text direction out of the box. If you have custom elements or custom styles, there are additional steps to enable RTL support.
+
+
+== DirMixin for Custom Elements
+
+If your element extends Vaadin's `ElementMixin`, no changes are needed. Otherwise, have the element extend `DirMixin` (from `@vaadin/component-base`):
+
+[source,javascript]
+----
+import { LitElement } from 'lit';
+import { DirMixin } from '@vaadin/component-base/src/dir-mixin.js';
+import { PolylitMixin } from '@vaadin/component-base/src/polylit-mixin.js';
+
+class MyElement extends DirMixin(PolylitMixin(LitElement)) {}
+----
+
+`DirMixin` synchronizes the element's `dir` attribute with the document-level `dir` attribute, allowing CSS and JS code to respond to text direction changes.
+
+
+== Adjusting Styles for RTL
+
+Review properties like `padding`, `margin`, `text-align`, `float`, and `transform`. For example, if your styles define directional padding:
+
+[source,css]
+----
+:host {
+    padding-right: 1em;
+    padding-left: 2em;
+}
+----
+
+Add an RTL override:
+
+[source,css]
+----
+:host([dir="rtl"]) {
+    padding-right: 2em;
+    padding-left: 1em;
+}
+----
+
+You can replace directional properties with https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties[CSS Logical Properties]. Flex and Grid containers are handled well by the browser and typically don't require adjustments.
+
+For help adjusting styles, you can use the tools at https://rtlcss.com/playground/#[RTLCSS]. See also this https://rtlstyling.com/posts/rtl-styling/[comprehensive right-to-left styling guide].
+
+
+== Icons and Directional Symbols
+
+If your element uses icons or Unicode symbols that indicate direction (e.g., a _Back_ button arrow), use the appropriate icons for RTL mode.
+
+
+== Keyboard Navigation
+
+If keyboard interactions use arrow keys for navigation, adjust the direction based on the `dir` attribute:
+
+[source,javascript]
+----
+const dirIncrement = this.getAttribute('dir') === 'rtl' ? -1 : 1;
+
+switch (event.key) {
+    // ...
+    case 'ArrowLeft':
+        idx = currentIdx - dirIncrement;
+        break;
+    case 'ArrowRight':
+        idx = currentIdx + dirIncrement;
+        break;
+    // ...
+}
+----
+
+Custom elements that rely on JavaScript calculations for sizing, position, or horizontal scroll may also need adjustments for RTL.
+
+If you have visual tests, consider adding or updating them to run in RTL mode as well.
+
+
+== Frontend-Only RTL
+
+For frontend-only applications, set `document.dir = 'rtl'` to enable right-to-left mode.
