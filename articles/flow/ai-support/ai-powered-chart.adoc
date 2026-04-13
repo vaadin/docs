@@ -1,0 +1,140 @@
+---
+title: AI-Powered Chart
+description: Use ChartAIController to let users build and update Highcharts visualizations from the application database using natural language.
+meta-description: Learn how to configure the Vaadin ChartAIController to create and update Charts from a database via natural language prompts and persist the resulting state.
+order: 70
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#AI-Powered Chart#
+
+ifdef::flow[]
+
+[classname]`ChartAIController` creates and updates a [classname]`Chart` visualization based on natural-language requests. Given a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller exposes tools that let the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
+
+The controller exposes five tools:
+
+* `get_database_schema` -- describes the tables, columns, and SQL dialect.
+* `get_chart_state` -- returns the current Highcharts configuration and the queries powering the chart.
+* `update_chart_data_source` -- validates and queues SQL queries, one per series.
+* `update_chart_configuration` -- queues a Highcharts configuration update, such as chart type, axes, tooltip, legend, or per-series styling.
+* `get_plot_options_schema` -- returns the JSON schema for a specific chart type's plot options, allowing the LLM to discover available styling properties.
+
+Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both are queued during the LLM turn and applied atomically in [methodname]`onRequestCompleted()`.
+
+
+== Basic Usage
+
+Create a [classname]`Chart`, construct a controller, and wire it to the orchestrator:
+
+[source,java]
+----
+Chart chart = new Chart();
+MessageInput messageInput = new MessageInput();
+
+DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
+ChartAIController controller = new ChartAIController(chart, databaseProvider);
+
+AIOrchestrator.builder(provider, ChartAIController.getSystemPrompt())
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+
+add(messageInput, chart);
+----
+
+Example prompts:
+
+* "Plot monthly revenue for the last year as a column chart."
+* "Show revenue by region as a pie chart."
+* "Compare 2025 and 2026 quarterly sales side-by-side with a legend."
+* "Turn this into an area chart and add a 'Revenue (USD)' y-axis title."
+
+.Recommended System Prompt
+[TIP]
+[methodname]`ChartAIController.getSystemPrompt()` returns a recommended system prompt that instructs the LLM to inspect state before making changes and to keep data and configuration separate.
+
+
+== Data Conventions
+
+The default converter recognizes specific column aliases when mapping SQL results to Highcharts series. All reserved names are prefixed with `_` to avoid colliding with real data columns. Common patterns include:
+
+* Basic charts -- line, column, bar, area, pie, and spline charts take two columns: category and value. No special aliases are required.
+* Multi-series -- add a `_series` column to group rows into separate named series.
+* Scatter and bubble -- `_x`, `_y`, and optionally `_z` for bubble size.
+* Range (`arearange`, `columnrange`) -- `_low`, `_high`, and optionally `_x`.
+* OHLC and candlestick -- `_x`, `_open`, `_high`, `_low`, `_close`.
+* Heatmap -- `_x`, `_y`, `_value`.
+* Gantt, Timeline, Treemap, Organization, Sankey, and Waterfall -- use the dedicated name-based aliases documented in the tool description.
+
+Any pattern that produces a [classname]`DataSeriesItem` also accepts an optional `_color` column for per-point coloring. The full list of aliases is defined in the [classname]`ColumnNames` class.
+
+
+== Custom Data Conversion
+
+The built-in [classname]`DefaultDataConverter` handles the common patterns. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
+
+[source,java]
+----
+public class CurrencyDataConverter implements DataConverter {
+
+    @Override
+    public List<Series> convertToSeries(List<Map<String, Object>> data) {
+        DataSeries series = new DataSeries();
+        for (Map<String, Object> row : data) {
+            String name = (String) row.get("category");
+            Number value = (Number) row.get("value");
+            series.add(new DataSeriesItem(name, roundToCents(value)));
+        }
+        return List.of(series);
+    }
+}
+
+controller.setDataConverter(new CurrencyDataConverter());
+----
+
+The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
+
+
+== Persisting Chart State
+
+[classname]`ChartState` captures both the SQL queries and the Highcharts configuration. Register a state change listener to persist the state automatically after each successful AI request:
+
+[source,java]
+----
+controller.addStateChangeListener(state ->
+        sessionStore.save(sessionId, state));
+
+// Restore on a new session
+ChartState saved = sessionStore.load(sessionId);
+if (saved != null) {
+    controller.restoreState(saved);
+}
+----
+
+Listeners do not fire when [methodname]`restoreState()` is called. The queries and configuration are also stored on the [classname]`Chart` component, so they survive session serialization automatically.
+
+
+== Reconnecting After Deserialization
+
+[classname]`ChartAIController` is not serializable. After session restore, create a new controller and pass it to the orchestrator's reconnector together with the new provider:
+
+[source,java]
+----
+ChartAIController controller = new ChartAIController(chart, databaseProvider);
+ChartState saved = sessionStore.load(sessionId);
+if (saved != null) {
+    controller.restoreState(saved);
+}
+
+orchestrator.reconnect(provider)
+        .withController(controller)
+        .apply();
+----
+
+
+== Multiple Charts
+
+[classname]`ChartAIController` manages a single chart. To expose several charts to the same orchestrator -- for example in a dashboard -- implement a custom [classname]`AIController` that builds its tool list from [classname]`ChartAITools.createAll()` with a [classname]`ChartAITools.Callbacks` implementation that returns a stable ID per chart.
+
+endif::flow[]
