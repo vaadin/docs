@@ -148,11 +148,12 @@ mvn k6:run -Dk6.testFile=test.js \
 </plugin>
 ----
 
-NOTE: In XML, use `&lt;` instead of `<` inside threshold expressions.
+NOTE: In XML, use `\&lt;` instead of `<` inside threshold expressions.
 
 === Combining Defaults and Custom Thresholds
 
 Custom thresholds are added alongside the defaults.
+
 If you add a custom `http_req_duration` expression, it is merged with the default p95/p99 thresholds:
 
 [source,bash]
@@ -170,6 +171,27 @@ export const options = {
   thresholds: {
     checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
     http_req_duration: ['p(95)<2000', 'p(99)<5000', 'p(50)<1000'],
+  },
+}
+----
+
+If a custom threshold contains same target as the default, the default gets overridden by the custom one and not duplicated.
+
+[source,bash]
+----
+# Overrides existing default p95 median threshold
+mvn k6:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.custom="http_req_duration:p(95)<500"
+----
+
+This produces:
+
+[source,javascript]
+----
+export const options = {
+  thresholds: {
+    checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
+    http_req_duration: ['p(95)<500', 'p(99)<5000'],
   },
 }
 ----
