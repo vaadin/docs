@@ -55,29 +55,22 @@ Add the plugin to your Maven project:
 </plugin>
 ----
 
-Add the load test helper as a test dependency. It provides [classname]`LoadTestItHelper` for <<proxy-configuration,proxy driver configuration>> in your tests:
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>loadtest-helper</artifactId>
-    <scope>test</scope>
-</dependency>
-----
-
-To enable the `@Destructive` annotation and automatic WebDriver cleanup during recording, add the load test support library as a test dependency:
+Add the load test support library as a dependency:
 
 [source,xml]
 ----
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>testbench-loadtest-support</artifactId>
-    <scope>test</scope>
+    <optional>true</optional>
 </dependency>
 ----
 
-This JUnit 5 extension auto-detects when the recording proxy is active and skips tests annotated with <<destructive,`@Destructive`>>. It also ensures the WebDriver is properly closed after each test to prevent orphaned browser processes during recording.
+This library provides [classname]`LoadTestItHelper` for <<proxy-configuration,proxy driver configuration>> in your tests, the `@Destructive` annotation for <<destructive,excluding tests from recording>>, and automatic WebDriver cleanup during recording.
+It also includes runtime features such as <<error-handler,error propagation>> and <<metrics,server metrics>> for load testing.
+
+The JUnit 5 extension auto-detects when the recording proxy is active and skips tests annotated with `@Destructive`.
+It auto-registers via ServiceLoader -- no code changes are needed.
 
 
 [[writing-tests]]
@@ -102,7 +95,7 @@ During recording, the plugin captures HTTP traffic by routing the browser throug
 The browser driver must be configured to use this proxy.
 Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
 
-The [classname]`LoadTestItHelper` class (from the `loadtest-helper` dependency) handles proxy driver configuration.
+The [classname]`LoadTestItHelper` class (from the `testbench-loadtest-support` dependency) handles proxy driver configuration.
 Its [methodname]`openWithProxy()` method checks whether the `k6.proxy.host` system property is set.
 When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support.
 When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
@@ -500,21 +493,9 @@ When using <<running,combined scenarios>>, each scenario's CSV data is loaded wi
 [[load-test-helper]]
 == Load Test Helper
 
-The `loadtest-helper` library is a drop-in dependency that enhances your Vaadin application for load testing. It provides two features: error propagation (so k6 can detect server-side failures) and Vaadin-specific metrics (exposed via Spring Boot Actuator). It auto-registers via ServiceLoader -- no code changes are needed.
+The `testbench-loadtest-support` library enhances your Vaadin application for load testing. In addition to test-time features (proxy configuration, `@Destructive` annotation), it provides two runtime features: error propagation (so k6 can detect server-side failures) and Vaadin-specific metrics (exposed via Spring Boot Actuator). It auto-registers via ServiceLoader -- no code changes are needed.
 
-The error handler and metrics features require the dependency with `runtime` scope so that it is deployed with the application:
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>loadtest-helper</artifactId>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[NOTE]
-The <<setup,project setup>> section shows `loadtest-helper` with `test` scope for using [classname]`LoadTestItHelper` in test code. If you also want error propagation and `vaadin.view.count` metrics at runtime, add the dependency a second time with `runtime` scope, or use the default (compile) scope to cover both cases. Only include the `runtime` dependency in builds used for load testing, as it changes error handling behavior.
+The <<setup,project setup>> section configures `testbench-loadtest-support` as `optional`, which makes it available both in test code and at runtime. Only include this dependency in builds used for load testing, as it changes error handling behavior.
 
 
 [[error-handler]]
