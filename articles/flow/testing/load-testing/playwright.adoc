@@ -7,9 +7,11 @@ order: 120
 version: since:com.vaadin:vaadin@V25.2
 ---
 
+This page covers the Playwright-specific aspects of load testing. For general load testing concepts, running tests, configuring think times, understanding k6 output, and more, see <<index#, Load Testing>>.
+
 == Overview
 
-Unlike the TestBench path, which requires a BrowserMob Proxy to capture HTTP traffic, the Playwright path uses **native HAR recording** built into the browser.
+Unlike the <<index#, TestBench path>>, which requires a BrowserMob Proxy to capture HTTP traffic, the Playwright path uses **native HAR recording** built into the browser.
 This results in simpler setup, fewer moving parts, and no proxy configuration.
 
 The workflow is as follows:
@@ -50,16 +52,7 @@ All steps after writing the tests are fully automated by the Maven plugin.
 
 == Prerequisites
 
-[cols="1,1,2", options="header"]
-|===
-| Tool | Version | Installation
-
-| Java | 21+ | https://adoptium.net/[Download]
-| Maven | 3.9+ | https://maven.apache.org/[Download]
-| k6 | latest | `brew install k6` (macOS) or https://grafana.com/docs/k6/[Download]
-|===
-
-NOTE: No Chrome installation is required for the Playwright path.
+The Playwright path requires the same base tools as the <<index#, TestBench path>> (Java 21+, Maven 3.9+, k6), but does **not** require Chrome or ChromeDriver.
 Playwright downloads and manages its own browser binaries automatically.
 
 == Writing Playwright Tests
@@ -182,7 +175,7 @@ public void crudWorkflow() {
 
 === Application Module Dependencies
 
-Add the `testbench-loadtest-support` dependency to your Vaadin application module:
+Add the `testbench-loadtest-support` and Playwright dependencies to your Vaadin application module:
 
 [source,xml]
 ----
@@ -201,20 +194,14 @@ Add the `testbench-loadtest-support` dependency to your Vaadin application modul
 </dependency>
 ----
 
-If you want Vaadin-specific metrics collected during load tests, also add the Spring Boot Actuator dependency to your application:
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-----
+NOTE: The Playwright path uses `testbench-loadtest-support` (which provides [classname]`PlaywrightHelper`) instead of the `loadtest-helper` dependency used by the TestBench path.
 
 === Load Test Orchestration Module
 
 Create a separate Maven module (packaging `pom`) that orchestrates the recording and load test execution.
 This module depends on your application module and configures the `testbench-converter-plugin`.
+
+The key difference from the TestBench orchestration module is using the `record-playwright` goal instead of the `record` goal.
 
 .Minimal pom.xml
 [source,xml]
@@ -356,9 +343,7 @@ String baseUrl = PlaywrightHelper.getBaseUrl(); // e.g., "http://localhost:8080"
 page.navigate(baseUrl + "/my-view");
 ----
 
-== Maven plugin Goals
-
-=== `loadtest:record-playwright`
+== `loadtest:record-playwright` Goal
 
 Records Playwright tests and converts captured HAR files to k6 scripts.
 
@@ -397,245 +382,7 @@ Records Playwright tests and converts captured HAR files to k6 scripts.
 | Skip recording.
 |===
 
-=== `loadtest:run`
-
-Executes generated k6 load tests.
-
-[cols="2,1,1,4", options="header"]
-|===
-| Parameter | Type | Default | Description
-
-| `testDir`
-| String
-| _required_
-| Directory containing k6 test scripts.
-
-| `virtualUsers`
-| int
-| `10`
-| Number of virtual users (VUs).
-
-| `duration`
-| String
-| `30s`
-| Test duration (k6 time format: `30s`, `5m`, `1h`).
-
-| `appPort`
-| int
-| `8080`
-| Target application port.
-
-| `appIp`
-| String
-| `localhost`
-| Target application host/IP.
-
-| `managementPort`
-| int
-| _none_
-| Spring Boot Actuator management port for metrics collection.
-
-| `combineScenarios`
-| boolean
-| `false`
-| Combine multiple test scripts into a single k6 run with weighted scenarios.
-
-| `scenarioWeights`
-| String
-| _none_
-| Scenario weight distribution (e.g., `helloWorld:70,crudExample:30`).
-
-| `collectVaadinMetrics`
-| boolean
-| `false`
-| Collect Vaadin-specific metrics from the Actuator endpoint after the test.
-
-| `loadPattern`
-| String
-| `ramp`
-| Load pattern: `constant`, `ramp`, `stress`, `soak`, or `custom`. See <<load-profiles.adoc#, Load Profiles>>.
-|===
-
-== Usage Modes
-
-=== Local Development (Default)
-
-Starts the server, records tests, and runs a quick load test -- all in one command.
-Run this from your load test orchestration module:
-
-[source,bash]
-----
-mvn verify -pl my-app-loadtest
-----
-
-=== Record Only
-
-Record Playwright scenarios without running the load test.
-Useful for preparing k6 scripts before deploying them to a load generation machine.
-Add a `record-only` profile to your orchestration module that sets `<k6.skipRun>true</k6.skipRun>`, then:
-
-[source,bash]
-----
-mvn verify -pl my-app-loadtest -Precord-only
-----
-
-The generated k6 scripts are saved in `target/k6/tests/`.
-
-=== Remote Load Testing
-
-Run pre-recorded k6 tests against a remote server.
-The application must already be running on the target host.
-Add a `remote` profile to your orchestration module that only runs the `loadtest:run` goal against a configurable host, then:
-
-[source,bash]
-----
-mvn verify -pl my-app-loadtest -Premote \
-    -Dk6.appHost=staging.example.com \
-    -Dk6.appPort=8080 \
-    -Dk6.vus=200 \
-    -Dk6.duration=5m
-----
-
-IMPORTANT: For meaningful performance numbers, always run the load generator on a **separate machine** from the application server.
-
-== Combined Scenarios
-
-Multiple Playwright test classes can be combined into a single k6 load test run with weighted VU distribution.
-This simulates realistic traffic where different user journeys happen concurrently.
-
-=== Configuration
-
-[source,xml]
-----
-<properties>
-    <k6.combineScenarios>true</k6.combineScenarios>
-    <k6.scenarioWeights>helloWorld:70,crudExample:30</k6.scenarioWeights>
-</properties>
-----
-
-With 100 VUs, this produces:
-
-* **helloWorld** scenario: 70 VUs running the HelloWorld workflow
-* **crudExample** scenario: 30 VUs running the CRUD workflow
-
-Both scenarios run in parallel for the configured duration.
-
-=== Command Line Override
-
-[source,bash]
-----
-mvn verify -Dk6.combineScenarios=true \
-    -Dk6.scenarioWeights="helloWorld:50,crudExample:50" \
-    -Dk6.vus=200
-----
-
-== What Gets Generated
-
-The plugin generates k6 JavaScript scripts with Vaadin-specific handling:
-
-* **Dynamic session management** -- extracts `JSESSIONID` from responses
-* **CSRF token handling** -- captures and replays `Vaadin-Security-Key`
-* **UI ID management** -- extracts and tracks the Vaadin UI identifier
-* **Push ID handling** -- manages the push channel identifier
-* **Configurable target server** -- uses `APP_IP` and `APP_PORT` environment variables
-* **Think time simulation** -- realistic delays between user actions (configurable, see <<#think-time, Think Time>>)
-* **Response validation** -- built-in checks for Vaadin protocol correctness
-
-=== Example Generated Script Structure
-
-[source,javascript]
-----
-import http from 'k6/http';
-import { check, fail, sleep } from 'k6';
-
-export let options = {
-    stages: [
-        { duration: '10s', target: 100 },
-        { duration: '10s', target: 100 },
-        { duration: '10s', target: 0 },
-    ],
-};
-
-export default function () {
-    let jar = http.cookieJar();
-    let csrfToken, uiId, pushId;
-
-    // 1. Initial page load
-    let res = http.get(`http://${__ENV.APP_IP}:${__ENV.APP_PORT}/`);
-    check(res, {
-        'init request succeeded': (r) => r.status === 200,
-        'session is valid': (r) => !r.body.includes('Your session needs to be refreshed'),
-    });
-
-    // Extract session tokens from response...
-    // 2. UIDL requests (user interactions)...
-    // Think time delays between actions...
-}
-----
-
-[[think-time]]
-== Think Time
-
-By default, generated k6 scripts include realistic delays that simulate actual user behavior:
-
-* **Page read delay**: 2-5 seconds after page loads (user reading the page)
-* **Interaction delay**: 0.5-2 seconds between actions (user thinking)
-
-The plugin analyzes HAR content to detect user actions (clicks, text input) and page loads, placing appropriate delays.
-If the recorded HAR already contains large gaps (> 500ms) from `Thread.sleep()` or Playwright wait methods, no additional delay is added.
-
-=== Configuration
-
-[source,xml]
-----
-<configuration>
-    <thinkTimeEnabled>true</thinkTimeEnabled>      <!-- default: true -->
-    <pageReadDelay>2.0</pageReadDelay>              <!-- base delay in seconds -->
-    <interactionDelay>0.5</interactionDelay>        <!-- base delay in seconds -->
-</configuration>
-----
-
-Or via command line:
-
-[source,bash]
-----
-# Disable think times for maximum throughput testing
-mvn verify -Dk6.thinkTime.enabled=false
-
-# Custom delays
-mvn verify -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1.0
-----
-
-== Understanding k6 Output
-
-After a load test run, k6 prints a summary:
-
-----
-          /\      |‾‾| /‾‾/   /‾‾/
-     /\  /  \     |  |/  /   /  /
-    /  \/    \    |     (   /   ‾‾\
-   /          \   |  |\  \ |  (‾)  |
-  / __________ \  |__| \__\ \_____/
-
-     scenarios: (100.00%) 2 scenarios, 100 max VUs, 1m0s max duration
-
-     ✓ init request succeeded
-     ✓ UIDL request succeeded
-     ✓ session is valid
-
-     http_req_duration..............: avg=45.23ms  min=12.34ms  max=234.56ms
-     http_req_failed................: 0.00%  ✓ 0   ✗ 4567
-     http_reqs......................: 4567   152.23/s
-----
-
-Key metrics to watch:
-
-* **http_req_duration** -- response time distribution (avg, min, max, p90, p95)
-* **http_req_failed** -- percentage of failed HTTP requests (should be 0% or near 0%)
-* **http_reqs** -- total request count and throughput (requests/second)
-* **checks** -- pass rate for all response validation checks
-
-When `collectVaadinMetrics` is enabled, the plugin also queries Spring Boot Actuator and prints server-side metrics (JVM heap, active sessions, etc.) after the test completes.
+For parameters related to running the generated k6 scripts (`loadtest:run`), configuring think times, combined scenarios, and understanding k6 output, see the <<index#, main Load Testing documentation>>.
 
 == Troubleshooting
 
@@ -649,27 +396,11 @@ Ensure the application module builds successfully with `mvn install` before runn
 Verify that your test uses `PlaywrightHelper.createBrowserContext(browser)` and not `browser.newContext()` directly.
 The helper is what enables HAR recording.
 
-=== k6 Reports High Failure Rate
-
-Check that the target server is running and accessible.
-For remote tests, verify the host and port with:
-
-[source,bash]
-----
-curl -v http://staging.example.com:8080/
-----
-
-Also verify that the application has enough resources (CPU, memory) to handle the configured number of VUs.
-
-=== Session Errors
-
-"Session needs to be refreshed" errors typically means the server ran out of session capacity.
-Reduce the number of VUs or increase the server's session limit / heap size.
-
 == Related Documentation
 
-* <<thresholds#, Load Testing Thresholds>> -- Configure threshold for load tests
+* <<index#, Load Testing>> -- General load testing setup, running tests, think time, k6 output, server metrics, and remote testing
+* <<thresholds#, Load Testing Thresholds>> -- Configure thresholds for load tests
 * <<load-profiles#, Load Profiles and Ramping>> -- configure load patterns (ramp, stress, soak, custom)
-* <<response-checks#, Custom Response Checks>> -- add custom validation to generated k6 scripts
+* <<response-checks#, Custom Response Checks>> -- Add custom validation to generated k6 scripts
 * https://playwright.dev/java/docs/intro[Playwright for Java Documentation]
 * https://grafana.com/docs/k6/latest/[k6 Documentation]
