@@ -1,7 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/badge';
-import '@vaadin/horizontal-layout';
 import '@vaadin/button';
+import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { html, LitElement } from 'lit';
