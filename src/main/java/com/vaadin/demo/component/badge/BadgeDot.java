@@ -31,7 +31,7 @@ public class BadgeDot extends HorizontalLayout {
 
         Button downloadsButton = new Button(LumoIcon.DOWNLOAD.create());
         // Only for Lumo
-        downloadsButton.addThemeVariants(ButtonVariant.LUMO_ICON); 
+        downloadsButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         Badge completed = new Badge("completed", 3);
         completed.addThemeVariants(BadgeVariant.DOT, BadgeVariant.SUCCESS);
