@@ -30,10 +30,11 @@ export class Example extends LitElement {
           <vaadin-badge
             slot="suffix"
             theme="dot success"
-            .number=${3}
-            style="position: absolute; top:0.3em; right:0.3em;"
-            >completed</vaadin-badge
+            number="3"
+            style="position: absolute; top: 0.3em; right: 0.3em;"
           >
+            completed
+          </vaadin-badge>
         </vaadin-button>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
