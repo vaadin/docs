@@ -13,7 +13,7 @@ function Example() {
       <Badge theme="dot error">Denied</Badge>
 
       <Button theme="icon" aria-label="Downloads">
-        <Icon icon="lumo:download"></Icon>
+        <Icon icon="lumo:download" />
         <Badge
           slot="suffix"
           theme="dot success"
