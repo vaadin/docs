@@ -12,11 +12,16 @@ function Example() {
       <Badge theme="dot warning">Warning</Badge>
       <Badge theme="dot error">Denied</Badge>
 
-      <Button theme="icon" aria-label='Downloads'>
+      <Button theme="icon" aria-label="Downloads">
         <Icon icon="lumo:download"></Icon>
-        <Badge slot="suffix" theme="dot success" number={3}
-          style={{ position: 'absolute', top: '0.3em', right: '0.3em' }}>
-          completed</Badge>
+        <Badge
+          slot="suffix"
+          theme="dot success"
+          number={3}
+          style={{ position: 'absolute', top: '0.3em', right: '0.3em' }}
+        >
+          completed
+        </Badge>
       </Button>
       {/* end::snippet[] */}
     </HorizontalLayout>

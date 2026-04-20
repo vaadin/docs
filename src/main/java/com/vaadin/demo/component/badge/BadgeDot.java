@@ -30,16 +30,16 @@ public class BadgeDot extends HorizontalLayout {
         denied.addThemeVariants(BadgeVariant.DOT, BadgeVariant.ERROR);
 
         Button downloadsButton = new Button(LumoIcon.DOWNLOAD.create());
-        downloadsButton.addThemeVariants(ButtonVariant.LUMO_ICON); // Only needed with Lumo theme
-        
+        // Only for Lumo
+        downloadsButton.addThemeVariants(ButtonVariant.LUMO_ICON); 
+
         Badge completed = new Badge("completed", 3);
         completed.addThemeVariants(BadgeVariant.DOT, BadgeVariant.SUCCESS);
         completed.getStyle().setPosition(Position.ABSOLUTE);
         completed.getStyle().setTop("0.3em");
         completed.getStyle().setRight("0.3em");
         downloadsButton.setSuffixComponent(completed);
-        
-        
+
         // end::snippet[]
 
         add(pending, confirmed, warning, denied, downloadsButton);
