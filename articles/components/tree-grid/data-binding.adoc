@@ -254,10 +254,17 @@ Both formats have their advantages and disadvantages. When implementing a custom
 
 The nested hierarchy format refers to a data provider implementation that, in each request, returns only the direct children of the requested parent item.
 
-Tree Grid fills the viewport by sending requests to the data provider based on the current scroll position and viewport size. Each request includes a [classname]`HierarchicalQuery` object, where:
+To fill the viewport, Tree Grid sends separate requests to the data provider for each expanded item within the visible range. Each request comes with a [classname]`HierarchicalQuery` object that contains the following fields:
 
-1. [methodname]`HierarchicalQuery#getParent()` specifies the parent item whose direct children are to be fetched.
-2. [methodname]`HierarchicalQuery#getOffset()` and [methodname]`HierarchicalQuery#getLimit()` define the range of direct children to return.
+|===
+|Method |Description
+
+|`HierarchicalQuery#getParent()`
+|The parent item whose direct children should be returned.
+
+|`HierarchicalQuery#getOffset()` and `getLimit()`
+|The offset and limit defining the range of direct children to return.
+|===
 
 If the returned children include expanded items that also fall within the visible range, Tree Grid sends additional requests to load their children, and so on. This creates a nested loading pattern where the hierarchy structure is discovered and cached progressively as the component is scrolled and more expanded items come into view.
 
@@ -357,13 +364,25 @@ public record Folder(String name) {};
 
 The flattened hierarchy format refers to a data provider implementation that returns the entire sub-tree of the requested parent item in a single, flat list, including all expanded descendants arranged in depth-first order: parent first, then its children, followed by their children, and so on.
 
-To load the current viewport, Tree Grid sends a single request with a [classname]`HierarchicalQuery` object, where:
+To fill the viewport, Tree Grid makes a single data provider request covering the entire visible range. Requests to individual levels are only made for specific operations that require it, such as recursive tree expansion.
 
-1. [methodname]`HierarchicalQuery#getParent()` specifies the parent item whose sub-tree to be fetched as a flat list. The `null` value means the entire tree starting from the root items.
-2. [methodname]`HierarchicalQuery#getExpandedItemIds()` provides a set of item IDs that are currently expanded.
-3. [methodname]`HierarchicalQuery#getOffset()` and [methodname]`HierarchicalQuery#getLimit()` define the slice of the flat list to return.
+Each request comes with a [classname]`HierarchicalQuery` object that contains the following fields:
 
-Additionally, the data provider must implement [methodname]`HierarchicalDataProvider#getDepth(T item)` to return the depth for each item in the hierarchy. Tree Grid uses this information to indent items visually.
+|===
+|Method |Description
+
+|`HierarchicalQuery#getParent()`
+|The parent item whose sub-tree should be returned as a flat list. Its direct children should always be included in the result. The `null` value means the entire tree from the root.
+
+|`HierarchicalQuery#getExpandedItemIds()`
+|The set of item IDs that are descendants of `getParent()` and whose children need to be included in the flat list as well.
+
+|`HierarchicalQuery#getOffset()` and `getLimit()`
+|The offset and limit defining the slice of the resulting flat list to return.
+
+|===
+
+The data provider must also implement [methodname]`HierarchicalDataProvider#getDepth(T item)` to return the depth for each item in the hierarchy. Tree Grid uses this information to indent items visually.
 
 Below is an example of a simple in-memory data provider using the flattened hierarchy format and [classname]`TreeData` as the data source:
 
