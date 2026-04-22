@@ -22,12 +22,11 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-custom-field
         label="Payment information"
-        theme="whitespace"
         @change="${(event: CustomFieldChangeEvent) => {
           this.customFieldValue = event.target.value ?? '';
         }}"
       >
-        <vaadin-horizontal-layout theme="spacing-s">
+        <vaadin-horizontal-layout style="gap: 0.5rem; padding-top: 0.25rem;">
           <input
             aria-label="Cardholder name"
             pattern="[\\p{L} \\-]+"

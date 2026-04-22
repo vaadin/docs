@@ -21,7 +21,6 @@ public class RadioButtonPresentation extends Div {
     public RadioButtonPresentation() {
         // tag::snippet[]
         RadioButtonGroup<Card> radioGroup = new RadioButtonGroup<>();
-        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         radioGroup.setLabel("Payment method");
 
         List<Card> cards = DataService.getCards();
@@ -39,6 +38,8 @@ public class RadioButtonPresentation extends Div {
 
         add(radioGroup);
         // end::snippet[]
+        // Only for Lumo
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<RadioButtonPresentation> { // hidden-source-line

@@ -69,18 +69,20 @@ const GridPaginationControls = ({
   );
 
   return (
-    <HorizontalLayout style={{ alignItems: 'center', gap: '0.3rem', width: '100%' }}>
-      <HorizontalLayout style={{ alignItems: 'center' }} theme="spacing-s">
-        <span id="page-size-label" style={{ fontSize: '0.875rem' }}>
-          Page size
-        </span>
+    <HorizontalLayout
+      style={{
+        alignItems: 'center',
+        gap: 'var(--vaadin-gap-s)',
+        fontSize: '0.875rem',
+        width: '100%',
+      }}
+    >
+      <HorizontalLayout style={{ alignItems: 'center', gap: 'var(--vaadin-gap-s)' }}>
+        <span id="page-size-label">Page size</span>
         <Select
           theme="small"
           aria-labelledby="page-size-label"
-          style={{
-            width: '4.8rem',
-            '--vaadin-input-field-value-font-size': '0.875rem',
-          }}
+          style={{ width: '4.8rem' }}
           items={['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}
           value={pageSize.value.toString()}
           onValueChanged={(e: CustomEvent) => {
@@ -100,7 +102,7 @@ const GridPaginationControls = ({
         () => onCurrentPageChanged(currentPage.value - 1),
         currentPage.value === 1
       )}
-      <span style={{ fontSize: '0.875rem', padding: '0 0.5rem' }} slot="end">
+      <span style={{ padding: '0 var(--vaadin-padding-xs)' }} slot="end">
         Page {currentPage.value} of {pageCount.value}
       </span>
       {smallIconButton(
@@ -183,20 +185,18 @@ function Example() {
       >
         <Icon slot="prefix" icon="vaadin:search" />
       </TextField>
-      <VerticalLayout theme="spacing-xs" style={{ width: '100%' }}>
-        <Grid items={gridItems.value} all-rows-visible>
-          <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
-          <GridColumn path="email" />
-          <GridColumn path="profession" />
-        </Grid>
-        <GridPaginationControls
-          totalItemCount={itemsFilteredByTermCount}
-          currentPage={currentPage}
-          onCurrentPageChanged={handleCurrentPageChanged}
-          pageSize={pageSize}
-          onPageSizeChanged={handlePageSizeChanged}
-        />
-      </VerticalLayout>
+      <Grid items={gridItems.value} all-rows-visible>
+        <GridColumn header="Name" flexGrow={0} width="230px" renderer={nameRenderer} />
+        <GridColumn path="email" />
+        <GridColumn path="profession" />
+      </Grid>
+      <GridPaginationControls
+        totalItemCount={itemsFilteredByTermCount}
+        currentPage={currentPage}
+        onCurrentPageChanged={handleCurrentPageChanged}
+        pageSize={pageSize}
+        onPageSizeChanged={handlePageSizeChanged}
+      />
     </VerticalLayout>
   );
 }

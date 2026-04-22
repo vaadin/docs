@@ -16,7 +16,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-time-picker
-        theme="align-right helper-above-field"
+        theme="align-right small helper-above-field"
         label="Label"
         helper-text="Helper text"
         value="07:00"

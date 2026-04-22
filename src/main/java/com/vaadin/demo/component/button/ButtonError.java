@@ -12,15 +12,15 @@ public class ButtonError extends Div {
     public ButtonError() {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
-                ButtonVariant.LUMO_ERROR);
+        primaryButton.addThemeVariants(ButtonVariant.PRIMARY,
+                ButtonVariant.ERROR);
 
         Button secondaryButton = new Button("Secondary");
-        secondaryButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        secondaryButton.addThemeVariants(ButtonVariant.ERROR);
 
         Button tertiaryButton = new Button("Tertiary");
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
-                ButtonVariant.LUMO_ERROR);
+        tertiaryButton.addThemeVariants(ButtonVariant.TERTIARY,
+                ButtonVariant.ERROR);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,

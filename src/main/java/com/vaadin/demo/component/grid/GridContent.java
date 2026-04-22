@@ -3,9 +3,10 @@ package com.vaadin.demo.component.grid;
 import java.util.List;
 
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -41,7 +42,7 @@ public class GridContent extends Div {
                 .<Person> of(
                         """
                                 <div class="person-item">
-                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}"></vaadin-avatar>
+                                  <vaadin-avatar img="${item.pictureUrl}" name="${item.fullName}" style="--vaadin-avatar-size: 2.25rem"></vaadin-avatar>
                                   <span>${item.fullName}</span>
                                   <span>${item.email}</span>
                                 </div>
@@ -51,17 +52,16 @@ public class GridContent extends Div {
                 .withProperty("email", Person::getEmail);
     }
 
-    private static final SerializableBiConsumer<Span, Person> statusComponentUpdater = (
-            span, person) -> {
+    private static final SerializableBiConsumer<Badge, Person> statusComponentUpdater = (
+            badge, person) -> {
         boolean isAvailable = "Available".equals(person.getStatus());
-        String theme = String.format("badge %s",
-                isAvailable ? "success" : "error");
-        span.getElement().setAttribute("theme", theme);
-        span.setText(person.getStatus());
+        badge.addThemeVariants(
+                isAvailable ? BadgeVariant.SUCCESS : BadgeVariant.ERROR);
+        badge.setText(person.getStatus());
     };
 
-    private static ComponentRenderer<Span, Person> createStatusComponentRenderer() {
-        return new ComponentRenderer<>(Span::new, statusComponentUpdater);
+    private static ComponentRenderer<Badge, Person> createStatusComponentRenderer() {
+        return new ComponentRenderer<>(Badge::new, statusComponentUpdater);
     }
     // end::snippet2[]
 

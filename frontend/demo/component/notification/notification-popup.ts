@@ -11,7 +11,7 @@ import { applyTheme } from 'Frontend/demo/theme';
 export class Example extends LitElement {
   static override styles = [
     css`
-      span[theme~='badge'] {
+      vaadin-badge {
         position: absolute;
         transform: translate(-40%, -30%);
       }
@@ -29,7 +29,7 @@ export class Example extends LitElement {
     return html`
       <vaadin-button id="target" aria-label="notifications" theme="tertiary icon">
         <vaadin-icon icon="lumo:bell"></vaadin-icon>
-        <span theme="badge error primary small pill">4</span>
+        <vaadin-badge number="4" theme="error filled"></vaadin-badge>
       </vaadin-button>
       <vaadin-popover for="target">
         <div>Show notifications here</div>

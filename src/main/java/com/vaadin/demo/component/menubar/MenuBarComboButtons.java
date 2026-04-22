@@ -15,10 +15,16 @@ public class MenuBarComboButtons extends Div {
     public MenuBarComboButtons() {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.PRIMARY);
+        // Only for Lumo
         menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON,
-                MenuBarVariant.LUMO_PRIMARY);
+                MenuBarVariant.LUMO_DROPDOWN_INDICATORS);
+        menuBar.getStyle().set("--vaadin-icon-size", "0")
+                .set("--vaadin-button-gap", "var(--vaadin-gap-xs)");
         menuBar.addItem("Save");
-        MenuItem item = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN));
+        Icon icon = new Icon(VaadinIcon.CHEVRON_DOWN);
+        icon.getStyle().set("--vaadin-icon-size", "1rem");
+        MenuItem item = menuBar.addItem(icon);
         SubMenu subItems = item.getSubMenu();
         subItems.addItem("Save as draft");
         subItems.addItem("Save as copy");

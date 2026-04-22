@@ -1,6 +1,7 @@
 package com.vaadin.demo.flow.signals.usecase;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.badge.Badge;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.ChartType;
 import com.vaadin.flow.component.charts.model.Configuration;
@@ -202,23 +203,18 @@ public class RealtimeDashboard extends VerticalLayout {
             valueSpan.addClassNames(FontWeight.SEMIBOLD, FontSize.XXXLARGE);
             valueSpan.bindText(signal.map(format::apply));
 
-            // Bind percentage text with prefix
-            Span percentageSpan = new Span();
-            percentageSpan.bindText(prefixSignal
-                    .map(prefix -> prefix + percentageSignal.get()));
-
             // Bind icon to computed signal
             Icon icon = new Icon(iconSignal);
-            icon.setSize("10px");
-            icon.getStyle().setMarginRight("4px").setMarginLeft("0");
 
             // Create badge with conditional theme binding
-            Span badge = new Span();
-            badge.add(icon, percentageSpan);
-            badge.getElement().getThemeList().add("badge");
+            Badge badge = new Badge(icon);
             badge.getElement().getThemeList().bind("success", successSignal);
             badge.getElement().getThemeList().bind("error",
                     Signal.not(successSignal));
+
+            // Bind percentage text with prefix
+            badge.bindText(prefixSignal
+                    .map(prefix -> prefix + percentageSignal.get()));
 
             add(h2, valueSpan, badge);
             getStyle().setGap("5px");

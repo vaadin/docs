@@ -23,7 +23,7 @@ public class PopoverUserMenu extends HorizontalLayout {
 
     public PopoverUserMenu() {
         setSpacing(false);
-        getStyle().set("background", "var(--lumo-contrast-5pct)");
+        getStyle().set("background", "var(--vaadin-background-container)");
 
         // tag::snippet[]
         String name = person.getFirstName() + " " + person.getLastName();
@@ -32,14 +32,15 @@ public class PopoverUserMenu extends HorizontalLayout {
         Avatar avatar = new Avatar(name);
         avatar.setImage(pictureUrl);
         avatar.getStyle().set("display", "block");
-        avatar.getStyle().set("cursor", "pointer");
+        avatar.getStyle().set("cursor", "var(--vaadin-clickable-cursor)");
         avatar.getElement().setAttribute("tabindex", "-1");
 
         Button button = new Button(avatar);
         button.addThemeVariants(ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_TERTIARY_INLINE);
-        button.getStyle().set("margin", "var(--lumo-space-s)");
+                ButtonVariant.TERTIARY);
+        button.getStyle().set("margin", "var(--vaadin-gap-s)");
         button.getStyle().set("margin-inline-start", "auto");
+        button.getStyle().set("padding", "0");
         button.getStyle().set("border-radius", "50%");
 
         Popover popover = new Popover();
@@ -48,7 +49,7 @@ public class PopoverUserMenu extends HorizontalLayout {
         popover.setAriaLabel("User menu");
         popover.setTarget(button);
         popover.setPosition(PopoverPosition.BOTTOM_END);
-        popover.addThemeVariants(PopoverVariant.LUMO_NO_PADDING);
+        popover.addThemeVariants(PopoverVariant.NO_PADDING);
         // end::snippet[]
 
         Avatar userAvatar = new Avatar(person.getFullName(),

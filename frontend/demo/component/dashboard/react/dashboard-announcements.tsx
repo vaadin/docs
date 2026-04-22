@@ -15,6 +15,15 @@ import {
 } from '@vaadin/react-components-pro';
 import type WidgetConfig from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig';
 import WidgetType from 'Frontend/generated/com/vaadin/demo/component/dashboard/WidgetConfig/WidgetType';
+import {
+  BrowsersWidget,
+  ConversionsWidget,
+  DownloadsWidget,
+  TrafficSourcesWidget,
+  VisitorsByCountryWidget,
+  VisitorsPerMonthWidget,
+  VisitorsWidget,
+} from './mock-widgets';
 
 const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.VISITORS]: 'Visitors',
@@ -22,8 +31,18 @@ const widgetTitles: Record<WidgetType, string> = {
   [WidgetType.CONVERSIONS]: 'Conversions',
   [WidgetType.VISITORS_BY_COUNTRY]: 'Visitors by country',
   [WidgetType.BROWSER_DISTRIBUTION]: 'Browsers',
-  [WidgetType.CAT_IMAGE]: 'A kittykat!',
-  [WidgetType.VISITORS_BY_BROWSER]: 'Visitors by browser',
+  [WidgetType.TRAFFIC_SOURCES]: 'Traffic sources',
+  [WidgetType.VISITORS_PER_MONTH]: 'Visitors per month',
+};
+
+const widgetComponents: Record<WidgetType, React.FC> = {
+  [WidgetType.VISITORS]: VisitorsWidget,
+  [WidgetType.DOWNLOADS]: DownloadsWidget,
+  [WidgetType.CONVERSIONS]: ConversionsWidget,
+  [WidgetType.VISITORS_BY_COUNTRY]: VisitorsByCountryWidget,
+  [WidgetType.BROWSER_DISTRIBUTION]: BrowsersWidget,
+  [WidgetType.TRAFFIC_SOURCES]: TrafficSourcesWidget,
+  [WidgetType.VISITORS_PER_MONTH]: VisitorsPerMonthWidget,
 };
 
 function Example() {
@@ -34,17 +53,17 @@ function Example() {
     { type: WidgetType.CONVERSIONS, colspan: 1, rowspan: 1 },
     { type: WidgetType.VISITORS_BY_COUNTRY, colspan: 1, rowspan: 2 },
     { type: WidgetType.BROWSER_DISTRIBUTION, colspan: 1, rowspan: 1 },
-    { type: WidgetType.CAT_IMAGE, colspan: 1, rowspan: 1 },
-    { type: WidgetType.VISITORS_BY_BROWSER, colspan: 2, rowspan: 1 },
+    { type: WidgetType.TRAFFIC_SOURCES, colspan: 1, rowspan: 1 },
+    { type: WidgetType.VISITORS_PER_MONTH, colspan: 2, rowspan: 1 },
   ]);
-  const renderWidget = useCallback(
-    ({ item }: DashboardReactRendererProps<WidgetConfig>) => (
+  const renderWidget = useCallback(({ item }: DashboardReactRendererProps<WidgetConfig>) => {
+    const Content = widgetComponents[item.type];
+    return (
       <DashboardWidget widgetTitle={widgetTitles[item.type]}>
-        <div className="dashboard-widget-content" />
+        <Content />
       </DashboardWidget>
-    ),
-    []
-  );
+    );
+  }, []);
 
   // tag::snippet[]
   const announcement = useSignal('');

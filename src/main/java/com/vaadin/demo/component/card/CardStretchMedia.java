@@ -22,7 +22,7 @@ public class CardStretchMedia extends Div {
         // tag::snippet[]
         // Card with stretched image
         Card imageCard = new Card();
-        imageCard.addThemeVariants(CardVariant.LUMO_STRETCH_MEDIA);
+        imageCard.addThemeVariants(CardVariant.STRETCH_MEDIA);
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
                 getClass(), "/images/lapland.avif", "lapland.avif");
@@ -36,7 +36,7 @@ public class CardStretchMedia extends Div {
 
         // Card with stretched icon
         Card iconCard = new Card();
-        iconCard.addThemeVariants(CardVariant.LUMO_STRETCH_MEDIA);
+        iconCard.addThemeVariants(CardVariant.STRETCH_MEDIA);
 
         Icon icon = LumoIcon.PHOTO.create();
         icon.getStyle().setBackgroundColor("rgba(0, 0, 0, 0.2)");

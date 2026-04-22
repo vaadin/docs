@@ -1,7 +1,6 @@
 package com.vaadin.demo.component.button;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -16,13 +15,11 @@ public class ButtonIcons extends Div {
         // Icon button using an aria-label to provide a textual alternative
         // to screen readers
         Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
-        plusButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         plusButton.setAriaLabel("Add item");
 
         // Icon button using a tooltip to provide textual description
         // of the action that it triggers
         Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         closeButton.setAriaLabel("Close");
         closeButton.setTooltipText("Close the dialog");
 

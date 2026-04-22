@@ -16,7 +16,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-checkbox-group label="Permissions">
+      <vaadin-checkbox-group label="Permissions" theme="horizontal">
         <vaadin-checkbox value="read" label="Read"></vaadin-checkbox>
         <vaadin-checkbox value="edit" label="Edit"></vaadin-checkbox>
         <vaadin-checkbox value="delete" label="Delete"></vaadin-checkbox>

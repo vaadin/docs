@@ -38,7 +38,17 @@ Jackson 3::
 Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
 
 Node.js 24::
-Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active Long Term Support (LTS) before Vaadin 25.0.0 - guaranteeing the longest possible support.
+Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active Long Term Support (LTS) before Vaadin 25.0.0 -- guaranteeing the longest possible support.
++
+The way Vaadin installs and manages Node.js has also changed:
++
+--
+- Node.js is now installed into version-specific directories (e.g., `~/.vaadin/node-v24.14.0/`) instead of a single `~/.vaadin/node/` directory. Multiple versions can coexist side by side.
+- The complete Node.js distribution is now extracted, including `npm`, `npx`, and `corepack`, so these tools can be used directly from the installation directory.
+- The `node.auto.update` configuration property has been removed. Auto-update is no longer needed since each version is installed into its own directory.
+- A new `node.folder` configuration property allows pointing to a custom Node.js installation directory. See <<{articles}/flow/configuration/development-mode/node-js.adoc#node-folder, Custom Node.js Folder>> for details.
+- If you have scripts or CI configurations that reference `~/.vaadin/node/bin/node`, update them to use the version-specific path (e.g., `~/.vaadin/node-v24.14.0/bin/node`).
+--
 
 React 19::
 Vaadin 25 uses React 19 for the React-based components and views. Details about the changes in React 19 can be found in link:https://react.dev/blog/2024/04/25/react-19-upgrade-guide[React 19 Upgrade Guide].
@@ -175,6 +185,18 @@ If you're using a Gradle wrapper, update it to version 8.14 by executing the fol
 
 For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
 
+=== Gradle: `vaadinPrepareFrontend` No Longer Runs Automatically
+
+Starting with Vaadin 25.2, the `vaadinPrepareFrontend` Gradle task is no longer automatically bound to the `processResources` lifecycle task. In earlier versions, this binding caused the task to run on every compilation, including when IntelliJ IDEA or other IDEs triggered automatic Gradle builds. This could lead to generated frontend files (such as `index.ts`) being unexpectedly deleted, particularly when using hot deploy mode.
+
+The task can still be run explicitly if needed. If your build relied on the automatic execution, you can re-add the binding in your [filename]`build.gradle`:
+
+----
+tasks.named('processResources') {
+    dependsOn 'vaadinPrepareFrontend'
+}
+----
+
 == Development Tools
 
 Development tools are opt-in feature in Vaadin 25. `vaadin-dev` module isn't included transitively by default anymore via `vaadin` or `vaadin-core` or any other Vaadin dependencies. To include it, add following dependency to your build configuration:
@@ -266,6 +288,11 @@ public class Application implements AppShellConfigurator {}
 
 The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
+[IMPORTANT]
+====
+The `lumoImports` property in [filename]`theme.json` is silently ignored in Vaadin 25. If your application relied on `lumoImports` to load utility classes (e.g., `"lumoImports": ["utility"]`), views using [classname]`LumoUtility` CSS classes for layout (flex, grid, gap, padding, etc.) will render with broken layouts. The class names are still added to the DOM but have no backing CSS rules. See <<lumo-theme>> for instructions on loading the Lumo Utility stylesheet.
+====
+
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
@@ -308,6 +335,7 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 }
 ----
 
+[[lumo-theme]]
 === Lumo Theme
 
 The Lumo theme is no longer loaded by default, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. If you’re not using [classname]`@Theme`, then add a [classname]`@StyleSheet` annotation to either your application class or a root layout to load the Lumo theme:
@@ -318,14 +346,18 @@ The Lumo theme is no longer loaded by default, except if you’re using the [cla
 public class Application implements AppShellConfigurator {}
 ----
 
-All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. To load the utility classes, add a separate [classname]`@StyleSheet` annotation:
+All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. This applies regardless of whether the theme is loaded through [classname]`@Theme` or [classname]`@StyleSheet`. To load the utility classes, add a [classname]`@StyleSheet` annotation:
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET)
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 public class Application implements AppShellConfigurator {}
 ----
+
+[NOTE]
+====
+If your Vaadin 24 application used `"lumoImports": ["utility"]` in [filename]`theme.json` to load the Lumo Utility Classes, you must add `@StyleSheet(Lumo.UTILITY_STYLESHEET)` when upgrading to Vaadin 25. The [classname]`@Theme` annotation does not load utility classes, and the `lumoImports` property in [filename]`theme.json` is no longer supported. Without this change, any layout built with [classname]`LumoUtility` constants (such as `Display.FLEX`, `FlexDirection.COLUMN`, `Gap.MEDIUM`, etc.) will appear broken, as the CSS class names are present in the HTML but have no associated styles.
+====
 
 The Lumo icon collection is not loaded by default anymore, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. To ensure Lumo icons are included in your application bundle, use the [classname]`LumoIcon` enum instead of the general [classname]`Icon` class:
 
@@ -430,7 +462,7 @@ The “New Item” button in the CRUD component no longer uses the primary style
 [.example]
 [source,java]
 ----
-crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+crud.getNewButton().addThemeVariants(ButtonVariant.PRIMARY);
 ----
 
 === Charts
@@ -594,7 +626,7 @@ vaadin-split-layout > * {
 The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
 
 === Spreadsheet
-The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. In order to achieve this, use one of the following constructors:
+The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. To achieve this, use one of the following constructors:
 
 * `CellReference(Cell)`
 * `CellReference(String, int, int, boolean, boolean)`
@@ -611,7 +643,7 @@ The Time Picker no longer uses `vaadin-time-picker-combo-box` internally. This m
 The [classname]`TimePickerOverlayElement` TestBench element has been removed as the component now uses the native HTML popover mechanism for its drop-down. The [methodname]`getItem` and [methodname]`getLastItem` methods are now available on [classname]`TimePickerElement` itself.
 
 === Tree Grid
-Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, the web component now sends a single request for the visible range, and the server always returns the corresponding items as a flat list. On the server side, on the other hand, the data provider can now choose to provide hierarchical data in one of two formats: the existing <<../components/tree-grid/data-providers#hierarchyformat-nested-default,`HierarchyFormat.NESTED`>> (default) or the new <<../components/tree-grid/data-providers#hierarchyformat-flattened,`HierarchyFormat.FLATTENED`>>. These updates collectively introduce breaking changes, which are described below.
+Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, the web component now sends a single request for the visible range, and the server always returns the corresponding items as a flat list. On the server side, on the other hand, the data provider can now choose to provide hierarchical data in one of two formats: the existing <<../components/tree-grid/data-binding#hierarchyformat-nested-default,`HierarchyFormat.NESTED`>> (default) or the new <<../components/tree-grid/data-binding#hierarchyformat-flattened,`HierarchyFormat.FLATTENED`>>. These updates collectively introduce breaking changes, which are described below.
 
 The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than to each level individually as before.
 

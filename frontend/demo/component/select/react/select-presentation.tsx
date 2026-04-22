@@ -21,7 +21,7 @@ function Example() {
 
   return (
     // tag::snippet[]
-    <Select label="Choose doctor">
+    <Select label="Choose doctor" style={{ width: '15em' }}>
       <ListBox>
         {people.value.map((person) => (
           <Item value={String(person.id)} key={person.id}>

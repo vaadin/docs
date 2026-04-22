@@ -29,21 +29,22 @@ async function dataProvider(
   callback(people, hierarchyLevelSize);
 }
 
+// tag::snippet[]
 function contactRenderer({ item: person }: { item: Person }) {
   return (
     <VerticalLayout
       style={{
-        fontSize: 'var(--lumo-font-size-s)',
-        lineHeight: 'var(--lumo-line-height-m)',
+        fontSize: '.875rem',
+        lineHeight: '1.625',
       }}
     >
       <a href={`mailto:${person.email}`} style={{ display: 'flex', alignItems: 'center' }}>
         <Icon
           icon="vaadin:envelope"
           style={{
-            height: 'var(--lumo-icon-size-s)',
-            marginInlineEnd: 'var(--lumo-space-s)',
-            width: 'var(--lumo-icon-size-s)',
+            width: '1.25em',
+            height: '1.25em',
+            marginInlineEnd: 'var(--vaadin-gap-s)',
           }}
         />
         <span>{person.email}</span>
@@ -52,9 +53,9 @@ function contactRenderer({ item: person }: { item: Person }) {
         <Icon
           icon="vaadin:phone"
           style={{
-            height: 'var(--lumo-icon-size-s)',
-            marginInlineEnd: 'var(--lumo-space-s)',
-            width: 'var(--lumo-icon-size-s)',
+            width: '1.25em',
+            height: '1.25em',
+            marginInlineEnd: 'var(--vaadin-gap-s)',
           }}
         />
         <span>{person.address.phone}</span>
@@ -65,7 +66,6 @@ function contactRenderer({ item: person }: { item: Person }) {
 
 function Example() {
   useSignals(); // hidden-source-line
-  // tag::snippet[]
   const expandedItems = useSignal<Person[]>([]);
 
   const toggleRenderer = useCallback(
@@ -86,7 +86,11 @@ function Example() {
         }}
       >
         <div className="person-item">
-          <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
+          <Avatar
+            img={person.pictureUrl}
+            name={`${person.firstName} ${person.lastName}`}
+            style={{ '--vaadin-avatar-size': '2.25rem' }}
+          />
           <span>
             {person.firstName} {person.lastName}
           </span>
@@ -103,7 +107,7 @@ function Example() {
       <GridColumn autoWidth header="Contact" renderer={contactRenderer} />
     </Grid>
   );
-  // end::snippet[]
 }
+// end::snippet[]
 
 export default reactExample(Example); // hidden-source-line

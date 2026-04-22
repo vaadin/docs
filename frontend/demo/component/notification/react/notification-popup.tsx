@@ -1,7 +1,7 @@
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button, Icon, Popover } from '@vaadin/react-components';
+import { Badge, Button, Icon, Popover } from '@vaadin/react-components';
 
 function Example() {
   return (
@@ -9,9 +9,11 @@ function Example() {
     <>
       <Button id="target" aria-label="notifications" theme="tertiary icon">
         <Icon icon="lumo:bell" />
-        <span style={{ position: 'absolute', transform: 'translate(-40%, -30%)' }}>
-          <span {...{ theme: 'badge error primary small pill' }}>4</span>
-        </span>
+        <Badge
+          number={4}
+          theme="error filled"
+          style={{ position: 'absolute', transform: 'translate(-40%, -30%)' }}
+        />
       </Button>
       <Popover for="target">
         <div>Show notifications here</div>

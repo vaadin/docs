@@ -1,16 +1,15 @@
 package com.vaadin.demo.component.notification;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.theme.lumo.LumoIcon;
-import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
-
-import java.util.Arrays;
 
 @Route("notification-popup")
 public class NotificationPopup extends Div {
@@ -34,24 +33,24 @@ public class NotificationPopup extends Div {
 
     public class MessagesButton extends Button {
 
-        private final Element numberOfNotifications;
+        private final Badge numberOfNotifications;
 
         public MessagesButton() {
             super(LumoIcon.BELL.create());
             addThemeVariants(ButtonVariant.TERTIARY);
-            numberOfNotifications = new Element("span");
+            numberOfNotifications = new Badge();
             numberOfNotifications.getStyle()
                     .setPosition(Style.Position.ABSOLUTE)
                     .setTransform("translate(-40%, -30%)");
-            numberOfNotifications.getThemeList().addAll(Arrays.asList("badge",
-                    "error", "primary", "small", "pill"));
+            numberOfNotifications.addThemeVariants(BadgeVariant.ERROR,
+                    BadgeVariant.FILLED);
         }
 
         public void setUnreadMessages(int unread) {
-            numberOfNotifications.setText(unread + "");
+            numberOfNotifications.setNumber(unread);
             if (unread > 0 && numberOfNotifications.getParent() == null) {
-                getElement().appendChild(numberOfNotifications);
-            } else if (numberOfNotifications.getNode().isAttached()) {
+                getElement().appendChild(numberOfNotifications.getElement());
+            } else if (numberOfNotifications.isAttached()) {
                 numberOfNotifications.removeFromParent();
             }
         }

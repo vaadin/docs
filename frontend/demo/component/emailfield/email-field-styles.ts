@@ -16,7 +16,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-email-field
-        theme="align-right helper-above-field"
+        theme="align-right small helper-above-field"
         label="Label"
         helper-text="Helper text"
         value="foo@bar.com"

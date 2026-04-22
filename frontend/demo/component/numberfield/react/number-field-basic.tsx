@@ -1,11 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { NumberField } from '@vaadin/react-components/NumberField.js';
+import { FormLayout, NumberField } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
       <NumberField label="Balance" value="200">
         <div slot="prefix">$</div>
@@ -15,7 +14,7 @@ function Example() {
         <div slot="suffix">€</div>
       </NumberField>
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

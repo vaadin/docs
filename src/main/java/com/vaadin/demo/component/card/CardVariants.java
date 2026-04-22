@@ -13,10 +13,10 @@ public class CardVariants extends Div {
         Card cardDefault = new Card();
 
         Card cardOutlined = new Card();
-        cardOutlined.addThemeVariants(CardVariant.LUMO_OUTLINED);
+        cardOutlined.addThemeVariants(CardVariant.OUTLINED);
 
         Card cardElevated = new Card();
-        cardElevated.addThemeVariants(CardVariant.LUMO_ELEVATED);
+        cardElevated.addThemeVariants(CardVariant.ELEVATED);
 
         // end::snippet[]
 

@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/card';
 import '@vaadin/avatar';
 import '@vaadin/button';
@@ -330,7 +331,7 @@ export class Example extends LitElement {
                 <h2>Lapland</h2>
               </div>
               <vaadin-avatar slot="header-prefix" abbr="L"></vaadin-avatar>
-              <span slot="header-suffix" theme="badge success">Arctic</span>
+              <vaadin-badge slot="header-suffix" theme="success">Arctic</vaadin-badge>
               <div slot="title">Lapland</div>
               <div slot="subtitle">The Exotic North</div>
               <vaadin-button slot="footer">Book Vacation</vaadin-button>

@@ -22,7 +22,7 @@ public class CardCoverMedia extends Div {
         // tag::snippet[]
         // Card with cover image
         Card imageCard = new Card();
-        imageCard.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
+        imageCard.addThemeVariants(CardVariant.COVER_MEDIA);
 
         DownloadHandler imageHandler = DownloadHandler.forClassResource(
                 getClass(), "/images/lapland.avif", "lapland.avif");
@@ -36,7 +36,7 @@ public class CardCoverMedia extends Div {
 
         // Card with cover icon
         Card iconCard = new Card();
-        iconCard.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
+        iconCard.addThemeVariants(CardVariant.COVER_MEDIA);
 
         Icon icon = LumoIcon.PHOTO.create();
         icon.getStyle().setBackgroundColor("rgba(0, 0, 0, 0.2)");
