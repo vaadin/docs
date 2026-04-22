@@ -9,7 +9,9 @@ order: 45
 = [since:com.vaadin:vaadin@V25.2]#Controllers#
 
 
-Controllers extend the orchestrator with domain-specific tools and lifecycle hooks. Objects registered via [methodname]`withTools()` rely on vendor-specific annotations such as LangChain4j's or Spring AI's [annotationname]`@Tool`. A controller, by contrast, contributes tools through the framework-agnostic [classname]`AIController` interface. The orchestrator collects the controller's tools before every LLM request and notifies the controller once the request cycle completes.
+Controllers expose your application's capabilities to the LLM as callable tools -- a customer database, an inventory lookup, a weather API, a form-filling routine -- and give you a lifecycle hook that fires after the LLM finishes each turn. Use a controller when you want reusable tools that don't depend on a specific AI framework's annotations, when you need to defer UI updates until after a multi-step AI response, or when you want to package an AI capability once and share it across applications.
+
+If you've registered tool objects via [methodname]`withTools()` elsewhere, controllers are the framework-agnostic equivalent: the same tool calling, but defined through the [classname]`AIController` interface instead of LangChain4j's or Spring AI's [annotationname]`@Tool` annotations.
 
 Vaadin provides two built-in controllers:
 
@@ -33,10 +35,75 @@ var orchestrator = AIOrchestrator
         .build();
 ----
 
-Only one controller can be attached per orchestrator. Controllers and tool objects registered via [methodname]`withTools()` can be combined -- the orchestrator merges their tool lists before each request.
+Only one controller can be attached per orchestrator, because the orchestrator needs a single owner for the [methodname]`onRequestCompleted()` lifecycle hook. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator merges their tool lists before each request.
 
 
-== The [classname]`AIController` Interface
+[[database-provider]]
+== Database Provider
+
+[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and execute read-only SQL queries on demand. Any controller that needs database access can reuse [classname]`DatabaseProviderAITools` to register the shared `get_database_schema` tool.
+
+The interface defines two methods:
+
+* [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
+* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps.
+
+The following example is a straightforward JDBC implementation:
+
+[source,java]
+----
+public class JdbcDatabaseProvider implements DatabaseProvider {
+
+    private final DataSource readOnlyDataSource;
+
+    public JdbcDatabaseProvider(DataSource readOnlyDataSource) {
+        this.readOnlyDataSource = readOnlyDataSource;
+    }
+
+    @Override
+    public String getSchema() {
+        return """
+                Tables:
+                employees(id INT, name VARCHAR, department VARCHAR, salary NUMERIC, hired_on DATE)
+                departments(id INT, name VARCHAR)
+                Dialect: PostgreSQL.
+                """;
+    }
+
+    @Override
+    public List<Map<String, Object>> executeQuery(String sql) {
+        try (var conn = readOnlyDataSource.getConnection();
+                var stmt = conn.prepareStatement(sql);
+                var rs = stmt.executeQuery()) {
+            var meta = rs.getMetaData();
+            var rows = new ArrayList<Map<String, Object>>();
+            while (rs.next()) {
+                var row = new LinkedHashMap<String, Object>();
+                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
+                }
+                rows.add(row);
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new IllegalArgumentException("Query failed: " + e.getMessage(), e);
+        }
+    }
+}
+----
+
+.Read-Only Database Access
+[IMPORTANT]
+The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
+
+.Schema Scope
+[TIP]
+Return only the tables, columns, and relationships the LLM needs. A smaller, well-described schema produces better queries, uses fewer tokens, and reduces the chance of leaking sensitive columns.
+
+
+== Building a Custom Controller
+
+The built-in controllers cover grid and chart data exploration. To expose your own capabilities to the LLM, implement [classname]`AIController` directly.
 
 [classname]`AIController` defines two methods:
 
@@ -105,67 +172,4 @@ Hand-writing JSON schemas is fine for small tools but becomes error-prone as the
 .Controller Serialization
 [NOTE]
 Controllers are not serialized with the orchestrator. After session restore, pass the controller to [methodname]`reconnect(provider).withController(controller).apply()` -- see <<conversation-history#,Conversation History & Session Persistence>>.
-
-
-[[database-provider]]
-== Database Provider
-
-[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and execute read-only SQL queries on demand. Any controller that needs database access can reuse [classname]`DatabaseProviderAITools` to register the shared `get_database_schema` tool.
-
-The interface defines two methods:
-
-* [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
-* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps.
-
-The following example is a straightforward JDBC implementation:
-
-[source,java]
-----
-public class JdbcDatabaseProvider implements DatabaseProvider {
-
-    private final DataSource readOnlyDataSource;
-
-    public JdbcDatabaseProvider(DataSource readOnlyDataSource) {
-        this.readOnlyDataSource = readOnlyDataSource;
-    }
-
-    @Override
-    public String getSchema() {
-        return """
-                Tables:
-                employees(id INT, name VARCHAR, department VARCHAR, salary NUMERIC, hired_on DATE)
-                departments(id INT, name VARCHAR)
-                Dialect: PostgreSQL.
-                """;
-    }
-
-    @Override
-    public List<Map<String, Object>> executeQuery(String sql) {
-        try (var conn = readOnlyDataSource.getConnection();
-                var stmt = conn.prepareStatement(sql);
-                var rs = stmt.executeQuery()) {
-            var meta = rs.getMetaData();
-            var rows = new ArrayList<Map<String, Object>>();
-            while (rs.next()) {
-                var row = new LinkedHashMap<String, Object>();
-                for (int i = 1; i <= meta.getColumnCount(); i++) {
-                    row.put(meta.getColumnLabel(i), rs.getObject(i));
-                }
-                rows.add(row);
-            }
-            return rows;
-        } catch (SQLException e) {
-            throw new IllegalArgumentException("Query failed: " + e.getMessage(), e);
-        }
-    }
-}
-----
-
-.Read-Only Database Access
-[IMPORTANT]
-The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
-
-.Schema Scope
-[TIP]
-Return only the tables, columns, and relationships the LLM needs. A smaller, well-described schema produces better queries, uses fewer tokens, and reduces the chance of leaking sensitive columns.
 

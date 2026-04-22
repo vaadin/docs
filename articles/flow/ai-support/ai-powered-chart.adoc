@@ -49,11 +49,13 @@ The controller registers a `get_chart_instructions` tool whose description carri
 The chart tools use optional properties in their JSON Schema definitions, which is incompatible with OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in (for example by calling `strictTools(true)` on LangChain4j's `OpenAiStreamingChatModel` builder) are affected.
 
 
+[[data-conventions]]
 == Data Conventions
 
-The default converter recognizes specific column aliases when mapping SQL results to Highcharts series. All reserved names are prefixed with `_` to avoid colliding with real data columns. Common patterns include:
+For the common chart types -- line, column, bar, area, pie, and spline -- no column conventions are needed. Pick a category column and a value column, and the converter does the rest.
 
-* Basic charts -- line, column, bar, area, pie, and spline charts take two columns: category and value. No special aliases are required.
+The reserved column aliases below unlock specialized chart types. All reserved names are prefixed with `_` to avoid colliding with real data columns. The LLM discovers them from the `update_chart_data_source` tool description and applies them as each chart type requires:
+
 * Multi-series -- add a `_series` column to group rows into separate named series.
 * Scatter and bubble -- `_x`, `_y`, and optionally `_z` for bubble size.
 * Range (`arearange`, `columnrange`) -- `_low`, `_high`, and optionally `_x`.
@@ -62,32 +64,6 @@ The default converter recognizes specific column aliases when mapping SQL result
 * Gantt, Timeline, Treemap, Organization, Sankey, and Waterfall -- use the dedicated name-based aliases documented in the tool description.
 
 Any pattern that produces a [classname]`DataSeriesItem` also accepts an optional `_color` column for per-point coloring. The full list of aliases is defined in the [classname]`ColumnNames` class.
-
-
-== Custom Data Conversion
-
-The built-in [classname]`DefaultDataConverter` handles the common patterns. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
-
-[source,java]
-----
-public class CurrencyDataConverter implements DataConverter {
-
-    @Override
-    public List<Series> convertToSeries(List<Map<String, Object>> data) {
-        DataSeries series = new DataSeries();
-        for (Map<String, Object> row : data) {
-            String name = (String) row.get("category");
-            Number value = (Number) row.get("value");
-            series.add(new DataSeriesItem(name, roundToCents(value)));
-        }
-        return List.of(series);
-    }
-}
-
-controller.setDataConverter(new CurrencyDataConverter());
-----
-
-The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
 
 
 == Persisting Chart State
@@ -124,7 +100,33 @@ orchestrator.reconnect(provider)
 
 == Multiple Charts
 
-[classname]`ChartAIController` manages a single chart. To expose several charts to the same orchestrator -- for example in a dashboard -- implement a custom [classname]`AIController` that builds its tool list from [classname]`ChartAITools.createAll()` with a [classname]`ChartAITools.Callbacks` implementation that returns a stable ID per chart.
+[classname]`ChartAIController` manages a single chart. To expose several charts to the same orchestrator -- for example in a dashboard -- build a custom [classname]`AIController` on top of [classname]`ChartAITools.createAll()` with your own [classname]`ChartAITools.Callbacks` implementation that returns a stable ID per chart. See the [classname]`ChartAITools` Javadoc for the callback contract.
+
+
+== Custom Data Conversion
+
+The built-in [classname]`DefaultDataConverter` handles the common patterns described in <<#data-conventions,Data Conventions>>. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
+
+[source,java]
+----
+public class CurrencyDataConverter implements DataConverter {
+
+    @Override
+    public List<Series> convertToSeries(List<Map<String, Object>> data) {
+        DataSeries series = new DataSeries();
+        for (Map<String, Object> row : data) {
+            String name = (String) row.get("category");
+            Number value = (Number) row.get("value");
+            series.add(new DataSeriesItem(name, roundToCents(value)));
+        }
+        return List.of(series);
+    }
+}
+
+controller.setDataConverter(new CurrencyDataConverter());
+----
+
+The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
 
 
 [[available-tools]]
