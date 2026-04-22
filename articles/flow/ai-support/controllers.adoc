@@ -26,7 +26,7 @@ Pass a controller to the orchestrator's builder with [methodname]`withController
 [source,java]
 ----
 var orchestrator = AIOrchestrator
-        .builder(provider, GridAIController.getSystemPrompt())
+        .builder(provider, systemPrompt)
         .withMessageList(messageList)
         .withInput(messageInput)
         .withController(controller)
@@ -38,10 +38,17 @@ Only one controller can be attached per orchestrator. Controllers and tool objec
 
 == The [classname]`AIController` Interface
 
-[classname]`AIController` defines two methods, both with default implementations:
+[classname]`AIController` defines two methods:
 
-* [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Defaults to an empty list. Tools are collected before every request, so a controller can vary its tool set based on current state.
+* [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
 * [methodname]`onRequestCompleted()` -- runs after all tool calls for a user request have finished and the LLM has produced its final response. Controllers use this hook to apply deferred state changes, avoiding partial state and multiple redraws during a multi-tool turn.
+
+Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
+
+* [methodname]`getName()` -- the unique name the LLM uses to invoke the tool.
+* [methodname]`getDescription()` -- a human-readable description shown to the LLM.
+* [methodname]`getParametersSchema()` -- a JSON Schema string describing the tool's parameters, or `null` for parameterless tools.
+* [methodname]`execute(JsonNode arguments)` -- receives the LLM's arguments as a [classname]`JsonNode` (from `tools.jackson.databind`) and returns the tool's result as a string.
 
 A minimal custom controller looks like this:
 
@@ -75,14 +82,25 @@ public class WeatherController implements AIController {
             }
 
             @Override
-            public String execute(String arguments) {
-                // Parse arguments as JSON and call your service
-                return weatherService.lookup(arguments);
+            public String execute(JsonNode arguments) {
+                String city = arguments.get("city").asString();
+                return weatherService.lookup(city);
             }
         });
     }
+
+    @Override
+    public void onRequestCompleted() {
+        // Apply any deferred state changes here.
+    }
 }
 ----
+
+Tool names must match the pattern `^[a-zA-Z0-9_-]{1,64}$`, as required by popular LLM APIs. Names are validated at build time; invalid names cause an [classname]`IllegalArgumentException`. Use a namespaced name such as `"MyController_getWeather"` to avoid collisions with tools from other controllers.
+
+.Generating JSON Schemas
+[TIP]
+Hand-writing JSON schemas is fine for small tools but becomes error-prone as they grow. For larger tools, use a schema generator to catch typos and structural mistakes at compile time. When using [classname]`SpringAILLMProvider`, Spring AI's `JsonSchemaGenerator` is already on the classpath -- pair it with a record annotated with `@JsonPropertyDescription` and parse the arguments via Jackson. Whichever approach you pick, verify the output stays inside the portable JSON Schema subset (string, integer, number, boolean, array, object, plus `anyOf` and `enum`); some generators emit keywords such as `format`, `pattern`, or `$ref` that not every LLM provider accepts.
 
 .Controller Serialization
 [NOTE]

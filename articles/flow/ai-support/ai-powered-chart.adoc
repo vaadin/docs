@@ -25,7 +25,7 @@ MessageInput messageInput = new MessageInput();
 DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
 ChartAIController controller = new ChartAIController(chart, databaseProvider);
 
-AIOrchestrator.builder(provider, ChartAIController.getSystemPrompt())
+AIOrchestrator.builder(provider, systemPrompt)
         .withInput(messageInput)
         .withController(controller)
         .build();
@@ -40,9 +40,13 @@ Example prompts:
 * "Compare 2025 and 2026 quarterly sales side-by-side with a legend."
 * "Turn this into an area chart and add a 'Revenue (USD)' y-axis title."
 
-.Recommended System Prompt
+.Built-In Workflow Instructions
 [TIP]
-[methodname]`ChartAIController.getSystemPrompt()` returns a recommended system prompt that instructs the LLM to inspect state before making changes and to keep data and configuration separate.
+The controller registers a `get_chart_instructions` tool whose description carries the recommended workflow -- inspect state first, keep data and configuration separate, match query aliases to the chart type. Because LLMs read tool descriptions as part of the tool manifest, the instructions are effectively always in front of the model without needing to be concatenated into the system prompt. You can focus your own system prompt on application-specific behavior such as tone, persona, or business rules.
+
+.Provider Compatibility
+[NOTE]
+The chart tools use optional properties in their JSON Schema definitions, which is incompatible with OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in (for example by calling `strictTools(true)` on LangChain4j's `OpenAiStreamingChatModel` builder) are affected.
 
 
 == Data Conventions
@@ -107,7 +111,7 @@ Listeners do not fire when [methodname]`restoreState()` is called. The queries a
 
 == Reconnecting After Deserialization
 
-[classname]`ChartAIController` is not serializable. After session restore, create a new controller and pass it to the orchestrator's reconnector together with the new provider:
+[classname]`ChartAIController` is not serializable. After session restore, create a new controller, wire it into the orchestrator's reconnector together with the new provider, and optionally re-apply the saved state:
 
 [source,java]
 ----
@@ -126,10 +130,11 @@ orchestrator.reconnect(provider)
 [[available-tools]]
 == Available Tools
 
-[classname]`ChartAIController` exposes five tools to the LLM:
+[classname]`ChartAIController` registers six tools on the orchestrator:
 
+* `get_chart_instructions` -- returns the recommended workflow for chart requests. The tool's description carries the same text, so the LLM already sees it as part of the tool manifest and rarely needs to call it explicitly.
 * `get_database_schema` -- describes the tables, columns, and SQL dialect.
 * `get_chart_state` -- returns the current Highcharts configuration and the queries powering the chart.
-* `update_chart_data_source` -- validates and queues SQL queries, one per series.
-* `update_chart_configuration` -- queues a Highcharts configuration update, such as chart type, axes, tooltip, legend, or per-series styling.
-* `get_plot_options_schema` -- returns the JSON schema for a specific chart type's plot options, allowing the LLM to discover available styling properties.
+* `update_chart_data_source` -- validates and queues SQL queries, one per series. Queries are executed eagerly to catch SQL errors before the turn ends.
+* `update_chart_configuration` -- queues a Highcharts configuration update, such as chart type, axes, tooltip, legend, or per-series styling. The JSON is parsed eagerly to catch configuration errors.
+* `get_plot_options_schema` -- returns the JSON schema for a specific chart type's plot options, allowing the LLM to discover available styling properties when mixing chart types in a single configuration.

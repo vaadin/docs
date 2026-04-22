@@ -16,17 +16,17 @@ When an LLM request completes, the queued query is executed and the grid re-rend
 
 == Basic Usage
 
-Create a grid typed as `Map<String, Object>`, construct a controller with the grid and a [classname]`DatabaseProvider`, and attach it to an orchestrator:
+Create a grid typed as [classname]`Grid<AIDataRow>`, construct a controller with the grid and a [classname]`DatabaseProvider`, and attach it to an orchestrator:
 
 [source,java]
 ----
-Grid<Map<String, Object>> grid = new Grid<>();
+Grid<AIDataRow> grid = new Grid<>();
 MessageInput messageInput = new MessageInput();
 
 DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
 GridAIController controller = new GridAIController(grid, databaseProvider);
 
-AIOrchestrator.builder(provider, GridAIController.getSystemPrompt())
+AIOrchestrator.builder(provider, systemPrompt)
         .withInput(messageInput)
         .withController(controller)
         .build();
@@ -40,9 +40,13 @@ A message list is not required -- the grid itself is the output surface. Example
 * "List the top 10 highest-paid employees with name, salary, and hire date."
 * "Show product name and category grouped under Product, and monthly revenue."
 
-.Recommended System Prompt
+.Grid Item Type
+[NOTE]
+[classname]`AIDataRow` is a framework-owned row type. Instances are created internally when query results are rendered. Application code should not construct or inspect them directly; the type parameter makes the grid's role explicit and signals that row data is managed by the controller.
+
+.Built-In Workflow Instructions
 [TIP]
-[methodname]`GridAIController.getSystemPrompt()` returns a recommended system prompt that teaches the LLM how to use the controller's tools. Concatenate it with your own instructions if you need additional behavior.
+The controller registers a `get_grid_instructions` tool whose description contains the recommended workflow for the LLM. Because LLMs read tool descriptions before deciding which tool to call, these instructions are effectively always available without needing to be concatenated into the system prompt. You can focus your own system prompt on application-specific behavior such as tone, persona, or business rules.
 
 
 == SQL Conventions
@@ -77,7 +81,7 @@ if (saved != null) {
 
 == Reconnecting After Deserialization
 
-[classname]`GridAIController` is not serializable. After session restore, create a new controller and pass it to the orchestrator's reconnector together with the new provider:
+[classname]`GridAIController` is not serializable. After session restore, create a new controller, wire it into the orchestrator's reconnector together with the new provider, and optionally re-apply the saved state:
 
 [source,java]
 ----
@@ -96,8 +100,9 @@ orchestrator.reconnect(provider)
 [[available-tools]]
 == Available Tools
 
-[classname]`GridAIController` exposes three tools to the LLM:
+[classname]`GridAIController` registers four tools on the orchestrator:
 
+* `get_grid_instructions` -- returns the recommended workflow for grid-related requests. The tool's description carries the same text, so the LLM already sees it as part of the tool manifest and rarely needs to call it explicitly.
 * `get_database_schema` -- describes the tables, columns, and SQL dialect.
 * `get_grid_state` -- returns the SQL query currently driving the grid.
-* `update_grid_data` -- queues a new SQL query for the grid.
+* `update_grid_data` -- queues a new SQL query for the grid. The query is validated eagerly with a lightweight probe before being accepted; invalid queries are returned to the LLM as an error.
