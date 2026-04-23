@@ -42,8 +42,7 @@ public class RangeSliderCustomValidation extends Div {
                 .withValidator(value -> value.end() - value.start() >= 200,
                         "Price range must span at least $200")
                 .bind(product -> {
-                    return new RangeSliderValue(
-                            (double) product.getMinPrice(),
+                    return new RangeSliderValue((double) product.getMinPrice(),
                             (double) product.getMaxPrice());
                 }, (product, value) -> {
                     product.setMinPrice(value.start().intValue());
