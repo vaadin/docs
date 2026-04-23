@@ -9,7 +9,7 @@ order: 60
 = [since:com.vaadin:vaadin@V25.2]#AI-Powered Grid#
 
 
-[classname]`GridAIController` populates a [classname]`Grid` with data from the application database based on natural-language requests. Given a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller exposes tools that let the LLM inspect the database schema and write SQL queries to drive the grid. See <<#available-tools,Available Tools>> for the full list.
+[classname]`GridAIController` populates a [classname]`Grid` with data from the application database based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema and run SQL queries that drive the grid.
 
 When an LLM request completes, the queued query is executed and the grid re-renders with dynamically generated columns, type-appropriate renderers, right-aligned numeric columns, lazy loading via SQL `LIMIT`/`OFFSET`, and optional column grouping.
 
@@ -42,18 +42,12 @@ A message list is not required -- the grid itself is the output surface. Example
 
 .Built-In Workflow Instructions
 [TIP]
-The controller registers a `get_grid_instructions` tool whose description contains the recommended workflow for the LLM. Because LLMs read tool descriptions before deciding which tool to call, these instructions are effectively always available without needing to be concatenated into the system prompt. You can focus your own system prompt on application-specific behavior such as tone, persona, or business rules.
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior.
 
 
-== SQL Conventions
+== Query Validation
 
-The tool description instructs the LLM to produce queries the grid can render cleanly:
-
-* Every column must have a human-readable `AS` alias. `SELECT *` is not allowed.
-* The grid handles pagination, so queries must not include `LIMIT` or `OFFSET`.
-* Dot-separated aliases -- for example `"Product.Name"` and `"Product.Category"` -- produce grouped column headers. A header row labelled "Product" spans both columns.
-
-Before queueing an update, the controller executes a lightweight probe (`SELECT * FROM (<query>) AS _v LIMIT 1`) to validate the query. If the probe fails, the error is returned to the LLM so that it can correct the query on the next turn.
+Before queueing an update, the controller runs a lightweight probe against the database to validate the LLM's query. If the probe fails, the error is returned to the LLM so that it can correct the query on the next turn. Invalid queries never reach the grid.
 
 
 == Persisting Grid State
@@ -72,7 +66,7 @@ if (saved != null) {
 }
 ----
 
-[methodname]`addStateChangeListener()` fires only when the grid is updated by the LLM, not when [methodname]`restoreState()` is called. The current query is also stored directly on the [classname]`Grid` component, so it survives session serialization automatically.
+[methodname]`addStateChangeListener()` fires only when the grid is updated by the LLM, not when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
 
 
 == Reconnecting After Deserialization
@@ -88,17 +82,3 @@ orchestrator.reconnect(provider)
 ----
 
 
-== Multiple Grids
-
-[classname]`GridAIController` manages a single grid. To coordinate several grids from the same orchestrator -- for example a dashboard where the LLM routes each request to the appropriate grid -- build a custom [classname]`AIController` on top of [classname]`GridAITools.createAll()` with your own [classname]`GridAITools.Callbacks` implementation. See the [classname]`GridAITools` Javadoc for the callback contract.
-
-
-[[available-tools]]
-== Available Tools
-
-[classname]`GridAIController` registers four tools on the orchestrator:
-
-* `get_grid_instructions` -- returns the recommended workflow for grid-related requests. The tool's description carries the same text, so the LLM already sees it as part of the tool manifest and rarely needs to call it explicitly.
-* `get_database_schema` -- describes the tables, columns, and SQL dialect.
-* `get_grid_state` -- returns the SQL query currently driving the grid.
-* `update_grid_data` -- queues a new SQL query for the grid. The query is validated eagerly with a lightweight probe before being accepted; invalid queries are returned to the LLM as an error.

@@ -9,9 +9,9 @@ order: 70
 = [since:com.vaadin:vaadin@V25.2]#AI-Powered Chart#
 
 
-[classname]`ChartAIController` creates and updates a [classname]`Chart` visualization based on natural-language requests. Given a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller exposes tools that let the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data. See <<#available-tools,Available Tools>> for the full list.
+[classname]`ChartAIController` creates and updates a [classname]`Chart` visualization based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
 
-Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both are queued during the LLM turn and applied atomically in [methodname]`onRequestCompleted()`.
+Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
 
 == Basic Usage
 
@@ -42,28 +42,11 @@ Example prompts:
 
 .Built-In Workflow Instructions
 [TIP]
-The controller registers a `get_chart_instructions` tool whose description carries the recommended workflow -- inspect state first, keep data and configuration separate, match query aliases to the chart type. Because LLMs read tool descriptions as part of the tool manifest, the instructions are effectively always in front of the model without needing to be concatenated into the system prompt. You can focus your own system prompt on application-specific behavior such as tone, persona, or business rules.
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior.
 
 .Provider Compatibility
 [NOTE]
-The chart tools use optional properties in their JSON Schema definitions, which is incompatible with OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in (for example by calling `strictTools(true)` on LangChain4j's `OpenAiStreamingChatModel` builder) are affected.
-
-
-[[data-conventions]]
-== Data Conventions
-
-For the common chart types -- line, column, bar, area, pie, and spline -- no column conventions are needed. Pick a category column and a value column, and the converter does the rest.
-
-The reserved column aliases below unlock specialized chart types. All reserved names are prefixed with `_` to avoid colliding with real data columns. The LLM discovers them from the `update_chart_data_source` tool description and applies them as each chart type requires:
-
-* Multi-series -- add a `_series` column to group rows into separate named series.
-* Scatter and bubble -- `_x`, `_y`, and optionally `_z` for bubble size.
-* Range (`arearange`, `columnrange`) -- `_low`, `_high`, and optionally `_x`.
-* OHLC and candlestick -- `_x`, `_open`, `_high`, `_low`, `_close`.
-* Heatmap -- `_x`, `_y`, `_value`.
-* Gantt, Timeline, Treemap, Organization, Sankey, and Waterfall -- use the dedicated name-based aliases documented in the tool description.
-
-Any pattern that produces a [classname]`DataSeriesItem` also accepts an optional `_color` column for per-point coloring. The full list of aliases is defined in the [classname]`ColumnNames` class.
+[classname]`ChartAIController` does not support OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in are affected.
 
 
 == Persisting Chart State
@@ -82,7 +65,7 @@ if (saved != null) {
 }
 ----
 
-Listeners do not fire when [methodname]`restoreState()` is called. The queries and configuration are also stored on the [classname]`Chart` component, so they survive session serialization automatically.
+Listeners do not fire when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
 
 
 == Reconnecting After Deserialization
@@ -98,14 +81,9 @@ orchestrator.reconnect(provider)
 ----
 
 
-== Multiple Charts
-
-[classname]`ChartAIController` manages a single chart. To expose several charts to the same orchestrator -- for example in a dashboard -- build a custom [classname]`AIController` on top of [classname]`ChartAITools.createAll()` with your own [classname]`ChartAITools.Callbacks` implementation that returns a stable ID per chart. See the [classname]`ChartAITools` Javadoc for the callback contract.
-
-
 == Custom Data Conversion
 
-The built-in [classname]`DefaultDataConverter` handles the common patterns described in <<#data-conventions,Data Conventions>>. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
+[classname]`DefaultDataConverter` maps SQL result rows to Highcharts series automatically. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
 
 [source,java]
 ----
@@ -127,16 +105,3 @@ controller.setDataConverter(new CurrencyDataConverter());
 ----
 
 The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
-
-
-[[available-tools]]
-== Available Tools
-
-[classname]`ChartAIController` registers six tools on the orchestrator:
-
-* `get_chart_instructions` -- returns the recommended workflow for chart requests. The tool's description carries the same text, so the LLM already sees it as part of the tool manifest and rarely needs to call it explicitly.
-* `get_database_schema` -- describes the tables, columns, and SQL dialect.
-* `get_chart_state` -- returns the current Highcharts configuration and the queries powering the chart.
-* `update_chart_data_source` -- validates and queues SQL queries, one per series. Queries are executed eagerly to catch SQL errors before the turn ends.
-* `update_chart_configuration` -- queues a Highcharts configuration update, such as chart type, axes, tooltip, legend, or per-series styling. The JSON is parsed eagerly to catch configuration errors.
-* `get_plot_options_schema` -- returns the JSON schema for a specific chart type's plot options, allowing the LLM to discover available styling properties when mixing chart types in a single configuration.

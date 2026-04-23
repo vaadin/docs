@@ -35,18 +35,18 @@ var orchestrator = AIOrchestrator
         .build();
 ----
 
-Only one controller can be attached per orchestrator, because the orchestrator needs a single owner for the [methodname]`onRequestCompleted()` lifecycle hook. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator merges their tool lists before each request.
+Only one controller can be attached per orchestrator. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator merges their tool lists before each request.
 
 
 [[database-provider]]
 == Database Provider
 
-[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and execute read-only SQL queries on demand. Any controller that needs database access can reuse [classname]`DatabaseProviderAITools` to register the shared `get_database_schema` tool.
+[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component only -- they are never sent back to the LLM.
 
 The interface defines two methods:
 
 * [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
-* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps.
+* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt.
 
 The following example is a straightforward JDBC implementation:
 
@@ -95,6 +95,10 @@ public class JdbcDatabaseProvider implements DatabaseProvider {
 .Read-Only Database Access
 [IMPORTANT]
 The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
+
+.Query Results Stay in the Application
+[IMPORTANT]
+The LLM receives only the schema, never the query results. Every row returned by [methodname]`executeQuery()` is rendered in the grid or chart component and discarded from the request cycle. This boundary is unconditional: sensitive row values cannot leak into a follow-up prompt, into the conversation history, or to the LLM provider.
 
 .Schema Scope
 [TIP]
