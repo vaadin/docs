@@ -34,7 +34,7 @@ public class RangeSliderCustomValidation extends Div {
     public RangeSliderCustomValidation() {
         // tag::snippet[]
         RangeSlider rangeSlider = new RangeSlider("Price Range", 0, 1000);
-        rangeSlider.setStep(50);
+        rangeSlider.setStep(50d);
         rangeSlider.setMinMaxVisible(true);
 
         Binder<PriceFilter> binder = new Binder<>();
@@ -42,11 +42,12 @@ public class RangeSliderCustomValidation extends Div {
                 .withValidator(value -> value.end() - value.start() >= 200,
                         "Price range must span at least $200")
                 .bind(product -> {
-                    return new RangeSliderValue(product.getMinPrice(),
-                            product.getMaxPrice());
+                    return new RangeSliderValue(
+                            (double) product.getMinPrice(),
+                            (double) product.getMaxPrice());
                 }, (product, value) -> {
-                    product.setMinPrice((int) value.start());
-                    product.setMaxPrice((int) value.end());
+                    product.setMinPrice(value.start().intValue());
+                    product.setMaxPrice(value.end().intValue());
                 });
 
         binder.setBean(new PriceFilter());

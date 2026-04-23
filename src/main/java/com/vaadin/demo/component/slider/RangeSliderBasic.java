@@ -12,7 +12,7 @@ public class RangeSliderBasic extends Div {
     public RangeSliderBasic() {
         // tag::snippet[]
         RangeSlider rangeSlider = new RangeSlider("Price range", 0, 1000);
-        rangeSlider.setValue(new RangeSliderValue(200, 800));
+        rangeSlider.setValue(new RangeSliderValue(200d, 800d));
         add(rangeSlider);
         // end::snippet[]
     }

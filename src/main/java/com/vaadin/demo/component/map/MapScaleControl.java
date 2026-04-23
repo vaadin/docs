@@ -54,7 +54,7 @@ public class MapScaleControl extends Div {
         // Configure number of bar segments
         Slider stepsSlider = new Slider("Bar steps", 2, 8);
         stepsSlider.setValue(4d);
-        stepsSlider.setStep(2);
+        stepsSlider.setStep(2d);
         stepsSlider.setValueChangeMode(ValueChangeMode.EAGER);
         stepsSlider.bindEnabled(showAsBar);
         stepsSlider.bindValue(barSteps, barSteps::set);
