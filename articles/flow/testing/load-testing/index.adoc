@@ -611,70 +611,80 @@ Below is a complete example that starts the application server, records two Test
 
 [source,xml]
 ----
-<plugin>
-    <groupId>com.vaadin</groupId>
-    <artifactId>testbench-converter-plugin</artifactId>
-    <version>${vaadin.version}</version>
-    <executions>
-        <!-- Start the application server -->
-        <execution>
-            <id>start-server</id>
-            <goals>
-                <goal>start-server</goal>
-            </goals>
-            <configuration>
-                <serverJar>${project.build.directory}/my-app.jar</serverJar>
-                <serverPort>8081</serverPort>
-                <managementPort>8082</managementPort>
-            </configuration>
-        </execution>
+<properties>
+    <serverPort>8081</serverPort>
+    <applicationJar>my-app.jar</applicationJar>
+    <managementPort>8082</managementPort>
+</properties>
 
-        <!-- Record TestBench scenarios -->
-        <execution>
-            <id>record-scenarios</id>
-            <phase>integration-test</phase>
-            <goals>
-                <goal>record</goal>
-            </goals>
-            <configuration>
-                <testClasses>
-                    <testClass>HelloWorldIT</testClass>
-                    <testClass>CrudExampleIT</testClass>
-                </testClasses>
-                <proxyPort>6000</proxyPort>
-                <appPort>8081</appPort>
-                <testWorkDir>${project.basedir}/../my-app</testWorkDir>
-            </configuration>
-        </execution>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>testbench-converter-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <!-- Start the application server -->
+                <execution>
+                    <id>start-server</id>
+                    <goals>
+                        <goal>start-server</goal>
+                    </goals>
+                    <configuration>
+                        <serverJar>${project.build.directory}/${applicationJar}</serverJar>
+                        <serverPort>${serverPort}</serverPort>
+                        <managementPort>${managementPort}</managementPort>
+                    </configuration>
+                </execution>
 
-        <!-- Run k6 load tests -->
-        <execution>
-            <id>run-load-tests</id>
-            <phase>integration-test</phase>
-            <goals>
-                <goal>run</goal>
-            </goals>
-            <configuration>
-                <testDir>${project.build.directory}/k6/tests</testDir>
-                <virtualUsers>100</virtualUsers>
-                <duration>2m</duration>
-                <appPort>8081</appPort>
-                <managementPort>8082</managementPort>
-                <collectVaadinMetrics>true</collectVaadinMetrics>
-                <combineScenarios>true</combineScenarios>
-                <scenarioWeights>helloWorld:70,crudExample:30</scenarioWeights>
-            </configuration>
-        </execution>
+                <!-- Record TestBench scenarios -->
+                <execution>
+                    <id>record-scenarios</id>
+                    <phase>integration-test</phase>
+                    <goals>
+                        <goal>record</goal>
+                    </goals>
+                    <configuration>
+                        <testClasses>
+                            <testClass>HelloWorldIT</testClass>
+                            <testClass>CrudExampleIT</testClass>
+                        </testClasses>
+                        <proxyPort>6000</proxyPort>
+                        <appPort>${serverPort}</appPort>
+                        <testWorkDir>${project.basedir}/../my-app</testWorkDir>
+                    </configuration>
+                </execution>
 
-        <!-- Stop the application server -->
-        <execution>
-            <id>stop-server</id>
-            <goals>
-                <goal>stop-server</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
+                <!-- Run k6 load tests -->
+                <execution>
+                    <id>run-load-tests</id>
+                    <phase>integration-test</phase>
+                    <goals>
+                        <goal>run</goal>
+                    </goals>
+                    <configuration>
+                        <testDir>${project.build.directory}/k6/tests</testDir>
+                        <virtualUsers>100</virtualUsers>
+                        <duration>2m</duration>
+                        <appPort>${serverPort}</appPort>
+                        <managementPort>${managementPort}</managementPort>
+                        <collectVaadinMetrics>true</collectVaadinMetrics>
+                        <combineScenarios>true</combineScenarios>
+                        <scenarioWeights>helloWorld:70,crudExample:30</scenarioWeights>
+                    </configuration>
+                </execution>
+
+                <!-- Stop the application server -->
+                <execution>
+                    <id>stop-server</id>
+                    <goals>
+                        <goal>stop-server</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ----
 
 Running `mvn verify` with this configuration executes the full workflow: start server, record scenarios, run load tests, and stop server.
