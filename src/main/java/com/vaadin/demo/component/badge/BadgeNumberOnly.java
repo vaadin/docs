@@ -6,23 +6,21 @@ import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
-@Route("badge-number")
-public class BadgeNumber extends HorizontalLayout {
+@Route("badge-number-only")
+public class BadgeNumberOnly extends HorizontalLayout {
 
-    public BadgeNumber() {
+    public BadgeNumberOnly() {
         // tag::snippet[]
         Badge inbox = new Badge("New messages", 12);
+        inbox.addThemeVariants(BadgeVariant.NUMBER_ONLY);
 
-        Badge completed = new Badge("Completed", 3);
-        completed.addThemeVariants(BadgeVariant.SUCCESS);
-
-        Badge failed = new Badge("Failed", 1);
-        failed.addThemeVariants(BadgeVariant.ERROR);
+        Badge alerts = new Badge("Alerts", 3);
+        alerts.addThemeVariants(BadgeVariant.ERROR, BadgeVariant.NUMBER_ONLY);
         // end::snippet[]
 
-        add(inbox, completed, failed);
+        add(inbox, alerts);
     }
 
-    public static class Exporter extends DemoExporter<BadgeNumber> { // hidden-source-line
+    public static class Exporter extends DemoExporter<BadgeNumberOnly> { // hidden-source-line
     } // hidden-source-line
 }

@@ -12,7 +12,7 @@ public class RangeSliderAccessibleName extends Div {
     public RangeSliderAccessibleName() {
         // tag::snippet[]
         RangeSlider rangeSlider = new RangeSlider("Price range", 0, 1000);
-        rangeSlider.setValue(new RangeSliderValue(200, 800));
+        rangeSlider.setValue(new RangeSliderValue(200.0, 800.0));
         rangeSlider.setAccessibleNameStart("Minimum price");
         rangeSlider.setAccessibleNameEnd("Maximum price");
         add(rangeSlider);
