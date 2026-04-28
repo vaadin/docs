@@ -1,8 +1,8 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.slider.RangeSlider;
-import com.vaadin.flow.component.slider.RangeSliderValue;
+import com.vaadin.flow.component.slider.DecimalRangeSlider;
+import com.vaadin.flow.component.slider.DecimalRangeSliderValue;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -11,8 +11,8 @@ public class RangeSliderAccessibleName extends Div {
 
     public RangeSliderAccessibleName() {
         // tag::snippet[]
-        RangeSlider rangeSlider = new RangeSlider("Price range", 0, 1000);
-        rangeSlider.setValue(new RangeSliderValue(200.0, 800.0));
+        DecimalRangeSlider rangeSlider = new DecimalRangeSlider("Price range", 0, 1000);
+        rangeSlider.setValue(new DecimalRangeSliderValue(200.0, 800.0));
         rangeSlider.setAccessibleNameStart("Minimum price");
         rangeSlider.setAccessibleNameEnd("Maximum price");
         add(rangeSlider);
