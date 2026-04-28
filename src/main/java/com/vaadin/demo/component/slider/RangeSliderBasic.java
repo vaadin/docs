@@ -11,7 +11,8 @@ public class RangeSliderBasic extends Div {
 
     public RangeSliderBasic() {
         // tag::snippet[]
-        DecimalRangeSlider rangeSlider = new DecimalRangeSlider("Price range", 0, 1000);
+        DecimalRangeSlider rangeSlider = new DecimalRangeSlider("Price range",
+                0, 1000);
         rangeSlider.setValue(new DecimalRangeSliderValue(200.0, 800.0));
         add(rangeSlider);
         // end::snippet[]
