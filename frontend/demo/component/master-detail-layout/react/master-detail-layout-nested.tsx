@@ -44,7 +44,7 @@ function Example() {
       {/* tag::snippet[] */}
       <MasterDetailLayout
         masterSize="300px"
-        expand="detail"
+        expandDetail
         onBackdropClick={() => {
           selectedProfession.value = null;
         }}
@@ -70,7 +70,7 @@ function Example() {
           {selectedProfession.value ? (
             <MasterDetailLayout
               masterSize="500px"
-              expand="detail"
+              expandDetail
               onBackdropClick={() => {
                 selectedPerson.value = null;
               }}

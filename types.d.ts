@@ -9,6 +9,8 @@ declare module '*.css?inline' {
   export default content;
 }
 
+declare module '*.css';
+
 // Allow any CSS Custom Properties
 declare module 'csstype' {
   interface Properties {

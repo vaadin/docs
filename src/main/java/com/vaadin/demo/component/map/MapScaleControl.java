@@ -8,7 +8,7 @@ import com.vaadin.flow.component.map.configuration.controls.ScaleControl;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.slider.Slider;
+import com.vaadin.flow.component.slider.DecimalSlider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.signals.Signal;
@@ -52,9 +52,9 @@ public class MapScaleControl extends Div {
         barCheckbox.bindValue(showAsBar, showAsBar::set);
 
         // Configure number of bar segments
-        Slider stepsSlider = new Slider("Bar steps", 2, 8);
-        stepsSlider.setValue(4d);
-        stepsSlider.setStep(2);
+        DecimalSlider stepsSlider = new DecimalSlider("Bar steps", 2, 8);
+        stepsSlider.setValue(4.0);
+        stepsSlider.setStep(2.0);
         stepsSlider.setValueChangeMode(ValueChangeMode.EAGER);
         stepsSlider.bindEnabled(showAsBar);
         stepsSlider.bindValue(barSteps, barSteps::set);
