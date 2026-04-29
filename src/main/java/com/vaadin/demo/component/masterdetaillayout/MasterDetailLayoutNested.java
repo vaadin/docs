@@ -46,12 +46,12 @@ public class MasterDetailLayoutNested extends Div {
         // Outer layout: professions → people
         MasterDetailLayout outerLayout = new MasterDetailLayout();
         outerLayout.setMasterSize("300px");
-        outerLayout.setExpandingArea(MasterDetailLayout.ExpandingArea.DETAIL);
+        outerLayout.setExpandDetail(true);
 
         // Inner layout: people → person details
         MasterDetailLayout innerLayout = new MasterDetailLayout();
         innerLayout.setMasterSize("500px");
-        innerLayout.setExpandingArea(MasterDetailLayout.ExpandingArea.DETAIL);
+        innerLayout.setExpandDetail(true);
 
         // Profession grid (outer master)
         Grid<String> professionGrid = new Grid<>();
