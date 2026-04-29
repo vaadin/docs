@@ -10,147 +10,201 @@ order: 115
 = Geolocation API
 :toc:
 
-The [classname]`Geolocation` API allows you to access the https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API[browser Geolocation API] from server-side Java code. It provides two modes: one-shot position requests with callbacks, and continuous position tracking with reactive Signals.
+The [classname]`Geolocation` API gives server-side Java code access to the https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API[browser Geolocation API]. Obtain the per-UI facade with [methodname]`UI.getGeolocation()`, then either request a single position with [methodname]`get()` or start a continuous reactive watch with [methodname]`track()`.
 
 [NOTE]
-The browser prompts the user for permission to share their location. Geolocation requires a secure context (HTTPS), except on `localhost` during development.
+The browser shows its own permission dialog the first time the application asks for a location. The dialog is controlled by the browser -- Flow can't style it, suppress it, or detect when it's shown. Geolocation also requires a secure context (HTTPS), except on `localhost` during development.
 
 
 == Getting the Current Position
 
-Use the static [methodname]`Geolocation.get()` method to request the device's current position. The callback runs on the UI thread.
+Use [methodname]`get()` to request the device's current position once -- the typical pattern for a "Use my location" button. The callback receives a [classname]`GeolocationOutcome`, a sealed type that's either a [classname]`GeolocationPosition` or a [classname]`GeolocationError`. Pattern matching keeps the [code]`switch` exhaustive without a dead "pending" branch.
 
 [source,java]
 ----
-Geolocation.get(position -> {
-    double lat = position.coords().latitude();
-    double lon = position.coords().longitude();
-    Notification.show("Location: " + lat + ", " + lon);
+Button locate = new Button("Use my location", e -> {
+    UI.getCurrent().getGeolocation().get(outcome -> {
+        switch (outcome) {
+        case GeolocationPosition pos -> {
+            double lat = pos.coords().latitude();
+            double lon = pos.coords().longitude();
+            map.setCenter(new Coordinate(lon, lat));
+        }
+        case GeolocationError err ->
+            Notification.show("Location error: " + err.message());
+        }
+    });
 });
 ----
 
-To handle errors, pass a second callback:
-
-[source,java]
-----
-Geolocation.get(
-    position -> {
-        double lat = position.coords().latitude();
-        double lon = position.coords().longitude();
-        map.setCenter(lat, lon);
-    },
-    error -> Notification.show("Location error: " + error.message())
-);
-----
+The call returns immediately. The callback is invoked on the UI thread once the browser reports a result.
 
 
 == Options
 
-You can configure the position request with [classname]`GeolocationOptions`:
-
-`enableHighAccuracy`:: Requests GPS-level accuracy. Uses more power and may take longer. Default: `false`.
-`timeout`:: Maximum time in milliseconds to wait for a position. Default: no limit.
-`maximumAge`:: Maximum age in milliseconds of a cached position that's acceptable to return. Default: `0` (always request a fresh position).
+Configure a request with [classname]`GeolocationOptions`. Use the builder -- it labels each setting at the call site and accepts [classname]`Duration` for the time-based fields:
 
 [source,java]
 ----
-var options = new GeolocationOptions(true, 5000, null);
+GeolocationOptions opts = GeolocationOptions.builder()
+        .highAccuracy(true)
+        .timeout(Duration.ofSeconds(10))
+        .maximumAge(Duration.ZERO)
+        .build();
 
-Geolocation.get(options, position -> {
-    map.setCenter(position.coords().latitude(), position.coords().longitude());
-});
+UI.getCurrent().getGeolocation().get(opts, outcome -> { /* ... */ });
 ----
 
-Pass `null` for any option to use the browser default.
+`highAccuracy(boolean)`:: Asks for the most accurate reading the device can produce -- typically GPS on mobile devices. Uses more battery and can take longer. Default: `false`.
+`timeout(Duration)`:: Maximum time the browser may spend before failing with a [code]`TIMEOUT` error. Default: no timeout.
+`maximumAge(Duration)`:: How old a cached reading may be while still acceptable. [code]`Duration.ZERO` (the default) refuses cached readings. Larger values save battery.
+
+A setter that's never called leaves the corresponding field at the browser default. There are also [code]`int` overloads if you already have a millisecond value on hand.
 
 
 == Tracking Position Changes
 
-Use [methodname]`Geolocation.track()` to continuously monitor position changes. It returns a [classname]`Geolocation` instance with reactive Signals that update whenever the device's position changes.
+[methodname]`track(Component)` starts a continuous watch and returns a [classname]`GeolocationTracker`. Its [methodname]`valueSignal()` is a reactive [classname]`Signal` whose value changes every time the browser reports a new reading; subscribe with [methodname]`Signal.effect()` to react to updates without managing event listeners by hand.
 
 [source,java]
 ----
-Geolocation geo = Geolocation.track(this);
-----
+GeolocationTracker tracker = UI.getCurrent().getGeolocation().track(this);
 
-Read the position in a [classname]`ComponentEffect` to reactively update the UI:
-
-[source,java]
-----
-Geolocation geo = Geolocation.track(this);
-
-ComponentEffect.effect(this, () -> {
-    GeolocationPosition pos = geo.value().get();
-    if (pos != null) {
-        map.setCenter(pos.coords().latitude(), pos.coords().longitude());
+Signal.effect(this, () -> {
+    switch (tracker.valueSignal().get()) {
+    case GeolocationPending p ->
+        status.setText("Waiting for first reading…");
+    case GeolocationPosition pos ->
+        map.setCenter(new Coordinate(pos.coords().longitude(),
+                pos.coords().latitude()));
+    case GeolocationError err ->
+        status.setText("Error: " + err.message());
     }
 });
 ----
 
-Tracking stops automatically when the owner component detaches. You can also pass [classname]`GeolocationOptions` to control accuracy and caching:
+The signal value is one of three sealed [classname]`GeolocationResult` subtypes:
+
+`GeolocationPending`:: Initial state, held until the browser reports the first reading.
+`GeolocationPosition`:: A successful reading. Replaces the previous value on every update.
+`GeolocationError`:: The browser reported an error.
+
+The browser watch is cancelled automatically when the owner component detaches, so most applications never need cleanup code. Pass [classname]`GeolocationOptions` as a second argument to control accuracy:
 
 [source,java]
 ----
-Geolocation geo = Geolocation.track(this, new GeolocationOptions(true, null, null));
+GeolocationTracker tracker = UI.getCurrent().getGeolocation().track(this,
+        GeolocationOptions.builder().highAccuracy(true).build());
 ----
+
+
+=== Stopping and Resuming
+
+Call [methodname]`stop()` to end tracking from application code -- for instance, behind a "Stop tracking" button. The handle stays usable: [methodname]`resume()` installs a fresh browser watch on the same tracker and any effects bound to [methodname]`valueSignal()` keep working.
+
+[methodname]`activeSignal()` reports whether the tracker is currently receiving updates. Bind a toggle button to it to avoid tracking a separate flag:
+
+[source,java]
+----
+Button toggle = new Button();
+toggle.addClickListener(e -> {
+    if (tracker.activeSignal().peek()) {
+        tracker.stop();
+    } else {
+        tracker.resume();
+    }
+});
+
+Signal.effect(this, () -> toggle.setText(
+        tracker.activeSignal().get() ? "Stop tracking" : "Start tracking"));
+----
+
+The signal is reset to [classname]`GeolocationPending` on each [methodname]`resume()`.
+
+.Permission revoke caveat
+[NOTE]
+If the user revokes location permission while a watch is active and then grants it again, the browser silently stops delivering updates to the existing watch. To recover, call [methodname]`stop()` followed by [methodname]`resume()`. To do this automatically, subscribe to [methodname]`availabilitySignal()` and trigger the cycle when availability returns to [code]`GRANTED`.
 
 
 == Handling Errors
 
-Both modes provide errors as [classname]`GeolocationError` objects with a numeric code and a message.
-
-With [methodname]`get()`, pass an error callback:
+A [classname]`GeolocationError` carries a numeric [methodname]`code()` and a [methodname]`message()`. Switch on [methodname]`errorCode()` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN` rather than throwing:
 
 [source,java]
 ----
-Geolocation.get(
-    position -> showOnMap(position),
-    error -> {
-        if (error.code() == GeolocationError.PERMISSION_DENIED) {
-            Notification.show("Please allow location access");
-        }
-    }
-);
+case GeolocationError err -> {
+    String userMessage = switch (err.errorCode()) {
+        case PERMISSION_DENIED ->
+            "Location is blocked. Please enable it in your browser settings.";
+        case POSITION_UNAVAILABLE ->
+            "Could not determine your location.";
+        case TIMEOUT ->
+            "Location request took too long. Please try again.";
+        case UNKNOWN ->
+            err.message();
+    };
+    Notification.show(userMessage);
+}
 ----
 
-With [methodname]`track()`, errors are available as a [classname]`Signal<GeolocationError>`. The error signal is cleared to `null` whenever a successful position update arrives.
+The browser-supplied [methodname]`message()` is meant for logging -- the wording isn't standardized, so don't show it directly to end users.
+
+
+== Checking Availability
+
+[methodname]`availabilitySignal()` is a reactive signal of [classname]`GeolocationAvailability` reporting whether the feature is usable and what permission state the origin has. Reading it does *not* trigger a permission dialog -- it tells you whether one would appear on the next [methodname]`get()` or [methodname]`track()` call.
+
+[cols="1,3"]
+|===
+| Value | Meaning
+
+| `GRANTED`
+| Permission already granted. A subsequent call proceeds silently.
+
+| `DENIED`
+| Permission already denied. Subsequent calls fail with `PERMISSION_DENIED` without prompting.
+
+| `PROMPT`
+| Not yet decided. The next call shows the browser's permission dialog.
+
+| `UNKNOWN`
+| The browser didn't report a state. Treat as "wait for an explicit user action".
+
+| `UNSUPPORTED`
+| The page is served over plain HTTP, or an iframe Permissions-Policy blocks geolocation. No user action can change this.
+|===
+
+Typical use is to decide how to render before the user clicks anything -- for example, auto-fetching on return visits when permission is already granted, or hiding the location button entirely when the feature is unsupported:
 
 [source,java]
 ----
-Geolocation geo = Geolocation.track(this);
-
-ComponentEffect.effect(this, () -> {
-    GeolocationError err = geo.error().get();
-    if (err != null) {
-        if (err.code() == GeolocationError.PERMISSION_DENIED) {
-            Notification.show("Please allow location access");
-        }
+@Override
+protected void onAttach(AttachEvent event) {
+    Geolocation geo = event.getUI().getGeolocation();
+    if (geo.availabilitySignal().peek() == GeolocationAvailability.GRANTED) {
+        geo.get(this::populateLocalContent);
     }
+}
+----
+
+Subscribe with [methodname]`Signal.effect()` to react to changes (such as the user revoking permission while the view is open):
+
+[source,java]
+----
+Signal.effect(this, () -> {
+    GeolocationAvailability availability = geo.availabilitySignal().get();
+    locateButton.setVisible(availability != GeolocationAvailability.UNSUPPORTED);
 });
 ----
 
-The error codes are:
-
-[cols="1,2"]
-|===
-| Code | Description
-
-| `GeolocationError.PERMISSION_DENIED`
-| The user denied the location permission request.
-
-| `GeolocationError.POSITION_UNAVAILABLE`
-| The device couldn't determine its position.
-
-| `GeolocationError.TIMEOUT`
-| The request exceeded the configured timeout.
-|===
+.Reliability caveats
+[NOTE]
+The value is a hint, not authoritative. Safari always reports [code]`UNKNOWN` because it doesn't expose permission state for geolocation. Firefox doesn't always propagate permission changes the user makes in browser settings. Chromium updates promptly but with a small delay. For critical paths, call [methodname]`get()` and rely on the result in the callback.
 
 
 == Position Data
 
-A [classname]`GeolocationPosition` contains [classname]`GeolocationCoordinates` and a timestamp (milliseconds since Unix epoch).
-
-The coordinates include:
+A [classname]`GeolocationPosition` contains [classname]`GeolocationCoordinates` and a [methodname]`timestamp()` (milliseconds since the Unix epoch -- use [methodname]`timestampAsInstant()` for an [classname]`Instant`).
 
 [cols="1,1,2"]
 |===
@@ -158,31 +212,31 @@ The coordinates include:
 
 | `latitude()`
 | `double`
-| Latitude in decimal degrees.
+| Decimal degrees, positive north. Always present.
 
 | `longitude()`
 | `double`
-| Longitude in decimal degrees.
+| Decimal degrees, positive east. Always present.
 
 | `accuracy()`
 | `double`
-| Accuracy of latitude and longitude in meters.
+| 1-sigma horizontal accuracy in meters -- the true position lies within this distance with about 68% probability. Always present.
 
 | `altitude()`
 | `Double`
-| Altitude in meters above the WGS84 ellipsoid, or `null`.
+| Meters above the WGS 84 ellipsoid, or `null` when the device can't measure it.
 
 | `altitudeAccuracy()`
 | `Double`
-| Accuracy of the altitude in meters, or `null`.
+| 1-sigma vertical accuracy in meters, or `null` when altitude isn't available.
 
 | `heading()`
 | `Double`
-| Direction of travel in degrees (0-360), or `null`.
+| Direction of travel in degrees clockwise from true north (0 = north, 90 = east), or `null` when the device can't measure it or the user is stationary.
 
 | `speed()`
 | `Double`
-| Speed in meters per second, or `null`.
+| Ground speed in meters per second, or `null` when the device can't measure it.
 |===
 
-Fields that return `Double` (boxed) may be `null` when the device doesn't provide that data.
+Boxed [code]`Double` fields can be [code]`null`. A laptop without GPS typically reports [code]`null` for altitude, heading, and speed; a mobile phone with GPS typically reports all of them.
