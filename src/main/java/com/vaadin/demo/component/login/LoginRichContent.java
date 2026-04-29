@@ -20,6 +20,9 @@ public class LoginRichContent extends Div {
         // Prevent the example from stealing focus when browsing the
         // documentation
         loginForm.getElement().setAttribute("no-autofocus", "");
+        // hidden-source-line - set color-scheme on the exported WC for Aura
+        getElement().executeJs( // hidden-source-line
+                "this.getRootNode().host.style.colorScheme='dark'"); // hidden-source-line
     }
 
     public static class Exporter extends DemoExporter<LoginRichContent> { // hidden-source-line

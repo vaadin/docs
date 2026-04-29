@@ -1,24 +1,24 @@
-import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { Button } from '@vaadin/react-components/Button.js';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
-import { Icon } from '@vaadin/react-components/Icon.js';
+import { Badge, Button, Icon, Popover } from '@vaadin/react-components';
 
 function Example() {
   return (
     // tag::snippet[]
-    <ContextMenu
-      openOn="click"
-      renderer={() => <div style={{ padding: 'var(--lumo-space-l)' }}>Show notifications here</div>}
-    >
-      <Button aria-label="notifications" theme="tertiary">
-        <Icon icon="vaadin:bell-o" />
-        <span style={{ position: 'absolute', transform: 'translate(-40%, -30%)' }}>
-          <span {...{ theme: 'badge error primary small pill' }}>4</span>
-        </span>
+    <>
+      <Button id="target" aria-label="notifications" theme="tertiary icon">
+        <Icon icon="lumo:bell" />
+        <Badge
+          number={4}
+          theme="error filled"
+          style={{ position: 'absolute', transform: 'translate(-40%, -30%)' }}
+        />
       </Button>
-    </ContextMenu>
+      <Popover for="target">
+        <div>Show notifications here</div>
+      </Popover>
+    </>
     // end::snippet[]
   );
 }

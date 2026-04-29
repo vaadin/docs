@@ -1,9 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/avatar';
-import '@vaadin/horizontal-layout';
 import '@vaadin/item';
 import '@vaadin/list-box';
-import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -32,21 +30,15 @@ export class Example extends LitElement {
       <vaadin-list-box multiple .selectedValues="${[0, 2]}">
         ${this.items.map(
           (person) => html`
-            <vaadin-item style="line-height: var(--lumo-line-height-m);">
-              <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
+            <vaadin-item>
+              <div class="person-item">
                 <vaadin-avatar
                   .img="${person.pictureUrl}"
                   .name="${`${person.firstName} ${person.lastName}`}"
                 ></vaadin-avatar>
-                <vaadin-vertical-layout>
-                  <span> ${person.firstName} ${person.lastName} </span>
-                  <span
-                    style="color: var(--lumo-secondary-text-color); font-size: var(--lumo-font-size-s);"
-                  >
-                    ${person.profession}
-                  </span>
-                </vaadin-vertical-layout>
-              </vaadin-horizontal-layout>
+                <span>${person.firstName} ${person.lastName}</span>
+                <span>${person.profession}</span>
+              </div>
             </vaadin-item>
           `
         )}

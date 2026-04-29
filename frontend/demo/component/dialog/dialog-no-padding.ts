@@ -42,7 +42,10 @@ export class Example extends LitElement {
         }}"
         ${dialogRenderer(
           () => html`
-            <vaadin-grid .items="${this.people}" style="width: 500px; max-width: 100%;">
+            <vaadin-grid
+              .items="${this.people}"
+              style="width: 500px; max-width: 100%; border-radius: 0;"
+            >
               <vaadin-grid-selection-column></vaadin-grid-selection-column>
               <vaadin-grid-column
                 header="Name"

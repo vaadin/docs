@@ -25,9 +25,9 @@ function Example() {
 
   return (
     <VerticalLayout theme="spacing" style={{ alignItems: 'stretch' }}>
-      <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
-        <h2 style={{ margin: '0 auto 0 0' }}>Users </h2>
-        <Button>Add user</Button>
+      <HorizontalLayout style={{ alignItems: 'center' }}>
+        <h2>Users</h2>
+        <Button slot="end">Add user</Button>
       </HorizontalLayout>
       <Grid
         items={items.value}

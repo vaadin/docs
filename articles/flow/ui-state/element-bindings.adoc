@@ -37,7 +37,7 @@ All element bindings follow consistent rules:
 .`Element#bindText(Signal<String> signal)`
 [source,java]
 ----
-// NumberSignal's Double type must be mapped to String
+// SharedNumberSignal's Double type must be mapped to String
 Signal<String> signal = counter.map(value -> String.format("Clicked %.0f times", value));
 
 span.getElement().bindText(signal);
@@ -53,7 +53,7 @@ span.getElement().setText(""); // throws BindingActiveException
 span.getElement().removeFromParent(); // detaching from the UI
 span.getElement().getText(); // returns "Clicked 0 times"
 span.getElement().setText(""); // throws BindingActiveException
-counter.value(5); // updating the signal value
+counter.set(5); // updating the signal value
 span.getElement().getText(); // returns "Clicked 0 times"
 add(span); // re-attaching the element to the UI
 span.getElement().getText(); // returns "Clicked 5 times"
@@ -70,13 +70,12 @@ span.getElement().getText(); // returns ""
 .`Element#bindAttribute(String attribute, Signal<String> signal)`
 [source,java]
 ----
-SharedValueSignal<String> label = new SharedValueSignal<>(String.class);
-label.value("Close dialog");
+ValueSignal<String> label = new ValueSignal<>("Close dialog");
 
 button.getElement().bindAttribute("aria-label", label);
 // DOM has "<button aria-label="Close dialog">"
 
-label.value(null);
+label.set(null);
 // DOM has "<button>" (attribute removed)
 ----
 
@@ -88,32 +87,32 @@ Property binding supports various value types: `String`, `Boolean`, `Double`, `B
 [NOTE]
 Typed Lists and Maps are not supported. The signal must be of type `Signal<List<?>>` or `Signal<Map<?,?>>`.
 
-.`Element#bindProperty(String name, Signal<?> signal)`
+.`Element#bindProperty(String name, Signal<T> signal, SerializableConsumer<T> writeCallback)`
+
+The third parameter is a write callback that propagates client-side property changes back to the signal. Pass `null` for read-only bindings where changes only flow from signal to element.
 
 [source,java]
 ----
-SharedValueSignal<Boolean> hidden = new SharedValueSignal<>(Boolean.class);
-hidden.value(false);
+ValueSignal<Boolean> hidden = new ValueSignal<>(false);
 
-span.getElement().bindProperty("hidden", hidden);
-hidden.value(!hidden.peek()); // toggles 'hidden' property
+span.getElement().bindProperty("hidden", hidden, null);
+hidden.set(!hidden.peek()); // toggles 'hidden' property
 ----
 
 .String type
 [source,java]
 ----
-SharedValueSignal<String> title = new SharedValueSignal<>(String.class);
-title.value("Hello");
-span.getElement().bindProperty("title", title);
-title.value("World"); // updates 'title' property
+ValueSignal<String> title = new ValueSignal<>("Hello");
+span.getElement().bindProperty("title", title, null);
+title.set("World"); // updates 'title' property
 ----
 
 .Double type
 [source,java]
 ----
 SharedNumberSignal width = new SharedNumberSignal();
-width.value(100.5);
-span.getElement().bindProperty("width", width);
+width.set(100.5);
+span.getElement().bindProperty("width", width, null);
 width.incrementBy(50); // updates 'width' property to 150.5
 ----
 
@@ -122,50 +121,88 @@ width.incrementBy(50); // updates 'width' property to 150.5
 ----
 record Person(String name, int age) {}
 
-SharedValueSignal<Person> person = new SharedValueSignal<>(Person.class);
-person.value(new Person("John", 30));
-span.getElement().bindProperty("person", person);
-person.value(new Person("Jane", 25));
+ValueSignal<Person> person = new ValueSignal<>(new Person("John", 30));
+span.getElement().bindProperty("person", person, null);
+person.set(new Person("Jane", 25));
 // element.person is now {name: 'Jane', age: 25}
 ----
 
 .List type
 [source,java]
 ----
-SharedValueSignal<List<String>> items = new SharedValueSignal<>(List.class);
-items.value(List.of("Item 1", "Item 2"));
-span.getElement().bindProperty("items", items);
-items.value(List.of("Item A", "Item B", "Item C"));
+ValueSignal<List<String>> items = new ValueSignal<>(List.of("Item 1", "Item 2"));
+span.getElement().bindProperty("items", items, null);
+items.set(List.of("Item A", "Item B", "Item C"));
 // element.items is now ['Item A', 'Item B', 'Item C']
 ----
 
 .Map type
 [source,java]
 ----
-SharedValueSignal<Map<String, String>> config = new SharedValueSignal<>(Map.class);
-config.value(Map.of("key1", "value1"));
-span.getElement().bindProperty("config", config);
-config.value(Map.of("key1", "value1", "key2", "value2"));
+ValueSignal<Map<String, String>> config = new ValueSignal<>(Map.of("key1", "value1"));
+span.getElement().bindProperty("config", config, null);
+config.set(Map.of("key1", "value1", "key2", "value2"));
 // element.config is now {key1: 'value1', key2: 'value2'}
 ----
 
-.Property change listener with bound signal
+.Two-way binding with property change listener
 [source,java]
 ----
-SharedValueSignal<Boolean> hidden = new SharedValueSignal<>(Boolean.class);
-hidden.value(false);
+ValueSignal<Boolean> hidden = new ValueSignal<>(false);
 
-// Bind the 'hidden' property to the signal
-span.getElement().bindProperty("hidden", hidden);
+// Bind the 'hidden' property to the signal with a write callback for two-way sync
+span.getElement().bindProperty("hidden", hidden, hidden::set);
 
 // Add a property change listener that synchronizes on 'change' DOM event
 span.getElement().addPropertyChangeListener("hidden", "change", event -> {
     // When the property changes on the client (via DOM event),
-    // the changed value is synchronized with the bound signal
+    // the changed value is propagated back to the signal via the write callback
     Notification.show("'hidden' property changed to: " + event.getValue());
 });
 
-// After a property change event from the client, signal.value() returns the updated value
+// After a property change event from the client, signal.get() returns the updated value
+----
+
+
+== Flashing a CSS Class
+
+.`Element#flashClass(String className)`
+
+Use [methodname]`flashClass()` to temporarily add a CSS class that triggers a CSS animation, then automatically removes it when the animation ends. This is useful for visual feedback like highlighting a value that changed:
+
+[source,java]
+----
+element.flashClass("highlight");
+----
+
+The method removes the class (if present), forces a DOM reflow, and re-adds it to restart the animation. An `animationend` listener removes the class when the animation completes. If no CSS animation is defined for the class, it is removed immediately.
+
+Define the animation in CSS:
+
+[source,css]
+----
+.highlight {
+    animation: flash 0.5s ease-out;
+}
+@keyframes flash {
+    from { background-color: yellow; }
+    to { background-color: transparent; }
+}
+----
+
+You can combine [methodname]`flashClass()` with signal effects to flash whenever a value changes:
+
+[source,java]
+----
+SharedNumberSignal counter = new SharedNumberSignal();
+
+Span counterSpan = new Span();
+counterSpan.bindText(counter.map(c -> String.format("Count: %.0f", c)));
+
+Signal.effect(counterSpan, () -> {
+    counter.get(); // Track the counter signal
+    counterSpan.getElement().flashClass("highlight");
+});
 ----
 
 
@@ -174,20 +211,39 @@ span.getElement().addPropertyChangeListener("hidden", "change", event -> {
 .`ClassList#bind(String name, Signal<Boolean> signal)`
 [source,java]
 ----
-SharedValueSignal<Boolean> foo = new SharedValueSignal<>(Boolean.class);
-SharedValueSignal<Boolean> bar = new SharedValueSignal<>(Boolean.class);
-foo.value(false);
-bar.value(true);
+ValueSignal<Boolean> foo = new ValueSignal<>(false);
+ValueSignal<Boolean> bar = new ValueSignal<>(true);
 
 span.getElement().getClassList().bind("foo", foo);
 span.getElement().getClassList().bind("bar", bar);
 // DOM has "<span class='bar'>"
 
-foo.value(true);
+foo.set(true);
 // DOM has "<span class='bar foo'>"
 
 span.getElement().getClassList().clear();
 // DOM has "<span class>". Binding is also removed.
+----
+
+
+=== Group Binding
+
+.`ClassList#bind(Signal<List<String>> signal)`
+
+Use the group binding variant to bind an entire list of class names to a signal. When the signal value changes, all previous class names from the binding are removed and the new ones are added:
+
+[source,java]
+----
+ValueSignal<List<String>> classes = new ValueSignal<>(List.of("card", "elevated"));
+
+span.getElement().getClassList().bind(classes);
+// DOM has "<span class='card elevated'>"
+
+classes.set(List.of("card", "flat"));
+// DOM has "<span class='card flat'>"
+
+classes.set(List.of());
+// DOM has "<span class=''>"
 ----
 
 
@@ -196,20 +252,18 @@ span.getElement().getClassList().clear();
 .`Style#bind(String name, Signal<String> signal)`
 [source,java]
 ----
-SharedValueSignal<String> color = new SharedValueSignal<>(String.class);
-SharedValueSignal<String> background = new SharedValueSignal<>(String.class);
-color.value("black");
-background.value("white");
+ValueSignal<String> color = new ValueSignal<>("black");
+ValueSignal<String> background = new ValueSignal<>("white");
 
 span.getElement().getStyle().bind("color", color);
 span.getElement().getStyle().bind("background", background);
 // DOM has "<span style='color: black; background: white'>"
 
-color.value("red");
-background.value("gray");
+color.set("red");
+background.set("gray");
 // DOM has "<span style='color: red; background: gray'>"
 
-background.value(""); // same with null
+background.set(""); // same with null
 // DOM has "<span style='color: red;'>"
 
 span.getElement().getStyle().clear();
@@ -227,8 +281,25 @@ ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
 component.getThemeList().bind("dark", darkMode);
 // Theme "dark" is applied when darkMode is true
 
-darkMode.value(true);
+darkMode.set(true);
 // Component now has "dark" theme applied
+----
+
+=== Group Binding
+
+.`ThemeList#bind(Signal<List<String>> signal)`
+
+Use the group binding variant to bind an entire list of theme names to a signal:
+
+[source,java]
+----
+ValueSignal<List<String>> themes = new ValueSignal<>(List.of("compact", "row-stripes"));
+
+component.getThemeList().bind(themes);
+// Component has themes "compact" and "row-stripes"
+
+themes.set(List.of("no-border"));
+// Component now has only "no-border" theme
 ----
 
 For component-level theme binding examples, see <<building-ui#binding-theme-variants,Binding Theme Variants>>.
@@ -246,7 +317,7 @@ ValueSignal<Boolean> visible = new ValueSignal<>(true);
 element.bindVisible(visible);
 // Element is visible when visible is true
 
-visible.value(false);
+visible.set(false);
 // Element is now hidden
 ----
 
@@ -265,11 +336,34 @@ ValueSignal<Boolean> enabled = new ValueSignal<>(true);
 button.getElement().bindEnabled(enabled);
 // Button is enabled when enabled is true
 
-enabled.value(false);
+enabled.set(false);
 // Button is now disabled
 ----
 
 For component-level examples, see <<building-ui#binding-enabled-state,Binding Enabled State>>.
+
+
+== Change Callbacks
+
+All binding methods return a [classname]`SignalBinding` that supports change callbacks via [methodname]`onChange()`:
+
+[source,java]
+----
+span.bindText(priceSignal.map(p -> "$" + p))
+    .onChange(ctx -> {
+        if (ctx.isBackgroundChange()) {
+            ctx.getElement().flashClass("highlight");
+        }
+    });
+----
+
+The [classname]`BindingContext` provides:
+
+- [methodname]`getOldValue()` / [methodname]`getNewValue()` — the previous and current bound values
+- [methodname]`getElement()` — the target element
+- [methodname]`getComponent()` — the owning component (if any)
+- [methodname]`isInitialRun()` — whether this is the first execution
+- [methodname]`isBackgroundChange()` — whether triggered by another session or background thread
 
 
 == HTML Content Binding
@@ -283,7 +377,7 @@ Html html = new Html("<span></span>");
 html.bindHtmlContent(htmlContent);
 // HTML content is now "<strong>Bold text</strong>"
 
-htmlContent.value("<em>Italic text</em>");
+htmlContent.set("<em>Italic text</em>");
 // HTML content is now "<em>Italic text</em>"
 ----
 
@@ -298,18 +392,18 @@ Form field bindings provide two-way synchronization between fields and signals. 
 
 === Two-Way Value Binding
 
-.`HasValue#bindValue(WritableSignal<V> signal)`
+.`HasValue#bindValue(Signal<V> signal, SerializableConsumer<V> setter)`
 
-The [methodname]`bindValue()` method creates a two-way binding between a form field and a writable signal:
+The [methodname]`bindValue()` method creates a two-way binding between a form field and a signal:
 
 [source,java]
 ----
-SharedValueSignal<String> nameSignal = new SharedValueSignal<>(String.class);
+ValueSignal<String> nameSignal = new ValueSignal<>("");
 
 TextField nameField = new TextField("Name");
-nameField.bindValue(nameSignal);
+nameField.bindValue(nameSignal, nameSignal::set);
 
-// User types in field -> signal is updated
+// User types in field -> signal is updated via setter
 // Signal changes -> field is updated
 ----
 
@@ -327,8 +421,23 @@ ValueSignal<Boolean> readOnly = new ValueSignal<>(false);
 TextField field = new TextField();
 field.bindReadOnly(readOnly);
 
-readOnly.value(true);
+readOnly.set(true);
 // Field is now read-only
+----
+
+
+=== Required Indicator Binding
+
+.`HasValue#bindRequiredIndicatorVisible(Signal<Boolean> signal)`
+
+Binds the required indicator visibility of a form field to a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> required = new ValueSignal<>(true);
+
+TextField field = new TextField("Name");
+field.bindRequiredIndicatorVisible(required);
 ----
 
 

@@ -53,7 +53,7 @@ export class Example extends LitElement {
   private nameRenderer: GridColumnBodyLitRenderer<PersonEnhanced> = (person) => html`
     <vaadin-horizontal-layout style="align-items: center;" theme="spacing">
       <vaadin-avatar img="${person.pictureUrl}" .name="${person.displayName}"></vaadin-avatar>
-      <span> ${person.displayName} </span>
+      <span>${person.displayName}</span>
     </vaadin-horizontal-layout>
   `;
 }

@@ -92,7 +92,7 @@ public class CrudToolbar extends Div {
         button.addClickListener(event -> {
             crud.edit(new Person(), Crud.EditMode.NEW_ITEM);
         });
-        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        button.addThemeVariants(ButtonVariant.TERTIARY);
         crud.setNewButton(button);
 
         HorizontalLayout toolbar = new HorizontalLayout(total);

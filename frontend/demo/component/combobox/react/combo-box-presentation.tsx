@@ -10,23 +10,16 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 // tag::snippet[]
 function renderPerson({ item: person }: { item: Person }) {
   return (
-    <div style={{ display: 'flex' }}>
+    <div className="person-item">
       <img
-        style={{ height: '2.25rem', marginRight: 'var(--lumo-space-s)' }}
         src={person.pictureUrl}
         alt={`Portrait of ${person.firstName} ${person.lastName}`}
+        style={{ width: '2.25rem' }}
       />
-      <div>
+      <span>
         {person.firstName} {person.lastName}
-        <div
-          style={{
-            fontSize: 'var(--lumo-font-size-s)',
-            color: 'var(--lumo-secondary-text-color)',
-          }}
-        >
-          {person.profession}
-        </div>
-      </div>
+      </span>
+      <span>{person.profession}</span>
     </div>
   );
 }

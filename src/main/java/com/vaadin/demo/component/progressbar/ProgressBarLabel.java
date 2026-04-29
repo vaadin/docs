@@ -5,7 +5,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.router.Route;
 
@@ -25,8 +24,9 @@ public class ProgressBarLabel extends Div {
 
         Span progressBarLabelValue = new Span("50%");
         HorizontalLayout progressBarLabel = new HorizontalLayout(
-                progressBarLabelText, progressBarLabelValue);
-        progressBarLabel.setJustifyContentMode(JustifyContentMode.BETWEEN);
+                progressBarLabelText);
+        progressBarLabel.addToEnd(progressBarLabelValue);
+        progressBarLabel.getStyle().set("margin-bottom", "var(--vaadin-gap-s)");
 
         add(progressBarLabel, progressBar);
         // end::snippet[]

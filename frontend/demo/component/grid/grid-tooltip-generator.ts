@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -73,11 +74,9 @@ export class Example extends LitElement {
     const theme = status === 'Available' ? 'success' : 'error';
 
     return html`
-      <vaadin-icon
-        icon="vaadin:${icon}"
-        style="padding: var(--lumo-space-xs)"
-        theme="badge ${theme}"
-      ></vaadin-icon>
+      <vaadin-badge theme="${theme} icon-only">
+        <vaadin-icon icon="vaadin:${icon}" slot="icon"></vaadin-icon>
+      </vaadin-badge>
     `;
   };
 }

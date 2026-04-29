@@ -3,7 +3,6 @@ package com.vaadin.demo.component.grid;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -19,10 +18,10 @@ public class GridDataProvider extends VerticalLayout {
 
         // tag::snippet[]
         Grid<Person> grid = new Grid<>();
-        grid.addColumn(Person::getFullName, "name")
-                .setSortable(true).setHeader("Name");
-        grid.addColumn(Person::getProfession, "profession")
-                .setSortable(true).setHeader("Profession");
+        grid.addColumn(Person::getFullName, "name").setSortable(true)
+                .setHeader("Name");
+        grid.addColumn(Person::getProfession, "profession").setSortable(true)
+                .setHeader("Profession");
 
         // Create a data provider instance with a configurable filter, allowing
         // the filter value to be set programmatically via setFilter().

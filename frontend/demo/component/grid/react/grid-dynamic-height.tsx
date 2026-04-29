@@ -16,10 +16,10 @@ function renderNoInvitationAlert() {
   return (
     <div
       style={{
-        padding: '2.75rem',
+        padding: 'var(--vaadin-padding-xl)',
         textAlign: 'center',
         fontStyle: 'italic',
-        color: 'var(--lumo-contrast-70pct)',
+        color: 'var(--vaadin-text-color-secondary)',
       }}
     >
       No invitation has been sent
@@ -60,7 +60,11 @@ function Example() {
     return (
       <>
         {/* tag::snippet[] */}
-        <Grid items={invitedPeople.value} allRowsVisible>
+        <Grid
+          items={invitedPeople.value}
+          allRowsVisible
+          style={{ marginTop: 'var(--vaadin-gap-s)' }}
+        >
           <GridColumn header="Name" path="displayName" autoWidth />
           <GridColumn path="email" />
           <GridColumn path="address.phone" />

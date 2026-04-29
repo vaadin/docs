@@ -14,18 +14,14 @@ public class PersonService {
             new Person("David Rodriguez", "Marketing"),
             new Person("Emma Wilson", "HR"));
 
-    public static Stream<Person> fetch(
-            String searchTerm, String sortOrder, int offset, int limit) {
-        return PEOPLE.stream()
-                .filter(createPredicate(searchTerm))
-                .sorted(createComparator(sortOrder))
-                .skip(offset)
-                .limit(limit);
+    public static Stream<Person> fetch(String searchTerm, String sortOrder,
+            int offset, int limit) {
+        return PEOPLE.stream().filter(createPredicate(searchTerm))
+                .sorted(createComparator(sortOrder)).skip(offset).limit(limit);
     }
 
     public static int count(String searchTerm) {
-        return (int) PEOPLE.stream()
-                .filter(createPredicate(searchTerm))
+        return (int) PEOPLE.stream().filter(createPredicate(searchTerm))
                 .count();
     }
 
@@ -36,9 +32,9 @@ public class PersonService {
 
     private static Comparator<Person> createComparator(String sortOrder) {
         return switch (sortOrder) {
-            case "Name (A-Z)" -> Comparator.comparing(Person::name);
-            case "Name (Z-A)" -> Comparator.comparing(Person::name).reversed();
-            default -> (p1, p2) -> 0;
+        case "Name (A-Z)" -> Comparator.comparing(Person::name);
+        case "Name (Z-A)" -> Comparator.comparing(Person::name).reversed();
+        default -> (p1, p2) -> 0;
         };
     }
 }

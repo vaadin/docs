@@ -22,7 +22,11 @@ function Example() {
       {/* tag::snippet[] */}
       <Upload noAuto ref={uploadRef} files={files.value} i18n={uploadI18n.value} />
 
-      <Button theme="primary" onClick={() => uploadRef.current?.uploadFiles()}>
+      <Button
+        theme="primary"
+        style={{ marginTop: 'var(--vaadin-gap-s)' }}
+        onClick={() => uploadRef.current?.uploadFiles()}
+      >
         Upload All Files
       </Button>
       {/* end::snippet[] */}

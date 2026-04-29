@@ -79,27 +79,25 @@ export class Example extends LitElement {
         >
           <vaadin-icon slot="prefix" icon="vaadin:search"></vaadin-icon>
         </vaadin-text-field>
-        <vaadin-vertical-layout style="width: 100%;" theme="spacing-xs">
-          <!-- tag::snippet[] -->
-          <vaadin-grid .items="${this.gridItems}" all-rows-visible>
-            <vaadin-grid-column
-              header="Name"
-              flex-grow="0"
-              width="230px"
-              ${columnBodyRenderer(this.nameRenderer, [])}
-            ></vaadin-grid-column>
-            <vaadin-grid-column path="email"></vaadin-grid-column>
-            <vaadin-grid-column path="profession"></vaadin-grid-column>
-          </vaadin-grid>
-          <grid-pagination-controls
-            style="width: 100%;"
-            .totalItemCount="${this.itemsFilteredByTermCount}"
-            @page-changed="${(_: CustomEvent) => {
-              this.updateGridItems();
-            }}"
-          ></grid-pagination-controls>
-          <!-- end::snippet[] -->
-        </vaadin-vertical-layout>
+        <!-- tag::snippet[] -->
+        <vaadin-grid .items="${this.gridItems}" all-rows-visible>
+          <vaadin-grid-column
+            header="Name"
+            flex-grow="0"
+            width="230px"
+            ${columnBodyRenderer(this.nameRenderer, [])}
+          ></vaadin-grid-column>
+          <vaadin-grid-column path="email"></vaadin-grid-column>
+          <vaadin-grid-column path="profession"></vaadin-grid-column>
+        </vaadin-grid>
+        <grid-pagination-controls
+          style="width: 100%;"
+          .totalItemCount="${this.itemsFilteredByTermCount}"
+          @page-changed="${(_: CustomEvent) => {
+            this.updateGridItems();
+          }}"
+        ></grid-pagination-controls>
+        <!-- end::snippet[] -->
       </vaadin-vertical-layout>
     `;
   }
@@ -131,9 +129,7 @@ export class GridPaginationControls extends LitElement {
   }
 
   protected override createRenderRoot() {
-    const root = super.createRenderRoot();
-    applyTheme(root);
-    return root;
+    return this;
   }
 
   protected override willUpdate(changedProperties: PropertyValues<this>) {
@@ -169,13 +165,15 @@ export class GridPaginationControls extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout style="align-items: center; gap: 0.3rem; width: 100%">
-        <vaadin-horizontal-layout style="align-items: center" theme="spacing-s">
-          <span id="page-size-label" style="font-size: 0.875rem">Page size</span>
+      <vaadin-horizontal-layout
+        style="align-items: center; gap: var(--vaadin-gap-s); font-size: 0.875rem;"
+      >
+        <vaadin-horizontal-layout style="align-items: center; gap: var(--vaadin-gap-s)">
+          <span id="page-size-label">Page size</span>
           <vaadin-select
             theme="small"
             aria-labelledby="page-size-label"
-            style="width: 4.8rem; --vaadin-input-field-value-font-size: 0.875rem"
+            style="width: 4.8rem;"
             .items="${['10', '15', '25', '50', '100'].map((it) => ({ label: it, value: it }))}"
             .value="${this.pageSize}"
             @value-changed="${(e: CustomEvent) => {
@@ -208,7 +206,7 @@ export class GridPaginationControls extends LitElement {
         >
           <vaadin-icon icon="vaadin:angle-left"></vaadin-icon>
         </vaadin-button>
-        <span style="font-size: 0.875rem; padding: 0 0.5rem" slot="end">
+        <span style="padding: 0 var(--vaadin-padding-xs);" slot="end">
           Page ${this.currentPage} of ${this.pageCount}
         </span>
         <vaadin-button

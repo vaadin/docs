@@ -1,9 +1,15 @@
+import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import type { UserConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const dspConfig = JSON.parse(
+  readFileSync(resolve(__dirname, 'dspublisher/config/default.json'), 'utf-8')
+);
+const docsPort = dspConfig.docsPort;
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 
@@ -37,7 +43,7 @@ const config: UserConfig = {
     /* dev-mode proxy config */
     proxy: {
       '/vaadin': {
-        target: 'http://localhost:8080',
+        target: `http://localhost:${docsPort}`,
       },
     },
   },
