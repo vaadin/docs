@@ -31,18 +31,18 @@ Button locate = new Button("Use my location", e -> {
             map.setCenter(new Coordinate(lon, lat));
         }
         case GeolocationError err ->
-            Notification.show("Location error: " + err.message());
+            Notification.show("Could not determine your location.");
         }
     });
 });
 ----
 
-The call returns immediately. The callback is invoked on the UI thread once the browser reports a result.
+The call returns immediately. The callback is invoked on the UI thread once the browser reports a result. See <<#handling-errors,Handling Errors>> for the full set of error reasons; the browser-supplied [methodname]`err.message()` is meant for diagnostic logs, not for the user-facing message.
 
 
 == Options
 
-Configure a request with [classname]`GeolocationOptions`. Use the builder -- it labels each setting at the call site and accepts [classname]`Duration` for the time-based fields:
+Configure a request with [classname]`GeolocationOptions`. Use the builder rather than the canonical constructor -- it accepts [classname]`Duration` for the time-based fields and gives every option a named setter:
 
 [source,java]
 ----
@@ -126,6 +126,7 @@ The signal is reset to [classname]`GeolocationPending` on each [methodname]`resu
 If the user revokes location permission while a watch is active and then grants it again, the browser silently stops delivering updates to the existing watch. To recover, call [methodname]`stop()` followed by [methodname]`resume()`. To do this automatically, subscribe to [methodname]`availabilitySignal()` and trigger the cycle when availability returns to [code]`GRANTED`.
 
 
+[#handling-errors]
 == Handling Errors
 
 A [classname]`GeolocationError` carries a numeric [methodname]`code()` and a [methodname]`message()`. Switch on [methodname]`errorCode()` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN` rather than throwing:
@@ -187,15 +188,7 @@ protected void onAttach(AttachEvent event) {
 }
 ----
 
-Subscribe with [methodname]`Signal.effect()` to react to changes (such as the user revoking permission while the view is open):
-
-[source,java]
-----
-Signal.effect(this, () -> {
-    GeolocationAvailability availability = geo.availabilitySignal().get();
-    locateButton.setVisible(availability != GeolocationAvailability.UNSUPPORTED);
-});
-----
+Subscribe with [methodname]`Signal.effect()` to react to changes -- for instance, when the user revokes permission while the view is open.
 
 .Reliability caveats
 [NOTE]
