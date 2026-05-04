@@ -12,17 +12,17 @@ order: 117
 
 The Page Visibility API exposes the browser tab's visibility and focus state to server-side code as a reactive [classname]`Signal`. Use it to pause periodic work while the user can't see the page, route notifications to the right channel, refresh stale data when the user comes back, or show presence to other users. Read the signal with [methodname]`UI.getPage().pageVisibilitySignal()`.
 
-The signal is seeded from the initial bootstrap, so reading it from [methodname]`onAttach` returns the real state instead of a placeholder. Subsequent changes are pushed from the browser's https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API[Page Visibility API] combined with [code]`focus`/[code]`blur` events.
+The signal carries a real value from the moment the UI is created, so it's safe to read from constructors and [methodname]`onAttach` without waiting for an event. It is built on the browser's https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API[Page Visibility API].
 
 
 == Visibility States
 
 The signal value is one of four [classname]`PageVisibility` enum constants:
 
-`VISIBLE`:: The tab is shown and focused. The user is actively looking at the page ([code]`!document.hidden && document.hasFocus()`).
-`VISIBLE_NOT_FOCUSED`:: The tab is shown but another window or application has focus. The page is on screen but is unlikely to be receiving the user's attention ([code]`!document.hidden && !document.hasFocus()`).
-`HIDDEN`:: The tab is in the background, the window is minimized, or the tab is on a different virtual desktop ([code]`document.hidden`). Browsers also throttle timers and `requestAnimationFrame` in this state.
-`UNKNOWN`:: No value has been reported yet. Only observed briefly between server attach and the first client handshake; after bootstrap, the signal transitions to one of the other values and never returns to [code]`UNKNOWN`.
+`VISIBLE`:: The tab is shown and focused. The user is actively looking at the page.
+`VISIBLE_NOT_FOCUSED`:: The tab is shown but another window or application has focus. The page is on screen but is unlikely to be receiving the user's attention.
+`HIDDEN`:: The tab is in the background, the window is minimized, or the tab is on a different virtual desktop. Browsers also throttle timers and animations in this state.
+`UNKNOWN`:: No value has been reported yet. Only observed briefly during initialization; once the UI is connected, the signal transitions to one of the other values and never returns to [code]`UNKNOWN`.
 
 
 == Reading the Signal
@@ -83,7 +83,7 @@ private void stopTicking() {
 }
 ----
 
-This keeps the websocket idle while the tab is in the background or another application is focused. Whether to treat [code]`VISIBLE_NOT_FOCUSED` as "pause" or "keep updating" depends on the use case -- a dashboard the user glances at on a second monitor probably wants to keep updating; a clock or counter that only matters when interacted with can pause.
+This keeps the WebSocket idle while the tab is in the background or another application is focused. Whether to treat [code]`VISIBLE_NOT_FOCUSED` as "pause" or "keep updating" depends on the use case -- a dashboard the user glances at on a second monitor probably wants to keep updating; a clock or counter that only matters when interacted with can pause.
 
 
 == Routing Notifications
