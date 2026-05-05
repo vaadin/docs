@@ -1,6 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { css } from 'lit';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
@@ -9,6 +10,14 @@ import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+
+const styles = css`
+  /* Set smallest allowed size for the dialog */
+  vaadin-dialog.resizable-dialog::part(overlay) {
+    min-height: 300px;
+    min-width: 200px;
+  }
+`;
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -29,6 +38,7 @@ function Example() {
     <>
       {/* tag::snippet[] */}
       <Dialog
+        className="resizable-dialog"
         headerTitle="Employee list"
         resizable
         draggable
@@ -57,4 +67,4 @@ function Example() {
   );
 }
 
-export default reactExample(Example); // hidden-source-line
+export default reactExample(Example, styles); // hidden-source-line

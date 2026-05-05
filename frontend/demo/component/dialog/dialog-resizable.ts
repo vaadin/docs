@@ -31,8 +31,16 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
+      <style>
+        vaadin-dialog.resizable-dialog::part(overlay) {
+          min-height: 300px;
+          min-width: 200px;
+        }
+      </style>
+
       <!-- tag::snippet[] -->
       <vaadin-dialog
+        class="resizable-dialog"
         header-title="Employee list"
         resizable
         draggable
