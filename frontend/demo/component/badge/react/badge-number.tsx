@@ -6,7 +6,7 @@ function Example() {
   return (
     <HorizontalLayout theme="spacing">
       {/* tag::snippet[] */}
-      <Badge number={12}>Inbox</Badge>
+      <Badge number={12}>New messages</Badge>
       <Badge number={3} theme="success">
         Completed
       </Badge>

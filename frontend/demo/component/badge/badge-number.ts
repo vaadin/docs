@@ -17,9 +17,9 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-badge .number="${12}">Inbox</vaadin-badge>
-        <vaadin-badge .number="${3}" theme="success">Completed</vaadin-badge>
-        <vaadin-badge .number="${1}" theme="error">Failed</vaadin-badge>
+        <vaadin-badge number="12">New messages</vaadin-badge>
+        <vaadin-badge number="3" theme="success">Completed</vaadin-badge>
+        <vaadin-badge number="1" theme="error">Failed</vaadin-badge>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

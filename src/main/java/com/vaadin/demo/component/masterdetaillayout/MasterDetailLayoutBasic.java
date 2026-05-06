@@ -15,6 +15,7 @@ public class MasterDetailLayoutBasic extends Div {
         MasterDetailLayout layout = new MasterDetailLayout();
         layout.setMasterSize("450px");
         layout.setDetailSize("250px");
+        layout.setExpandMaster(true);
         // end::snippet[]
 
         PersonList personList = new PersonList(DataService.getPeople());
