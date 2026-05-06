@@ -31,12 +31,18 @@ Button locate = new Button("Use my location", e -> Geolocation.getPosition(
         err -> Notification.show("Could not determine your location.")));
 ----
 
-The call returns immediately. Exactly one of the consumers is invoked once the browser reports a result. See <<#handling-errors,Handling Errors>> for the full set of error reasons; the browser-supplied [methodname]`err.message()` is meant for diagnostic logs, not for the user-facing message.
+The call returns immediately. Exactly one of the consumers is invoked once the browser reports a result. See <<#handling-errors,Handling Errors>> for the full set of error reasons.
 
 
 == Options
 
-Configure a request with [classname]`GeolocationOptions`. Use the builder rather than the canonical constructor -- it accepts [classname]`Duration` for the time-based fields and gives every option a named setter:
+[classname]`GeolocationOptions` controls three knobs on a request:
+
+`highAccuracy(boolean)`:: Asks for the most accurate reading the device can produce -- typically GPS on mobile devices. Uses more battery and can take longer. Default: `false`.
+`timeout(Duration)`:: Maximum time the browser may spend before failing with a [code]`TIMEOUT` error. Default: no timeout.
+`maximumAge(Duration)`:: How old a cached reading may be while still acceptable. [code]`Duration.ZERO` (the default) refuses cached readings. Larger values save battery.
+
+Pass an instance as the last argument to [methodname]`Geolocation.getPosition()` or as the second argument to [methodname]`Geolocation.watchPosition()`. A setter that's never called leaves the corresponding field at the browser default.
 
 [source,java]
 ----
@@ -47,29 +53,26 @@ GeolocationOptions opts = GeolocationOptions.builder()
         .build();
 
 Geolocation.getPosition(pos -> { /* ... */ }, err -> { /* ... */ }, opts);
+GeolocationWatcher watcher = Geolocation.watchPosition(this, opts);
 ----
 
-`highAccuracy(boolean)`:: Asks for the most accurate reading the device can produce -- typically GPS on mobile devices. Uses more battery and can take longer. Default: `false`.
-`timeout(Duration)`:: Maximum time the browser may spend before failing with a [code]`TIMEOUT` error. Default: no timeout.
-`maximumAge(Duration)`:: How old a cached reading may be while still acceptable. [code]`Duration.ZERO` (the default) refuses cached readings. Larger values save battery.
-
-A setter that's never called leaves the corresponding field at the browser default. There are also [code]`int` overloads if you already have a millisecond value on hand.
+Use the builder rather than the canonical constructor -- it accepts [classname]`Duration` for the time-based fields and gives every option a named setter. There are also [code]`int` overloads on [methodname]`timeout()` and [methodname]`maximumAge()` if you already have a millisecond value on hand.
 
 
-== Tracking Position Changes
+== Watching Position Changes
 
-[methodname]`Geolocation.watchPosition(Component)` starts a continuous watch and returns a [classname]`GeolocationWatcher` tied to the owner component. The browser reports new positions as the device moves. There are two ways to consume them -- pick the one that fits the destination.
+[methodname]`Geolocation.watchPosition(Component)` starts a continuous watch and returns a [classname]`GeolocationWatcher` tied to the owner component. The owner determines the watch's lifecycle: it must already be attached to a UI when [methodname]`watchPosition()` is called, and the watch is cancelled automatically when the component detaches. Pass the view itself in most cases -- the watch then lives exactly as long as the view is open, and you don't have to remember to clean up. The browser reports new positions as the device moves. There are two ways to consume them -- pick the one that fits the destination.
 
 === Listener Style
 
-Use [methodname]`addPositionListener()` when every reading needs to be processed in order -- for example, persisting each point to a database, appending to a route log, or forwarding to an external service. The position consumer fires for every successful reading and the error consumer fires for every error; the initial pending state is never delivered.
+Use [methodname]`addPositionListener()` when every reading needs to be processed in order -- for example, persisting each point to a database, appending to a route log, or forwarding to an external service. The position consumer fires for every successful reading and the error consumer fires for every error.
 
 [source,java]
 ----
 GeolocationWatcher watcher = Geolocation.watchPosition(this);
 watcher.addPositionListener(
         pos -> repository.save(pos),
-        err -> log.warn("location error: {}", err.message()));
+        err -> log.warn("location error: {}", err.debugInfo()));
 ----
 
 Both consumers are required. To opt out of one side, pass an empty lambda explicitly. Add multiple listeners if needed; the returned [classname]`Registration` removes both at once. Listeners stay attached across [methodname]`stop()`/[methodname]`resume()` cycles.
@@ -83,17 +86,16 @@ Use [methodname]`positionSignal()` when the goal is to reflect the *current* pos
 ----
 GeolocationWatcher watcher = Geolocation.watchPosition(this);
 
+status.bindText(watcher.positionSignal().map(result -> switch (result) {
+    case GeolocationPending p -> "Waiting for first reading…";
+    case GeolocationPosition pos -> "";
+    case GeolocationError err -> "Couldn't read location.";
+}));
+
 Signal.effect(this, () -> {
-    switch (watcher.positionSignal().get()) {
-    case GeolocationPending p ->
-        status.setText("Waiting for first reading…");
-    case GeolocationPosition pos -> {
-        status.setText("");
+    if (watcher.positionSignal().get() instanceof GeolocationPosition pos) {
         map.setCenter(new Coordinate(pos.coords().longitude(),
                 pos.coords().latitude()));
-    }
-    case GeolocationError err ->
-        status.setText("Error: " + err.message());
     }
 });
 ----
@@ -102,7 +104,7 @@ Signal.effect(this, () -> {
 `GeolocationPosition`:: A successful reading. Replaces the previous value on every update.
 `GeolocationError`:: The browser reported an error.
 
-The browser watch is cancelled automatically when the owner component detaches, so most applications never need cleanup code. Pass [classname]`GeolocationOptions` as a second argument to control accuracy:
+Pass [classname]`GeolocationOptions` as a second argument to control accuracy:
 
 [source,java]
 ----
@@ -113,23 +115,17 @@ GeolocationWatcher watcher = Geolocation.watchPosition(this,
 
 === Stopping and Resuming
 
-Call [methodname]`stop()` to end tracking from application code -- for instance, behind a "Stop tracking" button. The handle stays usable: [methodname]`resume()` installs a fresh browser watch on the same watcher and any signal subscribers and listeners keep working.
+Call [methodname]`stop()` on the [classname]`GeolocationWatcher` to end tracking from application code -- for instance, behind a "Stop tracking" button. The handle stays usable: [methodname]`watcher.resume()` installs a fresh browser watch on the same watcher and any signal subscribers and listeners keep working.
 
-[methodname]`activeSignal()` reports whether the watcher is currently receiving updates. Bind a toggle button to it to avoid tracking a separate flag:
+[methodname]`activeSignal()` reports whether the watcher is currently receiving updates. Bind separate Start and Stop buttons to it instead of tracking a flag yourself -- only the relevant one is shown:
 
 [source,java]
 ----
-Button toggle = new Button();
-toggle.addClickListener(e -> {
-    if (watcher.activeSignal().peek()) {
-        watcher.stop();
-    } else {
-        watcher.resume();
-    }
-});
+Button start = new Button("Start tracking", e -> watcher.resume());
+start.bindVisible(watcher.activeSignal().map(active -> !active));
 
-Signal.effect(this, () -> toggle.setText(
-        watcher.activeSignal().get() ? "Stop tracking" : "Start tracking"));
+Button stop = new Button("Stop tracking", e -> watcher.stop());
+stop.bindVisible(watcher.activeSignal());
 ----
 
 [methodname]`positionSignal()` is reset to [classname]`GeolocationPending` on each [methodname]`resume()`.
@@ -142,7 +138,7 @@ If the user revokes location permission while a watch is active and then grants 
 [#handling-errors]
 == Handling Errors
 
-A [classname]`GeolocationError` carries a numeric [methodname]`code()` and a [methodname]`message()`. Switch on [methodname]`errorCode()` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN` rather than throwing:
+Switch on [methodname]`errorCode()` on the [classname]`GeolocationError` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN` rather than throwing:
 
 [source,java]
 ----
@@ -155,38 +151,28 @@ Geolocation.getPosition(pos -> showOnMap(pos), err -> {
         case TIMEOUT ->
             "Location request took too long. Please try again.";
         case UNKNOWN ->
-            err.message();
+            "Couldn't read location.";
     };
     Notification.show(userMessage);
 });
 ----
 
-The browser-supplied [methodname]`message()` is meant for logging -- the wording isn't standardized, so don't show it directly to end users.
+For diagnostics, log [methodname]`err.debugInfo()` alongside the raw [methodname]`code()` -- it's a free-form browser string and isn't meant for end users.
 
 
 == Checking Availability
 
-[methodname]`Geolocation.availabilityHintSignal()` is a reactive signal of [classname]`GeolocationAvailability` reporting whether the feature is usable and what permission state the origin has. Reading it does *not* trigger a permission dialog -- it tells you whether one would appear on the next [methodname]`getPosition()` or [methodname]`watchPosition()` call.
+[methodname]`Geolocation.availabilityHintSignal()` is a reactive signal of [classname]`GeolocationAvailability` reporting whether the feature is usable and what permission state the origin has. It's called a *hint* mainly because of [code]`UNKNOWN`: some browsers (notably Safari) never expose permission state, so the signal can't tell you anything meaningful. The other values are reliable enough to act on, with one footnote covered below.
 
-[cols="1,3"]
-|===
-| Value | Meaning
+Reading the signal does *not* trigger a permission dialog -- it tells you whether one would appear on the next [methodname]`getPosition()` or [methodname]`watchPosition()` call.
 
-| `GRANTED`
-| Permission already granted. A subsequent call proceeds silently.
+[code]`UNSUPPORTED`:: The browser cannot do geolocation in this context (insecure origin or a blocking iframe policy) and no user action will change that. Hide the request UI entirely.
+[code]`GRANTED`:: Permission has already been granted; a subsequent call should proceed silently. Reasonable default: auto-fetch on attach.
+[code]`DENIED`:: Permission has already been denied; a subsequent call will fail with [code]`PERMISSION_DENIED` without prompting. Reasonable default: skip the request button or show a "blocked" message.
+[code]`PROMPT`:: No decision has been recorded yet; the next call will show the browser's permission dialog. Render the request button.
+[code]`UNKNOWN`:: The browser doesn't expose permission state -- the signal has no useful guess. Render the default request button and let the user click it.
 
-| `DENIED`
-| Permission already denied. Subsequent calls fail with `PERMISSION_DENIED` without prompting.
-
-| `PROMPT`
-| Not yet decided. The next call shows the browser's permission dialog.
-
-| `UNKNOWN`
-| The browser didn't report a state. Treat as "wait for an explicit user action".
-
-| `UNSUPPORTED`
-| The page is served over plain HTTP, or an iframe Permissions-Policy blocks geolocation. No user action can change this.
-|===
+Always handle the error consumer of [methodname]`getPosition()` and the watcher anyway. Even with a [code]`GRANTED` hint, the call can still fail for unrelated reasons (timeout, no position fix), or the user can revoke permission mid-session faster than the signal catches up.
 
 Typical use is to decide how to render before the user clicks anything -- for example, auto-fetching on return visits when permission is already granted, or hiding the location button entirely when the feature is unsupported:
 
@@ -204,10 +190,6 @@ protected void onAttach(AttachEvent event) {
 
 Subscribe with [methodname]`Signal.effect()` to react to changes -- for instance, when the user revokes permission while the view is open.
 
-.Reliability caveats
-[NOTE]
-The value is a hint, not authoritative. Safari always reports [code]`UNKNOWN` because it doesn't expose permission state for geolocation. Firefox doesn't always propagate permission changes the user makes in browser settings. Chromium updates promptly but with a small delay. For critical paths, call [methodname]`getPosition()` and rely on the result in the callback.
-
 
 == Calling From Background Threads
 
@@ -217,13 +199,13 @@ The static methods above resolve the target UI through [methodname]`UI.getCurren
 ----
 UI ui = UI.getCurrent();
 backgroundExecutor.submit(() -> {
-    Geolocation.getPosition(pos -> ui.access(() -> updateMap(pos)),
-            err  -> ui.access(() -> showError(err)),
+    Geolocation.getPosition(pos -> updateMap(pos),
+            err -> showError(err),
             ui);
 });
 ----
 
-[methodname]`Geolocation.availabilityHintSignal(ui)` and the four-argument [methodname]`getPosition(onSuccess, onError, options, ui)` overload follow the same pattern. [methodname]`watchPosition(Component)` already resolves the UI through the owner component, so it works from any thread without a special overload.
+The callbacks themselves are still invoked on the UI thread, so they can update components directly without an [methodname]`ui.access()` wrapper. [methodname]`Geolocation.availabilityHintSignal(ui)` and the four-argument [methodname]`getPosition(onSuccess, onError, options, ui)` overload follow the same pattern. [methodname]`watchPosition(Component)` already resolves the UI through the owner component, so it works from any thread without a special overload.
 
 
 == Position Data
