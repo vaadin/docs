@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.numberfield;
+package com.vaadin.demo.component.passwordfield;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.flow.routing.Route;
@@ -6,30 +6,30 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-@Route("number-field-value-change-mode")
-public class NumberFieldValueChangeMode extends VerticalLayout {
+@Route("password-field-value-change-mode")
+public class PasswordFieldValueChangeMode extends VerticalLayout {
 
-    public NumberFieldValueChangeMode() {
+    public PasswordFieldValueChangeMode() {
         setPadding(false);
+
         // tag::snippet[]
-        var numberField = new NumberField("Number Field");
+        var passwordField = new PasswordField("Password Field");
         var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
-        modeSelector.setValue(numberField.getValueChangeMode());
+        modeSelector.setValue(passwordField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
-            numberField.clear();
-            numberField.setValueChangeMode(e.getValue());
+            passwordField.clear();
+            passwordField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        numberField.addValueChangeListener(e ->
-                serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
+        passwordField.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var horizontalLayout = new HorizontalLayout(numberField, modeSelector);
+        var horizontalLayout = new HorizontalLayout(passwordField, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
         var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
@@ -37,7 +37,6 @@ public class NumberFieldValueChangeMode extends VerticalLayout {
         add(horizontalLayout, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter extends DemoExporter<PasswordFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

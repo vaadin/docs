@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.numberfield;
+package com.vaadin.demo.component.textarea;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.flow.routing.Route;
@@ -6,30 +6,30 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-@Route("number-field-value-change-mode")
-public class NumberFieldValueChangeMode extends VerticalLayout {
+@Route("text-area-value-change-mode")
+public class TextAreaValueChangeMode extends VerticalLayout {
 
-    public NumberFieldValueChangeMode() {
+    public TextAreaValueChangeMode() {
         setPadding(false);
+
         // tag::snippet[]
-        var numberField = new NumberField("Number Field");
+        var textArea = new TextArea("Text Area");
         var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
-        modeSelector.setValue(numberField.getValueChangeMode());
+        modeSelector.setValue(textArea.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
-            numberField.clear();
-            numberField.setValueChangeMode(e.getValue());
+            textArea.clear();
+            textArea.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        numberField.addValueChangeListener(e ->
-                serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
+        textArea.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var horizontalLayout = new HorizontalLayout(numberField, modeSelector);
+        var horizontalLayout = new HorizontalLayout(textArea, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
         var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
@@ -37,7 +37,6 @@ public class NumberFieldValueChangeMode extends VerticalLayout {
         add(horizontalLayout, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter extends DemoExporter<TextAreaValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

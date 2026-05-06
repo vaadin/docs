@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.numberfield;
+package com.vaadin.demo.component.slider;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.flow.routing.Route;
@@ -6,38 +6,36 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.slider.DecimalSlider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-@Route("number-field-value-change-mode")
-public class NumberFieldValueChangeMode extends VerticalLayout {
+@Route("slider-value-change-mode")
+public class SliderValueChangeMode extends VerticalLayout {
 
-    public NumberFieldValueChangeMode() {
+    public SliderValueChangeMode() {
         setPadding(false);
+
         // tag::snippet[]
-        var numberField = new NumberField("Number Field");
+        var slider = new DecimalSlider("Slider");
+        slider.setValue(50.0);
         var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
-        modeSelector.setValue(numberField.getValueChangeMode());
+        modeSelector.setValue(slider.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
-            numberField.clear();
-            numberField.setValueChangeMode(e.getValue());
+            slider.setValue(50.0);
+            slider.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        numberField.addValueChangeListener(e ->
+        slider.addValueChangeListener(e ->
                 serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var horizontalLayout = new HorizontalLayout(numberField, modeSelector);
-        horizontalLayout.setAlignItems(Alignment.BASELINE);
-
         var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
 
-        add(horizontalLayout, serverSideLayout);
+        add(slider, modeSelector, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter extends DemoExporter<SliderValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }
