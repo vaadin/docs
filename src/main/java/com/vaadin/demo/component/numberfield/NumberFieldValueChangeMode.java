@@ -1,4 +1,4 @@
-package com.vaadin.demo.component.emailfield;
+package com.vaadin.demo.component.numberfield;
 
 import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.flow.routing.Route;
@@ -7,28 +7,30 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-@Route("email-field-value-change-mode")
-public class EmailFieldValueChangeMode extends VerticalLayout {
+@Route("number-field-value-change-mode")
+public class NumberFieldValueChangeMode extends VerticalLayout {
 
-    public EmailFieldValueChangeMode() {
+    public NumberFieldValueChangeMode() {
         setPadding(false);
         // tag::snippet[]
-        var emailField = new EmailField("Email Field");
+        var numberField = new NumberField("Number Field");
         var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
-        modeSelector.setValue(emailField.getValueChangeMode());
+        modeSelector.setValue(numberField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
-            emailField.clear();
-            emailField.setValueChangeMode(e.getValue());
+            numberField.clear();
+            numberField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        emailField.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        numberField.addValueChangeListener(e ->
+                serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var horizontalLayout = new HorizontalLayout(emailField, modeSelector);
+        var horizontalLayout = new HorizontalLayout(numberField, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
         var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
@@ -37,6 +39,6 @@ public class EmailFieldValueChangeMode extends VerticalLayout {
     }
 
 
-    public static class Exporter extends DemoExporter<EmailFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }
