@@ -197,12 +197,15 @@ The static methods above resolve the target UI through [methodname]`UI.getCurren
 
 [source,java]
 ----
-UI ui = UI.getCurrent();
-backgroundExecutor.submit(() -> {
-    Geolocation.getPosition(pos -> updateMap(pos),
-            err -> showError(err),
-            ui);
-});
+@Override
+protected void onAttach(AttachEvent event) {
+    UI ui = event.getUI();
+    ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(
+            () -> Geolocation.getPosition(this::updateMap, this::showError,
+                    ui),
+            0, 5, TimeUnit.MINUTES);
+    addDetachListener(e -> task.cancel(false));
+}
 ----
 
 The callbacks themselves are still invoked on the UI thread, so they can update components directly without an [methodname]`ui.access()` wrapper. [methodname]`Geolocation.availabilityHintSignal(ui)` and the four-argument [methodname]`getPosition(onSuccess, onError, options, ui)` overload follow the same pattern. [methodname]`watchPosition(Component)` already resolves the UI through the owner component, so it works from any thread without a special overload.
