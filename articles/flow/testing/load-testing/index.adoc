@@ -486,6 +486,11 @@ Interval for server metrics collection, in seconds. Defaults to `10`.
 `failOnThreshold`::
 Fail the Maven build if k6 thresholds are breached. Defaults to `true`.
 
+`warmup`::
+Run a single 1-VU, 1-iteration warmup pass before each load test to prime the target application.
+The warmup runs with `--no-summary --no-thresholds`, so its metrics never appear in reports and threshold violations during warmup never fail the build.
+Defaults to `false`. See <<warmup>>.
+
 `combineScenarios`::
 Combine multiple test files into parallel scenarios with weighted virtual user distribution. Defaults to `false`.
 
@@ -525,6 +530,43 @@ mvn loadtest:run -Dk6.testDir=target/k6/tests \
 --
 
 In this example, 70 virtual users execute the `helloWorld` scenario while 30 execute the `crudExample` scenario simultaneously.
+
+
+[[warmup]]
+=== Warmup
+
+The `warmup` parameter runs a single 1-VU, 1-iteration pass of the recorded scenarios against the target application before the actual load test begins.
+The warmup is suppressed with `--no-summary --no-thresholds`, so its requests do not show up in the report and any slow first-request thresholds it would breach do not fail the build.
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<configuration>
+    <testDir>${project.build.directory}/k6/tests</testDir>
+    <virtualUsers>50</virtualUsers>
+    <duration>1m</duration>
+    <warmup>true</warmup>
+</configuration>
+----
+
+[source,bash]
+----
+<source-info group="Command Line"></source-info>
+mvn loadtest:run -Dk6.testDir=target/k6/tests \
+    -Dk6.vus=50 -Dk6.duration=1m \
+    -Dk6.warmup=true
+----
+--
+
+A freshly started application server is not in a steady state.
+The first requests trigger one-time work that subsequent requests never see again: JIT compilation of hot methods, class loading, JPA metamodel initialization, connection pool ramp-up, framework-level lazy initialization, and population of caches at every layer (HTTP, ORM, application, OS page cache).
+If the load test starts hitting the server during this period, the early iterations record response times that reflect cold-start cost rather than the steady-state behavior you want to measure.
+Worst case, those early outliers dominate the maximum, p(95), and p(99) figures and make a healthy server look broken.
+
+Enabling `warmup` issues one full pass of every recorded scenario before the measured run starts, so JIT, caches, and class loaders are primed when the virtual users ramp up.
+The numbers in the report then describe the application under sustained load — which is what a load test is meant to measure.
 
 
 === Understanding k6 Output
