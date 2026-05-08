@@ -1,0 +1,126 @@
+---
+title: Reference
+page-title: SwingBridge Reference | Vaadin Tools
+description: Public API summary, lifecycle hooks, and bundled sample applications.
+meta-description: Reference for the SwingBridge public Java API, lifecycle hooks, and the sample Swing applications shipped with the skeleton starter.
+order: 7
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.reference]]
+= Reference
+
+This page summarizes the public Java API surface of SwingBridge and lists the sample applications that ship with the skeleton starter.
+
+
+[[swing-bridge.reference.under-the-hood]]
+== What Happens Under the Hood
+
+Once you've set up your `[classname]`SwingBridge`` subclass (or instance), the framework handles:
+
+- Launching your Swing application in the background when the component attaches.
+- Capturing the UI as images and streaming the changed regions to the browser.
+- Routing user interactions — clicks, keyboard input, window resizing — back into the AWT event queue.
+- Managing dialogs, popups, and tooltips that your Swing application creates.
+- Updating the display continuously so users see a live view of your application.
+
+Every browser session runs the Swing application inside its own isolated `[classname]`AppContext``, so two users do not share static state, focus, clipboard, or drag-and-drop status.
+
+
+[[swing-bridge.reference.swingbridge]]
+== `SwingBridge` Component
+
+The `[classname]`SwingBridge`` class is the entry point. It is a Vaadin Flow `[classname]`Div`` that, on attach, launches the Swing application and renders it into the page.
+
+[[swing-bridge.reference.swingbridge.constructors]]
+=== Constructors
+
+[source,java]
+----
+new SwingBridge(String mainClassFQN);
+new SwingBridge(String mainClassFQN, String[] args);
+new SwingBridge(String mainClassFQN, Supplier<URLClassLoader> classLoaderSupplier);
+----
+
+The first form uses the default classloader supplier (loads JARs from the `applibs/` directory). The second forwards the given arguments to the Swing application's `main` method. The third hands full control of classloader construction to the caller — pair it with `[classname]`SwingBridgeRunner``'s helpers to load JARs from a `swing-app-jar-list.conf` file or a custom location.
+
+[[swing-bridge.reference.swingbridge.hooks]]
+=== Lifecycle Hooks
+
+`[classname]`SwingBridge`` exposes two protected hooks. Override them in a subclass to run custom code before or after the Swing application is wired into the view.
+
+[cols="2,5", options="header"]
+|===
+|Hook |When it runs
+
+|`[methodname]`beforeInit(Component component)``
+|After the Swing application has launched and produced a visible `[classname]`JFrame``, but before SwingBridge wires that frame into its canvas. Useful for last-minute configuration of the Swing component itself (sizing, native look-and-feel tweaks).
+
+|`[methodname]`afterInit(Component component)``
+|After SwingBridge has wired the frame into its canvas and frame updates are ready to flow. Useful for hooking up listeners on the Swing component or signalling readiness to the rest of the Vaadin view.
+|===
+
+A custom classloader supplier is contributed via `[methodname]`createClassLoaderSupplier()``, which subclasses also override (see <<adding-your-app#swing-bridge.adding-your-app.constructors, Constructor Variants>>).
+
+
+[[swing-bridge.reference.swingbridge-runner]]
+== `SwingBridgeRunner` Helpers
+
+`[classname]`SwingBridgeRunner`` is a static utility used by the component itself, but several of its methods are public and useful when you build a custom classloader supplier.
+
+[cols="3,4", options="header"]
+|===
+|Method |Use
+
+|`[methodname]`createSession(String mainClassFQN)``
+|Create a `[classname]`SwingBridgeSession`` that ties the Vaadin session to a specific main class. Pass it to `[methodname]`runSwingApp(...)``.
+
+|`[methodname]`runSwingApp(SwingBridgeSession, …)``
+|Launch the Swing application in an isolated `[classname]`AppContext``. Returns a `[classname]`CompletableFuture<JFrame>`` that resolves when the first window appears (or completes exceptionally on launch failure).
+
+|`[methodname]`loadSwingAppJarList()``
+|Read a `swing-app-jar-list.conf` from the classpath root and return the JAR paths it lists. Combine with `[methodname]`createClassLoader(...)``.
+
+|`[methodname]`loadJarsFromDirectory()``
+|Read every `.jar` in the configured `applibs` directory.
+
+|`[methodname]`createClassLoader(List<Path> jars, ClassLoader parent)``
+|Build a `[classname]`URLClassLoader`` from the supplied JAR paths.
+|===
+
+
+[[swing-bridge.reference.samples]]
+== Sample Applications
+
+The link:https://github.com/vaadin/skeleton-starter-vaadin-swing-bridge[skeleton starter] bundles a number of small Swing applications that demonstrate different features. They live under `simple-swing-apps/` in the source tree and are loaded into the playground via `swing-app-jar-list.conf`.
+
+[cols="3,4", options="header"]
+|===
+|Main class |What it shows
+
+|`com.mycompany.swingapp.SimpleSwingApp2`
+|Minimal Swing form (`JFrame` + `JTextField` + `JButton`). The smoke-test app.
+
+|`com.mycompany.swingapp.warehouse.WarehouseInventoryApp1`
+|Larger UI with a `JSplitPane`, tree, and tables. Demonstrates resize handling and grid rendering.
+
+|`com.mycompany.swingapp.swingx.JXDatePickerApp`
+|SwingX `JXDatePicker` to confirm popup support for non-standard Swing libraries.
+
+|`com.mycompany.swingapp.dnd.DndTestApp`
+|Drag-and-drop within a single Swing window.
+
+|`com.jinternalframe.JInternalFrameTilingDemo`
+|`JInternalFrame` tiling inside a `JDesktopPane`.
+|===
+
+Each sample is a starting point you can adapt to your own application — copy the view class from the playground, change the main-class FQN, and adjust the `applibs/` contents.
+
+
+[[swing-bridge.reference.next-steps]]
+== Next Steps
+
+- Bring in your own Swing JAR and wire up a Vaadin view: <<adding-your-app#, Adding Your Swing Application>>.
+- Tune runtime behaviour: <<configuration#, Configuration>>.
+- Diagnose launch failures: <<troubleshooting#, Troubleshooting>>.
