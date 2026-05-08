@@ -18,23 +18,27 @@ public class RichTextEditorValueChangeMode extends VerticalLayout {
         // tag::snippet[]
         var rte = new RichTextEditor();
         rte.setMaxHeight("300px");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(rte.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             rte.setValue("");
             rte.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        rte.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        rte.addValueChangeListener(
+                e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(rte, modeSelector, serverSideLayout);
     }
 
-    public static class Exporter extends DemoExporter<RichTextEditorValueChangeMode> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<RichTextEditorValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

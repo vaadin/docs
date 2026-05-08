@@ -16,14 +16,16 @@ public class EmailFieldValueChangeMode extends VerticalLayout {
         setPadding(false);
         // tag::snippet[]
         var emailField = new EmailField("Email Field");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(emailField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             emailField.clear();
             emailField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        emailField.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        emailField.addValueChangeListener(
+                e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
@@ -31,12 +33,13 @@ public class EmailFieldValueChangeMode extends VerticalLayout {
         var horizontalLayout = new HorizontalLayout(emailField, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(horizontalLayout, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<EmailFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<EmailFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

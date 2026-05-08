@@ -17,26 +17,31 @@ public class PasswordFieldValueChangeMode extends VerticalLayout {
 
         // tag::snippet[]
         var passwordField = new PasswordField("Password Field");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(passwordField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             passwordField.clear();
             passwordField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        passwordField.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        passwordField.addValueChangeListener(
+                e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var horizontalLayout = new HorizontalLayout(passwordField, modeSelector);
+        var horizontalLayout = new HorizontalLayout(passwordField,
+                modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(horizontalLayout, serverSideLayout);
     }
 
-    public static class Exporter extends DemoExporter<PasswordFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<PasswordFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

@@ -18,20 +18,22 @@ public class SliderValueChangeMode extends VerticalLayout {
         // tag::snippet[]
         var slider = new DecimalSlider("Slider");
         slider.setValue(50.0);
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(slider.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             slider.setValue(50.0);
             slider.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        slider.addValueChangeListener(e ->
-                serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
+        slider.addValueChangeListener(e -> serverSideContent
+                .setText(e.getValue() == null ? "" : e.getValue().toString()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(slider, modeSelector, serverSideLayout);
     }

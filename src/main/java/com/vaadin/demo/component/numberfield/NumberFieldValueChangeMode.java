@@ -16,15 +16,16 @@ public class NumberFieldValueChangeMode extends VerticalLayout {
         setPadding(false);
         // tag::snippet[]
         var numberField = new NumberField("Number Field");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(numberField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             numberField.clear();
             numberField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        numberField.addValueChangeListener(e ->
-                serverSideContent.setText(e.getValue() == null ? "" : e.getValue().toString()));
+        numberField.addValueChangeListener(e -> serverSideContent
+                .setText(e.getValue() == null ? "" : e.getValue().toString()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
@@ -32,12 +33,13 @@ public class NumberFieldValueChangeMode extends VerticalLayout {
         var horizontalLayout = new HorizontalLayout(numberField, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(horizontalLayout, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<NumberFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

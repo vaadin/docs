@@ -17,14 +17,16 @@ public class TextFieldValueChangeMode extends VerticalLayout {
 
         // tag::snippet[]
         var textField = new TextField("Text Field");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(textField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             textField.clear();
             textField.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        textField.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        textField.addValueChangeListener(
+                e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
@@ -32,12 +34,13 @@ public class TextFieldValueChangeMode extends VerticalLayout {
         var horizontalLayout = new HorizontalLayout(textField, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(horizontalLayout, serverSideLayout);
     }
 
-
-    public static class Exporter extends DemoExporter<TextFieldValueChangeMode> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<TextFieldValueChangeMode> { // hidden-source-line
     } // hidden-source-line
 }

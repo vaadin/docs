@@ -17,14 +17,16 @@ public class TextAreaValueChangeMode extends VerticalLayout {
 
         // tag::snippet[]
         var textArea = new TextArea("Text Area");
-        var modeSelector = new Select<>("Value Change Mode", ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode",
+                ValueChangeMode.values());
         modeSelector.setValue(textArea.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             textArea.clear();
             textArea.setValueChangeMode(e.getValue());
         });
         var serverSideContent = new Span();
-        textArea.addValueChangeListener(e -> serverSideContent.setText(e.getValue()));
+        textArea.addValueChangeListener(
+                e -> serverSideContent.setText(e.getValue()));
         // end::snippet[]
 
         modeSelector.setItemLabelGenerator(ValueChangeMode::name);
@@ -32,7 +34,8 @@ public class TextAreaValueChangeMode extends VerticalLayout {
         var horizontalLayout = new HorizontalLayout(textArea, modeSelector);
         horizontalLayout.setAlignItems(Alignment.BASELINE);
 
-        var serverSideLayout = new HorizontalLayout(new Span("Server side:"), serverSideContent);
+        var serverSideLayout = new HorizontalLayout(new Span("Server side:"),
+                serverSideContent);
 
         add(horizontalLayout, serverSideLayout);
     }
