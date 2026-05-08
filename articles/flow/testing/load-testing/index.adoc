@@ -38,7 +38,7 @@ The following tools are needed:
 - *Maven 3.9+*
 - *k6* -- Install from https://grafana.com/docs/k6/latest/get-started/installation/[Grafana k6 documentation]. On macOS: `brew install k6`.
 - *Chrome* -- Latest version, with ChromeDriver.
-- *TestBench* -- Existing end-to-end tests.
+- *TestBench* -- Existing <<{articles}/flow/testing/end-to-end#, end-to-end tests>>.
 - *Application* -- Production mode built application.
 
 
@@ -75,9 +75,12 @@ It auto-registers via ServiceLoader -- no code changes are needed.
 
 
 [[writing-tests]]
-== Writing Tests for Load Testing
+== Adapting Tests for Load Testing
 
-Standard TestBench integration tests define user workflows. The same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
+Standard TestBench integration tests define user workflows, and the same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
+
+For an introduction to writing TestBench tests -- element queries, page objects, assertions, and so on -- see <<{articles}/flow/testing/end-to-end#, End-to-End Testing>> and <<{articles}/flow/testing/end-to-end/creating-tests#, Creating Tests>>.
+The remainder of this section covers only the parts that differ when a TestBench test is used as a load test scenario.
 
 In practice, you may want to select certain scenarios from your existing E2E test suite, or create dedicated scenarios that reuse your page object classes.
 
@@ -92,53 +95,24 @@ Design load test scenarios to be *repeatable*: prefer read-only workflows, use s
 [[proxy-configuration]]
 === Proxy Configuration
 
-During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy.
-The browser driver must be configured to use this proxy.
-Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
+To make a TestBench test recordable, call one of the helper methods on [classname]`LoadTestItHelper` from your `@BeforeEach`:
 
-The [classname]`LoadTestItHelper` class (from the `testbench-loadtest-support` dependency) handles proxy driver configuration.
-The [methodname]`setupProxy()` and [methodname]`openWithProxy()` methods checks whether the `k6.proxy.host` system property is set.
-When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support.
-When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
-
-Either start with [methodname]`setupProxy()`, or open the test page with the [methodname]`openWithProxy()`, and set the resulting driver as the test driver.
-The helper method will automatically set up a chromedriver with the proxy and open the view when [methodname]`openWithProxy()` is used.
-
-The [methodname]`getRootURL()` helper builds the server base URL from the `HOSTNAME` environment variable (defaults to `localhost`) and the `server.port` system property (defaults to `8080`):
-
-.Testbench test sample
 [source,java]
 ----
-import com.vaadin.testbench.loadtest.LoadTestItHelper;
-import org.junit.jupiter.api.BeforeEach;
-
-public class HelloWorldIT {
-
-    @BeforeEach
-    public void open() {
-        String viewUrl = LoadTestItHelper.getRootURL()
-                + "/";
-        setDriver(LoadTestItHelper.openWithProxy(
-                getDriver(), viewUrl));
-
-        /* or
-         * setDriver(LoadTestItHelper.setupProxy(getDriver()));
-         * // do driver setup before opening page
-         * getDriver().get(viewUrl);
-         */
-    }
-
-    @Test
-    public void helloWorldWorkflow() {
-        TextFieldElement nameField = $(TextFieldElement.class).first();
-        nameField.setValue("Test User");
-
-        $(ButtonElement.class).first().click();
-
-        $(NotificationElement.class).waitForFirst();
-    }
+@BeforeEach
+public void open() {
+    setDriver(LoadTestItHelper.openWithProxy(
+            getDriver(), LoadTestItHelper.getRootURL() + "/"));
 }
 ----
+
+That is the whole setup -- no proxy ports, certificates, or driver flags to manage.
+Use [methodname]`setupProxy(getDriver())` instead of [methodname]`openWithProxy()` if you need to configure the driver before navigating.
+
+When the recording proxy is active (signaled by the `k6.proxy.host` system property set by the Maven plugin), the helper swaps in a driver that routes traffic through it.
+When it is not -- for example, during normal IDE runs -- the helper is a no-op and the test runs as a plain TestBench test.
+
+The test body itself is just a regular TestBench test -- see <<{articles}/flow/testing/end-to-end/creating-tests#, Creating Tests>> for the element query and interaction APIs.
 
 [[destructive]]
 === Excluding Destructive Tests
@@ -150,8 +124,7 @@ Some test methods modify shared state in ways that cannot be safely replayed by 
 @BrowserTest
 @Destructive
 public void deletePatient() {
-    // This test is skipped during k6 recording
-    // but runs normally in regular test execution
+    // Skipped during k6 recording, runs normally in regular test execution.
 }
 ----
 
