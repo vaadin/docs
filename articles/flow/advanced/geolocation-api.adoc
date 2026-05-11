@@ -10,7 +10,7 @@ order: 115
 = Geolocation API
 :toc:
 
-The [classname]`Geolocation` API gives server-side Java code access to the https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API[browser Geolocation API]. It exposes two static entry points: [methodname]`Geolocation.getPosition()` for a single reading and [methodname]`Geolocation.watchPosition()` for a continuous stream that returns a [classname]`GeolocationWatcher` handle.
+The [classname]`Geolocation` API gives server-side Java code access to the https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API[browser Geolocation API]. It exposes two static entry points: [methodname]`Geolocation.getPosition()` for a single reading and [methodname]`Geolocation.watchPosition()` for a continuous stream.
 
 [NOTE]
 The browser shows its own permission dialog the first time the application asks for a location. The dialog is controlled by the browser -- Vaadin can't style it, suppress it, or detect when it's shown. Geolocation also requires a secure context (HTTPS), except on `localhost` during development.
@@ -42,7 +42,7 @@ The call returns immediately. Exactly one of the consumers is invoked once the b
 `timeout(Duration)`:: Maximum time the browser may spend before failing with a [code]`TIMEOUT` error. Default: no timeout.
 `maximumAge(Duration)`:: How old a cached reading may be while still acceptable. [code]`Duration.ZERO` (the default) refuses cached readings. Larger values save battery.
 
-Pass an instance as the last argument to [methodname]`Geolocation.getPosition()` or as the second argument to [methodname]`Geolocation.watchPosition()`. A setter that's never called leaves the corresponding field at the browser default.
+Pass an instance as the last argument to [methodname]`Geolocation.getPosition()`. A setter that's never called leaves the corresponding field at the browser default.
 
 [source,java]
 ----
@@ -53,7 +53,6 @@ GeolocationOptions opts = GeolocationOptions.builder()
         .build();
 
 Geolocation.getPosition(pos -> { /* ... */ }, err -> { /* ... */ }, opts);
-GeolocationWatcher watcher = Geolocation.watchPosition(this, opts);
 ----
 
 Use the builder rather than the canonical constructor -- it accepts [classname]`Duration` for the time-based fields and gives every option a named setter. There are also [code]`int` overloads on [methodname]`timeout()` and [methodname]`maximumAge()` if you already have a millisecond value on hand.
@@ -61,7 +60,15 @@ Use the builder rather than the canonical constructor -- it accepts [classname]`
 
 == Watching Position Changes
 
-[methodname]`Geolocation.watchPosition(Component)` starts a continuous watch and returns a [classname]`GeolocationWatcher` tied to the owner component. The owner determines the watch's lifecycle: the watch activates as soon as the owner is attached to a UI -- so it's safe to create the watcher from a view's constructor -- and is cancelled automatically when the component detaches. Pass the view itself in most cases -- the watch then lives exactly as long as the view is open, and you don't have to remember to clean up. The browser reports new positions as the device moves. There are two ways to consume them -- pick the one that fits the destination.
+[methodname]`Geolocation.watchPosition(Component)` starts a continuous watch and returns a [classname]`GeolocationWatcher` tied to the owner component. The owner determines the watch's lifecycle: the watch activates as soon as the owner is attached to a UI and is cancelled automatically when the component detaches. Pass the view itself in most cases -- the watch then lives exactly as long as the view is open, and you don't have to remember to clean up. The browser reports new positions as the device moves. There are two ways to consume them -- pick the one that fits the destination.
+
+The same [classname]`GeolocationOptions` described above can be passed as a second argument to control accuracy, timeout, and cache-age:
+
+[source,java]
+----
+GeolocationWatcher watcher = Geolocation.watchPosition(this,
+        GeolocationOptions.builder().highAccuracy(true).build());
+----
 
 === Listener Style
 
@@ -104,20 +111,12 @@ Signal.effect(this, () -> {
 `GeolocationPosition`:: A successful reading. Replaces the previous value on every update.
 `GeolocationError`:: The browser reported an error.
 
-Pass [classname]`GeolocationOptions` as a second argument to control accuracy:
-
-[source,java]
-----
-GeolocationWatcher watcher = Geolocation.watchPosition(this,
-        GeolocationOptions.builder().highAccuracy(true).build());
-----
-
 
 === Stopping and Resuming
 
 Call [methodname]`stop()` on the [classname]`GeolocationWatcher` to end tracking from application code -- for instance, behind a "Stop tracking" button. The handle stays usable: [methodname]`watcher.resume()` installs a fresh browser watch on the same watcher and any signal subscribers and listeners keep working. [methodname]`resume()` requires the owner to be attached to a UI; calling it after the owner has detached throws [classname]`IllegalStateException`.
 
-[methodname]`activeSignal()` reports whether the watcher is currently receiving updates. Bind separate Start and Stop buttons to it instead of tracking a flag yourself -- only the relevant one is shown:
+[methodname]`activeSignal()` reports whether the watcher is currently receiving updates. You can use it, for instance, to drive separate Start and Stop buttons:
 
 [source,java]
 ----
@@ -138,7 +137,7 @@ If the user revokes location permission while a watch is active and then grants 
 [#handling-errors]
 == Handling Errors
 
-Switch on [methodname]`errorCode()` on the [classname]`GeolocationError` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN` rather than throwing:
+Switch on [methodname]`errorCode()` on the [classname]`GeolocationError` to get a typed [classname]`GeolocationErrorCode` enum -- the [code]`switch` is exhaustive at compile time and unknown future codes from the browser surface as [code]`UNKNOWN`:
 
 [source,java]
 ----
@@ -188,7 +187,7 @@ protected void onAttach(AttachEvent event) {
 }
 ----
 
-Subscribe with [methodname]`Signal.effect()` to react to changes -- for instance, when the user revokes permission while the view is open.
+Subscribe with [methodname]`Signal.effect()` to react to changes -- for instance, if the user revokes permission while the view is open.
 
 
 == Calling From Background Threads
