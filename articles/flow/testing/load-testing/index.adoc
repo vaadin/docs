@@ -14,7 +14,7 @@ section-nav: commercial
 :commercial-feature: TestBench
 include::{articles}/_commercial-banner.adoc[opts=optional]
 
-Vaadin provides a Maven plugin that converts <<{articles}/flow/testing/end-to-end#,TestBench end-to-end tests>> into https://grafana.com/docs/k6/latest/[k6] load tests. This allows you to reuse your existing E2E tests as realistic user scenarios for performance testing, without writing separate load test scripts.
+Vaadin provides a Maven plugin that converts <<{articles}/flow/testing/end-to-end#,TestBench end-to-end tests>> or <<{articles}/flow/testing/playwright#,Playwright tests>> into https://grafana.com/docs/k6/latest/[k6] load tests. This allows you to reuse your existing E2E tests as realistic user scenarios for performance testing, without writing separate load test scripts.
 
 The plugin records browser traffic from TestBench tests, converts it into k6 scripts, and handles Vaadin-specific details such as session management, <<{articles}/flow/security/advanced-topics/vulnerabilities#cross-site-request-forgery-csrf,CSRF (Cross-Site Request Forgery)>> tokens, and push communication. The generated scripts can then be run with k6 against any server.
 
@@ -187,10 +187,13 @@ Keep in mind that WARs are typically deployed under a context path (e.g. `/myapp
 Path to the executable JAR file to start. Required.
 
 `serverPort`::
-Application server port. Defaults to `8080`.
+Spring Boot application server port. Required unless `httpPort` (Jetty) is set.
+
+`httpPort`::
+Jetty HTTP port. Required unless `serverPort` (Spring Boot) is set.
 
 `managementPort`::
-Spring Boot Actuator management port. Defaults to `8082`.
+Spring Boot Actuator management port. Optional -- when set, `/actuator/health` is polled for readiness in addition to the application root.
 
 `jvmArgs`::
 Extra JVM arguments (for example, `-Xmx512m`).
@@ -231,14 +234,13 @@ The `loadtest:record` goal runs one or more TestBench test classes through a rec
 </goals>
 <configuration>
     <testClass>HelloWorldIT</testClass>
-    <appPort>8080</appPort>
 </configuration>
 ----
 
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:record -Dk6.testClass=HelloWorldIT -Dk6.appPort=8080
+mvn loadtest:record -Dk6.testClass=HelloWorldIT
 ----
 --
 
@@ -382,7 +384,7 @@ mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js -Dk6.vus=50 -Dk6.d
 ----
 --
 
-To run all scripts in a directory:
+To run all scripts in the default output directory (`${project.build.directory}/k6/tests`):
 
 [.example]
 --
@@ -390,7 +392,6 @@ To run all scripts in a directory:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <testDir>${project.build.directory}/k6/tests</testDir>
     <virtualUsers>50</virtualUsers>
     <duration>1m</duration>
 </configuration>
@@ -399,9 +400,11 @@ To run all scripts in a directory:
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests -Dk6.vus=50 -Dk6.duration=1m
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=1m
 ----
 --
+
+Set `testDir` (CLI: `-Dk6.testDir=...`) to point at a different directory.
 
 To run against a remote server:
 
@@ -413,7 +416,6 @@ To run against a remote server:
 <configuration>
     <testFile>${project.build.directory}/k6/tests/hello-world.js</testFile>
     <appIp>staging.example.com</appIp>
-    <appPort>8080</appPort>
     <virtualUsers>100</virtualUsers>
     <duration>5m</duration>
 </configuration>
@@ -423,21 +425,10 @@ To run against a remote server:
 ----
 <source-info group="Command Line"></source-info>
 mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js \
-    -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
+    -Dk6.appIp=staging.example.com \
     -Dk6.vus=100 -Dk6.duration=5m
 ----
 --
-
-You can also run the generated scripts directly with k6:
-
-[source,bash]
-----
-k6 run --vus 50 --duration 30s target/k6/tests/hello-world.js
-
-# Against a different server
-k6 run -e APP_IP=192.168.1.100 -e APP_PORT=8080 target/k6/tests/hello-world.js
-----
-
 
 === Run Parameters
 
@@ -448,7 +439,7 @@ Single k6 test file to run.
 List of k6 test files to run.
 
 `testDir`::
-Directory containing k6 test files. All `.js` files in the directory are executed.
+Directory containing k6 test files. All `.js` files in the directory are executed. Defaults to `${project.build.directory}/k6/tests`.
 
 `virtualUsers` (CLI: `k6.vus`)::
 Number of virtual users. Defaults to `10`.
@@ -499,7 +490,6 @@ When running multiple test files, you can combine them into parallel k6 scenario
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <testDir>${project.build.directory}/k6/tests</testDir>
     <virtualUsers>100</virtualUsers>
     <duration>5m</duration>
     <combineScenarios>true</combineScenarios>
@@ -510,7 +500,7 @@ When running multiple test files, you can combine them into parallel k6 scenario
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run \
     -Dk6.vus=100 -Dk6.duration=5m \
     -Dk6.combineScenarios=true \
     -Dk6.scenarioWeights=helloWorld:70,crudExample:30
@@ -532,7 +522,6 @@ The warmup is suppressed with `--no-summary --no-thresholds`, so its requests do
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <testDir>${project.build.directory}/k6/tests</testDir>
     <virtualUsers>50</virtualUsers>
     <duration>1m</duration>
     <warmup>true</warmup>
@@ -542,7 +531,7 @@ The warmup is suppressed with `--no-summary --no-thresholds`, so its requests do
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run \
     -Dk6.vus=50 -Dk6.duration=1m \
     -Dk6.warmup=true
 ----
@@ -632,16 +621,13 @@ Configure think times in the plugin configuration:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <!-- Enable or disable think times (default: true) -->
-    <thinkTimeEnabled>true</thinkTimeEnabled>
+    <!-- Base delay after page load in seconds.
+         Actual delay: baseDelay + random(0, baseDelay * 1.5) -->
+    <pageReadDelay>3.0</pageReadDelay>
 
-    <!-- Base delay after page load in seconds (default: 2.0) -->
-    <!-- Actual delay: baseDelay + random(0, baseDelay * 1.5) -->
-    <pageReadDelay>2.0</pageReadDelay>
-
-    <!-- Base delay after user interaction in seconds (default: 0.5) -->
-    <!-- Actual delay: baseDelay + random(0, baseDelay * 3) -->
-    <interactionDelay>0.5</interactionDelay>
+    <!-- Base delay after user interaction in seconds.
+         Actual delay: baseDelay + random(0, baseDelay * 3) -->
+    <interactionDelay>1.0</interactionDelay>
 </configuration>
 ----
 
@@ -652,7 +638,7 @@ Configure think times in the plugin configuration:
 mvn loadtest:record -Dk6.thinkTime.enabled=false
 
 # Custom delays
-mvn loadtest:record -Dk6.thinkTime.pageReadDelay=2.0 -Dk6.thinkTime.interactionDelay=0.5
+mvn loadtest:record -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1.0
 ----
 --
 
@@ -774,19 +760,14 @@ Enable metrics collection via the plugin configuration:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <managementPort>8082</managementPort>
     <collectVaadinMetrics>true</collectVaadinMetrics>
-    <metricsInterval>10</metricsInterval>
 </configuration>
 ----
 
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
-    -Dk6.managementPort=8082 \
-    -Dk6.collectVaadinMetrics=true \
-    -Dk6.metricsInterval=10
+mvn loadtest:run -Dk6.collectVaadinMetrics=true
 ----
 --
 
@@ -838,9 +819,7 @@ Below is a complete example that starts the application server, records two Test
                             <testClass>HelloWorldIT</testClass>
                             <testClass>CrudExampleIT</testClass>
                         </testClasses>
-                        <proxyPort>6000</proxyPort>
                         <appPort>${serverPort}</appPort>
-                        <testWorkDir>${project.basedir}</testWorkDir>
                     </configuration>
                 </execution>
 
@@ -852,11 +831,9 @@ Below is a complete example that starts the application server, records two Test
                         <goal>run</goal>
                     </goals>
                     <configuration>
-                        <testDir>${project.build.directory}/k6/tests</testDir>
                         <virtualUsers>100</virtualUsers>
                         <duration>2m</duration>
                         <appPort>${serverPort}</appPort>
-                        <managementPort>${managementPort}</managementPort>
                         <collectVaadinMetrics>true</collectVaadinMetrics>
                         <combineScenarios>true</combineScenarios>
                         <scenarioWeights>helloWorld:70,crudExample:30</scenarioWeights>
@@ -899,7 +876,7 @@ Record tests on a development machine, then run against the target server:
 mvn loadtest:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT -Dk6.appPort=8081
 
 # Step 2: Run against remote server
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run \
     -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
     -Dk6.vus=100 -Dk6.duration=5m
 ----
