@@ -10,54 +10,57 @@ section-nav: badge-flow
 = Binding Data to Tree Grid [badge-flow]#Flow#
 :toclevels: 2
 
-Tree Grid supports connecting to various types of data sources through hierarchical data providers. For simple use cases, it offers a built-in [classname]`TreeData` structure along with a ready-made [classname]`TreeDataProvider`, which together provide an easy way to create and manage hierarchies in memory. It also supports custom hierarchical data providers to fetch data from other sources, e.g. a database.
+Tree Grid supports several ways to bind hierarchical data, depending on where the data lives and how much control is needed:
+
+- Convenience method <<#setting-items,setItems>> for quickly populating Tree Grid from an in-memory collection.
+- More general <<#tree-data-provider,TreeData and TreeDataProvider>> for storing and managing hierarchies in memory.
+- <<#custom-data-providers,Custom hierarchical data providers>> for connecting to external data sources such as a database.
 
 == Setting Items
 
-The simplest way to populate Tree Grid is the [methodname]`setItems(rootItems, childItemProvider)` method. It takes a collection of root items and a callback that returns the children of any given item:
+The simplest way to populate Tree Grid is to use the [methodname]`setItems(rootItems, childItemProvider)` method. It takes a collection of root items and a callback that returns the children of each item:
 
+[.example]
+--
+.Example.java
 [source,java]
 ----
-public record Folder(String name, List<Folder> children) {}
-
-...
-
-// ├── Work
-// │   └── Documents
-// │       └── Invoices
-// └── Family
-
 Folder invoices = new Folder("Invoices", List.of());
 Folder documents = new Folder("Documents", List.of(invoices));
 Folder work = new Folder("Work", List.of(documents));
 Folder family = new Folder("Family", List.of());
 
-// First argument: root-level items shown at the top level of the tree.
+// First argument: root-level folders shown at the top level of the tree.
 // Second argument: a callback that returns the children of any folder.
 treeGrid.setItems(List.of(work, family), Folder::children);
+
+// Result:
+//
+// ├── Work
+// │   └── Documents
+// │       └── Invoices
+// └── Family
 ----
 
-[methodname]`setItems` walks the hierarchy eagerly: it calls the child item provider on each root item, then recursively on each returned child, until no more children are produced. The full hierarchy is loaded into an in-memory [classname]`TreeData` structure wrapped in a [classname]`TreeDataProvider`, both created internally.
+[source,java]
+.Folder.java
+----
+public record Folder(String name, List<Folder> children) {}
+----
+--
 
-A [methodname]`setItems(Stream, ValueProvider)` overload is also available for populating the tree from a stream of root items.
+Behind the scenes, the [methodname]`setItems` method creates a [classname]`TreeData` structure by eagerly traversing the root items and their descendants: it calls the child item provider on each root item, then on each returned child, and continues until no more children are returned.
 
-To modify the hierarchy after [methodname]`setItems` has been called, retrieve the underlying [classname]`TreeData` instance with [methodname]`HasHierarchicalDataProvider#getTreeData()` and update it directly. Tree Grid doesn't pick up such changes automatically, so call [methodname]`DataProvider#refreshAll()` afterwards to update the UI:
+The underlying [classname]`TreeData` structure and its associated [classname]`TreeDataProvider` are then available via the `TreeGrid#getTreeData` and `TreeGrid#getDataProvider` methods:
 
 [source,java]
 ----
-// Add a "Reports" folder under "Work"
-treeGrid.getTreeData().addItem(work, new Folder("Reports", List.of()));
-
-// Refresh the Tree Grid to reflect the changes in the UI
-treeGrid.getDataProvider().refreshAll();
+TreeData<Folder> treeData = treeGrid.getTreeData();
+TreeDataProvider<Folder> treeDataProvider = (TreeDataProvider<Folder>) treeGrid.getDataProvider();
 ----
 
-For more control over the data provider — for example, to use the [enumname]`HierarchyFormat.FLATTENED` format — construct a [classname]`TreeDataProvider` explicitly as shown in the next section.
+The next section explains the [classname]`TreeData` and [classname]`TreeDataProvider` concepts in more detail, and how to use them to modify, sort, and filter the hierarchical data.
 
-[NOTE]
-====
-Because the entire hierarchy is walked and held in memory upfront, [methodname]`setItems` is best suited for hierarchies that fit comfortably in memory. For larger or backend-driven hierarchies, use a custom hierarchical data provider as described in the <<#custom-data-providers,Custom Data Providers>> section.
-====
 
 == Tree Data Provider
 
@@ -67,12 +70,11 @@ The [classname]`TreeDataProvider` class is a companion to [classname]`TreeData`.
 
 Both are available out of the box in Flow and can be used with Tree Grid like this:
 
+[.example]
+--
 [source,java]
+.Example.java
 ----
-public record Folder(String name) {}
-
-...
-
 // Create a TreeData instance with Folder records
 TreeData<Folder> treeData = new TreeData<>();
 
@@ -85,6 +87,13 @@ TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(
 treeGrid.setDataProvider(treeDataProvider);
 ----
 
+[source,java]
+.Folder.java
+----
+public record Folder(String name, List<Folder> children) {}
+----
+--
+
 [NOTE]
 ====
 Using the [enumname]`HierarchyFormat.FLATTENED` option with [classname]`TreeDataProvider` is recommended to ensure Tree Grid preserves its scroll position after the TreeData's hierarchy is modified. More details about hierarchy formats are provided later in this article in the <<#hierarchy-formats,Hierarchy Formats>> section.
@@ -96,11 +105,6 @@ The [classname]`TreeData` structure provides methods for adding both root-level 
 
 [source,java]
 ----
-// ├── Work
-// │   └── Documents
-// │       └── Invoices
-// └── Family
-
 Folder work = new Folder("Work");
 Folder documents = new Folder("Documents");
 Folder invoices = new Folder("Invoices");
@@ -109,6 +113,13 @@ Folder family = new Folder("Family");
 treeData.addRootItems(work, family);
 treeData.addItem(work, documents);
 treeData.addItem(documents, invoices);
+
+// Result:
+//
+// ├── Work
+// │   └── Documents
+// │       └── Invoices
+// └── Family
 ----
 
 The resulting tree structure can be navigated using the [methodname]`TreeData#getChildren(T parent)` and [methodname]`TreeData#getParent(T item)` methods:
