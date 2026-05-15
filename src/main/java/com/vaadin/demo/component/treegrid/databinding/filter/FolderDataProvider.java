@@ -70,16 +70,21 @@ public class FolderDataProvider
         for (Folder child : children) {
             List<Folder> descendants = Collections.emptyList();
 
+            // Recurse when expanded, or when filtering, since a collapsed
+            // folder must still be included if any descendant matches.
             var isExpanded = expandedFolderIds.contains(getId(child));
             if (isExpanded || filter.isPresent()) {
                 descendants = flatten(child, expandedFolderIds, filter);
             }
 
+            // Keep folder if it matches itself or has a matching descendant.
             var matchesFilter = matches(child, filter)
                     || !descendants.isEmpty();
             if (matchesFilter) {
                 result.add(child);
             }
+
+            // Only include descendants when user actually expanded the folder.
             if (matchesFilter && isExpanded) {
                 result.addAll(descendants);
             }
