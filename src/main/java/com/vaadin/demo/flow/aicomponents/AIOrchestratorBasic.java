@@ -16,7 +16,7 @@ public class AIOrchestratorBasic extends Div {
         MessageList messageList = new MessageList();
         MessageInput messageInput = new MessageInput();
 
-        LLMProvider provider = getLLMProvider();
+        LLMProvider provider = new MockLLMProvider();
 
         AIOrchestrator.builder(provider, "You are a helpful assistant.")
                 .withMessageList(messageList).withInput(messageInput).build();
@@ -25,10 +25,6 @@ public class AIOrchestratorBasic extends Div {
         // end::snippet[]
 
         com.vaadin.demo.component.messages.LLMClient.initPolling(messageList); // hidden-source-line
-    }
-
-    private LLMProvider getLLMProvider() {
-        return new MockLLMProvider();
     }
 
     public static class Exporter extends DemoExporter<AIOrchestratorBasic> { // hidden-source-line
