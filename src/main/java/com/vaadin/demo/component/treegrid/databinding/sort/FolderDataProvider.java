@@ -1,5 +1,6 @@
 package com.vaadin.demo.component.treegrid.databinding.sort;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -48,30 +49,25 @@ public class FolderDataProvider
     @Override
     public Stream<Folder> fetchChildren(HierarchicalQuery<Folder, Void> query) {
         // @formatter:off hidden-source-line
-        return flatten(
-                query.getParent(),
-                query.getExpandedItemIds(),
-                query.getSortOrders())
-                .skip(query.getOffset()).limit(query.getLimit());
+        return flatten(query.getParent(), query.getExpandedItemIds(), query.getSortOrders())
+                .stream()
+                .skip(query.getOffset())
+                .limit(query.getLimit());
         // @formatter:on hidden-source-line
     }
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, Void> query) {
-        // @formatter:off hidden-source-line
-        return (int) flatten(
-                query.getParent(),
-                query.getExpandedItemIds(),
-                // Sorting doesn't affect the count, so it can be omitted
-                // here to improve performance.
-                null)
-                .count();
-        // @formatter:end hidden-source-line
+        // Sorting doesn't affect the count, so pass null as sortOrders
+        // to skip it
+        return flatten(query.getParent(), query.getExpandedItemIds(), null)
+                .size();
     }
 
-    private Stream<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
+    private List<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
             List<QuerySortOrder> sortOrders) {
-        Stream<Folder> children = folderTreeData.getChildren(parent).stream();
+        List<Folder> result = new ArrayList<>();
+        List<Folder> children = folderTreeData.getChildren(parent);
 
         // Apply the comparator separately at each hierarchy level so that
         // parents continue to precede their children in the resulting flat
@@ -84,17 +80,19 @@ public class FolderDataProvider
                     .map(FolderDataProvider::toComparator)
                     .reduce(Comparator::thenComparing).orElse(null);
 
-            children = children.sorted(comparator);
+            children = children.stream().sorted(comparator).toList();
         }
 
-        return children.flatMap(child -> {
-            if (expandedFolderIds.contains(getId(child))) {
-                return Stream.concat(Stream.of(child),
-                        flatten(child, expandedFolderIds, sortOrders));
-            }
+        for (Folder child : children) {
+            result.add(child);
 
-            return Stream.of(child);
-        });
+            var isExpanded = expandedFolderIds.contains(getId(child));
+            if (isExpanded) {
+                result.addAll(flatten(child, expandedFolderIds, sortOrders));
+            }
+        }
+
+        return result;
     }
 
     private static Comparator<Folder> toComparator(QuerySortOrder sortOrder) {

@@ -1,8 +1,10 @@
 package com.vaadin.demo.component.treegrid.databinding.filter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.vaadin.demo.component.treegrid.databinding.Folder;
@@ -46,43 +48,50 @@ public class FolderDataProvider
     @Override
     public Stream<Folder> fetchChildren(
             HierarchicalQuery<Folder, String> query) {
+        // @formatter:off hidden-source-line
         return flatten(query.getParent(), query.getExpandedItemIds(), query.getFilter())
-                .skip(query.getOffset()).limit(query.getLimit());
+                .stream()
+                .skip(query.getOffset())
+                .limit(query.getLimit());
+        // @formatter:on hidden-source-line
     }
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, String> query) {
-        return (int) flatten(query.getParent(), query.getExpandedItemIds(),
-                query.getFilter()).count();
+        return flatten(query.getParent(), query.getExpandedItemIds(),
+                query.getFilter()).size();
     }
 
-    private Stream<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
+    private List<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
             Optional<String> filter) {
-        Stream<Folder> children = folderTreeData.getChildren(parent).stream();
+        List<Folder> result = new ArrayList<>();
+        List<Folder> children = folderTreeData.getChildren(parent);
 
-        if (filter.isPresent()) {
-            String term = filter.get().toLowerCase();
-            children = children.filter(folder -> folder.name().toLowerCase().contains(term));
+        for (Folder child : children) {
+            List<Folder> descendants = Collections.emptyList();
+
+            var isExpanded = expandedFolderIds.contains(getId(child));
+            if (isExpanded || filter.isPresent()) {
+                descendants = flatten(child, expandedFolderIds, filter);
+            }
+
+            var matchesFilter = matches(child, filter)
+                    || !descendants.isEmpty();
+            if (matchesFilter) {
+                result.add(child);
+            }
+            if (matchesFilter && isExpanded) {
+                result.addAll(descendants);
+            }
         }
 
-        return children.flatMap(child -> expandedFolderIds.contains(getId(child))
-                ? Stream.concat(Stream.of(child),
-                        flatten(child, expandedFolderIds, filter))
-                : Stream.of(child));
+        return result;
     }
 
-    // Returns true if the folder or any descendant matches the filter, so that
-    // folders containing deep matches stay reachable even when they don't match
-    // themselves.
-    private boolean matches(Folder folder, Predicate<Folder> filter) {
-        return filter.test(folder) || folderTreeData.getChildren(folder).stream()
-                .anyMatch(child -> matches(child, filter));
-    }
-
-    private static Predicate<Folder> toFilter(String filter) {
-        String term = filter.toLowerCase();
-        return folder -> term.isEmpty()
-                || folder.name().toLowerCase().contains(term);
+    private boolean matches(Folder folder, Optional<String> filter) {
+        return filter
+                .map(f -> folder.name().toLowerCase().contains(f.toLowerCase()))
+                .orElse(true);
     }
 }
 // end::body[]
