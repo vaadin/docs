@@ -1,7 +1,8 @@
 package com.vaadin.demo.component.treegrid.databinding.filter;
 
-import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.vaadin.demo.component.treegrid.databinding.Folder;
@@ -45,66 +46,43 @@ public class FolderDataProvider
     @Override
     public Stream<Folder> fetchChildren(
             HierarchicalQuery<Folder, String> query) {
-        return flatten(query.getParent(), query.getExpandedItemIds(),
-                findIdsMatchingFilter(query.getFilter().orElse("")))
+        return flatten(query.getParent(), query.getExpandedItemIds(), query.getFilter())
                 .skip(query.getOffset()).limit(query.getLimit());
     }
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, String> query) {
         return (int) flatten(query.getParent(), query.getExpandedItemIds(),
-                findIdsMatchingFilter(query.getFilter().orElse(""))).count();
+                query.getFilter()).count();
     }
 
     private Stream<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
-            Set<Object> idsMatchingFilter) {
+            Optional<String> filter) {
         Stream<Folder> children = folderTreeData.getChildren(parent).stream();
 
-        if (idsMatchingFilter != null) {
-            children = children.filter(
-                    folder -> idsMatchingFilter.contains(getId(folder)));
+        if (filter.isPresent()) {
+            String term = filter.get().toLowerCase();
+            children = children.filter(folder -> folder.name().toLowerCase().contains(term));
         }
 
-        return children.flatMap(child -> {
-            if (expandedFolderIds.contains(getId(child))) {
-                return Stream.concat(Stream.of(child),
-                        flatten(child, expandedFolderIds, idsMatchingFilter));
-            }
-
-            return Stream.of(child);
-        });
+        return children.flatMap(child -> expandedFolderIds.contains(getId(child))
+                ? Stream.concat(Stream.of(child),
+                        flatten(child, expandedFolderIds, filter))
+                : Stream.of(child));
     }
 
-    /**
-     * Returns the IDs of folders that match the filter, along with the IDs of
-     * their ancestors so that deep matches stay reachable when ancestors don't
-     * match themselves. Returns null when no filter is active, signaling that
-     * every folder should be included.
-     */
-    private Set<Object> findIdsMatchingFilter(String filter) {
+    // Returns true if the folder or any descendant matches the filter, so that
+    // folders containing deep matches stay reachable even when they don't match
+    // themselves.
+    private boolean matches(Folder folder, Predicate<Folder> filter) {
+        return filter.test(folder) || folderTreeData.getChildren(folder).stream()
+                .anyMatch(child -> matches(child, filter));
+    }
+
+    private static Predicate<Folder> toFilter(String filter) {
         String term = filter.toLowerCase();
-        if (term.isEmpty()) {
-            return null;
-        }
-        Set<Object> idsMatchingFilter = new HashSet<>();
-        folderTreeData.getRootItems()
-                .forEach(root -> collectIdsMatchingFilter(root, term,
-                        idsMatchingFilter));
-        return idsMatchingFilter;
-    }
-
-    private boolean collectIdsMatchingFilter(Folder folder, String term,
-            Set<Object> idsMatchingFilter) {
-        boolean folderOrDescendantMatches = folder.name().toLowerCase()
-                .contains(term);
-        for (Folder child : folderTreeData.getChildren(folder)) {
-            folderOrDescendantMatches |= collectIdsMatchingFilter(child, term,
-                    idsMatchingFilter);
-        }
-        if (folderOrDescendantMatches) {
-            idsMatchingFilter.add(getId(folder));
-        }
-        return folderOrDescendantMatches;
+        return folder -> term.isEmpty()
+                || folder.name().toLowerCase().contains(term);
     }
 }
 // end::body[]
