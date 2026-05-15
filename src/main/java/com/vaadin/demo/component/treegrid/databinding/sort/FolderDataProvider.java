@@ -22,18 +22,51 @@ public class FolderDataProvider
         return HierarchyFormat.FLATTENED;
     }
 
+    /* ... standard overrides of isInMemory(), hasChildren(), getDepth() ... */
+    // end::body[]
+
+    @Override
+    public boolean isInMemory() {
+        return true;
+    }
+
+    @Override
+    public boolean hasChildren(Folder folder) {
+        return folderTreeData.getChildren(folder).size() > 0;
+    }
+
+    @Override
+    public int getDepth(Folder folder) {
+        int depth = 0;
+        while ((folder = folderTreeData.getParent(folder)) != null) {
+            depth++;
+        }
+        return depth;
+    }
+    // tag::body[]
+
     @Override
     public Stream<Folder> fetchChildren(HierarchicalQuery<Folder, Void> query) {
-        return flatten(query.getParent(), query.getExpandedItemIds(),
-                query.getSortOrders()).skip(query.getOffset())
-                .limit(query.getLimit());
+        // @formatter:off hidden-source-line
+        return flatten(
+                query.getParent(),
+                query.getExpandedItemIds(),
+                query.getSortOrders())
+                .skip(query.getOffset()).limit(query.getLimit());
+        // @formatter:on hidden-source-line
     }
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, Void> query) {
-        return (int) flatten(query.getParent(), query.getExpandedItemIds(),
-                // Sorting doesn't affect the count, so it's omitted here.
-                null).count();
+        // @formatter:off hidden-source-line
+        return (int) flatten(
+                query.getParent(),
+                query.getExpandedItemIds(),
+                // Sorting doesn't affect the count, so it can be omitted
+                // here to improve performance.
+                null)
+                .count();
+        // @formatter:end hidden-source-line
     }
 
     private Stream<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
@@ -51,9 +84,7 @@ public class FolderDataProvider
                     .map(FolderDataProvider::toComparator)
                     .reduce(Comparator::thenComparing).orElse(null);
 
-            if (comparator != null) {
-                children = children.sorted(comparator);
-            }
+            children = children.sorted(comparator);
         }
 
         return children.flatMap(child -> {
@@ -74,25 +105,6 @@ public class FolderDataProvider
         return sortOrder.getDirection() == SortDirection.DESCENDING
                 ? comparator.reversed()
                 : comparator;
-    }
-
-    @Override
-    public boolean isInMemory() {
-        return true;
-    }
-
-    @Override
-    public boolean hasChildren(Folder folder) {
-        return folderTreeData.getChildren(folder).size() > 0;
-    }
-
-    @Override
-    public int getDepth(Folder folder) {
-        int depth = 0;
-        while ((folder = folderTreeData.getParent(folder)) != null) {
-            depth++;
-        }
-        return depth;
     }
 }
 // end::body[]

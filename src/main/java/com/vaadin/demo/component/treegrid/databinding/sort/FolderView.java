@@ -2,10 +2,10 @@ package com.vaadin.demo.component.treegrid.databinding.sort;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.component.treegrid.databinding.Folder;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 
-public class FolderView extends Div {
+public class FolderView extends VerticalLayout {
     public FolderView() {
         // tag::body[]
         TreeGrid<Folder> treeGrid = new TreeGrid<>();

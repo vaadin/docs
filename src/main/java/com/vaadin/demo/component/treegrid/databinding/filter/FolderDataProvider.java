@@ -19,6 +19,29 @@ public class FolderDataProvider
         return HierarchyFormat.FLATTENED;
     }
 
+    /* ... standard overrides of isInMemory(), hasChildren(), getDepth() ... */
+    // end::body[]
+
+    @Override
+    public boolean isInMemory() {
+        return true;
+    }
+
+    @Override
+    public boolean hasChildren(Folder folder) {
+        return folderTreeData.getChildren(folder).size() > 0;
+    }
+
+    @Override
+    public int getDepth(Folder folder) {
+        int depth = 0;
+        while ((folder = folderTreeData.getParent(folder)) != null) {
+            depth++;
+        }
+        return depth;
+    }
+    // tag::body[]
+
     @Override
     public Stream<Folder> fetchChildren(
             HierarchicalQuery<Folder, String> query) {
@@ -82,25 +105,6 @@ public class FolderDataProvider
             idsMatchingFilter.add(getId(folder));
         }
         return folderOrDescendantMatches;
-    }
-
-    @Override
-    public boolean isInMemory() {
-        return true;
-    }
-
-    @Override
-    public boolean hasChildren(Folder folder) {
-        return folderTreeData.getChildren(folder).size() > 0;
-    }
-
-    @Override
-    public int getDepth(Folder folder) {
-        int depth = 0;
-        while ((folder = folderTreeData.getParent(folder)) != null) {
-            depth++;
-        }
-        return depth;
     }
 }
 // end::body[]
