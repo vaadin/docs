@@ -50,7 +50,7 @@ function Example() {
 
   return (
     <ContextMenu items={items}>
-      <Tooltip slot="tooltip"></Tooltip>
+      <Tooltip slot="tooltip" />
       <Grid allRowsVisible items={gridItems.value} ref={gridRef}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
