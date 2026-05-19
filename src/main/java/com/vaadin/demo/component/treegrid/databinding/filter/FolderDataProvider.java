@@ -49,17 +49,25 @@ public class FolderDataProvider
     public Stream<Folder> fetchChildren(
             HierarchicalQuery<Folder, String> query) {
         // @formatter:off hidden-source-line
-        return flatten(query.getParent(), query.getExpandedItemIds(), query.getFilter())
-                .stream()
-                .skip(query.getOffset())
-                .limit(query.getLimit());
+        List<Folder> result = flatten(
+                query.getParent(),
+                query.getExpandedItemIds(),
+                query.getFilter());
         // @formatter:on hidden-source-line
+
+        return result.stream().skip(query.getOffset()).limit(query.getLimit());
     }
 
     @Override
     public int getChildCount(HierarchicalQuery<Folder, String> query) {
-        return flatten(query.getParent(), query.getExpandedItemIds(),
-                query.getFilter()).size();
+        // @formatter:off hidden-source-line
+        List<Folder> result = flatten(
+                query.getParent(),
+                query.getExpandedItemIds(),
+                query.getFilter());
+        // @formatter:on hidden-source-line
+
+        return result.size();
     }
 
     private List<Folder> flatten(Folder parent, Set<Object> expandedFolderIds,
