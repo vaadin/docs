@@ -64,7 +64,7 @@ You can also use the generic [methodname]`Element.executeJs()` method to run Jav
 
 The [methodname]`executeJs()` method accepts two parameters: the JavaScript expression to invoke; and the parameters to pass to the expression. The given parameters are available as variables named `$0`, `$1`, and so on.
 
-The arguments passed to the expression must be a type supported by the communication mechanism. The supported types are `String`, `Integer`, `Double`, `Boolean`, `JsonNode`, and `Element`.
+The arguments passed to the expression must be a type supported by the communication mechanism. The supported types are `String`, `Integer`, `Double`, `Boolean`, `JsonNode`, `Element`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>).
 
 .Calling `MyModule.complete(true)` on the client side
 [example]
@@ -93,6 +93,81 @@ public void setItems(List<String> items) {
 Always pass arguments using the `$0`, `$1`, ... notation to avoid script injection vulnerabilities. Never concatenate or interpolate strings to build JavaScript code to be executed.
 
 If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrent().getPage().executeJs()` method.
+
+
+[[js-function]]
+== Passing JavaScript Functions [since:com.vaadin:vaadin@V25.2]
+
+A [classname]`JsFunction` lets you build a reusable JavaScript function on the server and pass it as a parameter to [methodname]`executeJs()` or [methodname]`callJsFunction()`. The function arrives on the client as a real callable function with its captured values pre-bound, so you don't need to concatenate JavaScript fragments to embed server-side values.
+
+The first argument to [methodname]`JsFunction.of()` is a JavaScript function body. The remaining arguments are captured values, referenced inside the body as `$0`, `$1`, &hellip; using the same naming convention as [methodname]`executeJs()` parameters.
+
+.Defining a function and invoking it
+[example]
+====
+[source,java]
+----
+JsFunction greet = JsFunction.of(
+        "return $0 + ' ' + $1;", "Hello", "World");
+getElement().executeJs(
+        "this.textContent = $0();", greet);
+----
+====
+
+Captures may be any value supported as an [methodname]`executeJs()` parameter, including `Element`. An attached element arrives on the client as the corresponding DOM node; a detached element arrives as `null`.
+
+.Capturing an element
+[example]
+====
+[source,java]
+----
+Div target = new Div();
+add(target);
+
+JsFunction mutate = JsFunction.of(
+        "$0.textContent = 'updated';",
+        target.getElement());
+getElement().executeJs("$0();", mutate);
+----
+====
+
+
+=== Declaring Runtime Arguments
+
+Use [methodname]`withArguments()` to declare named parameters that the materialized function accepts at call time. The body references them by name, and the caller supplies them positionally after the captured values:
+
+.A function with runtime arguments
+[example]
+====
+[source,java]
+----
+JsFunction format = JsFunction
+        .of("return prefix + ':' + suffix;")
+        .withArguments("prefix", "suffix");
+getElement().executeJs(
+        "this.textContent = $0('alpha', 'beta');", format);
+----
+====
+
+
+=== Controlling `this`
+
+Inside the body, `this` follows normal JavaScript call semantics &ndash; it isn't bound to the host element. The caller of the materialized function chooses the receiver:
+
+.Calling the function with a specific `this`
+[example]
+====
+[source,java]
+----
+JsFunction setOwnText = JsFunction
+        .of("this.textContent = msg;")
+        .withArguments("msg");
+getElement().executeJs(
+        "$0.call(this, 'host element text');", setOwnText);
+----
+====
+
+To use a specific element from within the body regardless of how the function is called, pass it as a capture instead of relying on `this`.
 
 
 == Return Values
