@@ -47,7 +47,8 @@ public class FolderDataProvider
     public Stream<Folder> fetchChildren(HierarchicalQuery<Folder, Void> query) {
         List<Folder> children = folderTreeData.getChildren(query.getParent());
 
-        return children.stream().skip(query.getOffset()).limit(query.getLimit());
+        return children.stream().skip(query.getOffset())
+                .limit(query.getLimit());
     }
 
     /**

@@ -45,7 +45,8 @@ public class FolderDataProvider
      */
     @Override
     public Stream<Folder> fetchChildren(HierarchicalQuery<Folder, Void> query) {
-        List<Folder> result = flatten(query.getParent(), query.getExpandedItemIds());
+        List<Folder> result = flatten(query.getParent(),
+                query.getExpandedItemIds());
 
         return result.stream().skip(query.getOffset()).limit(query.getLimit());
     }
@@ -56,7 +57,8 @@ public class FolderDataProvider
      */
     @Override
     public int getChildCount(HierarchicalQuery<Folder, Void> query) {
-        List<Folder> result = flatten(query.getParent(), query.getExpandedItemIds());
+        List<Folder> result = flatten(query.getParent(),
+                query.getExpandedItemIds());
 
         return result.size();
     }
