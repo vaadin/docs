@@ -1,6 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/context-menu';
 import '@vaadin/grid';
+import '@vaadin/tooltip';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { Grid } from '@vaadin/grid';
@@ -45,6 +46,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippethtml[] -->
       <vaadin-context-menu .items=${this.items}>
+        <vaadin-tooltip slot="tooltip"></vaadin-tooltip>
         <vaadin-grid
           all-rows-visible
           .items=${this.gridItems}

@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { ContextMenu } from '@vaadin/react-components/ContextMenu.js';
+import { ContextMenu, Tooltip } from '@vaadin/react-components';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -50,6 +50,7 @@ function Example() {
 
   return (
     <ContextMenu items={items}>
+      <Tooltip slot="tooltip"></Tooltip>
       <Grid allRowsVisible items={gridItems.value} ref={gridRef}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />
