@@ -40,7 +40,7 @@ The API exposes three nested contexts that mirror Vaadin's runtime hierarchy:
 | One [classname]`VaadinSession` and the security state of a single logical user. A user can own many windows.
 
 | [classname]`BrowserlessUIContext`
-| One [classname]`UI` instance -- a single browser window. Provides the testing DSL ([methodname]`navigate`, [methodname]`$`, [methodname]`test`, ...).
+| One [classname]`UI` instance -- a single browser window. Provides the testing DSL ([methodname]`navigate`, [methodname]`find`, [methodname]`test`, ...).
 |===
 
 [NOTE]
@@ -53,15 +53,12 @@ When the test calls a DSL method on any [classname]`BrowserlessUIContext`, the A
 
 The application context is built once per test, typically in [annotationname]`@BeforeEach`, and closed in [annotationname]`@AfterEach`. Use try-with-resources or call [methodname]`close()` explicitly: closing the application context cascades to every user and window it created.
 
-Routes are discovered with [classname]`Routes.autoDiscoverViews(...)`, passing the packages that contain [annotationname]`@Route`-annotated views.
+[methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
 
 .Plain Java
 [source,java]
 ----
-Routes routes = new Routes()
-        .autoDiscoverViews("com.example.shop");
-
-try (var app = BrowserlessApplicationContext.create(routes)) {
+try (var app = BrowserlessApplicationContext.create(CartView.class)) {
     var user = app.newUser();
     var window = user.newWindow();
     window.navigate(CartView.class);
@@ -85,10 +82,8 @@ class CartViewMultiUserTest {
 
     @BeforeEach
     void setUp() {
-        Routes routes = new Routes()
-                .autoDiscoverViews("com.example.shop");
-        app = SpringBrowserlessApplicationContext.create(routes,
-                applicationContext);
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                CartView.class);
     }
 
     @AfterEach
@@ -108,9 +103,7 @@ class CartViewMultiUserTest {
 
     @BeforeEach
     void setUp() {
-        Routes routes = new Routes()
-                .autoDiscoverViews("com.example.shop");
-        app = QuarkusBrowserlessApplicationContext.create(routes);
+        app = QuarkusBrowserlessApplicationContext.create(CartView.class);
     }
 
     @AfterEach
@@ -208,10 +201,8 @@ class MultiUserSecurityTest {
 
     @BeforeEach
     void setUp() {
-        Routes routes = new Routes()
-                .autoDiscoverViews("com.example.security");
-        app = SpringBrowserlessApplicationContext.createSecured(routes,
-                applicationContext);
+        app = SpringBrowserlessApplicationContext.createSecured(
+                applicationContext, ProtectedView.class);
     }
 
     @AfterEach
@@ -260,9 +251,8 @@ class MultiUserSecurityTest {
 
     @BeforeEach
     void setUp() {
-        Routes routes = new Routes()
-                .autoDiscoverViews("com.example.security");
-        app = QuarkusBrowserlessApplicationContext.createSecured(routes);
+        app = QuarkusBrowserlessApplicationContext
+                .createSecured(ProtectedView.class);
     }
 
     @AfterEach
@@ -301,17 +291,23 @@ As with the Spring factory, [methodname]`newUser()` without arguments creates an
 
 == Customizing the Application Context
 
-[methodname]`BrowserlessApplicationContext.builder(routes)` exposes the same configuration knobs as the framework-specific factories. Call [methodname]`build()` directly for an unsecured context, or chain [methodname]`withSecurityContextHandler(...)` to transition to a typed [classname]`SecuredBrowserlessApplicationContext.Builder<C>` whose [methodname]`build()` returns the credential-aware variant.
+For advanced setups, [classname]`BrowserlessApplicationContext.Builder` exposes the same configuration knobs as the framework-specific factories. Construct one directly and call [methodname]`build()` for an unsecured context, or chain [methodname]`withSecurityContextHandler(...)` to transition to a typed [classname]`SecuredBrowserlessApplicationContext.Builder<C>` whose [methodname]`build()` returns the credential-aware variant.
 
 .Builder Configuration
 [cols="1,2"]
 |===
 | Method | Purpose
 
+| [methodname]`withViewPackages(String...)` / [methodname]`withViewPackages(Class<?>...)`
+| Adds packages to scan for [annotationname]`@Route`-annotated views. Successive calls accumulate.
+
+| [methodname]`withComponentTesterPackages(String...)` / [methodname]`withComponentTesterPackages(Class<?>...)`
+| Adds packages to scan for custom [classname]`ComponentTester` implementations.
+
 | [methodname]`withSecurityContextHandler(SecurityContextHandler<C>)`
 | Enables credential-aware [methodname]`newUser(...)` overloads. Transitions to the typed [classname]`SecuredBrowserlessApplicationContext.Builder<C>`.
 
-| [methodname]`withServletFactory(BiFunction<Routes, UIFactory, VaadinServlet>)`
+| [methodname]`withServletFactory(...)`
 | Replaces the default mock servlet -- for example, to plug in a framework-specific servlet.
 
 | [methodname]`withUIFactory(UIFactory)`
@@ -323,6 +319,17 @@ As with the Spring factory, [methodname]`newUser()` without arguments creates an
 | [methodname]`withCloseHook(Runnable)`
 | Registers a callback to run after the context tears down -- intended for releasing framework-specific state.
 |===
+
+For one-off tweaks without holding on to a builder reference, [methodname]`BrowserlessApplicationContext.create(UnaryOperator<Builder>)` and the corresponding [methodname]`createSecured(Function<Builder, SecuredBuilder<C>>)` accept a configurer:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(b -> b
+        .withViewPackages(CartView.class)
+        .withCloseHook(() -> testFixtures.reset()))) {
+    // ...
+}
+----
 
 The Spring and Quarkus factories expose [methodname]`builder(...)` overloads that return a pre-wired builder for projects that need to add further customizations on top of the framework defaults.
 

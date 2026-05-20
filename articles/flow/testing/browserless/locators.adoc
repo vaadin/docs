@@ -1,0 +1,180 @@
+---
+title: Component Locators
+page-title: Using locators in Vaadin browserless tests
+description: Drive components with a fluent locator that combines a query filter chain and tester actions.
+meta-description: Use the Vaadin browserless locator API to assert and act on components in a single fluent expression -- replacing find().single() plus test() boilerplate.
+order: 22
+---
+
+
+= Component Locators
+
+[since:com.vaadin:vaadin@V25.2]
+
+A *locator* is a fluent object that combines a [classname]`ComponentQuery` filter chain with the actions of a [classname]`ComponentTester`. A single expression replaces the common [methodname]`test(find(...).single())` pattern and the locator is reusable across UI changes -- its resolution cache rewinds automatically when filters are reapplied, or explicitly via [methodname]`invalidate()`.
+
+[NOTE]
+Locator entry points are currently available on [classname]`BrowserlessUIContext` (the multi-user/multi-window API). For tests that extend [classname]`BrowserlessTest` or use the JUnit 6 extensions, continue to use <<component-query#, component queries>> with [methodname]`test()`.
+
+
+== Generated Entry Points
+
+For every built-in Vaadin component tester, a typed [methodname]`find&lt;Component&gt;()` method is available on the window. The method name mirrors the component type, and the returned locator exposes both the filter chain and the tester's action methods:
+
+[source,java]
+----
+var window = app.newUser().newWindow();
+window.navigate(CartView.class);
+
+window.findTextField().withId("name").setValue("World");
+window.findButton().withCaption("Save").click();
+
+Assertions.assertEquals("Saved: World",
+        window.findSpan().withId("echo").getText());
+----
+
+For testers whose value type isn't pinned by the component (typically [classname]`Grid` and [classname]`ComboBox`), the entry point takes a witness:
+
+[source,java]
+----
+Person first = window.findGrid(Person.class).getRow(0);
+int rows = window.findGrid(Person.class).size();
+----
+
+
+== Filter Chain
+
+Locators share their filter vocabulary with [classname]`ComponentQuery`:
+
+[cols="1,2"]
+|===
+| Method | Description
+
+| [methodname]`withId(String)`
+| Matches the component with the given `id`.
+
+| [methodname]`withCaption(String)` / [methodname]`withCaptionContaining(String)`
+| Matches by exact caption or by caption substring.
+
+| [methodname]`withText(String)` / [methodname]`withTextContaining(String)`
+| Matches by exact text content or by substring.
+
+| [methodname]`withClassName(String...)` / [methodname]`withoutClassName(String...)`
+| Matches components carrying all (or none) of the given CSS class names.
+
+| [methodname]`withTheme(String)` / [methodname]`withoutTheme(String)`
+| Matches components with (or without) the given theme value.
+
+| [methodname]`withAttribute(String)` / [methodname]`withAttribute(String, String)` / [methodname]`withoutAttribute(...)`
+| Matches by attribute presence and value.
+
+| [methodname]`withValue(V)`
+| Matches [interfacename]`HasValue` components whose value equals the given value.
+
+| [methodname]`withCondition(Predicate<C>)`
+| Matches components satisfying a custom predicate.
+
+| [methodname]`inside(Component)` / [methodname]`inside(Locator)`
+| Scopes the search to descendants of the given component (or of the component matched by the given locator -- resolved lazily on first action).
+
+| [methodname]`atIndex(int)`
+| Picks the n-th match (1-based) when the filter chain yields more than one.
+
+| [methodname]`with(UnaryOperator<ComponentQuery<C>>)`
+| Escape hatch for filters not exposed on the locator (for example, [methodname]`withPropertyValue` or [methodname]`withResultsSize`).
+|===
+
+[source,java]
+----
+window.findButton()
+        .with(q -> q.withPropertyValue(Button::getText, "Save"))
+        .click();
+----
+
+
+== Resolution
+
+Most locator chains end in a tester action ([methodname]`click()`, [methodname]`setValue()`, ...), which resolves the locator to a single component and caches the result for the rest of the chain. The base locator also exposes resolution methods directly:
+
+[cols="1,2"]
+|===
+| Method | Description
+
+| [methodname]`component()`
+| Resolves to a single matching component (or the [methodname]`atIndex(n)` pick). Caches the result; subsequent calls return the same instance until the cache is cleared.
+
+| [methodname]`components()`
+| Returns all matching components. Bypasses the cache.
+
+| [methodname]`exists()`
+| Returns [code]`true` if the filter chain matches at least one component.
+
+| [methodname]`invalidate()`
+| Rewinds the cache and clears any [methodname]`atIndex(n)` pick. Use after a UI change that may have replaced or detached the resolved component.
+|===
+
+Filter methods themselves clear only the resolution cache, so a locator can be re-used safely across UI mutations without re-applying its filters. [methodname]`atIndex(n)` is sticky -- it is part of the filter chain -- so only [methodname]`invalidate()` resets the pick.
+
+[source,java]
+----
+var save = window.findButton().withCaption("Save");
+
+window.findTextField().withId("name").setValue("first");
+save.click();
+
+// Same locator instance, fresh resolution after the UI changed
+window.findTextField().withId("name").setValue("second");
+save.invalidate().click();
+----
+
+
+== Seeding a Locator with a Direct Reference
+
+When the test already holds a reference to a specific component (for example, an exposed field of a composite), [methodname]`use(component)` returns a locator pinned to that instance. The locator skips the type-based search and applies any further filter on top of the identity match:
+
+[source,java]
+----
+PersonForm form = window.find(PersonForm.class).single();
+
+window.use(form.nameField).setValue("Ada");
+window.use(form.emailField).setValue("ada@example.com");
+window.use(form.submit).click();
+----
+
+
+== Custom Locators
+
+For composites, page objects, or domain-specific widgets, subclass [classname]`Locator` with the recursive self-type so filter steps stay chainable, and expose the actions you want the test to see. Scope inner queries with [methodname]`inside(this)` so they only match descendants of the resolved composite:
+
+[source,java]
+----
+public class PersonFormLocator
+        extends Locator<PersonForm, PersonFormLocator> {
+
+    public PersonFormLocator() {
+        super(PersonForm.class);
+    }
+
+    public PersonFormLocator fillIn(String name, String email) {
+        new TextFieldLocator().withId("pf-name").inside(this).setValue(name);
+        new TextFieldLocator().withId("pf-email").inside(this).setValue(email);
+        return this;
+    }
+
+    public void submit() {
+        new ButtonLocator().withId("pf-submit").inside(this).click();
+    }
+}
+----
+
+Tests reach the custom locator through [methodname]`find(Supplier&lt;L&gt;)`:
+
+[source,java]
+----
+window.find(PersonFormLocator::new)
+        .fillIn("Ada", "ada@example.com")
+        .submit();
+----
+
+
+[discussion-id]`2E7A4F31-6B98-4D2A-9C18-5F3E8A7B1C04`
