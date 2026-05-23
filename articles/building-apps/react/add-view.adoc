@@ -1,0 +1,170 @@
+---
+title: Add a React View
+page-title: How to add a React view to a Vaadin application
+meta-description: Learn to create, name, and organize React views in Vaadin - routing conventions, directory structures, route aliases, and best practices for defining explicit routes.
+order: 5
+---
+
+
+= React Views
+:toclevels: 2
+
+In this guide, you'll learn how to create and name views in React, assign multiple routes to a single view, and organize views into view directories.
+
+== Creating Views
+
+Hilla views are React components that are returned by the default exported function defined in a TSX file:
+
+[source,tsx]
+.hello.tsx
+----
+export default function HelloView() {
+    return <h1>Hello, World!</h1>;
+}
+----
+
+The default way for creating routes for views in Hilla is based on the file system structure. The route for a view is determined based on:
+
+1. where the respective file for a view is located, relative to the `src/main/frontend/views` directory, and
+
+2. how the respective file for a view is named.
+
+For example, if the [filename]`hello.tsx` file is located directly under `src/main/frontend/views`, then the route for `HelloView` component (default export from this file) is `/hello`, which means the file name [filename]`hello.tsx` excluding the `.tsx`. If the application is running from the root context, users would be able to access this view by navigating to `\https://example.com/hello`. Moreover, moving this file under `src/main/frontend/views/greeting` directory changes the route to `/greeting/hello`, so the users can access this view by navigating to `\https://example.com/greeting/hello`.
+
+Likewise, naming the view file as [filename]`hello-world.tsx` or [filename]`HelloWorld.tsx` results in the route `/hello-world` or `/HelloWorld`.
+
+To avoid repeating the `src/main/frontend/views` throughout this guide, `views` is used as an alias to refer to this directory.
+
+If a view is supposed to target the root route, the file should be named as [filename]`@index.tsx` and located directly under the `views` directory:
+
+[source,tsx]
+.@index.tsx
+----
+export default function HomeView() {
+    return <h1>Home</h1>;
+}
+----
+
+Then, the route for the above component is `/`, and if the application is running from the root context, users can access this view by navigating to `\https://example.com/`.
+
+
+== View Naming
+
+React only recognizes an exported function as a component if the function name starts with an uppercase letter. For example, the following component is recognized as a valid React component:
+
+[source,tsx]
+.customers.tsx
+----
+export default function CustomersView() {
+    return <h1>Customers</h1>;
+}
+----
+
+Defining the function name as `customersView` or `customerList` does not result in a compile or runtime error, but is not recognized as a React component either.
+
+The routing uses the React component's name for creating the default automatic title for the view. For example, the title for the `CustomersView` component is `Customers`, and the title for the `HelloWorldView` component is `Hello World`. This automatically-determined title is used when creating the navigation menu based on utilities from the routing API.
+
+Another important convention to consider while naming the views and directories is to use the `_` (underscore) character at the beginning of the file or directory name to instruct the routing system to ignore it. For example, a file named as `_AddressFormComponent.tsx` is ignored when creating routes for views. This is useful for creating utility files and reusable components that are not intended to be available as navigation targets.
+
+The details about the automatic title and the navigation menu are covered in more detail in the <<../navigate#,Navigate to a View>> guide.
+
+
+== Route Aliases
+
+In Hilla, there is no shortcut for creating multiple routes that target the same view. However, you can create a new view file that exports a component returning the target component. You can place this alias component in any directory to create desired route alias. For example, the following view targets the root route (`/`):
+
+[source,tsx]
+.@index.tsx
+----
+export default function RootView() {
+    return <h1>Home</h1>;
+}
+----
+
+Now to have the same view accessible via `/home` and `/main`, you can create two additional view files:
+
+[source,tsx]
+.home.tsx
+----
+export default function HomeView() {
+    return RootView();
+}
+----
+
+and
+
+[source,tsx]
+.main.tsx
+----
+export default function MainView() {
+    return RootView();
+}
+----
+
+
+== Directory Structure
+
+As mentioned earlier, the file system structure determines the route for a view. Therefore, organizing views into directories helps maintain a clear structure for views and routes.
+
+Simple views that consist of only one file can be placed directly under the `views` directory. For example, "About", "Contact Us", and the "Home" view do not need a complex composition of components, nor should have a long route, so it is a good practice to place them directly under the `views` directory:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            ├── @index.tsx
+            ├── about.tsx
+            └── contact-us.tsx
+----
+
+This way, the routes for these views are `/`, `/about`, and `/contact-us`, respectively.
+
+However, for more complex views that consist of other components, or if they should accept route parameters, it is recommended to place all the files related to that view under a directory, named by the functionality they provide. For example, views related to customers can be grouped under a `customers` directory, and views related to products under a `products` directory. The following is an example of a directory structure for view files that handle the customer related functionalities:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            └── customers
+                ├── {id} <1>
+                │   ├── edit.tsx <2>
+                │   └── index.tsx <3>
+                ├── @index.tsx <4>
+                └── new.tsx <5>
+----
+1. The `{id}` directory is a placeholder for the route parameter. You will learn more about route parameters in the <<../navigate#,Navigate to a View>> guide.
+2. The [filename]`edit.tsx` file is responsible for editing a specified customer details. The route for this view is `/customers/:id/edit`.
+3. The [filename]`@index.tsx` file is responsible for displaying the details of a specified customer. The route for this view is `/customers/:id`.
+4. The [filename]`index.tsx` file is responsible for displaying the list of customers. The route for this view is `/customers`.
+5. The [filename]`new.tsx` file is responsible for adding a new customer. The route for this view is `/customers/new`.
+
+As this guide focuses on basics of creating views in Hilla, further details about routing conventions are covered in the <<{articles}/hilla/guides/routing#, Routing>> guide.
+
+
+== Defining Explicit Routes
+
+So far, you have learned how to create views and how routes are automatically resolved based on the file system structure and file name. However, if you want to have a custom route for a view, you can export a `ViewConfig` object named `config` from the view file. The path specified for the `route` overrides the automatically-resolved path according to the routing conventions. For example, the following view has a custom route `/custom-route`:
+
+[source,tsx]
+.hello.tsx
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export const config: ViewConfig = {
+  route: "/custom-route",
+};
+
+export default function HelloView() {
+    return <h1>Hello, World!</h1>;
+}
+----
+
+Now, users can access this view by navigating to `\https://example.com/custom-route`.
+
+[NOTE]
+Avoid using explicit routes unless absolutely necessary. The routing system is designed to automatically resolve the routes based on the file system structure and the file name, which helps to keep the routes consistent and predictable.
+

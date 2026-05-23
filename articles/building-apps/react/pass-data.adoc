@@ -1,0 +1,340 @@
+---
+title: Passing Data in React
+page-title: How to navigate to a view in Hilla | Vaadin
+description: Learn how to navigate between Hilla views in a Vaadin application.
+meta-description: This guide covers how to navigate to a Hilla or Flow view in Vaadin applications, including creating links and programmatic navigation.
+order: 15
+---
+
+
+= Route Parameters in Hilla
+:toclevels: 2
+
+In this guide, you'll learn how to create a view that accepts a single route parameter. You'll also explore the differences between required, optional, and wildcard route parameters. 
+
+
+== Required Route Parameters
+
+To create a Hilla view that accepts a required route parameter, you need to define the parameter name as the view name placed between curly braces (`{}`) followed by the `.tsx` suffix. For example, to create a view that accepts a required `productId` parameter, you should name the view `{productId}.tsx`. The directory structure under the `views` looks like this:
+
+[source]
+----
+views/
+└── products/
+    └── {productId}.tsx <1>
+----
+<1> The view file that accepts the `productId` parameter. The route is in the form of `/products/{productId}`, where `productId` is a required parameter. Routes such as `/products/123`, `/products/prd222`, etc., match this view. Trying to navigate to `/products` results in a 404 Not Found error unless a view matching the route is defined.
+
+Though it is technically possible to define the views with parameters directly under the `views` directory, it is recommended to use subdirectories to keep the views organized.
+
+The routing system also supports having parameters in the middle of the route, which means the directories can also have their names defined with a `{param-name}` convention. Here is an example of a view that accepts a required `productId` parameter:
+
+[source]
+----
+views/
+└── products
+    └── {productId} <1>
+        └── edit.tsx
+----
+<1> The directory where all its children files have the `productId` parameter in the middle of their routes. The route is in the form of `/products/{productId}/edit`, where `productId` acts as a placeholder for the required parameter, in this case, the product ID. Routes such as `/products/123/edit`, `/products/prd222/edit`, etc., match this view. Trying to navigate to `/products/edit` results in a 404 Not Found error unless a view matching the route is defined.
+
+
+=== Accessing Route Parameter Value
+
+To access the route parameter in the view, use the `useParams` hook from `react-router` in your component. Here is an example of a view that accepts a required `productId` parameter:
+
+[source,tsx]
+.views/products/{productId}.tsx
+----
+// tag::snippet[]
+import { useParams } from 'react-router';
+// end::snippet[]
+
+export default function ProductView() {
+// tag::snippet[]
+  const { productId } = useParams(); <1>
+// end::snippet[]
+
+  return (
+    <>
+        <h1>Product Details</h1>
+        <p>Product ID: {productId}</p>
+    </>
+  );
+}
+----
+<1> The `useParams` hook returns an object containing the route parameters. In this case, the `productId` parameter is extracted from the object and stored in a variable.
+
+
+=== Passing Route Parameter
+
+To navigate to a view that accepts a route parameter, use the `NavLink` component from `react-router`. Here is an example of how to create a link to a view located at `/products/123`:
+
+[source,tsx]
+----
+import { NavLink } from 'react-router';
+...
+<NavLink to="/products/123">Product 123</NavLink>
+----
+
+Another way is to use the `useNavigate` hook to navigate programmatically. Here is an example of how to use `useNavigate` for programmatic navigation:
+
+[source,tsx]
+----
+// tag::snippet[]
+import { useNavigate } from 'react-router';
+// end::snippet[]
+
+function MyComponent() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/products/123');
+  };
+
+  return (
+    <button onClick={handleClick}>
+      Go to Product 123
+    </button>
+  );
+}
+----
+
+By using either of the above methods, you can navigate to the `/views/products/{productId}.tsx` view that accepts the `productId` route parameter. If you navigate to `/products/123`, the `productId` parameter is extracted and used in the view to fetch the product details for the given ID.
+
+If a parameter is expected in the middle of the route, the method for navigating to the view is the same. For example, to navigate to `/products/123/edit`, use the same methods as above. The `useParams` hook extracts the `productId` parameter from the route, and the view fetches the product details for the given ID.
+
+
+== Optional Route Parameters
+
+Views can also have optional route parameters. This means that the view can be navigated to with or without the parameter. To make a route parameter optional, use double curly braces around the parameter name when naming the view file. For example, to create a view that accepts an optional `categoryName` parameter, name the view `{{categoryName}}.tsx`. The directory structure under the `views` looks like this:
+
+[source]
+----
+views/
+└── products
+    └── {{categoryName}}.tsx <1>
+----
+
+<1> The view file that accepts the `categoryName` optional parameter. The route for this view is in the form of `/products/{{categoryName}}`, where `categoryName` is an optional parameter. Routes such as `/products`, `/products/electronics`, `/products/clothing`, etc., match this view. Note that a view with an optional parameter should be able to handle both cases when the parameter is present and when it is not. Here is an example of a view that accepts an optional `categoryName` parameter:
+
+[source,tsx]
+.views/products/{{categoryName}}.tsx
+----
+import { useParams } from "react-router";
+import { ProductService } from "Frontend/generated/endpoints.js";
+import { useEffect } from "react";
+import { useSignal } from "@vaadin/hilla-react-signals";
+
+export default function ProductByCategoriesView() {
+// tag::snippet[]
+  const { categoryName } = useParams(); <1>
+// end::snippet[]
+  const products = useSignal<string[]>([]);
+
+  useEffect(() => {
+// tag::snippet[]
+    if (categoryName == undefined) { <2>
+// end::snippet[]
+      ProductService.allProducts().then((data) => products.value = data);
+    } else {
+      ProductService.productsInCategory(categoryName).then((data) => products.value = data);
+    }
+  }, []);
+
+  return (
+    <>
+      <h3>Products from {categoryName ? `'${categoryName}' category` : "all categories"}:</h3>
+      <div>
+        <ul>{products.value.map((product) => (
+          <li key={product}>{product}</li>
+        ))}</ul>
+      </div>
+    </>
+  );
+}
+----
+<1> The `useParams` hook returns an object containing the route parameters. In this case, the `categoryName` parameter is extracted from the object and stored in a variable.
+<2> The `categoryName` parameter is checked to determine whether it is present or not. If it is not present, all products are fetched. Otherwise, products in the specified category are fetched.
+
+In the above example, the `ProductByCategoriesView` fetches all products when the `categoryName` parameter is not present. When the `categoryName` parameter is present, it fetches the products in the specified category. The view displays the products in the specified category or all products if the `categoryName` parameter is not present.
+
+
+== Wildcard Route Parameters
+
+Wildcard route parameters are used to match any number of URL segments. This means when a URL cannot be matched with the other defined routes, the wildcard route is picked as the fallback to handle the navigation. One of the common cases of defining wildcard route parameters when defining the routes in a Hilla application is to properly handle the navigation of users when the route is not found. As the default way of defining the routes is through defining the view files and proper directory structure, adding wildcard route parameters should be done by defining the file name as `{...wildcard}.tsx`. The literal value `wildcard` can be anything that is supported by the filesystem as the filename, but Vaadin recommends to use the `{...wildcard}.tsx` as a conventional standard to make it more readable and intuitive. An example of a view that accepts a wildcard route parameter is shown below:
+
+[source]
+----
+views/
+├── @index.tsx
+├── about.tsx
+├── contact-us.tsx
+└── {...wildcard}.tsx <1>
+----
+<1> The view file that accepts the wildcard route parameter.
+
+The routes that are matched with this view depends on the other defined routes. In this case the `/`, `/about`, and `/contact-us` are mapped to their respective views, and if the user tries to navigate to any other routes such as `/123`, `/orders`, or even `/about/789`, then the `{...wildcard}.tsx` is matched as the fallback, accepting the whole unmatched segment of the URL as the wildcard parameter. The view can then handle the navigation and display a custom 404 Not Found page or redirect the user to the home page. Here is an example of a view that accepts a wildcard route parameter:
+
+[source, tsx]
+.views/{...wildcard}.tsx
+----
+import { NavLink, useParams } from "react-router";
+
+export default function WildcardView() {
+  const wildcard = useParams()['*']; <1>
+  return (
+    <>
+      <h3>Page Not Found!</h3>
+      <div>
+        The '<b>/{wildcard}</b>' route does not exist.
+        Go back to the <NavLink to="/">home page</NavLink>.
+      </div>
+    </>
+  );
+}
+----
+<1> The wildcard route parameter can be extracted using the `useParams` hook, which is stored in the `params` object with the `*` (asterisk) as the key. The matched wildcard parameters can have many segments, and all the segments is extracted at once when reading the `params` object with the `*` (asterisk) as the key.
+
+
+
+= Query Parameters in Hilla
+:toclevels: 2
+
+In this guide, you'll learn how to access and set query parameters in a Hilla view using React.
+
+
+== Using Query Parameters
+
+To work with query parameters in Hilla views, you can use the `useSearchParams` hook from `react-router`. This hook provides methods to read, update, and delete query parameters without causing a full page reload.
+
+The `useSearchParams` hook returns an array with two elements:
+
+- `searchParams` -- a `URLSearchParams` object for reading parameters.
+- `setSearchParams` -- a function to update or clear query parameters.
+
+Here's an example of a view that manages a search term using query parameters:
+
+[source,tsx]
+----
+// tag::snippet[]
+import { useSearchParams } from 'react-router';
+// end::snippet[]
+import { TextField } from '@vaadin/react-components/TextField.js';
+
+export default function ProductView() {
+// tag::snippet[]
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchTerm = searchParams.get('category') || '';
+// end::snippet[]
+    return (
+        <div>
+            <TextField
+                label="Search for:"
+                value={searchTerm}
+                onValueChanged={(e) => {
+                    const newValue = e.detail.value;
+                    if (newValue) {
+// tag::snippet[]
+                        setSearchParams({ category: newValue });
+// end::snippet[]
+                    } else {
+// tag::snippet[]
+                        setSearchParams({});
+// end::snippet[]
+                    }
+                }}
+            />
+            <div>Current search term: {searchTerm}</div>
+        </div>
+    );
+}
+----
+
+In this example, the `category` parameter is used to store the search term. When a user types a new value, `setSearchParams` updates the query parameter accordingly. If the value is empty, passing an empty object to `setSearchParams` clears all query parameters.
+
+
+== Multiple Query Parameters
+
+You can work with multiple query parameters simultaneously. In the following example, a view manages both a search filter (`category`) and a sorting order (`sort`) while ensuring any other query parameters are preserved when updating values:
+
+[source,tsx]
+----
+import { useSearchParams } from 'react-router';
+import { TextField } from '@vaadin/react-components/TextField.js';
+import { Select } from "@vaadin/react-components";
+
+export default function ProductView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const category = searchParams.get('category') || '';
+    const sortOrder = searchParams.get('sort') || 'asc';
+
+    // Function to update query parameters while preserving existing ones
+    const updateParams = (params: Record<string, string>) => {
+        setSearchParams({
+            ...Object.fromEntries(searchParams),
+            ...params
+        });
+    };
+
+    // Ensure URL parameters reflect the current state
+    if (category !== searchParams.get('category')
+        || sortOrder !== searchParams.get('sort')) {
+        updateParams({ category: category, sort: sortOrder });
+    }
+
+    return (
+        <div>
+            <TextField
+                label="Search for:"
+                value={category}
+                onValueChanged={(e) => updateParams({ category: e.detail.value })}
+            />
+            <Select
+                label="Sort order:"
+                value={sortOrder}
+                items={[
+                    { label: 'Ascending', value: 'asc' },
+                    { label: 'Descending', value: 'desc' },
+                ]}
+                onValueChanged={(e) => updateParams({ sort: e.detail.value })}
+            />
+            <div>Current search term: {category}</div>
+            <div>Current sort order: {sortOrder}</div>
+        </div>
+    );
+}
+----
+
+In this example:
+
+- The `category` and `sort` parameters are managed together in the query string.
+- The `updateParams` function ensures that only the changed parameter is updated while preserving any other existing parameters.
+- The URL parameters are updated dynamically to reflect changes in search input and sorting selection.
+
+
+== Query Parameters Best Practices
+
+When working with query parameters in Hilla, follow these best practices:
+
+1. *Default Values*: Determine default values when parameters are missing:
++
+[source,tsx]
+----
+const page = parseInt(searchParams.get('page') || '1');
+const size = parseInt(searchParams.get('size') || '10');
+----
+
+2. *Type Safety*: Convert string parameters to appropriate types:
++
+[source,tsx]
+----
+const isActive = searchParams.get('active') === 'true';
+const count = Number(searchParams.get('count'));
+----
+
+3. *URL Length*: Keep URLs manageable by using concise parameter names and avoiding unnecessary parameters. Extremely long URLs cannot work across all browsers or cannot be handled by all servers.
+
+4. *State Management*: Use query parameters for shareable state that should persist across page reloads.
+
+5. *Security Awareness*: Remember that query parameters are visible in the URL and should not contain sensitive information. Thus, never include sensitive data such as security tokens as query parameters, but use HTTP headers (e.g., authorization header), or request body of the post request, or store them in secure cookies.

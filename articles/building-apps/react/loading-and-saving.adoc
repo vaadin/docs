@@ -1,0 +1,188 @@
+---
+title: Hilla
+page-title: How to load and save a form in Hilla | Vaadin
+meta-description: Learn how to load and save forms in Vaadin Hilla using either selection or service-based fetching, and handle both single or split save operations.
+order: 10
+---
+
+
+= Load and Save a Form in Hilla
+:toclevels: 2
+
+This guide shows how to load and save forms in Vaadin Hilla using *Load from Selection*, *Fetch and Load*, and saving patterns like *Single Save* and *Insert/Update*.
+
+.Part of a Series
+[TIP]
+This is part 3 of the *Add a Form* series. It builds on the concepts introduced in the <<../fields-and-binding/hilla#,Fields & Binding>> and <<../validation/hilla#,Form Validation>> guides. You should also read the <<.#,Overview>>.
+
+
+== Load from Selection
+
+This approach is simple and doesn't require a separate service call. You pass the selected item directly into the form component, like this:
+
+[source,tsx]
+----
+export default function ProposalView() {
+    const proposals = useSignal<Proposal[]>([]); // <1>
+    const selection = useSignal<Proposal[]>([]); // <2>
+
+    useEffect(() => {
+        ProposalService.list()
+            .then(result => proposals.value = result)
+            .catch(error => handleError(error));
+    }, []);
+
+    return (
+        <main>
+            <Grid 
+                items={proposals.value} 
+                selectedItems={selection.value}
+                onActiveItemChanged={event => {
+                    const item = event.detail.value;
+                    selection.value = item ? [item] : [];
+                }}
+            >
+                <GridColumn path="title"/>
+                <GridColumn path="type"/>
+                <GridColumn path="description"/>
+            </Grid>
+            <ProposalDrawer proposal={selection.value[0]}/>
+        </main>
+    );
+}
+----
+<1> Contains all the proposals in the grid.
+<2> Contains the selected proposals.
+
+[NOTE]
+In this example, the form is cleared when the item is deselected. This is because `selection.value[0]` is `undefined` when `selection` is empty, and reading an `undefined` value clears the form.
+
+
+== Fetch and Load
+
+When using Fetch and Load, you first fetch the FDO from an application service, and then populate the form with it. You also have to handle the case when the application service returns an empty result. This could happen if the ID is invalid, or if the entity has been deleted by another session.
+
+Here is an example of what Fetch and Load could look like:
+
+[source,tsx]
+----
+export default function ProposalView() {
+    const proposals = useSignal<ProposalListEntry[]>([]); // <1>
+    const selection = useSignal<ProposalListEntry[]>([]); 
+    const selectedProposal = useSignal<Proposal>(); // <2>
+
+    useEffect(() => {
+        ProposalService.list()
+            .then(result => proposals.value = result)
+            .catch(error => handleError(error));
+    }, []);
+
+    useSignalEffect(() => { // <3>
+        const id = selection.value[0]?.proposalId;
+        if (id != null) {
+            ProposalService.findById(id)
+                .then(result => selectedProposal.value = result) // <4>
+                .catch(error => handleError(error));
+        } else {
+            selectedProposal.value = undefined; // <5>
+        }
+    });
+
+    return (
+        <main>
+            <Grid 
+                items={proposals.value} 
+                selectedItems={selection.value}
+                onActiveItemChanged={event => {
+                    const item = event.detail.value;
+                    selection.value = item ? [item] : [];
+                }}
+            >
+                <GridColumn path="title"/>
+                <GridColumn path="type"/>
+                <GridColumn path="description"/>
+            </Grid>
+            <ProposalDrawer proposal={selectedProposal.value}/>
+        </main>
+    );
+}
+----
+<1> The grid contains `ProposalListEntry` objects, not `Proposal` objects.
+<2> Uses a separate signal for the fetched `Proposal` object.
+<3> The signal effect triggers whenever the `selection` signal changes.
+<4> Updates the signal with the returned value. If the proposal wasn't found, the result is `undefined` and the form is cleared.
+<5> The form is also cleared if no item is selected.
+
+
+== Saving a Form
+
+The process of saving a form in Vaadin typically follows this pattern:
+
+1. Validate the form.
+2. Write to the FDO.
+3. Call the application service to save the FDO.
+4. Re-initialize the form with the FDO returned by the service, refresh the grid, navigate to another view, or do something else.
+
+In Hilla, the `useForm` hook provides a `submit()` method. This method validates the form and passes the valid FDO to an `onSubmit` callback function, which in turn calls the application service. You supply the callback function when you call `useForm()`, like this:
+
+[source,typescript]
+----
+const form = useForm(ProposalModel, {
+    onSubmit: async (proposal: Proposal) => {
+        // Call the application service
+    }
+});
+----
+
+How the application service is called depends on whether a single save operation or separate insert and update operations are used.
+
+
+=== Single Save
+
+Using a single save operation is a straightforward approach: send the FDO to the service for saving:
+
+[source,typescript]
+----
+const form = useForm(ProposalModel, {
+    onSubmit: async (proposal: Proposal) => {
+        try {
+            const result = await ProposalService.save(proposal);
+            form.read(result); // <1>
+        } catch (error) {
+            handleError(error);
+        }
+    }
+});
+----
+<1> Re-initializes the form with the returned FDO.
+
+
+=== Insert/Update
+
+If you have separate workflows for creating and updating, having separate insert and update operations in your application service is easy: you call the corresponding method in the corresponding workflow. However, if you are using the same form and a single Save operation in the user interface, you have to keep track of which method to call.
+
+If you are using a wrapper class for persistent items, you can do something like this:
+
+[source,typescript]
+----
+const persistentProposal = useSignal<PersistentProposal>();
+
+const form = useForm(ProposalModel, {
+    onSubmit: async (proposal: Proposal) => {
+        try {
+            if (persistentProposal.value == null) {
+                persistentProposal.value = await ProposalService.insert(proposal);
+            } else {
+                persistentProposal.value = await ProposalService.update({
+                    ...persistentProposal.value,
+                    proposal: proposal
+                });
+            }
+        } catch (error) {
+            handleError(error);
+        }
+    }
+});
+----
+
+// TODO Write about making a custom hook
