@@ -51,7 +51,7 @@ The `@Tag` annotation here defines the name of the HTML element. The `@JsModule`
 
 Your component may require in-project frontend files, such as additional JavaScript modules. In which case, add them to the `src/main/resources/META-INF/frontend` directory so that they're packaged in the component JAR if you choose to make an add-on of your component.
 
-As a example, you might use the `@JsModule` annotation to add a local JavaScript module like so:
+As a example, you might use the `@JsModule` annotation to add a local JavaScript or TypeScript module like so:
 [source,java]
 ----
 @JsModule("./my-local-module.js")
@@ -60,3 +60,51 @@ As a example, you might use the `@JsModule` annotation to add a local JavaScript
 .Use explicit relative paths in CSS imports
 [NOTE]
 When importing CSS files within other CSS files, always use explicit relative paths (e.g., `@import "./second.css";` instead of `@import "second.css";`). Some tools like Tailwind CSS require this notation to resolve imports correctly. See <<debugging-a-web-component-integration#theming-issues,Theming Issues>> for more details.
+
+
+[[typescript-support]]
+== TypeScript Support
+
+Vaadin fully supports TypeScript for client-side files. You can use `.ts` files with the `@JsModule` annotation exactly as you would use `.js` files:
+
+[source,java]
+----
+@JsModule("./my-component.ts")
+----
+
+TypeScript provides type safety for property definitions, event data, and configuration objects, which is especially valuable for complex components. It also enables better IDE support with auto-completion and inline documentation.
+
+When using Lit to define Web Components, TypeScript enables typed decorators for properties and events:
+
+[source,typescript]
+----
+import { LitElement, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+
+@customElement('my-component')
+class MyComponent extends LitElement {
+  @property({ type: String })
+  accessor label: string = '';
+
+  @property({ type: Number })
+  accessor count: number = 0;
+
+  render() {
+    return html`<span>${this.label}: ${this.count}</span>`;
+  }
+}
+----
+
+See <<{articles}/building-apps/components/wrap-web-component#,Wrap a Web Component>> for a complete example, and <<advanced-integration#,Advanced Web Component Integration>> for guidance on wrapping npm packages with TypeScript and using advanced Lit features.
+
+
+[[npm-package-design]]
+== Why `@NpmPackage` Is Declared on Components
+
+You might wonder why the `@NpmPackage` annotation is placed directly on component classes rather than in a centralized configuration file. This design is intentional:
+
+*Automatic tree-shaking*:: Only npm packages referenced by components that are actually used in the application are installed. If a component class is never referenced, its npm dependencies are excluded from the bundle.
+
+*Self-contained add-ons*:: When creating a reusable add-on (e.g., for the Vaadin Directory), the component class carries its own dependency declarations. Consumers don't need to manually configure npm packages -- adding the Java dependency is sufficient.
+
+*Clear dependency graph*:: Each component explicitly declares what it needs. This makes it straightforward to understand which client-side libraries a component relies on, and avoids hidden or implicit dependencies.
