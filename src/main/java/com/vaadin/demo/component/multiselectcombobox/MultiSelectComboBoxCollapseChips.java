@@ -24,7 +24,7 @@ public class MultiSelectComboBoxCollapseChips extends VerticalLayout {
         // tag::snippet[]
         comboBox.setCollapseChips(true);
 
-        Checkbox toggle = new Checkbox("Toggle collapse chips", true);
+        Checkbox toggle = new Checkbox("Collapse chips", true);
         toggle.addValueChangeListener(
                 e -> comboBox.setCollapseChips(e.getValue()));
         // end::snippet[]

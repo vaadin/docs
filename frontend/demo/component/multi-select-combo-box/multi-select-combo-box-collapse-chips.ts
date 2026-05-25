@@ -5,6 +5,7 @@ import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { CheckboxChangeEvent } from '@vaadin/checkbox';
+import type { MultiSelectComboBoxSelectedItemsChangedEvent } from '@vaadin/multi-select-combo-box';
 import { getCountries } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
@@ -21,10 +22,15 @@ export class Example extends LitElement {
   private items: Country[] = [];
 
   @state()
+  private selectedCountries: Country[] = [];
+
+  @state()
   private collapseChips = true;
 
   protected override async firstUpdated() {
-    this.items = await getCountries();
+    const countries = await getCountries();
+    this.items = countries
+    this.selectedCountries = countries.slice(0, 3);
   }
 
   protected override render() {
@@ -37,13 +43,16 @@ export class Example extends LitElement {
           item-id-path="id"
           item-value-path="id"
           .items="${this.items}"
-          .selectedItems="${this.items.slice(0, 3)}"
-          style="width: 250px"
           ?collapse-chips="${this.collapseChips}"
+          .selectedItems="${this.selectedCountries}"
+          @selected-items-changed="${(e: MultiSelectComboBoxSelectedItemsChangedEvent<Country>) => {
+            this.selectedCountries = e.detail.value;
+          }}"
+          style="width: 250px"
         ></vaadin-multi-select-combo-box>
         <!-- end::snippet[] -->
         <vaadin-checkbox
-          label="Toggle collapse chips"
+          label="Collapse chips"
           .checked="${this.collapseChips}"
           @change="${(e: CheckboxChangeEvent) => {
             this.collapseChips = e.target.checked;

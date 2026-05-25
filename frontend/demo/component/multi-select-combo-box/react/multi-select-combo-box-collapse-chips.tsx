@@ -12,14 +12,14 @@ function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Country[]>([]);
   const collapseChips = useSignal(true);
+  const selectedCountries = useSignal<Country[]>([]);
 
   useEffect(() => {
     getCountries().then((countries) => {
       items.value = countries;
+      selectedCountries.value = countries.slice(0, 3);
     });
   }, []);
-
-  const selectedItems = useComputed(() => items.value.slice(0, 3));
 
   return (
     <VerticalLayout theme="spacing">
@@ -31,12 +31,15 @@ function Example() {
         itemValuePath="id"
         items={items.value}
         collapseChips={collapseChips.value}
-        selectedItems={selectedItems.value}
+        selectedItems={selectedCountries.value}
+        onSelectedItemsChanged={(event) => {
+          selectedCountries.value = event.detail.value;
+        }}
         style={{ width: '250px' }}
       />
       {/* end::snippet[] */}
       <Checkbox
-        label="Toggle collapse chips"
+        label="Collapse chips"
         checked={collapseChips.value}
         onChange={(e) => {
           collapseChips.value = e.target.checked;
