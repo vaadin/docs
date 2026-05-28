@@ -24,6 +24,7 @@ public class ComboBoxFocusSelectedItem extends Div {
         add(comboBox);
     }
 
-    public static class Exporter extends DemoExporter<ComboBoxFocusSelectedItem> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<ComboBoxFocusSelectedItem> { // hidden-source-line
     } // hidden-source-line
 }

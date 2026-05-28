@@ -50,6 +50,7 @@ public class ComboBoxFocusSelectedItemLazy extends Div {
                 .toLowerCase().contains(normalized));
     }
 
-    public static class Exporter extends DemoExporter<ComboBoxFocusSelectedItemLazy> { // hidden-source-line
+    public static class Exporter
+            extends DemoExporter<ComboBoxFocusSelectedItemLazy> { // hidden-source-line
     } // hidden-source-line
 }
