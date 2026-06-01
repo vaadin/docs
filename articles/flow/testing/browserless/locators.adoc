@@ -14,7 +14,7 @@ order: 22
 A *locator* is a fluent object that combines a [classname]`ComponentQuery` filter chain with the actions of a [classname]`ComponentTester`. A single expression replaces the common [methodname]`test(find(...).single())` pattern and the locator is reusable across UI changes -- its resolution cache rewinds automatically when filters are reapplied, or explicitly via [methodname]`invalidate()`.
 
 [NOTE]
-Locator entry points are currently available on [classname]`BrowserlessUIContext` (the multi-user/multi-window API). For tests that extend [classname]`BrowserlessTest` or use the JUnit 6 extensions, continue to use <<component-query#, component queries>> with [methodname]`test()`.
+Locator entry points are built in to [classname]`BrowserlessUIContext` (the multi-user/multi-window API) and to the JUnit 6 extensions ([classname]`BrowserlessExtension` and [classname]`BrowserlessClassExtension`). Tests that extend [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, or [classname]`QuarkusBrowserlessTest` don't expose locator entry points by default -- to avoid clashing with helper methods existing tests may already define. Opt in by declaring that the test class implements [interfacename]`Locators` (see <<#opting-in, Opting In>> below). This may become the default in a future release. For projects on commercial Vaadin components, see <<#commercial-components, Commercial Components>> for the parallel [interfacename]`CommercialLocators` opt-in.
 
 
 == Generated Entry Points
@@ -175,6 +175,52 @@ window.find(PersonFormLocator::new)
         .fillIn("Ada", "ada@example.com")
         .submit();
 ----
+
+
+[#opting-in]
+== Opting In for `BrowserlessTest`
+
+To use locator entry points in a test class that extends [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, or [classname]`QuarkusBrowserlessTest`, declare that the class implements [interfacename]`Locators`:
+
+[source,java]
+----
+class CartViewTest extends SpringBrowserlessTest implements Locators {
+
+    @Test
+    void addItem_increasesCartSize() {
+        navigate(CartView.class);
+        findButton().withText("Add to cart").click();
+
+        Assertions.assertEquals("1 item",
+                findSpan().withId("cart-size").getText());
+    }
+}
+----
+
+This may become the default in a future release, at which point the explicit `implements` clause can be dropped.
+
+
+[#commercial-components]
+== Commercial Components
+
+[interfacename]`CommercialLocators` extends [interfacename]`Locators` and adds typed entry points for commercial component testers ([classname]`Chart`, [classname]`GridPro`, ...). The substitution is orthogonal to where you opt in: use [interfacename]`CommercialLocators` instead of [interfacename]`Locators` whenever you would otherwise reference [interfacename]`Locators`.
+
+[source,java]
+----
+class ChartViewTest extends SpringBrowserlessTest
+        implements CommercialLocators {
+
+    @Test
+    void chart_isRendered() {
+        navigate(ChartView.class);
+
+        Assertions.assertNotNull(
+                findChart().withId("sales").getComponent());
+    }
+}
+----
+
+The same substitution applies to a custom JUnit 6 extension subclass. For surfaces where you can't substitute directly -- such as the framework-constructed [classname]`BrowserlessUIContext` in the multi-user API -- pass a commercial locator factory to the generic [methodname]`find(Supplier<L>)` entry point: for example, [code]`window.find(ChartLocator::new)`.
 
 
 [discussion-id]`2E7A4F31-6B98-4D2A-9C18-5F3E8A7B1C04`
