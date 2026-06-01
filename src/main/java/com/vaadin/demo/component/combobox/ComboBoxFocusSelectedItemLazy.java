@@ -43,11 +43,9 @@ public class ComboBoxFocusSelectedItemLazy extends Div {
     }
 
     private static Stream<Country> filteredCountries(Optional<String> filter) {
-        return DataService.getCountries().stream()
-                .filter(country -> filter
-                        .map(f -> country.getName().toLowerCase()
-                                .contains(f.toLowerCase()))
-                        .orElse(true));
+        return DataService.getCountries().stream().filter(country -> filter.map(
+                f -> country.getName().toLowerCase().contains(f.toLowerCase()))
+                .orElse(true));
     }
 
     public static class Exporter
