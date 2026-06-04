@@ -1,8 +1,8 @@
 ---
 title: Clipboard API
 page-title: How to use the Clipboard API in Vaadin
-description: Using the Clipboard API to copy text and HTML to the user's clipboard from the server.
-meta-description: Learn how to copy text and HTML to the user's clipboard in Vaadin applications using the server-side Clipboard API.
+description: Using the Clipboard API to copy text, HTML, and images to the user's clipboard from the server.
+meta-description: Learn how to copy text, HTML, and images to the user's clipboard in Vaadin applications using the server-side Clipboard API.
 order: 113
 ---
 
@@ -10,7 +10,7 @@ order: 113
 = Clipboard API
 :toc:
 
-The [classname]`Clipboard` API lets server-side Java code copy text and HTML to the user's clipboard through the https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API[browser Clipboard API]. Actions are bound to a clickable component and run during the DOM event that fires the underlying click, so the browser sees a fresh user gesture and allows the write.
+The [classname]`Clipboard` API lets server-side Java code copy text, HTML, and images to the user's clipboard through the https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API[browser Clipboard API]. Actions are bound to a clickable component and run during the DOM event that fires the underlying click, so the browser sees a fresh user gesture and allows the write.
 
 [NOTE]
 The Clipboard API requires a secure context (HTTPS), except on `localhost` during development. Browsers also require the [code]`write` call to happen inside a short-lived user gesture (click, key press, …) -- writes triggered outside of a gesture, for example from a background thread or a timer, will fail with a [code]`NotAllowedError`.
@@ -72,16 +72,39 @@ Clipboard.onClick(copy).writeHtml("<b>Hello</b>, <i>world</i>!");
 Most targets fall back to a plain-text representation when only [code]`text/html` is present, but the fallback is browser-dependent. To control both representations explicitly, use the multi-format form below.
 
 
-== Multi-Format Content
+== Copying Images
 
-[classname]`ClipboardContent` packs several MIME types into a single clipboard item, so the paste target can pick the representation it understands. Set the [code]`text/plain` and [code]`text/html` slots independently; at least one must be set.
+Use [methodname]`writeImage()` to copy a PNG version of an [code]`<img>` element to the clipboard:
 
 [source,java]
 ----
+Image preview = new Image("images/chart.png", "Chart preview");
+Clipboard.onClick(copy).writeImage(preview);
+----
+
+The source can be a same-origin image, a [code]`data:` URL, or any cross-origin image served with matching CORS headers and [code]`crossorigin="anonymous"` on the [code]`<img>`. If the image is served from the server, pass a [classname]`DownloadHandler` instead:
+
+[source,java]
+----
+Clipboard.onClick(copy).writeImage(
+        DownloadHandler.forClassResource(MainView.class, "chart.png"));
+----
+
+To include an image together with text or HTML, use [methodname]`ClipboardContent.image()` in the multi-format form.
+
+
+== Multi-Format Content
+
+[classname]`ClipboardContent` packs several MIME types into a single clipboard item, so the paste target can pick the representation it understands. Set the [code]`text/plain`, [code]`text/html`, and [code]`image/png` slots independently; at least one must be set.
+
+[source,java]
+----
+Image preview = new Image("images/chart.png", "Chart preview");
 Button copy = new Button("Copy");
 Clipboard.onClick(copy).write(ClipboardContent.create()
         .text("Hello, world!")
-        .html("<b>Hello</b>, <i>world</i>!"));
+        .html("<b>Hello</b>, <i>world</i>!")
+        .image(preview));
 ----
 
 The [methodname]`text()` setter also accepts a component, with the same client-side read semantics as [methodname]`writeText(Component)`:
@@ -97,6 +120,8 @@ Clipboard.onClick(copy).write(ClipboardContent.create()
 
 [NOTE]
 The HTML slot only accepts a literal string -- there is no component overload. If the HTML depends on a field value, build it on the server before binding, or use the plain-text component overload alongside a static HTML literal.
+[NOTE]
+The image slot only accepts a component whose root element is an [code]`<img>`. If the image source is not already on the page, use [methodname]`writeImage(DownloadHandler)` to serve it through a hidden image element.
 
 
 [#observing-the-outcome]
