@@ -27,23 +27,38 @@ The signal value is one of four [classname]`PageVisibility` enum constants:
 
 == Reading the Signal
 
-The signal is read-only -- subscribe with [methodname]`Signal.effect()` to react to changes, or call [methodname]`peek()` for a one-shot snapshot outside a reactive context.
+The signal is read-only. There are two ways to consume it.
+
+When the visibility state drives a single component property, bind that property to a derived signal. Use [methodname]`map()` to turn the [classname]`PageVisibility` value into the property value, then pass the result to the component's [methodname]`bindText()` (or [methodname]`bindEnabled()`, [methodname]`bindVisible()`, and so on). This is the recommended approach for the common case: the property is set immediately, stays synchronized, and the binding is removed automatically when the component detaches -- no owner or cleanup to manage.
 
 [source,java]
 ----
+Signal<String> statusText = UI.getCurrent().getPage()
+        .pageVisibilitySignal().map(state -> switch (state) {
+    case VISIBLE -> "Active";
+    case VISIBLE_NOT_FOCUSED -> "Window not focused";
+    case HIDDEN -> "Tab hidden";
+    case UNKNOWN -> "";
+});
+status.bindText(statusText);
+----
+
+When the reaction is more than setting one property -- starting and stopping a task, sending a notification, updating several things at once -- subscribe with [methodname]`Signal.effect()` instead:
+
+[source,java]
+----
+Signal<PageVisibility> visibility = UI.getCurrent().getPage()
+        .pageVisibilitySignal();
 Signal.effect(this, () -> {
-    PageVisibility state = UI.getCurrent().getPage()
-            .pageVisibilitySignal().get();
-    switch (state) {
-    case VISIBLE -> status.setText("Active");
-    case VISIBLE_NOT_FOCUSED -> status.setText("Window not focused");
-    case HIDDEN -> status.setText("Tab hidden");
-    case UNKNOWN -> status.setText("");
+    if (visibility.get() == PageVisibility.VISIBLE) {
+        resumeUpdates();
+    } else {
+        pauseUpdates();
     }
 });
 ----
 
-The effect is bound to a component owner ([code]`this` above), so it stops automatically when the component detaches. Most applications never need explicit cleanup.
+The effect is bound to a component owner ([code]`this` above), so it stops automatically when the component detaches. Most applications never need explicit cleanup. For a one-shot read outside a reactive context, call [methodname]`peek()`.
 
 
 == Pausing Work While Hidden
