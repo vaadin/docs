@@ -26,6 +26,9 @@ public class DialogResizable extends Div {
         dialog.setDraggable(true);
         dialog.setResizable(true);
         // end::snippet[]
+        // Set limits for dialog min size
+        dialog.setMinWidth("200px");
+        dialog.setMinHeight("300px");
 
         Button button = new Button("Show dialog", e -> dialog.open());
         add(dialog, button);

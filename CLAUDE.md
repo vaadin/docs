@@ -187,7 +187,7 @@ The repository uses Vale for automated style checking. Configuration is in `.val
 Avoid explicit Vaadin version numbers in text. Instead, use version badges:
 
 ```asciidoc
-[since:com.vaadin:vaadin@V24]
+[since:com.vaadin:vaadin@V25.1]
 ```
 
 This keeps documentation version-agnostic and maintainable.
