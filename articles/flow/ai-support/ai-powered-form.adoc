@@ -64,6 +64,16 @@ controller.ignore(internalIdField);
 Ignored fields are hidden from the LLM and stay editable while a fill is in progress.
 
 
+== Hidden, Disabled, and Read-Only Fields
+
+The controller checks each field's state on every turn:
+
+* A field hidden via [methodname]`setVisible(false)`, or one that sits inside a hidden container, is dropped from the LLM surface entirely. The model cannot read its value and cannot write to it. It reappears the moment a value-change listener or other application code makes it visible again.
+* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected with a reason.
+
+A common case is a conditional field driven by a [interfacename]`ValueChangeListener` -- a "Cost center" enabled only when "Trip type" is set to "Business", or a renewal date enabled by a "Renews automatically" checkbox. The built-in workflow instructions tell the model that a disabled or read-only field is usually waiting on a controlling field, so it sets the controlling field first and writes the dependent one in the same turn.
+
+
 == Field Descriptions
 
 The LLM sees each field's label, helper text, and component type. When those don't fully capture the field's meaning, for example a numeric field that takes a percentage rather than an absolute amount, or a date that means "renewal date" rather than "purchase date", add an explicit description with [methodname]`describe()`:
@@ -146,12 +156,13 @@ A field whose value type is a [classname]`Collection` must implement [classname]
 
 == Validation
 
-Each value the LLM writes is validated immediately after the field accepts it:
+When the model writes back a set of values, the controller commits all of them first and then runs validation once against the resulting form. Each field is checked according to how it is wired:
 
 * A field that is bound through a [classname]`Binder` is validated through its binding, so the converter and every registered validator run as one unit.
 * An unbound field with a default validator (for example the email-format check on [classname]`EmailField`, or the `min` and `max` constraints on [classname]`NumberField` and [classname]`DatePicker`) is validated through that validator.
+* Cross-field rules registered with `binder.withValidator((bean, ctx) -> ...)` -- see <<{articles}/building-apps/forms-data/add-form/validation#binder-level-validators,Binder-Level Validators>> -- are evaluated against the post-write form, but only when the binder has a bean set ([methodname]`setBean(bean)`) and every per-field check passes first. A failing rule is reported as a form-level rejection rather than against any single field, so the model can adjust the offending values and try again in the same turn.
 
-If validation fails, the value stays in the field, the field's UI error indicator turns on, and the failure is reported back to the model with the field id and the validator's message. The model can supply a corrected value in the same turn, so users typically see only the final, valid state.
+If validation fails for a written field, the value stays in the field, the field's UI error indicator turns on, and the failure is reported back to the model with the field id and the validator's message. The model can supply a corrected value in the same turn, so users typically see only the final, valid state. Fields the current turn did not write are not flagged invalid as a side effect -- a required field the user has not reached yet stays clean.
 
 
 == What the Model Sees
@@ -161,12 +172,13 @@ The controller sends only a defined subset of the form to the LLM. Knowing where
 The model sees:
 
 * Each visible field's label, helper text, component type, and any [methodname]`describe()` text or [classname]`Binder` property-name default.
-* The current value of every visible, non-ignored field, so it can decide which entries to overwrite.
+* The current value of every visible, non-ignored field, so it can decide which entries to overwrite. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
 * The eager items of a combo box or select, or the labels returned by a [methodname]`valueOptions()` query callback for the filter the model supplies.
 
 The model does not see:
 
 * Any field excluded with [methodname]`ignore()`. Its value, label, and existence are all hidden.
+* Any field the application has hidden via [methodname]`setVisible(false)`, or that sits inside a hidden container.
 * The contents of [classname]`PasswordField`, which is always excluded.
 * Internal data, services, or beans. The model has access only to what the field components themselves show.
 
@@ -177,7 +189,7 @@ Every visible field's current value is forwarded to the LLM provider on every tu
 
 == Field Locking During a Fill Turn
 
-While a fill is in progress, every non-ignored field that wasn't already read-only is set to read-only, so the user cannot type into a field the AI is about to overwrite. Locks are released automatically when the turn ends, whether it succeeded or failed.
+While a fill is in progress, every field the user can currently edit -- visible, enabled, and not already read-only -- is set to read-only so the user cannot type into a field the AI is about to overwrite. Fields the application had already disabled or set read-only stay as they were. Locks are released automatically when the turn ends, whether it succeeded or failed.
 
 .Read-Only Toggles During a Turn
 [NOTE]
