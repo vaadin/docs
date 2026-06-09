@@ -9,8 +9,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
-import java.util.List;
-
 import static com.vaadin.demo.component.Constants.valueChangeModes;
 
 @Route("email-field-value-change-mode")

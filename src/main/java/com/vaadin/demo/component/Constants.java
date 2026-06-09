@@ -9,5 +9,7 @@ public class Constants {
 
     }
 
-    public final static List<ValueChangeMode> valueChangeModes = List.of(ValueChangeMode.EAGER, ValueChangeMode.LAZY, ValueChangeMode.ON_CHANGE, ValueChangeMode.TIMEOUT);
+    public final static List<ValueChangeMode> valueChangeModes = List.of(
+            ValueChangeMode.EAGER, ValueChangeMode.LAZY,
+            ValueChangeMode.ON_CHANGE, ValueChangeMode.TIMEOUT);
 }
