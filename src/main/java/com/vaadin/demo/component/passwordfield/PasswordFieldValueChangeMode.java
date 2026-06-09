@@ -9,6 +9,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import static com.vaadin.demo.component.Constants.valueChangeModes;
+
 @Route("password-field-value-change-mode")
 public class PasswordFieldValueChangeMode extends VerticalLayout {
 
@@ -17,8 +19,7 @@ public class PasswordFieldValueChangeMode extends VerticalLayout {
 
         // tag::snippet[]
         var passwordField = new PasswordField("Password Field");
-        var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode", valueChangeModes);
         modeSelector.setValue(passwordField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             passwordField.clear();

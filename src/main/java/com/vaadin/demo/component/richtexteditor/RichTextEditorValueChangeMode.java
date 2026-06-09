@@ -9,6 +9,8 @@ import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import static com.vaadin.demo.component.Constants.valueChangeModes;
+
 @Route("rich-text-editor-value-change-mode")
 public class RichTextEditorValueChangeMode extends VerticalLayout {
 
@@ -18,8 +20,7 @@ public class RichTextEditorValueChangeMode extends VerticalLayout {
         // tag::snippet[]
         var rte = new RichTextEditor();
         rte.setMaxHeight("300px");
-        var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode", valueChangeModes);
         modeSelector.setValue(rte.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             rte.setValue("");

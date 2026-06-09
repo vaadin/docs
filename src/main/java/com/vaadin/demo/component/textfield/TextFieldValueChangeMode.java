@@ -9,6 +9,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import static com.vaadin.demo.component.Constants.valueChangeModes;
+
 @Route("text-field-value-change-mode")
 public class TextFieldValueChangeMode extends VerticalLayout {
 
@@ -17,8 +19,7 @@ public class TextFieldValueChangeMode extends VerticalLayout {
 
         // tag::snippet[]
         var textField = new TextField("Text Field");
-        var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode", valueChangeModes);
         modeSelector.setValue(textField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             textField.clear();

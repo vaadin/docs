@@ -9,6 +9,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.slider.DecimalSlider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import static com.vaadin.demo.component.Constants.valueChangeModes;
+
 @Route("slider-value-change-mode")
 public class SliderValueChangeMode extends VerticalLayout {
 
@@ -18,8 +20,7 @@ public class SliderValueChangeMode extends VerticalLayout {
         // tag::snippet[]
         var slider = new DecimalSlider("Slider");
         slider.setValue(50.0);
-        var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode", valueChangeModes);
         modeSelector.setValue(slider.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             slider.setValue(50.0);

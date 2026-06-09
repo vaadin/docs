@@ -9,6 +9,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import static com.vaadin.demo.component.Constants.valueChangeModes;
+
 @Route("number-field-value-change-mode")
 public class NumberFieldValueChangeMode extends VerticalLayout {
 
@@ -16,8 +18,7 @@ public class NumberFieldValueChangeMode extends VerticalLayout {
         setPadding(false);
         // tag::snippet[]
         var numberField = new NumberField("Number Field");
-        var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+        var modeSelector = new Select<>("Value Change Mode", valueChangeModes);
         modeSelector.setValue(numberField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             numberField.clear();
