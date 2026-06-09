@@ -9,6 +9,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import java.util.List;
+
 @Route("email-field-value-change-mode")
 public class EmailFieldValueChangeMode extends VerticalLayout {
 
@@ -17,7 +19,7 @@ public class EmailFieldValueChangeMode extends VerticalLayout {
         // tag::snippet[]
         var emailField = new EmailField("Email Field");
         var modeSelector = new Select<>("Value Change Mode",
-                ValueChangeMode.values());
+                List.of(ValueChangeMode.EAGER, ValueChangeMode.LAZY, ValueChangeMode.ON_CHANGE, ValueChangeMode.TIMEOUT));
         modeSelector.setValue(emailField.getValueChangeMode());
         modeSelector.addValueChangeListener(e -> {
             emailField.clear();
