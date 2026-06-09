@@ -27,6 +27,7 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -34,22 +35,24 @@ import com.vaadin.flow.router.Route;
 public class LayoutExampleView extends VerticalLayout {
 
     public LayoutExampleView() {
-        // Header: title fills the row, button sits at the right
+        // Header: title on the left, button pushed to the right
         var header = new HorizontalLayout(new H2("Dashboard"), new Button("Settings"));
         header.setWidthFull();
         header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.expand(header.getComponentAt(0));
+        header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
 
         // Content: fixed-width sidebar + expanding main area
         var sidebar = new VerticalLayout(new Span("Item 1"), new Span("Item 2"));
         sidebar.setWidth("200px");
 
         var main = new VerticalLayout(new Paragraph("Main content goes here."));
+        var mainScroller = new Scroller(main);
 
-        var content = new HorizontalLayout(sidebar, main);
+        var content = new HorizontalLayout(sidebar, mainScroller);
         content.setWidthFull();
         content.setFlexShrink(0, sidebar); // keep the sidebar at 200px
-        content.expand(main);              // main fills the remaining width
+        content.expand(mainScroller);      // scroller fills the remaining width
+        content.setMinHeight("0");         // let the row shrink so the Scroller scrolls, not the page
 
         // Footer: buttons pushed to the right
         var save = new Button("Save");
@@ -64,6 +67,9 @@ public class LayoutExampleView extends VerticalLayout {
     }
 }
 ----
+
+[NOTE]
+The main area scrolls because it's wrapped in a `Scroller`. For that to work in a full-height view, every layout between the `Scroller` and the sized root view must be allowed to shrink -- which is why `content.setMinHeight("0")` is there. See <<#overflow-and-scrolling,Overflow and Scrolling>>.
 
 
 == Choosing a Layout Component
@@ -182,6 +188,7 @@ layout.setFlexShrink(0, fixedSizeComponent);
 Vaadin includes an experimental `layoutComponentImprovements` feature flag (Flow only) that makes `setWidthFull()` / `setHeightFull()` / `setSizeFull()` apply `flex: 1` instead of a literal percentage, avoiding the shrinking trap. It's *off by default* -- don't assume the behavior unless it's been enabled.
 
 
+[#overflow-and-scrolling]
 == Overflow and Scrolling
 
 A flex child won't shrink below its content size by default, so it can overflow and produce unwanted scrollbars. Fix it by setting the minimum size to `0` on the overflowing component:
@@ -202,6 +209,8 @@ scroller.setSizeFull();
 var content = new VerticalLayout(); // no explicit height -- hugs content
 scroller.setContent(content);
 ----
+
+A `Scroller` only scrolls when it has a bounded height. Inside a full-height view, that means every flex layout between the `Scroller` and the sized root must be allowed to shrink below its content -- call `setMinHeight("0")` on those layouts, as the copy-paste example does on its content row.
 
 
 == Form Layout
