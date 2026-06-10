@@ -174,7 +174,8 @@ Set sizes with `setWidth()`, `setHeight()`, and their shorthands `setWidthFull()
 
 [source,java]
 ----
-bar.expand(searchField);          // searchField grows; the button keeps its size
+var bar = new HorizontalLayout(searchField, goButton);
+bar.expand(searchField);          // searchField grows to fill the row; goButton keeps its size
 layout.setFlexGrow(2, mainPanel); // distribute proportionally:
 layout.setFlexGrow(1, sidePanel); // mainPanel gets 2/3, sidePanel gets 1/3
 ----
@@ -198,32 +199,40 @@ layout.setFlexShrink(0, fixedSizeComponent);
 
 .Experimental: the layoutComponentImprovements feature flag
 [NOTE]
-Vaadin includes an experimental `layoutComponentImprovements` feature flag (Flow only) that makes `setWidthFull()` / `setHeightFull()` / `setSizeFull()` apply `flex: 1` instead of a literal percentage, avoiding the shrinking trap. It's *off by default* -- don't assume the behavior unless it's been enabled.
+Vaadin includes an experimental `layoutComponentImprovements` <</flow/configuration/feature-flags.adoc#,feature flag>> that makes `setWidthFull()` / `setHeightFull()` / `setSizeFull()` apply `flex: 1` instead of a literal percentage, avoiding the shrinking trap. It's *off by default* -- don't assume the behavior unless it's been enabled.
 
 
 [#overflow-and-scrolling]
 == Overflow and Scrolling
 
-A flex child won't shrink below its content size by default, so it can overflow and produce unwanted scrollbars. Fix it by setting the minimum size to `0` on the overflowing component:
+If you put more into a layout than fits in the space it has, the content can spill past the layout's edges and produce scrollbars where you don't want them. This happens because, by default, a component refuses to become smaller than the content inside it needs -- so instead of shrinking to fit, it pushes past its boundaries.
+
+To let a component shrink to the space it's given instead of overflowing, set its minimum size to `0`:
 
 [source,java]
 ----
-overflowingComponent.setMinHeight("0"); // or setMinWidth("0")
+overflowingComponent.setMinHeight("0"); // use setMinWidth("0") for horizontal overflow
 ----
 
-`HorizontalLayout` can also wrap onto multiple lines with `setWrap(true)`.
-
-When a region needs to scroll, wrap it in a <</components/scroller#,Scroller>> rather than setting CSS overflow, and leave the inner layout's height undefined so it hugs its content and the `Scroller` can tell when to scroll:
+If a `HorizontalLayout` has too many items to fit on one line, you can instead let it wrap the extra items onto new lines:
 
 [source,java]
 ----
-var scroller = new Scroller();
+row.setWrap(true);
+----
+
+=== Making a Region Scroll
+
+When you *want* part of the view to scroll -- a long list next to a fixed sidebar, say -- wrap that part in a <</components/scroller#,Scroller>>. A `Scroller` is a component that shows a scrollbar when its content is taller than the space it has. Leave the content inside it at its natural height (don't set a height on it) so the `Scroller` can tell when the content has outgrown the available space:
+
+[source,java]
+----
+var content = new VerticalLayout(); // the long content; don't set its height
+var scroller = new Scroller(content);
 scroller.setSizeFull();
-var content = new VerticalLayout(); // no explicit height -- hugs content
-scroller.setContent(content);
 ----
 
-A `Scroller` only scrolls when it has a bounded height. Inside a full-height view, that means every flex layout between the `Scroller` and the sized root must be allowed to shrink below its content -- call `setMinHeight("0")` on those layouts, as the copy-paste example does on its content row.
+There's one catch in a view that fills the whole screen. For the `Scroller` to scroll, it needs a fixed amount of space to work within, and that space is handed down from the full-screen view through each layout in between. But those in-between layouts also refuse to shrink below their content by default, so they grow to fit everything and leave no fixed height for the `Scroller`. Give each layout between the `Scroller` and the screen-sized view permission to shrink by calling `setMinHeight("0")` on it -- exactly what the copy-paste example does on its content row.
 
 
 == Form Layout
