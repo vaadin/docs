@@ -41,7 +41,7 @@ add(messageInput, form);
 
 Example prompts:
 
-* "Fill in John Doe, john@acme.com, started in Germany on 2026-03-01."
+* "Fill in John Doe, john@acme.com, started in Germany on March 1, 2026."
 * "Maria from Helsinki, hired last Monday." (relative dates are interpreted by the LLM)
 * "Use the information in the attached resume to fill the form." (when the orchestrator has a <<file-attachments#,file receiver>> configured)
 
@@ -125,7 +125,7 @@ controller.valueOptions(
         label -> projectService.findByName(label));
 ----
 
-The second argument is the label-to-value converter. It is required whenever the field's value type is not [classname]`String`, and a registration that needs one but doesn't provide it will not compile. For [classname]`String`-valued fields the converter is omitted; the chosen label is already the value.
+The second argument is the label-to-value converter. It is required whenever the field's value type is not [classname]`String`, and a registration that needs one but doesn't provide it fails to compile. For [classname]`String`-valued fields the converter is omitted; the chosen label is already the value.
 
 `projectService` here is a placeholder for your own data source -- a Spring repository, a REST client, an in-memory list, or whatever your application already uses to look up projects.
 
@@ -184,7 +184,7 @@ The model does not see:
 
 .Visible Field Values Are Sent to the Model
 [IMPORTANT]
-Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or PII with [methodname]`ignore()`, or keep them out of the layout passed to the controller.
+Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignore()`, or keep them out of the layout passed to the controller.
 
 
 == Field Locking During a Fill Turn
@@ -220,7 +220,7 @@ The listener runs on the UI thread with the session lock held, so it can call [m
 Repeated [methodname]`showHighlight()` calls on the same field are idempotent -- exactly one highlight remains. Each controller marks its highlight with an identifier unique to that instance, so the AI highlight coexists with any other `vaadin-field-highlighter` consumers the application keeps on the field, for example a collaboration session showing other users' edits. The highlight survives detach and re-attach: the controller re-applies it whenever the field returns to the DOM. The field passed to [methodname]`showHighlight()` does not need to belong to the controller's form -- any [classname]`HasValue` [classname]`Component` works.
 
 
-== Reconnecting After Deserialization
+== Reconnecting after Deserialization
 
 [classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describe()`, [methodname]`valueOptions()`, and [methodname]`ignore()` hints, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
 
@@ -239,7 +239,7 @@ orchestrator.reconnect(provider)
         .apply();
 ----
 
-Field ids remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. There is no separate state object to save and restore; the form fields are the state, and [classname]`VaadinSession` already persists them.
+Field ids remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
 
 
 == Composing Multiple Forms
