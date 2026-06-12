@@ -65,7 +65,7 @@ class ViewTest extends SpringBrowserlessTest {
         test(helloView.name).setValue("Test");
         test(helloView.sayHello).click();
 
-        Notification notification = $(Notification.class).single();
+        Notification notification = find(Notification.class).single();
         Assertions.assertEquals("Hello Test", test(notification).getText());
     }
 }
@@ -79,6 +79,46 @@ class ViewTestConfig {
         }
 }
 ----
+
+
+== Sharing the Vaadin Environment Across Tests
+
+[since:com.vaadin:vaadin@V25.2]
+
+By default, the Vaadin environment -- the session, the UI, and all routes -- is created before every test method and torn down after. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
+
+Annotating the test class with [annotationname]`@TestInstance(Lifecycle.PER_CLASS)` initializes the environment once in [annotationname]`@BeforeAll` and shares the same [classname]`UI` instance across all test methods in the class. This can significantly reduce runtime for suites with hundreds of tests on the same view.
+
+.Per-Class Lifecycle Example
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class CartViewTest extends BrowserlessTest {
+
+    @BeforeAll
+    void setup() {
+        navigate(CartView.class);
+    }
+
+    @Test
+    void addItem_increasesCartSize() {
+        // same UI instance as the other tests
+        test(find(Button.class).withText("Add").single()).click();
+    }
+
+    @Test
+    void removeItem_decreasesCartSize() {
+        // state from the previous test is preserved
+    }
+}
+----
+
+[WARNING]
+With a shared environment, state leaks between tests. Tests must either tolerate leftover state or reset it explicitly -- for example, by re-navigating to the view in a [annotationname]`@BeforeEach` method. Prefer per-class lifecycle for read-only or independent interactions; stick with the default per-method lifecycle when tests mutate shared state in conflicting ways.
+
+[NOTE]
+This optimization applies only to [classname]`BrowserlessTest`. [classname]`SpringBrowserlessTest` and [classname]`QuarkusBrowserlessTest` still reinitialize the Vaadin environment before each test method, so [annotationname]`@TestInstance(PER_CLASS)` on those classes doesn't share the Vaadin environment -- though it can still be useful for sharing other per-class state.
 
 
 [discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`

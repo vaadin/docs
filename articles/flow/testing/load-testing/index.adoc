@@ -135,91 +135,13 @@ public void deletePatient() {
 }
 ----
 
+== Recording and Running Tests
 
-[[server-lifecycle]]
-== Starting and Stopping the Server
-
-The `loadtest:record` and `loadtest:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `loadtest:start-server` and `loadtest:stop-server` goals.
-
-The `loadtest:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `loadtest:stop-server` goal retrieves that handle and shuts the server down gracefully.
-
-[source,xml]
-----
-<groupId>com.vaadin</groupId>
-<artifactId>testbench-converter-plugin</artifactId>
-
-<executions>
-    <execution>
-        <id>start-server</id>
-        <goals>
-            <goal>start-server</goal>
-        </goals>
-        <configuration>
-            <serverJar>${project.build.directory}/my-app.jar</serverJar>
-            <serverPort>8081</serverPort>
-            <managementPort>8082</managementPort>
-        </configuration>
-    </execution>
-
-    <execution>
-        <id>stop-server</id>
-        <goals>
-            <goal>stop-server</goal>
-        </goals>
-    </execution>
-</executions>
-----
-
-By default, `loadtest:start-server` runs in the `pre-integration-test` phase and `loadtest:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
-
-==== Testing WAR-packaged Applications
-
-The tooling works equally well with WAR-packaged applications, since the load test itself is just HTTP traffic against a running server.
-The only difference from the JAR/Spring Boot workflow is that you are responsible for deploying the WAR to a servlet container (Tomcat, Jetty, WildFly, etc.) before recording -- the plugin can not start the application for you.
-
-Deploy the WAR locally for the `k6:record` step and point the plugin at it via `-Dk6.appPort` (and `-Dserver.host` if not on localhost), then run the generated k6 script against your separate load-test environment using `-Dk6.appIp` and `-Dk6.appPort`.
-
-Keep in mind that WARs are typically deployed under a context path (e.g. `/myapp`), so make sure `getViewName()` in your TestBench tests reflects the deployed path; the recorded HAR -- and therefore the generated k6 script -- will use whatever URLs the browser actually hits during recording.
-
-=== Start Server Parameters
-
-`serverJar`::
-Path to the executable JAR file to start. Required.
-
-`serverPort`::
-Spring Boot application server port. Required unless `httpPort` (Jetty) is set.
-
-`httpPort`::
-Jetty HTTP port. Required unless `serverPort` (Spring Boot) is set.
-
-`managementPort`::
-Spring Boot Actuator management port. Optional -- when set, `/actuator/health` is polled for readiness in addition to the application root.
-
-`jvmArgs`::
-Extra JVM arguments (for example, `-Xmx512m`).
-
-`appArgs`::
-Extra application arguments.
-
-`startupTimeout`::
-Maximum time to wait for server startup, in seconds. Defaults to `120`.
-
-`healthPollInterval`::
-Interval for polling the health endpoint, in seconds. Defaults to `2`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
-
-=== Stop Server Parameters
-
-`gracePeriod`::
-Time to wait for graceful shutdown before force-killing, in seconds. Defaults to `10`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
+The `loadtest:record` and `loadtest:run` goals require the application server to be running.
+The plugin provides `loadtest:start-server` and `loadtest:stop-server` goals to manage the server lifecycle automatically -- see <<utilities#server-lifecycle,Load Testing Utilities>>.
 
 [[recording]]
-== Recording Tests
+=== Recording Tests
 
 The `loadtest:record` goal runs one or more TestBench test classes through a recording proxy, captures the HTTP traffic, and converts it into k6 scripts:
 
@@ -307,57 +229,8 @@ Force re-recording even if test sources are unchanged. Defaults to `false`.
 [NOTE]
 For CLI the parameters need to be given as `k6.[parameterName]`
 
-[[converting]]
-== Converting HAR Files
-
-If you already have a HAR file (for example, recorded with browser developer tools), you can convert it directly into a k6 script without running a TestBench test:
-
-[.example]
---
-[source,xml]
-----
-<source-info group="Maven"></source-info>
-<configuration>
-    <harFile>recording.har</harFile>
-</configuration>
-----
-
-[source,bash]
-----
-<source-info group="Command Line"></source-info>
-mvn loadtest:convert -Dk6.harFile=recording.har
-----
---
-
-The conversion pipeline:
-
-. Filters out requests to external domains (analytics, CDN).
-. Generates a k6 script from the HAR entries.
-. Applies Vaadin-specific refactoring (session handling, configurable server address).
-
-
-=== Conversion Parameters
-
-`harFile`::
-Path to the HAR file to convert. Required.
-
-`outputDir`::
-Output directory for the k6 script. Defaults to `${project.build.directory}/k6/tests`.
-
-`outputName`::
-Output file base name. Defaults to a name derived from the HAR file.
-
-`skipFilter`::
-Skip filtering external domain requests. Defaults to `false`.
-
-`skipRefactor`::
-Skip Vaadin-specific session handling refactoring. Defaults to `false`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
-
 [[running]]
-== Running Load Tests
+=== Running Load Tests
 
 The `loadtest:run` goal executes k6 scripts with configurable virtual users and duration:
 
@@ -545,6 +418,7 @@ Worst case, those early outliers dominate the maximum, p(95), and p(99) figures 
 Enabling `warmup` issues one full pass of every recorded scenario before the measured run starts, so JIT, caches, and class loaders are primed when the virtual users ramp up.
 The numbers in the report then describe the application under sustained load — which is what a load test is meant to measure.
 
+== Results and Tool Output
 
 === Understanding k6 Output
 
@@ -772,6 +646,55 @@ mvn loadtest:run -Dk6.collectVaadinMetrics=true
 --
 
 The plugin collects a baseline before the load test starts, then samples metrics at the configured interval. After the test, it reports a time-series table with system metrics (CPU, heap, sessions) and per-view counts, along with summary statistics such as heap delta, session delta, and average/peak CPU usage.
+
+[[converting]]
+== Converting HAR Files
+
+If you already have a HAR file (for example, recorded with browser developer tools), you can convert it directly into a k6 script without running a TestBench test:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<configuration>
+    <harFile>recording.har</harFile>
+</configuration>
+----
+
+[source,bash]
+----
+<source-info group="Command Line"></source-info>
+mvn loadtest:convert -Dk6.harFile=recording.har
+----
+--
+
+The conversion pipeline:
+
+. Filters out requests to external domains (analytics, CDN).
+. Generates a k6 script from the HAR entries.
+. Applies Vaadin-specific refactoring (session handling, configurable server address).
+
+
+=== Conversion Parameters
+
+`harFile`::
+Path to the HAR file to convert. Required.
+
+`outputDir`::
+Output directory for the k6 script. Defaults to `${project.build.directory}/k6/tests`.
+
+`outputName`::
+Output file base name. Defaults to a name derived from the HAR file.
+
+`skipFilter`::
+Skip filtering external domain requests. Defaults to `false`.
+
+`skipRefactor`::
+Skip Vaadin-specific session handling refactoring. Defaults to `false`.
+
+[NOTE]
+For CLI the parameters need to be given as `k6.[parameterName]`
 
 
 [[full-example]]

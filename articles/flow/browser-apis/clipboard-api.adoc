@@ -1,0 +1,159 @@
+---
+title: Clipboard
+page-title: How to use the Clipboard API in Vaadin
+description: Using the Clipboard API to copy text and HTML to the user's clipboard from the server.
+meta-description: Learn how to copy text and HTML to the user's clipboard in Vaadin applications using the server-side Clipboard API.
+order: 10
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Clipboard#
+:toc:
+
+The [classname]`Clipboard` API lets server-side Java code copy text and HTML to the user's clipboard through the https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API[browser Clipboard API]. Actions are bound to a clickable component and run during the DOM event that fires the underlying click, so the browser sees a fresh user gesture and allows the write.
+
+[NOTE]
+The Clipboard API requires a secure context (HTTPS), except on `localhost` during development. Browsers also require the [code]`write` call to happen inside a short-lived user gesture (click, key press, …) -- writes triggered outside of a gesture, for example from a background thread or a timer, will fail with a [code]`NotAllowedError`.
+
+
+== Copying Text
+
+[methodname]`Clipboard.onClick(component)` returns a [classname]`ClipboardBinding` -- a fluent surface that attaches a clipboard action to the component's [code]`click` event. The typical "Copy to clipboard" button is one line:
+
+[source,java]
+----
+Button copy = new Button("Copy");
+Clipboard.onClick(copy).writeText("Hello, world!");
+----
+
+Every subsequent click of the button copies the literal string to the clipboard. The call returns immediately and does not subscribe to the result -- see <<#observing-the-outcome,Observing the Outcome>> if you need to know whether the write succeeded.
+
+
+== Copying a Field Value
+
+To copy the current value of an input field, pass the component to [methodname]`writeText()`. The value is read on the client at the moment the click fires, so user edits are reflected without a server round-trip:
+
+[source,java]
+----
+TextField token = new TextField("API token");
+Button copy = new Button("Copy");
+Clipboard.onClick(copy).writeText(token);
+----
+
+Any component implementing [interfacename]`HasValue<?, String>` works -- [classname]`TextField`, [classname]`TextArea`, [classname]`PasswordField`, [classname]`EmailField`, and so on.
+
+
+== Other Click Sources
+
+[methodname]`Clipboard.onClick()` accepts any component implementing [interfacename]`ClickNotifier`, not just [classname]`Button`. A [classname]`ContextMenu` item is a common alternative -- the user right-clicks a target and picks "Copy" from the menu:
+
+[source,java]
+----
+ContextMenu menu = new ContextMenu(target);
+MenuItem copyItem = menu.addItem("Copy value");
+Clipboard.onClick(copyItem).writeText(value,
+        written -> Notification.show("Token copied"),
+        error -> Notification.show("Copy failed: " + error.message()));
+----
+
+The menu item's click counts as the user gesture, so the write is allowed. The same pattern works for icons, list items, or any custom component that fires a click event.
+
+
+== Copying HTML
+
+Use [methodname]`writeHtml()` to put a [code]`text/html` payload on the clipboard. This is what rich-text targets (word processors, mail composers) paste as formatted content:
+
+[source,java]
+----
+Button copy = new Button("Copy formatted");
+Clipboard.onClick(copy).writeHtml("<b>Hello</b>, <i>world</i>!");
+----
+
+Most targets fall back to a plain-text representation when only [code]`text/html` is present, but the fallback is browser-dependent. To control both representations explicitly, use the multi-format form below.
+
+
+== Multi-Format Content
+
+[classname]`ClipboardContent` packs several MIME types into a single clipboard item, so the paste target can pick the representation it understands. Set the [code]`text/plain` and [code]`text/html` slots independently; at least one must be set.
+
+[source,java]
+----
+Button copy = new Button("Copy");
+Clipboard.onClick(copy).write(ClipboardContent.create()
+        .text("Hello, world!")
+        .html("<b>Hello</b>, <i>world</i>!"));
+----
+
+The [methodname]`text()` setter also accepts a component, with the same client-side read semantics as [methodname]`writeText(Component)`:
+
+[source,java]
+----
+TextField message = new TextField();
+Button copy = new Button("Copy");
+Clipboard.onClick(copy).write(ClipboardContent.create()
+        .text(message)
+        .html("<blockquote>" + message.getValue() + "</blockquote>"));
+----
+
+[NOTE]
+The HTML slot only accepts a literal string -- there is no component overload. If the HTML depends on a field value, build it on the server before binding, or use the plain-text component overload alongside a static HTML literal.
+
+
+[#observing-the-outcome]
+== Observing the Outcome
+
+All [methodname]`write*` methods have an overload that takes [code]`onCopied` and [code]`onError` consumers. The write becomes observed: after the browser resolves or rejects the underlying promise, the framework invokes one of the consumers on the UI thread.
+
+[source,java]
+----
+Clipboard.onClick(copy).writeText(token,
+        copied -> Notification.show("Copied " + copied),
+        err -> Notification.show("Couldn't copy: " + err.message()));
+----
+
+[code]`onCopied` receives the string that was copied -- the [code]`text/plain` value if present, otherwise the [code]`text/html` value. This is useful when the input was a component value, since the exact string is only known on the client.
+
+Both consumers are required in the observed form. To opt out of one side, pass an empty lambda:
+
+[source,java]
+----
+Clipboard.onClick(copy).writeText(token,
+        copied -> { /* ignore */ },
+        err -> log.warn("clipboard write failed: {}", err.message()));
+----
+
+
+== Handling Errors
+
+The [methodname]`onError` consumer receives a [classname]`PromiseAction.Error` record with the browser's rejection details:
+
+`name()`:: The DOM exception class name, typically [code]`NotAllowedError` when the user has denied clipboard access or the write happened outside a user gesture. Switch on this when you need typed handling.
+`message()`:: The free-form description from the browser. Useful for logging and diagnostics; not meant for end users.
+
+[source,java]
+----
+Clipboard.onClick(copy).writeText(token,
+        copied -> Notification.show("Copied"),
+        err -> {
+            String userMessage = switch (err.name()) {
+                case "NotAllowedError" ->
+                    "Clipboard access is blocked. Please allow it in your browser settings.";
+                default ->
+                    "Couldn't copy to clipboard.";
+            };
+            Notification.show(userMessage);
+            log.warn("clipboard write failed: {} -- {}",
+                    err.name(), err.message());
+        });
+----
+
+The Clipboard API does not expose a permission state the same way other browser APIs do, so there is no separate availability signal -- handle errors at the point of the write.
+
+
+== User Gesture Requirement
+
+The Clipboard API requires every write to happen inside a fresh user gesture. A few consequences:
+
+- Writes cannot be initiated from a background thread, a scheduled task, or a server push. The gesture must originate in the browser.
+- Each click is one gesture. Chaining multiple [methodname]`write*` calls on the same binding attaches multiple actions to the same click, but each one needs to succeed against the browser's gesture budget.
+- If the application performs a long server round-trip before the write call, the browser may consider the gesture stale and reject the write.
