@@ -36,9 +36,8 @@ public class RouteParameterView extends VerticalLayout
                 .orElse("No parameter value provided"));
 
         // Update the URL parameter when the signal changes
-        Signal.effect(this,
-                () -> UI.getCurrent().navigate(RouteParameterView.class,
-                        parameter.get()));
+        Signal.effect(this, () -> UI.getCurrent()
+                .navigate(RouteParameterView.class, parameter.get()));
     }
 
     @Override
