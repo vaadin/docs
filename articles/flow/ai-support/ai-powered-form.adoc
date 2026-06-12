@@ -52,7 +52,7 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 
 == Field Discovery
 
-The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. Any component that implements the [classname]`HasValue` interface is treated as a field; nested layouts are walked recursively.
+The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. The container can be any component that implements [classname]`HasComponents`. Any component that implements [classname]`HasValue` is treated as a field, and any nested [classname]`HasComponents` is walked recursively.
 
 [classname]`PasswordField` is always hidden from the LLM. To hide other fields, for example internal IDs or anything sensitive that the user must fill in manually, call [methodname]`ignore()`:
 
@@ -69,7 +69,7 @@ Ignored fields are hidden from the LLM and stay editable while a fill is in prog
 The controller checks each field's state on every turn:
 
 * A field hidden via [methodname]`setVisible(false)`, or one that sits inside a hidden container, is dropped from the LLM surface entirely. The model cannot read its value and cannot write to it. It reappears the moment a value-change listener or other application code makes it visible again.
-* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected with a reason.
+* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected, and the model receives the rejection reason so it can adjust on the next turn.
 
 A common case is a conditional field driven by a [interfacename]`ValueChangeListener` -- a "Cost center" enabled only when "Trip type" is set to "Business", or a renewal date enabled by a "Renews automatically" checkbox. The built-in workflow instructions tell the model that a disabled or read-only field is usually waiting on a controlling field, so it sets the controlling field first and writes the dependent one in the same turn.
 
@@ -98,7 +98,7 @@ binder.bindInstanceFields(this);
 FormAIController controller = new FormAIController(form, binder);
 ----
 
-For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or `@PropertyId`), the bean property name is used as a default field description, so when the user mentions a field by its bean-side name, the LLM can match the request to the right field. An explicit [methodname]`describe()` call always overrides the default. Lambda-bound bindings have no property name and contribute no default.
+For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or `@PropertyId`), the bean property name is used as a default field description, so when the user mentions a field by its bean-side name, the LLM can match the request to the right field. An explicit [methodname]`describe()` call always overrides the default. Lambda-bound bindings have no property name and contribute no default field description.
 
 
 == Options for Selection Fields
@@ -244,4 +244,4 @@ Field ids remain stable across the round-trip because they live on the field com
 
 == Composing Multiple Forms
 
-[classname]`FormAIController` manages a single container, but a view can host several. Construct one controller per form section and attach each to its own [classname]`AIOrchestrator`. Each orchestrator also needs a dedicated [classname]`LLMProvider`, [classname]`MessageInput`, and [classname]`MessageList` -- per the <<index#,AI Support overview>>, none of those instances may be shared across orchestrators.
+[classname]`FormAIController` manages a single container, but a view can host several. Construct one controller per form section and attach each to its own [classname]`AIOrchestrator`. Each orchestrator also needs a dedicated [classname]`LLMProvider`, [classname]`MessageInput`, and [classname]`MessageList` -- per the <<index#,AI Integration overview>>, none of those instances may be shared across orchestrators.
