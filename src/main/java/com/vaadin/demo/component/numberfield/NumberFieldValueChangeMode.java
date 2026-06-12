@@ -1,13 +1,13 @@
 package com.vaadin.demo.component.numberfield;
 
 import com.vaadin.demo.DemoExporter;
-import com.vaadin.demo.flow.routing.Route;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.Route;
 
 import static com.vaadin.demo.component.Constants.valueChangeModes;
 

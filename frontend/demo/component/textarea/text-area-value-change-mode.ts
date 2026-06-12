@@ -1,5 +1,5 @@
 import 'Frontend/demo/init';
-import '@vaadin/text-field';
+import '@vaadin/text-area';
 import '@vaadin/select';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
