@@ -67,6 +67,28 @@ protected void onAttach(AttachEvent attachEvent) {
 }
 ----
 
+For a hot stream that several users share, you can instead feed the stream into a shared <</flow/ui-state#,signal>> once, in a singleton bean, and let each view bind to it. This removes the per-view subscribe/unsubscribe and `UI.accessLater()` bookkeeping:
+
+[source,java]
+----
+@Component // Singleton: subscribed once for the whole application
+public class ChatMessages {
+    private final SharedListSignal<ChatMessage> messages =
+            new SharedListSignal<>(ChatMessage.class);
+
+    ChatMessages(ChatService chatService) {
+        chatService.messages().subscribe(messages::insertLast); // <1>
+    }
+
+    public SharedListSignal<ChatMessage> messages() {
+        return messages;
+    }
+}
+----
+<1> The bean holds a single subscription for all users. Views bind to `messages()` with [methodname]`bindChildren()`, and Flow pushes new messages to every connected user automatically.
+
+See <<updates#broadcasting-to-all-users,Broadcasting to All Users>> for the matching view code. Note that the <<#buffering,buffering>> guidance below still applies: signals don't rate-limit updates, so buffer a high-frequency stream before feeding it into the signal.
+
 
 === Subscribing with Hilla
 
