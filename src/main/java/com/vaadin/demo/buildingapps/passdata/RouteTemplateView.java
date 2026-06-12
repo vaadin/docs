@@ -50,7 +50,7 @@ public class RouteTemplateView extends VerticalLayout
                 new RouteParam("id", id),
                 new RouteParam("action", action.name()));
         // @formatter:on hidden-source-line
-        UI.getCurrent().navigate(RouteTemplateView.class, parameters);
+        UI.getCurrentOrThrow().navigate(RouteTemplateView.class, parameters);
     }
 }
 // end::snippet[]

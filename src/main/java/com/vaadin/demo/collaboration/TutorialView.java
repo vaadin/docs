@@ -46,7 +46,7 @@ public class TutorialView extends VerticalLayout {
         // tag::user-info[]
         // NOTE: Use the user id of the logged-in user
         // instead
-        String userId = System.identityHashCode(UI.getCurrent()) + "";
+        String userId = System.identityHashCode(UI.getCurrentOrThrow()) + "";
         UserInfo localUser = new UserInfo(userId, "User " + userId);
         // end::user-info[]
         // tag::avatar-group[]

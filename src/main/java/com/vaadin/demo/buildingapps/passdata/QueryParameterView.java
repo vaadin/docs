@@ -20,11 +20,11 @@ public class QueryParameterView extends VerticalLayout
 
         filterField.addValueChangeListener(event -> {
             // @formatter:off hidden-source-line
-            var queryParameters = UI.getCurrent()
+            var queryParameters = UI.getCurrentOrThrow()
                     .getActiveViewLocation()
                     .getQueryParameters()
                     .merging("filter", event.getValue());
-            UI.getCurrent().navigate(
+            UI.getCurrentOrThrow().navigate(
                     QueryParameterView.class,
                     queryParameters);
             // @formatter:on hidden-source-line
