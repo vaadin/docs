@@ -1,0 +1,89 @@
+---
+title: Load Testing Utilities
+page-title: Load Testing Utility Goals
+description: Utility Maven goals for managing the application server during load tests.
+meta-description: Use the loadtest:start-server and loadtest:stop-server goals to manage the application server during Vaadin load tests.
+order: 140
+version: since:com.vaadin:vaadin@V25.2
+---
+
+= [since:com.vaadin:vaadin@V25.2]#Load Testing Utilities#
+
+[[server-lifecycle]]
+== Starting and Stopping the Server
+
+The `loadtest:record` and `loadtest:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `loadtest:start-server` and `loadtest:stop-server` goals.
+
+The `loadtest:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `loadtest:stop-server` goal retrieves that handle and shuts the server down gracefully.
+
+[source,xml]
+----
+<groupId>com.vaadin</groupId>
+<artifactId>testbench-converter-plugin</artifactId>
+
+<executions>
+    <execution>
+        <id>start-server</id>
+        <goals>
+            <goal>start-server</goal>
+        </goals>
+        <configuration>
+            <serverJar>${project.build.directory}/my-app.jar</serverJar>
+            <serverPort>8081</serverPort>
+            <managementPort>8082</managementPort>
+        </configuration>
+    </execution>
+
+    <execution>
+        <id>stop-server</id>
+        <goals>
+            <goal>stop-server</goal>
+        </goals>
+    </execution>
+</executions>
+----
+
+By default, `loadtest:start-server` runs in the `pre-integration-test` phase and `loadtest:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
+
+=== Testing WAR-packaged Applications
+
+The tooling works equally well with WAR-packaged applications, since the load test itself is just HTTP traffic against a running server.
+The only difference from the JAR/Spring Boot workflow is that you are responsible for deploying the WAR to a servlet container (Tomcat, Jetty, WildFly, etc.) before recording -- the plugin can not start the application for you.
+
+Deploy the WAR locally for the `loadtest:record` step and point the plugin at it via `-Dk6.appPort` (and `-Dserver.host` if not on localhost), then run the generated k6 script against your separate load-test environment using `-Dk6.appIp` and `-Dk6.appPort`.
+
+Keep in mind that WARs are typically deployed under a context path (e.g. `/myapp`), so make sure `getViewName()` in your TestBench tests reflects the deployed path; the recorded HAR -- and therefore the generated k6 script -- will use whatever URLs the browser actually hits during recording.
+
+=== Start Server Parameters
+
+`serverJar`::
+Path to the executable JAR file to start. Required.
+
+`serverPort`::
+Spring Boot application server port. Required unless `httpPort` (Jetty) is set.
+
+`httpPort`::
+Jetty HTTP port. Required unless `serverPort` (Spring Boot) is set.
+
+`managementPort`::
+Spring Boot Actuator management port. Optional -- when set, `/actuator/health` is polled for readiness in addition to the application root.
+
+`jvmArgs`::
+Extra JVM arguments (for example, `-Xmx512m`).
+
+`appArgs`::
+Extra application arguments.
+
+`startupTimeout`::
+Maximum time to wait for server startup, in seconds. Defaults to `120`.
+
+`healthPollInterval`::
+Interval for polling the health endpoint, in seconds. Defaults to `2`.
+
+=== Stop Server Parameters
+
+`gracePeriod`::
+Time to wait for graceful shutdown before force-killing, in seconds. Defaults to `10`.
+
+[NOTE]
+For CLI the parameters need to be given as `k6.[parameterName]`
