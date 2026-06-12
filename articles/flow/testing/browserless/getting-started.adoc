@@ -227,6 +227,26 @@ fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
 ----
 
 
+[#signals]
+== Testing Signal-Based UIs
+
+Views built on <<{articles}/flow/ui-state#, signals>> are testable without extra setup: [classname]`BrowserlessTest` registers a test [classname]`SignalEnvironment`, so signal effects run deterministically on the test thread instead of on a background thread pool. Signal changes made directly by a simulated user action are reflected in the UI immediately, so the testers and queries see the updated state right away.
+
+When a signal is changed from a background thread -- for example, by a service callback or another part of the application -- call [methodname]`runPendingSignalsTasks()` to process the pending signal effects before asserting:
+
+[source,java]
+----
+// Application code updates a signal from a background thread
+test(view.start).click();
+
+// Process the pending signal effects, then assert
+runPendingSignalsTasks();
+Assertions.assertEquals("Completed", test(view.status).getText());
+----
+
+The same method is available on the JUnit extension as [methodname]`ext.runPendingSignalsTasks()` (see <<extensions#, JUnit 6 Extensions>>) and on each window in multi-user tests (see <<multi-user#signals, Signals in Multi-User Tests>>).
+
+
 .Multiple Users or Windows?
 [TIP]
 This setup drives a single user with a single window. For tests that need several concurrent users or multiple windows of the same user, see <<multi-user#, Multi-User and Multi-Window Testing>>.
