@@ -1,0 +1,374 @@
+---
+title: Multi-User and Multi-Window Testing
+page-title: Browserless testing for multi-user and multi-window scenarios in Vaadin
+description: Drive multiple concurrent user sessions and multiple browser windows in a single browserless test.
+meta-description: Test Vaadin features that depend on multiple users or multiple windows -- shared state, security isolation, and per-window UI state -- without a browser.
+order: 32
+---
+
+
+= Multi-User and Multi-Window Testing
+
+[since:com.vaadin:vaadin@V25.2]
+
+[classname]`BrowserlessTest` and the JUnit 6 extensions cover the most common scenario: one user, one window. Some features can only be exercised with multiple participants in the same test -- application-wide singletons observed by two users, per-window UI state of the same user, or security context isolation when switching between authenticated users.
+
+The [classname]`BrowserlessApplicationContext` API models this directly. It is a composition-based, lower-level alternative that lets the test create as many user sessions and UI instances as needed, then drive them independently.
+
+
+== When to Use This API
+
+Reach for [classname]`BrowserlessApplicationContext` when:
+
+- Two or more users must be active at the same time -- for example, asserting that a shared service exposes the same state to both, or that one user's mutation does not leak into another user's session.
+- A single user has multiple browser windows open and per-window UI state must remain isolated while session state is shared.
+- A test switches between authenticated users and needs the Spring Security or Quarkus security context to follow the active window.
+
+For tests with a single user and a single window, prefer <<getting-started#, `SpringBrowserlessTest`>>, <<non-spring#, `BrowserlessTest`>>, <<quarkus#, `QuarkusBrowserlessTest`>>, or the <<extensions#, JUnit 6 extensions>>.
+
+
+== Application, User, and Window
+
+The API exposes three nested contexts that mirror Vaadin's runtime hierarchy:
+
+[cols="1,3"]
+|===
+| [classname]`BrowserlessApplicationContext`
+| One [classname]`VaadinService` and one servlet, shared across every user and window the test creates.
+
+| [classname]`BrowserlessUserContext`
+| One [classname]`VaadinSession` and the security state of a single logical user. A user can own many windows.
+
+| [classname]`BrowserlessUIContext`
+| One [classname]`UI` instance -- a single browser window. Provides the testing DSL ([methodname]`navigate`, [methodname]`find`, [methodname]`test`, ...).
+|===
+
+[NOTE]
+All three contexts are *thread-affine*: within a single test, each context must be created, used, and closed on the same thread, and cannot be shared with other threads. Tests can still run in parallel -- each test owns its own contexts.
+
+When the test calls a DSL method on any [classname]`BrowserlessUIContext`, the API automatically switches the thread-local Vaadin state -- [classname]`VaadinService`, [classname]`VaadinSession`, [classname]`UI`, request, response, and the security context -- to that window's user. Interleaving calls on different windows is therefore safe without any explicit context switch.
+
+
+== Setting Up the Application Context
+
+The application context is built once per test, typically in [annotationname]`@BeforeEach`, and closed in [annotationname]`@AfterEach`. Use try-with-resources or call [methodname]`close()` explicitly: closing the application context cascades to every user and window it created.
+
+[methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
+
+.Plain Java
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(CartView.class)) {
+    var user = app.newUser();
+    var window = user.newWindow();
+    window.navigate(CartView.class);
+    // assertions...
+}
+----
+
+For Spring and Quarkus, dedicated factories pre-wire the framework-specific servlet and lookup initializer:
+
+.Spring
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = ShopTestConfig.class)
+class CartViewMultiUserTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                CartView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+}
+----
+
+.Quarkus
+[source,java]
+----
+@QuarkusTest
+class CartViewMultiUserTest {
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(CartView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+}
+----
+
+
+== Creating Users and Windows
+
+[methodname]`newUser()` returns a fresh [classname]`BrowserlessUserContext` with its own [classname]`VaadinSession`. [methodname]`newWindow()` creates a new [classname]`UI` for that user. Different users have independent sessions; different windows of the same user share a session but have independent [classname]`UI` instances.
+
+.Two Users, Independent Sessions
+[source,java]
+----
+var alice = app.newUser();
+var aliceWindow = alice.newWindow();
+
+var bob = app.newUser();
+var bobWindow = bob.newWindow();
+
+Assertions.assertNotSame(alice.getSession(), bob.getSession());
+Assertions.assertNotSame(aliceWindow.getUI(), bobWindow.getUI());
+----
+
+Every window exposes the same testing DSL as [classname]`BrowserlessTest`, scoped to that window -- no explicit activation is required:
+
+- [methodname]`window.navigate(...)` -- navigate the window to a view.
+- [methodname]`window.findButton()`, [methodname]`window.findTextField()`, [methodname]`window.findGrid(Class<V>)`, ... -- typed locator entry points that combine a filter chain with the component's tester actions in one fluent expression; see <<locators#, Component Locators>>.
+- [methodname]`window.find(Class)` and [methodname]`window.findInView(Class)` -- locate components in this window. Returns a [classname]`ComponentQuery`; see <<component-query#, Querying Components>>.
+- [methodname]`window.test(component)` -- wrap a component in a tester that simulates user actions like [methodname]`click()` and [methodname]`setValue()`. Returns a typed tester matched to the component's type; see <<component-testers#, Component Testers>>. To request a specific tester type explicitly -- for example, a custom tester -- use [methodname]`window.test(MyTester.class, component)`.
+- [methodname]`window.fireShortcut(Key, KeyModifier...)` -- simulate a keyboard shortcut in the window, mirroring [methodname]`fireShortcut()` on [classname]`BrowserlessTest`.
+- [methodname]`window.runPendingSignalsTasks()` -- process pending signal effects before asserting; see <<#signals, Signals>> below.
+- [methodname]`window.getCurrentView()` and [methodname]`window.roundTrip()` -- convenience accessors that mirror their [classname]`BrowserlessTest` counterparts.
+
+.Two Users Sharing Application-Level State
+[source,java]
+----
+var w1 = app.newUser().newWindow();
+w1.navigate(SharedCounterView.class);
+
+var w2 = app.newUser().newWindow();
+w2.navigate(SharedCounterView.class);
+
+// w1 mutates a shared static counter
+w1.findButton().withText("Increment").click();
+Assertions.assertEquals("Count: 1", w1.findParagraph().getText());
+
+// w2 still shows its own UI state until it refreshes
+Assertions.assertEquals("Count: 0", w2.findParagraph().getText());
+
+w2.findButton().withText("Refresh").click();
+Assertions.assertEquals("Count: 1", w2.findParagraph().getText());
+----
+
+.Same User, Two Windows, Independent UI State
+[source,java]
+----
+var user = app.newUser();
+var w1 = user.newWindow();
+var w2 = user.newWindow();
+
+w1.navigate(CartView.class);
+w2.navigate(CheckoutView.class);
+
+// Each window holds its own current view
+Assertions.assertInstanceOf(CartView.class, w1.getCurrentView());
+Assertions.assertInstanceOf(CheckoutView.class, w2.getCurrentView());
+
+// Session is the same; UIs are not
+Assertions.assertSame(user.getSession(), w1.getUI().getSession());
+Assertions.assertNotSame(w1.getUI(), w2.getUI());
+----
+
+
+[#signals]
+== Signals
+
+The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
+
+.Two Users Observing a Shared Signal
+[source,java]
+----
+var w1 = app.newUser().newWindow();
+w1.navigate(ChatView.class);
+
+var w2 = app.newUser().newWindow();
+w2.navigate(ChatView.class);
+
+// w1 updates a shared signal that both views are bound to
+w1.findTextField().withLabel("Message").setValue("Hello!");
+w1.findButton().withText("Send").click();
+
+// Process the pending signal effects, then assert on the other window
+w2.runPendingSignalsTasks();
+Assertions.assertEquals("Hello!", w2.findParagraph().getText());
+----
+
+[methodname]`runPendingSignalsTasks()` waits up to 100 milliseconds for the first pending task to arrive and then drains the queue; the [methodname]`runPendingSignalsTasks(long, TimeUnit)` overload accepts a custom wait time. The method returns [code]`true` if any tasks were processed. If the calling thread holds the window's [classname]`VaadinSession` lock, the lock is temporarily released during the wait so that background threads can enqueue tasks.
+
+
+== Authenticated Users with Spring Security
+
+When Spring Security is on the classpath, [methodname]`SpringBrowserlessApplicationContext.createSecured()` returns a [classname]`SecuredBrowserlessApplicationContext<Authentication>` that exposes credential-aware [methodname]`newUser(...)` overloads. The handler installs the user's [classname]`Authentication` on the calling thread before [classname]`SessionInit` listeners fire, mirroring the order of operations in a real Vaadin + Spring Security request.
+
+When the test switches between windows belonging to different users, the outgoing user's [classname]`SecurityContext` is saved and the incoming user's snapshot is restored automatically.
+
+.Multi-User Security Isolation
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = SecurityTestConfig.class)
+class MultiUserSecurityTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private SecuredBrowserlessApplicationContext<Authentication> app;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.createSecured(
+                applicationContext, ProtectedView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void switchingUsers_securityContextFollowsActiveWindow() {
+        var admin = app.newUser("john", "ADMIN").newWindow();
+        var anon = app.newUser().newWindow();
+
+        admin.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                admin.getCurrentView());
+
+        // Switching to the anonymous user restores their (empty) context;
+        // the protected view redirects to login.
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> anon.navigate(ProtectedView.class));
+        Assertions.assertInstanceOf(LoginView.class, anon.getCurrentView());
+
+        // Switching back restores admin's authentication.
+        admin.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                admin.getCurrentView());
+    }
+}
+----
+
+[methodname]`newUser(String username, String... roles)` is a convenience that produces an [classname]`Authentication` with the conventions of [annotationname]`@WithMockUser`. To install a custom [classname]`Authentication` directly, pass it to [methodname]`newUser(Authentication)`. Calling [methodname]`newUser()` without arguments creates an anonymous user; the handler installs Spring's [classname]`AnonymousAuthenticationToken`.
+
+
+== Authenticated Users with Quarkus Security
+
+The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type:
+
+.Quarkus Multi-User Test
+[source,java]
+----
+@QuarkusTest
+@TestProfile(SecurityTestConfig.class)
+class MultiUserSecurityTest {
+
+    private SecuredBrowserlessApplicationContext<SecurityIdentity> app;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext
+                .createSecured(ProtectedView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void authenticatedUser_byUsernameAndRoles_seesProtectedView() {
+        var window = app.newUser("john", "USER").newWindow();
+
+        window.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                window.getCurrentView());
+    }
+
+    @Test
+    void authenticatedUser_byIdentity_seesProtectedView() {
+        SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+                .setPrincipal(new QuarkusPrincipal("john"))
+                .addRoles(Set.of("USER"))
+                .setAnonymous(false)
+                .build();
+
+        var window = app.newUser(identity).newWindow();
+
+        window.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                window.getCurrentView());
+    }
+}
+----
+
+As with the Spring factory, [methodname]`newUser()` without arguments creates an anonymous user, and cross-user window switches save and restore the active [classname]`SecurityIdentity` automatically.
+
+
+== Customizing the Application Context
+
+For advanced setups, [classname]`BrowserlessApplicationContext.Builder` exposes the same configuration knobs as the framework-specific factories. Construct one directly and call [methodname]`build()` for an unsecured context, or chain [methodname]`withSecurityContextHandler(...)` to transition to a typed [classname]`SecuredBrowserlessApplicationContext.Builder<C>` whose [methodname]`build()` returns the credential-aware variant.
+
+.Builder Configuration
+[cols="1,2"]
+|===
+| Method | Purpose
+
+| [methodname]`withViewPackages(String...)` / [methodname]`withViewPackages(Class<?>...)`
+| Adds packages to scan for [annotationname]`@Route`-annotated views. Successive calls accumulate.
+
+| [methodname]`withComponentTesterPackages(String...)` / [methodname]`withComponentTesterPackages(Class<?>...)`
+| Adds packages to scan for custom [classname]`ComponentTester` implementations.
+
+| [methodname]`withSecurityContextHandler(SecurityContextHandler<C>)`
+| Enables credential-aware [methodname]`newUser(...)` overloads. Transitions to the typed [classname]`SecuredBrowserlessApplicationContext.Builder<C>`.
+
+| [methodname]`withServletFactory(...)`
+| Replaces the default mock servlet -- for example, to plug in a framework-specific servlet.
+
+| [methodname]`withUIFactory(UIFactory)`
+| Provides a custom [classname]`UI` subclass for every window created by the context.
+
+| [methodname]`withLookupServices(Class<?>...)`
+| Registers Vaadin [classname]`Lookup` service implementations.
+
+| [methodname]`withCloseHook(Runnable)`
+| Registers a callback to run after the context tears down -- intended for releasing framework-specific state.
+|===
+
+For one-off tweaks without holding on to a builder reference, [methodname]`BrowserlessApplicationContext.create(UnaryOperator<Builder>)` and the corresponding [methodname]`createSecured(Function<Builder, SecuredBuilder<C>>)` accept a configurer:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(b -> b
+        .withViewPackages(CartView.class)
+        .withCloseHook(() -> testFixtures.reset()))) {
+    // ...
+}
+----
+
+The Spring and Quarkus factories expose [methodname]`builder(...)` overloads that return a pre-wired builder for projects that need to add further customizations on top of the framework defaults.
+
+
+== Pitfalls and Guarantees
+
+Common gotchas worth keeping in mind:
+
+- *Always close the application context.* Use try-with-resources or call [methodname]`close()` in [annotationname]`@AfterEach`. Closing the application cascades to every user and window. Leaking a context across tests leaves Vaadin thread-locals pointing at torn-down state.
+- *No parallel access.* Every context is thread-affine. Driving the same [classname]`BrowserlessApplicationContext` from multiple threads in the same test is unsupported.
+- *Security snapshot is per user, not per window.* Two windows of the same user share one snapshot; a security mutation made while one window is active is visible to the user's other windows. The snapshot is re-captured only on cross-user switches.
+- *Calling Vaadin APIs directly.* DSL methods on [classname]`BrowserlessUIContext` activate the window automatically. If the test reaches for [methodname]`UI.getCurrent()`, [methodname]`VaadinSession.getCurrent()`, or [classname]`SecurityContextHolder` between DSL calls, call [methodname]`window.activate()` first to make sure the thread-locals reflect the intended window.
+- *Anonymous users still go through the handler.* On a secured context, [methodname]`newUser()` with no arguments delegates to the handler, which installs its anonymous-equivalent state (for example, Spring's [classname]`AnonymousAuthenticationToken`).
+
+
+[discussion-id]`9C4E8A2D-6F31-4B72-9A8F-5D7E1C3B4F60`
