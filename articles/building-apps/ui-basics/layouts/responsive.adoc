@@ -1,0 +1,169 @@
+---
+title: Responsive Layouts
+page-title: How to build responsive layouts in Vaadin
+description: Learn how to adapt Vaadin layouts to different screen sizes with built-in components, CSS media and container queries, and Lumo utility classes.
+meta-description: Build Vaadin views that adapt to phones, tablets, and desktops using built-in responsive components, CSS media and container queries, and Lumo utility classes.
+order: 10
+---
+
+= Responsive Layouts
+:toclevels: 2
+
+A _responsive_ layout adapts to the size of the screen it's shown on, presenting the right amount of information and interaction for each device. This guide covers how to *implement* a responsive Vaadin view. For the design decisions behind responsiveness -- when to reduce features, go mobile-first, or build a separate mobile UI -- see <</designing-apps/responsiveness#,Responsiveness>>. For the layout components themselves -- rows, columns, sizing, and alignment -- see the <<index#,Arrange with Layouts>> overview.
+
+Responsiveness is a styling concern, handled with CSS rather than by detecting the screen size on the server. The core techniques -- CSS media queries and container queries -- work with *any theme*. The Lumo theme adds utility classes as a shortcut; with the Aura theme, which has no utility classes, you use the CSS techniques directly.
+
+
+== Use Built-In Responsive Components First
+
+Many Vaadin components already adapt themselves, so check whether one fits before writing any responsive CSS. For example, <</components/app-layout#,App Layout>> collapses its drawer to a hamburger menu, <</components/form-layout#,Form Layout>> adjusts its column count, <</components/dashboard#,Dashboard>> reflows its widgets, and <</components/menu-bar#,Menu Bar>> moves overflowing items into a sub-menu. For the full catalog of components with built-in responsive behavior, see <</designing-apps/responsiveness#responsive-features-in-vaadin,Responsive Features in Vaadin>>.
+
+
+== CSS Media Queries
+
+A _media query_ applies a block of CSS only when the screen matches a condition, such as a maximum width. This is the primary tool for adapting to the viewport size.
+
+Add a class name to the component from Java, then write the responsive rules in your view's stylesheet:
+
+[source,java]
+----
+filterPanel.addClassName("filter-panel");
+----
+
+[source,css]
+----
+.filter-panel {
+    display: flex;
+}
+
+/* Hide the panel on screens 640px wide or narrower */
+@media (max-width: 640px) {
+    .filter-panel {
+        display: none;
+    }
+}
+----
+
+For how to attach a stylesheet and apply class names from Java, see <<../add-styling#,Add Styling>>.
+
+To keep behavior predictable, use a consistent set of breakpoints rather than targeting specific device widths:
+
+[cols="1,1,2",options="header"]
+|===
+| Breakpoint | Min width | Typical device
+| (default) | 0px | Phones (portrait)
+| Small | 640px | Phones (landscape), small tablets
+| Medium | 768px | Tablets (portrait)
+| Large | 1024px | Tablets (landscape), small laptops
+| XLarge | 1280px | Laptops and desktops
+| XXLarge | 1536px | Large and high-resolution monitors
+|===
+
+Use the min width in a CSS media query: `@media (min-width: 768px)` targets the `Medium` breakpoint and wider. The Lumo utility classes use these same breakpoints -- see <<#lumo-utility-classes,Lumo Utility Classes>> below.
+
+=== Pattern: Responsive Card Grid
+
+A common need is a grid of cards that shows more columns as the screen widens. <<css-grid#,CSS Grid>> handles this with a few media queries, and it works with any theme:
+
+[source,css]
+----
+.card-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;             /* one column on mobile */
+}
+
+@media (min-width: 640px) {
+    .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(3, 1fr); }
+}
+----
+
+For a card grid that wraps automatically without media queries, see <<css-grid#fluid-grids-that-wrap-automatically,CSS Grid Layouts>>.
+
+
+== CSS Container Queries
+
+A _container query_ adapts a component to the width of its own container rather than the whole screen. Use it for resizable panels, dashboard widgets, and reusable components that may appear in different places -- anywhere the component shouldn't assume how much space it has.
+
+Mark an element as a container, then query its width:
+
+[source,css]
+----
+.side-panel {
+    container-type: inline-size;
+    container-name: side-panel;
+}
+
+/* Show the footer only when the panel itself is at least 400px wide */
+.side-panel .footer {
+    display: none;
+}
+
+@container side-panel (min-width: 400px) {
+    .side-panel .footer {
+        display: flex;
+    }
+}
+----
+
+This makes a component self-contained: it adapts to the space it's given, no matter where it's placed.
+
+
+[#lumo-utility-classes]
+== Lumo Utility Classes
+
+[NOTE]
+Utility classes require the *Lumo theme*. If you use Aura, use CSS media or container queries instead, as shown above.
+
+If you use Lumo, its utility classes are the fastest way to add responsive behavior without writing custom CSS. They follow a _mobile-first_ pattern: the plain class sets the default (mobile) style, and a breakpoint-prefixed class overrides it on larger screens.
+
+Load the utility classes with `@StyleSheet` imports on your application shell:
+
+[source,java]
+----
+@StyleSheet(Lumo.STYLESHEET)
+@StyleSheet(Lumo.UTILITY_STYLESHEET)
+public class Application implements AppShellConfigurator {
+}
+----
+
+[NOTE]
+When migrating from an older Vaadin version, remember that loading utility classes through `theme.json` is no longer supported -- use the `@StyleSheet` imports shown above.
+
+Apply the classes from Java with `addClassNames()`. For example, to show a toolbar only on small screens:
+
+[source,java]
+----
+mobileToolbar.addClassNames(
+        LumoUtility.Display.FLEX,                       // visible by default (mobile)
+        LumoUtility.Display.Breakpoint.Medium.HIDDEN);  // hidden at 768px and up
+----
+
+Or to stack a container vertically on mobile and switch to a row on wider screens:
+
+[source,java]
+----
+container.addClassNames(
+        LumoUtility.Display.FLEX,
+        LumoUtility.FlexDirection.COLUMN,                    // stacked by default (mobile)
+        LumoUtility.FlexDirection.Breakpoint.Medium.ROW);   // side by side at 768px and up
+----
+
+For the full list of utility classes and their breakpoint variants, see the <</styling/themes/lumo/utility-classes#,Lumo Utility Classes>> reference.
+
+
+== Best Practices
+
+. *Use CSS for responsiveness, not server-side detection.* Avoid making layout decisions from `Page.retrieveExtendedClientDetails()` or a browser-resize listener -- CSS media and container queries are faster and need no server round-trip.
+. *Design mobile-first.* Make the mobile layout the default and add complexity for larger screens. This matches how the Lumo breakpoints work.
+. *Lean on the built-in responsive components* -- App Layout, Form Layout, Dashboard, and Menu Bar already adapt. Don't rebuild what they provide.
+. *Prefer container queries for reusable components.* If a component might appear in containers of different widths, container queries make it self-adapting.
+. *Design for fluid sizes, not specific devices.* Users resize windows, split screens, and zoom. Test at many widths, not only "phone" and "desktop."
+. *Check wrapping at in-between sizes.* When you rely on `setWrap(true)` or CSS `flex-wrap`, verify that items wrap gracefully between your breakpoints, not only at them.
+
+[WARNING]
+Don't add a server-side browser-resize listener to switch layouts -- it sends a request to the server on every resize. And avoid building separate mobile and desktop view classes unless the interaction patterns are genuinely different; one view with responsive CSS is far easier to maintain.
