@@ -10,7 +10,7 @@ order: 10
 = Route Parameters
 :toclevels: 2
 
-In this guide, you'll learn how to create a view that accepts a single route parameter. You'll also explore the differences between optional and wildcard route parameters.
+In this guide, you'll learn how to create a view that accepts a single route parameter, holds it in a <</flow/ui-state#,signal>> so the UI updates reactively, and keeps the browser URL in sync. You'll also explore the differences between optional and wildcard route parameters.
 
 
 == Copy-Paste into Your Project
@@ -22,7 +22,7 @@ If you want to quickly try out route parameters in your Vaadin application, copy
 include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/RouteParameterView.java[tags=snippet,indent=0]
 ----
 
-For more detailed instructions on how to use route parameters, continue reading below.
+This view stores the route parameter in a signal, binds its text to a value derived from that signal, and updates the URL whenever the signal changes. For more detailed instructions on how to use route parameters, continue reading below.
 
 
 == What Are Route Parameters?
@@ -138,3 +138,47 @@ Now, navigating to `/customers/cu1234/edit` passes `"cu1234/edit"` as the parame
 An empty wildcard parameter is an empty string (`""`), while an empty optional parameter is `null`. So, navigating to `/customers` calls [methodname]`setParameter()` with `""` instead of `null`.
 
 If you’re considering wildcard parameters because you need multiple route parameters, <<route-templates#,Route Templates>> may be a better solution.
+
+
+== Holding the Parameter in a Signal
+
+The [classname]`CustomerView` examples above set text directly inside [methodname]`setParameter()`. That works for trivial views, but as soon as several parts of the UI depend on the parameter, you have to remember to update each of them by hand every time the value changes.
+
+A cleaner approach — the one used by the <<#copy-paste-into-your-project,copy-paste example>> at the top of this guide — is to store the parameter in a <</flow/ui-state#,signal>> and let the UI derive from it. The signal becomes the single source of truth: [methodname]`setParameter()` only writes the incoming value to the signal, and every component that depends on the parameter binds to it and updates itself automatically.
+
+[source,java]
+----
+private final ValueSignal<String> parameter = new ValueSignal<>(null);
+
+@Override
+public void setParameter(BeforeEvent event, @OptionalParameter String parameterValue) {
+    parameter.set(parameterValue);
+}
+----
+
+The parameter is held in a [classname]`ValueSignal<String>`, initialized to `null` for the "no value" case. When the router calls [methodname]`setParameter()`, it writes the incoming value — which may be `null` for an <<#optional-parameters,optional parameter>> — straight to the signal.
+
+Components don't read the parameter directly. Instead, they bind to the signal and re-render whenever it changes. The copy-paste example binds a [classname]`Paragraph` with [methodname]`bindText()`:
+
+[source,java]
+----
+parameterValue.bindText(() -> Optional.ofNullable(parameter.get())
+        .map(value -> "Parameter value: " + value)
+        .orElse("No parameter value provided"));
+----
+
+Anything else that depends on the parameter — an enabled state, a visible flag, a nested component — can bind to the same signal in the same way. See <</flow/ui-state/building-ui#,Component Bindings>> for the full set of binding methods.
+
+
+== Keeping the URL in Sync
+
+Because the signal is the source of truth, the URL should follow it: when the value changes, the browser's address bar should update to match. A <</flow/ui-state/effects-computed#,signal effect>> handles this. Reading `parameter.get()` inside the effect makes it re-run whenever the value changes, navigating the view to itself with the current parameter:
+
+[source,java]
+----
+Signal.effect(this,
+        () -> UI.getCurrent().navigate(RouteParameterView.class,
+                parameter.get()));
+----
+
+The effect is bound to the view's lifecycle, so it's active only while the view is attached. Navigating the view to itself reuses the existing instance and updates the URL; because the target location matches the current one whenever [methodname]`setParameter()` was the source of the change, this doesn't cause a navigation loop.
