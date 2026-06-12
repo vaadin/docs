@@ -289,6 +289,56 @@ vaadin {
 ----
 You can find more details about production builds in the <<#_production, Going to Production>> section.
 
+[#_endpoint_discovery]
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Explicit Endpoint Discovery
+
+During code generation, Hilla discovers browser-callable classes -- classes annotated with [annotationname]`@BrowserCallable` or [annotationname]`@Endpoint` -- automatically. The discovery relies on detecting the Spring Boot application class on the module's classpath. In some setups, such as multi-module projects where the application class resides in a different module, this auto-detection fails.
+
+In these cases, you can configure endpoint discovery explicitly with the following project properties:
+
+`com.vaadin.hilla.mainClass`::
+  The fully qualified name of the Spring Boot application class to use for discovering browser-callable classes. The plugin also reads the plain `mainClass` project property as a fallback.
+
+`com.vaadin.hilla.sourceClasses`::
+  A comma-separated list of fully qualified names of Spring configuration classes that declare the browser-callable beans. The classes are passed to the Spring AOT processor as `--spring.main.sources`, and are used when no Spring Boot application class is found on the classpath.
+
+Set the properties in the [filename]`gradle.properties` file:
+
+[source,properties]
+----
+com.vaadin.hilla.mainClass=com.example.application.Application
+----
+
+Alternatively, if there is no Spring Boot application class available, list the Spring configuration classes that declare the browser-callable beans:
+
+[source,properties]
+----
+com.vaadin.hilla.sourceClasses=com.example.application.ApplicationConfiguration,com.example.module.ModuleConfiguration
+----
+
+You can also pass the properties on the command line:
+
+[.example]
+--
+.terminal
+[source,bash,subs="+attributes"]
+----
+<source-info group="Windows"></source-info>
+gradlew -Pcom.vaadin.hilla.mainClass=com.example.application.Application hillaGenerate
+----
+
+.terminal
+[source,bash,subs="+attributes"]
+----
+<source-info group="macOS / Linux"></source-info>
+./gradlew -Pcom.vaadin.hilla.mainClass=com.example.application.Application hillaGenerate
+----
+--
+
+[NOTE]
+When either property is set, Hilla discovers browser-callable classes with the Spring AOT-based finder, and skips the default lookup-based auto-detection.
+
 [#_production]
 == Going to Production
 When doing a production-ready build, the Vaadin Gradle plugin transpiles, bundles, and optimizes all the client-side dependencies for a faster startup and better browser performance.
