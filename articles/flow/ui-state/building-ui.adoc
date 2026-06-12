@@ -77,15 +77,15 @@ firstName.set("Jane");
 // Automatically updates to "Jane Doe"
 ----
 
-For expensive computations, wrap the lambda in [methodname]`Signal.computed()` to cache the result:
+For expensive computations, wrap the computation in [methodname]`Signal.cached()` to cache the result:
 
 [source,java]
 ----
-fullName.bindText(Signal.computed(() ->
-    firstName.get() + " " + lastName.get()));
+fullName.bindText(Signal.cached(Signal.computed(() ->
+    firstName.get() + " " + lastName.get())));
 ----
 
-Both variants execute the callback when a dependency signal value changes. The difference is that the lambda variant recalculates the result every time someone reads the lambda signal value, while an explicit computed signal (using [methodname]`Signal.computed()`) caches the result until any dependency signal value changes. For simple operations like [methodname]`String::length`, a lambda is enough. However, for complex or expensive computations, use an explicit computed signal to avoid unnecessary recalculations when the value is read multiple times.
+Both variants execute the callback when a dependency signal value changes. The difference is that a plain lambda or [methodname]`Signal.computed()` signal recalculates the result every time someone reads the signal value, while a cached signal (using [methodname]`Signal.cached()`) stores the result and reuses it until any dependency signal value changes. For simple operations like [methodname]`String::length`, a lambda is enough. However, for complex or expensive computations, use [methodname]`Signal.cached()` to avoid unnecessary recalculations when the value is read multiple times. See <<effects-computed#caching-with-signal-cached,Caching with Signal.cached()>> for details.
 
 
 [TIP]
@@ -567,6 +567,110 @@ This approach works with both [classname]`ListSignal` (for local, single-user sc
 Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`Signal.effect()` with [methodname]`setItems()` when you want to populate a data items component (e.g., [classname]`Grid`, [classname]`VirtualList`) that manages its own rendering.
 
 
+[role="since:com.vaadin:vaadin@V25.2"]
+== Component-Specific Bindings
+
+In addition to the general-purpose bindings, some components provide binding methods for state that is specific to that component. Like the other binding methods, they return a [classname]`SignalBinding` that can be used to register `onChange` callbacks or to unbind. Two-way bindings accept a write callback as the second argument; pass `null` for one-way binding.
+
+
+=== Grid Selection Binding
+
+Bind the selection of a [classname]`Grid` to a signal through the single-select or multi-select wrapper. Use [methodname]`asSingleSelect().bindValue()` to bind the selected item:
+
+[source,java]
+----
+ValueSignal<Person> selectedPerson = new ValueSignal<>();
+
+Grid<Person> grid = new Grid<>(Person.class);
+grid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
+
+// Selecting a row updates the signal;
+// setting the signal updates the selection
+----
+
+Use [methodname]`asMultiSelect().bindValue()` to bind the set of selected items to a `Signal<Set<T>>`:
+
+[source,java]
+----
+ValueSignal<Set<Person>> selectedPersons = new ValueSignal<>(Set.of());
+
+Grid<Person> grid = new Grid<>(Person.class);
+grid.setSelectionMode(Grid.SelectionMode.MULTI);
+grid.asMultiSelect().bindValue(selectedPersons, selectedPersons::set);
+----
+
+
+=== MessageList Items Binding
+
+Use [methodname]`bindItems()` to bind the items of a [classname]`MessageList` to a signal holding a list of item signals, such as a [classname]`ListSignal<MessageListItem>`. The rendered messages update when the list structure or any individual item signal changes:
+
+[source,java]
+----
+ListSignal<MessageListItem> messages = new ListSignal<>();
+
+MessageList messageList = new MessageList();
+messageList.bindItems(messages);
+
+messages.insertLast(new MessageListItem("Hello!", Instant.now(), "Alice"));
+// The new message appears in the list
+----
+
+As a shorthand, [classname]`MessageList` also has a constructor that binds the items signal directly:
+
+[source,java]
+----
+MessageList messageList = new MessageList(messages);
+----
+
+While the binding is active, modifying the items manually through [methodname]`setItems()` or [methodname]`addItem()` throws a [classname]`BindingActiveException`.
+
+
+=== AppLayout Drawer Binding
+
+Use [methodname]`bindDrawerOpened()` to bind the drawer state of an [classname]`AppLayout` to a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> drawerOpened = new ValueSignal<>(true);
+
+AppLayout appLayout = new AppLayout();
+appLayout.bindDrawerOpened(drawerOpened, drawerOpened::set);
+
+// Toggling the drawer in the browser updates the signal;
+// setting the signal opens or closes the drawer
+----
+
+
+=== Checkbox Indeterminate Binding
+
+Use [methodname]`bindIndeterminate()` to bind the indeterminate state of a [classname]`Checkbox` to a boolean signal. A typical use case is a "Select All" checkbox indicating that some, but not all, items are selected:
+
+[source,java]
+----
+ValueSignal<Boolean> indeterminate = new ValueSignal<>(true);
+
+Checkbox selectAll = new Checkbox("Select all");
+selectAll.bindIndeterminate(indeterminate, indeterminate::set);
+----
+
+
+=== Theme Variant Binding
+
+Use [methodname]`bindThemeVariants()` to bind a list of theme variants to a signal. This method is available on components that implement [interfacename]`HasThemeVariant` and is a typed alternative to [methodname]`bindThemeNames()` that works with theme variant enums instead of raw theme name strings:
+
+[source,java]
+----
+ValueSignal<List<ButtonVariant>> variants =
+    new ValueSignal<>(List.of(ButtonVariant.LUMO_PRIMARY));
+
+Button saveButton = new Button("Save");
+saveButton.bindThemeVariants(variants);
+
+// Update all theme variants at once
+variants.set(List.of(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL));
+----
+
+
 == Built-In Signal Sources
 
 Vaadin provides several built-in signals that expose framework-level state reactively.
@@ -595,28 +699,44 @@ The signal is lazily initialized. The actual window dimensions are available fro
 
 === UI Locale Signal
 
-Use [methodname]`UI.localeSignal()` to get a writable signal that tracks the UI's locale:
+Use [methodname]`UI.localeSignal()` to get a read-only signal that tracks the UI's locale:
 
 [source,java]
 ----
-ValueSignal<Locale> locale = UI.getCurrent().localeSignal();
+Signal<Locale> locale = UI.getCurrent().localeSignal();
 
 Span greeting = new Span();
 greeting.bindText(locale.map(loc ->
     loc.getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
 ----
 
-[WARNING]
-Writing directly to this signal does not notify [interfacename]`LocaleChangeObserver` implementations. If you need observers to be notified, use [methodname]`UI.setLocale()` instead.
+The signal cannot be written directly. To change the locale, use [methodname]`UI.setLocale()`, which updates the signal and also notifies [interfacename]`LocaleChangeObserver` implementations. For two-way binding with a field component, pass [methodname]`setLocale()` as the write callback:
+
+[source,java]
+----
+UI ui = UI.getCurrent();
+
+ComboBox<Locale> languageSelect = new ComboBox<>("Language");
+languageSelect.setItems(Locale.ENGLISH, Locale.of("fi"));
+languageSelect.bindValue(ui.localeSignal(), ui::setLocale);
+----
 
 
 === Session Locale Signal
 
-Use [methodname]`VaadinSession.localeSignal()` to get a shared, writable signal that tracks the session-level locale. UIs that have not had their locale explicitly overridden derive their locale from this signal:
+Use [methodname]`VaadinSession.localeSignal()` to get a read-only signal that tracks the session-level locale. UIs that have not had their locale explicitly overridden derive their locale from this signal:
 
 [source,java]
 ----
-SharedValueSignal<Locale> sessionLocale = VaadinSession.getCurrent().localeSignal();
+VaadinSession session = VaadinSession.getCurrent();
+Signal<Locale> sessionLocale = session.localeSignal();
+----
+
+To change the session locale, use [methodname]`VaadinSession.setLocale()`. As with the UI locale signal, the signal can be combined with [methodname]`setLocale()` as the write callback for two-way binding:
+
+[source,java]
+----
+languageSelect.bindValue(session.localeSignal(), session::setLocale);
 ----
 
 
