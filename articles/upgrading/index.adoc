@@ -197,6 +197,10 @@ tasks.named('processResources') {
 }
 ----
 
+=== Recently Published npm Packages Not Installed by Default
+
+Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
+
 == Development Tools
 
 Development tools are opt-in feature in Vaadin 25. `vaadin-dev` module isn't included transitively by default anymore via `vaadin` or `vaadin-core` or any other Vaadin dependencies. To include it, add following dependency to your build configuration:
@@ -282,13 +286,7 @@ The [annotationname]`@StyleSheet` annotation is now the recommended way to load 
 public class Application implements AppShellConfigurator {}
 ----
 
-Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. If the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications), the referenced stylesheet must be prefixed by the `context://` protocol.
-
-[source,java]
-----
-@StyleSheet("context://styles.css")
-public class Application implements AppShellConfigurator {}
-----
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. [since:com.vaadin:vaadin@V25.2]#Stylesheet URLs are automatically resolved against the servlet context root, so they work also when the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications).# Prefixing the URL with the `context://` protocol is no longer necessary, but it's still supported.
 
 The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
@@ -1062,6 +1060,21 @@ Vaadin only sets the header if the response doesn't already contain an `X-Frame-
 Vaadin 25 with Spring Boot 4 uses JUnit 6 (JUnit Platform) as the default test framework. If you have JUnit 4 tests using [classname]`UIUnit4Test` (Browserless) or [classname]`TestBenchTestCase` (End-to-End), they won't be detected or executed without adding the JUnit Vintage Engine dependency.
 
 See <<{articles}/flow/testing/browserless/getting-started#,Getting Started with Browserless Testing>> and <<{articles}/flow/testing/end-to-end/getting-started#,Getting Started with End-to-End Testing>> for the required dependencies.
+
+=== Browserless Testing: Spring Support Moved to a Separate Artifact
+
+Starting with Vaadin 25.2, the Spring-specific browserless-testing classes -- [classname]`SpringBrowserlessTest` and the Spring mock infrastructure -- are no longer included in the `browserless-test` and `browserless-test-junit6` artifacts. If your tests extend [classname]`SpringBrowserlessTest`, add the new `browserless-test-spring` dependency, as the tests no longer compile without it:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Non-Spring projects aren't affected. See <<{articles}/flow/testing/browserless/migration#,Migrating to Browserless Testing>> for details.
 
 === ComponentTester Click Method
 
