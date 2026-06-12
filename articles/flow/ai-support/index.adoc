@@ -87,6 +87,57 @@ public class Application implements AppShellConfigurator {
 Synchronous mode does not require push. If push is not available in your environment, disable streaming on the provider. A warning is logged at runtime if push is not enabled when using streaming mode.
 
 
+[[request-response-listeners]]
+[role="since:com.vaadin:vaadin@V25.2"]
+== Request & Response Listeners
+
+The builder accepts two lifecycle hooks that fire on every conversation turn:
+
+* [methodname]`withRequestListener()` -- called on every prompt, just before the LLM request starts. The event carries the user message, the assigned message ID, and the attachments included with the message (an empty list when there are none). Use it to persist outbound requests or attachment data keyed by message ID; see <<file-attachments#,File Attachments>>.
+* [methodname]`withResponseListener()` -- called once per turn when the response has completed, successfully or with an error. The event carries the response text and, on failure, the cause via [methodname]`getError()`. Use it to persist conversation history, trigger follow-up actions, or surface errors; see <<conversation-history#,Conversation History & Session Persistence>>.
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withRequestListener(event -> logPrompt(
+                event.getMessageId(), event.getUserMessage()))
+        .withResponseListener(event -> event.getError().ifPresentOrElse(
+                error -> logFailure(error),
+                () -> saveHistory(orchestrator.getHistory())))
+        .build();
+----
+
+The request listener runs on the UI thread; offload long-running work to a background thread. The response listener runs on a background thread: blocking I/O (such as database writes) is safe directly, but updates to Vaadin UI components must be wrapped in `ui.access()`.
+
+On success, the response text may be empty if the model emitted only tool calls or otherwise stopped without producing visible content. Such turns still trigger the response listener, but empty responses are not appended to the conversation history.
+
+.Replaces Earlier Listener Types
+[NOTE]
+[classname]`RequestListener` and [classname]`ResponseListener` replace the [classname]`AttachmentSubmitListener` and [classname]`ResponseCompleteListener` types from earlier versions, which have been removed. Replace [methodname]`withAttachmentSubmitListener()` calls with [methodname]`withRequestListener()` -- the new listener also fires for messages without attachments. Replace [methodname]`withResponseCompleteListener()` calls with [methodname]`withResponseListener()` -- the new listener also fires for failed and empty responses, so check [methodname]`getError()` and [methodname]`getResponse()` if the callback should only react to successful, text-bearing responses.
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Session Metadata
+
+The LLM only knows what's in the conversation. Use [methodname]`withMetadata()` to supply ambient session context -- the current date and time, the user's locale, the active tenant, the page the user is on -- to the LLM on every turn. The supplier is invoked once per turn on the UI thread when the request is built, so it can read [methodname]`UI.getCurrent()` and session-scoped state:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withMetadata(() -> "Current time: " + ZonedDateTime.now()
+                + "\nUser locale: " + UI.getCurrent().getLocale())
+        .build();
+----
+
+If the supplier returns `null` or a blank string, no context is added for that turn -- useful for patterns where context only applies in certain situations. By default, the orchestrator supplies the current date and time, so the LLM can interpret relative references such as "show me sales from the past two months". Passing `null` to [methodname]`withMetadata()` disables session metadata entirely, including this built-in default.
+
+
 == Topics
 
 section_outline::[]
