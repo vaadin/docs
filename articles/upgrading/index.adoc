@@ -197,6 +197,10 @@ tasks.named('processResources') {
 }
 ----
 
+=== Recently Published npm Packages Not Installed by Default
+
+Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
+
 == Development Tools
 
 Development tools are opt-in feature in Vaadin 25. `vaadin-dev` module isn't included transitively by default anymore via `vaadin` or `vaadin-core` or any other Vaadin dependencies. To include it, add following dependency to your build configuration:
@@ -278,13 +282,7 @@ The [annotationname]`@StyleSheet` annotation is now the recommended way to load 
 public class Application implements AppShellConfigurator {}
 ----
 
-Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. If the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications), the referenced stylesheet must be prefixed by the `context://` protocol.
-
-[source,java]
-----
-@StyleSheet("context://styles.css")
-public class Application implements AppShellConfigurator {}
-----
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. [since:com.vaadin:vaadin@V25.2]#Stylesheet URLs are automatically resolved against the servlet context root, so they work also when the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications).# Prefixing the URL with the `context://` protocol is no longer necessary, but it's still supported.
 
 The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
@@ -1047,6 +1045,8 @@ If your application needs to set such URLs, either configure the accepted scheme
 === X-Frame-Options Header Sent by Default
 
 Starting with Vaadin 25.2, the application page is served with the `X-Frame-Options: SAMEORIGIN` HTTP response header to protect against clickjacking. As a result, browsers refuse to show the application inside a frame on a different origin. Applications that are meant to be embedded in an iframe on another origin must set the `frameOptions` configuration parameter to an empty value to disable the header. The parameter can also be set to another header value, such as `DENY`. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
 
 
 == TestBench
