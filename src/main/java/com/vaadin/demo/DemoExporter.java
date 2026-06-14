@@ -40,7 +40,8 @@ public abstract class DemoExporter<T extends Component>
                 .toMillis();
         if (UI.getCurrentOrThrow().getPollInterval() == -1) {
             UI.getCurrentOrThrow().setPollInterval(interval);
-            UI.getCurrentOrThrow().addPollListener(e -> emitUpdateTimestamp(interval));
+            UI.getCurrentOrThrow()
+                    .addPollListener(e -> emitUpdateTimestamp(interval));
         }
         emitUpdateTimestamp(interval);
     }
