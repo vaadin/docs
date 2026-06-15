@@ -35,8 +35,8 @@ Every generated k6 script includes these thresholds out of the box:
 | `p(99)<5000` (5 seconds)
 
 | `checks`
-| All checks must pass
-| `rate==1` with `abortOnFail: true`
+| Check success rate (1% failure rate allowed)
+| `rate>=0.99` with `abortOnFail: true`
 |===
 
 This generates the following block in the k6 script:
@@ -45,7 +45,7 @@ This generates the following block in the k6 script:
 ----
 export const options = {
   thresholds: {
-    checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
     http_req_duration: ['p(95)<2000', 'p(99)<5000'],
   },
 }
@@ -67,6 +67,14 @@ mvn loadtest:convert -Dk6.harFile=recording.har \
 # Allow checks to fail without aborting the test
 mvn loadtest:convert -Dk6.harFile=recording.har \
     -Dk6.threshold.checksAbortOnFail=false
+
+# Allow up to 5% of checks to fail (generates rate>=0.95)
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.checksAllowedFailureRate=0.05
+
+# Require all checks to pass (generates rate==1)
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.checksAllowedFailureRate=0
 
 # Disable the p95 threshold entirely (set to 0)
 mvn loadtest:convert -Dk6.harFile=recording.har \
@@ -108,6 +116,10 @@ mvn loadtest:convert -Dk6.harFile=recording.har \
 | `k6.threshold.checksAbortOnFail`
 | `true`
 | When `true`, the test aborts immediately on the first check failure. When `false`, failures are recorded but the test continues.
+
+| `k6.threshold.checksAllowedFailureRate`
+| `0.01`
+| Fraction of checks allowed to fail, between `0` and `1`. The default `0.01` generates the threshold `rate>=0.99`. Set to `0` to require all checks to pass (`rate==1`).
 |===
 
 == Adding Custom Thresholds
@@ -169,7 +181,7 @@ This produces:
 ----
 export const options = {
   thresholds: {
-    checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
     http_req_duration: ['p(95)<2000', 'p(99)<5000', 'p(50)<1000'],
   },
 }
@@ -190,7 +202,7 @@ This produces:
 ----
 export const options = {
   thresholds: {
-    checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
     http_req_duration: ['p(95)<500', 'p(99)<5000'],
   },
 }
@@ -214,7 +226,7 @@ Generated output:
 [source,javascript]
 ----
 thresholds: {
-  checks: [{ threshold: 'rate==1', abortOnFail: true, delayAbortEval: '5s' }],
+  checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
   http_req_duration: ['p(95)<500', 'p(99)<1000'],
   http_req_failed: ['rate<0.001'],
   http_req_waiting: ['p(95)<300'],
@@ -236,7 +248,7 @@ Generated output:
 [source,javascript]
 ----
 thresholds: {
-  checks: ['rate==1'],
+  checks: ['rate>=0.99'],
   http_req_duration: ['p(95)<10000'],
   http_req_failed: ['rate<0.05'],
 },
