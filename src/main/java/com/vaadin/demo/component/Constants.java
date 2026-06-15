@@ -11,6 +11,5 @@ public class Constants {
 
     public static final List<ValueChangeMode> valueChangeModes = List.of(
             ValueChangeMode.EAGER, ValueChangeMode.LAZY,
-            ValueChangeMode.TIMEOUT, ValueChangeMode.ON_BLUR,
-            ValueChangeMode.ON_CHANGE);
+            ValueChangeMode.TIMEOUT, ValueChangeMode.ON_CHANGE);
 }
