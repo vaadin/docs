@@ -103,7 +103,13 @@ For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or 
 
 == Options for Selection Fields
 
-For [classname]`ComboBox`, [classname]`Select`, and multi-select components like [classname]`CheckboxGroup` whose option set comes from the application rather than a fixed enum on the field, register the options with [classname]`ValueOptions`:
+Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`valueOptions()` tells the controller what that set is and constrains the LLM to it: the LLM picks a label, the controller resolves the label to the field's value type, and writes it. Any label the controller can't resolve is rejected back to the LLM with a reason, and the LLM can correct on the next turn. The mechanism doubles as validation -- a value outside the registered set never lands in the form.
+
+Use a fixed list when the values are small and known up front, or a query callback when they come from a service or database.
+
+=== Fixed List
+
+For a small set of known [classname]`String` values, pass them directly:
 
 [source,java]
 ----
@@ -112,22 +118,32 @@ controller.valueOptions(
                 .options(List.of("Software", "Manufacturing", "Healthcare")));
 ----
 
-[methodname]`forField()` returns a builder. Use [methodname]`options(Collection)` for a fixed label list, or [methodname]`options(BiFunction)` for a callback the LLM invokes with a filter string and a result-count limit:
+No converter is needed -- the chosen label is the value.
+
+=== Service-Backed Lookup
+
+When the values come from a service or repository the application already uses, supply a callback the LLM can search:
 
 [source,java]
 ----
-ComboBox<Project> projectSelect = new ComboBox<>("Project");
+ComboBox<Project> projectField = new ComboBox<>("Project");
+projectField.setItemLabelGenerator(Project::name);
 
 controller.valueOptions(
-        ValueOptions.forField(projectSelect)
-                .options((filter, limit) ->
-                        projectService.search(filter, limit)),
+        ValueOptions.forField(projectField)
+                .options((filter, limit) -> projectService.search(filter, limit)
+                        .stream().map(Project::name).toList()),
         label -> projectService.findByName(label));
 ----
 
-The second argument is the label-to-value converter. It is required whenever the field's value type is not [classname]`String`, and a registration that needs one but doesn't provide it fails to compile. For [classname]`String`-valued fields the converter is omitted; the chosen label is already the value.
+Two pieces are at play:
 
-`projectService` here is a placeholder for your own data source -- a Spring repository, a REST client, an in-memory list, or whatever your application already uses to look up projects.
+* **The callback returns labels** (strings), not domain objects. Since the LLM only ever sees labels, map your domain objects to strings before returning -- typically the same labels the [classname]`ComboBox` renders via [methodname]`setItemLabelGenerator()`.
+* **The second argument is the label-to-value converter.** When the LLM picks a label, the controller calls this converter to resolve the label back to a domain object, then writes the resolved value to the field. The converter is required for any field whose value type is not [classname]`String`; the type system enforces this at compile time.
+
+The converter is also the validation step. If [methodname]`findByName()` returns `null` or throws -- because the LLM picked a label the service does not recognize -- the write is rejected with a reason the model reads, and the LLM can try again on the next turn.
+
+`projectService` here is a stand-in for whatever your application already uses to look up projects -- a Spring repository, a REST client, an in-memory list. The controller only needs two things from it: a label callback that returns strings, and a converter that turns a chosen string into a domain object.
 
 .Eager Items as a Fallback
 [NOTE]
