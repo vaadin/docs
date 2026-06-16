@@ -165,7 +165,7 @@ CompletableFuture<Map<String, Person>> future = getElement()
 
 
 [[js-function]]
-== Passing JavaScript Functions [since:com.vaadin:vaadin@V25.2]
+== [since:com.vaadin:vaadin@V25.2]#Passing JavaScript Functions#
 
 A [classname]`JsFunction` lets you build a reusable JavaScript function on the server and pass it as a parameter to [methodname]`executeJs()` or [methodname]`callJsFunction()`. The function arrives on the client as a real callable function with its captured values pre-bound, so you don't need to concatenate JavaScript fragments to embed server-side values.
 
@@ -242,7 +242,7 @@ If the body always needs to reference the same element regardless of how the fun
 
 
 [[add-js-initializer]]
-== Client-Side Lifecycle With `addJsInitializer` [since:com.vaadin:vaadin@V25.2]
+== [since:com.vaadin:vaadin@V25.2]#Client-Side Lifecycle With `addJsInitializer`#
 
 The [methodname]`Element.addJsInitializer()` method registers a JavaScript expression that runs each time a client-side DOM node is created for the element, and whose returned cleanup callback runs when that DOM node is discarded or the returned [classname]`Registration` is removed.
 
@@ -256,12 +256,14 @@ The expression syntax is the same as [methodname]`executeJs()`: `this` is the ho
 [source,java]
 ----
 Registration registration = getElement().addJsInitializer("""
-        const handler = (event) => console.log('clicked', event.target);
-        this.addEventListener('click', handler);
-        return () => this.removeEventListener('click', handler);
-        """);
+        const handler = (event) => console.log($1, event.target);
+        this.addEventListener($0, handler);
+        return () => this.removeEventListener($0, handler);
+        """, "click", "clicked");
 ----
 ====
+
+As with [methodname]`executeJs()`, values passed after the expression are available as `$0`, `$1`, and so on. Here the event type (`"click"`) and the log label (`"clicked"`) come from the server rather than being hard-coded in the expression.
 
 Remove the registration on the server when the listener is no longer needed; the cleanup callback then runs on the client.
 
@@ -273,7 +275,20 @@ The initializer is re-run after a real re-attach &ndash; when the element is rem
 
 === Cleanup Constraints
 
-The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning nothing (no `return`, or `undefined`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client. If you need asynchronous setup, do the async work inside the body and store the teardown in a synchronously returned function.
+The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning nothing (no `return`, or `undefined`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
+
+If setup is asynchronous, don't return the `Promise`. Do the async work inside the body, keep a reference to whatever needs to be torn down, and return a synchronous cleanup function that uses it:
+
+[source,java]
+----
+getElement().addJsInitializer("""
+        let widget;
+        import('./my-widget.js').then((module) => {
+            widget = module.create(this);
+        });
+        return () => widget?.destroy();
+        """);
+----
 
 
 [discussion-id]`AB7EDF45-DB22-4560-AF27-FF1DC6944482`
