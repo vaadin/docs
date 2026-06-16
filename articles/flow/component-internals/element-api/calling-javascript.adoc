@@ -275,18 +275,16 @@ The initializer is re-run after a real re-attach &ndash; when the element is rem
 
 === Cleanup Constraints
 
-The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning nothing (no `return`, or `undefined`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
+The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning `null`, `undefined`, or nothing at all (no `return`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
 
-If setup is asynchronous, don't return the `Promise`. Do the async work inside the body, keep a reference to whatever needs to be torn down, and return a synchronous cleanup function that uses it:
+If setup is asynchronous, don't return the `Promise`. Keep a reference to the pending work and return a cleanup function that awaits it before tearing down. Awaiting the same promise in the cleanup callback ensures the resource is torn down even if cleanup runs before the asynchronous setup has finished &ndash; otherwise a slow import could create the widget after cleanup has already run, leaking it:
 
 [source,java]
 ----
 getElement().addJsInitializer("""
-        let widget;
-        import('./my-widget.js').then((module) => {
-            widget = module.create(this);
-        });
-        return () => widget?.destroy();
+        const widgetPromise = import('./my-widget.js')
+                .then((module) => module.create(this));
+        return async () => (await widgetPromise).destroy();
         """);
 ----
 
