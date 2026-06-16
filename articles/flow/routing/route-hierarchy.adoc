@@ -96,26 +96,19 @@ public class Breadcrumbs extends Div {
         }
         RouteConfiguration configuration = RouteConfiguration
                 .forSessionScope();
+        Router router = VaadinService.getCurrent().getRouter();
         for (RouteParentReference entry : configuration.getRouteHierarchy(
                 state.navigationTarget(), state.routeParameters())) {
-            add(new RouterLink(resolveTitle(entry), entry.navigationTarget(),
+            String title = router.resolvePageTitle(entry.navigationTarget(),
+                    entry.routeParameters()).orElse("");
+            add(new RouterLink(title, entry.navigationTarget(),
                     entry.routeParameters()));
         }
     }
 }
 ----
 
-The [methodname]`resolveTitle()` helper in the example resolves the title of each entry. Because none of the ancestor routes are instantiated, instance-based title APIs such as [interfacename]`HasDynamicTitle` can't be used for this; a [interfacename]`PageTitleGenerator` resolves titles from the navigation target class and its route parameters alone:
-
-[source,java]
-----
-private String resolveTitle(RouteParentReference entry) {
-    PageTitleGenerator generator = new MyTitleGenerator();
-    return generator.generatePageTitle(new PageTitleContext(
-            entry.navigationTarget(), entry.routeParameters(),
-            QueryParameters.empty(), ""));
-}
-----
+[methodname]`Router.resolvePageTitle(Class, RouteParameters)` resolves the title of each entry without instantiating the route, applying the same [annotationname]`@DynamicPageTitle` generator and application-wide default [interfacename]`PageTitleGenerator` chain used during navigation. Because the ancestor routes are never instantiated, instance-based title APIs such as [interfacename]`HasDynamicTitle` aren't consulted; titles are resolved from the navigation target class and its route parameters alone.
 
 See <<page-titles#generating-page-titles, Generating Page Titles>> for how to declare title generators on routes and application-wide.
 
