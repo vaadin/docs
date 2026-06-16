@@ -186,4 +186,42 @@ anchor.getElement().setAttribute("router-ignore", "");
 ----
 
 
+[[observing-navigation-state]]
+== [since:com.vaadin:vaadin@V25.2]#Observing Navigation State#
+
+The [methodname]`UI.routerStateSignal()` method returns a read-only signal that holds the current navigation state of the UI as a [classname]`RouterState`. The signal value is updated whenever a navigation completes, immediately before [interfacename]`AfterNavigationListener` implementations are notified, so reactive consumers and listeners observe the same state.
+
+The signal lets reactive code — breadcrumbs, menus, or anything else that depends on the current location — track navigation without registering an [interfacename]`AfterNavigationListener` and manually fetching the initial state on attach:
+
+[source,java]
+----
+Signal<RouterState> routerState = UI.getCurrent().routerStateSignal();
+
+Span currentPath = new Span();
+currentPath.bindText(routerState.map(
+        state -> "Current path: " + state.location().getPath()));
+----
+
+[classname]`RouterState` is an immutable record with the following components:
+
+- [methodname]`location()` — the [classname]`Location` of the current view, including the path, query parameters, and fragment.
+- [methodname]`routeParameters()` — the [classname]`RouteParameters` extracted from the URL.
+- [methodname]`activeChain()` — an unmodifiable list of the currently active route target and its parent layouts, leaf first.
+- [methodname]`navigationTarget()` — the class of the leaf route target.
+
+The [methodname]`currentView()` method returns the currently shown leaf view as an [classname]`Optional`.
+
+Before the first navigation completes, the signal value is a [classname]`RouterState` with an empty [classname]`Location`, empty [classname]`RouteParameters`, an empty active chain, and a `null` navigation target.
+
+Use [methodname]`Signal.get()` to read the value reactively — inside a [methodname]`Signal.effect()` this creates a dependency, so the effect runs again after each navigation — or [methodname]`Signal.peek()` for a non-reactive snapshot. Fine-grained projections can be derived with [methodname]`Signal.map()`, for example a signal holding only the location:
+
+[source,java]
+----
+Signal<Location> locationSignal = UI.getCurrent().routerStateSignal()
+        .map(RouterState::location);
+----
+
+Combined with the <<route-hierarchy#, route hierarchy>>, the signal can drive a breadcrumb trail that updates on every navigation. See <<{articles}/flow/ui-state#, Manage UI State with Signals>> for more about signals and effects.
+
+
 [discussion-id]`3F7CDDD8-C4FB-44DC-9047-C48EAB57C862`
