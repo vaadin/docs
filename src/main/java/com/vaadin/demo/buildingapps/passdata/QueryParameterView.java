@@ -27,9 +27,10 @@ public class QueryParameterView extends VerticalLayout {
     }
 
     private void setFilter(String filter) {
-        var queryParameters = UI.getCurrent().getActiveViewLocation()
+        var queryParameters = UI.getCurrentOrThrow().getActiveViewLocation()
                 .getQueryParameters().merging(QUERY_PARAM_FILTER, filter);
-        UI.getCurrent().navigate(QueryParameterView.class, queryParameters);
+        UI.getCurrentOrThrow().navigate(QueryParameterView.class,
+                queryParameters);
     }
 }
 // end::snippet[]

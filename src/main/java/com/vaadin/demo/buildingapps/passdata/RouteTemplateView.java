@@ -48,7 +48,7 @@ public class RouteTemplateView extends VerticalLayout {
     public static void showView(int id, Action action) {
         var parameters = new RouteParameters(new RouteParam(PARAM_ID, id),
                 new RouteParam(PARAM_ACTION, action.name().toLowerCase()));
-        UI.getCurrent().navigate(RouteTemplateView.class, parameters);
+        UI.getCurrentOrThrow().navigate(RouteTemplateView.class, parameters);
     }
 }
 // end::snippet[]
