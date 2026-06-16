@@ -28,7 +28,7 @@ Here is an example of a button click listener that starts a new virtual thread:
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    Thread.ofVirtual().start(UI.getCurrent().accessLater(() -> {
+    Thread.ofVirtual().start(UI.getCurrentOrThrow().accessLater(() -> {
         // Perform the UI operation here.
     }, null));
 });
@@ -66,7 +66,7 @@ This example uses a button click listener that starts a UI operation in a backgr
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    taskExecutor.execute(UI.getCurrent().accessLater(() -> {
+    taskExecutor.execute(UI.getCurrentOrThrow().accessLater(() -> {
         // Perform the UI operation here.
     }, null));
 });
@@ -104,3 +104,34 @@ The tasks that you execute in the task scheduler should be fast. If you need to 
 
 [CAUTION]
 Do not use the `@Scheduled` annotation in Flow views. It turns them into proxies that don't work with Vaadin.
+
+
+=== Updating the Scheduled Result With a Signal
+
+If the scheduled task only updates UI _state_, you can hold that state in a <</flow/ui-state#,signal>> and skip `UI.accessLater()` entirely. Bind the component to the signal once, then update the signal from the scheduled task. Flow pushes the change to the bound component automatically:
+
+[source,java]
+----
+private final ValueSignal<String> currentTime = new ValueSignal<>("");
+
+public MyView(TaskScheduler taskScheduler) {
+    this.taskScheduler = taskScheduler;
+    currentTimeLabel.bindText(currentTime); // <1>
+}
+
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var task = taskScheduler.scheduleAtFixedRate(
+        () -> currentTime.set(Instant.now().toString()), // <2>
+        Duration.ofSeconds(1));
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        task.cancel(true); // <3>
+    });
+}
+----
+<1> Bind the label to the signal once. The binding is active only while the component is attached and is removed automatically on detach.
+<2> The scheduled task updates the signal directly — no `UI.accessLater()` and no captured `UI` instance.
+<3> You still cancel the scheduled task on detach. Signals manage the _binding_ lifecycle, not the scheduler.
+
+For more on binding components to signals, see <<updates#pushing-state-with-signals,Pushing State with Signals>>.

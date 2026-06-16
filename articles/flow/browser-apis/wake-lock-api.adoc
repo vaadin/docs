@@ -1,0 +1,145 @@
+---
+title: Wake Lock
+page-title: How to use the Wake Lock API in Vaadin
+description: Using the Wake Lock API to keep the device screen on from the server.
+meta-description: Learn how to keep the device screen awake in Vaadin Flow applications using the server-side Wake Lock API.
+order: 60
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Wake Lock#
+:toc:
+
+The [classname]`WakeLock` API gives server-side Java code access to the https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API[browser Screen Wake Lock API]. It keeps the screen from dimming or locking while the lock is held -- useful for dashboards left on display, kiosks, presentations, navigation, media playback, and similar always-on views. It exposes two static entry points -- [methodname]`WakeLock.request()` to acquire and [methodname]`WakeLock.release()` to release -- and a pair of reactive signals for observing state and availability.
+
+[NOTE]
+The Screen Wake Lock API requires a secure context (HTTPS), except on `localhost` during development. Safari supports it from version 16.4. The browser may also release the lock at any time -- for example, when the tab becomes hidden, on low battery, or under operating-system power-saving rules -- and the application has no control over that. Use [methodname]`WakeLock.availabilitySignal()` to gate UI controls up front and [methodname]`WakeLock.activeSignal()` to react to spontaneous releases.
+
+
+== Acquiring a Wake Lock
+
+Use [methodname]`WakeLock.request()` to ask the browser to keep the screen on. The call is asynchronous and fire-and-forget: by the time the method returns the browser has not necessarily granted the lock yet. Observe [methodname]`WakeLock.activeSignal()` for the actual state -- see <<#observing-active-state,Observing Active State>>.
+
+[source,java]
+----
+Button keepOn = new Button("Keep screen on", e -> WakeLock.request());
+----
+
+The framework adds two conveniences on top of the raw browser API:
+
+- The browser releases the lock automatically when the tab becomes hidden. The client transparently re-acquires it when the tab becomes visible again, so a single [methodname]`request()` call covers the lifetime of the view; no `visibilitychange` listener is needed.
+- Calling [methodname]`request()` while a lock is already held is a no-op.
+
+For persistent failures -- the API is unavailable, the origin is insecure, or the browser refuses with `NotAllowedError` -- there is a [methodname]`request(onError)` overload covered in <<#handling-errors,Handling Errors>>.
+
+
+== Releasing a Wake Lock
+
+Call [methodname]`WakeLock.release()` to drop the current lock and stop re-acquiring it on subsequent visibility changes. The call is idempotent -- calling it when no lock is held is a no-op.
+
+[source,java]
+----
+Button stop = new Button("Allow screen off", e -> WakeLock.release());
+----
+
+
+[#observing-active-state]
+== Observing Active State
+
+[methodname]`WakeLock.activeSignal()` returns a read-only `Signal<Boolean>` that reflects whether the browser is currently holding the wake lock for this UI. It starts as [code]`false`, flips to [code]`true` once the browser confirms a request, and flips back to [code]`false` whenever the browser releases the lock -- explicitly through [methodname]`release()`, automatically when the tab becomes hidden, or because the browser dropped it for power-saving or low-battery reasons. When the tab is shown again the client re-requests the lock if [methodname]`release()` has not been called, so the signal flips back to [code]`true` shortly after.
+
+Use [methodname]`Signal.effect()` to react to changes -- for example, to reflect the wake-lock state in the browser's document title so a hidden tab makes its stay-on mode obvious:
+
+[source,java]
+----
+Signal.effect(this, () -> {
+    Page page = UI.getCurrentOrThrow().getPage();
+    page.setTitle(WakeLock.activeSignal().get()
+            ? "Live Dashboard (stay-on)"
+            : "Live Dashboard");
+});
+----
+
+When a component property accepts a signal directly, prefer that binding over [methodname]`Signal.effect()`. The canonical "Start" / "Stop" toggle pair binds the signal to button visibility:
+
+[source,java]
+----
+Button keepOn = new Button("Keep screen on", e -> WakeLock.request());
+keepOn.bindVisible(Signal.not(WakeLock.activeSignal()));
+
+Button allowOff = new Button("Allow screen off", e -> WakeLock.release());
+allowOff.bindVisible(WakeLock.activeSignal());
+----
+
+
+[#handling-errors]
+== Handling Errors
+
+Pass a [classname]`SerializableConsumer<WakeLockError>` to [methodname]`WakeLock.request()` to be notified when the browser permanently refuses the request. The callback fires on the UI thread. Switch on [methodname]`err.code()` to get a typed [classname]`WakeLockErrorCode` -- the [code]`switch` is exhaustive at compile time:
+
+[source,java]
+----
+WakeLock.request(err -> {
+    String userMessage = switch (err.code()) {
+        case UNSUPPORTED ->
+            "Keep-screen-on isn't available in this browser.";
+        case NOT_ALLOWED ->
+            "The browser refused to keep the screen on.";
+        case UNKNOWN ->
+            "Couldn't keep the screen on.";
+    };
+    Notification.show(userMessage);
+});
+----
+
+The callback is meant for *persistent* failures -- the kinds that should surface in the UI, typically by re-enabling a "Keep screen on" toggle and showing a message. It is not invoked when the lock is merely deferred (tab hidden until the user returns) or when the browser temporarily releases the lock for power-management reasons; observe [methodname]`activeSignal()` for those.
+
+When availability is already known to be [code]`UNSUPPORTED` (see <<#checking-availability,Checking Availability>>), the error callback fires synchronously, without a server-to-client round-trip. This makes it cheap to wire the toggle up unconditionally and rely on the error callback to degrade gracefully on insecure origins.
+
+For diagnostics, log [methodname]`err.message()` alongside the code -- it is a free-form browser string and isn't meant for end users.
+
+
+[#checking-availability]
+== Checking Availability
+
+[methodname]`WakeLock.availabilitySignal()` returns a `Signal<WakeLockAvailability>` reporting whether the Screen Wake Lock API is usable in the current page context. Reading the signal does not call the browser API -- it reports whether a subsequent [methodname]`request()` has any chance of succeeding.
+
+[code]`SUPPORTED`:: The browser exposes the API and the page is served from a secure context. Render the "keep screen on" toggle.
+[code]`UNSUPPORTED`:: The browser does not implement the API, or the page is served over an insecure connection. No user action changes this -- hide the toggle entirely.
+[code]`UNKNOWN`:: The browser has not yet reported a value. This is the seed state during the brief window between UI attach and bootstrap completion; in practice applications see it only as a transient state.
+
+Use [methodname]`bindVisible()` to render the toggle only when the API is usable:
+
+[source,java]
+----
+Button keepOn = new Button("Keep screen on", e -> WakeLock.request());
+keepOn.bindVisible(WakeLock.availabilitySignal()
+        .map(a -> a == WakeLockAvailability.SUPPORTED));
+----
+
+
+== Calling from Background Threads
+
+The static entry points above resolve the target UI through [methodname]`UI.getCurrent()`, which only works on a request-handling thread. Background threads (executors, scheduled tasks, push handlers) need to pass the UI explicitly. Every entry point has an overload accepting a [classname]`UI` argument: [methodname]`request(ui)`, [methodname]`request(onError, ui)`, [methodname]`release(ui)`, [methodname]`activeSignal(ui)`, and [methodname]`availabilitySignal(ui)`.
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent event) {
+    UI ui = event.getUI();
+    ScheduledFuture<?> task = scheduler.schedule(
+            () -> WakeLock.request(ui),
+            5, TimeUnit.SECONDS);
+    addDetachListener(e -> task.cancel(false));
+}
+----
+
+The error callback on [methodname]`request(onError, ui)` is still invoked on the UI thread, so it can update components directly without an [methodname]`ui.access()` wrapper.
+
+
+== Limitations and Caveats
+
+- A secure context is required (HTTPS, or `localhost` during development).
+- Safari supports the API from 16.4; older versions report [code]`UNSUPPORTED` through [methodname]`availabilitySignal()`.
+- The browser may release the lock at any time -- low battery, power-saving mode, or operating-system policy. [methodname]`activeSignal()` reflects the change so the UI can react.
+- Wake lock state is per-UI (per tab). Each tab needs its own [methodname]`request()`; releasing in one tab does not affect another.

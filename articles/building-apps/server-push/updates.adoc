@@ -11,7 +11,120 @@ order: 1
 
 Whenever you're using server push in Vaadin Flow, you're triggering it from a thread other than the normal HTTP request thread. Making changes to a UI from another thread and pushing them to the browser requires locking the user session. Otherwise, the UI update performed from another thread could conflict with a regular event-driven update and cause either data corruption, race conditions or deadlocks.
 
-Such errors are by nature hard to discover and fix, since they often occur randomly and under a heavy load. Because of this, you may only access a UI using the `UI.access()` method, which locks the session to prevent race conditions. You would use it like this:
+Such errors are by nature hard to discover and fix, since they often occur randomly and under a heavy load.
+
+There are two ways to push these updates:
+
+* For *state-driven* updates, use <</flow/ui-state#,signals>>. Signals are thread-safe and update any bound components automatically, so you don't have to lock the session yourself. This is the recommended approach for most cases, and the one this page leads with.
+* For *imperative* updates — such as adding or removing components, or calling component methods that aren't expressed as state — lock the session manually with the `UI.access()` method. Understanding `UI.access()` also helps you understand what signals do for you under the hood.
+
+[NOTE]
+The examples on this page only work with push enabled. This applies to signal-driven updates as well: when a signal is changed from a background thread, push is what delivers the change to the browser. For information about how to enable push, see the <<index.adoc#,Server Push>> documentation page.
+
+
+== Pushing State with Signals
+
+A <</flow/ui-state#,signal>> holds a piece of UI state. When you bind a component to a signal, the component updates itself whenever the signal's value changes — no matter which thread made the change. Signals are thread-safe and synchronize with the UI internally, so you don't need to call `UI.access()`, and you don't need to capture the `UI` instance in advance.
+
+Just as importantly, bindings are tied to the component lifecycle: a binding is active only while the component is attached, and it's removed automatically when the component is detached. This means there's no listener to unsubscribe and no `UI` reference left dangling, so the whole class of memory leaks described later on this page doesn't arise.
+
+
+=== Updating From a Background Job
+
+Hold the state that the background job produces in a signal, and bind a component to it. When the job updates the signal from its own thread, the bound component updates automatically:
+
+[source,java]
+----
+public class JobView extends VerticalLayout {
+    private final ValueSignal<String> status = new ValueSignal<>("Idle");
+
+    public JobView(MyService myService) {
+        Span statusLabel = new Span();
+        statusLabel.bindText(status); // <1>
+
+        Button start = new Button("Start job", click ->
+            myService.startBackgroundJob(() -> status.set("Done"))); // <2>
+
+        add(statusLabel, start);
+    }
+}
+----
+<1> The label's text is bound to the `status` signal.
+<2> The callback runs on a background thread and updates the signal directly. There's no `UI.access()` and no captured `UI` instance — the bound label updates on its own.
+
+
+=== Broadcasting to All Users
+
+For state that several users share, put a <</flow/ui-state#,shared signal>> in a Spring bean and let the view bind to it. A singleton bean shares one signal instance across the whole application, so a change made by one user — or by a background thread — is pushed to every connected user that's bound to it:
+
+[source,java]
+----
+@Component // Singleton: one instance shared by all users
+public class ChatMessages {
+    private final SharedListSignal<String> messages =
+            new SharedListSignal<>(String.class);
+
+    public SharedListSignal<String> messages() {
+        return messages;
+    }
+
+    public void post(String message) {
+        messages.insertLast(message);
+    }
+}
+----
+
+The view binds its component list to the shared signal with [methodname]`bindChildren()`:
+
+[source,java]
+----
+public class ChatView extends VerticalLayout {
+    public ChatView(ChatMessages chatMessages) {
+        VerticalLayout list = new VerticalLayout();
+        list.bindChildren(chatMessages.messages(), messageSignal -> {
+            Span message = new Span();
+            message.bindText(messageSignal); // <1>
+            return message;
+        });
+        add(list);
+
+        TextField input = new TextField();
+        Button send = new Button("Send", click -> {
+            chatMessages.post(input.getValue());
+            input.clear();
+        });
+        add(input, send);
+    }
+}
+----
+<1> Pass the child signal straight to a component instead of reading it with [methodname]`get()`. Calling `messageSignal.get()` inside the factory throws an exception, because the factory isn't itself a reactive context — let the component create its own binding.
+
+When any user calls `post()`, every open `ChatView` receives the new message. Compare this with the manual approach described in <<#avoiding-memory-leaks,Avoiding Memory Leaks>> below: there's no event bus to subscribe to, no `UI.access()`, and no detach handler to unsubscribe. The signal lives in the bean, so its lifetime is the bean's lifetime, and each view's binding is cleaned up automatically on detach.
+
+[NOTE]
+Use a `@Component` singleton for application-wide state, or a `@VaadinSessionScope` bean for state shared between the tabs of a single user. For more on scoping signals, see <</flow/ui-state/shared-signals#signal-scope-patterns,Signal Scope Patterns>>.
+
+
+=== Highlighting Background Changes
+
+Sometimes you want to draw attention to a value that changed because of a background update, rather than one the current user triggered. Binding methods provide an [methodname]`onChange()` callback whose context can tell the two apart:
+
+[source,java]
+----
+Span price = new Span();
+price.bindText(priceSignal.map(p -> "$" + p))
+    .onChange(ctx -> {
+        if (ctx.isBackgroundChange()) {
+            ctx.getElement().flashClass("highlight"); // <1>
+        }
+    });
+----
+<1> [methodname]`isBackgroundChange()` returns `true` when the change came from another session or a background thread. See <</flow/ui-state/effects-computed#,Effects and Computed Signals>> for details.
+
+
+== Pushing Manually With UI.access()
+
+Signals cover state-driven updates. When you need to make an imperative change from a background thread — for example, adding components to a layout — lock the session yourself with `UI.access()`:
 
 [source,java]
 ----
@@ -19,9 +132,6 @@ ui.access(() -> {
     // Update your UI here
 });
 ----
-
-[NOTE]
-The examples on this page only work with push enabled. For information about how to do that, see the <<index.adoc#,Server Push>> documentation page.
 
 By default, Flow uses automatic pushing. This means that any pending changes are pushed to the browser after the command passed to `UI.access()` finishes. You can also configure Flow to use manual pushing. This would give you more control over when changes are pushed to the browser. For example, you can push multiple times inside a single call to `UI.access()`.
 
@@ -46,7 +156,7 @@ ui.access(() -> {
 ----
 
 
-== Getting the UI Instance
+=== Getting the UI Instance
 
 Before you can call `access()`, you need to get the `UI` instance. You'd typically use `Component.getUI()` or `UI.getCurrent()` for this. However, both are problematic when it comes to server push.
 
@@ -73,8 +183,11 @@ button.addClickListener(clickEvent -> {
 <1> This is executed in an HTTP request thread. The user session is locked and `UI.getCurrent()` returns the current `UI`-instance.
 <2> This is executed in the background thread. `UI.getCurrent()` returns `null`, but the `UI` instance is stored in a local variable.
 
+[TIP]
+This is the kind of bookkeeping signals remove for you. When you push state through a signal instead, you don't capture the `UI` instance and you don't call `access()` — see <<#pushing-state-with-signals,Pushing State with Signals>>.
 
-== Access Later
+
+=== Access Later
 
 You probably often use server push in various types of event listeners and <<callbacks#,callbacks>>. A background job might inform you that it has finished processing.
 
@@ -82,7 +195,7 @@ In the following example, the user interface is updated in a callback after a ba
 
 [source,java]
 ----
-var ui = UI.getCurrent();
+var ui = UI.getCurrentOrThrow();
 myService.startBackgroundJob(() -> ui.access(() -> {
     // Update your UI here when the job is finished
 }));
@@ -94,7 +207,7 @@ In the following example, the user interface subscribes to an event bus, and upd
 
 [source,java]
 ----
-var ui = UI.getCurrent();
+var ui = UI.getCurrentOrThrow();
 var subscription = myEventBus.subscribe((message) -> ui.access(() -> {
     // Update your UI here when a message has arrived
 }));
@@ -110,7 +223,7 @@ Rewritten with `accessLater()`, the thread completion example becomes this:
 
 [source,java]
 ----
-myService.startBackgroundJob(UI.getCurrent().accessLater(() -> {
+myService.startBackgroundJob(UI.getCurrentOrThrow().accessLater(() -> {
     // Update your UI here when the job is finished.
 }, null));
 ----
@@ -119,13 +232,13 @@ Likewise, the event listener becomes this:
 
 [source,java]
 ----
-var subscription = myEventBus.subscribe(UI.getCurrent().accessLater((message) -> {
+var subscription = myEventBus.subscribe(UI.getCurrentOrThrow().accessLater((message) -> {
     // Update your UI here when a message has arrived
 }, null));
 ----
 
 
-== Avoiding Memory Leaks
+=== Avoiding Memory Leaks
 
 When you're using server push to update the user interface when an event has occurred, you would typically subscribe a listener to some broadcaster or event bus. When you do this, be sure to unsubscribe when the UI is detached. Otherwise, you'll have a memory leak that prevents your UI from being garbage collected. This is because the listener holds a reference to the `UI` instance.
 
@@ -150,12 +263,15 @@ protected void onAttach(AttachEvent attachEvent) { // <1>
 <3> Remove the detach listener itself, to prevent a memory leak in case the component is attached multiple times.
 <4> Unsubscribe when the view is detached from the UI.
 
+[TIP]
+Binding a component to a signal avoids this bookkeeping entirely: the binding is active only while the component is attached and is removed automatically on detach. See <<#broadcasting-to-all-users,Broadcasting to All Users>> for the signal-based version of this example.
+
 
 == Avoiding Floods
 
-Another risk you have to manage when updating the user interface in response to events is flooding the user interface with updates. As a rule of thumb, you should not push more than two to four times per second. Pushing more often than that can cause performance issues. Plus, there is a limit to how many updates the human brain is able to register per second.
+Another risk you have to manage when updating the user interface in response to events is flooding the user interface with updates. This applies whether you push through signals or through `UI.access()` directly. As a rule of thumb, you should not push more than two to four times per second. Pushing more often than that can cause performance issues. Plus, there is a limit to how many updates the human brain is able to register per second.
 
-When you know events are coming no faster than two to four events per second, you can push on every event. However, if they're more frequent, you have to buffer events and update the user interface in batches. This is quite easy to do if you're using a `Flux` from https://projectreactor.io/[Reactor]. See the <<reactive#,Consuming Reactive Streams>> documentation page for more information about this.
+When you know events are coming no faster than two to four events per second, you can push on every event. However, if they're more frequent, you have to buffer events and update the user interface in batches — for signals, this means buffering before you write to the signal. This is quite easy to do if you're using a `Flux` from https://projectreactor.io/[Reactor]. See the <<reactive#,Consuming Reactive Streams>> documentation page for more information about this.
 
 The buffering duration depends on the size of the UI update, and the network latency. In some applications, you may need to use a longer buffer duration. In others, a shorter one might work. You should try various durations to see what's best for your application.
 
@@ -169,7 +285,7 @@ To understand better, look at this example:
 [source,java]
 ----
 var button = new Button("Test Me", event -> {
-    UI.getCurrent().access(() -> {
+    UI.getCurrentOrThrow().access(() -> {
         add(new Div("This <div> is added from within a call to UI.access()"));
     });
     add(new Div("This <div> is added from an event listener"));

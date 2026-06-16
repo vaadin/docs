@@ -13,7 +13,7 @@ public class AboutView extends VerticalLayout {
     }
 
     public static void showView() {
-        UI.getCurrent().navigate(AboutView.class);
+        UI.getCurrentOrThrow().navigate(AboutView.class);
     }
 }
 // end::snippet[]
