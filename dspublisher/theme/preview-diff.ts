@@ -336,6 +336,7 @@ function buildDeletionMarker(deletion: Deletion): HTMLElement {
   const bodyId = `preview-diff-removed-${deletionBodySeq++}`;
   const lineCount = deletion.text.length;
   const toggle = document.createElement('button');
+  toggle.type = 'button';
   toggle.className = 'preview-diff-deletion-toggle';
   toggle.textContent = `${lineCount} line${lineCount === 1 ? '' : 's'} removed`;
   toggle.setAttribute('aria-expanded', 'false');
@@ -516,6 +517,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
     nav.appendChild(label);
 
     const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
     prevBtn.textContent = '↑ Prev';
     prevBtn.title = 'Previous change on this page (p)';
     prevBtn.disabled = changedBlocks.length === 0;
@@ -527,6 +529,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
     nav.appendChild(counterEl);
 
     const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
     nextBtn.textContent = 'Next ↓';
     nextBtn.title = 'Next change on this page (n)';
     nextBtn.disabled = changedBlocks.length === 0;
@@ -548,6 +551,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
     pageNav.appendChild(label);
 
     const prevPageBtn = document.createElement('button');
+    prevPageBtn.type = 'button';
     prevPageBtn.textContent = '← Prev page';
     prevPageBtn.title = 'Previous changed page (P)';
     prevPageBtn.style.flex = '1';
@@ -555,6 +559,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
     pageNav.appendChild(prevPageBtn);
 
     const nextPageBtn = document.createElement('button');
+    nextPageBtn.type = 'button';
     nextPageBtn.textContent = 'Next page →';
     nextPageBtn.title = 'Next changed page (N)';
     nextPageBtn.style.flex = '1';
@@ -591,6 +596,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   }
 
   const toggle = document.createElement('button');
+  toggle.type = 'button';
   toggle.className = 'preview-diff-toggle';
   const updateLabel = () => {
     toggle.textContent = document.body.classList.contains('preview-diff-hidden')

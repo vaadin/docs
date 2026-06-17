@@ -130,6 +130,23 @@ const DELIMITER_LINE = /^(-{2,}|={4,}|\.{4,}|\+{4,}|_{4,}|\*{4,}|\/{4,}|\|===.*|
 const ATTRIBUTE_LINE = /^\[.*\]$/;
 const CALLOUT_LINE = /^<\d+>/;
 const FRONT_MATTER_KEY = /^([a-z][a-z0-9-]*):\s+(.*)$/;
+// Keys actually used in this repo's YAML front matter. Only these are treated
+// as front matter, so prose / code lines like "kind: Service" or "user: User"
+// are still processed as normal content.
+const FRONT_MATTER_KEYS = new Set([
+  'title',
+  'page-title',
+  'meta-description',
+  'description',
+  'order',
+  'section-nav',
+  'page-links',
+  'layout',
+  'tab-title',
+  'version',
+  'url',
+]);
+// Front-matter keys whose value is rendered in the page body.
 const RENDERED_FRONT_MATTER_KEYS = new Set(['title', 'description']);
 
 /** Strips AsciiDoc inline markup, returning plain-text fragments of the line. */
@@ -163,7 +180,7 @@ function adocLineToNeedles(line) {
     return [];
   }
   const frontMatter = t.match(FRONT_MATTER_KEY);
-  if (frontMatter) {
+  if (frontMatter && FRONT_MATTER_KEYS.has(frontMatter[1])) {
     if (!RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1])) {
       return [];
     }
@@ -224,7 +241,11 @@ function isStructuralOnly(lines) {
     // Front-matter metadata that isn't rendered in the page body (e.g.
     // page-title, meta-description, order) shouldn't produce removal markers.
     const frontMatter = t.match(FRONT_MATTER_KEY);
-    return frontMatter != null && !RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1]);
+    return (
+      frontMatter != null &&
+      FRONT_MATTER_KEYS.has(frontMatter[1]) &&
+      !RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1])
+    );
   });
 }
 
