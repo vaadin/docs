@@ -12,7 +12,7 @@
  * - PREVIEW_URL: base URL of the preview deployment (used in the PR comment)
  * - GITHUB_SHA: commit SHA recorded in the outputs
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -27,8 +27,14 @@ const COMMENT_PATH = 'preview-comment.md';
 // false-positive highlights and are dropped.
 const MIN_NEEDLE_LENGTH = 12;
 
+// Caps on the removed source kept per deletion, to bound the published
+// manifest size. Reviewers get the full context from the GitHub diff.
+const MAX_DELETION_LINES = 30;
+const MAX_DELETION_LINE_LENGTH = 200;
+
+// Runs git with an argv array (no shell), avoiding injection and quoting issues.
 function git(args) {
-  return execSync(`git ${args}`, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 }
 
 /**
@@ -258,6 +264,19 @@ function trimBlankEdges(lines) {
   return lines.slice(start, end);
 }
 
+/** Caps the removed source kept for display so the manifest stays small. */
+function capRemovedText(lines) {
+  let capped = lines.map((line) =>
+    line.length > MAX_DELETION_LINE_LENGTH ? `${line.slice(0, MAX_DELETION_LINE_LENGTH)} …` : line
+  );
+  if (capped.length > MAX_DELETION_LINES) {
+    const extra = capped.length - MAX_DELETION_LINES;
+    capped = capped.slice(0, MAX_DELETION_LINES);
+    capped.push(`… ${extra} more removed line${extra === 1 ? '' : 's'} — see the GitHub diff`);
+  }
+  return capped;
+}
+
 /**
  * Turns the raw removed runs of a file into deletion records:
  * { before, after, text } where before/after are anchor needles (or null) for
@@ -274,7 +293,7 @@ function buildDeletionRecords(deletions, isCode) {
     records.push({
       before: firstNeedle(d.beforeLines, isCode),
       after: firstNeedle(d.afterLines, isCode),
-      text,
+      text: capRemovedText(text),
     });
   }
   return records;
@@ -313,7 +332,7 @@ function fileToPagePath(file) {
 }
 
 function isPartial(file) {
-  return path.basename(file).startsWith('_');
+  return path.posix.basename(file).startsWith('_');
 }
 
 /**
@@ -333,10 +352,11 @@ function resolveIncludePath(includerFile, target) {
   if (t.startsWith('/')) {
     t = t.slice(1);
   }
+  // Use path.posix so keys stay repo-style (forward slashes) on all platforms.
   if (/^(articles|src|frontend)\//.test(t)) {
-    return path.normalize(t);
+    return path.posix.normalize(t);
   }
-  return path.normalize(path.join(path.dirname(includerFile), t));
+  return path.posix.normalize(path.posix.join(path.posix.dirname(includerFile), t));
 }
 
 /**
@@ -359,14 +379,14 @@ function buildIncluderMap() {
   while (stack.length > 0) {
     const dir = stack.pop();
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
+      const full = path.posix.join(dir, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
       } else if (entry.name.endsWith('.adoc')) {
         const content = fs.readFileSync(full, 'utf8');
         for (const match of content.matchAll(/^include::([^\[]+)\[/gm)) {
           const target = match[1].trim();
-          add(byBasename, path.basename(target), full);
+          add(byBasename, path.posix.basename(target), full);
           const resolved = resolveIncludePath(full, target);
           if (resolved) {
             add(byPath, resolved, full);
@@ -379,9 +399,19 @@ function buildIncluderMap() {
 }
 
 function main() {
-  const mergeBase = git(`merge-base ${baseRef} HEAD`).trim();
+  const mergeBase = git(['merge-base', baseRef, 'HEAD']).trim();
   // Context lines (-U3) are needed to anchor deletions to surviving blocks.
-  const diffText = git(`diff --no-color -U3 ${mergeBase} HEAD -- articles src frontend`);
+  const diffText = git([
+    'diff',
+    '--no-color',
+    '-U3',
+    mergeBase,
+    'HEAD',
+    '--',
+    'articles',
+    'src',
+    'frontend',
+  ]);
   const entries = parseDiff(diffText);
 
   const includerMap = buildIncluderMap();
@@ -416,7 +446,8 @@ function main() {
     // Prefer matching by full resolved path; fall back to basename for targets
     // whose path could not be resolved when the map was built.
     const includers =
-      includerMap.byPath.get(path.normalize(file)) || includerMap.byBasename.get(path.basename(file));
+      includerMap.byPath.get(path.posix.normalize(file)) ||
+      includerMap.byBasename.get(path.posix.basename(file));
     if (!includers || includers.size === 0) {
       return false;
     }
