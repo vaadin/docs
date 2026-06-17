@@ -12,6 +12,9 @@ order: 65
 
 The [classname]`WebShare` API gives server-side Java code access to the browser https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API[Web Share API] ([code]`navigator.share`). Use it to open the operating system's native share sheet -- the same one users see when sharing from a native app -- so they can pass a title, some text, and a URL to messaging apps, email, or other installed targets. The API has two entry points: a click binding that invokes the share sheet, and a read-only signal that reports whether sharing is available at all.
 
+[WARNING]
+Not every browser implements the Web Share API. Notably, most desktop Firefox builds don't expose [code]`navigator.share`, even though Vaadin itself supports Firefox. Always check for support before showing a share control, and provide a fallback for browsers where sharing is unavailable. See <<Detecting Support>>.
+
 The Web Share API requires a fresh user gesture for every call. The browser only honors [code]`navigator.share` while it is handling a real interaction such as a click or tap, so [classname]`WebShare` binds the share action to a trigger component rather than exposing a method you can call from anywhere. Calling the underlying browser API directly from a constructor, a background thread, or a server push is rejected by the browser.
 
 
@@ -55,7 +58,7 @@ WebShare.onClick(shareButton).share(
 
 == Detecting Support
 
-[methodname]`WebShare.supportSignal()` returns a read-only [classname]`Signal<WebShareSupport>` for the current UI. The value is seeded from the bootstrap handshake, so your view code observes a real value before it runs. Web Share support is fixed for the lifetime of the page, so the signal settles once and then stays stable.
+[methodname]`WebShare.supportSignal()` returns a read-only [classname]`Signal<WebShareSupport>` for the current UI -- see <<{articles}/flow/ui-state#,UI State>> for an introduction to signals. The value is seeded from the bootstrap handshake, so your view code observes a real value before it runs. Web Share support is fixed for the lifetime of the page, so the signal settles once and then stays stable.
 
 The signal value is one of three [classname]`WebShareSupport` constants:
 
@@ -74,8 +77,6 @@ WebShare.onClick(shareButton).share(
 shareButton.bindVisible(WebShare.supportSignal()
         .map(support -> support == WebShareSupport.SUPPORTED));
 ----
-
-When sharing is unsupported, fall back to another affordance such as a copy-link button or social-network links.
 
 
 == Handling the Outcome
