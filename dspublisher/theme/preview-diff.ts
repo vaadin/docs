@@ -87,6 +87,34 @@ function findCurrentPageIndex(): number {
   return best;
 }
 
+/**
+ * The URL path prefix the docs are served under, derived from the current page
+ * (e.g. "docs" when the current URL is "/docs/components/button" and the
+ * matched manifest path is "components/button"). Empty for root deployments.
+ */
+function currentPathPrefix(): string {
+  const current = currentPagePath();
+  const index = findCurrentPageIndex();
+  if (index === -1) {
+    return '';
+  }
+  const matched = manifestPages[index].path;
+  if (matched === '') {
+    return current;
+  }
+  if (current === matched) {
+    return '';
+  }
+  // current ends with "/" + matched (guaranteed by findCurrentPageIndex)
+  return current.slice(0, current.length - matched.length - 1);
+}
+
+/** Builds an absolute href for a manifest page, preserving any path prefix. */
+function pageHref(targetPath: string): string {
+  const full = [currentPathPrefix(), targetPath].filter(Boolean).join('/');
+  return `/${full}`;
+}
+
 function injectStyles() {
   if (document.getElementById('preview-diff-styles')) {
     return;
@@ -486,7 +514,7 @@ function gotoPage(delta: number) {
   } catch (e) {
     // Ignore storage failures; navigation still works, just without auto-scroll.
   }
-  window.location.assign(`/${page.path}`);
+  window.location.assign(pageHref(page.path));
 }
 
 function renderPanel(currentPage: ChangedPage | undefined) {
@@ -574,7 +602,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   for (const page of manifestPages) {
     const item = document.createElement('li');
     const link = document.createElement('a');
-    link.href = `/${page.path}`;
+    link.href = pageHref(page.path);
     link.textContent = page.path || 'front page';
     item.appendChild(link);
     if (page === currentPage) {
