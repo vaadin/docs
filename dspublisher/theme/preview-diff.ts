@@ -70,9 +70,21 @@ function currentPagePath(): string {
 
 function findCurrentPageIndex(): number {
   const current = currentPagePath();
-  return manifestPages.findIndex(
-    (page) => page.path === current || (page.path !== '' && current.endsWith(`/${page.path}`))
-  );
+  const exact = manifestPages.findIndex((page) => page.path === current);
+  if (exact !== -1) {
+    return exact;
+  }
+  // Fall back to the longest matching path suffix, so "bar/foo" is preferred
+  // over "foo" when the URL ends with "/bar/foo".
+  let best = -1;
+  let bestLength = -1;
+  manifestPages.forEach((page, i) => {
+    if (page.path !== '' && current.endsWith(`/${page.path}`) && page.path.length > bestLength) {
+      best = i;
+      bestLength = page.path.length;
+    }
+  });
+  return best;
 }
 
 function injectStyles() {
@@ -83,6 +95,7 @@ function injectStyles() {
   style.id = 'preview-diff-styles';
   style.textContent = `
     .${HIGHLIGHT_CLASS} {
+      position: relative;
       background-color: rgba(46, 160, 67, 0.16);
       box-shadow: -0.75rem 0 0 0 rgba(46, 160, 67, 0.16), inset 3px 0 0 0 transparent;
       border-radius: 2px;
@@ -299,24 +312,43 @@ function findBlockByNeedle(container: Element, needle: string | null): HTMLEleme
   return null;
 }
 
+// Unique id source for wiring a toggle button to the body it controls (aria).
+let deletionBodySeq = 0;
+
+/** Shows or hides a deletion marker's removed content, keeping aria state in sync. */
+function setDeletionExpanded(marker: HTMLElement, expanded: boolean) {
+  const body = marker.querySelector<HTMLElement>('.preview-diff-deletion-body');
+  const toggle = marker.querySelector<HTMLElement>('.preview-diff-deletion-toggle');
+  if (body) {
+    body.hidden = !expanded;
+  }
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', String(expanded));
+  }
+}
+
 /** Builds the collapsible "removed content" marker element for one deletion. */
 function buildDeletionMarker(deletion: Deletion): HTMLElement {
   const marker = document.createElement('div');
   marker.className = DELETION_CLASS;
   marker.tabIndex = -1;
 
+  const bodyId = `preview-diff-removed-${deletionBodySeq++}`;
   const lineCount = deletion.text.length;
   const toggle = document.createElement('button');
   toggle.className = 'preview-diff-deletion-toggle';
   toggle.textContent = `${lineCount} line${lineCount === 1 ? '' : 's'} removed`;
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', bodyId);
 
   const body = document.createElement('pre');
   body.className = 'preview-diff-deletion-body';
+  body.id = bodyId;
   body.hidden = true;
   body.textContent = deletion.text.join('\n');
 
   toggle.addEventListener('click', () => {
-    body.hidden = !body.hidden;
+    setDeletionExpanded(marker, toggle.getAttribute('aria-expanded') !== 'true');
   });
 
   marker.appendChild(toggle);
@@ -402,10 +434,7 @@ function updateCounter() {
 function markActive(el: HTMLElement) {
   el.classList.add(ACTIVE_CLASS);
   if (el.classList.contains(DELETION_CLASS)) {
-    const body = el.querySelector<HTMLElement>('.preview-diff-deletion-body');
-    if (body) {
-      body.hidden = false;
-    }
+    setDeletionExpanded(el, true);
   }
 }
 

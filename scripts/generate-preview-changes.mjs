@@ -212,13 +212,19 @@ function firstNeedle(lines, isCode) {
 function isStructuralOnly(lines) {
   return lines.every((line) => {
     const t = line.trim();
-    return (
+    if (
       !t ||
       SKIP_LINE.test(t) ||
       DELIMITER_LINE.test(t) ||
       ATTRIBUTE_LINE.test(t) ||
       CALLOUT_LINE.test(t)
-    );
+    ) {
+      return true;
+    }
+    // Front-matter metadata that isn't rendered in the page body (e.g.
+    // page-title, meta-description, order) shouldn't produce removal markers.
+    const frontMatter = t.match(FRONT_MATTER_KEY);
+    return frontMatter != null && !RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1]);
   });
 }
 
@@ -290,12 +296,44 @@ function isPartial(file) {
 }
 
 /**
- * Builds a reverse include map: basename of an included file -> set of .adoc
- * files that include it. Used to resolve changed partials and code examples
- * to the pages where their content is rendered.
+ * Resolves an `include::` target to a repo-relative path matching the paths git
+ * reports, or null when the target uses an attribute we can't resolve.
+ * `{root}` maps to the repo root and `{articles}` to the articles directory;
+ * other targets are resolved relative to the including file.
+ */
+function resolveIncludePath(includerFile, target) {
+  let t = target.trim();
+  t = t.replace(/^\{root\}/, '');
+  t = t.replace(/^\{articles\}/, 'articles');
+  if (t.includes('{')) {
+    // Unresolved attribute (e.g. {root-fix}); fall back to basename matching.
+    return null;
+  }
+  if (t.startsWith('/')) {
+    t = t.slice(1);
+  }
+  if (/^(articles|src|frontend)\//.test(t)) {
+    return path.normalize(t);
+  }
+  return path.normalize(path.join(path.dirname(includerFile), t));
+}
+
+/**
+ * Builds reverse include maps used to resolve changed partials and code
+ * examples to the pages where their content is rendered:
+ * - byPath: repo-relative resolved path -> set of including .adoc files
+ * - byBasename: file basename -> set of including files (fallback for
+ *   targets whose path can't be resolved)
  */
 function buildIncluderMap() {
-  const map = new Map();
+  const byPath = new Map();
+  const byBasename = new Map();
+  const add = (map, key, includer) => {
+    if (!map.has(key)) {
+      map.set(key, new Set());
+    }
+    map.get(key).add(includer);
+  };
   const stack = ['articles'];
   while (stack.length > 0) {
     const dir = stack.pop();
@@ -306,16 +344,17 @@ function buildIncluderMap() {
       } else if (entry.name.endsWith('.adoc')) {
         const content = fs.readFileSync(full, 'utf8');
         for (const match of content.matchAll(/^include::([^\[]+)\[/gm)) {
-          const basename = path.basename(match[1].trim());
-          if (!map.has(basename)) {
-            map.set(basename, new Set());
+          const target = match[1].trim();
+          add(byBasename, path.basename(target), full);
+          const resolved = resolveIncludePath(full, target);
+          if (resolved) {
+            add(byPath, resolved, full);
           }
-          map.get(basename).add(full);
         }
       }
     }
   }
-  return map;
+  return { byPath, byBasename };
 }
 
 function main() {
@@ -353,7 +392,10 @@ function main() {
       return false;
     }
     seen.add(file);
-    const includers = includerMap.get(path.basename(file));
+    // Prefer matching by full resolved path; fall back to basename for targets
+    // whose path could not be resolved when the map was built.
+    const includers =
+      includerMap.byPath.get(path.normalize(file)) || includerMap.byBasename.get(path.basename(file));
     if (!includers || includers.size === 0) {
       return false;
     }
