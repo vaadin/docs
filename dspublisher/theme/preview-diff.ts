@@ -477,7 +477,8 @@ function focusChange(index: number) {
   changedBlocks.forEach((b) => b.classList.remove(ACTIVE_CLASS));
   const el = changedBlocks[wrapped];
   markActive(el);
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
   updateCounter();
 }
 
