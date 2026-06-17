@@ -299,9 +299,15 @@ function buildDeletionRecords(deletions, isCode) {
   return records;
 }
 
+// AsciiDoc source files use either extension.
+const ADOC_EXTENSION = /\.(adoc|asciidoc)$/;
+function isAdoc(file) {
+  return ADOC_EXTENSION.test(file);
+}
+
 /** Extracts the addition needles and deletion records contributed by one file. */
 function payloadFor(entry) {
-  const isCode = !entry.file.endsWith('.adoc');
+  const isCode = !isAdoc(entry.file);
   const needles = isCode
     ? entry.addedLines.flatMap(codeLineToNeedles)
     : entry.addedLines.flatMap(adocLineToNeedles);
@@ -324,7 +330,7 @@ function dedupeDeletions(deletions) {
 
 /** Maps an article file path to the URL path of the page it produces. */
 function fileToPagePath(file) {
-  let p = file.replace(/^articles\//, '').replace(/\.adoc$/, '');
+  let p = file.replace(/^articles\//, '').replace(ADOC_EXTENSION, '');
   if (p === 'index' || p.endsWith('/index')) {
     p = p.replace(/\/?index$/, '');
   }
@@ -382,7 +388,7 @@ function buildIncluderMap() {
       const full = path.posix.join(dir, entry.name);
       if (entry.isDirectory()) {
         stack.push(full);
-      } else if (entry.name.endsWith('.adoc')) {
+      } else if (isAdoc(entry.name)) {
         const content = fs.readFileSync(full, 'utf8');
         for (const match of content.matchAll(/^include::([^\[]+)\[/gm)) {
           const target = match[1].trim();
@@ -469,7 +475,7 @@ function main() {
 
   const sharedEntries = [];
   for (const entry of entries) {
-    const isArticle = entry.file.startsWith('articles/') && entry.file.endsWith('.adoc');
+    const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
     if (isArticle && !isPartial(entry.file)) {
       if (entry.status === 'deleted') {
         unmapped.push({ file: entry.file, status: 'deleted' });
