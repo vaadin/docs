@@ -738,7 +738,9 @@ function onKeydown(e: KeyboardEvent) {
 
 async function init() {
   // Preview-only feature: never run on the production documentation site
-  if (window.location.hostname.endsWith('vaadin.com')) {
+  // (vaadin.com and its subdomains, but not lookalikes like myvaadin.com).
+  const host = window.location.hostname;
+  if (host === 'vaadin.com' || host.endsWith('.vaadin.com')) {
     return;
   }
 
