@@ -1,0 +1,473 @@
+/**
+ * Generates a manifest of documentation pages changed in the current branch
+ * compared to a base ref (default: origin/main).
+ *
+ * Outputs:
+ * - dspublisher/changes/changes.json: consumed by dspublisher/theme/preview-diff.ts
+ *   in preview deployments to highlight changed content on the live site.
+ * - preview-comment.md: the sticky PR comment body with links to changed pages.
+ *
+ * Environment variables:
+ * - PREVIEW_BASE_REF: base ref to diff against (default: origin/main)
+ * - PREVIEW_URL: base URL of the preview deployment (used in the PR comment)
+ * - GITHUB_SHA: commit SHA recorded in the outputs
+ */
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const baseRef = process.env.PREVIEW_BASE_REF || 'origin/main';
+const previewUrl = (process.env.PREVIEW_URL || '').replace(/\/+$/, '');
+const buildSha = process.env.GITHUB_SHA || '';
+
+const MANIFEST_PATH = 'dspublisher/changes/changes.json';
+const COMMENT_PATH = 'preview-comment.md';
+
+// Needles shorter than this (after normalization) are too likely to produce
+// false-positive highlights and are dropped.
+const MIN_NEEDLE_LENGTH = 12;
+
+function git(args) {
+  return execSync(`git ${args}`, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+}
+
+/**
+ * Walks a single hunk's body lines (each `[marker, text]`) and records every
+ * contiguous run of removed lines, together with the surviving lines (context
+ * or added — both exist in the new version) immediately before and after it,
+ * nearest first. Those surviving lines are later resolved to a rendered block
+ * the deletion marker can be anchored to.
+ */
+function extractDeletions(entry, hunkLines) {
+  let i = 0;
+  while (i < hunkLines.length) {
+    if (hunkLines[i][0] !== '-') {
+      i++;
+      continue;
+    }
+    const removed = [];
+    let j = i;
+    while (j < hunkLines.length && hunkLines[j][0] === '-') {
+      removed.push(hunkLines[j][1]);
+      j++;
+    }
+    const beforeLines = [];
+    for (let k = i - 1; k >= 0; k--) {
+      if (hunkLines[k][0] !== '-') beforeLines.push(hunkLines[k][1]);
+    }
+    const afterLines = [];
+    for (let k = j; k < hunkLines.length; k++) {
+      if (hunkLines[k][0] !== '-') afterLines.push(hunkLines[k][1]);
+    }
+    entry.deletions.push({ removed, beforeLines, afterLines });
+    i = j;
+  }
+}
+
+/**
+ * Parses `git diff` output (with context) into
+ * [{ file, status, addedLines, added, removed, deletions }].
+ */
+function parseDiff(diffText) {
+  const entries = [];
+  let current = null;
+  let hunkLines = null;
+
+  const flushHunk = () => {
+    if (current && hunkLines) {
+      extractDeletions(current, hunkLines);
+    }
+    hunkLines = null;
+  };
+
+  for (const line of diffText.split('\n')) {
+    if (line.startsWith('diff --git ')) {
+      flushHunk();
+      current = { file: null, status: 'modified', addedLines: [], added: 0, removed: 0, deletions: [] };
+      entries.push(current);
+    } else if (!current) {
+      continue;
+    } else if (line.startsWith('new file mode')) {
+      current.status = 'added';
+    } else if (line.startsWith('deleted file mode')) {
+      current.status = 'deleted';
+    } else if (line.startsWith('rename to ')) {
+      current.status = 'renamed';
+    } else if (line.startsWith('+++ b/')) {
+      current.file = line.slice('+++ b/'.length);
+    } else if (line.startsWith('--- a/') && current.file == null) {
+      current.file = line.slice('--- a/'.length);
+    } else if (line.startsWith('@@')) {
+      flushHunk();
+      hunkLines = [];
+    } else if (hunkLines) {
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        current.added++;
+        current.addedLines.push(line.slice(1));
+        hunkLines.push(['+', line.slice(1)]);
+      } else if (line.startsWith('-') && !line.startsWith('---')) {
+        current.removed++;
+        hunkLines.push(['-', line.slice(1)]);
+      } else if (line.startsWith(' ')) {
+        hunkLines.push([' ', line.slice(1)]);
+      }
+    }
+  }
+  flushHunk();
+  return entries.filter((e) => e.file && e.file !== '/dev/null');
+}
+
+/** Normalizes text the same way preview-diff.ts normalizes rendered DOM text. */
+function normalize(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+const SKIP_LINE = /^(\/\/|include::|ifdef::|ifndef::|ifeval::|endif::|image::|video::|audio::|toc::|:[!\w][\w.-]*:)/;
+const DELIMITER_LINE = /^(-{2,}|={4,}|\.{4,}|\+{4,}|_{4,}|\*{4,}|\/{4,}|\|===.*|''')\s*$/;
+const ATTRIBUTE_LINE = /^\[.*\]$/;
+const CALLOUT_LINE = /^<\d+>/;
+const FRONT_MATTER_KEY = /^([a-z][a-z0-9-]*):\s+(.*)$/;
+const RENDERED_FRONT_MATTER_KEYS = new Set(['title', 'description']);
+
+/** Strips AsciiDoc inline markup, returning plain-text fragments of the line. */
+function stripInlineMarkup(text) {
+  let t = text;
+  // Macros where the bracket content is the rendered text
+  t = t.replace(/xref:[^\s\[\]]*\[([^\]]*)\]/g, '$1');
+  t = t.replace(/(?:link:|mailto:)[^\s\[\]]*\[([^\]]*)\]/g, '$1');
+  t = t.replace(/https?:\/\/[^\s\[\]]*\[([^\]]*)\]/g, '$1');
+  t = t.replace(/(?:menu|btn|kbd):\[?([^\]]*)\]?/g, '$1');
+  t = t.replace(/<<[^>,]*,([^>]*)>>/g, '$1');
+  t = t.replace(/<<([^>]*)>>/g, '$1');
+  // Macros that render as something else entirely
+  t = t.replace(/image:[^\s\[\]]*\[[^\]]*\]/g, ' ');
+  t = t.replace(/footnote:[^\[]*\[[^\]]*\]/g, ' ');
+  // Role spans: [.classname]#text#
+  t = t.replace(/\[[^\]]*\]#([^#]*)#/g, '$1');
+  // Inline style roles before formatted text: [classname]`Foo`, [filename]`x.txt`
+  t = t.replace(/\[[\w.-]+\]/g, ' ');
+  // Formatting pairs; normalization removes the symbols anyway, but unbalanced
+  // markers around attribute boundaries are cleaner without them
+  t = t.replace(/[*_`#^~]/g, '');
+  // Attribute references render as unknown values: split the needle there
+  return t.split(/\{[^}]+\}/);
+}
+
+/** Converts one added AsciiDoc source line into zero or more match needles. */
+function adocLineToNeedles(line) {
+  let t = line.trim();
+  if (!t || SKIP_LINE.test(t) || DELIMITER_LINE.test(t) || ATTRIBUTE_LINE.test(t) || CALLOUT_LINE.test(t)) {
+    return [];
+  }
+  const frontMatter = t.match(FRONT_MATTER_KEY);
+  if (frontMatter) {
+    if (!RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1])) {
+      return [];
+    }
+    t = frontMatter[2];
+  }
+  // Section title / list item / description list markers
+  t = t.replace(/^=+\s+/, '');
+  t = t.replace(/^(?:\*+|\.+|-)\s+/, '');
+  t = t.replace(/^([^:]+)::\s*/, '$1 ');
+  // Table rows: each cell is rendered separately
+  const cells = t.startsWith('|') ? t.split('|') : [t];
+  const needles = [];
+  for (const cell of cells) {
+    for (const fragment of stripInlineMarkup(cell)) {
+      const needle = normalize(fragment);
+      if (needle.length >= MIN_NEEDLE_LENGTH) {
+        needles.push(needle);
+      }
+    }
+  }
+  return needles;
+}
+
+/** Converts one added code-example line into a match needle (code renders verbatim). */
+function codeLineToNeedles(line) {
+  const t = line.replace(/\/\/\s*(hidden-source-line|tag::.*|end::.*)$/, '').trim();
+  if (!t || /^(\/\/|#|\*)/.test(t)) {
+    return [];
+  }
+  const needle = normalize(t);
+  return needle.length >= MIN_NEEDLE_LENGTH ? [needle] : [];
+}
+
+/** Returns the first usable anchor needle from a list of surviving lines. */
+function firstNeedle(lines, isCode) {
+  for (const line of lines) {
+    const needles = isCode ? codeLineToNeedles(line) : adocLineToNeedles(line);
+    if (needles.length > 0) {
+      return needles[0];
+    }
+  }
+  return null;
+}
+
+/** True if every removed line is blank or pure AsciiDoc structure (not worth showing). */
+function isStructuralOnly(lines) {
+  return lines.every((line) => {
+    const t = line.trim();
+    return (
+      !t ||
+      SKIP_LINE.test(t) ||
+      DELIMITER_LINE.test(t) ||
+      ATTRIBUTE_LINE.test(t) ||
+      CALLOUT_LINE.test(t)
+    );
+  });
+}
+
+/** Trims leading and trailing blank lines from a removed run. */
+function trimBlankEdges(lines) {
+  let start = 0;
+  let end = lines.length;
+  while (start < end && lines[start].trim() === '') start++;
+  while (end > start && lines[end - 1].trim() === '') end--;
+  return lines.slice(start, end);
+}
+
+/**
+ * Turns the raw removed runs of a file into deletion records:
+ * { before, after, text } where before/after are anchor needles (or null) for
+ * the surviving blocks around the deletion, and text is the removed source to
+ * display. Structural-only and empty runs are dropped.
+ */
+function buildDeletionRecords(deletions, isCode) {
+  const records = [];
+  for (const d of deletions) {
+    const text = trimBlankEdges(d.removed);
+    if (text.length === 0 || isStructuralOnly(text)) {
+      continue;
+    }
+    records.push({
+      before: firstNeedle(d.beforeLines, isCode),
+      after: firstNeedle(d.afterLines, isCode),
+      text,
+    });
+  }
+  return records;
+}
+
+/** Extracts the addition needles and deletion records contributed by one file. */
+function payloadFor(entry) {
+  const isCode = !entry.file.endsWith('.adoc');
+  const needles = isCode
+    ? entry.addedLines.flatMap(codeLineToNeedles)
+    : entry.addedLines.flatMap(adocLineToNeedles);
+  return { needles, deletions: buildDeletionRecords(entry.deletions, isCode) };
+}
+
+/** Removes duplicate deletion records (same anchors and removed text). */
+function dedupeDeletions(deletions) {
+  const seen = new Set();
+  const out = [];
+  for (const d of deletions) {
+    const key = JSON.stringify([d.before, d.after, d.text]);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(d);
+    }
+  }
+  return out;
+}
+
+/** Maps an article file path to the URL path of the page it produces. */
+function fileToPagePath(file) {
+  let p = file.replace(/^articles\//, '').replace(/\.adoc$/, '');
+  if (p === 'index' || p.endsWith('/index')) {
+    p = p.replace(/\/?index$/, '');
+  }
+  return p;
+}
+
+function isPartial(file) {
+  return path.basename(file).startsWith('_');
+}
+
+/**
+ * Builds a reverse include map: basename of an included file -> set of .adoc
+ * files that include it. Used to resolve changed partials and code examples
+ * to the pages where their content is rendered.
+ */
+function buildIncluderMap() {
+  const map = new Map();
+  const stack = ['articles'];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(full);
+      } else if (entry.name.endsWith('.adoc')) {
+        const content = fs.readFileSync(full, 'utf8');
+        for (const match of content.matchAll(/^include::([^\[]+)\[/gm)) {
+          const basename = path.basename(match[1].trim());
+          if (!map.has(basename)) {
+            map.set(basename, new Set());
+          }
+          map.get(basename).add(full);
+        }
+      }
+    }
+  }
+  return map;
+}
+
+function main() {
+  const mergeBase = git(`merge-base ${baseRef} HEAD`).trim();
+  // Context lines (-U3) are needed to anchor deletions to surviving blocks.
+  const diffText = git(`diff --no-color -U3 ${mergeBase} HEAD -- articles src frontend`);
+  const entries = parseDiff(diffText);
+
+  const includerMap = buildIncluderMap();
+
+  // path -> page record
+  const pages = new Map();
+  const unmapped = [];
+
+  function pageFor(file, status) {
+    const pagePath = fileToPagePath(file);
+    if (!pages.has(pagePath)) {
+      pages.set(pagePath, {
+        path: pagePath,
+        file,
+        status,
+        added: 0,
+        removed: 0,
+        needles: [],
+        deletions: [],
+      });
+    }
+    return pages.get(pagePath);
+  }
+
+  // Resolves a changed partial or code example to the non-partial pages that
+  // (transitively) include it, and attaches its needles and deletions there.
+  function attachToIncluders(file, payload, seen = new Set()) {
+    if (seen.has(file)) {
+      return false;
+    }
+    seen.add(file);
+    const includers = includerMap.get(path.basename(file));
+    if (!includers || includers.size === 0) {
+      return false;
+    }
+    let attached = false;
+    for (const includer of includers) {
+      if (isPartial(includer)) {
+        attached = attachToIncluders(includer, payload, seen) || attached;
+      } else {
+        const page = pages.has(fileToPagePath(includer))
+          ? pages.get(fileToPagePath(includer))
+          : pageFor(includer, 'includes-changes');
+        page.needles.push(...payload.needles);
+        page.deletions.push(...payload.deletions);
+        attached = true;
+      }
+    }
+    return attached;
+  }
+
+  const sharedEntries = [];
+  for (const entry of entries) {
+    const isArticle = entry.file.startsWith('articles/') && entry.file.endsWith('.adoc');
+    if (isArticle && !isPartial(entry.file)) {
+      if (entry.status === 'deleted') {
+        unmapped.push({ file: entry.file, status: 'deleted' });
+        continue;
+      }
+      const page = pageFor(entry.file, entry.status);
+      page.status = entry.status;
+      page.added += entry.added;
+      page.removed += entry.removed;
+      const payload = payloadFor(entry);
+      page.needles.push(...payload.needles);
+      page.deletions.push(...payload.deletions);
+    } else {
+      sharedEntries.push(entry);
+    }
+  }
+
+  // Partials and code examples are resolved after direct page changes so their
+  // content merges into already-registered pages instead of duplicating them.
+  for (const entry of sharedEntries) {
+    if (entry.status === 'deleted') {
+      unmapped.push({ file: entry.file, status: 'deleted' });
+      continue;
+    }
+    if (!attachToIncluders(entry.file, payloadFor(entry))) {
+      unmapped.push({ file: entry.file, status: entry.status });
+    }
+  }
+
+  const pageList = [...pages.values()]
+    .map((p) => ({
+      ...p,
+      needles: [...new Set(p.needles)],
+      deletions: dedupeDeletions(p.deletions),
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
+  const manifest = {
+    base: mergeBase,
+    sha: buildSha,
+    pages: pageList,
+    unmapped,
+  };
+
+  fs.mkdirSync(path.dirname(MANIFEST_PATH), { recursive: true });
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+
+  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped));
+
+  console.log(
+    `Wrote ${MANIFEST_PATH}: ${pageList.length} changed page(s), ${unmapped.length} unmapped file(s)`
+  );
+}
+
+function buildComment(pageList, unmapped) {
+  const lines = [];
+  lines.push('### Preview Deployment');
+  lines.push('');
+  lines.push('This PR has been deployed for preview.');
+  lines.push('');
+  lines.push(`**URL:** ${previewUrl}`);
+  lines.push('');
+  if (pageList.length > 0) {
+    lines.push('#### Changed pages');
+    lines.push('');
+    lines.push('Added content is highlighted in green; removed content is marked in red on each page.');
+    lines.push('');
+    for (const page of pageList) {
+      const url = `${previewUrl}/${page.path}`;
+      const base =
+        page.status === 'includes-changes'
+          ? 'shared content changed'
+          : `${page.status}, +${page.added}/-${page.removed} lines`;
+      const removals = page.deletions.length > 0 ? `, ${page.deletions.length} removal marker(s)` : '';
+      lines.push(`- [${page.path || 'front page'}](${url}) — ${base}${removals}`);
+    }
+    lines.push('');
+  } else {
+    lines.push('_No documentation page changes detected._');
+    lines.push('');
+  }
+  if (unmapped.length > 0) {
+    lines.push('#### Other changed files');
+    lines.push('');
+    for (const file of unmapped) {
+      lines.push(`- \`${file.file}\` (${file.status})`);
+    }
+    lines.push('');
+  }
+  lines.push(`_Built from ${buildSha}_`);
+  lines.push('');
+  return lines.join('\n');
+}
+
+main();

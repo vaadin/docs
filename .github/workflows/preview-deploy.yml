@@ -24,6 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history is needed to diff against the merge base with main
+          fetch-depth: 0
+
+      - name: Generate change manifest
+        env:
+          PREVIEW_URL: https://${{ env.FLY_APP }}.fly.dev
+        run: node scripts/generate-preview-changes.mjs
 
       - name: Set up Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
@@ -65,14 +73,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: preview-deploy
-          message: |
-            ### Preview Deployment
-
-            This PR has been deployed for preview.
-
-            **URL:** https://${{ env.FLY_APP }}.fly.dev
-
-            _Built from ${{ github.sha }}_
+          path: preview-comment.md
 
   cleanup:
     if: github.event.action == 'closed'
