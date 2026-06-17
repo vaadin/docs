@@ -5,13 +5,18 @@
  * and only present in preview deployments), highlights rendered blocks whose
  * text matches added source lines, inserts markers showing removed content, and
  * shows a floating panel that lists all changed pages and lets you step through
- * changes. Does nothing on vaadin.com or when the manifest is absent.
+ * changes. Disabled unless the build set the preview flag (see below).
  *
  * Navigation:
  * - n / p          jump to the next / previous change on the current page
  * - N / P          go to the next / previous changed page
  * The same actions are available as buttons in the panel.
  */
+
+// Injected by the build via vite `define` (vite.dspublisher.ts): true only when
+// DOCS_PREVIEW_DIFF=true was set, i.e. for preview deployments. Referenced with
+// `typeof` below so a build that doesn't define it doesn't throw.
+declare const __DOCS_PREVIEW_DIFF__: boolean;
 
 interface Deletion {
   // Anchor needles for the surviving blocks before / after the removed content.
@@ -737,10 +742,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 async function init() {
-  // Preview-only feature: never run on the production documentation site
-  // (vaadin.com and its subdomains, but not lookalikes like myvaadin.com).
-  const host = window.location.hostname;
-  if (host === 'vaadin.com' || host.endsWith('.vaadin.com')) {
+  // Preview-only feature, gated by a build-time flag rather than the hostname.
+  // If the flag is explicitly false (a normal production build), do nothing.
+  // If it's missing entirely (the define didn't reach this bundle), fall back
+  // to the manifest-presence check below, which is itself preview-only.
+  const previewFlag = typeof __DOCS_PREVIEW_DIFF__ !== 'undefined' ? __DOCS_PREVIEW_DIFF__ : undefined;
+  if (previewFlag === false) {
     return;
   }
 
