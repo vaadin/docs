@@ -418,6 +418,20 @@ function buildDeletionMarker(deletion: Deletion): HTMLElement {
 }
 
 /**
+ * Inserts a block-level marker next to an anchor. When the anchor is inside a
+ * table, the marker is placed beside the whole table instead of the cell, since
+ * a <div> can't be a valid sibling of <td>/<th>/<tr>.
+ */
+function placeMarker(marker: HTMLElement, anchor: HTMLElement, where: 'before' | 'after') {
+  const target: Element = anchor.closest('table') || anchor;
+  if (where === 'after') {
+    target.after(marker);
+  } else {
+    target.before(marker);
+  }
+}
+
+/**
  * Inserts a marker for each deletion, anchored next to the surviving block it
  * was adjacent to. Deletions whose anchor can't be located are grouped at the
  * end of the article so the removed content is still visible.
@@ -434,12 +448,12 @@ function renderDeletions(page: ChangedPage, container: Element) {
     const marker = buildDeletionMarker(deletion);
     const beforeBlock = findBlockByNeedle(container, deletion.before);
     if (beforeBlock) {
-      beforeBlock.after(marker);
+      placeMarker(marker, beforeBlock, 'after');
       continue;
     }
     const afterBlock = findBlockByNeedle(container, deletion.after);
     if (afterBlock) {
-      afterBlock.before(marker);
+      placeMarker(marker, afterBlock, 'before');
       continue;
     }
     orphans.push(deletion);
