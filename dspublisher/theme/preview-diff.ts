@@ -42,6 +42,9 @@ interface ChangesManifest {
 
 const HIGHLIGHT_CLASS = 'preview-diff-changed';
 const DELETION_CLASS = 'preview-diff-deletion';
+// Wrapper for deletions whose anchor wasn't found; deliberately NOT DELETION_CLASS
+// so the wrapper itself isn't treated as a navigation target.
+const DELETION_GROUP_CLASS = 'preview-diff-deletion-group';
 const ACTIVE_CLASS = 'preview-diff-active';
 const PANEL_ID = 'preview-diff-panel';
 const BLOCK_SELECTOR =
@@ -156,8 +159,18 @@ function injectStyles() {
     body.preview-diff-hidden .${HIGHLIGHT_CLASS}::before {
       display: none;
     }
-    body.preview-diff-hidden .${DELETION_CLASS} {
+    body.preview-diff-hidden .${DELETION_CLASS},
+    body.preview-diff-hidden .${DELETION_GROUP_CLASS} {
       display: none;
+    }
+    .${DELETION_GROUP_CLASS} {
+      margin: 1.5rem 0;
+    }
+    .${DELETION_GROUP_CLASS} .preview-diff-deletion-group-note {
+      margin-bottom: 0.25rem;
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      color: var(--docs-secondary-text-color, #5b7282);
     }
     .${DELETION_CLASS} {
       margin: 0.5rem 0;
@@ -396,7 +409,9 @@ function buildDeletionMarker(deletion: Deletion): HTMLElement {
  * end of the article so the removed content is still visible.
  */
 function renderDeletions(page: ChangedPage, container: Element) {
-  document.querySelectorAll(`.${DELETION_CLASS}`).forEach((el) => el.remove());
+  document
+    .querySelectorAll(`.${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)
+    .forEach((el) => el.remove());
 
   const deletions = page.deletions || [];
   const orphans: Deletion[] = [];
@@ -417,20 +432,22 @@ function renderDeletions(page: ChangedPage, container: Element) {
   }
 
   if (orphans.length > 0) {
+    // The wrapper uses its own class (not DELETION_CLASS) so it isn't picked up
+    // as a navigation target; only the real markers inside it are.
     const group = document.createElement('div');
-    group.className = DELETION_CLASS;
+    group.className = DELETION_GROUP_CLASS;
     const note = document.createElement('div');
-    note.className = 'preview-diff-deletion-toggle';
-    note.style.cursor = 'default';
+    note.className = 'preview-diff-deletion-group-note';
     note.textContent = `${orphans.length} removed section${
       orphans.length === 1 ? '' : 's'
     } (original location not found)`;
     group.appendChild(note);
     for (const deletion of orphans) {
-      const body = document.createElement('pre');
-      body.className = 'preview-diff-deletion-body';
-      body.textContent = deletion.text.join('\n');
-      group.appendChild(body);
+      // Each orphan is a real marker (toggle + aria, individually navigable),
+      // expanded by default since there's no surrounding context to orient from.
+      const marker = buildDeletionMarker(deletion);
+      setDeletionExpanded(marker, true);
+      group.appendChild(marker);
     }
     container.appendChild(group);
   }
