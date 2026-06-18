@@ -49,6 +49,9 @@ const ACTIVE_CLASS = 'preview-diff-active';
 const PANEL_ID = 'preview-diff-panel';
 const BLOCK_SELECTOR =
   'p, li, h1, h2, h3, h4, h5, h6, td, th, dt, dd, pre, blockquote, caption, figcaption';
+// Blocks whose text is longer than this are skipped during matching to keep the
+// (repeated, per-retry) scan cheap. Far above any real prose or code-example block.
+const MAX_BLOCK_TEXT_LENGTH = 50000;
 
 // sessionStorage key used to carry "scroll to a change" intent across a
 // cross-page navigation (a full page load on this static site).
@@ -319,11 +322,18 @@ function highlightBlocks(page: ChangedPage, container: Element) {
   }
 
   container.querySelectorAll(BLOCK_SELECTOR).forEach((block) => {
-    // Skip blocks inside the panel itself
-    if (block.closest(`#${PANEL_ID}`)) {
+    // Skip the panel and any deletion marker/group (a previous run's markers may
+    // still be in the DOM during the SPA retry, and their <pre> bodies would
+    // otherwise be matched and highlighted as false positives).
+    if (block.closest(`#${PANEL_ID}, .${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)) {
       return;
     }
-    const text = normalize(block.textContent || '');
+    const raw = block.textContent || '';
+    // Skip pathologically large blocks so the per-retry scan stays cheap.
+    if (raw.length < 4 || raw.length > MAX_BLOCK_TEXT_LENGTH) {
+      return;
+    }
+    const text = normalize(raw);
     if (text.length < 4) {
       return;
     }
@@ -348,10 +358,14 @@ function findBlockByNeedle(container: Element, needle: string | null): HTMLEleme
   }
   const blocks = container.querySelectorAll<HTMLElement>(BLOCK_SELECTOR);
   for (const block of Array.from(blocks)) {
-    if (block.closest(`#${PANEL_ID}`) || block.closest(`.${DELETION_CLASS}`)) {
+    if (block.closest(`#${PANEL_ID}, .${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)) {
       continue;
     }
-    if (normalize(block.textContent || '').includes(needle)) {
+    const raw = block.textContent || '';
+    if (raw.length > MAX_BLOCK_TEXT_LENGTH) {
+      continue;
+    }
+    if (normalize(raw).includes(needle)) {
       return block;
     }
   }
