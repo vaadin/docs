@@ -13,12 +13,13 @@ Controllers expose your application's capabilities to the LLM as callable tools 
 
 If you've registered tool objects via [methodname]`withTools()` elsewhere, controllers are the framework-agnostic equivalent: the same tool calling, but defined through the [classname]`AIController` interface instead of LangChain4j's or Spring AI's [annotationname]`@Tool` annotations.
 
-Vaadin provides two built-in controllers:
+Vaadin provides three built-in controllers:
 
 * <<ai-powered-grid#,[classname]`GridAIController`>> -- populates a [classname]`Grid` from a database using natural-language requests.
 * <<ai-powered-chart#,[classname]`ChartAIController`>> -- creates and updates [classname]`Chart` visualizations from a database using natural-language requests.
+* <<ai-powered-form#,[classname]`FormAIController`>> -- fills any layout containing input fields, from natural-language input or attached files.
 
-Both rely on a <<#database-provider,[classname]`DatabaseProvider`>> to expose schema information and execute queries on behalf of the LLM.
+The grid and chart controllers rely on a <<#database-provider,[classname]`DatabaseProvider`>> to expose schema information and execute queries on behalf of the LLM. The form controller works directly with the form's field components.
 
 
 == Attaching a Controller
@@ -111,10 +112,11 @@ Return only the tables, columns, and relationships the LLM needs. A smaller, wel
 
 The built-in controllers cover grid and chart data exploration. To expose your own capabilities to the LLM, implement [classname]`AIController` directly.
 
-[classname]`AIController` defines two methods:
+[classname]`AIController` defines three methods:
 
 * [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
-* [methodname]`onResponseComplete()` -- runs after all tool calls for a user request have finished and the LLM has produced its final response. Controllers use this hook to apply deferred state changes, avoiding partial state and multiple redraws during a multi-tool turn.
+* [methodname]`onRequest()` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn.
+* [methodname]`onResponse(Throwable)` -- runs on the UI thread once the LLM stream has completed, either successfully (`error` is `null`) or with an error. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure.
 
 Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
 
@@ -163,7 +165,10 @@ public class WeatherController implements AIController {
     }
 
     @Override
-    public void onResponseComplete() {
+    public void onResponse(Throwable error) {
+        if (error != null) {
+            return;
+        }
         // Apply any deferred state changes here.
     }
 }
