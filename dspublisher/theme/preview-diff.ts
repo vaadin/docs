@@ -684,7 +684,9 @@ function apply(manifest: ChangesManifest) {
     document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
       el.classList.remove(HIGHLIGHT_CLASS, ACTIVE_CLASS);
     });
-    document.querySelectorAll(`.${DELETION_CLASS}`).forEach((el) => el.remove());
+    document
+      .querySelectorAll(`.${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)
+      .forEach((el) => el.remove());
   }
 
   renderPanel(currentPage);
