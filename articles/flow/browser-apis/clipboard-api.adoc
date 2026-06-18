@@ -1,8 +1,8 @@
 ---
 title: Clipboard
 page-title: How to use the Clipboard API in Vaadin
-description: Using the Clipboard API to copy text and HTML to the user's clipboard from the server.
-meta-description: Learn how to copy text and HTML to the user's clipboard in Vaadin applications using the server-side Clipboard API.
+description: Using the Clipboard API to copy text, HTML, and images to the user's clipboard, read clipboard content, and handle paste events from the server.
+meta-description: Learn how to copy text, HTML, and images to the clipboard, read clipboard content, and handle paste events in Vaadin with the Clipboard API.
 order: 10
 ---
 
@@ -10,7 +10,7 @@ order: 10
 = [since:com.vaadin:vaadin@V25.2]#Clipboard#
 :toc:
 
-The [classname]`Clipboard` API lets server-side Java code copy text and HTML to the user's clipboard through the https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API[browser Clipboard API]. Actions are bound to a clickable component and run during the DOM event that fires the underlying click, so the browser sees a fresh user gesture and allows the write.
+The [classname]`Clipboard` API lets server-side Java code copy text, HTML, and images to the user's clipboard through the https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API[browser Clipboard API]. Actions are bound to a clickable component and run during the DOM event that fires the underlying click, so the browser sees a fresh user gesture and allows the write. The same click binding can also <<#reading-the-clipboard,read the clipboard>>, and separate listeners react to browser paste events -- including <<#handling-pasted-files,pasted files>> -- without any click binding.
 
 [NOTE]
 The Clipboard API requires a secure context (HTTPS), except on `localhost` during development. Browsers also require the [code]`write` call to happen inside a short-lived user gesture (click, key press, …) -- writes triggered outside of a gesture, for example from a background thread or a timer, will fail with a [code]`NotAllowedError`.
@@ -72,16 +72,47 @@ Clipboard.onClick(copy).writeHtml("<b>Hello</b>, <i>world</i>!");
 Most targets fall back to a plain-text representation when only [code]`text/html` is present, but the fallback is browser-dependent. To control both representations explicitly, use the multi-format form below.
 
 
-== Multi-Format Content
+== Copying Images
 
-[classname]`ClipboardContent` packs several MIME types into a single clipboard item, so the paste target can pick the representation it understands. Set the [code]`text/plain` and [code]`text/html` slots independently; at least one must be set.
+Use [methodname]`writeImage()` to copy an image to the clipboard:
 
 [source,java]
 ----
+Image preview = new Image("images/chart.png", "Chart preview");
+Clipboard.onClick(copy).writeImage(preview);
+----
+
+The image slot in the clipboard only accepts a component whose root element is an [code]`<img>`. The source can be a same-origin image, a [code]`data:` URL, or any cross-origin image served with matching CORS headers and [code]`crossorigin="anonymous"` on the [code]`<img>`.
+
+When the image is rendered server-side -- for example a dynamic chart that the user wants to paste into an email or slide deck -- pass a [classname]`DownloadHandler` instead:
+
+[source,java]
+----
+Button copyChart = new Button("Copy chart");
+Clipboard.onClick(copyChart).writeImage(DownloadHandler.fromInputStream(event -> {
+    // Produce the PNG bytes for the chart. How you render the image is
+    // application-specific -- here a service turns the report data into a PNG.
+    byte[] png = chartRenderer.renderPng(report.currentData());
+    return new DownloadResponse(new ByteArrayInputStream(png),
+            "chart.png", "image/png", png.length);
+}));
+----
+
+To include an image together with text or HTML, use [methodname]`ClipboardContent.image()` in the multi-format form.
+
+
+== Multi-Format Content
+
+[classname]`ClipboardContent` packs several MIME types into a single clipboard item, so the paste target can pick the representation it understands. Set the [code]`text/plain`, [code]`text/html`, and [code]`image/png` slots independently; at least one must be set.
+
+[source,java]
+----
+Image preview = new Image("images/chart.png", "Chart preview");
 Button copy = new Button("Copy");
 Clipboard.onClick(copy).write(ClipboardContent.create()
         .text("Hello, world!")
-        .html("<b>Hello</b>, <i>world</i>!"));
+        .html("<b>Hello</b>, <i>world</i>!")
+        .image(preview));
 ----
 
 The [methodname]`text()` setter also accepts a component, with the same client-side read semantics as [methodname]`writeText(Component)`:
@@ -95,8 +126,44 @@ Clipboard.onClick(copy).write(ClipboardContent.create()
         .html("<blockquote>" + message.getValue() + "</blockquote>"));
 ----
 
-[NOTE]
 The HTML slot only accepts a literal string -- there is no component overload. If the HTML depends on a field value, build it on the server before binding, or use the plain-text component overload alongside a static HTML literal.
+
+
+[#reading-the-clipboard]
+== Reading the Clipboard
+
+The same [classname]`ClipboardBinding` that writes can also read. The [methodname]`read*` methods read the clipboard via [code]`navigator.clipboard.read()` when the bound click fires and deliver the result to a server-side callback. [methodname]`readText()` delivers the [code]`text/plain` content:
+
+[source,java]
+----
+TextField address = new TextField("Address");
+Button paste = new Button("Paste");
+Clipboard.onClick(paste).readText(
+        text -> address.setValue(text != null ? text : ""),
+        error -> Notification.show("Couldn't read: " + error.message()));
+----
+
+Both consumers are required. The payload consumer receives [code]`null` when the clipboard is empty or has no representation of the requested type. [methodname]`readHtml()` works the same way for the [code]`text/html` representation.
+
+To receive both textual representations at once, use [methodname]`read()`. It delivers a [classname]`ClipboardPayload` record whose [methodname]`text()` and [methodname]`html()` accessors are each [code]`null` when the corresponding MIME type is not present on the clipboard item:
+
+[source,java]
+----
+Clipboard.onClick(paste).read(
+        payload -> {
+            if (payload == null) {
+                Notification.show("Clipboard is empty");
+            } else if (payload.html() != null) {
+                renderHtml(payload.html());
+            } else {
+                renderText(payload.text());
+            }
+        },
+        error -> Notification.show("Couldn't read: " + error.message()));
+----
+
+[NOTE]
+Reading is more restricted than writing: in addition to the user gesture, the browser requires the user to grant the [code]`clipboard-read` permission, typically through a prompt on the first read. If the permission is denied, the read is rejected with a [code]`NotAllowedError`, which is delivered to the [code]`onError` consumer -- see <<#handling-errors,Handling Errors>>.
 
 
 [#observing-the-outcome]
@@ -123,6 +190,7 @@ Clipboard.onClick(copy).writeText(token,
 ----
 
 
+[#handling-errors]
 == Handling Errors
 
 The [methodname]`onError` consumer receives a [classname]`PromiseAction.Error` record with the browser's rejection details:
@@ -157,3 +225,107 @@ The Clipboard API requires every write to happen inside a fresh user gesture. A 
 - Writes cannot be initiated from a background thread, a scheduled task, or a server push. The gesture must originate in the browser.
 - Each click is one gesture. Chaining multiple [methodname]`write*` calls on the same binding attaches multiple actions to the same click, but each one needs to succeed against the browser's gesture budget.
 - If the application performs a long server round-trip before the write call, the browser may consider the gesture stale and reject the write.
+
+Reads bound to a click are subject to the same requirement -- the click satisfies the gesture, but the [code]`clipboard-read` permission is still checked separately.
+
+
+[#handling-paste-events]
+== Handling Paste Events
+
+[methodname]`Clipboard.onPaste(component, listener)` registers a server-side listener for the browser's native [code]`paste` event -- the one the browser fires when the user presses [code]`Ctrl+V` ([code]`Cmd+V` on macOS) or picks _Paste_ from a context menu. Unlike the write and read APIs, it needs no click binding -- the listener is attached directly to the component's element and is invoked on the UI thread once per paste gesture targeting the component, or any of its descendants, since [code]`paste` bubbles. The listener receives a [classname]`PasteEvent` carrying the [code]`text/plain` and [code]`text/html` representations of the pasted content:
+
+[source,java]
+----
+Div pasteTarget = new Div();
+pasteTarget.getElement().setAttribute("tabindex", "0");
+add(pasteTarget);
+
+Clipboard.onPaste(pasteTarget, event -> {
+    if (event.hasHtml()) {
+        renderHtml(event.getHtml());
+    } else if (event.hasText()) {
+        renderText(event.getText());
+    }
+});
+----
+
+The call returns a [classname]`Registration`; call [methodname]`remove()` on it to detach the listener. The component does not need to be attached at registration time -- the DOM listener is applied when the element is attached to a UI.
+
+[classname]`PasteEvent` exposes the paste through these methods:
+
+`getText()`, `getHtml()`:: The [code]`text/plain` and [code]`text/html` content, or [code]`null` when the paste did not include that representation. The browser returns an empty string both for an absent MIME type and for a pasted empty string; [classname]`PasteEvent` collapses both into [code]`null`, so [methodname]`hasText()` and [methodname]`hasHtml()` are sufficient checks.
+`getTargetElement()`:: The closest Flow-tracked [classname]`Element` ancestor of the paste's DOM target, resolved against the live DOM in the browser. For a paste inside a Vaadin web component this is typically the component's host element. Use [methodname]`Element.getComponent()` to look up the enclosing component. Returns [code]`null` in the rare case that no Flow-tracked element encloses the target.
+`getSource()`:: The component the listener was registered on.
+
+A few browser caveats apply:
+
+- The browser only fires [code]`paste` when the target element is focused at the moment the user invokes paste. Non-editable elements such as a plain [classname]`Div` must be made focusable, typically via [code]`tabindex="0"`.
+- On editable targets ([code]`<input>`, [code]`<textarea>`, [code]`contenteditable` elements), the browser still performs its native paste insertion. The listener observes the paste; it does not replace it.
+- On Safari, some plain-text pastes do not include a [code]`text/html` representation even when Chromium would synthesize one, so [methodname]`getHtml()` may be [code]`null` on Safari for a paste that yields HTML on Chrome.
+
+Files and binary clipboard items -- pasted screenshots, files copied from a file manager -- are not delivered by [classname]`PasteEvent`. Register for those with [methodname]`Clipboard.onFilePaste()` instead; the same paste gesture fires both listeners when both are registered.
+
+
+=== Page-Wide Listeners and Paste Options
+
+To observe pastes anywhere on the page, pass the [classname]`UI` as the component -- its root element is [code]`<body>`, so every bubbling paste event reaches it. A page-wide listener usually should not react to pastes the user intends for a form field. The [classname]`PasteOptions` overload controls this:
+
+[source,java]
+----
+Clipboard.onPaste(UI.getCurrent(), PasteOptions.defaults(), event -> {
+    importFromClipboard(event);
+});
+----
+
+[methodname]`PasteOptions.defaults()`:: Skips pastes whose target is an input, textarea, or [code]`contenteditable` element. The check sees through open shadow DOMs, so a focused field inside a Vaadin web component is also skipped.
+[methodname]`PasteOptions.includingInputFields()`:: Forwards every paste regardless of focus. This is also the behavior of the two-argument [methodname]`onPaste()` overload, which takes no options.
+
+
+[#handling-pasted-files]
+== Handling Pasted Files
+
+[methodname]`Clipboard.onFilePaste(component, handler)` registers a listener for pastes that deliver files -- a screenshot from the OS clipboard, files copied from a file manager, anything that arrives on [code]`event.clipboardData.files`. Each pasted file is uploaded to the server individually and handed to the given [classname]`UploadHandler`, exactly as for a regular upload; pastes without files are ignored. The simplest form uses a plain in-memory handler:
+
+[source,java]
+----
+Clipboard.onFilePaste(this, UploadHandler.inMemory(
+        (metadata, bytes) -> store(metadata.fileName(), bytes)));
+----
+
+UI changes made in the handler are flushed to the browser automatically once the paste's uploads have finished -- no server push is required.
+
+For paste-aware handling, [classname]`PasteFileHandler` builds upload handlers that correlate the parallel uploads of one paste gesture. [methodname]`PasteFileHandler.perFile()` delivers each file as a [classname]`PasteFile` record on the UI thread:
+
+[source,java]
+----
+Clipboard.onFilePaste(this, PasteFileHandler.perFile(file -> {
+    if (file.newPaste()) {
+        attachments.removeAll();
+    }
+    attachments.add(createPreview(file.fileName(), file.bytes()));
+}));
+----
+
+[classname]`PasteFile` carries the file's bytes plus metadata and paste correlation:
+
+`fileName()`, `contentType()`, `size()`, `bytes()`:: The file name and MIME type as reported by the browser ([methodname]`contentType()` may be [code]`null`), the size in bytes, and the content itself.
+`pasteId()`:: A sequence number shared by all files of the same paste gesture; subsequent pastes in the same tab carry strictly larger values.
+`newPaste()`:: [code]`true` on the first file of each paste to reach the listener, [code]`false` for the rest.
+`totalFiles()`:: The total number of files the originating paste contained.
+
+When the application needs to know when a whole paste has finished, use the three-step batch form. [methodname]`onStart` fires once per paste before its first file, [methodname]`onFile` fires per file, and [methodname]`onComplete` fires once the paste's declared file count has been delivered; any step may be omitted:
+
+[source,java]
+----
+Clipboard.onFilePaste(this, PasteFileHandler.batch()
+        .onStart(start -> progress.setVisible(true))
+        .onFile(file -> addAttachment(file.fileName(), file.bytes()))
+        .onComplete(complete -> progress.setVisible(false))
+        .build());
+----
+
+[methodname]`onStart` receives a [classname]`PasteStart` record with [methodname]`pasteId()` and [methodname]`totalFiles()`; [methodname]`onComplete` receives a [classname]`PasteComplete` with [methodname]`pasteId()` and [methodname]`receivedFiles()`. Each paste runs as its own batch and completes on its own timeline, even when the uploads of two pastes interleave in transit. An upload that fails in transit never reaches the server and does not count, so a paste with a lost upload never fires [methodname]`onComplete`.
+
+[methodname]`PasteFileHandler.perFile()` and the [methodname]`onFile` step read each upload fully into memory as a [code]`byte[]` before invoking the callback, so a very large paste is held entirely in heap. Cap it with the size limits of a custom [classname]`UploadHandler`, or read the stream yourself, when that matters. Also treat [methodname]`fileName()` as untrusted browser input -- never use it directly as a filesystem path without sanitizing it first.
+
+Unlike [methodname]`onPaste()`, the file variant has no option to skip pastes into form fields: browsers never paste files into an [code]`<input>` or [code]`<textarea>`, so there is no native paste behavior to compete with. The API is independent of [methodname]`onPaste()` -- a paste that carries both files and text fires both listeners when both are registered.
