@@ -2,6 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/breadcrumbs';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { patchBreadcrumbsNavigation } from 'Frontend/demo/component/breadcrumbs/breadcrumbs-helper'; // hidden-source-line
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('breadcrumbs-basic')
@@ -11,6 +12,10 @@ export class Example extends LitElement {
     applyTheme(root);
     return root;
   }
+
+  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
+    patchBreadcrumbsNavigation(this.shadowRoot!.querySelector('vaadin-breadcrumbs')!); // hidden-source-line
+  } // hidden-source-line
 
   protected override render() {
     return html`

@@ -25,6 +25,8 @@ public class BreadcrumbsIcons extends Div {
         breadcrumbs.add(home, orders, current);
         // end::snippet[]
 
+        breadcrumbs.getElement() // hidden-source-line
+                .executeJs("window.patchBreadcrumbsNavigation(this);"); // hidden-source-line
         add(breadcrumbs);
     }
 

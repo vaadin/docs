@@ -23,6 +23,8 @@ public class BreadcrumbsBasic extends Div {
         breadcrumbs.add(home, components, current);
         // end::snippet[]
 
+        breadcrumbs.getElement() // hidden-source-line
+                .executeJs("window.patchBreadcrumbsNavigation(this);"); // hidden-source-line
         add(breadcrumbs);
     }
 

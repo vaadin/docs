@@ -29,6 +29,8 @@ public class BreadcrumbsOverflow extends Div {
         breadcrumbs.setWidth("300px");
         // end::snippet[]
 
+        breadcrumbs.getElement() // hidden-source-line
+                .executeJs("window.patchBreadcrumbsNavigation(this);"); // hidden-source-line
         add(breadcrumbs);
     }
 
