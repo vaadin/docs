@@ -99,24 +99,30 @@ function parseDiff(diffText) {
       current.status = 'deleted';
     } else if (line.startsWith('rename to ')) {
       current.status = 'renamed';
-    } else if (line.startsWith('+++ b/')) {
+    } else if (!hunkLines && line.startsWith('+++ b/')) {
+      // File headers only appear before the first @@; guarding on !hunkLines
+      // avoids mistaking a hunk body line like "+++ b/..." for a header.
       current.file = line.slice('+++ b/'.length);
-    } else if (line.startsWith('--- a/') && current.file == null) {
+    } else if (!hunkLines && line.startsWith('--- a/') && current.file == null) {
       current.file = line.slice('--- a/'.length);
     } else if (line.startsWith('@@')) {
       flushHunk();
       hunkLines = [];
     } else if (hunkLines) {
-      if (line.startsWith('+') && !line.startsWith('+++')) {
+      // Inside a hunk the first character is the marker; the rest is verbatim
+      // content (which may itself start with +++/---), so key only on line[0].
+      const marker = line[0];
+      if (marker === '+') {
         current.added++;
         current.addedLines.push(line.slice(1));
         hunkLines.push(['+', line.slice(1)]);
-      } else if (line.startsWith('-') && !line.startsWith('---')) {
+      } else if (marker === '-') {
         current.removed++;
         hunkLines.push(['-', line.slice(1)]);
-      } else if (line.startsWith(' ')) {
+      } else if (marker === ' ') {
         hunkLines.push([' ', line.slice(1)]);
       }
+      // Other markers (e.g. "\ No newline at end of file") are ignored.
     }
   }
   flushHunk();

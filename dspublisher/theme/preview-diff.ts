@@ -807,6 +807,34 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
+/**
+ * Fetches the change manifest. Tries the site root first (where the preview
+ * Dockerfile serves it), then a <base>-relative URL so a deployment served
+ * under a path prefix (e.g. /docs/) also resolves it.
+ */
+async function fetchManifest(): Promise<ChangesManifest | null> {
+  const candidates = ['/preview-changes.json'];
+  try {
+    const baseRelative = new URL('preview-changes.json', document.baseURI).pathname;
+    if (!candidates.includes(baseRelative)) {
+      candidates.push(baseRelative);
+    }
+  } catch (e) {
+    // Ignore malformed baseURI.
+  }
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      // Try the next candidate.
+    }
+  }
+  return null;
+}
+
 async function init() {
   // Guard against the module being evaluated twice in one document (e.g. HMR),
   // which would otherwise double-wrap history.pushState and double-schedule.
@@ -824,16 +852,7 @@ async function init() {
     return;
   }
 
-  let manifest: ChangesManifest;
-  try {
-    const response = await fetch('/preview-changes.json');
-    if (!response.ok) {
-      return;
-    }
-    manifest = await response.json();
-  } catch (e) {
-    return;
-  }
+  const manifest = await fetchManifest();
   if (!manifest || !Array.isArray(manifest.pages)) {
     return;
   }
