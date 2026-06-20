@@ -417,13 +417,19 @@ function buildDeletionMarker(deletion: Deletion): HTMLElement {
   return marker;
 }
 
+// Block anchors whose parent (table row, list, definition list) can't host a
+// <div> sibling; for these the marker is placed beside the enclosing container.
+const RELOCATE_ANCHOR = 'td, th, tr, caption, li, dt, dd';
+
 /**
- * Inserts a block-level marker next to an anchor. When the anchor is inside a
- * table, the marker is placed beside the whole table instead of the cell, since
- * a <div> can't be a valid sibling of <td>/<th>/<tr>.
+ * Inserts a block-level marker next to an anchor. A <div> can't be a valid
+ * sibling of a table cell/row or a list/definition item, so when the anchor is
+ * one of those the marker is placed beside the enclosing table/list instead.
  */
 function placeMarker(marker: HTMLElement, anchor: HTMLElement, where: 'before' | 'after') {
-  const target: Element = anchor.closest('table') || anchor;
+  const target: Element = anchor.matches(RELOCATE_ANCHOR)
+    ? anchor.closest('table, ul, ol, dl') || anchor
+    : anchor;
   if (where === 'after') {
     target.after(marker);
   } else {
@@ -532,25 +538,29 @@ function focusChange(index: number) {
   updateCounter();
 }
 
-function nextChange() {
-  if (changedBlocks.length > 0) {
-    focusChange(currentIndex + 1);
+function nextChange(): boolean {
+  if (changedBlocks.length === 0) {
+    return false;
   }
+  focusChange(currentIndex + 1);
+  return true;
 }
 
-function prevChange() {
-  if (changedBlocks.length > 0) {
-    focusChange(currentIndex <= 0 ? changedBlocks.length - 1 : currentIndex - 1);
+function prevChange(): boolean {
+  if (changedBlocks.length === 0) {
+    return false;
   }
+  focusChange(currentIndex <= 0 ? changedBlocks.length - 1 : currentIndex - 1);
+  return true;
 }
 
 /**
  * Navigates to another changed page. `where` selects the first or last change
  * to focus once that page loads (carried across the page load via sessionStorage).
  */
-function gotoPage(delta: number) {
-  if (manifestPages.length === 0) {
-    return;
+function gotoPage(delta: number): boolean {
+  if (manifestPages.length < 2) {
+    return false;
   }
   const current = findCurrentPageIndex();
   let target: number;
@@ -566,6 +576,7 @@ function gotoPage(delta: number) {
     // Ignore storage failures; navigation still works, just without auto-scroll.
   }
   window.location.assign(pageHref(page.path));
+  return true;
 }
 
 function renderPanel(currentPage: ChangedPage | undefined) {
@@ -765,30 +776,45 @@ function onKeydown(e: KeyboardEvent) {
   if (manifestPages.length === 0 || e.defaultPrevented) {
     return;
   }
-  if (e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e.target)) {
+  if (e.metaKey || e.ctrlKey || e.altKey) {
     return;
   }
+  // composedPath()[0] is the real (possibly shadow-DOM) target, so typing in a
+  // web-component field (e.g. the docs search <vaadin-text-field>) isn't hijacked.
+  const target = e.composedPath?.()[0] ?? e.target;
+  if (isTypingTarget(target)) {
+    return;
+  }
+  let handled = false;
   switch (e.key) {
     case 'n':
-      nextChange();
-      e.preventDefault();
+      handled = nextChange();
       break;
     case 'p':
-      prevChange();
-      e.preventDefault();
+      handled = prevChange();
       break;
     case 'N':
-      gotoPage(1);
-      e.preventDefault();
+      handled = gotoPage(1);
       break;
     case 'P':
-      gotoPage(-1);
-      e.preventDefault();
+      handled = gotoPage(-1);
       break;
+  }
+  // Only swallow the key if it actually did something, so unrelated typing of
+  // n/p/N/P elsewhere on the page is preserved.
+  if (handled) {
+    e.preventDefault();
   }
 }
 
 async function init() {
+  // Guard against the module being evaluated twice in one document (e.g. HMR),
+  // which would otherwise double-wrap history.pushState and double-schedule.
+  if ((window as unknown as Record<string, unknown>).__previewDiffInit) {
+    return;
+  }
+  (window as unknown as Record<string, unknown>).__previewDiffInit = true;
+
   // Preview-only feature, gated by a build-time flag rather than the hostname.
   // If the flag is explicitly false (a normal production build), do nothing.
   // If it's missing entirely (the define didn't reach this bundle), fall back
