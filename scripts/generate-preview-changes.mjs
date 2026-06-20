@@ -155,6 +155,20 @@ const FRONT_MATTER_KEYS = new Set([
 // Front-matter keys whose value is rendered in the page body.
 const RENDERED_FRONT_MATTER_KEYS = new Set(['title', 'description']);
 
+/**
+ * Returns the front-matter key match for a line, or null. Front matter is
+ * unindented YAML at the top of the file, so the (untrimmed) source line must
+ * start at column 0 — this avoids mistaking indented `key: value` lines inside
+ * code blocks (e.g. `  description: string;`) for front matter.
+ */
+function frontMatterKey(sourceLine, trimmed) {
+  if (/^\s/.test(sourceLine)) {
+    return null;
+  }
+  const match = trimmed.match(FRONT_MATTER_KEY);
+  return match && FRONT_MATTER_KEYS.has(match[1]) ? match : null;
+}
+
 /** Strips AsciiDoc inline markup, returning plain-text fragments of the line. */
 function stripInlineMarkup(text) {
   let t = text;
@@ -185,8 +199,8 @@ function adocLineToNeedles(line) {
   if (!t || SKIP_LINE.test(t) || DELIMITER_LINE.test(t) || ATTRIBUTE_LINE.test(t) || CALLOUT_LINE.test(t)) {
     return [];
   }
-  const frontMatter = t.match(FRONT_MATTER_KEY);
-  if (frontMatter && FRONT_MATTER_KEYS.has(frontMatter[1])) {
+  const frontMatter = frontMatterKey(line, t);
+  if (frontMatter) {
     if (!RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1])) {
       return [];
     }
@@ -246,12 +260,8 @@ function isStructuralOnly(lines) {
     }
     // Front-matter metadata that isn't rendered in the page body (e.g.
     // page-title, meta-description, order) shouldn't produce removal markers.
-    const frontMatter = t.match(FRONT_MATTER_KEY);
-    return (
-      frontMatter != null &&
-      FRONT_MATTER_KEYS.has(frontMatter[1]) &&
-      !RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1])
-    );
+    const frontMatter = frontMatterKey(line, t);
+    return frontMatter != null && !RENDERED_FRONT_MATTER_KEYS.has(frontMatter[1]);
   });
 }
 
