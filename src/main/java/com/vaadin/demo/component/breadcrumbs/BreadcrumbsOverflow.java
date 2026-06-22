@@ -4,7 +4,6 @@ import com.vaadin.flow.component.breadcrumbs.Breadcrumbs;
 import com.vaadin.flow.component.breadcrumbs.BreadcrumbsItem;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("breadcrumbs-overflow")

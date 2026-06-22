@@ -5,7 +5,6 @@ import com.vaadin.flow.component.breadcrumbs.BreadcrumbsItem;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.router.Route;
-
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("breadcrumbs-icons")
