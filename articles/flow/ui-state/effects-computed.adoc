@@ -117,7 +117,7 @@ Signal<String> fullName = Signal.computed(() -> {
 });
 ----
 
-Computed signals are read-only; you cannot set their value directly.
+Computed signals are read-only; you cannot set their value directly. The computation callback runs every time the signal value is read. For expensive computations, wrap the computed signal in [methodname]`Signal.cached()` to avoid repeating the work on every read (see <<#caching-with-signal-cached,Caching with Signal.cached()>>).
 
 
 === Combining Multiple Signals
@@ -141,21 +141,29 @@ quantity.set(3.0);
 ----
 
 
-=== Caching and Lazy Evaluation
+[[caching-with-signal-cached]]
+=== Caching with Signal.cached()
 
-Computed signals cache their value and only recalculate when dependencies change:
+Neither a [methodname]`Signal.computed()` signal nor an inline lambda passed to a binding caches its value: the computation callback runs every time the value is read. This keeps the computation lightweight, but reading the value of an expensive computation from several places repeats the work.
+
+Use [methodname]`Signal.cached()` to add caching to such a computation. A cached signal stores the most recently computed value and returns it on subsequent reads. The cached value remains valid until the value of any dependency signal changes:
 
 [source,java]
 ----
-Signal<Integer> expensiveComputation = Signal.computed(() -> {
-    // This only runs when dependencies change
-    return performExpensiveCalculation(inputSignal.get());
-});
+Signal<Integer> expensiveComputation = Signal.cached(() ->
+    performExpensiveCalculation(inputSignal.get()));
 
-// Multiple reads return the cached value
-expensiveComputation.get(); // Computes once
-expensiveComputation.get(); // Returns cached value
+expensiveComputation.get(); // Computes the value
+expensiveComputation.get(); // Returns the cached value
+
+inputSignal.set(newInput);
+expensiveComputation.get(); // Recomputes because a dependency changed
 ----
+
+Use plain [methodname]`Signal.computed()` for cheap derivations such as string concatenation or simple arithmetic, where the bookkeeping overhead of caching would outweigh the cost of recomputing the value. Use [methodname]`Signal.cached()` when the computation is expensive — for example, filtering or sorting a large list — and the value is read multiple times.
+
+[NOTE]
+An effect or an outer cached signal that uses the value from a cached signal isn't re-run when the inner computation is invalidated but produces the same value as before. This makes [methodname]`Signal.cached()` useful for cutting off update chains when an expensive intermediate result is unchanged.
 
 
 == Signal Mapping

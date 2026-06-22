@@ -77,15 +77,16 @@ firstName.set("Jane");
 // Automatically updates to "Jane Doe"
 ----
 
-For expensive computations, wrap the lambda in [methodname]`Signal.computed()` to cache the result:
+When combining signals involves an expensive computation that's read multiple times, wrap it in [methodname]`Signal.cached()` to avoid recomputing on every read:
 
 [source,java]
 ----
-fullName.bindText(Signal.computed(() ->
-    firstName.get() + " " + lastName.get()));
+Span report = new Span();
+report.bindText(Signal.cached(() ->
+    generateReport(firstName.get(), lastName.get())));
 ----
 
-Both variants execute the callback when a dependency signal value changes. The difference is that the lambda variant recalculates the result every time someone reads the lambda signal value, while an explicit computed signal (using [methodname]`Signal.computed()`) caches the result until any dependency signal value changes. For simple operations like [methodname]`String::length`, a lambda is enough. However, for complex or expensive computations, use an explicit computed signal to avoid unnecessary recalculations when the value is read multiple times.
+A plain lambda or [methodname]`Signal.computed()` signal recalculates the result every time someone reads the signal value, while a cached signal stores the result and reuses it until any dependency signal value changes. For simple operations like string concatenation, a lambda is enough. For complex or expensive computations that are read multiple times, use [methodname]`Signal.cached()` to avoid unnecessary recalculations. See <<effects-computed#caching-with-signal-cached,Caching with Signal.cached()>> for details.
 
 
 [TIP]
@@ -567,6 +568,26 @@ This approach works with both [classname]`ListSignal` (for local, single-user sc
 Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`Signal.effect()` with [methodname]`setItems()` when you want to populate a data items component (e.g., [classname]`Grid`, [classname]`VirtualList`) that manages its own rendering.
 
 
+== Component-Specific Bindings
+
+In addition to the general-purpose bindings, some components provide binding methods for state that's specific to that component. Like the other binding methods, they return a [classname]`SignalBinding` that can be used to register `onChange` callbacks. Two-way bindings accept a write callback as the second argument; pass `null` for one-way binding.
+
+For example, bind the selection of a [classname]`Grid` to a signal through the single-select or multi-select wrapper:
+
+[source,java]
+----
+ValueSignal<Person> selectedPerson = new ValueSignal<>();
+
+Grid<Person> grid = new Grid<>(Person.class);
+grid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
+
+// Selecting a row updates the signal;
+// setting the signal updates the selection
+----
+
+Other components expose their own bindings in the same style — for instance, [methodname]`MessageList.bindItems()`, [methodname]`AppLayout.bindDrawerOpened()`, [methodname]`Checkbox.bindIndeterminate()`, and [methodname]`bindThemeVariants()` on components that implement [interfacename]`HasThemeVariant`. See each component's documentation for the component-specific bindings it offers.
+
+
 == Built-In Signal Sources
 
 Vaadin provides several built-in signals that expose framework-level state reactively.
@@ -595,28 +616,44 @@ The signal is lazily initialized. The actual window dimensions are available fro
 
 === UI Locale Signal
 
-Use [methodname]`UI.localeSignal()` to get a writable signal that tracks the UI's locale:
+Use [methodname]`UI.localeSignal()` to get a read-only signal that tracks the UI's locale:
 
 [source,java]
 ----
-ValueSignal<Locale> locale = UI.getCurrentOrThrow().localeSignal();
+Signal<Locale> locale = UI.getCurrentOrThrow().localeSignal();
 
 Span greeting = new Span();
 greeting.bindText(locale.map(loc ->
     loc.getLanguage().equals("fi") ? "Tervetuloa" : "Welcome"));
 ----
 
-[WARNING]
-Writing directly to this signal does not notify [interfacename]`LocaleChangeObserver` implementations. If you need observers to be notified, use [methodname]`UI.setLocale()` instead.
+The signal cannot be written directly. To change the locale, use [methodname]`UI.setLocale()`, which updates the signal and also notifies [interfacename]`LocaleChangeObserver` implementations. For two-way binding with a field component, pass [methodname]`setLocale()` as the write callback:
+
+[source,java]
+----
+UI ui = UI.getCurrent();
+
+ComboBox<Locale> languageSelect = new ComboBox<>("Language");
+languageSelect.setItems(Locale.ENGLISH, Locale.of("fi"));
+languageSelect.bindValue(ui.localeSignal(), ui::setLocale);
+----
 
 
 === Session Locale Signal
 
-Use [methodname]`VaadinSession.localeSignal()` to get a shared, writable signal that tracks the session-level locale. UIs that have not had their locale explicitly overridden derive their locale from this signal:
+Use [methodname]`VaadinSession.localeSignal()` to get a read-only signal that tracks the session-level locale. UIs that have not had their locale explicitly overridden derive their locale from this signal:
 
 [source,java]
 ----
-SharedValueSignal<Locale> sessionLocale = VaadinSession.getCurrent().localeSignal();
+VaadinSession session = VaadinSession.getCurrent();
+Signal<Locale> sessionLocale = session.localeSignal();
+----
+
+To change the session locale, use [methodname]`VaadinSession.setLocale()`. As with the UI locale signal, the signal can be combined with [methodname]`setLocale()` as the write callback for two-way binding:
+
+[source,java]
+----
+languageSelect.bindValue(session.localeSignal(), session::setLocale);
 ----
 
 
