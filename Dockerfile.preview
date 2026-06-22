@@ -1,7 +1,7 @@
 # Dockerfile.preview
-# Builds the AsciiDoc documentation and serves the static output.
+# Serves the AsciiDoc documentation using DSPublisher's dev server.
 
-FROM node:24-alpine AS build
+FROM node:24-alpine
 
 RUN apk add --no-cache openjdk21 maven
 
@@ -19,17 +19,17 @@ COPY articles/ articles/
 COPY dspublisher/ dspublisher/
 COPY frontend/ frontend/
 
-ARG VAADIN_PRO_KEY
-RUN mkdir -p ~/.vaadin && echo "{\"proKey\":\"$VAADIN_PRO_KEY\"}" > ~/.vaadin/proKey
-RUN mvn compile vaadin:prepare-frontend vaadin:build-frontend -B
-RUN npx -y @vaadin/dspublisher@3.0.0-alpha.13 --build
+RUN mvn compile vaadin:prepare-frontend -B
 
-FROM node:24-alpine
-
-RUN npm install -g serve
-
-COPY --from=build /app/dspublisher/out/public /app/public
+RUN --mount=type=secret,id=VAADIN_PRO_KEY \
+    mkdir -p ~/.vaadin && \
+    SECRET="$(cat /run/secrets/VAADIN_PRO_KEY)" && \
+    USERNAME="${SECRET%%/*}" && \
+    PROKEY="${SECRET#*/}" && \
+    echo "{\"username\":\"$USERNAME\",\"proKey\":\"$PROKEY\"}" > ~/.vaadin/proKey && \
+    mvn vaadin:build-frontend -B && \
+    rm -f ~/.vaadin/proKey
 
 EXPOSE 8210
 
-CMD ["serve", "/app/public", "-l", "8210"]
+CMD sh -c 'mkdir -p ~/.vaadin && USERNAME="${VAADIN_PRO_KEY%%/*}" && PROKEY="${VAADIN_PRO_KEY#*/}" && echo "{\"username\":\"$USERNAME\",\"proKey\":\"$PROKEY\"}" > ~/.vaadin/proKey && HOST=0.0.0.0 npx -y @vaadin/dspublisher@3.0.0-alpha.14 --develop'
