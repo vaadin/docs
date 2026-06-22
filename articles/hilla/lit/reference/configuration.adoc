@@ -77,6 +77,55 @@ If your application is in a package named `com.example.application`, and you hav
 [NOTE]
 If endpoints external to the main application have autowired Spring dependencies, make sure that Spring can find them. Otherwise, Hilla tries to instantiate them using a default no-arguments constructor, which won't trigger dependency injection.
 
+
+[[endpoint-discovery]]
+[role="since:com.vaadin:vaadin@V25.2"]
+== Explicit Endpoint Discovery
+
+During code generation, Hilla discovers browser-callable classes -- classes annotated with [annotationname]`@BrowserCallable` or [annotationname]`@Endpoint` -- automatically. The discovery relies on detecting the Spring Boot application class on the module's classpath. In some setups, such as multi-module projects where the application class resides in a different module, this auto-detection fails.
+
+In these cases, you can configure endpoint discovery explicitly with the `mainClass` and `sourceClasses` plugin parameters. They are available on the `prepare-frontend`, `build-frontend`, and `generate` goals of the Hilla Maven plugin:
+
+`mainClass`::
+  The fully qualified name of the Spring Boot application class to use for discovering browser-callable classes.
+
+`sourceClasses`::
+  A list of fully qualified names of Spring configuration classes that declare the browser-callable beans. The classes are passed to the Spring AOT processor as `--spring.main.sources`, and are used when no Spring Boot application class is found on the classpath.
+
+For example, to set the application class explicitly:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin.hilla</groupId>
+    <artifactId>hilla-maven-plugin</artifactId>
+    <version>${hilla.version}</version>
+    <configuration>
+        <mainClass>com.example.application.Application</mainClass>
+    </configuration>
+</plugin>
+----
+
+Alternatively, if there is no Spring Boot application class available, list the Spring configuration classes that declare the browser-callable beans:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin.hilla</groupId>
+    <artifactId>hilla-maven-plugin</artifactId>
+    <version>${hilla.version}</version>
+    <configuration>
+        <sourceClasses>
+            <sourceClass>com.example.application.ApplicationConfiguration</sourceClass>
+            <sourceClass>com.example.module.ModuleConfiguration</sourceClass>
+        </sourceClasses>
+    </configuration>
+</plugin>
+----
+
+[NOTE]
+When either `mainClass` or `sourceClasses` is set, Hilla discovers browser-callable classes with the Spring AOT-based finder, and skips the default lookup-based auto-detection.
+
 [[ts-compiler-options]]
 == TypeScript Compiler Options
 
