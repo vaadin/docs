@@ -24,8 +24,6 @@ public class BreadcrumbsOverflow extends Div {
                         "/catalog/electronics/computers/laptops"),
                 new BreadcrumbsItem("Model X1"));
 
-        // Constrain the width so that leading items collapse into an
-        // overflow menu.
         breadcrumbs.setWidth("300px");
         // end::snippet[]
 
