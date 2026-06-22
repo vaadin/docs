@@ -666,6 +666,22 @@ function renderPanel(currentPage: ChangedPage | undefined) {
     const link = document.createElement('a');
     link.href = pageHref(page.path);
     link.textContent = page.path || 'front page';
+    // Plain internal anchors are hijacked into a client-side (SPA) navigation
+    // by Gatsby, after which the highlights don't re-apply. Force a full page
+    // load like the Prev/Next page buttons (gotoPage), which work reliably, and
+    // carry the autoscroll intent so it lands on the first change.
+    link.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+        return;
+      }
+      e.preventDefault();
+      try {
+        sessionStorage.setItem(AUTOSCROLL_KEY, 'first');
+      } catch (err) {
+        // Ignore storage failures; navigation still works, just without auto-scroll.
+      }
+      window.location.assign(link.href);
+    });
     item.appendChild(link);
     if (page === currentPage) {
       item.classList.add('current');
