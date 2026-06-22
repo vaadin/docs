@@ -1,0 +1,99 @@
+---
+title: Web Share
+page-title: How to use the Web Share API in Vaadin Flow
+description: Invoking the browser's native share sheet from the server side.
+meta-description: Use the server-side Web Share API in Vaadin Flow to open the browser's native share sheet from a click and detect whether sharing is available.
+order: 65
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Web Share#
+:toc:
+
+The [classname]`WebShare` API gives server-side Java code access to the browser https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API[Web Share API] ([code]`navigator.share`). Use it to open the operating system's native share sheet -- the same one users see when sharing from a native app -- so they can pass a title, some text, and a URL to messaging apps, email, or other installed targets. The API has two entry points: a click binding that invokes the share sheet, and a read-only signal that reports whether sharing is available at all.
+
+[WARNING]
+Not every browser implements the Web Share API. Notably, most desktop Firefox builds don't expose [code]`navigator.share`, even though Vaadin itself supports Firefox. Always check for support before showing a share control, and provide a fallback for browsers where sharing is unavailable. See <<Detecting Support>>.
+
+The Web Share API requires a fresh user gesture for every call. The browser only honors [code]`navigator.share` while it is handling a real interaction such as a click or tap, so [classname]`WebShare` binds the share action to a trigger component rather than exposing a method you can call from anywhere. Calling the underlying browser API directly from a constructor, a background thread, or a server push is rejected by the browser.
+
+
+== Sharing on Click
+
+Bind a share action to a component the user can click. [methodname]`WebShare.onClick(Component)` returns a [classname]`WebShareBinding` whose [methodname]`share()` method registers the action with that component's click. The action then runs inside the browser's click handler and inherits the user gesture:
+
+[source,java]
+----
+Button shareButton = new Button("Share");
+WebShare.onClick(shareButton).share(
+        ShareContent.create().title("Vaadin").url("https://vaadin.com"));
+----
+
+The trigger component must implement [interfacename]`ClickNotifier`, which covers buttons and most other clickable components.
+
+
+== Building Share Content
+
+[classname]`ShareContent` is the payload passed to [methodname]`share()`. Create one with [methodname]`ShareContent.create()` and set any combination of [methodname]`title()`, [methodname]`text()`, and [methodname]`url()`. The Web Share API requires at least one of the three to be present:
+
+[source,java]
+----
+ShareContent content = ShareContent.create()
+        .title("Vaadin Docs")
+        .text("Server-side Java for modern web apps")
+        .url("https://vaadin.com/docs");
+----
+
+Each setter also has an overload that reads the value from a component instead of a literal string. Pass any component implementing [interfacename]`HasValue<?, String>`, such as a [classname]`TextField`, and the value is read on the client at the moment the trigger fires. This lets users share something they typed without a server round trip to capture it first:
+
+[source,java]
+----
+TextField urlField = new TextField("Link to share");
+
+Button shareButton = new Button("Share");
+WebShare.onClick(shareButton).share(
+        ShareContent.create().title("Check this out").url(urlField));
+----
+
+
+== Detecting Support
+
+[methodname]`WebShare.supportSignal()` returns a read-only [classname]`Signal<WebShareSupport>` for the current UI -- see <<{articles}/flow/ui-state#,UI State>> for an introduction to signals. The value is seeded from the bootstrap handshake, so your view code observes a real value before it runs. Web Share support is fixed for the lifetime of the page, so the signal settles once and then stays stable.
+
+The signal value is one of three [classname]`WebShareSupport` constants:
+
+[code]`SUPPORTED`:: The browser exposes [code]`navigator.share`; a share action bound to a click invokes the native share sheet.
+[code]`UNSUPPORTED`:: The browser does not expose [code]`navigator.share`. Share actions silently reject. Most desktop Firefox builds and older browsers fall here.
+[code]`UNKNOWN`:: Sentinel value used only in the brief window before the first client handshake delivers a real value. Treat it the same as [code]`UNSUPPORTED`.
+
+Because a share action does nothing when sharing is unsupported, use this signal to decide whether to show a share affordance at all. Bind it to the button's visibility with [methodname]`bindVisible()` and a mapped signal, rather than reading the value once -- this keeps the button in sync if the value is still settling when the view renders:
+
+[source,java]
+----
+Button shareButton = new Button("Share");
+WebShare.onClick(shareButton).share(
+        ShareContent.create().title("Vaadin").url("https://vaadin.com"));
+
+shareButton.bindVisible(WebShare.supportSignal()
+        .map(support -> support == WebShareSupport.SUPPORTED));
+----
+
+
+== Handling the Outcome
+
+The plain [methodname]`share(ShareContent)` call is fire-and-forget -- the server never sees what the user did with the share sheet. To react to the outcome, use the overload that takes an [code]`onShared` runnable and an [code]`onError` consumer:
+
+[source,java]
+----
+WebShare.onClick(shareButton).share(
+        ShareContent.create().url("https://vaadin.com"),
+        () -> Notification.show("Thanks for sharing!"),
+        err -> Notification.show("Sharing cancelled: " + err.name()));
+----
+
+Both callbacks fire on the UI thread, so they can update components directly. [code]`onShared` runs after the user picks a share target. [code]`onError` runs when the user dismisses the share sheet -- the browser reports this as [code]`AbortError` -- or when the call is rejected for another reason, such as a missing user gesture, a permissions-policy block, or an unsupported browser. Both consumers are required in this form; pass [code]`() -> {}` or [code]`err -> {}` to opt out of one side.
+
+The [code]`onError` consumer receives the browser's error, and [methodname]`name()` returns its name. Because the user dismissing the sheet arrives as an [code]`AbortError` rather than a success, treat that case as a normal cancellation rather than a failure.
+
+
+[discussion-id]`7994048A-12C5-408F-A14F-FFF4B68A005D`

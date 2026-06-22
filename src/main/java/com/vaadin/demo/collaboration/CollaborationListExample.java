@@ -15,7 +15,7 @@ public class CollaborationListExample extends VerticalLayout {
         // tag::snippet[]
         // NOTE: Use the user id of the logged-in user
         // instead
-        String userId = System.identityHashCode(UI.getCurrent()) + "";
+        String userId = System.identityHashCode(UI.getCurrentOrThrow()) + "";
         UserInfo localUser = new UserInfo(userId, "User " + userId);
         CollaborationEngine.getInstance().openTopicConnection(this, "my-topic",
                 localUser, connection -> {

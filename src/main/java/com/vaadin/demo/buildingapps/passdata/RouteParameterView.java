@@ -48,7 +48,8 @@ public class RouteParameterView extends VerticalLayout
 
     // For use by other views navigating to this view
     public static void showView(@Nullable String parameterValue) {
-        UI.getCurrent().navigate(RouteParameterView.class, parameterValue);
+        UI.getCurrentOrThrow().navigate(RouteParameterView.class,
+                parameterValue);
     }
 }
 // end::snippet[]
