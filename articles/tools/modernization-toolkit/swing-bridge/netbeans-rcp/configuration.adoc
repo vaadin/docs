@@ -1,0 +1,115 @@
+---
+title: Requirements and Configuration
+page-title: Configure NetBeans RCP Embedding | Vaadin Tools
+description: Cluster discovery, the additional JVM flags, and system properties for embedding a NetBeans Platform application.
+meta-description: How SwingBridge discovers a NetBeans Platform distribution, the extra JVM flags an RCP guest needs, and the system properties that control it.
+order: 3
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.netbeans-rcp.configuration]]
+= Requirements and Configuration
+
+This page covers what a NetBeans Platform guest needs on top of a standard SwingBridge setup: how the distribution is discovered, the additional JVM flags, and the system properties that control embedding.
+
+
+[[swing-bridge.netbeans-rcp.configuration.requirements]]
+== Requirements
+
+- *A pre-built NetBeans Platform distribution* — the directory the platform's own launcher would run. It must contain at least `etc/<branding>.clusters` and `platform/lib/boot.jar`, alongside the branding cluster and the feature module clusters. Bare `.nbm` files without a host application are not supported.
+- *JDK 21.* NetBeans Platform 25's `TopSecurityManager` depends on classes removed in JDK 24 and later; embedding on a newer JDK requires a NetBeans Platform variant that has dropped that dependency.
+- *The standard SwingBridge runtime setup* — the `--patch-module` / `-Xbootclasspath/a` flags, `java.awt.headless=false`, a valid license, and server push (`@Push`). See <<../installation-from-scratch#, Installation from Scratch>>.
+
+
+[[swing-bridge.netbeans-rcp.configuration.discovery]]
+== Cluster Discovery
+
+SwingBridge locates the NetBeans Platform distribution using the same convention ladder plain Swing guests use for their JARs. The first source that yields a valid distribution wins:
+
+[cols="1,3,4", options="header"]
+|===
+| Order | Source | Notes
+
+| 1
+| `-Dswingbridge.rcp.cluster.dir=<absolute-path>`
+| Explicit override. Useful for power users and CI.
+
+| 2
+| Directory entries in `swing-app-jar-list.conf`
+| The same file plain Swing guests use. Entries that are *directories* (not JARs) are treated as candidate distributions. See <<../adding-your-app#swing-bridge.adding-your-app.jar-loading.jar-list, Using `swing-app-jar-list.conf`>>.
+
+| 3
+| The `applibs/` directory
+| Resolved exactly as for plain Swing guests (`-Dapplibs.dir` → next to the running JAR → `<user.dir>/applibs`). The directory itself and one level below it are probed, since some build outputs nest the distribution under a versioned subdirectory.
+|===
+
+A directory qualifies as a distribution only when it contains *both* `etc/<branding>.clusters` and `platform/lib/boot.jar`; the branding token is the basename of the `.clusters` file. If no source yields a valid distribution, startup fails with a message that names all three sources, so you know which levers are available. Discovery runs once per JVM and the result is reused across sessions.
+
+[NOTE]
+====
+A frequent mistake is listing the distribution's individual JARs in `swing-app-jar-list.conf`. Cluster discovery only recognizes *directory* entries — add the distribution's root directory, not its JARs.
+====
+
+
+[[swing-bridge.netbeans-rcp.configuration.jvm-flags]]
+== NetBeans JVM Flags
+
+A NetBeans Platform guest needs a few JVM flags beyond the standard SwingBridge runtime set documented in <<../installation-from-scratch#swing-bridge.installation-from-scratch.jvm-flags, JVM Flags Reference>>. Add these to the `<jvmArguments>` of the `spring-boot-maven-plugin`, together with the standard set:
+
+[source]
+----
+--add-opens=java.base/java.lang=ALL-UNNAMED
+--add-opens=java.desktop/javax.swing=ALL-UNNAMED
+--add-opens=java.desktop/javax.swing.text=ALL-UNNAMED
+--add-opens=java.base/java.net=ALL-UNNAMED
+--add-opens=java.base/java.security=ALL-UNNAMED
+-Djava.security.manager=allow
+----
+
+[cols="3,5", options="header"]
+|===
+| Flag | Purpose
+
+| `--add-opens=java.base/java.lang=ALL-UNNAMED`
+| *Required.* Lets SwingBridge give each tenant a thread group that reports itself as a JVM root, so NetBeans's `RequestProcessor` attributes its worker threads per tenant. Without it, platform startup fails with a message naming this flag.
+
+| `-Djava.security.manager=allow`
+| *Required.* NetBeans Platform 25 installs a `SecurityManager` during boot. On JDK 21 this is only permitted when the JVM is started with `-Djava.security.manager=allow`.
+
+| `--add-opens=java.desktop/javax.swing=ALL-UNNAMED` +
+`--add-opens=java.desktop/javax.swing.text=ALL-UNNAMED`
+| Reflective access the platform performs into Swing internals during boot and rendering.
+
+| `--add-opens=java.base/java.net=ALL-UNNAMED` +
+`--add-opens=java.base/java.security=ALL-UNNAMED`
+| Reflective access the platform's module system and networking layers perform during boot.
+|===
+
+[IMPORTANT]
+====
+These flags apply to the runtime JVM only. The compile-time `.mvn/jvm.config` set from <<../installation-from-scratch#swing-bridge.installation-from-scratch.project-setup, Project Setup>> is unchanged — the additional flags above are not needed to compile.
+====
+
+
+[[swing-bridge.netbeans-rcp.configuration.system-properties]]
+== System Properties
+
+In addition to the SwingBridge system properties (see <<../configuration#swing-bridge.configuration.system-properties, System Properties Reference>>), the following applies to NetBeans Platform guests:
+
+[cols="3,1,5", options="header"]
+|===
+| Property | Default | Description
+
+| `swingbridge.rcp.cluster.dir`
+| —
+| Absolute path to the NetBeans Platform distribution directory. Highest-priority discovery source; overrides `swing-app-jar-list.conf` entries and the `applibs/` convention.
+|===
+
+The per-tenant `--userdir`, `--cachedir`, `--branding`, and look-and-feel arguments are derived and managed automatically per session; they are not configured by hand.
+
+
+[[swing-bridge.netbeans-rcp.configuration.laf]]
+== Look and Feel
+
+The bridge resolves the look-and-feel from the distribution's `etc/<branding>.conf` file — the `--laf <class>` token in its `default_options` line — and falls back to `com.formdev.flatlaf.FlatLightLaf` when the file is missing or specifies no look-and-feel. Because each session's frames are rendered into an HTML canvas with no native window, the bridge also transparently handles two platform-default behaviors that don't apply to offscreen rendering: it keeps the main menu bar painted in-window on macOS, and it disables FlatLaf's native window library on Windows. No configuration is required for either.

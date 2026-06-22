@@ -1,0 +1,129 @@
+---
+title: Quick Start
+page-title: NetBeans RCP Quick Start with SwingBridge | Vaadin Tools
+description: Embed a pre-built NetBeans Platform application in a Vaadin view in a few steps.
+meta-description: Drop a pre-built NetBeans Platform distribution into applibs, add a few JVM flags, mount NetBeansRcpBridge, and run the RCP app in the browser.
+order: 1
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.netbeans-rcp.quick-start]]
+= NetBeans RCP Quick Start
+
+This page walks through the fastest path to a pre-built NetBeans Platform application rendering in the browser: drop the distribution into `applibs/`, add a few JVM flags, mount the bridge in a view, and run.
+
+.Prerequisites
+[NOTE]
+====
+This page builds on a working SwingBridge project. If you don't have one yet, set it up first with the <<../quick-start-guide#, SwingBridge Quick Start>> (skeleton starter) or <<../installation-from-scratch#, Installation from Scratch>>. You also need a pre-built NetBeans Platform distribution and JDK 21 — see <<index#swing-bridge.netbeans-rcp.prerequisites, Prerequisites>>.
+====
+
+
+[[swing-bridge.netbeans-rcp.quick-start.cluster]]
+== Step 1: Add the Distribution to `applibs`
+
+Copy your pre-built NetBeans Platform distribution directory into the project's `applibs` directory. This is the same directory the platform's own launcher would run; it has this shape:
+
+[source,filesystem]
+----
+my-vaadin-app/
+├── pom.xml
+├── applibs/
+│   └── my-rcp-app/                  ← the pre-built NetBeans Platform distribution
+│       ├── etc/
+│       │   ├── my-rcp-app.clusters  ← branding marker
+│       │   └── my-rcp-app.conf      ← (optional) defines --laf, JVM options
+│       ├── platform/
+│       │   └── lib/boot.jar
+│       ├── my-rcp-app/              ← branding cluster (matches the .clusters name)
+│       └── <feature clusters>/
+└── src/...
+----
+
+SwingBridge discovers the distribution through the standard convention ladder — the `applibs/` directory, a directory entry in `swing-app-jar-list.conf`, or the `-Dswingbridge.rcp.cluster.dir` system property. See <<configuration#swing-bridge.netbeans-rcp.configuration.discovery, Cluster Discovery>> for the full resolution order.
+
+[NOTE]
+====
+A directory qualifies as a distribution only when it contains both `etc/<branding>.clusters` and `platform/lib/boot.jar`. A directory of loose JARs is not a NetBeans Platform distribution.
+====
+
+
+[[swing-bridge.netbeans-rcp.quick-start.flags]]
+== Step 2: Add the NetBeans-Specific JVM Flags
+
+On top of the standard SwingBridge runtime flags, a NetBeans Platform guest needs a few more. Add them to the `<jvmArguments>` of the `spring-boot-maven-plugin`:
+
+[source]
+----
+--add-opens=java.base/java.lang=ALL-UNNAMED
+--add-opens=java.desktop/javax.swing=ALL-UNNAMED
+--add-opens=java.desktop/javax.swing.text=ALL-UNNAMED
+--add-opens=java.base/java.net=ALL-UNNAMED
+--add-opens=java.base/java.security=ALL-UNNAMED
+-Djava.security.manager=allow
+----
+
+`--add-opens=java.base/java.lang=ALL-UNNAMED` and `-Djava.security.manager=allow` are the load-bearing ones — without them the platform fails to boot. See <<configuration#swing-bridge.netbeans-rcp.configuration.jvm-flags, NetBeans JVM Flags>> for the complete block and an explanation of each flag.
+
+
+[[swing-bridge.netbeans-rcp.quick-start.view]]
+== Step 3: Mount the Bridge in a View
+
+Add a `NetBeansRcpBridge` to a Vaadin view. The no-arg constructor renders the whole platform shell:
+
+[source,java]
+----
+@Route("desktop")
+public class DesktopView extends VerticalLayout {
+    public DesktopView() {
+        setSizeFull();
+        setPadding(false);
+        var rcp = new NetBeansRcpBridge();
+        rcp.setSizeFull();
+        add(rcp);
+        expand(rcp);
+    }
+}
+----
+
+That's the whole integration — no path parameters, no source changes to the RCP project.
+
+[NOTE]
+====
+As with any SwingBridge guest, server push must be enabled with the [annotationname]`@Push` annotation on the application shell class, or the view stays empty. See <<../adding-your-app#swing-bridge.adding-your-app.view, Create a Vaadin View>>.
+====
+
+
+[[swing-bridge.netbeans-rcp.quick-start.run]]
+== Step 4: Run the Application
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="macOS/Linux"></source-info>
+./mvnw spring-boot:run
+----
+
+[source,terminal]
+----
+<source-info group="Windows"></source-info>
+mvnw.cmd spring-boot:run
+----
+--
+
+Open the application in your browser and navigate to the view's route (`/desktop` in the example above). The first session pays a one-time cold-start cost of a few seconds while the platform boots in-process; then the NetBeans main window paints into the canvas, and mouse, keyboard, menus, and dialogs all work as they do on the desktop.
+
+[NOTE]
+====
+Cold start is roughly 5–8 seconds per session. If two browser sessions mount the bridge cold at the same time, their boots are serialized, so the second waits for the first. See <<multi-tenancy#swing-bridge.netbeans-rcp.multi-tenancy.performance, Cold-Start Performance>>.
+====
+
+
+[[swing-bridge.netbeans-rcp.quick-start.next-steps]]
+== Next Steps
+
+- Embed a single view instead of the whole shell, or drive Vaadin navigation from an RCP action: <<embedding-modes#, Embedding Modes>>.
+- Cluster discovery, the full JVM flag set, and system properties: <<configuration#, Requirements and Configuration>>.
+- Per-session isolation, lifecycle, performance, and known limitations: <<multi-tenancy#, Multi-Tenancy and Lifecycle>>.
