@@ -56,6 +56,8 @@ jobs:
           [http_service]
             internal_port = 8210
             force_https = true
+            auto_stop_machines = "stop"
+            min_machines_running = 0
 
           [[vm]]
             size = "shared-cpu-1x"
@@ -86,6 +88,10 @@ jobs:
 
       - name: Destroy Fly app
         run: |
-          flyctl apps destroy "${{ env.FLY_APP }}" --yes 2>/dev/null || true
+          if flyctl apps list --json | jq -e --arg name "${{ env.FLY_APP }}" '.[] | select(.Name == $name)' > /dev/null; then
+            flyctl apps destroy "${{ env.FLY_APP }}" --yes
+          else
+            echo "App ${{ env.FLY_APP }} does not exist, nothing to destroy"
+          fi
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
