@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.slider.DecimalSlider;
+import com.vaadin.flow.component.slider.IntegerSlider;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -12,11 +12,11 @@ public class SliderReadonlyAndDisabled extends HorizontalLayout {
         setPadding(false);
 
         // tag::snippet[]
-        DecimalSlider readonlySlider = new DecimalSlider("Read-only");
-        readonlySlider.setValue(50.0);
+        IntegerSlider readonlySlider = new IntegerSlider("Read-only");
+        readonlySlider.setValue(50);
         readonlySlider.setReadOnly(true);
 
-        DecimalSlider disabledSlider = new DecimalSlider("Disabled");
+        IntegerSlider disabledSlider = new IntegerSlider("Disabled");
         disabledSlider.setEnabled(false);
         // end::snippet[]
 

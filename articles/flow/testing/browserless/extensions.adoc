@@ -1,0 +1,131 @@
+---
+title: JUnit 6 Extensions
+page-title: Composition-based browserless testing with JUnit 6 extensions
+description: Use BrowserlessExtension and BrowserlessClassExtension as an alternative to extending BrowserlessTest.
+meta-description: Set up Vaadin browserless tests with JUnit 6 @RegisterExtension when extending a base class is not an option.
+order: 45
+---
+
+
+= JUnit 6 Extensions
+
+[since:com.vaadin:vaadin@V25.2]
+
+Extending [classname]`BrowserlessTest` is the most compact way to write browserless tests, but it requires your test class to use inheritance for the Vaadin setup. When a project already has its own test base class, or you prefer composition over inheritance, the [classname]`BrowserlessExtension` and [classname]`BrowserlessClassExtension` JUnit 6 extensions provide the same functionality without requiring a specific superclass.
+
+[NOTE]
+These extensions are part of the `browserless-test-junit6` artifact. They don't replace [classname]`SpringBrowserlessTest` or [classname]`QuarkusBrowserlessTest` -- for Spring and Quarkus projects, continue to extend those base classes.
+
+
+== When to Use an Extension
+
+Use an extension when any of the following applies:
+
+- The test class already extends another base class that can't be changed.
+- The project standardizes on composition-based JUnit 6 extensions.
+
+
+== Per-Method Lifecycle
+
+[classname]`BrowserlessExtension` creates a fresh Vaadin environment before each test method and tears it down after. Register it as an instance field with [annotationname]`@RegisterExtension`:
+
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+class CartViewTest {
+
+    @RegisterExtension
+    BrowserlessExtension ext = new BrowserlessExtension();
+
+    @Test
+    void addItemToCart() {
+        ext.navigate(CartView.class);
+        ext.findButton().withText("Add to cart").click();
+
+        Assertions.assertEquals("1 item",
+                ext.findSpan().withId("cart-size").getText());
+    }
+}
+----
+
+Navigation, queries, and tester interactions are available as methods on the extension instance -- [methodname]`ext.navigate()`, [methodname]`ext.find()`, [methodname]`ext.findInView()`, [methodname]`ext.test()`, [methodname]`ext.getCurrentView()`, [methodname]`ext.fireShortcut()`, [methodname]`ext.roundTrip()`, and [methodname]`ext.runPendingSignalsTasks()`. The extension also exposes typed locator entry points such as [methodname]`ext.findButton()` and [methodname]`ext.findTextField()`; see <<locators#, Component Locators>>.
+
+
+== Per-Class Lifecycle
+
+[classname]`BrowserlessClassExtension` initializes the Vaadin environment once in [annotationname]`@BeforeAll` and shares it across all tests in the class. Register it as a `static` field:
+
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+class CartViewSharedTest {
+
+    @RegisterExtension
+    static BrowserlessClassExtension ext = new BrowserlessClassExtension();
+
+    @BeforeAll
+    static void setup() {
+        ext.navigate(CartView.class);
+    }
+
+    @Test
+    void addItem() {
+        // same UI instance as removeItem
+        ext.findButton().withText("Add").click();
+    }
+
+    @Test
+    void removeItem() {
+        // state from addItem is preserved
+    }
+}
+----
+
+The same trade-offs as <<optimizing-tests#sharing-the-vaadin-environment-across-tests, per-class lifecycle with `BrowserlessTest`>> apply: state leaks between tests, so write tests that tolerate leftover state or reset it explicitly.
+
+
+== Configuring the Extension
+
+Both extensions support a builder-style API for configuration, used as an alternative or in addition to annotations.
+
+.Builder API
+[cols="1,2"]
+|===
+| Method | Description
+
+| [methodname]`withViewPackages(Class<?>...)`
+| Adds the packages of the given classes to the route scan. Equivalent to [annotationname]`@ViewPackages(classes = ...)`.
+
+| [methodname]`withViewPackages(String...)`
+| Adds package names (as strings) to the route scan. Equivalent to [annotationname]`@ViewPackages(packages = ...)`.
+
+| [methodname]`withServices(Class<?>...)`
+| Registers custom implementations with the Vaadin [classname]`Lookup` SPI.
+
+| [methodname]`withComponentTesterPackages(String...)`
+| Adds packages to scan for custom [classname]`ComponentTester` implementations. Equivalent to [annotationname]`@ComponentTesterPackages`.
+|===
+
+The [annotationname]`@ViewPackages` annotation still works when placed on the test class; programmatic configuration adds to what the annotation declares.
+
+.Extension with Programmatic Configuration
+[source,java]
+----
+class AdminViewTest {
+
+    @RegisterExtension
+    BrowserlessExtension ext = new BrowserlessExtension()
+            .withViewPackages("com.example.views", "com.example.admin")
+            .withServices(CustomInstantiatorFactory.class)
+            .withComponentTesterPackages("com.example.testers");
+
+    @Test
+    void adminDashboardLoads() {
+        AdminDashboardView view = ext.navigate(AdminDashboardView.class);
+        Assertions.assertNotNull(view);
+    }
+}
+----
+
+
+[discussion-id]`B51F9D4A-2E73-4B18-8C6F-9A3D7E2B1C04`

@@ -7,12 +7,14 @@ order: 120
 version: since:com.vaadin:vaadin@V25.2
 ---
 
-This page covers the Playwright-specific aspects of load testing. For general load testing concepts, running tests, configuring think times, understanding k6 output, and more, see <<index#, Load Testing>>.
+= [since:com.vaadin:vaadin@V25.2]#Load Testing With Playwright#
+
+This page covers the Playwright-specific aspects of load testing. For general load testing concepts, running tests, configuring think times, understanding k6 output, and more, see <<index#, Load Testing>>. For an introduction to writing Playwright tests for Vaadin applications, see <<../playwright#, Testing with Playwright>>.
 
 == Overview
 
 Unlike the <<index#, TestBench path>>, which requires a BrowserMob Proxy to capture HTTP traffic, the Playwright path uses **native HAR recording** built into the browser.
-This results in simpler setup, fewer moving parts, and no proxy configuration.
+This results in fewer moving parts, and no proxy to run requests through.
 
 The workflow is as follows:
 
@@ -37,14 +39,6 @@ All steps after writing the tests are fully automated by the Maven plugin.
 | No
 | Yes
 
-| Element selection
-| `page.getByLabel()`, `page.getByRole()`
-| `$(ElementClass).first()`
-
-| Setup complexity
-| Minimal
-| Requires BrowserMob Proxy configuration and certificate handling
-
 | Maven goal
 | `loadtest:record-playwright`
 | `loadtest:record`
@@ -55,121 +49,28 @@ All steps after writing the tests are fully automated by the Maven plugin.
 The Playwright path requires the same base tools as the <<index#, TestBench path>> (Java 21+, Maven 3.9+, k6), but does **not** require Chrome or ChromeDriver.
 Playwright downloads and manages its own browser binaries automatically.
 
-== Writing Playwright Tests
+== Adapting Playwright Tests for Load Testing
 
-Playwright tests for load testing are standard JUnit 5 integration tests.
-The only requirement is using `PlaywrightHelper.createBrowserContext(browser)` to create the browser context -- this enables transparent HAR recording when the test is run by the Maven plugin.
-
-=== Test Structure
+Playwright tests for load testing are standard JUnit 5 integration tests -- see <<../playwright#, Testing with Playwright>> for the basics of writing them.
+The only load-testing-specific requirement is using `PlaywrightHelper.createBrowserContext(browser)` to create the browser context.
+This enables transparent HAR recording when the test is run by the Maven plugin, and is a no-op during normal development runs.
 
 [source,java]
 ----
-import com.microsoft.playwright.*;
-import com.vaadin.testbench.loadtest.PlaywrightHelper;
-import org.junit.jupiter.api.*;
-
-import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-
-public class MyScenarioPlaywrightIT {
-
-    private Playwright playwright;
-    private Browser browser;
-    private BrowserContext context;
-    private Page page;
-
-    @BeforeEach
-    public void setUp() {
-        playwright = Playwright.create();
-        browser = playwright.chromium()
-                .launch(new BrowserType.LaunchOptions().setHeadless(true));
-        context = PlaywrightHelper.createBrowserContext(browser);  // <1>
-        page = context.newPage();
-        page.navigate(PlaywrightHelper.getBaseUrl() + "/my-view");  // <2>
-    }
-
-    @AfterEach
-    public void tearDown() {
-        if (context != null) context.close();
-        if (browser != null) browser.close();
-        if (playwright != null) playwright.close();
-    }
-
-    @Test
-    public void myUserScenario() {
-        // Simulate user actions
-        page.getByLabel("Name").fill("Test User");
-        page.getByRole(AriaRole.BUTTON,
-                new Page.GetByRoleOptions().setName("Submit")).click();
-
-        // Verify expected outcome
-        assertThat(page.locator("vaadin-notification-card"))
-                .containsText("Success");
-    }
-}
+context = PlaywrightHelper.createBrowserContext(browser);  // <1>
+page = context.newPage();
+page.navigate(PlaywrightHelper.getBaseUrl() + "/my-view");  // <2>
 ----
 <1> `PlaywrightHelper.createBrowserContext()` enables HAR recording when the `k6.harOutputPath` system property is set by the Maven plugin. When running tests normally (e.g., during development), it creates a plain browser context with no recording overhead.
 <2> `PlaywrightHelper.getBaseUrl()` resolves the deployment URL from the `HOSTNAME` environment variable and `server.port` system property, defaulting to `http://localhost:8080`.
 
-=== Example: Hello World Scenario
+=== Best Practices for Load Test Scenarios
 
-A simple workflow that enters a name and clicks a button:
-
-[source,java]
-----
-@Test
-public void helloWorldWorkflow() {
-    page.getByLabel("Your name").fill("Vaadin User");
-
-    page.getByRole(AriaRole.BUTTON,
-            new Page.GetByRoleOptions().setName("Say hello")).click();
-
-    assertThat(page.locator("vaadin-notification-card"))
-            .containsText("Hello Vaadin User");
-}
-----
-
-=== Example: CRUD Scenario
-
-A more complex workflow that interacts with a grid, creates a record, and deletes it:
-
-[source,java]
-----
-@Test
-public void crudWorkflow() {
-    Locator grid = page.locator("vaadin-grid");
-    grid.waitFor();
-
-    // Select a random row in the grid
-    int rowCount = (int) grid
-            .evaluate("g => g._dataProviderController.rootCache.size");
-    int randomRow = new Random().nextInt(Math.min(rowCount, 5));
-    grid.evaluate(
-            "(g, idx) => {"
-                    + "  g.scrollToIndex(idx);"
-                    + "  g.activeItem = g._dataProviderController"
-                    + "    .rootCache.items[idx];"
-                    + "}",
-            randomRow);
-
-    // Fill form and save
-    page.locator("#cancel-button").click();
-    form.getByLabel("First Name").fill("TestName");
-    form.getByLabel("Email").fill("test@example.com");
-    page.locator("#save-button").click();
-
-    // Delete the created record
-    grid.locator("vaadin-grid-cell-content").getByText("TestName").click();
-    page.locator("#delete-button").click();
-}
-----
-
-=== Best Practices for Test Scenarios
-
-* **Use semantic locators** -- prefer `getByLabel()`, `getByRole()`, and `getByText()` over CSS selectors. They are more resilient to UI changes and produce more readable tests.
 * **One scenario per test class** -- each test class maps to one k6 script. Keep scenarios focused on a single user journey.
+* **Use semantic locators** -- prefer `getByLabel()`, `getByRole()`, and `getByText()` over CSS selectors. They are more resilient to UI changes.
 * **Include assertions** -- assertions verify correctness during recording and serve as documentation. They don't affect the generated k6 script.
 * **Avoid destructive-only tests** -- if a test only deletes data, mark it with `@Destructive` so it can be skipped during recording runs. Prefer tests that create-then-delete.
-* **Keep headless mode configurable** -- use `setHeadless(true)` for CI/recording and `setHeadless(false)` for debugging.
+* **Run headless during recording** -- use `setHeadless(true)` for CI and recording runs.
 
 == Project Setup
 
@@ -183,7 +84,6 @@ Add the `testbench-loadtest-support` and Playwright dependencies to your Vaadin 
     <groupId>com.vaadin</groupId>
     <artifactId>testbench-loadtest-support</artifactId>
     <version>${vaadin.testbench.version}</version>
-    <scope>test</scope>
 </dependency>
 
 <dependency>
@@ -194,127 +94,86 @@ Add the `testbench-loadtest-support` and Playwright dependencies to your Vaadin 
 </dependency>
 ----
 
-=== Load Test Orchestration Module
+=== Load Test Orchestration
 
-Create a separate Maven module (packaging `pom`) that orchestrates the recording and load test execution.
-This module depends on your application module and configures the `testbench-converter-plugin`.
+Add a load test profile or create a separate Maven module (packaging `pom`) that orchestrates the recording and load test execution.
 
 The key difference from the TestBench orchestration module is using the `record-playwright` goal instead of the `record` goal.
 
-.Minimal pom.xml
+.Minimal Load Test
 [source,xml]
 ----
-<project>
-    <modelVersion>4.0.0</modelVersion>
+<properties>
+    <app.port>8081</app.port>
+    <management.port>8082</management.port>
+    <k6.vus>100</k6.vus>
+    <k6.duration>30s</k6.duration>
+    <k6.testDir>${project.build.directory}/k6/tests</k6.testDir>
+</properties>
 
-    <groupId>com.example</groupId>
-    <artifactId>my-app-loadtest</artifactId>
-    <packaging>pom</packaging>
+<build>
+    <plugins>
+        <!-- Load test plugin -->
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>testbench-converter-plugin</artifactId>
+            <version>${vaadin.testbench.version}</version>
+            <executions>
+                <!-- 1. Start the application -->
+                <execution>
+                    <id>start-server</id>
+                    <goals><goal>start-server</goal></goals>
+                    <configuration>
+                        <serverJar>${project.build.directory}/my-app.jar</serverJar>
+                        <serverPort>${app.port}</serverPort>
+                        <managementPort>${management.port}</managementPort>
+                    </configuration>
+                </execution>
 
-    <properties>
-        <app.port>8081</app.port>
-        <management.port>8082</management.port>
-        <k6.vus>100</k6.vus>
-        <k6.duration>30s</k6.duration>
-        <k6.testDir>${project.build.directory}/k6/tests</k6.testDir>
-    </properties>
+                <!-- 2. Record Playwright scenarios -->
+                <execution>
+                    <id>record</id>
+                    <phase>integration-test</phase>
+                    <goals><goal>record-playwright</goal></goals>
+                    <configuration>
+                        <testClasses>
+                            <testClass>MyScenarioPlaywrightIT</testClass>
+                        </testClasses>
+                        <appPort>${app.port}</appPort>
+                        <testWorkDir>${project.basedir}</testWorkDir>
+                        <harDir>${project.build.directory}</harDir>
+                        <outputDir>${k6.testDir}</outputDir>
+                    </configuration>
+                </execution>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>my-app</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
+                <!-- 3. Run k6 load tests -->
+                <execution>
+                    <id>run</id>
+                    <phase>integration-test</phase>
+                    <goals><goal>run</goal></goals>
+                    <configuration>
+                        <testDir>${k6.testDir}</testDir>
+                        <virtualUsers>${k6.vus}</virtualUsers>
+                        <duration>${k6.duration}</duration>
+                        <appPort>${app.port}</appPort>
+                        <managementPort>${management.port}</managementPort>
+                    </configuration>
+                </execution>
 
-    <build>
-        <plugins>
-            <!-- Copy the application JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-app</id>
-                        <phase>package</phase>
-                        <goals><goal>copy</goal></goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.example</groupId>
-                                    <artifactId>my-app</artifactId>
-                                    <type>jar</type>
-                                    <destFileName>my-app.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Load test plugin -->
-            <plugin>
-                <groupId>com.vaadin</groupId>
-                <artifactId>testbench-converter-plugin</artifactId>
-                <version>${vaadin.testbench.version}</version>
-                <executions>
-                    <!-- 1. Start the application -->
-                    <execution>
-                        <id>start-server</id>
-                        <goals><goal>start-server</goal></goals>
-                        <configuration>
-                            <serverJar>${project.build.directory}/my-app.jar</serverJar>
-                            <serverPort>${app.port}</serverPort>
-                            <managementPort>${management.port}</managementPort>
-                        </configuration>
-                    </execution>
-
-                    <!-- 2. Record Playwright scenarios -->
-                    <execution>
-                        <id>record</id>
-                        <phase>integration-test</phase>
-                        <goals><goal>record-playwright</goal></goals>
-                        <configuration>
-                            <testClasses>
-                                <testClass>MyScenarioPlaywrightIT</testClass>
-                            </testClasses>
-                            <appPort>${app.port}</appPort>
-                            <testWorkDir>${project.basedir}/../my-app</testWorkDir>
-                            <harDir>${project.build.directory}</harDir>
-                            <outputDir>${k6.testDir}</outputDir>
-                        </configuration>
-                    </execution>
-
-                    <!-- 3. Run k6 load tests -->
-                    <execution>
-                        <id>run</id>
-                        <phase>integration-test</phase>
-                        <goals><goal>run</goal></goals>
-                        <configuration>
-                            <testDir>${k6.testDir}</testDir>
-                            <virtualUsers>${k6.vus}</virtualUsers>
-                            <duration>${k6.duration}</duration>
-                            <appPort>${app.port}</appPort>
-                            <managementPort>${management.port}</managementPort>
-                        </configuration>
-                    </execution>
-
-                    <!-- 4. Stop the application -->
-                    <execution>
-                        <id>stop-server</id>
-                        <goals><goal>stop-server</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</project>
+                <!-- 4. Stop the application -->
+                <execution>
+                    <id>stop-server</id>
+                    <goals><goal>stop-server</goal></goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ----
 
 == PlaywrightHelper API
 
-The `PlaywrightHelper` class in `testbench-loadtest-support` provides two static methods:
+The `PlaywrightHelper` class in `testbench-loadtest-support` provides the following static methods:
 
 === `createBrowserContext(Browser browser)`
 
@@ -322,10 +181,10 @@ Creates a Playwright `BrowserContext`.
 When the `k6.harOutputPath` system property is set (automatically by the `loadtest:record-playwright` goal), HAR recording is enabled in `FULL` mode.
 Otherwise, a plain context is created.
 
-[source,java]
-----
-BrowserContext context = PlaywrightHelper.createBrowserContext(browser);
-----
+=== `createBrowserContext(Browser browser, Browser.NewContextOptions options)`
+
+Same as above, but creates the context with the given `Browser.NewContextOptions`.
+Use this overload when your test needs custom context options -- for example a specific viewport size, locale, or extra HTTP headers -- while still enabling HAR recording transparently during recording runs.
 
 === `getBaseUrl()`
 
@@ -334,12 +193,6 @@ Resolution order:
 
 1. `HOSTNAME` environment variable (if set) for the host, otherwise `localhost`
 2. `server.port` system property (if set) for the port, otherwise `8080`
-
-[source,java]
-----
-String baseUrl = PlaywrightHelper.getBaseUrl(); // e.g., "http://localhost:8080"
-page.navigate(baseUrl + "/my-view");
-----
 
 == `loadtest:record-playwright` Goal
 
@@ -396,6 +249,7 @@ The helper is what enables HAR recording.
 
 == Related Documentation
 
+* <<../playwright#, Testing with Playwright>> -- Setting up Playwright and writing your first tests
 * <<index#, Load Testing>> -- General load testing setup, running tests, think time, k6 output, server metrics, and remote testing
 * <<thresholds#, Load Testing Thresholds>> -- Configure thresholds for load tests
 * <<load-profiles#, Load Profiles and Ramping>> -- configure load patterns (ramp, stress, soak, custom)

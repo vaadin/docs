@@ -11,7 +11,7 @@ version: since:com.vaadin:vaadin@V25.2
 
 == Overview
 
-By default, the `k6:run` goal uses a **ramp** load pattern that gradually increases virtual users to the target count, sustains the load, then ramps back down.
+By default, the `loadtest:run` goal uses a **ramp** load pattern that gradually increases virtual users to the target count, sustains the load, then ramps back down.
 This produces more realistic traffic than an instant spike and avoids overwhelming the application at startup.
 
 Load profiles control the shape of the traffic curve -- how many virtual users (VUs) are active at each point during the test.
@@ -28,38 +28,38 @@ Configuration priority (highest to lowest): `k6.customScenario` > `k6.executor` 
 .Default behavior (ramp up 10 s, sustain, ramp down 10 s)
 [source,bash]
 ----
-mvn k6:run -Dk6.vus=50 -Dk6.duration=2m
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=2m
 ----
 
 .Constant load (no ramping, previous default behavior)
 [source,bash]
 ----
-mvn k6:run -Dk6.vus=50 -Dk6.duration=2m -Dk6.loadPattern=constant
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=2m -Dk6.loadPattern=constant
 ----
 
 .Custom ramp durations
 [source,bash]
 ----
-mvn k6:run -Dk6.vus=50 -Dk6.duration=5m -Dk6.rampUp=30s -Dk6.rampDown=15s
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=5m -Dk6.rampUp=30s -Dk6.rampDown=15s
 ----
 
 .Fully custom stages
 [source,bash]
 ----
-mvn k6:run -Dk6.stages="30s:20,1m:50,30s:50,15s:80,1m:80,30s:0"
+mvn loadtest:run -Dk6.stages="30s:20,1m:50,30s:50,15s:80,1m:80,30s:0"
 ----
 
 .Constant arrival rate (explicit executor)
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
+mvn loadtest:run -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
     -Dk6.duration=2m -Dk6.preAllocatedVUs=50 -Dk6.maxVUs=200
 ----
 
 .Shared iterations (explicit executor)
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=shared-iterations -Dk6.vus=50 \
+mvn loadtest:run -Dk6.executor=shared-iterations -Dk6.vus=50 \
     -Dk6.iterations=1000 -Dk6.duration=5m
 ----
 
@@ -151,7 +151,7 @@ To hold load steady, repeat the same target in consecutive stages (e.g. `1m:50,3
 .Example: gradual ramp with plateau and spike
 [source,bash]
 ----
-mvn k6:run -Dk6.stages="30s:20,1m:50,30s:50,15s:80,1m:80,30s:0"
+mvn loadtest:run -Dk6.stages="30s:20,1m:50,30s:50,15s:80,1m:80,30s:0"
 ----
 
 This produces:
@@ -234,7 +234,7 @@ Arrival-rate executors instead control _how many requests per second_ are sent, 
 .Constant arrival rate: 100 iterations/second for 2 minutes
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
+mvn loadtest:run -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
     -Dk6.timeUnit=1s -Dk6.duration=2m \
     -Dk6.preAllocatedVUs=50 -Dk6.maxVUs=200
 ----
@@ -242,7 +242,7 @@ mvn k6:run -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
 .Ramping arrival rate: ramp from 0 to 200 req/s, sustain, then ramp down
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=ramping-arrival-rate \
+mvn loadtest:run -Dk6.executor=ramping-arrival-rate \
     -Dk6.stages="1m:200,3m:200,1m:0" -Dk6.startRate=0 \
     -Dk6.timeUnit=1s -Dk6.preAllocatedVUs=50 -Dk6.maxVUs=300
 ----
@@ -250,21 +250,21 @@ mvn k6:run -Dk6.executor=ramping-arrival-rate \
 .Shared iterations: distribute 10,000 requests across 50 VUs
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=shared-iterations \
+mvn loadtest:run -Dk6.executor=shared-iterations \
     -Dk6.vus=50 -Dk6.iterations=10000 -Dk6.duration=10m
 ----
 
 .Per-VU iterations: each of 20 VUs executes 50 iterations
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=per-vu-iterations \
+mvn loadtest:run -Dk6.executor=per-vu-iterations \
     -Dk6.vus=20 -Dk6.iterations=50 -Dk6.duration=5m
 ----
 
 .Externally controlled: start with 10 VUs, adjust via k6 REST API
 [source,bash]
 ----
-mvn k6:run -Dk6.executor=externally-controlled \
+mvn loadtest:run -Dk6.executor=externally-controlled \
     -Dk6.vus=10 -Dk6.maxVUs=200 -Dk6.duration=30m
 ----
 
@@ -314,7 +314,7 @@ This overrides all other load configuration parameters.
 .Command line
 [source,bash]
 ----
-mvn k6:run -Dk6.customScenario="executor: 'ramping-arrival-rate', \
+mvn loadtest:run -Dk6.customScenario="executor: 'ramping-arrival-rate', \
     startRate: 0, timeUnit: '1s', preAllocatedVUs: 50, maxVUs: 100, \
     stages: [{duration: '1m', target: 100}, {duration: '2m', target: 100}, \
     {duration: '1m', target: 0}],"
@@ -350,17 +350,17 @@ The plugin adds the `exec` property automatically to wire up the test function.
 [source,bash]
 ----
 # Ramp pattern with custom durations
-mvn k6:run -Dk6.vus=100 -Dk6.duration=10m -Dk6.loadPattern=ramp \
+mvn loadtest:run -Dk6.vus=100 -Dk6.duration=10m -Dk6.loadPattern=ramp \
     -Dk6.rampUp=1m -Dk6.rampDown=30s
 
 # Stress test
-mvn k6:run -Dk6.vus=100 -Dk6.duration=10m -Dk6.loadPattern=stress
+mvn loadtest:run -Dk6.vus=100 -Dk6.duration=10m -Dk6.loadPattern=stress
 
 # Soak test (long duration)
-mvn k6:run -Dk6.vus=50 -Dk6.duration=1h -Dk6.loadPattern=soak
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=1h -Dk6.loadPattern=soak
 
 # Custom stages
-mvn k6:run -Dk6.stages="1m:25,3m:50,1m:100,2m:100,1m:0"
+mvn loadtest:run -Dk6.stages="1m:25,3m:50,1m:100,2m:100,1m:0"
 ----
 
 === POM Configuration (Predefined Patterns)
@@ -508,7 +508,7 @@ This applies to all configuration modes -- predefined patterns, explicit executo
 
 [source,bash]
 ----
-mvn k6:run -Dk6.testDir=k6/tests -Dk6.combineScenarios=true \
+mvn loadtest:run -Dk6.testDir=k6/tests -Dk6.combineScenarios=true \
     -Dk6.vus=100 -Dk6.duration=5m -Dk6.loadPattern=ramp -Dk6.rampUp=30s
 ----
 
@@ -522,7 +522,7 @@ Scenario B:  0 ──30s──> 50 VUs ──sustain──> 50 VUs ──10s─�
 .Combined scenarios with arrival-rate executor
 [source,bash]
 ----
-mvn k6:run -Dk6.testDir=k6/tests -Dk6.combineScenarios=true \
+mvn loadtest:run -Dk6.testDir=k6/tests -Dk6.combineScenarios=true \
     -Dk6.executor=constant-arrival-rate -Dk6.rate=100 \
     -Dk6.duration=5m -Dk6.preAllocatedVUs=50 -Dk6.maxVUs=200
 ----

@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.slider.DecimalSlider;
+import com.vaadin.flow.component.slider.IntegerSlider;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -10,8 +10,8 @@ public class SliderValueAlwaysVisible extends Div {
 
     public SliderValueAlwaysVisible() {
         // tag::snippet[]
-        DecimalSlider slider = new DecimalSlider("Brightness", 0, 100);
-        slider.setValue(75.0);
+        IntegerSlider slider = new IntegerSlider("Brightness", 0, 100);
+        slider.setValue(75);
         slider.setValueAlwaysVisible(true);
         add(slider);
         // end::snippet[]

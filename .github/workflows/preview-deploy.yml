@@ -24,9 +24,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Full history is needed to diff against the merge base with main
+          fetch-depth: 0
+
+      - name: Generate change manifest
+        env:
+          PREVIEW_URL: https://${{ env.FLY_APP }}.fly.dev
+          # The PR head commit (GITHUB_SHA is the synthetic merge ref on PRs)
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/generate-preview-changes.mjs
 
       - name: Set up Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # v1.5
 
       - name: Create Fly app (if not exists)
         run: |
@@ -67,21 +77,14 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: preview-deploy
-          message: |
-            ### Preview Deployment
-
-            This PR has been deployed for preview.
-
-            **URL:** https://${{ env.FLY_APP }}.fly.dev
-
-            _Built from ${{ github.sha }}_
+          path: preview-comment.md
 
   cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be # v1.5
 
       - name: Destroy Fly app
         run: |

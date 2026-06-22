@@ -14,7 +14,7 @@ section-nav: commercial
 :commercial-feature: TestBench
 include::{articles}/_commercial-banner.adoc[opts=optional]
 
-Vaadin provides a Maven plugin that converts <<{articles}/flow/testing/end-to-end#,TestBench end-to-end tests>> into https://grafana.com/docs/k6/latest/[k6] load tests. This allows you to reuse your existing E2E tests as realistic user scenarios for performance testing, without writing separate load test scripts.
+Vaadin provides a Maven plugin that converts <<{articles}/flow/testing/end-to-end#,TestBench end-to-end tests>> or <<{articles}/flow/testing/playwright#,Playwright tests>> into https://grafana.com/docs/k6/latest/[k6] load tests. This allows you to reuse your existing E2E tests as realistic user scenarios for performance testing, without writing separate load test scripts.
 
 The plugin records browser traffic from TestBench tests, converts it into k6 scripts, and handles Vaadin-specific details such as session management, <<{articles}/flow/security/advanced-topics/vulnerabilities#cross-site-request-forgery-csrf,CSRF (Cross-Site Request Forgery)>> tokens, and push communication. The generated scripts can then be run with k6 against any server.
 
@@ -29,6 +29,13 @@ The load testing workflow has three stages:
 
 The plugin uses pure Java utilities. No Node.js is required.
 
+[IMPORTANT]
+====
+For results that reflect real-world behavior, run the actual load test against your production server -- or a staging environment configured as closely as possible to it (same JVM, memory, CPU, database, network topology, and TLS termination).
+Recording can be done against a local development build, but the measured run should target the environment whose performance you care about.
+Running it against `localhost` or a developer laptop produces numbers that do not generalize to production, but can be used to validate the script.
+====
+
 
 == Prerequisites
 
@@ -38,7 +45,8 @@ The following tools are needed:
 - *Maven 3.9+*
 - *k6* -- Install from https://grafana.com/docs/k6/latest/get-started/installation/[Grafana k6 documentation]. On macOS: `brew install k6`.
 - *Chrome* -- Latest version, with ChromeDriver.
-- *TestBench* -- Existing end-to-end tests.
+- *TestBench* -- Existing <<{articles}/flow/testing/end-to-end#, end-to-end tests>>.
+- *Application* -- Production mode built application.
 
 
 [[setup]]
@@ -51,9 +59,10 @@ Add the plugin to your Maven project:
 <plugin>
     <groupId>com.vaadin</groupId>
     <artifactId>testbench-converter-plugin</artifactId>
-    <version>${vaadin.version}</version>
 </plugin>
 ----
+
+If the platform pom is not defined add the testbench version `<version>${testbench.version}</version>`
 
 Add the load test support library as a dependency:
 
@@ -73,9 +82,12 @@ It auto-registers via ServiceLoader -- no code changes are needed.
 
 
 [[writing-tests]]
-== Writing Tests for Load Testing
+== Adapting Tests for Load Testing
 
-Standard TestBench integration tests define user workflows. The same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
+Standard TestBench integration tests define user workflows, and the same tests you use for functional verification can serve as load test scenarios. If you update your application or tests, the load tests are automatically updated on next recording.
+
+For an introduction to writing TestBench tests -- element queries, page objects, assertions, and so on -- see <<{articles}/flow/testing/end-to-end#, End-to-End Testing>> and <<{articles}/flow/testing/end-to-end/creating-tests#, Creating Tests>>.
+The remainder of this section covers only the parts that differ when a TestBench test is used as a load test scenario.
 
 In practice, you may want to select certain scenarios from your existing E2E test suite, or create dedicated scenarios that reuse your page object classes.
 
@@ -90,53 +102,24 @@ Design load test scenarios to be *repeatable*: prefer read-only workflows, use s
 [[proxy-configuration]]
 === Proxy Configuration
 
-During recording, the plugin captures HTTP traffic by routing the browser through a recording proxy.
-The browser driver must be configured to use this proxy.
-Without proxy configuration, the browser connects directly to the server and the plugin cannot capture traffic.
+To make a TestBench test recordable, call one of the helper methods on [classname]`LoadTestItHelper` from your `@BeforeEach`:
 
-The [classname]`LoadTestItHelper` class (from the `testbench-loadtest-support` dependency) handles proxy driver configuration.
-The [methodname]`setupProxy()` and [methodname]`openWithProxy()` methods checks whether the `k6.proxy.host` system property is set.
-When it is, it replaces the current driver with one configured to route traffic through the recording proxy, including the necessary Chrome flags for MITM proxy support.
-When the property is not set, it navigates the existing driver to the given URL, so the tests run normally.
-
-Either start with [methodname]`setupProxy()`, or open the test page with the [methodname]`openWithProxy()`, and set the resulting driver as the test driver.
-The helper method will automatically set up a chromedriver with the proxy and open the view when [methodname]`openWithProxy()` is used.
-
-The [methodname]`getRootURL()` helper builds the server base URL from the `HOSTNAME` environment variable (defaults to `localhost`) and the `server.port` system property (defaults to `8080`):
-
-.Testbench test sample
 [source,java]
 ----
-import com.vaadin.testbench.loadtest.LoadTestItHelper;
-import org.junit.jupiter.api.BeforeEach;
-
-public class HelloWorldIT {
-
-    @BeforeEach
-    public void open() {
-        String viewUrl = LoadTestItHelper.getRootURL()
-                + "/";
-        setDriver(LoadTestItHelper.openWithProxy(
-                getDriver(), viewUrl));
-
-        /* or
-         * setDriver(LoadTestItHelper.setupProxy(getDriver()));
-         * // do driver setup before opening page
-         * getDriver().get(viewUrl);
-         */
-    }
-
-    @Test
-    public void helloWorldWorkflow() {
-        TextFieldElement nameField = $(TextFieldElement.class).first();
-        nameField.setValue("Test User");
-
-        $(ButtonElement.class).first().click();
-
-        $(NotificationElement.class).waitForFirst();
-    }
+@BeforeEach
+public void open() {
+    setDriver(LoadTestItHelper.openWithProxy(
+            getDriver(), LoadTestItHelper.getRootURL() + "/"));
 }
 ----
+
+That is the whole setup -- no proxy ports, certificates, or driver flags to manage.
+Use [methodname]`setupProxy(getDriver())` instead of [methodname]`openWithProxy()` if you need to configure the driver before navigating.
+
+When the recording proxy is active (signaled by the `k6.proxy.host` system property set by the Maven plugin), the helper swaps in a driver that routes traffic through it.
+When it is not -- for example, during normal IDE runs -- the helper is a no-op and the test runs as a plain TestBench test.
+
+The test body itself is just a regular TestBench test -- see <<{articles}/flow/testing/end-to-end/creating-tests#, Creating Tests>> for the element query and interaction APIs.
 
 [[destructive]]
 === Excluding Destructive Tests
@@ -148,85 +131,17 @@ Some test methods modify shared state in ways that cannot be safely replayed by 
 @BrowserTest
 @Destructive
 public void deletePatient() {
-    // This test is skipped during k6 recording
-    // but runs normally in regular test execution
+    // Skipped during k6 recording, runs normally in regular test execution.
 }
 ----
 
+== Recording and Running Tests
 
-[[server-lifecycle]]
-== Starting and Stopping the Server
-
-The `loadtest:record` and `loadtest:run` goals require the application server to be running. You can start and stop the server manually, or let the plugin manage it automatically using the `loadtest:start-server` and `loadtest:stop-server` goals.
-
-The `loadtest:start-server` goal starts a Spring Boot executable JAR, waits for the health endpoint to respond, and stores the process handle in the Maven build context. The `loadtest:stop-server` goal retrieves that handle and shuts the server down gracefully.
-
-[source,xml]
-----
-<groupId>com.vaadin</groupId>
-<artifactId>testbench-converter-plugin</artifactId>
-
-<executions>
-    <execution>
-        <id>start-server</id>
-        <goals>
-            <goal>start-server</goal>
-        </goals>
-        <configuration>
-            <serverJar>${project.build.directory}/my-app.jar</serverJar>
-            <serverPort>8081</serverPort>
-            <managementPort>8082</managementPort>
-        </configuration>
-    </execution>
-
-    <execution>
-        <id>stop-server</id>
-        <goals>
-            <goal>stop-server</goal>
-        </goals>
-    </execution>
-</executions>
-----
-
-By default, `loadtest:start-server` runs in the `pre-integration-test` phase and `loadtest:stop-server` runs in the `post-integration-test` phase, so the server lifecycle wraps around the recording and load test executions.
-
-
-=== Start Server Parameters
-
-`serverJar`::
-Path to the executable JAR file to start. Required.
-
-`serverPort`::
-Application server port. Defaults to `8080`.
-
-`managementPort`::
-Spring Boot Actuator management port. Defaults to `8082`.
-
-`jvmArgs`::
-Extra JVM arguments (for example, `-Xmx512m`).
-
-`appArgs`::
-Extra application arguments.
-
-`startupTimeout`::
-Maximum time to wait for server startup, in seconds. Defaults to `120`.
-
-`healthPollInterval`::
-Interval for polling the health endpoint, in seconds. Defaults to `2`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
-
-=== Stop Server Parameters
-
-`gracePeriod`::
-Time to wait for graceful shutdown before force-killing, in seconds. Defaults to `10`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
+The `loadtest:record` and `loadtest:run` goals require the application server to be running.
+The plugin provides `loadtest:start-server` and `loadtest:stop-server` goals to manage the server lifecycle automatically -- see <<utilities#server-lifecycle,Load Testing Utilities>>.
 
 [[recording]]
-== Recording Tests
+=== Recording Tests
 
 The `loadtest:record` goal runs one or more TestBench test classes through a recording proxy, captures the HTTP traffic, and converts it into k6 scripts:
 
@@ -241,14 +156,13 @@ The `loadtest:record` goal runs one or more TestBench test classes through a rec
 </goals>
 <configuration>
     <testClass>HelloWorldIT</testClass>
-    <appPort>8080</appPort>
 </configuration>
 ----
 
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:record -Dk6.testClass=HelloWorldIT -Dk6.appPort=8080
+mvn loadtest:record -Dk6.testClass=HelloWorldIT
 ----
 --
 
@@ -315,57 +229,8 @@ Force re-recording even if test sources are unchanged. Defaults to `false`.
 [NOTE]
 For CLI the parameters need to be given as `k6.[parameterName]`
 
-[[converting]]
-== Converting HAR Files
-
-If you already have a HAR file (for example, recorded with browser developer tools), you can convert it directly into a k6 script without running a TestBench test:
-
-[.example]
---
-[source,xml]
-----
-<source-info group="Maven"></source-info>
-<configuration>
-    <harFile>recording.har</harFile>
-</configuration>
-----
-
-[source,bash]
-----
-<source-info group="Command Line"></source-info>
-mvn loadtest:convert -Dk6.harFile=recording.har
-----
---
-
-The conversion pipeline:
-
-. Filters out requests to external domains (analytics, CDN).
-. Generates a k6 script from the HAR entries.
-. Applies Vaadin-specific refactoring (session handling, configurable server address).
-
-
-=== Conversion Parameters
-
-`harFile`::
-Path to the HAR file to convert. Required.
-
-`outputDir`::
-Output directory for the k6 script. Defaults to `${project.build.directory}/k6/tests`.
-
-`outputName`::
-Output file base name. Defaults to a name derived from the HAR file.
-
-`skipFilter`::
-Skip filtering external domain requests. Defaults to `false`.
-
-`skipRefactor`::
-Skip Vaadin-specific session handling refactoring. Defaults to `false`.
-
-[NOTE]
-For CLI the parameters need to be given as `k6.[parameterName]`
-
 [[running]]
-== Running Load Tests
+=== Running Load Tests
 
 The `loadtest:run` goal executes k6 scripts with configurable virtual users and duration:
 
@@ -392,7 +257,7 @@ mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js -Dk6.vus=50 -Dk6.d
 ----
 --
 
-To run all scripts in a directory:
+To run all scripts in the default output directory (`${project.build.directory}/k6/tests`):
 
 [.example]
 --
@@ -400,7 +265,6 @@ To run all scripts in a directory:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <testDir>${project.build.directory}/k6/tests</testDir>
     <virtualUsers>50</virtualUsers>
     <duration>1m</duration>
 </configuration>
@@ -409,9 +273,11 @@ To run all scripts in a directory:
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests -Dk6.vus=50 -Dk6.duration=1m
+mvn loadtest:run -Dk6.vus=50 -Dk6.duration=1m
 ----
 --
+
+Set `testDir` (CLI: `-Dk6.testDir=...`) to point at a different directory.
 
 To run against a remote server:
 
@@ -423,7 +289,6 @@ To run against a remote server:
 <configuration>
     <testFile>${project.build.directory}/k6/tests/hello-world.js</testFile>
     <appIp>staging.example.com</appIp>
-    <appPort>8080</appPort>
     <virtualUsers>100</virtualUsers>
     <duration>5m</duration>
 </configuration>
@@ -433,21 +298,10 @@ To run against a remote server:
 ----
 <source-info group="Command Line"></source-info>
 mvn loadtest:run -Dk6.testFile=target/k6/tests/hello-world.js \
-    -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
+    -Dk6.appIp=staging.example.com \
     -Dk6.vus=100 -Dk6.duration=5m
 ----
 --
-
-You can also run the generated scripts directly with k6:
-
-[source,bash]
-----
-k6 run --vus 50 --duration 30s target/k6/tests/hello-world.js
-
-# Against a different server
-k6 run -e APP_IP=192.168.1.100 -e APP_PORT=8080 target/k6/tests/hello-world.js
-----
-
 
 === Run Parameters
 
@@ -458,7 +312,7 @@ Single k6 test file to run.
 List of k6 test files to run.
 
 `testDir`::
-Directory containing k6 test files. All `.js` files in the directory are executed.
+Directory containing k6 test files. All `.js` files in the directory are executed. Defaults to `${project.build.directory}/k6/tests`.
 
 `virtualUsers` (CLI: `k6.vus`)::
 Number of virtual users. Defaults to `10`.
@@ -484,6 +338,11 @@ Interval for server metrics collection, in seconds. Defaults to `10`.
 `failOnThreshold`::
 Fail the Maven build if k6 thresholds are breached. Defaults to `true`.
 
+`warmup`::
+Run a single 1-VU, 1-iteration warmup pass before each load test to prime the target application.
+The warmup runs with `--no-summary --no-thresholds`, so its metrics never appear in reports and threshold violations during warmup never fail the build.
+Defaults to `false`. See <<warmup>>.
+
 `combineScenarios`::
 Combine multiple test files into parallel scenarios with weighted virtual user distribution. Defaults to `false`.
 
@@ -504,7 +363,6 @@ When running multiple test files, you can combine them into parallel k6 scenario
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <testDir>${project.build.directory}/k6/tests</testDir>
     <virtualUsers>100</virtualUsers>
     <duration>5m</duration>
     <combineScenarios>true</combineScenarios>
@@ -515,7 +373,7 @@ When running multiple test files, you can combine them into parallel k6 scenario
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run \
     -Dk6.vus=100 -Dk6.duration=5m \
     -Dk6.combineScenarios=true \
     -Dk6.scenarioWeights=helloWorld:70,crudExample:30
@@ -524,6 +382,43 @@ mvn loadtest:run -Dk6.testDir=target/k6/tests \
 
 In this example, 70 virtual users execute the `helloWorld` scenario while 30 execute the `crudExample` scenario simultaneously.
 
+
+[[warmup]]
+=== Warmup
+
+The `warmup` parameter runs a single 1-VU, 1-iteration pass of the recorded scenarios against the target application before the actual load test begins.
+The warmup is suppressed with `--no-summary --no-thresholds`, so its requests do not show up in the report and any slow first-request thresholds it would breach do not fail the build.
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<configuration>
+    <virtualUsers>50</virtualUsers>
+    <duration>1m</duration>
+    <warmup>true</warmup>
+</configuration>
+----
+
+[source,bash]
+----
+<source-info group="Command Line"></source-info>
+mvn loadtest:run \
+    -Dk6.vus=50 -Dk6.duration=1m \
+    -Dk6.warmup=true
+----
+--
+
+A freshly started application server is not in a steady state.
+The first requests trigger one-time work that subsequent requests never see again: JIT compilation of hot methods, class loading, JPA metamodel initialization, connection pool ramp-up, framework-level lazy initialization, and population of caches at every layer (HTTP, ORM, application, OS page cache).
+If the load test starts hitting the server during this period, the early iterations record response times that reflect cold-start cost rather than the steady-state behavior you want to measure.
+Worst case, those early outliers dominate the maximum, p(95), and p(99) figures and make a healthy server look broken.
+
+Enabling `warmup` issues one full pass of every recorded scenario before the measured run starts, so JIT, caches, and class loaders are primed when the virtual users ramp up.
+The numbers in the report then describe the application under sustained load — which is what a load test is meant to measure.
+
+== Results and Tool Output
 
 === Understanding k6 Output
 
@@ -600,16 +495,13 @@ Configure think times in the plugin configuration:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <!-- Enable or disable think times (default: true) -->
-    <thinkTimeEnabled>true</thinkTimeEnabled>
+    <!-- Base delay after page load in seconds.
+         Actual delay: baseDelay + random(0, baseDelay * 1.5) -->
+    <pageReadDelay>3.0</pageReadDelay>
 
-    <!-- Base delay after page load in seconds (default: 2.0) -->
-    <!-- Actual delay: baseDelay + random(0, baseDelay * 1.5) -->
-    <pageReadDelay>2.0</pageReadDelay>
-
-    <!-- Base delay after user interaction in seconds (default: 0.5) -->
-    <!-- Actual delay: baseDelay + random(0, baseDelay * 3) -->
-    <interactionDelay>0.5</interactionDelay>
+    <!-- Base delay after user interaction in seconds.
+         Actual delay: baseDelay + random(0, baseDelay * 3) -->
+    <interactionDelay>1.0</interactionDelay>
 </configuration>
 ----
 
@@ -620,7 +512,7 @@ Configure think times in the plugin configuration:
 mvn loadtest:record -Dk6.thinkTime.enabled=false
 
 # Custom delays
-mvn loadtest:record -Dk6.thinkTime.pageReadDelay=2.0 -Dk6.thinkTime.interactionDelay=0.5
+mvn loadtest:record -Dk6.thinkTime.pageReadDelay=3.0 -Dk6.thinkTime.interactionDelay=1.0
 ----
 --
 
@@ -669,6 +561,14 @@ The `testbench-loadtest-support` library enhances your Vaadin application for lo
 
 The <<setup,project setup>> section configures `testbench-loadtest-support`, which makes it available both in test code and at runtime. Only include this dependency in builds used for load testing, as it changes error handling behavior.
 
+The `testbench-loadtest-support` library includes a JUnit 5 extension that is registered via `ServiceLoader`. For it to be detected automatically, your project must enable extension auto-detection by adding the following property to `src/test/resources/junit-platform.properties`:
+
+[source,properties]
+----
+junit.jupiter.extensions.autodetection.enabled=true
+----
+
+This is only required when using JUnit 5. If your project uses a newer version of JUnit or runs with Spring Boot (which registers extensions differently), no additional configuration is needed.
 
 [[error-handler]]
 === Error Visibility
@@ -700,7 +600,6 @@ The following metrics are registered:
 - `vaadin.view.count` (tagged with `view`) -- Number of active instances per view class (for example, `view=MainView`).
 
 If Micrometer is not on the classpath, the helper still tracks UIs internally but does not expose metrics.
-
 
 ==== Enabling Actuator
 
@@ -735,23 +634,67 @@ Enable metrics collection via the plugin configuration:
 ----
 <source-info group="Maven"></source-info>
 <configuration>
-    <managementPort>8082</managementPort>
     <collectVaadinMetrics>true</collectVaadinMetrics>
-    <metricsInterval>10</metricsInterval>
 </configuration>
 ----
 
 [source,bash]
 ----
 <source-info group="Command Line"></source-info>
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
-    -Dk6.managementPort=8082 \
-    -Dk6.collectVaadinMetrics=true \
-    -Dk6.metricsInterval=10
+mvn loadtest:run -Dk6.collectVaadinMetrics=true
 ----
 --
 
 The plugin collects a baseline before the load test starts, then samples metrics at the configured interval. After the test, it reports a time-series table with system metrics (CPU, heap, sessions) and per-view counts, along with summary statistics such as heap delta, session delta, and average/peak CPU usage.
+
+[[converting]]
+== Converting HAR Files
+
+If you already have a HAR file (for example, recorded with browser developer tools), you can convert it directly into a k6 script without running a TestBench test:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Maven"></source-info>
+<configuration>
+    <harFile>recording.har</harFile>
+</configuration>
+----
+
+[source,bash]
+----
+<source-info group="Command Line"></source-info>
+mvn loadtest:convert -Dk6.harFile=recording.har
+----
+--
+
+The conversion pipeline:
+
+. Filters out requests to external domains (analytics, CDN).
+. Generates a k6 script from the HAR entries.
+. Applies Vaadin-specific refactoring (session handling, configurable server address).
+
+
+=== Conversion Parameters
+
+`harFile`::
+Path to the HAR file to convert. Required.
+
+`outputDir`::
+Output directory for the k6 script. Defaults to `${project.build.directory}/k6/tests`.
+
+`outputName`::
+Output file base name. Defaults to a name derived from the HAR file.
+
+`skipFilter`::
+Skip filtering external domain requests. Defaults to `false`.
+
+`skipRefactor`::
+Skip Vaadin-specific session handling refactoring. Defaults to `false`.
+
+[NOTE]
+For CLI the parameters need to be given as `k6.[parameterName]`
 
 
 [[full-example]]
@@ -799,9 +742,7 @@ Below is a complete example that starts the application server, records two Test
                             <testClass>HelloWorldIT</testClass>
                             <testClass>CrudExampleIT</testClass>
                         </testClasses>
-                        <proxyPort>6000</proxyPort>
                         <appPort>${serverPort}</appPort>
-                        <testWorkDir>${project.basedir}</testWorkDir>
                     </configuration>
                 </execution>
 
@@ -813,11 +754,9 @@ Below is a complete example that starts the application server, records two Test
                         <goal>run</goal>
                     </goals>
                     <configuration>
-                        <testDir>${project.build.directory}/k6/tests</testDir>
                         <virtualUsers>100</virtualUsers>
                         <duration>2m</duration>
                         <appPort>${serverPort}</appPort>
-                        <managementPort>${managementPort}</managementPort>
                         <collectVaadinMetrics>true</collectVaadinMetrics>
                         <combineScenarios>true</combineScenarios>
                         <scenarioWeights>helloWorld:70,crudExample:30</scenarioWeights>
@@ -842,6 +781,9 @@ Running `mvn verify` with this configuration executes the full workflow: start s
 [NOTE]
 Name your test classes with the `IT` suffix, not `Test`. Classes ending in `Test` are picked up during the `test` phase, before the server starts. See the Maven https://maven.apache.org/surefire/maven-failsafe-plugin/examples/inclusion-exclusion.html[Failsafe] and https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html[Surefire] inclusion-exclusion documentation for details on the default naming patterns.
 
+[NOTE]
+Command line arguments have higher priority than pom configuration, so a configuration `<virtualUsers>100</virtualUsers>` and execution with command line `-Dk6.vus=200` the tests will use `200` virtual users.
+
 [[remote-testing]]
 == Remote Load Testing
 
@@ -857,7 +799,7 @@ Record tests on a development machine, then run against the target server:
 mvn loadtest:record -Dk6.testClasses=HelloWorldIT,CrudExampleIT -Dk6.appPort=8081
 
 # Step 2: Run against remote server
-mvn loadtest:run -Dk6.testDir=target/k6/tests \
+mvn loadtest:run \
     -Dk6.appIp=staging.example.com -Dk6.appPort=8080 \
     -Dk6.vus=100 -Dk6.duration=5m
 ----

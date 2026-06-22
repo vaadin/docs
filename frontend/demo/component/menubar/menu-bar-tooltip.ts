@@ -29,14 +29,18 @@ export class Example extends LitElement {
     {
       component: this.createItem('folder'),
       tooltip: 'Move',
+      children: [
+        { text: 'To folder…', tooltip: 'Choose a destination folder' },
+        { text: 'To archive', tooltip: 'Move to archive', tooltipPosition: 'end' },
+      ],
     },
     {
       component: this.createItem('copy'),
       tooltip: 'Duplicate',
     },
     {
-      component: this.createItem('archive'),
-      tooltip: 'Archive',
+      component: this.createItem('trash'),
+      tooltip: 'Delete',
       disabled: true,
     },
   ];
