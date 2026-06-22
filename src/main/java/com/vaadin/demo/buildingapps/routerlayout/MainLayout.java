@@ -45,7 +45,7 @@ public class MainLayout extends AppLayout {
     }
 
     private SideNavItem createSideNavItem(MenuEntry menuEntry) {
-        var item = new SideNavItem(menuEntry.title(), menuEntry.path());
+        var item = new SideNavItem(menuEntry.title(), menuEntry.menuClass());
         item.setMatchNested(true);
         if (menuEntry.icon() != null) {
             item.setPrefixComponent(new Icon(menuEntry.icon()));

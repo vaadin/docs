@@ -15,7 +15,7 @@ The orchestrator tracks conversation history internally. Use [methodname]`getHis
 
 == Persisting History
 
-Use [classname]`ResponseCompleteListener` to persist conversation state after each successful exchange:
+Use [classname]`ResponseListener` to persist conversation state after each exchange:
 
 [source,java]
 ----
@@ -23,16 +23,19 @@ var orchestrator = AIOrchestrator
         .builder(provider, systemPrompt)
         .withMessageList(messageList)
         .withInput(messageInput)
-        .withResponseCompleteListener(event -> {
+        .withResponseListener(event -> {
+            if (event.getError().isPresent()) {
+                return;
+            }
             var history = orchestrator.getHistory();
             saveToDatabase(sessionId, history);
         })
         .build();
 ----
 
-The listener is not called when the response fails, times out, is empty, or when history is restored.
+The listener fires once per turn for both successful and failed exchanges -- check [methodname]`event.getError()` to tell them apart. It is not called when history is restored via [methodname]`withHistory()`, and empty responses (turns where the model emitted only tool calls or no visible content) are not appended to history.
 
-.UI Updates from ResponseCompleteListener
+.UI Updates from ResponseListener
 [IMPORTANT]
 The listener runs on a background thread. It is safe to perform blocking I/O (such as database writes) directly. However, to update Vaadin UI components from this callback, wrap the update in `ui.access()`.
 
@@ -59,7 +62,7 @@ endif::[]
 This replays messages into the LLM provider's memory, populates the Message List UI, and rebuilds internal mappings for attachment click handling.
 
 [NOTE]
-[methodname]`getHistory()` returns a point-in-time snapshot. If called while a streaming response is in progress, the snapshot may include the user message without its corresponding assistant response. Use [classname]`ResponseCompleteListener` to capture history at the right time.
+[methodname]`getHistory()` returns a point-in-time snapshot. If called while a streaming response is in progress, the snapshot may include the user message without its corresponding assistant response. Use [classname]`ResponseListener` to capture history at the right time.
 
 
 == Data Model
@@ -78,7 +81,7 @@ File attachments are represented as [classname]`AIAttachment` records with [meth
 
 [classname]`AIOrchestrator` is serializable. Conversation history, UI component bindings, listener registrations, and display names are preserved across serialization. However, the LLM provider and tool objects are transient -- they are not serialized and must be restored after deserialization.
 
-=== Reconnecting After Deserialization
+=== Reconnecting after Deserialization
 
 After the session is restored, call [methodname]`reconnect(LLMProvider)` to supply a new provider and optionally restore tools and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
 
@@ -98,7 +101,7 @@ orchestrator.reconnect(provider)
 
 .Controller Reattachment
 [NOTE]
-[classname]`AIController` instances -- including [classname]`GridAIController` and [classname]`ChartAIController` -- are not serialized with the orchestrator. Create a new controller after session restore and pass it to [methodname]`withController()` on the reconnector. The built-in controllers each have their own state capture and restoration API; see <<ai-powered-grid#,AI-Powered Grid>> and <<ai-powered-chart#,AI-Powered Chart>> for the specifics.
+[classname]`AIController` instances, including [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController`, are not serialized with the orchestrator. Create a new controller after session restore and pass it to [methodname]`withController()` on the reconnector. The grid and chart controllers each have their own state capture and restoration API. The form controller has no separate state object, because the form fields themselves are persisted with the [classname]`VaadinSession`. See <<ai-powered-grid#,AI-Powered Grid>>, <<ai-powered-chart#,AI-Powered Chart>>, and <<ai-powered-form#,AI Form Filler>> for the specifics.
 
 If [methodname]`prompt()` is called before reconnecting, it throws an [classname]`IllegalStateException`.
 
