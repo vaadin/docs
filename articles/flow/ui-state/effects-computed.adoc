@@ -88,6 +88,11 @@ The [classname]`EffectContext` provides:
 - [methodname]`isInitialRun()` — `true` on the first execution of the effect
 - [methodname]`isBackgroundChange()` — `true` when the effect was triggered by a change from another user session or a background thread
 
+[IMPORTANT]
+====
+Always read the signal values you depend on *before* branching on the context flags, as shown above where `priceSignal.get()` is read unconditionally. Reading a signal only inside a conditional branch — such as `if (!ctx.isInitialRun())` — breaks dependency tracking. See <<reading-signals-unconditionally,Read Signals Unconditionally>> for details.
+====
+
 
 === Custom Effects for Non-Bindable Properties
 
@@ -254,6 +259,7 @@ cleanup.remove();
 Standalone effects can lead to memory leaks through any instances referenced by the closure of the effect callback. Always store the [classname]`Registration` and call [methodname]`remove()` when the effect is no longer needed.
 
 
+[[dependency-tracking]]
 == Dependency Tracking
 
 Dependencies are tracked dynamically based on which signals are actually read during execution:
@@ -276,6 +282,81 @@ Signal.effect(component, () -> {
 ----
 
 When `showDetails` is false, changes to `details` won't trigger the effect because it wasn't read in the last execution.
+
+
+[[reading-signals-unconditionally]]
+== Read Signals Unconditionally
+
+Because dependencies are tracked only for the signals actually read during a run, where you read a signal matters. Two related rules follow from this:
+
+- An effect (and a computed signal) *must read at least one signal on every run*. A run that reads no signal throws a [classname]`MissingSignalUsageException` with the message _"Effect action must read at least one signal value."_ Such a callback could never be triggered again, so it's reported as a programming error rather than silently ignored.
+- A signal read only inside a conditional branch becomes a dependency *only on the runs where that branch executes*. If the branch doesn't run, the signal isn't tracked, and later changes to it won't re-run the effect.
+
+The safest pattern is the same as React hooks: read all the signal values you depend on at the top of the callback, then apply conditional logic afterwards.
+
+=== Guarding Reads Behind Context Flags
+
+A common way to hit both rules at once is to gate a signal read behind an [classname]`EffectContext` flag:
+
+[source,java]
+----
+// Broken: throws MissingSignalUsageException on the initial run
+Signal.effect(this, ctx -> {
+    if (!ctx.isInitialRun()) {
+        // Skipped on the first run, so no signal is read and the
+        // effect has no dependencies to ever trigger a later run
+        Notification.show("Value changed: " + valueSignal.get());
+    }
+});
+----
+
+On the initial run, `isInitialRun()` is `true`, the branch is skipped, no signal is read, and the effect throws. Even if it didn't throw, the effect would never have a dependency to re-run on.
+
+Read the signal unconditionally, then branch on the context flag:
+
+[source,java]
+----
+// Correct: the signal is always read, so the dependency is always tracked
+Signal.effect(this, ctx -> {
+    String value = valueSignal.get();
+    if (!ctx.isInitialRun()) {
+        Notification.show("Value changed: " + value);
+    }
+});
+----
+
+=== Branching Between Different Signals
+
+The same pitfall appears when each branch reads a *different* signal:
+
+[source,java]
+----
+// Broken: signal2 is never tracked, so the effect never reacts to it
+Signal.effect(this, ctx -> {
+    if (ctx.isInitialRun()) {
+        component.setText(signal1.get()); // tracked on the first run only
+    } else {
+        component.setText(signal2.get()); // never reached, never tracked
+    }
+});
+----
+
+Only `signal1` is read on the initial run, so only `signal1` becomes a dependency. Because the effect never re-runs on a `signal2` change, the `else` branch is never reached. Read both signals up front so both are tracked:
+
+[source,java]
+----
+// Correct: both signals are read, so both are dependencies
+Signal.effect(this, ctx -> {
+    String first = signal1.get();
+    String second = signal2.get();
+    component.setText(ctx.isInitialRun() ? first : second);
+});
+----
+
+[NOTE]
+====
+Conditional reads are still valid when *every* branch reads a signal that itself controls the condition — as in the <<dependency-tracking,Dependency Tracking>> example, where `showDetails.get()` is always read and decides which other signal to read. The pitfall is specifically reading a signal only on *some* runs, especially behind a context flag that is constant for a given run.
+====
 
 
 == Best Practices
