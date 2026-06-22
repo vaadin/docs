@@ -1,0 +1,263 @@
+---
+title: AI Form Filler
+description: Use FormAIController to let users fill any Vaadin form from natural-language input or attached files.
+meta-description: Configure the Vaadin FormAIController to fill form fields from natural language or attached files, with Binder validation and select-options support.
+order: 80
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#AI Form Filler#
+
+
+[classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each write is validated through the [classname]`Binder`, or through the component's built-in validators if [classname]`Binder` is not used. Rejected values are reported back so the model can correct them on the next turn.
+
+The controller works with any combination of standard Vaadin field components, such as [classname]`TextField`, [classname]`ComboBox`, [classname]`DatePicker`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup`. No extra wiring is needed beyond constructing the controller around the layout and attaching it to the orchestrator.
+
+
+== Basic Usage
+
+Build the form, construct a [classname]`FormAIController` for it, and attach the controller to an orchestrator:
+
+[source,java]
+----
+TextField name = new TextField("Name");
+EmailField email = new EmailField("Email");
+ComboBox<String> country = new ComboBox<>("Country");
+country.setItems("Finland", "Germany", "United States");
+DatePicker hiredOn = new DatePicker("Hired on");
+
+FormLayout form = new FormLayout(name, email, country, hiredOn);
+MessageInput messageInput = new MessageInput();
+
+FormAIController controller = new FormAIController(form);
+
+AIOrchestrator.builder(provider, systemPrompt)
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+
+add(messageInput, form);
+----
+
+Example prompts:
+
+* "Fill in John Doe, john@acme.com, started in Germany on March 1, 2026."
+* "Maria from Helsinki, hired last Monday." (relative dates are interpreted by the LLM)
+* "Use the information in the attached resume to fill the form." (when the orchestrator has a <<file-attachments#,file receiver>> configured)
+
+.Built-In Workflow Instructions
+[TIP]
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior, such as tone, naming conventions, or which fields the user may leave blank.
+
+
+== Field Discovery
+
+The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. The container can be any component that implements [classname]`HasComponents`. Any component that implements [classname]`HasValue` is treated as a field, and any nested [classname]`HasComponents` is walked recursively.
+
+[classname]`PasswordField` is always hidden from the LLM. To hide other fields, for example internal IDs or anything sensitive that the user must fill in manually, call [methodname]`ignore()`:
+
+[source,java]
+----
+controller.ignore(internalIdField);
+----
+
+Ignored fields are hidden from the LLM and stay editable while a fill is in progress.
+
+
+== Hidden, Disabled, and Read-Only Fields
+
+The controller checks each field's state on every turn:
+
+* A field hidden via [methodname]`setVisible(false)`, or one that sits inside a hidden container, is dropped from the LLM surface entirely. The model cannot read its value and cannot write to it. It reappears the moment a value-change listener or other application code makes it visible again.
+* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected, and the model receives the rejection reason so it can adjust on the next turn.
+
+A common case is a conditional field driven by a [interfacename]`ValueChangeListener` -- a "Cost center" enabled only when "Trip type" is set to "Business", or a renewal date enabled by a "Renews automatically" checkbox. The built-in workflow instructions tell the model that a disabled or read-only field is usually waiting on a controlling field, so it sets the controlling field first and writes the dependent one in the same turn.
+
+
+== Field Descriptions
+
+The LLM sees each field's label, helper text, and component type. When those don't fully capture the field's meaning, for example a numeric field that takes a percentage rather than an absolute amount, or a date that means "renewal date" rather than "purchase date", add an explicit description with [methodname]`describe()`:
+
+[source,java]
+----
+controller.describe(discount, "Discount as a percentage between 0 and 100.")
+        .describe(renewalDate, "When the subscription renews, not when it started.");
+----
+
+Later calls for the same field overwrite earlier ones.
+
+=== Binder Integration
+
+When the form is backed by a [classname]`Binder`, pass the binder to the controller as well:
+
+[source,java]
+----
+Binder<Employee> binder = new Binder<>(Employee.class);
+binder.bindInstanceFields(this);
+
+FormAIController controller = new FormAIController(form, binder);
+----
+
+For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or `@PropertyId`), the bean property name is used as a default field description, so when the user mentions a field by its bean-side name, the LLM can match the request to the right field. An explicit [methodname]`describe()` call always overrides the default. Lambda-bound bindings have no property name and contribute no default field description.
+
+
+== Options for Selection Fields
+
+Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`valueOptions()` registers that set with the controller, and the labels are presented to the LLM as the field's choices. When the LLM picks a label, the controller resolves it to the field's value type and writes the result to the field.
+
+Use a fixed list when the values are small and known up front, or a query callback when they come from a service or database.
+
+=== Fixed List
+
+For a small set of known [classname]`String` values, pass them directly:
+
+[source,java]
+----
+controller.valueOptions(
+        ValueOptions.forField(industry)
+                .options(List.of("Software", "Manufacturing", "Healthcare")));
+----
+
+No converter is needed -- the chosen label is the value.
+
+=== Service-Backed Lookup
+
+When the values come from a service or repository the application already uses, supply a callback the LLM can search:
+
+[source,java]
+----
+ComboBox<Project> projectField = new ComboBox<>("Project");
+projectField.setItemLabelGenerator(Project::name);
+
+controller.valueOptions(
+        ValueOptions.forField(projectField)
+                .options((filter, limit) -> projectService.search(filter, limit)
+                        .stream().map(Project::name).toList()),
+        label -> projectService.findByName(label));
+----
+
+Two pieces are at play:
+
+* **The callback returns labels** (strings), not domain objects. Since the LLM only ever sees labels, map your domain objects to strings before returning -- typically the same labels the [classname]`ComboBox` renders via [methodname]`setItemLabelGenerator()`.
+* **The second argument is the label-to-value converter.** When the LLM picks a label, the controller calls this converter to resolve the label back to a domain object, then writes the resolved value to the field. The converter is required for any field whose value type is not [classname]`String`; the type system enforces this at compile time.
+
+If [methodname]`findByName()` returns `null` or throws -- because the LLM picked a label the service does not recognize -- the write is rejected with a reason the model reads, and the LLM can try again on the next turn.
+
+`projectService` here is a stand-in for whatever your application already uses to look up projects -- a Spring repository, a REST client, an in-memory list. The controller only needs two things from it: a label callback that returns strings, and a converter that turns a chosen string into a domain object.
+
+.Eager Items as a Fallback
+[NOTE]
+Single- and multi-select fields configured with [methodname]`setItems(...)` already share their items with the LLM, so the simple fixed-options case often needs no [methodname]`valueOptions()` call. Use [methodname]`valueOptions()` when items come from a lazy or remote source rather than an in-memory list, or when you want the LLM to fetch options through a filter callback instead of receiving the full set up front.
+
+=== Multi-Select Fields
+
+[classname]`MultiSelectComboBox`, [classname]`CheckboxGroup`, and any other field that implements [classname]`MultiSelect` are supported. Use the component's concrete multi-select type for the field reference so the [methodname]`forField(MultiSelect)` overload is selected:
+
+[source,java]
+----
+MultiSelectComboBox<Project> projectsField = new MultiSelectComboBox<>("Projects");
+
+controller.valueOptions(
+        ValueOptions.forField(projectsField)
+                .options(List.of("Apollo", "Vega", "Helios")),
+        label -> projectService.findByName(label));
+----
+
+The converter runs once per chosen label, and the resolved values are written to the field as a set.
+
+.Multi-Value Fields Must Implement MultiSelect
+[NOTE]
+A field whose value type is a [classname]`Collection` must implement [classname]`MultiSelect`. The controller rejects two cases at registration time: a [classname]`MultiSelect` field passed through the single-value [methodname]`forField(HasValue)` overload, and a [classname]`Collection`-valued field that doesn't implement [classname]`MultiSelect`.
+
+
+== Validation
+
+When the model writes back a set of values, the controller commits all of them first and then runs validation once against the resulting form. Each field is checked according to how it is wired:
+
+* A field that is bound through a [classname]`Binder` is validated through its binding, so the converter and every registered validator run as one unit.
+* An unbound field with a default validator (for example the email-format check on [classname]`EmailField`, or the `min` and `max` constraints on [classname]`NumberField` and [classname]`DatePicker`) is validated through that validator.
+* Cross-field rules registered with `binder.withValidator((bean, ctx) -> ...)` -- see <<{articles}/building-apps/forms-data/add-form/validation#binder-level-validators,Binder-Level Validators>> -- are evaluated against the post-write form, but only when the binder has a bean set ([methodname]`setBean(bean)`) and every per-field check passes first. A failing rule is reported as a form-level rejection rather than against any single field, so the model can adjust the offending values and try again in the same turn.
+
+If validation fails for a written field, the value stays in the field, the field's UI error indicator turns on, and the failure is reported back to the model with the field id and the validator's message. The model can supply a corrected value in the same turn, so users typically see only the final, valid state. Fields the current turn did not write are not flagged invalid as a side effect -- a required field the user has not reached yet stays clean.
+
+
+== What the Model Sees
+
+The controller sends only a defined subset of the form to the LLM. Knowing where that boundary lies matters when the form holds sensitive or domain-specific data.
+
+The model sees:
+
+* Each visible field's label, helper text, component type, and any [methodname]`describe()` text or [classname]`Binder` property-name default.
+* The current value of every visible, non-ignored field, so it can decide which entries to overwrite. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
+* The eager items of a combo box or select, or the labels returned by a [methodname]`valueOptions()` query callback for the filter the model supplies.
+
+The model does not see:
+
+* Any field excluded with [methodname]`ignore()`. Its value, label, and existence are all hidden.
+* Any field the application has hidden via [methodname]`setVisible(false)`, or that sits inside a hidden container.
+* The contents of [classname]`PasswordField`, which is always excluded.
+* Internal data, services, or beans. The model has access only to what the field components themselves show.
+
+.Visible Field Values Are Sent to the Model
+[IMPORTANT]
+Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignore()`, or keep them out of the layout passed to the controller.
+
+
+== Field Locking During a Fill Turn
+
+While a fill is in progress, every field the user can currently edit -- visible, enabled, and not already read-only -- is set to read-only so the user cannot type into a field the AI is about to overwrite. Fields the application had already disabled or set read-only stay as they were. Locks are released automatically when the turn ends, whether it succeeded or failed.
+
+.Read-Only Toggles During a Turn
+[NOTE]
+If application code changes a field's read-only state during a turn, for example from a [interfacename]`ValueChangeListener` that reacts to one of the model's writes, that change is overridden when the controller releases its own locks at the end of the turn.
+
+
+== Highlighting AI Changes
+
+When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller exposes two APIs for this:
+
+* [methodname]`addFieldValueChangedListener()` registers a listener that fires once per successful turn with the fields whose values changed.
+* [methodname]`showHighlight()` and [methodname]`hideHighlight()` toggle a per-field highlight rendered by the `vaadin-field-highlighter` web component.
+
+A typical pattern flashes every changed field after each fill:
+
+[source,java]
+----
+controller.addFieldValueChangedListener(changes ->
+        changes.forEach(change -> controller.showHighlight(change.field())));
+----
+
+The listener receives a list of [classname]`FieldValueChange` records in document order, each carrying the field, its pre-turn value, and its post-turn value. Fields the application has marked with [methodname]`ignore()` are excluded from the list. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
+
+A field hidden at turn start that is revealed and written into the same turn is reported with its real pre-turn value rather than `null`, so cascades into conditional fields show up correctly.
+
+The listener runs on the UI thread with the session lock held, so it can call [methodname]`showHighlight()`, update components, or any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
+
+Repeated [methodname]`showHighlight()` calls on the same field are idempotent -- exactly one highlight remains. Each controller marks its highlight with an identifier unique to that instance, so the AI highlight coexists with any other `vaadin-field-highlighter` consumers the application keeps on the field, for example a collaboration session showing other users' edits. The highlight survives detach and re-attach: the controller re-applies it whenever the field returns to the DOM. The field passed to [methodname]`showHighlight()` does not need to belong to the controller's form -- any [classname]`HasValue` [classname]`Component` works.
+
+
+== Reconnecting after Deserialization
+
+[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describe()`, [methodname]`valueOptions()`, and [methodname]`ignore()` hints, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
+
+[source,java]
+----
+FormAIController controller = new FormAIController(form, binder);
+controller.describe(discount, "Discount as a percentage between 0 and 100.")
+        .valueOptions(ValueOptions.forField(industry)
+                .options(List.of("Software", "Manufacturing", "Healthcare")))
+        .ignore(internalIdField);
+controller.addFieldValueChangedListener(changes ->
+        changes.forEach(change -> controller.showHighlight(change.field())));
+
+orchestrator.reconnect(provider)
+        .withController(controller)
+        .apply();
+----
+
+Field ids remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
+
+
+== Composing Multiple Forms
+
+[classname]`FormAIController` manages a single container, but a view can host several. Construct one controller per form section and attach each to its own [classname]`AIOrchestrator`. Each orchestrator also needs a dedicated [classname]`LLMProvider`, [classname]`MessageInput`, and [classname]`MessageList` -- per the <<index#,AI Integration overview>>, none of those instances may be shared across orchestrators.
