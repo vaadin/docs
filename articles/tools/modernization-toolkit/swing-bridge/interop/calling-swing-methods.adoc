@@ -1,0 +1,396 @@
+---
+title: Calling Swing Methods
+page-title: Call Swing Methods from Vaadin | SwingBridge
+description: Expose Swing methods with <code>@ExposedMethod</code> and call them from Vaadin code through a typed bridge.
+meta-description: Expose Swing methods with @ExposedMethod, choose between sync and async invocation, and call them from Vaadin views through a typed BridgeHandle.
+order: 2
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop.calling-swing-methods]]
+= Calling Swing Methods from Vaadin
+
+A Vaadin view calls a Swing method by going through a generated bridge interface. The Swing side declares which methods are callable with `@ExposedMethod`; the build's Maven plugin generates a typed `*Bridge` interface plus a proxy that handles EDT dispatch; the Vaadin side obtains a handle through `SwingBridge.interop().of(MyBridge.class)`.
+
+
+[[swing-bridge.interop.calling-swing-methods.swing-side]]
+== Exposing a Method on the Swing Side
+
+Annotate any `public` method on a Swing class with `@ExposedMethod`:
+
+[source,java]
+----
+package com.example.swingapp;
+
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import javax.swing.JFrame;
+
+public class MainWindow extends JFrame {
+
+    @ExposedMethod
+    public void hideNavigation() {
+        navigationPanel.setVisible(false);
+        revalidate();
+    }
+
+    @ExposedMethod
+    public int countSelectedItems() {
+        return itemList.getSelectedIndices().length;
+    }
+}
+----
+
+At build time, the codegen plugin emits a matching bridge interface:
+
+[source,java]
+----
+// Generated into target/generated-sources/swing-bridge/
+package com.example.swingapp;
+
+public interface MainWindowBridge {
+    void hideNavigation();
+    int countSelectedItems();
+}
+----
+
+The Swing source remains a normal Swing class. It doesn't import any Vaadin types.
+
+
+[[swing-bridge.interop.calling-swing-methods.invocation-shapes]]
+== The Four Invocation Shapes
+
+`@ExposedMethod` takes one optional attribute, `invocation()`, with values `Invocation.SYNC` (default) and `Invocation.ASYNC`. Combined with the method's return type, four useful shapes emerge:
+
+[cols="2,2,3,4", options="header"]
+|===
+| Return type | `invocation()` | Bridge method shape | When to use
+
+| `void`
+| `SYNC` (default)
+| `void`, fire-and-forget
+| Stateless commands. The Vaadin thread returns immediately; the EDT runs the work later.
+
+| `T` (non-`void`)
+| `SYNC`
+| `T`, blocks the Vaadin caller until the EDT replies (default timeout: 10 s)
+| Quick state queries that won't show a dialog or take long on the EDT.
+
+| `T`
+| `ASYNC`
+| `CompletableFuture<T>`, non-blocking
+| Anything that might show a dialog, run slowly on the EDT, or otherwise risk blocking the Vaadin UI thread.
+
+| `CompletableFuture<T>` (explicit)
+| `SYNC`
+| `CompletableFuture<T>`, forwarded as-is
+| The Swing developer wants to compose multiple async stages themselves.
+|===
+
+Codegen rejects two combinations:
+
+- `@ExposedMethod(invocation = ASYNC)` on a method whose return type is already `CompletableFuture<T>` (redundant).
+- `@ExposedMethod(invocation = ASYNC)` on a method whose return type is `Runnable` (incompatible with the adder/remover-style listener pattern — see <<listening-to-swing-events#, Listening to Swing Events>>).
+
+
+[[swing-bridge.interop.calling-swing-methods.invocation-shapes.examples]]
+=== Examples for Each Shape
+
+*Void, fire-and-forget* — typical for UI commands:
+
+[source,java]
+----
+@ExposedMethod
+public void refreshSidebar() {
+    sidebar.reload();
+}
+----
+
+*Synchronous return* — for cheap queries that complete on the EDT immediately:
+
+[source,java]
+----
+@ExposedMethod
+public String getCurrentLocale() {
+    return localeService.getCurrentTag();
+}
+----
+
+*Async return (codegen wraps the future)* — for anything that might block on the EDT:
+
+[source,java]
+----
+@ExposedMethod(invocation = Invocation.ASYNC)
+public Boolean confirmLeaveCurrentEditor() {
+    // Shows a modal Swing dialog. Don't block the Vaadin thread for this.
+    return JOptionPane.showConfirmDialog(this,
+            "Discard unsaved changes?",
+            "Confirm",
+            JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+}
+----
+
+The generated bridge method has signature `CompletableFuture<Boolean> confirmLeaveCurrentEditor()`. The Swing source itself doesn't import `CompletableFuture` — the codegen does the wrapping.
+
+*Explicit `CompletableFuture` return* — when the Swing dev wants to compose async stages:
+
+[source,java]
+----
+@ExposedMethod
+public CompletableFuture<String> fetchUserGreeting(String userId) {
+    return CompletableFuture
+        .supplyAsync(() -> userService.findGreeting(userId))
+        .thenApplyAsync(g -> g + ", " + LocalDate.now());
+}
+----
+
+
+[[swing-bridge.interop.calling-swing-methods.discovery]]
+== How the Bridge Finds the Target Instance
+
+Before a bridge method can run, the framework needs an _instance_ to invoke it on. That instance is resolved per call using one of three discovery strategies, _inferred_ from the annotated class — there is no `@Discovery` annotation to declare on user code.
+
+[cols="2,3,4", options="header"]
+|===
+| Strategy | Inferred when | Resolution
+
+| `WINDOW`
+| The annotated class extends `java.awt.Window` (so any `JFrame`, `JDialog`, or `JWindow`).
+| The framework uses the most recently visible window of that exact class on the Swing AppContext.
+
+| `SINGLETON`
+| The annotated class has a `@InstanceProvider` static factory, or (legacy) a `public static T getInstance()` method.
+| The factory is invoked on every call to obtain a fresh-or-cached instance.
+
+| `STATIC_ONLY`
+| All `@ExposedMethod` methods on the class are `static` (and the class isn't a `Window`).
+| No instance needed; static dispatch only.
+|===
+
+Mixing `static` and instance `@ExposedMethod` methods on the same class is a build error.
+
+
+[[swing-bridge.interop.calling-swing-methods.discovery.window]]
+=== `WINDOW` — Main Frame and Dialogs
+
+For methods on the application's main `JFrame` or any other `Window` subclass, nothing extra is required:
+
+[source,java]
+----
+public class MainWindow extends JFrame {
+
+    @ExposedMethod
+    public void hideNavigation() { ... }
+}
+----
+
+The bridge resolves to whichever instance of `MainWindow` is currently visible in the Swing AppContext.
+
+
+[[swing-bridge.interop.calling-swing-methods.discovery.instance-provider]]
+=== `SINGLETON` — `@InstanceProvider` for Long-Lived Panels
+
+For a panel held in a customer-side registry — a common pattern in Swing applications that route between "editors" — declare a static factory and annotate it with `@InstanceProvider`:
+
+[source,java]
+----
+package com.example.swingapp.editors;
+
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import com.vaadin.swingbridge.interop.InstanceProvider;
+import javax.swing.JPanel;
+
+public class CustomerPanel extends JPanel {
+
+    @InstanceProvider
+    public static CustomerPanel currentInstance() {
+        return EditorsRegistry.getInstance().get(CustomerPanel.class);
+    }
+
+    @ExposedMethod
+    public CustomerRecord getSelectedCustomer() {
+        return (CustomerRecord) customerList.getSelectedValue();
+    }
+}
+----
+
+Rules for the factory method:
+
+- Must be `public static`.
+- Must take no arguments.
+- Must return the annotated type (or a subtype).
+- Is invoked on _every_ bridge call (not cached), so the registry can return different instances over time.
+- Runs on the EDT — it's safe to touch Swing state inside it.
+
+
+[[swing-bridge.interop.calling-swing-methods.discovery.static-only]]
+=== `STATIC_ONLY` — Utility Classes
+
+For stateless helpers (settings, logging, lookups), make every annotated method `static`:
+
+[source,java]
+----
+public final class Settings {
+    private Settings() {}
+
+    @ExposedMethod
+    public static String getDefaultLocale() {
+        return Locale.getDefault().toLanguageTag();
+    }
+
+    @ExposedMethod
+    public static void setDefaultLocale(String tag) {
+        Locale.setDefault(Locale.forLanguageTag(tag));
+    }
+}
+----
+
+No instance is resolved; the bridge proxy calls the static methods directly.
+
+
+[[swing-bridge.interop.calling-swing-methods.vaadin-side]]
+== Calling the Bridge from Vaadin
+
+Inside a Vaadin view, get a `BridgeHandle` and use it. There are two entry points on the handle, matched to the two shapes of work.
+
+For `void` or `SYNC`-with-result methods, register a one-shot callback with `onReady`:
+
+[source,java]
+----
+import com.example.swingapp.MainWindowBridge;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.swingbridge.SwingBridge;
+
+@Route("main")
+public class MainView extends VerticalLayout {
+
+    public MainView() {
+        add(new SwingBridge("com.example.swingapp.SwingAppMain"));
+
+        SwingBridge.interop()
+            .of(MainWindowBridge.class)
+            .onReady(main -> main.hideNavigation());
+    }
+}
+----
+
+`onReady` fires once, on the Vaadin UI thread, as soon as the bridge is resolvable. If the bridge is _already_ ready when `onReady` is called (a re-attach, or a different view registering after the Swing app has booted), the callback fires immediately, synchronously, on the calling thread.
+
+For `ASYNC`-shaped methods, use `requestAsync`. It awaits readiness, invokes the method, and relays the result off the Swing EDT so a `whenComplete` continuation can safely call `ui.access(...)`:
+
+[source,java]
+----
+SwingBridge.interop().of(MainWindowBridge.class)
+    .requestAsync(MainWindowBridge::confirmLeaveCurrentEditor)
+    .whenComplete((approved, err) -> getUI().ifPresent(ui -> ui.access(() -> {
+        if (err != null) {
+            Notification.show("Could not confirm: " + err.getMessage());
+        } else if (Boolean.TRUE.equals(approved)) {
+            ui.navigate("home");
+        }
+    })));
+----
+
+[NOTE]
+====
+The off-EDT relay is load-bearing. The Swing-side future is typically completed on the EDT (for example when a `SwingBridgeDialog` closes). Attaching `whenComplete` _directly_ to that future would run the continuation on the EDT, where any `ui.access(...)` resolves inline, re-enters the bridge with `invokeOnEdtAndWait`, and deadlocks the EDT on itself. `requestAsync` relays completion onto `ForkJoinPool.commonPool()` so the standard `ui.access(...)` pattern is safe.
+====
+
+To check readiness without registering a callback — useful in a `BeforeLeaveEvent` handler, for example, where you may want to skip postponing navigation altogether if the Swing app hasn't booted yet:
+
+[source,java]
+----
+if (SwingBridge.interop().of(MainWindowBridge.class).isReady()) {
+    // ...
+}
+----
+
+When more than one Swing application is hosted in the same Vaadin session (rare), disambiguate by passing the main class FQN:
+
+[source,java]
+----
+SwingBridge.interop("com.example.swingapp.SwingAppMain")
+    .of(MainWindowBridge.class)
+    .onReady(...);
+----
+
+
+[[swing-bridge.interop.calling-swing-methods.build]]
+== Build Setup
+
+[[swing-bridge.interop.calling-swing-methods.build.swing-side]]
+=== Swing-Side `pom.xml`
+
+The Swing application's build depends on `swing-bridge-annotations` so that source files can reference `@ExposedMethod`, `@VaadinCallback`, and `@InstanceProvider`:
+
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>swing-bridge-annotations</artifactId>
+        <version>${swing-bridge.version}</version>
+    </dependency>
+</dependencies>
+----
+
+The annotations are `RUNTIME`-retention; no further changes are needed on the Swing side. The compiled JAR carries the annotation descriptors, which the codegen plugin reads at build time on the Vaadin side.
+
+
+[[swing-bridge.interop.calling-swing-methods.build.vaadin-side]]
+=== Vaadin-Side `pom.xml`
+
+The Vaadin application's build configures the codegen plugin so the generated `*Bridge`, `*BridgeProxy`, and `*BridgeMetadata` classes land on the compile classpath:
+
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>swing-bridge-codegen-maven-plugin</artifactId>
+            <version>${swing-bridge.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>generate-bridge</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The goal binds to `generate-sources` by default and:
+
+- Scans every `.jar` in the `applibs` directory (or wherever `<applibsDir>` points).
+- Walks the bytecode with ASM, finding classes with `@ExposedMethod`, `@VaadinCallback`, or `@InstanceProvider`.
+- Emits the bridge interface, proxy class, and metadata class per annotated class into `target/generated-sources/swing-bridge/`.
+- Registers the output directory as an additional Maven compile source root so the generated classes are visible to Vaadin code with no extra wiring.
+
+
+[[swing-bridge.interop.calling-swing-methods.errors]]
+== Errors You May See
+
+[cols="3,4", options="header"]
+|===
+| Symptom | What it means
+
+| `SwingBridgeInvocationException`
+| The bridge call could not be dispatched: the target instance couldn't be resolved, the Swing method threw, or the EDT exceeded the timeout. The original throwable is preserved as `cause`.
+
+| `SwingBridgeTimeoutException`
+| Subtype of `SwingBridgeInvocationException`. A `SYNC` non-`void` call exceeded the EDT timeout. Switch the Swing method to `Invocation.ASYNC` so the Vaadin caller doesn't block.
+
+| `IllegalStateException` from `onReady`
+| Called outside a Vaadin UI thread, or called when no Swing AppContext is associated with the bridge yet. Make sure the call happens inside a Vaadin route or `UI.access` block.
+
+| Build error referencing `@InstanceProvider`
+| Codegen could not infer a discovery strategy for the annotated class. Either make all `@ExposedMethod` methods `static`, or add a `@InstanceProvider` factory.
+|===
+
+Continue with <<listening-to-swing-events#, Listening to Swing Events>> to wire the other direction — events emitted by Swing into Vaadin handlers.

@@ -1,0 +1,177 @@
+---
+title: Embedding Modes
+page-title: NetBeans RCP Embedding Modes | Vaadin Tools
+description: Embed the whole NetBeans Platform shell, a single TopComponent, or drive Vaadin navigation from an RCP action.
+meta-description: Full-shell embedding, single-TopComponent embedding, and turning a NetBeans window-system open into Vaadin navigation with NetBeansRcpBridge.
+order: 2
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.netbeans-rcp.embedding-modes]]
+= Embedding Modes
+
+`NetBeansRcpBridge` embeds a NetBeans Platform application in one of two modes — the whole shell, or a single `TopComponent` — and can additionally surface NetBeans window-system events as Vaadin navigation. All three are configured fluently on the component; there is no second component type and no path argument on the constructor.
+
+
+[[swing-bridge.netbeans-rcp.embedding-modes.full-shell]]
+== Full Shell
+
+The no-arg constructor renders the whole platform shell: the main window with its menu bar, toolbar, status bar, and docked windows, exactly as the desktop application looks.
+
+[source,java]
+----
+@Route("desktop")
+public class DesktopView extends VerticalLayout {
+    public DesktopView() {
+        setSizeFull();
+        setPadding(false);
+        var rcp = new NetBeansRcpBridge();
+        rcp.setSizeFull();
+        add(rcp);
+        expand(rcp);
+    }
+}
+----
+
+This is the right choice when the goal is to make the existing desktop application reachable through a browser without changing how it looks or behaves.
+
+
+[[swing-bridge.netbeans-rcp.embedding-modes.single-topcomponent]]
+== Single TopComponent
+
+`embedTopComponent(preferredId)` switches the instance to render a single `TopComponent` without the platform shell — no menu bar, toolbar, status bar, or docking, only the view's content. It is a per-instance, fluent switch on the same component and returns the bridge for chaining:
+
+[source,java]
+----
+@Route("dashboard")
+public class DashboardView extends VerticalLayout {
+    public DashboardView() {
+        setSizeFull();
+        setPadding(false);
+        var dashboard = new NetBeansRcpBridge()
+                .embedTopComponent("DashboardTopComponent");
+        dashboard.setSizeFull();
+        add(dashboard);
+        expand(dashboard);
+    }
+}
+----
+
+The argument is the `TopComponent`'s `preferredID` — the same id NetBeans assigns through `@TopComponent.Description(preferredID = …)`. This lets individual RCP views appear as ordinary Vaadin views on their own routes, composed alongside native Vaadin UI.
+
+[[swing-bridge.netbeans-rcp.embedding-modes.single-topcomponent.shared-platform]]
+=== One Platform per Session, Many Views
+
+When several views in the same Vaadin session each embed a single `TopComponent`, they *share one* embedded platform. The first bridge to attach boots the platform; the others reuse it, each rendering its own `TopComponent` in its own frame, without the platform shell. The platform boots only once per session, and a `TopComponent` opened in one view is visible to the others — which is what makes cross-view navigation (below) work.
+
+A common pattern is a base class shared by all single-`TopComponent` views:
+
+[source,java]
+----
+abstract class AbstractRcpView extends VerticalLayout {
+    protected AbstractRcpView(String preferredId) {
+        setSizeFull();
+        setPadding(false);
+        var bridge = new NetBeansRcpBridge().embedTopComponent(preferredId);
+        bridge.setSizeFull();
+        add(bridge);
+        expand(bridge);
+    }
+}
+----
+
+[IMPORTANT]
+====
+Don't mix a full-shell bridge and a single-`TopComponent` bridge in the same Vaadin session. Single-`TopComponent` mode hides the platform main window, which a full-shell bridge needs visible. Use either a session of single-`TopComponent` views, or a single full-shell bridge.
+====
+
+[NOTE]
+====
+`findTopComponent(preferredId)` resolves a `TopComponent` only once the window system knows it — that is, one that opens at startup or that some action has already opened. Embedding a `TopComponent` that is neither yet open shows the standard launch-failure view; open it first (see <<#swing-bridge.netbeans-rcp.embedding-modes.cross-view, Cross-View Navigation>>). Because the embedded view is reparented out of the window system into a plain frame, a `TopComponent` that hard-depends on its docking parent may misbehave.
+====
+
+
+[[swing-bridge.netbeans-rcp.embedding-modes.cross-view]]
+== Cross-View Navigation
+
+`onTopComponentOpened(handler)` registers a handler that runs on the Vaadin UI thread whenever a `TopComponent` opens in the session's embedded platform, passing the opened component's `preferredID`. This turns an RCP-side window open into Vaadin navigation — *with no change to the RCP application*. The bridge observes the platform's window system; it does not invoke anything in the guest.
+
+The typical case: a grid view whose existing double-click already opens a detail `TopComponent`. The handler maps that to a route:
+
+[source,java]
+----
+@Route("customers")
+public class CustomersView extends VerticalLayout {
+    private static final String DETAIL_PREFIX = "CustomerDetail-";
+
+    public CustomersView() {
+        setSizeFull();
+        setPadding(false);
+        var bridge = new NetBeansRcpBridge()
+                .embedTopComponent("CustomersTopComponent")
+                .onTopComponentOpened(tcId -> {
+                    // The grid's double-click opens "CustomerDetail-<id>";
+                    // navigate to the Vaadin detail view for that customer.
+                    if (tcId != null && tcId.startsWith(DETAIL_PREFIX)) {
+                        String id = tcId.substring(DETAIL_PREFIX.length());
+                        UI.getCurrent().navigate("customer-detail/" + id);
+                    }
+                });
+        bridge.setSizeFull();
+        add(bridge);
+        expand(bridge);
+    }
+}
+----
+
+The destination view embeds the newly opened detail `TopComponent` by its route-derived `preferredID`. Because it shares the per-session platform, that component is already open and resolves immediately:
+
+[source,java]
+----
+@Route("customer-detail/:customerId")
+public class CustomerDetailView extends VerticalLayout
+        implements BeforeEnterObserver {
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        removeAll();
+        String id = event.getRouteParameters().get("customerId").orElse(null);
+        if (id == null) {
+            return;
+        }
+        setSizeFull();
+        setPadding(false);
+        var detail = new NetBeansRcpBridge()
+                .embedTopComponent("CustomerDetail-" + id);
+        detail.setSizeFull();
+        add(detail);
+        expand(detail);
+    }
+}
+----
+
+The handler fires for *every* open in the tenant, so filter by `preferredID` prefix as shown. The listener is removed automatically when the originating view detaches.
+
+[NOTE]
+====
+Deep-linking straight to a detail route (without first opening the `TopComponent` through the grid) is not wired out of the box: the detail `TopComponent` isn't open yet, so it can't be resolved. Reaching it cold requires an application-provided "open by id" path in the RCP code.
+====
+
+
+[[swing-bridge.netbeans-rcp.embedding-modes.api]]
+== API Summary
+
+[cols="2,5", options="header"]
+|===
+| Member | Behavior
+
+| `new NetBeansRcpBridge()`
+| Full-shell mode. Renders the platform main window. Discovery and bootstrap happen on attach.
+
+| `embedTopComponent(String preferredId)`
+| Switches this instance to render the named `TopComponent` without the platform shell. Per-instance; call before the component attaches. Returns `this`.
+
+| `onTopComponentOpened(SerializableConsumer<String> handler)`
+| Invokes `handler` on the Vaadin UI thread with the `preferredID` of each `TopComponent` opened in the session's tenant. Returns `this`.
+|===
