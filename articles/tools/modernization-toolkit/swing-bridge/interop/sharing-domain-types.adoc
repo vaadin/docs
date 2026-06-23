@@ -1,0 +1,305 @@
+---
+title: Sharing Domain Types
+page-title: Share Swing Domain Types with Vaadin | SwingBridge
+description: Make Swing entity classes resolvable from both sides so they cross the bridge without conversion.
+meta-description: Decide how Swing domain types cross the SwingBridge boundary — same-class by reference, annotation-stripped, or DTO-converted — without ClassCastException.
+order: 4
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop.sharing-domain-types]]
+= Sharing Domain Types
+
+This page covers the single most important decision when adding interop on top of an embedded Swing application: _what happens when a bridge method accepts or returns a domain object_, like `Customer`, `CityDataBean`, or `Order`.
+
+If both sides of the bridge resolve `com.example.Customer` to the _same_ `Class<?>` object, the entity crosses by reference and Vaadin code can use it directly. If they resolve to _different_ `Class<?>` objects (same fully-qualified name, different classloaders), the very first cross-boundary call fails with `ClassCastException`. The strategy you pick determines which world you live in.
+
+
+[[swing-bridge.interop.sharing-domain-types.classloader-model]]
+== The Classloader Model
+
+To keep each Vaadin session's Swing app isolated, SwingBridge loads the Swing JARs into a per-session `URLClassLoader`. That classloader's _parent_ is the thread's context classloader at the moment the Swing app starts — typically the Vaadin application's own classloader (in dev mode, Spring Boot's `RestartClassLoader`; in production, the launcher classloader).
+
+This setup gives a single invariant to design around:
+
+[NOTE]
+====
+*Any class on the Vaadin app's parent classpath is visible to the Swing-side classloader through parent-first delegation, and resolves to the same `Class<?>` object on both sides.*
+
+Conversely, a class that lives only in `applibs/` (the Swing-only JARs) is _not_ visible to the Vaadin classpath and cannot cross the bridge by reference.
+====
+
+Listener interfaces are an automatic exception. Codegen reads the Swing JAR at build time and emits a stub of every non-JDK reference-type interface used in an `@ExposedMethod` or `@VaadinCallback` signature into `target/generated-sources/swing-bridge/`. So a custom listener interface like `CustomerSelectionListener` "just works" with no manual sharing — Vaadin code compiles against the generated stub and resolves it through parent-first delegation at runtime.
+
+What does _not_ "just work" automatically is data classes — entities, value types, DTOs. Those are the focus of this page.
+
+
+[[swing-bridge.interop.sharing-domain-types.application-profiles]]
+== Classify the Swing Application First
+
+The right strategy depends on the shape of the Swing application's domain JAR:
+
+[cols="1,4,3", options="header"]
+|===
+| Profile | What it looks like | Suggested strategy
+
+| Type 3
+| No domain types cross the bridge. All `@ExposedMethod` signatures use JDK types only (`String`, `int`, arrays of primitives, etc.).
+| Nothing extra — covered automatically.
+
+| Type 3+
+| A separate, _thin_ domain JAR (entity beans only, no embedded Hibernate / EJB / JNDI startup). The Vaadin app starts cleanly with that JAR on its classpath.
+| <<#swing-bridge.interop.sharing-domain-types.type-3plus, By reference>>. _Shipped._
+
+| Type 1
+| A thin domain JAR, but it carries `javax.persistence` / `javax.validation` / `javax.ejb` annotations that conflict with the Vaadin app's `jakarta.*` stack.
+| <<#swing-bridge.interop.sharing-domain-types.type-1, Strip annotations>>. _Roadmap._
+
+| Type 2
+| Fat client. Domain types and an embedded ORM (Hibernate, EJB, JNDI) live in the same JAR; the JAR cannot be placed on the Vaadin classpath without breaking Vaadin startup.
+| <<#swing-bridge.interop.sharing-domain-types.type-2, DTO generation>>. _Roadmap._
+|===
+
+Most green-field migrations from a server-backed Swing client fall into Type 3+. The two roadmap strategies are described at the end of this page so you know they're coming, but you should not rely on them yet.
+
+
+[[swing-bridge.interop.sharing-domain-types.type-3]]
+== Type 3 — No Domain Types Cross the Bridge
+
+If every `@ExposedMethod` and listener method uses only JDK types, there's nothing to configure. Codegen handles it; both sides see the same `String`/`int`/`long`. This is the simplest path and a fine starting point for an incremental migration.
+
+[source,java]
+----
+public class MainWindow extends javax.swing.JFrame {
+
+    @ExposedMethod
+    public String getCurrentUserName() {
+        return UserService.current().getDisplayName();
+    }
+
+    @ExposedMethod
+    public int getOpenIssueCount() {
+        return IssueRegistry.openCount();
+    }
+}
+----
+
+
+[[swing-bridge.interop.sharing-domain-types.type-3plus]]
+== Type 3+ — Domain by Reference _(Recommended, Shipped)_
+
+When the Swing application has a thin domain JAR (no embedded ORM startup, no JNDI lookups at construction time), and the Vaadin application starts cleanly with that JAR on its classpath, the cleanest setup is to add it as a Maven dependency on _both_ sides. The same JAR ends up on the Vaadin classpath _and_ inside the Swing app — but they resolve through the same parent classloader, so they yield the same `Class<?>`.
+
+[[swing-bridge.interop.sharing-domain-types.type-3plus.setup]]
+=== Maven Setup
+
+On the Vaadin app, add the domain JAR as a normal `<dependency>` (do _not_ put it only in `applibs/`):
+
+[source,xml]
+----
+<dependencies>
+    <!-- Shared with the Swing app, on the parent classpath -->
+    <dependency>
+        <groupId>com.example</groupId>
+        <artifactId>example-domain-entities</artifactId>
+        <version>2.7.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>swing-bridge-flow</artifactId>
+        <version>${swing-bridge.version}</version>
+    </dependency>
+</dependencies>
+----
+
+The Swing application's own JAR — which references the domain types — still goes into `applibs/` as before. At runtime, when the Swing-side classloader loads, say, `com.example.domain.Customer`, parent-first delegation finds it on the Vaadin classpath first.
+
+[[swing-bridge.interop.sharing-domain-types.type-3plus.example]]
+=== End-to-End Example
+
+The Swing side returns entities directly:
+
+[source,java]
+----
+package com.example.swingapp;
+
+import com.example.domain.CityDataBean;  // from example-domain-entities.jar
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import com.vaadin.swingbridge.interop.Invocation;
+
+public class MainWindow extends javax.swing.JFrame {
+
+    @ExposedMethod(invocation = Invocation.ASYNC)
+    public CityDataBean[] searchCityData(String query) {
+        return cityService.search(query).toArray(new CityDataBean[0]);
+    }
+}
+----
+
+The generated bridge interface uses the same `CityDataBean` class:
+
+[source,java]
+----
+public interface MainWindowBridge {
+    CompletableFuture<CityDataBean[]> searchCityData(String query);
+}
+----
+
+The Vaadin view binds a grid directly to the entity — no DTO, no converter:
+
+[source,java]
+----
+import com.example.domain.CityDataBean;
+import com.example.swingapp.MainWindowBridge;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.swingbridge.SwingBridge;
+import java.util.Arrays;
+
+@Route("cities")
+public class CitiesView extends VerticalLayout {
+
+    private final TextField query = new TextField("Search");
+    private final Grid<CityDataBean> grid = new Grid<>();
+
+    public CitiesView() {
+        grid.addColumn(CityDataBean::getZipCode).setHeader("Zip");
+        grid.addColumn(CityDataBean::getCity).setHeader("City");
+        add(query, grid);
+
+        query.addValueChangeListener(e -> {
+            String q = e.getValue();
+            SwingBridge.interop().of(MainWindowBridge.class)
+                .requestAsync(b -> b.searchCityData(q))
+                .whenComplete((rows, err) -> getUI().ifPresent(ui -> ui.access(() -> {
+                    if (err == null && rows != null) {
+                        grid.setItems(Arrays.asList(rows));
+                    }
+                })));
+        });
+    }
+}
+----
+
+[[swing-bridge.interop.sharing-domain-types.type-3plus.gotchas]]
+=== Gotchas
+
+*Lazy-loaded Hibernate proxies.* If the Swing side fetches an entity through Hibernate, the entity's collections may be uninitialised proxies tied to a session. Force-load and detach _before_ returning, or the Vaadin side throws `LazyInitializationException` on first access:
+
+[source,java]
+----
+@ExposedMethod(invocation = Invocation.ASYNC)
+public Customer findCustomer(String id) {
+    Customer c = entityManager.find(Customer.class, id);
+    Hibernate.initialize(c.getOrders());  // pre-load lazy collections
+    entityManager.detach(c);              // disconnect from the session
+    return c;
+}
+----
+
+*Domain JAR drags in Hibernate.* If the entities JAR pulls Hibernate, JPA providers, or other startup wiring transitively, adding it to the Vaadin classpath may make the Vaadin app fail to start (the persistence provider tries to initialise with no datasource configured). Drop to Type 2 in that case, or split the entities JAR so it only contains the POJOs.
+
+*`javax.persistence` vs `jakarta.persistence`.* Even when the simple names match, `javax.persistence.Entity` and `jakarta.persistence.Entity` are different classes on the JVM. A Vaadin app on Jakarta EE can't import a domain JAR built against `javax.persistence` without conflicts — but the underlying entity bean shape (fields, getters, setters) is identical, so once annotation stripping ships (Type 1), this becomes a one-line build step.
+
+*Domain JAR only in `applibs/`.* This is the most common mistake. A JAR inside `applibs/` is visible only to the Swing-side classloader, not to its parent — so the entity exists on the Swing side but doesn't exist on Vaadin's classpath at all. Either add it as a `<dependency>`, or move the entities into a JAR that is added as a `<dependency>`.
+
+
+[[swing-bridge.interop.sharing-domain-types.type-1]]
+== Type 1 — Strip Annotations _(Roadmap)_
+
+For a thin domain JAR whose JPA / EJB / JAXB annotations conflict with the Vaadin app's Jakarta EE stack, the plan is to ship a `strip-annotations` Maven goal that produces a clean variant of the JAR with the offending annotations removed. The original JAR stays in `applibs/` (so Swing-side Hibernate still works); the stripped variant goes on the Vaadin classpath.
+
+[IMPORTANT]
+====
+The `strip-annotations` Mojo currently exists as a code skeleton only — it is not wired into the codegen pipeline, has no integration tests, and is _not production-ready_. Don't depend on it in customer code yet.
+
+In the interim, customers in this profile typically either:
+
+- Repackage the entities JAR by hand (for example with `maven-shade-plugin` + a `relocations` ruleset) to remove `javax.*` annotations, then add the repackaged JAR as a `<dependency>` and follow the <<#swing-bridge.interop.sharing-domain-types.type-3plus, Type 3+>> recipe; or
+- Treat the application as Type 2 and write hand-rolled DTOs.
+====
+
+When the goal ships, the expected XML will read approximately:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-codegen-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>strip-domain-annotations</id>
+            <goals><goal>strip-annotations</goal></goals>
+            <configuration>
+                <inputJar>${project.basedir}/applibs/example-domain.jar</inputJar>
+                <outputJar>${project.build.directory}/example-domain-stripped.jar</outputJar>
+                <stripNamespaces>
+                    <namespace>javax.persistence</namespace>
+                    <namespace>javax.ejb</namespace>
+                    <namespace>javax.xml.bind</namespace>
+                </stripNamespaces>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+This page will be updated with the final shape once the goal ships.
+
+
+[[swing-bridge.interop.sharing-domain-types.type-2]]
+== Type 2 — DTO Generation _(Roadmap)_
+
+For fat-client Swing applications whose domain JAR cannot be placed on the Vaadin classpath at all (embedded ORM, JNDI lookups at construction, custom serialisers), the plan is a `generate-shared-types` Maven goal that emits clean DTOs from the customer JAR and bridges them with JSON marshalling at the bridge boundary.
+
+[IMPORTANT]
+====
+The `generate-shared-types` Mojo currently exists as a code skeleton only — there is no JSON marshalling integration in the bridge runtime, and the DTO emission path is not wired end-to-end. Don't depend on it in customer code yet.
+
+In the interim, the supported approach is to write DTOs by hand on the Vaadin side and convert at the bridge boundary:
+
+. Define a `CustomerDto` class on the Vaadin side mirroring the fields of `Customer`.
+. Have the Swing-side `@ExposedMethod` accept and return the DTO. The Swing-side method maps to and from the entity locally.
+. The Vaadin side never sees the original entity.
+
+This sidesteps the classloader problem entirely (the DTO lives on the Vaadin classpath, never in `applibs/`), at the cost of a manual mapping layer.
+====
+
+
+[[swing-bridge.interop.sharing-domain-types.summary]]
+== Summary
+
+[cols="1,2,2,2,2", options="header"]
+|===
+| Profile | Vaadin classpath has | `applibs/` has | Conversion | Status
+
+| Type 3
+| Vaadin code only
+| Swing app JAR
+| None
+| Shipped
+
+| Type 3+
+| Vaadin code + domain JAR
+| Swing app JAR
+| None (same `Class<?>`)
+| Shipped
+
+| Type 1
+| Vaadin code + _stripped_ domain JAR
+| Swing app JAR + _original_ domain JAR
+| None (same shape, different annotations)
+| Roadmap
+
+| Type 2
+| Vaadin code + generated DTOs
+| Fat-client JAR (untouched)
+| JSON marshalling at the bridge
+| Roadmap
+|===
+
+For most customers, the right path today is *Type 3+*. If the domain JAR can't be added to the Vaadin classpath (whether because of annotation conflicts or embedded ORM), fall back to hand-rolled DTOs until Type 1 or Type 2 ships.

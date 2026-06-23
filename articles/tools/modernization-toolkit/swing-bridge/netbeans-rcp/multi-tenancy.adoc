@@ -1,0 +1,111 @@
+---
+title: Multi-Tenancy and Lifecycle
+page-title: NetBeans RCP Multi-Tenancy and Lifecycle | Vaadin Tools
+description: How SwingBridge isolates NetBeans Platform tenants per session, the boot and teardown lifecycle, performance, and known limitations.
+meta-description: Per-session isolation, cold-start performance, session teardown, and known limitations when embedding a NetBeans Platform application with SwingBridge.
+order: 4
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.netbeans-rcp.multi-tenancy]]
+= Multi-Tenancy and Lifecycle
+
+A NetBeans Platform application is built for a single user on a desktop. SwingBridge runs one independent instance — a _tenant_ — per Vaadin session, so that many browser users can use the application at once without sharing state.
+
+
+[[swing-bridge.netbeans-rcp.multi-tenancy.isolation]]
+== Per-Session Isolation
+
+Each Vaadin session that mounts the bridge runs the platform in its own isolated environment, stacking four layers on top of SwingBridge's standard per-session isolation:
+
+[cols="2,4", options="header"]
+|===
+| Layer | What it isolates
+
+| AWT `AppContext`
+| All `Window`, `Toolkit`, `EventQueue`, and `UIManager` state — the standard SwingBridge per-session isolation.
+
+| Thread group
+| The platform's `RequestProcessor` worker threads, so background work is attributed to the right tenant.
+
+| Classloader
+| Class identity for the platform's statics — `Lookup`, `WindowManager`, and the rest — so each tenant has independent platform state.
+
+| System properties
+| Process-singleton properties the platform derives per-process state from, most importantly the NetBeans user directory, so a later tenant's boot can't poison an earlier tenant's directory.
+|===
+
+On top of these, each tenant boots into its own user directory, so two users never share platform preferences, caches, or window layout.
+
+
+[[swing-bridge.netbeans-rcp.multi-tenancy.lifecycle]]
+== Boot and Teardown
+
+The platform boots in-process the first time a session mounts the bridge: the bridge discovers the distribution, builds the per-tenant environment, and starts the platform, which is rendered into the canvas once its main window appears. Within a session, the platform boots only once — additional bridges reuse the running tenant (see <<embedding-modes#swing-bridge.netbeans-rcp.embedding-modes.single-topcomponent.shared-platform, One Platform per Session>>).
+
+Two events end a tenant cleanly, neither of which affects the host JVM or other tenants:
+
+- *`File > Exit` from the NetBeans menu* disposes that tenant's windows and releases its resources — without calling `System.exit`, so the host keeps running.
+- *Vaadin session destroy* (timeout, browser close, or logout) runs an ordered teardown that stops the tenant's platform, releases its `AppContext` and in-memory state, and reclaims its user directory on disk — on all operating systems.
+
+
+[[swing-bridge.netbeans-rcp.multi-tenancy.performance]]
+== Cold-Start Performance
+
+Booting a NetBeans Platform in-process takes roughly *5–8 seconds* per tenant. This cost is paid once per session, on the first mount; re-attaching within a live session reuses the running tenant and is near-instant.
+
+First-time boots are serialized across tenants. If two sessions mount the bridge cold at the same time, the second waits for the first to finish booting, so its user-visible latency is roughly *10–16 seconds*. This suits the target use case — long-lived sessions rather than page-by-page navigation — and there is no contention once a tenant is warm.
+
+
+[[swing-bridge.netbeans-rcp.multi-tenancy.limitations]]
+== Known Limitations
+
+[cols="2,5", options="header"]
+|===
+| Limitation | Detail
+
+| Pre-built distribution required
+| You must supply a pre-built NetBeans Platform distribution directory. Bare `.nbm` files, without a host application, are not supported.
+
+| JDK 21
+| NetBeans Platform 25's `TopSecurityManager` depends on classes removed in JDK 24+. Newer JDKs require a NetBeans Platform variant that has dropped that dependency.
+
+| Native libraries are single-tenant
+| A native library (`.so` / `.dll`) can be loaded only once per JVM. If one tenant loads it, another tenant's load attempt fails; NetBeans tolerates the absence by logging a warning and disabling the dependent feature.
+
+| Platform types can't cross the interop bridge
+| Types under `org.osgi.*`, `org.apache.felix.*`, `org.netbeans.*`, and `org.openide.*` resolve to different classes on the host and guest sides, so they can't be used in <<../interop#, interop>> method signatures. Wrap them in a type from your own namespace (`com.acme.*`) first; your own domain types cross the bridge normally.
+
+| Direct `System.exit` is not contained
+| The platform's own exit path is neutralized, but a direct `System.exit()` in guest code is not intercepted and would terminate the host JVM. Audit the RCP modules for direct exit calls.
+
+| No deep-link to an unopened TopComponent
+| A `TopComponent` resolves only once it has been opened. Reaching a detail view cold, without first opening it through the application, requires an application-provided "open by id" path. See <<embedding-modes#swing-bridge.netbeans-rcp.embedding-modes.cross-view, Cross-View Navigation>>.
+|===
+
+
+[[swing-bridge.netbeans-rcp.multi-tenancy.troubleshooting]]
+== Troubleshooting
+
+[cols="3,4", options="header"]
+|===
+| Symptom | Likely cause and fix
+
+| Startup fails with a message naming `swingbridge.rcp.cluster.dir`, `swing-app-jar-list.conf`, and `applibs/`.
+| No valid distribution was found at any discovery source. Confirm the *directory* (not its JARs) is in `applibs/` or listed in `swing-app-jar-list.conf`, and that it contains both `etc/<branding>.clusters` and `platform/lib/boot.jar`. See <<configuration#swing-bridge.netbeans-rcp.configuration.discovery, Cluster Discovery>>.
+
+| Platform startup fails referencing `java.base/java.lang` or a thread-group error.
+| The `--add-opens=java.base/java.lang=ALL-UNNAMED` flag is missing. Add the NetBeans JVM flags from <<configuration#swing-bridge.netbeans-rcp.configuration.jvm-flags, NetBeans JVM Flags>>.
+
+| Platform fails to boot referencing a `SecurityManager`.
+| `-Djava.security.manager=allow` is missing, or the host runs on JDK 24+. Add the flag on JDK 21; on newer JDKs, supply a NetBeans Platform variant without `TopSecurityManager`.
+
+| The single-`TopComponent` view shows the launch-failure view.
+| The `preferredID` doesn't match a registered `TopComponent`, or the component isn't open yet. Verify the id against `@TopComponent.Description(preferredID = …)`, and open the component first if it isn't an open-at-startup view.
+
+| The whole shell is blank after switching one view to a single `TopComponent`.
+| A full-shell bridge and a single-`TopComponent` bridge are mixed in one session; single-`TopComponent` mode hides the main window the full-shell bridge needs. Use one mode per session.
+|===
+
+For SwingBridge failures that aren't specific to NetBeans (missing patch-module flags, headless errors, an empty view from missing push, missing fonts, or license problems), see <<../troubleshooting#, Troubleshooting>>.
