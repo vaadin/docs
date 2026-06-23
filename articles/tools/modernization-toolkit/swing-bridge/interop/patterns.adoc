@@ -1,0 +1,315 @@
+---
+title: Patterns and Cookbook
+page-title: SwingBridge Interop Patterns | Vaadin Tools
+description: Common high-level patterns for combining <code>@ExposedMethod</code>, <code>@VaadinCallback</code>, and the <code>SwingBridge</code> helpers.
+meta-description: Recipes for the Vaadin-rendered LOV dialog, navigation guards, bridges from non-host views, and the runInAppContext escape hatch.
+order: 5
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop.patterns]]
+= Patterns and Cookbook
+
+The previous pages describe individual interop _ingredients_. This page combines them into common end-to-end patterns.
+
+
+[[swing-bridge.interop.patterns.lov]]
+== Vaadin-Rendered List-of-Values Dialog
+
+A frequent goal during incremental migration is replacing a deeply-nested Swing lookup dialog with a modern Vaadin dialog, without modifying the Swing form that opens it. The flagship pattern combines `@VaadinCallback(dispatch = ACCESS_SYNCHRONOUSLY)` (so Vaadin can return a value to Swing) with `@ExposedMethod(invocation = ASYNC)` (so the dialog can call back into Swing for data).
+
+*Swing side — the listener interface and the form that uses it:*
+
+[source,java]
+----
+package com.example.swingapp;
+
+import java.util.concurrent.CompletableFuture;
+
+public interface CityChooser {
+    CompletableFuture<CityDataBean> choose(String currentZip);
+}
+----
+
+[source,java]
+----
+package com.example.swingapp;
+
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import com.vaadin.swingbridge.interop.Invocation;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+public class NewCasePanel extends JPanel {
+
+    private CityChooser cityChooser;
+
+    @ExposedMethod
+    public void setCityChooser(CityChooser chooser) {
+        this.cityChooser = chooser;
+    }
+
+    @ExposedMethod(invocation = Invocation.ASYNC)
+    public CityDataBean[] searchCityData(String query) {
+        return cityService.search(query).toArray(new CityDataBean[0]);
+    }
+
+    private void onMagnifierClicked() {
+        if (cityChooser == null) return;
+        cityChooser.choose(zipField.getText()).whenComplete((bean, err) -> {
+            if (err != null || bean == null) return;
+            SwingUtilities.invokeLater(() -> {
+                zipField.setText(bean.getZipCode());
+                cityField.setText(bean.getCity());
+            });
+        });
+    }
+}
+----
+
+*Vaadin side — the handler and the dialog:*
+
+[source,java]
+----
+import com.example.swingapp.CityChooser;
+import com.example.swingapp.NewCasePanelBridge;
+import com.example.domain.CityDataBean;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.shared.Registration;
+import com.vaadin.swingbridge.SwingBridge;
+import com.vaadin.swingbridge.interop.Dispatch;
+import com.vaadin.swingbridge.interop.VaadinCallback;
+import java.util.concurrent.CompletableFuture;
+
+public class NewCaseView extends VerticalLayout {
+
+    private Registration callbackRegistration;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        callbackRegistration = SwingBridge.interop()
+            .of(NewCasePanelBridge.class)
+            .registerCallback(this);
+    }
+
+    @VaadinCallback(observerFor = CityChooser.class,
+                    dispatch = Dispatch.ACCESS_SYNCHRONOUSLY)
+    public CompletableFuture<CityDataBean> choose(String currentZip) {
+        CompletableFuture<CityDataBean> result = new CompletableFuture<>();
+        new CityLookupDialog(currentZip, result::complete).open();
+        return result;
+    }
+}
+----
+
+[source,java]
+----
+import com.example.domain.CityDataBean;
+import com.example.swingapp.NewCasePanelBridge;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.swingbridge.SwingBridge;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class CityLookupDialog extends Dialog {
+
+    private final TextField queryField = new TextField("Search");
+    private final Grid<CityDataBean> grid = new Grid<>();
+    private final Consumer<CityDataBean> onPick;
+    private boolean completed;
+
+    public CityLookupDialog(String initialQuery, Consumer<CityDataBean> onPick) {
+        this.onPick = onPick;
+        queryField.setValue(initialQuery);
+
+        grid.addColumn(CityDataBean::getZipCode).setHeader("Zip");
+        grid.addColumn(CityDataBean::getCity).setHeader("City");
+        grid.addItemDoubleClickListener(e -> closeWith(e.getItem()));
+
+        queryField.addKeyPressListener(Key.ENTER, e -> search(queryField.getValue()));
+        addOpenedChangeListener(e -> { if (!e.isOpened()) closeWith(null); });
+
+        add(queryField, grid);
+        search(initialQuery);
+    }
+
+    private void search(String q) {
+        SwingBridge.interop().of(NewCasePanelBridge.class)
+            .requestAsync(b -> b.searchCityData(q))
+            .whenComplete((rows, err) -> getUI().ifPresent(ui -> ui.access(() -> {
+                grid.setItems(rows == null ? List.of() : Arrays.asList(rows));
+            })));
+    }
+
+    private void closeWith(CityDataBean picked) {
+        if (completed) return;
+        completed = true;
+        onPick.accept(picked);
+        close();
+    }
+}
+----
+
+A few details that make this pattern hold together:
+
+- `Dispatch.ACCESS_SYNCHRONOUSLY` is what lets the Vaadin handler return a `CompletableFuture` value to the Swing caller. With any other dispatch mode the framework rejects the registration.
+- The handler returns the _unfinished_ future immediately — that's the whole point. The Swing thread unparks within milliseconds; the future is completed later, from the Vaadin UI thread, when the user picks a row or closes the dialog.
+- `requestAsync` inside the dialog relays the search result off the Swing EDT, so the `whenComplete` continuation can safely call `ui.access(...)` without re-entering the bridge and deadlocking.
+- The Swing-side `whenComplete` hops back via `SwingUtilities.invokeLater` before touching Swing UI state — the completion thread is _not_ the EDT.
+
+
+[[swing-bridge.interop.patterns.nav-guard]]
+== Navigation Guard with `BeforeLeaveObserver`
+
+When the user navigates away from a Vaadin route that hosts a Swing form with unsaved edits, you typically want to ask the Swing side whether it's safe to leave. The pattern: postpone the navigation, call an `ASYNC`-shaped Swing method via `requestAsync`, then proceed or cancel based on the answer.
+
+*Swing side:*
+
+[source,java]
+----
+@ExposedMethod(invocation = Invocation.ASYNC)
+public Boolean confirmLeaveCurrentEditor() {
+    return EditorRegistry.current().canLeave();
+}
+----
+
+*Vaadin side:*
+
+[source,java]
+----
+import com.example.swingapp.MainWindowBridge;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.BeforeLeaveEvent.ContinueNavigationAction;
+import com.vaadin.flow.router.BeforeLeaveObserver;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.swingbridge.SwingBridge;
+
+public abstract class SwingEditorView extends VerticalLayout
+        implements BeforeLeaveObserver, BeforeEnterObserver {
+
+    private static volatile Class<? extends Component> pendingCancelRedirect;
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        var handle = SwingBridge.interop().of(MainWindowBridge.class);
+        if (!handle.isReady()) return;  // Swing not booted yet — just let it through
+
+        ContinueNavigationAction action = event.postpone();
+        handle.requestAsync(MainWindowBridge::confirmLeaveCurrentEditor)
+            .whenComplete((approved, err) -> getUI().ifPresent(ui -> ui.access(() -> {
+                if (err != null) {
+                    action.proceed();  // fail open — don't trap the user
+                    return;
+                }
+                if (Boolean.TRUE.equals(approved)) {
+                    action.proceed();
+                } else {
+                    // Stash the source view so beforeEnter can redirect back.
+                    pendingCancelRedirect = getClass();
+                    action.proceed();
+                }
+            })));
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        Class<? extends Component> redirect = pendingCancelRedirect;
+        if (redirect != null) {
+            pendingCancelRedirect = null;
+            event.forwardTo(redirect);
+        }
+    }
+}
+----
+
+The non-obvious detail is the cancellation path: when the Swing side says "no", we _still_ call `action.proceed()` and then forward back to the original route from the target view's `beforeEnter`. Postponing without later calling `proceed()` leaves Vaadin's client-side router in a state where subsequent `RouterLink` clicks are silently dropped.
+
+
+[[swing-bridge.interop.patterns.non-host-view]]
+== Calling a Bridge from a View That Doesn't Host the Swing App
+
+The `SwingBridgeInterop` registry is scoped to the Vaadin session and persists across `SwingBridge` attach/detach. Any view in the session can call any `SINGLETON` or `STATIC_ONLY` bridge — even views that have nothing to do with the embedded Swing component.
+
+[source,java]
+----
+@Route("admin")
+public class AdminView extends VerticalLayout {
+
+    public AdminView() {
+        add(new Button("Show default locale", e -> {
+            SwingBridge.interop()
+                .of(SettingsBridge.class)
+                .requestAsync(SettingsBridge::getDefaultLocale)
+                .whenComplete((locale, err) -> getUI().ifPresent(ui ->
+                    ui.access(() -> Notification.show("Locale: " + locale))));
+        }));
+    }
+}
+----
+
+`WINDOW`-typed bridges (those whose target is a `JFrame` or other `Window`) work the same way as long as a matching window has been seen at least once in the session — the framework caches the last-seen frame. If no `SwingBridge` has ever attached in the session, `WINDOW` bridges aren't ready and `onReady` simply queues the callback for later.
+
+
+[[swing-bridge.interop.patterns.runinappcontext]]
+== `SwingBridge.runInAppContext` — The AppContext Escape Hatch
+
+Sometimes there's no `@ExposedMethod` to call but you still need to run something inside the Swing app's `AppContext` — for example, to apply a Look-and-Feel workaround before the first window is shown, or to drive a piece of legacy code that depends on `AppContext`-bound static state.
+
+`SwingBridge` exposes two static helpers for this. Both run the task on a fresh thread in the Swing app's `ThreadGroup`, not on the EDT.
+
+*Fire-and-forget:*
+
+[source,java]
+----
+SwingBridge.runInAppContext(swingComponent, () -> {
+    // Runs in the right AppContext, but not on the EDT.
+    // Hop to the EDT manually if you need to touch Swing UI state:
+    EventQueue.invokeLater(() -> {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    });
+});
+----
+
+*With a result:*
+
+[source,java]
+----
+CompletableFuture<String> future = SwingBridge.runInAppContext(swingComponent, () -> {
+    // Callable<T> — return value or thrown exception flows back through the future.
+    return LegacyConfigService.snapshot();
+});
+
+future.whenComplete((snapshot, err) -> getUI().ifPresent(ui -> ui.access(() -> {
+    if (err != null) {
+        Notification.show("Snapshot failed: " + err.getMessage());
+    } else {
+        snapshotPanel.render(snapshot);
+    }
+})));
+----
+
+If no `AppContext` is associated with the component (the Swing app hasn't started, or the component isn't from a bridged Swing app), the `Runnable` overload is a silent no-op, and the `Callable` overload completes the future exceptionally with `IllegalStateException`.
+
+[NOTE]
+====
+*The task does not run on the EDT.* `runInAppContext` only places the task inside the right `AppContext` `ThreadGroup`. To touch any Swing UI state, the task itself must call `EventQueue.invokeLater(...)` or `EventQueue.invokeAndWait(...)`.
+
+For ordinary cross-bridge calls — invoking a Swing method, reading a value, listening for events — prefer `@ExposedMethod` + `BridgeHandle.requestAsync`. `runInAppContext` is the escape hatch for one-off setup that doesn't fit the annotation model.
+====
+
+
+[[swing-bridge.interop.patterns.next]]
+== Next
+
+- For the underlying mechanics of each ingredient used here, return to <<calling-swing-methods#, Calling Swing Methods>> and <<listening-to-swing-events#, Listening to Swing Events>>.
+- To make sure your domain entities cross the bridge correctly, read <<sharing-domain-types#, Sharing Domain Types>>.

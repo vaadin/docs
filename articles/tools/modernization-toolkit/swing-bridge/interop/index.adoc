@@ -1,0 +1,240 @@
+---
+title: Interoperability
+page-title: SwingBridge Interoperability | Vaadin Tools
+description: Type-safe API and tooling to call between Vaadin and an embedded Swing application.
+meta-description: Type-safe interoperability between Vaadin and an embedded Swing application — call Swing methods, react to Swing events, and share domain types.
+order: 4
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop]]
+= Interoperability
+
+Once a Swing application is embedded with SwingBridge (see <<../adding-your-app#, Adding Your Swing Application>>), it runs as a live program inside the Vaadin session. The interoperability layer is what lets a Vaadin view _talk_ to that program: invoke methods on it, listen to events from it, and exchange domain objects with it — type-safely, on the right thread, and without leaking listeners across navigation.
+
+This is the API used during the second phase of an incremental migration, where individual Swing screens are replaced one at a time with native Vaadin views while the rest of the Swing application continues to run unchanged.
+
+
+[[swing-bridge.interop.mental-model]]
+== Mental Model
+
+Interop is bi-directional, and each direction has its own annotation:
+
+[cols="1,3,3", options="header"]
+|===
+| Direction | What it does | Annotation
+
+| Vaadin → Swing
+| A Vaadin view calls a method on a Swing class. The call is dispatched onto the AWT Event Dispatch Thread (EDT). The return value (or `CompletableFuture`) flows back to Vaadin.
+| `@ExposedMethod` on the Swing-side method.
+
+| Swing → Vaadin
+| Swing code invokes a listener interface. The framework proxies the listener onto the Vaadin UI thread, where a handler method on the Vaadin view receives the event.
+| `@VaadinCallback` on the Vaadin-side handler.
+|===
+
+A Maven plugin scans the Swing application's JARs at build time and generates a typed bridge interface, proxy, and metadata class for each annotated Swing class. Vaadin code obtains a handle to that bridge through `SwingBridge.interop().of(MyBridge.class)` and works with the generated interface as if it were a normal Java API.
+
+
+[[swing-bridge.interop.ingredients]]
+== Ingredients
+
+[cols="2,5", options="header"]
+|===
+| Element | Role
+
+| `@ExposedMethod` (Swing side)
+| Marks a public Swing method as callable from Vaadin. `invocation()` selects between blocking (`SYNC`) and `CompletableFuture`-wrapped (`ASYNC`) call shapes.
+
+| `@VaadinCallback` (Vaadin side)
+| Marks a handler method on a Vaadin view. `observerFor()` names the Swing listener interface it implements; `dispatch()` selects how the event hops onto the Vaadin UI thread.
+
+| `@InstanceProvider` (Swing side)
+| Marks a `public static` no-arg factory method that returns the live target instance. Required when the annotated Swing class isn't a `Window` and isn't fully static.
+
+| `SwingBridge.interop()`
+| Static accessor that returns the session-scoped `SwingBridgeInterop` for the (only) Swing app running in the current Vaadin session. Use the `interop(mainClassFQN)` overload when more than one Swing app is hosted in the same session.
+
+| `BridgeHandle<B>`
+| Returned by `SwingBridge.interop().of(MyBridge.class)`. Bundles `onReady`, `requestAsync`, `registerCallback`, and `isReady` so the bridge type is named once at the call site.
+
+| `swing-bridge-codegen-maven-plugin`
+| Maven plugin that scans annotated Swing JARs and emits `*Bridge`, `*BridgeProxy`, and `*BridgeMetadata` classes into `target/generated-sources/swing-bridge/`.
+|===
+
+
+[[swing-bridge.interop.decision-tree]]
+== Which Page Do I Need?
+
+Use this decision tree to find the right starting point:
+
+. *First time adding interop to a project.* +
+  → <<quick-start#, Interop Quick Start>>. The minimal end-to-end setup for both directions — one exposed method, one callback, all defaults.
+
+. *A Vaadin view needs to call a Swing method.* +
+  → <<calling-swing-methods#, Calling Swing Methods>>. Covers `@ExposedMethod`, the four invocation shapes, instance discovery, and the `BridgeHandle.onReady` / `requestAsync` call sites.
+
+. *A Vaadin view needs to react to a Swing event.* +
+  → <<listening-to-swing-events#, Listening to Swing Events>>. Covers `@VaadinCallback`, the three `Dispatch` modes, setter-vs-adder/remover wiring shapes, and the `Registration` cleanup pattern.
+
+. *A method on either side accepts or returns a Swing domain object (entity, DTO, value type).* +
+  → <<sharing-domain-types#, Sharing Domain Types>>. This is the single most important section. Choosing the wrong strategy here causes silent `ClassCastException` or runtime classloader failures.
+
+. *Replacing a deeply-nested Swing dialog with a Vaadin one, or wiring up a Vaadin-driven cross-cutting concern.* +
+  → <<patterns#, Patterns and Cookbook>>. Vaadin-rendered LOV dialog, navigation guard with `BeforeLeaveObserver`, calling a bridge from a view that doesn't host the Swing component, and the `SwingBridge.runInAppContext(...)` escape hatch.
+
+
+[[swing-bridge.interop.prerequisites]]
+== Prerequisites
+
+- A working SwingBridge setup. If you don't have one yet, follow <<../quick-start-guide#, Quick Start>> or <<../installation-from-scratch#, Installation from Scratch>>.
+- The Swing application's compile classpath has the `swing-bridge-annotations` JAR on it — see <<#swing-bridge.interop.prerequisites.annotations, Adding the Annotations JAR>> below for how to do this in Maven, Ant, Gradle, or directly from your IDE.
+- The Vaadin application's build configures the `swing-bridge-codegen-maven-plugin` so generated bridge interfaces are on the Vaadin compile classpath. See <<calling-swing-methods#swing-bridge.interop.calling-swing-methods.build, Calling Swing Methods → Build Setup>>.
+
+
+[[swing-bridge.interop.prerequisites.annotations]]
+=== Adding the Annotations JAR to the Swing Application
+
+The annotations live in a single JAR with these coordinates:
+
+[cols="1,3", options="header"]
+|===
+| Coordinate | Value
+
+| Group ID
+| `com.vaadin`
+
+| Artifact ID
+| `swing-bridge-annotations`
+
+| Version
+| `{swing-bridge-version}` — use the version that matches the SwingBridge release on the Vaadin side of the project. The two sides must stay in lockstep.
+|===
+
+The JAR carries only the `@ExposedMethod`, `@VaadinCallback`, and `@InstanceProvider` annotations, plus the `Invocation`, `Dispatch`, and `Discovery` enums. It has no transitive dependencies and no runtime cost — it is *compile-only* on the Swing side. The Swing application does not need it on its runtime classpath; the embedded launch on the Vaadin side supplies the runtime classes.
+
+The JAR is published in Vaadin's public Maven repositories — `https://maven.vaadin.com/vaadin-addons` for stable releases and `https://maven.vaadin.com/vaadin-prereleases` for pre-releases. Downloads are anonymous; the SwingBridge license check happens later, at runtime on the Vaadin side, when the embedded Swing app starts. See <<../installation-from-scratch#swing-bridge.installation-from-scratch.license, License Installation>> for the license setup itself.
+
+Pick the approach that matches your Swing project's build:
+
+[[swing-bridge.interop.prerequisites.annotations.maven]]
+==== Maven
+
+[source,xml,subs="+attributes"]
+----
+<repositories>
+    <repository>
+        <id>vaadin-addons</id>
+        <url>https://maven.vaadin.com/vaadin-addons</url>
+    </repository>
+    <!-- ... existing repositories ... -->
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>swing-bridge-annotations</artifactId>
+        <version>{swing-bridge-version}</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+----
+
+`scope=provided` reflects the compile-only nature of the JAR. The `<repositories>` block is only needed if your Swing project's `pom.xml` doesn't already inherit one from a parent.
+
+[[swing-bridge.interop.prerequisites.annotations.gradle]]
+==== Gradle
+
+[source,groovy,subs="+attributes"]
+----
+repositories {
+    maven { url = uri("https://maven.vaadin.com/vaadin-addons") }
+    // ... existing repositories ...
+}
+
+dependencies {
+    compileOnly 'com.vaadin:swing-bridge-annotations:{swing-bridge-version}'
+}
+----
+
+`compileOnly` is the Gradle equivalent of `provided`.
+
+[[swing-bridge.interop.prerequisites.annotations.manual]]
+==== Ant, IDE-Managed `lib/`, or No Formal Build Tool
+
+Most long-running Swing codebases use Ant, IDE-managed libraries, or no formal build tool. Download the JAR directly with a browser or `curl`:
+
+[source,terminal,subs="+attributes"]
+----
+curl -O https://maven.vaadin.com/vaadin-addons/com/vaadin/swing-bridge-annotations/{swing-bridge-version}/swing-bridge-annotations-{swing-bridge-version}.jar
+----
+
+For a SwingBridge pre-release, swap `vaadin-addons` for `vaadin-prereleases` in the URL. The download is anonymous — no Vaadin license check at this step.
+
+Then add the JAR to the Swing project:
+
+. *Drop it into the project's compile-time library folder.* Wherever you keep compile-time JARs today — typically `lib/`, `libs/`, or `dependencies/` next to the project.
+
+. *Reference it from the build:*
++
+- *Ant*: add the JAR to the path used by the `<javac>` task. Most projects expose a `<path id="compile.classpath">` block; add a `<pathelement location="lib/swing-bridge-annotations-{swing-bridge-version}.jar"/>` entry inside it.
+- *Eclipse* (with or without Ant): right-click the project → _Build Path_ → _Configure Build Path_ → _Libraries_ → _Add External JARs_ → select the JAR. If the project is shared in version control, commit the resulting `.classpath` change.
+- *IntelliJ IDEA*: _File_ → _Project Structure_ → _Libraries_ → _+ Java_ → select the JAR; assign it to the relevant module(s).
+- *NetBeans*: right-click the project → _Properties_ → _Libraries_ → _Compile_ tab → _Add JAR/Folder_ → select the JAR.
+
+. *Verify.* Open any Swing source file and confirm that this import resolves with no error:
++
+[source,java]
+----
+import com.vaadin.swingbridge.interop.ExposedMethod;
+----
+
+
+[[swing-bridge.interop.status]]
+== What's Shipped Today
+
+The interop runtime, the `generate-bridge` Maven goal, and the by-reference domain-types strategy are production-ready. Two further codegen goals exist as in-progress skeletons and are not recommended for production use yet:
+
+[cols="3,1,4", options="header"]
+|===
+| Capability | Status | Notes
+
+| `@ExposedMethod`, `@VaadinCallback`, `@InstanceProvider`
+| Shipped
+| Stable annotation surface in `com.vaadin.swingbridge.interop`.
+
+| `SwingBridge.interop()` / `BridgeHandle<B>`
+| Shipped
+| Including `onReady`, `requestAsync`, `registerCallback`, and `isReady`.
+
+| `SwingBridge.runInAppContext(Component, Runnable \| Callable)`
+| Shipped
+| Helper for running arbitrary code on a thread in the Swing app's `AppContext`.
+
+| `generate-bridge` Maven goal
+| Shipped
+| Scans JARs, infers discovery, emits bridge interface + proxy + metadata + listener-interface stubs.
+
+| Shared domain types by reference (Type 3+)
+| Shipped
+| Add the domain JAR as a Maven `<dependency>` of the Vaadin app. Same `Class<?>` on both sides; no conversion.
+
+| `strip-annotations` Maven goal (Type 1)
+| Roadmap
+| Mojo skeleton in the codebase but untested and unwired. Don't rely on it yet.
+
+| `generate-shared-types` Maven goal (Type 2)
+| Roadmap
+| Mojo skeleton for DTO generation + JSON marshalling. Currently requires hand-rolled DTOs as an interim.
+
+| Gradle plugin wrapper
+| Not started
+| Maven only for now.
+|===
+
+
+[[swing-bridge.interop.topics]]
+== Topics
+
+section_outline::[]
