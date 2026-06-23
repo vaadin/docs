@@ -1,0 +1,294 @@
+---
+title: Listening to Swing Events
+page-title: Handle Swing Events in Vaadin | SwingBridge
+description: Implement Swing listener interfaces with <code>@VaadinCallback</code> handlers on a Vaadin view.
+meta-description: Handle Swing events on a Vaadin view with @VaadinCallback, choose a dispatch mode, and clean up listener registrations on detach.
+order: 3
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop.listening-to-swing-events]]
+= Listening to Swing Events from Vaadin
+
+When a Swing component fires an event — a table selection, a value change, an audit notification — a Vaadin view can subscribe to it by implementing the Swing-side listener interface as a `@VaadinCallback`-annotated method. The framework builds a proxy that hops onto the Vaadin UI thread and invokes the handler.
+
+
+[[swing-bridge.interop.listening-to-swing-events.swing-side]]
+== Two Wiring Shapes on the Swing Side
+
+The Swing class needs to accept a listener instance. Two patterns are supported, and the choice affects whether the Vaadin side gets clean detach behaviour.
+
+[[swing-bridge.interop.listening-to-swing-events.swing-side.setter]]
+=== Setter Style — Single Observer, No Cleanup
+
+A method named `setXxxListener(L l)`-shaped (one parameter of a listener-interface type):
+
+[source,java]
+----
+package com.example.swingapp;
+
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import com.vaadin.swingbridge.interop.InstanceProvider;
+
+public class CustomerPanel extends javax.swing.JPanel {
+
+    private CustomerSelectionListener listener;
+
+    @InstanceProvider
+    public static CustomerPanel currentInstance() {
+        return EditorsRegistry.getInstance().get(CustomerPanel.class);
+    }
+
+    @ExposedMethod
+    public void setCustomerSelectionListener(CustomerSelectionListener l) {
+        this.listener = l;
+    }
+
+    private void onTableSelectionChanged() {
+        Customer c = (Customer) table.getSelectedValue();
+        if (listener != null) {
+            listener.onCustomerSelected(c);
+        }
+    }
+}
+----
+
+[[swing-bridge.interop.listening-to-swing-events.swing-side.adder]]
+=== Adder/Remover Style — Multi-Observer with Cleanup
+
+The annotated method takes the listener and _returns a `Runnable`_ whose `run()` removes the listener. This is the preferred shape:
+
+[source,java]
+----
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class CustomerPanel extends javax.swing.JPanel {
+
+    private final List<CustomerSelectionListener> listeners =
+            new CopyOnWriteArrayList<>();
+
+    @InstanceProvider
+    public static CustomerPanel currentInstance() { ... }
+
+    @ExposedMethod
+    public Runnable addCustomerSelectionListener(CustomerSelectionListener l) {
+        listeners.add(l);
+        return () -> listeners.remove(l);
+    }
+
+    private void onTableSelectionChanged() {
+        Customer c = (Customer) table.getSelectedValue();
+        for (CustomerSelectionListener l : listeners) {
+            l.onCustomerSelected(c);
+        }
+    }
+}
+----
+
+The codegen recognises a `Runnable` return type as a remover and captures it so the Vaadin side can run the cleanup later. Multiple views can subscribe to the same panel independently.
+
+[NOTE]
+====
+Codegen rejects `@ExposedMethod(invocation = Invocation.ASYNC)` on adder/remover-style methods. The `Runnable` is captured eagerly during registration, so the call shape has to be synchronous.
+====
+
+
+[[swing-bridge.interop.listening-to-swing-events.vaadin-side]]
+== Handling the Event on the Vaadin Side
+
+On the Vaadin view, declare the listener interface's method body and annotate it with `@VaadinCallback`. `observerFor()` names the listener interface:
+
+[source,java]
+----
+import com.example.swingapp.CustomerPanelBridge;
+import com.example.swingapp.CustomerSelectionListener;
+import com.example.swingapp.Customer;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
+import com.vaadin.swingbridge.SwingBridge;
+import com.vaadin.swingbridge.interop.VaadinCallback;
+
+@Route("customers")
+public class CustomersView extends VerticalLayout {
+
+    private Registration callbackRegistration;
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        callbackRegistration = SwingBridge.interop()
+            .of(CustomerPanelBridge.class)
+            .registerCallback(this);
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (callbackRegistration != null) {
+            callbackRegistration.remove();
+            callbackRegistration = null;
+        }
+        super.onDetach(detachEvent);
+    }
+
+    @VaadinCallback(observerFor = CustomerSelectionListener.class)
+    public void onCustomerSelected(Customer customer) {
+        Notification.show("Selected: " + customer.getName());
+    }
+}
+----
+
+`registerCallback(this)`:
+
+- Walks the bridge interface for every one-argument method whose parameter is a listener interface.
+- For each match, finds a `@VaadinCallback` method on `this` whose `observerFor` equals that listener interface.
+- Builds a proxy that forwards every method invocation onto the Vaadin UI thread according to the handler's `dispatch()` setting.
+- Calls the Swing-side setter (or adder) with the proxy.
+- Returns a single `Registration` whose `remove()` runs every captured cleanup `Runnable`.
+
+
+[[swing-bridge.interop.listening-to-swing-events.cleanup]]
+== The Cleanup Pattern
+
+Store the returned `Registration` and call `.remove()` from `onDetach`. With adder/remover-style Swing wiring, every navigation cycle would otherwise add another listener to the Swing panel, and the panel would keep firing events into detached UIs until the session is destroyed.
+
+[source,java]
+----
+private Registration callbackRegistration;
+
+@Override
+protected void onAttach(AttachEvent e) {
+    super.onAttach(e);
+    callbackRegistration = SwingBridge.interop()
+        .of(CustomerPanelBridge.class)
+        .registerCallback(this);
+}
+
+@Override
+protected void onDetach(DetachEvent e) {
+    if (callbackRegistration != null) {
+        callbackRegistration.remove();
+        callbackRegistration = null;
+    }
+    super.onDetach(e);
+}
+----
+
+For setter-style wiring there's nothing to remove (the next `registerCallback` overwrites the previous proxy), but calling `.remove()` is still safe and harmless — write the same code regardless so a future switch from setter to adder/remover doesn't introduce a leak silently.
+
+
+[[swing-bridge.interop.listening-to-swing-events.dispatch-modes]]
+== Choosing a Dispatch Mode
+
+`@VaadinCallback(dispatch = ...)` chooses how the proxy hands the call off from the Swing thread to the Vaadin UI thread. The three modes map verbatim to `UI` methods:
+
+[cols="2,2,4", options="header"]
+|===
+| Mode | Underlying call | When to use
+
+| `Dispatch.ACCESS` (default)
+| `ui.access(task)`
+| Default for `void` listener methods. Fire-and-forget. Throws on the Swing side if the UI is detached when the proxy is invoked.
+
+| `Dispatch.ACCESS_SYNCHRONOUSLY`
+| `ui.accessSynchronously(task)`
+| _Required_ for listener methods with a non-`void` return type. The Swing caller blocks until the handler completes, and the return value (or thrown exception) flows back to Swing.
+
+| `Dispatch.ACCESS_LATER`
+| `ui.accessLater(task, detachHandler)`
+| Detach-safe fire-and-forget. If the UI is detached when the proxy is invoked, the event is silently dropped. Right for audit logs and best-effort telemetry where lost events on navigation are acceptable.
+|===
+
+The framework checks the listener method's return type at registration and throws if a non-`void` method is bound with anything other than `ACCESS_SYNCHRONOUSLY`.
+
+[[swing-bridge.interop.listening-to-swing-events.dispatch-modes.access-synchronously]]
+=== Returning a Value with `ACCESS_SYNCHRONOUSLY`
+
+This pattern enables Vaadin to answer questions Swing asks. The listener interface declares a non-`void` return:
+
+[source,java]
+----
+// On the Swing side
+public interface CityChooser {
+    CompletableFuture<CityDataBean> choose(String currentZip);
+}
+----
+
+The Vaadin handler implements it with `ACCESS_SYNCHRONOUSLY` so the return value can propagate back:
+
+[source,java]
+----
+@VaadinCallback(observerFor = CityChooser.class,
+                dispatch = Dispatch.ACCESS_SYNCHRONOUSLY)
+public CompletableFuture<CityDataBean> choose(String currentZip) {
+    CompletableFuture<CityDataBean> result = new CompletableFuture<>();
+    new CityLookupDialog(currentZip, result::complete).open();
+    return result;  // unfinished; completed when the user picks a row
+}
+----
+
+The Swing caller's thread is parked _just long enough_ for the handler to open the dialog and return the unfinished future. The dialog completes the future later from the Vaadin UI thread.
+
+This is the foundation of the Vaadin-rendered list-of-values pattern. The full end-to-end example is in <<patterns#swing-bridge.interop.patterns.lov, Patterns → Vaadin-Rendered LOV Dialog>>.
+
+
+[[swing-bridge.interop.listening-to-swing-events.dispatch-modes.access-later]]
+=== Surviving Detach with `ACCESS_LATER`
+
+For events that may fire while the user is navigating away, choose `ACCESS_LATER`:
+
+[source,java]
+----
+@VaadinCallback(observerFor = CaseAuditListener.class,
+                dispatch = Dispatch.ACCESS_LATER)
+public void onCaseAction(String actionName) {
+    auditLog.record(actionName, getCurrentUser());
+}
+----
+
+If the UI is still attached, the handler runs on the UI thread. If the UI has detached by the time Swing fires the event, the framework drops it silently — no exception, no log noise.
+
+
+[[swing-bridge.interop.listening-to-swing-events.multi-listener]]
+== One View, Multiple Listener Slots
+
+A single `registerCallback` call wires every matching slot on the bridge. If a Swing panel exposes three adders for three different listener interfaces, declare one `@VaadinCallback` per interface on the view and call `registerCallback(this)` once:
+
+[source,java]
+----
+public class CustomersView extends VerticalLayout {
+
+    private Registration callbackRegistration;
+
+    @Override
+    protected void onAttach(AttachEvent e) {
+        super.onAttach(e);
+        callbackRegistration = SwingBridge.interop()
+            .of(CustomerEditorBridge.class)
+            .registerCallback(this);
+    }
+
+    @VaadinCallback(observerFor = CustomerSelectionListener.class)
+    public void onCustomerSelected(Customer c) { ... }
+
+    @VaadinCallback(observerFor = CustomerFilterListener.class)
+    public void onCustomerFilterChanged(String filterText) { ... }
+
+    @VaadinCallback(observerFor = CustomerModeChangeListener.class)
+    public void onCustomerModeChanged(EditorMode mode) { ... }
+}
+----
+
+The returned `Registration` cleans up all three slots when `.remove()` is called.
+
+
+[[swing-bridge.interop.listening-to-swing-events.next]]
+== Next
+
+- If listener interfaces or their methods carry your own domain types, read <<sharing-domain-types#, Sharing Domain Types>> next.
+- For a complete end-to-end pattern that combines exposed methods _and_ callbacks, see <<patterns#swing-bridge.interop.patterns.lov, Patterns → Vaadin-Rendered LOV Dialog>>.
