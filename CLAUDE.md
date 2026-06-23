@@ -186,10 +186,27 @@ The repository uses Vale for automated style checking. Configuration is in `.val
 
 Avoid explicit Vaadin version numbers in text. Instead, use a `since` badge.
 
-The badge is an inline AsciiDoc role: `[since:<coordinates>@<version>]` **must** be immediately
-followed (no space) by a formatted text span that holds the text the badge applies to. The span is
-usually `#...#`, but any inline formatting works (e.g. `*...*`). Without a following span the badge
-does not render — it either shows up as literal `[since:...]` brackets or is silently dropped.
+The badge is an inline AsciiDoc role. It **must be immediately followed (no space) by a formatted
+text span** that holds the text the badge applies to — usually `#...#`, but any inline formatting
+works (e.g. `*...*`). Without a following span the badge shows up as literal `[since:...]` brackets
+or is dropped entirely. Place it on a heading or wrapping a phrase in body text.
+
+```asciidoc
+// Correct — on a page title or section heading:
+= [since:com.vaadin:vaadin@V25.1]#Slider#
+== [since:com.vaadin:vaadin@V25.2]#Hierarchical Data#
+
+// Correct — wrapping a phrase in body text:
+The component can also [since:com.vaadin:vaadin@V25.2]#do the sanitization itself#.
+```
+
+```asciidoc
+// WRONG — badge after the heading text, with no span (renders literal brackets):
+== Hierarchical Data [since:com.vaadin:vaadin@V25.2]
+
+// WRONG — badge alone on its own line (no span to attach to):
+[since:com.vaadin:vaadin@V25.2]
+```
 
 This keeps documentation version-agnostic and maintainable.
 
