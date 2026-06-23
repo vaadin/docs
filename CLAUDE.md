@@ -184,11 +184,12 @@ The repository uses Vale for automated style checking. Configuration is in `.val
 
 ### Version References
 
-Avoid explicit Vaadin version numbers in text. Instead, use version badges:
+Avoid explicit Vaadin version numbers in text. Instead, use a `since` badge.
 
-```asciidoc
-[since:com.vaadin:vaadin@V25.1]
-```
+The badge is an inline AsciiDoc role: `[since:<coordinates>@<version>]` **must** be immediately
+followed (no space) by a formatted text span that holds the text the badge applies to. The span is
+usually `#...#`, but any inline formatting works (e.g. `*...*`). Without a following span the badge
+does not render — it either shows up as literal `[since:...]` brackets or is silently dropped.
 
 This keeps documentation version-agnostic and maintainable.
 
