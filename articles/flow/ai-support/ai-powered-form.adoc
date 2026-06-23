@@ -216,18 +216,18 @@ If application code changes a field's read-only state during a turn, for example
 
 When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller exposes two APIs for this:
 
-* [methodname]`addFieldValueChangedListener()` registers a listener that fires once per successful turn with the fields whose values changed.
+* [methodname]`addFieldValueChangeListener()` registers a listener that fires once per changed field after a successful turn.
 * [methodname]`showHighlight()` and [methodname]`hideHighlight()` toggle a per-field highlight rendered by the `vaadin-field-highlighter` web component.
 
 A typical pattern flashes every changed field after each fill:
 
 [source,java]
 ----
-controller.addFieldValueChangedListener(changes ->
-        changes.forEach(change -> controller.showHighlight(change.field())));
+controller.addFieldValueChangeListener(event ->
+        controller.showHighlight(event.getField()));
 ----
 
-The listener receives a list of [classname]`FieldValueChange` records in document order, each carrying the field, its pre-turn value, and its post-turn value. Fields the application has marked with [methodname]`ignore()` are excluded from the list. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
+Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignore()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
 
 A field hidden at turn start that is revealed and written into the same turn is reported with its real pre-turn value rather than `null`, so cascades into conditional fields show up correctly.
 
@@ -247,8 +247,8 @@ controller.describe(discount, "Discount as a percentage between 0 and 100.")
         .valueOptions(ValueOptions.forField(industry)
                 .options(List.of("Software", "Manufacturing", "Healthcare")))
         .ignore(internalIdField);
-controller.addFieldValueChangedListener(changes ->
-        changes.forEach(change -> controller.showHighlight(change.field())));
+controller.addFieldValueChangeListener(event ->
+        controller.showHighlight(event.getField()));
 
 orchestrator.reconnect(provider)
         .withController(controller)
