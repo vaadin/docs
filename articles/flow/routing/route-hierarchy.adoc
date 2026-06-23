@@ -35,7 +35,7 @@ The parent inherits the [classname]`RouteParameters` of the annotated route, nar
 
 == Resolving the Parent Dynamically
 
-When the parent — or the parameters it should be resolved with — needs to be computed, set a [interfacename]`RouteParentResolver` through the `resolver` attribute of [annotationname]`@RouteParent`. The resolver receives a [classname]`RouteParentContext` describing the navigation target class and its [classname]`RouteParameters`, and returns a [classname]`RouteParentReference` pointing to the parent:
+When the parent — or the parameters it should be resolved with — needs to be computed, set a [interfacename]`RouteParentResolver` through the `resolver` attribute of [annotationname]`@RouteParent`. The resolver receives a [classname]`RouteParentContext` describing the navigation target class and its [classname]`RouteParameters`, and returns a [classname]`RouteReference` pointing to the parent:
 
 [source,java]
 ----
@@ -46,18 +46,18 @@ public class ProjectView extends Div {
 
 public class OrgParentResolver implements RouteParentResolver {
     @Override
-    public Optional<RouteParentReference> resolveParent(
+    public Optional<RouteReference> resolveParent(
             RouteParentContext context) {
         // carry over only the parameters the parent route needs
         RouteParameters parentParameters = new RouteParameters("orgId",
                 context.routeParameters().get("orgId").orElseThrow());
         return Optional.of(
-                new RouteParentReference(OrgView.class, parentParameters));
+                new RouteReference(OrgView.class, parentParameters));
     }
 }
 ----
 
-A [classname]`RouteParentReference` carries both the parent navigation target class and the [classname]`RouteParameters` it should be resolved with. The parameters are part of the reference because a parent route typically declares only a subset of the child parameters, and that subset is needed both to build a link to the parent and to resolve its parent in turn.
+A [classname]`RouteReference` carries both the parent navigation target class and the [classname]`RouteParameters` it should be resolved with. The parameters are part of the reference because a parent route typically declares only a subset of the child parameters, and that subset is needed both to build a link to the parent and to resolve its parent in turn.
 
 Returning an empty [classname]`Optional` marks the top of the hierarchy. When a resolver is set, the static `value` of the annotation is ignored.
 
@@ -75,7 +75,7 @@ This means that route hierarchies that follow the URL structure work without any
 
 [classname]`RouteConfiguration` exposes the resolved hierarchy:
 
-- [methodname]`getRouteParent(Class, RouteParameters)` resolves the logical parent of a navigation target, returning an [classname]`Optional<RouteParentReference>`.
+- [methodname]`getRouteParent(Class, RouteParameters)` resolves the logical parent of a navigation target, returning an [classname]`Optional<RouteReference>`.
 - [methodname]`getRouteHierarchy(Class, RouteParameters)` resolves the whole chain of the target and its logical ancestors, ordered from the hierarchy root to the given target, which is the last element.
 
 Neither method instantiates any of the routes. Combined with the <<navigation#observing-navigation-state, router state signal>>, the hierarchy can be used to render a breadcrumb trail that updates on every navigation:
@@ -97,7 +97,7 @@ public class Breadcrumbs extends Div {
         RouteConfiguration configuration = RouteConfiguration
                 .forSessionScope();
         Router router = VaadinService.getCurrent().getRouter();
-        for (RouteParentReference entry : configuration.getRouteHierarchy(
+        for (RouteReference entry : configuration.getRouteHierarchy(
                 state.navigationTarget(), state.routeParameters())) {
             String title = router.resolvePageTitle(entry.navigationTarget(),
                     entry.routeParameters()).orElse("");
