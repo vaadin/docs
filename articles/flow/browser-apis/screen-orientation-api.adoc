@@ -1,0 +1,80 @@
+---
+title: Screen Orientation
+page-title: How to use the Screen Orientation API in Vaadin Flow
+description: Reading device orientation and locking the screen from the server.
+meta-description: Learn how to observe device orientation and lock or unlock screen orientation in Vaadin Flow from Java code.
+order: 25
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Screen Orientation#
+:toc:
+
+The [classname]`ScreenOrientation` API gives server-side Java code access to the browser https://developer.mozilla.org/en-US/docs/Web/API/Screen_Orientation_API[Screen Orientation API]. Use it to react when a user rotates a phone or tablet, to keep a landscape hint visible, or to lock a view to a chosen orientation while the user stays on the page. The API exposes a read-only signal for the current orientation, plus [methodname]`lock()` and [methodname]`unlock()` methods.
+
+
+== Checking Support
+
+Most browsers only honor an orientation lock on devices that actually rotate, and many require the document to be fullscreen first. If you only need a quick yes/no before rendering a control, use [methodname]`getExtendedClientDetails()` on [classname]`Page` and read [methodname]`isScreenOrientationSupported()` on the returned [classname]`ExtendedClientDetails`. It returns `true` once the browser has reported a real orientation and `false` when the API is unsupported or the client handshake has not completed yet. Use it to decide whether to show an orientation-lock control before subscribing to [methodname]`ScreenOrientation.orientationSignal()`.
+
+
+== Observing Orientation
+
+[methodname]`ScreenOrientation.orientationSignal()` returns a read-only [classname]`Signal<ScreenOrientationData>` for the current UI. The signal value contains the current [methodname]`type()` and [methodname]`angle()`, so you can react to both the coarse orientation and the exact rotation angle.
+
+The [methodname]`type()` is one of the [classname]`ScreenOrientationType` values:
+
+`PORTRAIT_PRIMARY`:: The screen is upright in its natural portrait position.
+`PORTRAIT_SECONDARY`:: The screen is rotated 180 degrees from the natural portrait position.
+`LANDSCAPE_PRIMARY`:: The screen is rotated 90 degrees clockwise from the natural portrait position.
+`LANDSCAPE_SECONDARY`:: The screen is rotated 90 degrees counter-clockwise from the natural portrait position.
+`UNKNOWN`:: The initial sentinel value before the first client bootstrap value arrives.
+`UNSUPPORTED`:: The browser does not implement the Screen Orientation API.
+
+Use [methodname]`bindVisible()` with a mapped signal to keep the UI in sync:
+
+[source,java]
+----
+portraitHint.bindVisible(ScreenOrientation.orientationSignal()
+        .map(orientation -> !orientation.type().isLandscape()));
+----
+
+
+== Locking Orientation
+
+Use [methodname]`ScreenOrientation.lock(ScreenOrientationType)` to request a lock for as long as the user stays on the current page. Pass one of the physical orientation values, such as [code]`LANDSCAPE_PRIMARY`; [code]`UNKNOWN` and [code]`UNSUPPORTED` are rejected.
+
+[source,java]
+----
+Button lockLandscape = new Button("Lock landscape",
+        e -> ScreenOrientation.lock(ScreenOrientationType.LANDSCAPE_PRIMARY));
+----
+
+The plain overload is fire-and-forget: failures are logged at [code]`DEBUG` but not otherwise surfaced. Use the overload that accepts success and error callbacks when you need to react in the UI:
+
+[source,java]
+----
+Button lockLandscape = new Button("Lock landscape",
+        e -> ScreenOrientation.lock(
+                ScreenOrientationType.LANDSCAPE_PRIMARY,
+                () -> Notification.show("Orientation locked"),
+                err -> Notification.show(
+                        "Could not lock orientation: " + err.errorCode())));
+----
+
+
+== Unlocking Orientation
+
+Call [methodname]`ScreenOrientation.unlock()` to release a previous lock. The call is a no-op on browsers that do not implement the Screen Orientation API. Use [methodname]`unlock(SerializableRunnable)` if you need to run follow-up logic after the browser has applied the unlock.
+
+
+== Handling Errors
+
+When a lock fails, [methodname]`errorCode()` on [classname]`ScreenOrientationLockError` returns a typed [classname]`ScreenOrientationLockErrorCode`:
+
+`NOT_SUPPORTED`:: The browser does not implement the API, or the device cannot be locked.
+`SECURITY`:: A security requirement blocked the request, for example a hidden document or a sandboxed iframe without `allow-orientation-lock`.
+`ABORT`:: A newer lock or unlock call superseded the request.
+`UNKNOWN`:: The browser rejected the request for another reason, or the bridge call itself failed.
+
+Use [methodname]`debugInfo()` for diagnostics when you need the underlying browser message.

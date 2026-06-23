@@ -87,6 +87,18 @@ The following table shows frequently used testers and their key methods:
 
 | [classname]`Upload`
 | [methodname]`upload(File)`, [methodname]`uploadAll(File...)`
+
+| [classname]`IntegerSlider`
+| [classname]`IntegerSliderTester`: [methodname]`setValue(Integer)`, [methodname]`increment()`, [methodname]`decrement()`, [methodname]`incrementBy(int)`, [methodname]`decrementBy(int)`
+
+| [classname]`IntegerRangeSlider`
+| [classname]`IntegerRangeSliderTester`: [methodname]`setValue(IntegerRangeSliderValue)`, [methodname]`setStart(Integer)`, [methodname]`setEnd(Integer)`, [methodname]`incrementStart()`, [methodname]`decrementEnd()`, ...
+
+| [classname]`DecimalSlider`
+| [classname]`DecimalSliderTester`: [methodname]`setValue(Double)`, [methodname]`increment()`, [methodname]`decrement()`, [methodname]`incrementBy(int)`, [methodname]`decrementBy(int)`
+
+| [classname]`DecimalRangeSlider`
+| [classname]`DecimalRangeSliderTester`: [methodname]`setValue(DecimalRangeSliderValue)`, [methodname]`setStart(Double)`, [methodname]`setEnd(Double)`, [methodname]`incrementStart()`, [methodname]`decrementEnd()`, ...
 |===
 
 
@@ -157,6 +169,39 @@ All testers inherit from [classname]`ComponentTester`, which provides methods us
 | [methodname]`find(Class)`
 | Creates a component query scoped to the children of the wrapped component.
 |===
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Testing a Component Without a View
+
+A single component -- for example, a form or a custom field -- can be tested in isolation, without wrapping it in an [annotationname]`@Route` view. [methodname]`BrowserlessUIContext.forComponent()` builds a self-contained, route-free test environment, attaches the component to a window's [classname]`UI`, and tears everything down when the window closes, so a single try-with-resources is enough:
+
+[source,java]
+----
+try (var window = BrowserlessUIContext.forComponent(new MyForm())) {
+    window.findTextField().withLabel("Name").setValue("Ada");
+    window.findButton().withText("Save").click();
+}
+----
+
+The returned window is a [classname]`BrowserlessUIContext`, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<multi-user#, Multi-User and Multi-Window Testing>> for the context API.
+
+If the component's constructor needs [methodname]`UI.getCurrent()` or the session, pass a factory instead: [methodname]`BrowserlessUIContext.forComponent(MyForm::new)`. The factory runs after the Vaadin thread-locals are installed, so the constructor observes the live environment.
+
+For tests that need the same standalone component in several windows or for several users, use [methodname]`BrowserlessApplicationContext.forComponent(Supplier)`. It returns the application context, and every window created from it gets a fresh component instance from the factory:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
+    var w1 = app.newUser().newWindow();
+    var w2 = app.newUser().newWindow();
+
+    w1.findTextField().withLabel("Name").setValue("Ada");
+    // w2 holds its own MyForm instance
+    Assertions.assertEquals("", w2.findTextField().withLabel("Name")
+            .component().getValue());
+}
+----
 
 
 == Building Custom Testers

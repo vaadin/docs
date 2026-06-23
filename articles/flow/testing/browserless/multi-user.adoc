@@ -136,7 +136,9 @@ Every window exposes the same testing DSL as [classname]`BrowserlessTest`, scope
 - [methodname]`window.navigate(...)` -- navigate the window to a view.
 - [methodname]`window.findButton()`, [methodname]`window.findTextField()`, [methodname]`window.findGrid(Class<V>)`, ... -- typed locator entry points that combine a filter chain with the component's tester actions in one fluent expression; see <<locators#, Component Locators>>.
 - [methodname]`window.find(Class)` and [methodname]`window.findInView(Class)` -- locate components in this window. Returns a [classname]`ComponentQuery`; see <<component-query#, Querying Components>>.
-- [methodname]`window.test(component)` -- wrap a component in a tester that simulates user actions like [methodname]`click()` and [methodname]`setValue()`. Returns a typed tester matched to the component's type; see <<component-testers#, Component Testers>>.
+- [methodname]`window.test(component)` -- wrap a component in a tester that simulates user actions like [methodname]`click()` and [methodname]`setValue()`. Returns a typed tester matched to the component's type; see <<component-testers#, Component Testers>>. To request a specific tester type explicitly -- for example, a custom tester -- use [methodname]`window.test(MyTester.class, component)`.
+- [methodname]`window.fireShortcut(Key, KeyModifier...)` -- simulate a keyboard shortcut in the window, mirroring [methodname]`fireShortcut()` on [classname]`BrowserlessTest`.
+- [methodname]`window.runPendingSignalsTasks()` -- process pending signal effects before asserting; see <<#signals, Signals>> below.
 - [methodname]`window.getCurrentView()` and [methodname]`window.roundTrip()` -- convenience accessors that mirror their [classname]`BrowserlessTest` counterparts.
 
 .Two Users Sharing Application-Level State
@@ -177,6 +179,32 @@ Assertions.assertInstanceOf(CheckoutView.class, w2.getCurrentView());
 Assertions.assertSame(user.getSession(), w1.getUI().getSession());
 Assertions.assertNotSame(w1.getUI(), w2.getUI());
 ----
+
+
+[#signals]
+== Signals
+
+The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
+
+.Two Users Observing a Shared Signal
+[source,java]
+----
+var w1 = app.newUser().newWindow();
+w1.navigate(ChatView.class);
+
+var w2 = app.newUser().newWindow();
+w2.navigate(ChatView.class);
+
+// w1 updates a shared signal that both views are bound to
+w1.findTextField().withLabel("Message").setValue("Hello!");
+w1.findButton().withText("Send").click();
+
+// Process the pending signal effects, then assert on the other window
+w2.runPendingSignalsTasks();
+Assertions.assertEquals("Hello!", w2.findParagraph().getText());
+----
+
+[methodname]`runPendingSignalsTasks()` waits up to 100 milliseconds for the first pending task to arrive and then drains the queue; the [methodname]`runPendingSignalsTasks(long, TimeUnit)` overload accepts a custom wait time. The method returns [code]`true` if any tasks were processed. If the calling thread holds the window's [classname]`VaadinSession` lock, the lock is temporarily released during the wait so that background threads can enqueue tasks.
 
 
 == Authenticated Users with Spring Security

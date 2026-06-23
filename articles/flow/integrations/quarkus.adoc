@@ -174,6 +174,25 @@ public class ExecutorConfiguration {
 
 
 
+[[quarkus.push]]
+[role="since:com.vaadin:vaadin@V25.2"]
+== Server Push
+
+The Vaadin Quarkus extension sets the `quarkus.websocket.dispatch-to-worker` configuration property to `true` by default. This routes inbound <<{articles}/flow/advanced/server-push#, Server Push>> websocket frames through the Quarkus worker thread pool instead of the Vert.x event loop.
+
+This default differs from the Quarkus default, which dispatches websocket frames on the event-loop thread. Event-loop dispatch is unsafe for Vaadin: Vaadin acquires the session lock before dispatching a request, and application code is free to block while holding that lock -- for example, by making synchronous REST or database calls in a [interfacename]`BeforeEnterObserver` or [interfacename]`AfterNavigationListener`. Blocking the event loop in this way can cause the application to hang.
+
+You can override the default by setting the property explicitly in [filename]`application.properties`:
+
+.[filename]`application.properties`
+[source,properties]
+----
+quarkus.websocket.dispatch-to-worker=false
+----
+
+Only opt back in to event-loop dispatch if you have a specific performance reason to prefer it, and you can guarantee that no code executed while holding the session lock performs blocking operations.
+
+
 [[quarkus.vaadin.addons]]
 == Vaadin Add-Ons in Quarkus
 

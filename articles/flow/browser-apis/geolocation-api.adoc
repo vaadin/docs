@@ -248,3 +248,52 @@ A [classname]`GeolocationPosition` contains [classname]`GeolocationCoordinates` 
 |===
 
 Boxed [code]`Double` fields can be [code]`null`. A laptop without GPS typically reports [code]`null` for altitude, heading, and speed; a mobile phone with GPS typically reports all of them.
+
+
+== Testing
+
+Views that use geolocation can be tested without a browser. In <<{articles}/flow/testing/browserless#, browserless tests>>, [classname]`GeolocationSimulator` provides a state-based simulation of the browser's geolocation: the test describes the world -- the user's permission decision and the sensor's reading -- and then exercises application code that observes it through the regular [classname]`Geolocation` API. The simulator is installed automatically whenever browserless mocking is active; obtain it with [methodname]`GeolocationSimulator.current()` for the current [classname]`UI`, or [methodname]`GeolocationSimulator.forUI(UI)`.
+
+Two orthogonal axes drive the simulation:
+
+Permission:: [methodname]`grantPermission()`, [methodname]`denyPermission()`, [methodname]`resetPermission()`, and [methodname]`simulateUnsupported()`. The default state is [code]`PROMPT`, equivalent to a fresh page where the user hasn't yet responded to the permission dialog -- [methodname]`getPosition()` calls stay pending until the test decides the permission.
+Sensor reading:: [methodname]`setLocation(latitude, longitude)` -- with overloads taking an accuracy or a full [classname]`GeolocationPosition` -- plus [methodname]`clearLocation()`, [methodname]`setUnavailable(GeolocationErrorCode, String)`, and [methodname]`clearUnavailable()`. The default state is no fix.
+
+When permission is granted and a location is set, position requests resolve with that fix, and active watches receive it on every [methodname]`setLocation()` call:
+
+[source,java]
+----
+@Test
+void useMyLocation_centersMapOnPosition() {
+    LocateView view = navigate(LocateView.class);
+
+    GeolocationSimulator geo = GeolocationSimulator.current();
+    geo.grantPermission();
+    geo.setLocation(60.1699, 24.9384);
+
+    test(view.locateButton).click();
+
+    Assertions.assertEquals(60.1699, view.map.getCenter().getY(), 0.001);
+}
+----
+
+Denying permission resolves pending requests with a [code]`PERMISSION_DENIED` error, delivers the same error to active watches, and stops them -- so the error path is just as easy to cover:
+
+[source,java]
+----
+@Test
+void permissionDenied_showsErrorNotification() {
+    LocateView view = navigate(LocateView.class);
+
+    GeolocationSimulator.current().denyPermission();
+    test(view.locateButton).click();
+
+    Notification notification = find(Notification.class).single();
+    Assertions.assertEquals("Could not determine your location.",
+            test(notification).getText());
+}
+----
+
+Sensor failures are simulated with [methodname]`setUnavailable()` -- for example, [methodname]`setUnavailable(GeolocationErrorCode.TIMEOUT, "no fix")` exercises the timeout branch of an error handler.
+
+For finer-grained control, [methodname]`requests()` and [methodname]`lastRequest()` expose pending one-shot [classname]`GeolocationRequest` instances that can be resolved individually with [methodname]`respondWith()`, and [methodname]`activeTrackers()` lists the active [classname]`GeolocationTrackerSession` instances created by [methodname]`watchPosition()`, including their owner component and options.

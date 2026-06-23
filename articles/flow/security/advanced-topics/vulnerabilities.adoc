@@ -153,6 +153,28 @@ Div div = new Div();
 div.add(new Html(safeHtml));
 ----
 
+[since:com.vaadin:vaadin@V25.2]
+
+The [classname]`Html` component can also do the sanitization itself. The constructors that take a [classname]`SerializableSupplier<Safelist>` clean the initial content -- and any content applied later -- with the supplied jsoup [classname]`Safelist`:
+
+[source,java]
+----
+Div div = new Div();
+div.add(new Html(dangerousText, Safelist::relaxed));
+----
+
+Pass a method reference or a lambda that builds the [classname]`Safelist`, rather than capturing a pre-built instance: jsoup's [classname]`Safelist` isn't serializable, and capturing one in the supplier breaks session serialization. Also note that the safelist must permit the root element of the fragment.
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Unsafe URL Schemes
+
+URLs using a script-capable scheme, such as `javascript:`, are another common XSS vector. Vaadin validates URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, and [methodname]`Page.open(String)` against a list of safe schemes, and these methods throw an [classname]`IllegalArgumentException` if the scheme isn't considered safe. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted. Relative URLs have no scheme and are always accepted.
+
+The set of safe schemes can be customized with the `com.vaadin.safeUrlSchemes` configuration parameter, which takes a comma-separated list of schemes. An entry of `*` marks every scheme as safe, disabling the validation. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+If a URL is fully under your control and known to be safe, you can bypass the validation for that URL with the dedicated unsafe setters: [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, and [methodname]`Page.openUnsafe(String)`.
+
 
 === Running Custom JavaScript
 
@@ -161,12 +183,12 @@ Sometimes you may need to run custom scripts inside the application. Running any
 [source,java]
 ----
 // The script below can do whatever it wants, so use with care:
-UI.getCurrent().getPage().executeJs("window.alert('This method is inherently unsafe');");
+UI.getCurrentOrThrow().getPage().executeJs("window.alert('This method is inherently unsafe');");
 
 // This is especially dangerous since you can't be sure
 // what the script contains, nor can you make it safe:
 String script = getExternalScript();
-UI.getCurrent().getPage().executeJs(script);
+UI.getCurrentOrThrow().getPage().executeJs(script);
 ----
 
 Scripts can't be escaped automatically since any escaping would cause the script not to work. Vaadin can't know which scripts are dangerous and which are not. It's up to you to make sure the scripts are safe. However, you can safely pass parameters to JS execution by using the following syntax:
@@ -178,7 +200,7 @@ String script = "window.alert($0)";
 
 // These parameters are treated in a safe way:
 String scriptParam = getScriptParamFromDB();
-UI.getCurrent().getPage().executeJs(script, scriptParam);
+UI.getCurrentOrThrow().getPage().executeJs(script, scriptParam);
 ----
 
 
