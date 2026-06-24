@@ -54,11 +54,11 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 
 The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. The container can be any component that implements [classname]`HasComponents`. Any component that implements [classname]`HasValue` is treated as a field, and any nested [classname]`HasComponents` is walked recursively.
 
-[classname]`PasswordField` is always hidden from the LLM. To hide other fields, for example internal IDs or anything sensitive that the user must fill in manually, call [methodname]`ignore()`:
+[classname]`PasswordField` is always hidden from the LLM. To hide other fields, for example internal IDs or anything sensitive that the user must fill in manually, call [methodname]`ignoreField()`:
 
 [source,java]
 ----
-controller.ignore(internalIdField);
+controller.ignoreField(internalIdField);
 ----
 
 Ignored fields are hidden from the LLM and stay editable while a fill is in progress.
@@ -76,12 +76,12 @@ A common case is a conditional field driven by a [interfacename]`ValueChangeList
 
 == Field Descriptions
 
-The LLM sees each field's label, helper text, and component type. When those don't fully capture the field's meaning, for example a numeric field that takes a percentage rather than an absolute amount, or a date that means "renewal date" rather than "purchase date", add an explicit description with [methodname]`describe()`:
+The LLM sees each field's label, helper text, and component type. When those don't fully capture the field's meaning, for example a numeric field that takes a percentage rather than an absolute amount, or a date that means "renewal date" rather than "purchase date", add an explicit description with [methodname]`describeField()`:
 
 [source,java]
 ----
-controller.describe(discount, "Discount as a percentage between 0 and 100.")
-        .describe(renewalDate, "When the subscription renews, not when it started.");
+controller.describeField(discount, "Discount as a percentage between 0 and 100.")
+        .describeField(renewalDate, "When the subscription renews, not when it started.");
 ----
 
 Later calls for the same field overwrite earlier ones.
@@ -98,12 +98,12 @@ binder.bindInstanceFields(this);
 FormAIController controller = new FormAIController(form, binder);
 ----
 
-For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or `@PropertyId`), the bean property name is used as a default field description, so when the user mentions a field by its bean-side name, the LLM can match the request to the right field. An explicit [methodname]`describe()` call always overrides the default. Lambda-bound bindings have no property name and contribute no default field description.
+For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or `@PropertyId`), the bean property name is used as a default field description, so when the user mentions a field by its bean-side name, the LLM can match the request to the right field. An explicit [methodname]`describeField()` call always overrides the default. Lambda-bound bindings have no property name and contribute no default field description.
 
 
 == Options for Selection Fields
 
-Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`valueOptions()` registers that set with the controller, and the labels are presented to the LLM as the field's choices. When the LLM picks a label, the controller resolves it to the field's value type and writes the result to the field.
+Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`fieldValueOptions()` registers that set with the controller, and the labels are presented to the LLM as the field's choices. When the LLM picks a label, the controller resolves it to the field's value type and writes the result to the field.
 
 Use a fixed list when the values are small and known up front, or a query callback when they come from a service or database.
 
@@ -113,7 +113,7 @@ For a small set of known [classname]`String` values, pass them directly:
 
 [source,java]
 ----
-controller.valueOptions(
+controller.fieldValueOptions(
         ValueOptions.forField(industry)
                 .options(List.of("Software", "Manufacturing", "Healthcare")));
 ----
@@ -129,7 +129,7 @@ When the values come from a service or repository the application already uses, 
 ComboBox<Project> projectField = new ComboBox<>("Project");
 projectField.setItemLabelGenerator(Project::name);
 
-controller.valueOptions(
+controller.fieldValueOptions(
         ValueOptions.forField(projectField)
                 .options((filter, limit) -> projectService.search(filter, limit)
                         .stream().map(Project::name).toList()),
@@ -147,7 +147,7 @@ If [methodname]`findByName()` returns `null` or throws -- because the LLM picked
 
 .Eager Items as a Fallback
 [NOTE]
-Single- and multi-select fields configured with [methodname]`setItems(...)` already share their items with the LLM, so the simple fixed-options case often needs no [methodname]`valueOptions()` call. Use [methodname]`valueOptions()` when items come from a lazy or remote source rather than an in-memory list, or when you want the LLM to fetch options through a filter callback instead of receiving the full set up front.
+Single- and multi-select fields configured with [methodname]`setItems(...)` already share their items with the LLM, so the simple fixed-options case often needs no [methodname]`fieldValueOptions()` call. Use [methodname]`fieldValueOptions()` when items come from a lazy or remote source rather than an in-memory list, or when you want the LLM to fetch options through a filter callback instead of receiving the full set up front.
 
 === Multi-Select Fields
 
@@ -157,7 +157,7 @@ Single- and multi-select fields configured with [methodname]`setItems(...)` alre
 ----
 MultiSelectComboBox<Project> projectsField = new MultiSelectComboBox<>("Projects");
 
-controller.valueOptions(
+controller.fieldValueOptions(
         ValueOptions.forField(projectsField)
                 .options(List.of("Apollo", "Vega", "Helios")),
         label -> projectService.findByName(label));
@@ -187,20 +187,20 @@ The controller sends only a defined subset of the form to the LLM. Knowing where
 
 The model sees:
 
-* Each visible field's label, helper text, component type, and any [methodname]`describe()` text or [classname]`Binder` property-name default.
+* Each visible field's label, helper text, component type, and any [methodname]`describeField()` text or [classname]`Binder` property-name default.
 * The current value of every visible, non-ignored field, so it can decide which entries to overwrite. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
-* The eager items of a combo box or select, or the labels returned by a [methodname]`valueOptions()` query callback for the filter the model supplies.
+* The eager items of a combo box or select, or the labels returned by a [methodname]`fieldValueOptions()` query callback for the filter the model supplies.
 
 The model does not see:
 
-* Any field excluded with [methodname]`ignore()`. Its value, label, and existence are all hidden.
+* Any field excluded with [methodname]`ignoreField()`. Its value, label, and existence are all hidden.
 * Any field the application has hidden via [methodname]`setVisible(false)`, or that sits inside a hidden container.
 * The contents of [classname]`PasswordField`, which is always excluded.
 * Internal data, services, or beans. The model has access only to what the field components themselves show.
 
 .Visible Field Values Are Sent to the Model
 [IMPORTANT]
-Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignore()`, or keep them out of the layout passed to the controller.
+Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignoreField()`, or keep them out of the layout passed to the controller.
 
 
 == Field Locking During a Fill Turn
@@ -217,38 +217,38 @@ If application code changes a field's read-only state during a turn, for example
 When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller exposes two APIs for this:
 
 * [methodname]`addFieldValueChangeListener()` registers a listener that fires once per changed field after a successful turn.
-* [methodname]`showHighlight()` and [methodname]`hideHighlight()` toggle a per-field highlight rendered by the `vaadin-field-highlighter` web component.
+* [methodname]`showFieldHighlight()` and [methodname]`hideFieldHighlight()` toggle a per-field highlight rendered by the `vaadin-field-highlighter` web component.
 
 A typical pattern flashes every changed field after each fill:
 
 [source,java]
 ----
 controller.addFieldValueChangeListener(event ->
-        controller.showHighlight(event.getField()));
+        controller.showFieldHighlight(event.getField()));
 ----
 
-Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignore()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
+Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignoreField()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
 
 A field hidden at turn start that is revealed and written into the same turn is reported with its real pre-turn value rather than `null`, so cascades into conditional fields show up correctly.
 
-The listener runs on the UI thread with the session lock held, so it can call [methodname]`showHighlight()`, update components, or any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
+The listener runs on the UI thread with the session lock held, so it can call [methodname]`showFieldHighlight()`, update components, or any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
 
-Repeated [methodname]`showHighlight()` calls on the same field are idempotent -- exactly one highlight remains. Each controller marks its highlight with an identifier unique to that instance, so the AI highlight coexists with any other `vaadin-field-highlighter` consumers the application keeps on the field, for example a collaboration session showing other users' edits. The highlight survives detach and re-attach: the controller re-applies it whenever the field returns to the DOM. The field passed to [methodname]`showHighlight()` does not need to belong to the controller's form -- any [classname]`HasValue` [classname]`Component` works.
+Repeated [methodname]`showFieldHighlight()` calls on the same field are idempotent -- exactly one highlight remains. Each controller marks its highlight with an identifier unique to that instance, so the AI highlight coexists with any other `vaadin-field-highlighter` consumers the application keeps on the field, for example a collaboration session showing other users' edits. The highlight survives detach and re-attach: the controller re-applies it whenever the field returns to the DOM. The field passed to [methodname]`showFieldHighlight()` does not need to belong to the controller's form -- any [classname]`HasValue` [classname]`Component` works.
 
 
 == Reconnecting after Deserialization
 
-[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describe()`, [methodname]`valueOptions()`, and [methodname]`ignore()` hints, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
+[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
 
 [source,java]
 ----
 FormAIController controller = new FormAIController(form, binder);
-controller.describe(discount, "Discount as a percentage between 0 and 100.")
-        .valueOptions(ValueOptions.forField(industry)
+controller.describeField(discount, "Discount as a percentage between 0 and 100.")
+        .fieldValueOptions(ValueOptions.forField(industry)
                 .options(List.of("Software", "Manufacturing", "Healthcare")))
-        .ignore(internalIdField);
+        .ignoreField(internalIdField);
 controller.addFieldValueChangeListener(event ->
-        controller.showHighlight(event.getField()));
+        controller.showFieldHighlight(event.getField()));
 
 orchestrator.reconnect(provider)
         .withController(controller)
