@@ -22,6 +22,7 @@ function Example() {
   const professions = useSignal<string[]>([]);
   const selectedProfession = useSignal<string | null>(null);
   const selectedPerson = useSignal<Person | null>(null);
+  const hasInitialData = useSignal(false);
 
   const persons = useComputed(() => {
     const profession = selectedProfession.value;
@@ -36,10 +37,15 @@ function Example() {
       people.value = allPeople;
       professions.value = [...new Set(allPeople.map((p) => p.profession))].toSorted().slice(0, 4);
       selectedProfession.value = professions.value[0];
+      hasInitialData.value = true;
     });
   }, []);
 
-  return (
+  // For the outer MDL, details can only be rendered after initial data has been loaded. The details
+  // being rendered later than the root component results in an animation for what is practically
+  // the initial rendering of the component. As a workaround, render the whole MDL only after the
+  // initial data has been loaded.
+  return hasInitialData.value ? (
     <SplitLayout style={{ height: '100%' }}>
       {/* tag::snippet[] */}
       <MasterDetailLayout
@@ -113,6 +119,7 @@ function Example() {
           ) : null}
         </MasterDetailLayout.Detail>
       </MasterDetailLayout>
+
       {/* end::snippet[] */}
       <div
         style={{
@@ -130,7 +137,7 @@ function Example() {
         </span>
       </div>
     </SplitLayout>
-  );
+  ) : null;
 }
 
 export default reactExample(Example); // hidden-source-line
