@@ -185,6 +185,22 @@ If you're using a Gradle wrapper, update it to version 8.14 by executing the fol
 
 For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
 
+=== Gradle: `vaadinPrepareFrontend` No Longer Runs Automatically
+
+Starting with Vaadin 25.2, the `vaadinPrepareFrontend` Gradle task is no longer automatically bound to the `processResources` lifecycle task. In earlier versions, this binding caused the task to run on every compilation, including when IntelliJ IDEA or other IDEs triggered automatic Gradle builds. This could lead to generated frontend files (such as `index.ts`) being unexpectedly deleted, particularly when using hot deploy mode.
+
+The task can still be run explicitly if needed. If your build relied on the automatic execution, you can re-add the binding in your [filename]`build.gradle`:
+
+----
+tasks.named('processResources') {
+    dependsOn 'vaadinPrepareFrontend'
+}
+----
+
+=== Recently Published npm Packages Not Installed by Default
+
+Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
+
 == Development Tools
 
 Development tools are opt-in feature in Vaadin 25. `vaadin-dev` module isn't included transitively by default anymore via `vaadin` or `vaadin-core` or any other Vaadin dependencies. To include it, add following dependency to your build configuration:
@@ -243,6 +259,10 @@ Vaadin Quarkus extension is changed to build production package by default. No n
 
 To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
 
+=== Push Requests Dispatched on Worker Threads
+
+Starting with Vaadin 25.2, the Vaadin Quarkus extension sets `quarkus.websocket.dispatch-to-worker=true` by default, so that Server Push websocket frames are dispatched on Quarkus worker threads instead of the Vert.x event loop. This prevents application code that blocks while holding the Vaadin session lock from hanging the event loop. If your application explicitly relies on event-loop dispatch, set the property to `false` in [filename]`application.properties`. See <<{articles}/flow/integrations/quarkus#quarkus.push, Server Push in the Quarkus integration documentation>> for details.
+
 == Themes and Styling
 
 Vaadin 25 simplifies the theme/styling system to bring it closer to normal/native web development, and minimizes Vaadin-specific peculiarities, while keeping migration from earlier versions as painless as possible.
@@ -266,13 +286,7 @@ The [annotationname]`@StyleSheet` annotation is now the recommended way to load 
 public class Application implements AppShellConfigurator {}
 ----
 
-Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. If the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications), the referenced stylesheet must be prefixed by the `context://` protocol.
-
-[source,java]
-----
-@StyleSheet("context://styles.css")
-public class Application implements AppShellConfigurator {}
-----
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. [since:com.vaadin:vaadin@V25.2]#Stylesheet URLs are automatically resolved against the servlet context root, so they work also when the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications).# Prefixing the URL with the `context://` protocol is no longer necessary, but it's still supported.
 
 The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
 
@@ -408,6 +422,9 @@ Note that `theme.json` and shadow-DOM styling of components through the `compone
 
 
 == Components
+
+=== Accordion
+Starting with Vaadin 25.2, attaching an [classname]`Accordion` to the UI no longer fires an initial [classname]`OpenedChangeEvent`. In addition, [methodname]`isFromClient()` on the event now correctly returns `false` for changes made from server-side code; previously, it always returned `true`. Adjust any listeners that rely on receiving an event when the component is attached, or that use [methodname]`isFromClient()` to distinguish user-initiated changes.
 
 === App Layout
 The `bottom` attribute was removed and can no longer be used to target the bottom navbar. Instead, use the selector `::part(navbar-bottom)` to target it with CSS.
@@ -987,7 +1004,7 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 ----
 --
 
-. Remove `extends VaadinWebSecurity` and import the Vaadin security context holder strategy
+. Remove `extends VaadinWebSecurity`.
 +
 [source,java]
 ----
@@ -1022,13 +1039,45 @@ public class MainLayout extends AppLayout {
 ----
 
 
-== TestBench
+== Security Defaults in Vaadin 25.2
+
+Vaadin 25.2 hardens some security-related defaults. These changes may require action when upgrading.
+
+=== URL Scheme Validation
+
+Starting with Vaadin 25.2, URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, and [methodname]`Page.open(String)` are validated against a list of safe URL schemes. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted; relative URLs are always accepted. Applications that set URLs with other schemes -- such as `javascript:` -- now get an [classname]`IllegalArgumentException` from these methods.
+
+If your application needs to set such URLs, either configure the accepted schemes with the `com.vaadin.safeUrlSchemes` configuration parameter -- a comma-separated list of schemes, where the value `*` disables the validation -- or use the unsafe setter variants [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, and [methodname]`Page.openUnsafe(String)` for URLs that are fully under your control. See <<{articles}/flow/security/advanced-topics/vulnerabilities#,Common Vulnerabilities>> for details.
+
+=== X-Frame-Options Header Sent by Default
+
+Starting with Vaadin 25.2, the application page is served with the `X-Frame-Options: SAMEORIGIN` HTTP response header to protect against clickjacking. As a result, browsers refuse to show the application inside a frame on a different origin. Applications that are meant to be embedded in an iframe on another origin must set the `frameOptions` configuration parameter to an empty value to disable the header. The parameter can also be set to another header value, such as `DENY`. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
+
+
+== TestBench and Browserless Testing
 
 === JUnit 6 and Vintage Engine for JUnit 4 Tests
 
 Vaadin 25 with Spring Boot 4 uses JUnit 6 (JUnit Platform) as the default test framework. If you have JUnit 4 tests using [classname]`UIUnit4Test` (Browserless) or [classname]`TestBenchTestCase` (End-to-End), they won't be detected or executed without adding the JUnit Vintage Engine dependency.
 
 See <<{articles}/flow/testing/browserless/getting-started#,Getting Started with Browserless Testing>> and <<{articles}/flow/testing/end-to-end/getting-started#,Getting Started with End-to-End Testing>> for the required dependencies.
+
+=== Browserless Testing: Spring Support Moved to a Separate Artifact
+
+Starting with Vaadin 25.2, the Spring-specific browserless-testing classes -- [classname]`SpringBrowserlessTest` and the Spring mock infrastructure -- are no longer included in the `browserless-test` and `browserless-test-junit6` artifacts. If your tests extend [classname]`SpringBrowserlessTest`, add the new `browserless-test-spring` dependency, as the tests no longer compile without it:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Non-Spring projects aren't affected. See <<{articles}/flow/testing/browserless/migration#,Migrating to Browserless Testing>> for details.
 
 === ComponentTester Click Method
 
@@ -1040,6 +1089,8 @@ The [methodname]`getPropertyString`, [methodname]`getPropertyBoolean`, [methodna
 
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
+
+[methodname]`Binder.writeBean()` and [methodname]`Binder.writeBeanIfValid()` no longer process hidden fields. Previously, all bound fields were validated and written to the bean regardless of visibility. Now, bindings for non-visible components are skipped by default. To restore the previous behavior, call [methodname]`binder.setApplyBindingsToHiddenFields(true)`, or set a per-binding predicate with [methodname]`binding.setIsAppliedPredicate(b -> true)`. See <<{articles}/flow/binding-data/components-binder-validation#conditionally-applying-bindings,Conditionally Applying Bindings>> for details.
 
 == Server-Side Modality
 [classname]`Dialog` has become less strict and allows background requests to server. Vaadin Flow allows to change this behavior if needed through [methodname]`Dialog.setModality(ModalityMode)` method.

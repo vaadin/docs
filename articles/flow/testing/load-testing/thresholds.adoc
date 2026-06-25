@@ -1,0 +1,309 @@
+---
+title: Load Testing Thresholds
+page-title: Setting Thresholds for Load Tests
+description: How to set and control failure thresholds for the load tests
+meta-description: Learn how to  set and control failure thresholds for the load tests
+order: 60
+version: since:com.vaadin:vaadin@V25.2
+---
+
+= [since:com.vaadin:vaadin@V25.2]#Load Testing Thresholds#
+
+== Overview
+
+k6 thresholds define pass/fail criteria for your load tests.
+
+When a threshold is breached, k6 marks the test as failed, and the Maven build fails if `k6.failOnThreshold=true` (the default).
+
+The TestBench k6 converter plugin generates some default thresholds automatically in every k6 script produced.
+You can configure the default thresholds, disable individual ones, or add custom thresholds for any k6 metric.
+
+== Default Thresholds
+
+Every generated k6 script includes these thresholds out of the box:
+
+[cols="2,3,2", options="header"]
+|===
+| Metric | Expression | Default
+
+| `http_req_duration`
+| 95th percentile response time
+| `p(95)<2000` (2 seconds)
+
+| `http_req_duration`
+| 99th percentile response time
+| `p(99)<5000` (5 seconds)
+
+| `checks`
+| Check success rate (1% failure rate allowed)
+| `rate>=0.99` with `abortOnFail: true`
+|===
+
+This generates the following block in the k6 script:
+
+[source,javascript]
+----
+export const options = {
+  thresholds: {
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
+    http_req_duration: ['p(95)<2000', 'p(99)<5000'],
+  },
+}
+----
+
+== Editing Default Thresholds
+
+You can change the default threshold values with Maven properties or through configuration in the POM.
+
+=== Via Command Line
+
+[source,bash]
+----
+# Tighter response time requirements
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.httpReqDurationP95=1000 \
+    -Dk6.threshold.httpReqDurationP99=3000
+
+# Allow checks to fail without aborting the test
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.checksAbortOnFail=false
+
+# Allow up to 5% of checks to fail (generates rate>=0.95)
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.checksAllowedFailureRate=0.05
+
+# Require all checks to pass (generates rate==1)
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.checksAllowedFailureRate=0
+
+# Disable the p95 threshold entirely (set to 0)
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.httpReqDurationP95=0
+----
+
+=== Via POM Configuration
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>testbench-converter-plugin</artifactId>
+    <configuration>
+        <!-- 95th percentile response time in ms (0 to disable) -->
+        <httpReqDurationP95>1000</httpReqDurationP95>
+        <!-- 99th percentile response time in ms (0 to disable) -->
+        <httpReqDurationP99>3000</httpReqDurationP99>
+        <!-- Set to false to continue the test even when checks fail -->
+        <checksAbortOnFail>false</checksAbortOnFail>
+    </configuration>
+</plugin>
+----
+
+=== Default Threshold Parameters
+
+[cols="3,1,3", options="header"]
+|===
+| Parameter | Default | Description
+
+| `k6.threshold.httpReqDurationP95`
+| `2000`
+| 95th percentile response time threshold in ms. Set to `0` to disable.
+
+| `k6.threshold.httpReqDurationP99`
+| `5000`
+| 99th percentile response time threshold in ms. Set to `0` to disable.
+
+| `k6.threshold.checksAbortOnFail`
+| `true`
+| When `true`, the test aborts immediately on the first check failure. When `false`, failures are recorded but the test continues.
+
+| `k6.threshold.checksAllowedFailureRate`
+| `0.01`
+| Fraction of checks allowed to fail, between `0` and `1`. The default `0.01` generates the threshold `rate>=0.99`. Set to `0` to require all checks to pass (`rate==1`).
+|===
+
+== Adding Custom Thresholds
+
+You can add pass/fail thresholds for any https://grafana.com/docs/k6/latest/using-k6/metrics/[k6 built-in metric] using the `k6.threshold.custom` property.
+
+The format is a comma-separated list of `metric:expression` pairs:
+
+[source]
+----
+metric1:expression1,metric2:expression2,...
+----
+
+=== Via Command Line
+
+[source,bash]
+----
+# Fail if more than 1% of requests fail
+mvn loadtest:run -Dk6.testFile=test.js \
+    -Dk6.threshold.custom="http_req_failed:rate<0.01"
+
+# Multiple custom thresholds
+mvn loadtest:run -Dk6.testFile=test.js \
+    -Dk6.threshold.custom="http_req_failed:rate<0.01,http_req_waiting:p(95)<500,http_reqs:count>100"
+----
+
+=== Via POM Configuration
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>testbench-converter-plugin</artifactId>
+    <configuration>
+        <!-- Custom thresholds in metric:expression format -->
+        <customThresholds>http_req_failed:rate&lt;0.01,http_req_waiting:p(95)&lt;500</customThresholds>
+    </configuration>
+</plugin>
+----
+
+NOTE: In XML, use `\&lt;` instead of `<` inside threshold expressions.
+
+=== Combining Defaults and Custom Thresholds
+
+Custom thresholds are added alongside the defaults.
+
+If you add a custom `http_req_duration` expression, it is merged with the default p95/p99 thresholds:
+
+[source,bash]
+----
+# Adds a median threshold alongside the existing p95 and p99
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.custom="http_req_duration:p(50)<1000"
+----
+
+This produces:
+
+[source,javascript]
+----
+export const options = {
+  thresholds: {
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
+    http_req_duration: ['p(95)<2000', 'p(99)<5000', 'p(50)<1000'],
+  },
+}
+----
+
+If a custom threshold contains same target as the default, the default gets overridden by the custom one and not duplicated.
+
+[source,bash]
+----
+# Overrides existing default p95 median threshold
+mvn loadtest:convert -Dk6.harFile=recording.har \
+    -Dk6.threshold.custom="http_req_duration:p(95)<500"
+----
+
+This produces:
+
+[source,javascript]
+----
+export const options = {
+  thresholds: {
+    checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
+    http_req_duration: ['p(95)<500', 'p(99)<5000'],
+  },
+}
+----
+
+== Common Threshold Examples
+
+Below are commonly used threshold configurations for Vaadin load tests.
+
+=== Strict Performance Requirements
+
+[source,bash]
+----
+mvn loadtest:run -Dk6.testFile=test.js \
+    -Dk6.threshold.httpReqDurationP95=500 \
+    -Dk6.threshold.httpReqDurationP99=1000 \
+    -Dk6.threshold.custom="http_req_failed:rate<0.001,http_req_waiting:p(95)<300"
+----
+
+Generated output:
+[source,javascript]
+----
+thresholds: {
+  checks: [{ threshold: 'rate>=0.99', abortOnFail: true, delayAbortEval: '5s' }],
+  http_req_duration: ['p(95)<500', 'p(99)<1000'],
+  http_req_failed: ['rate<0.001'],
+  http_req_waiting: ['p(95)<300'],
+},
+----
+
+=== Relaxed Thresholds for Stress Testing
+
+[source,bash]
+----
+mvn loadtest:run -Dk6.testFile=test.js \
+    -Dk6.threshold.httpReqDurationP95=10000 \
+    -Dk6.threshold.httpReqDurationP99=0 \
+    -Dk6.threshold.checksAbortOnFail=false \
+    -Dk6.threshold.custom="http_req_failed:rate<0.05"
+----
+
+Generated output:
+[source,javascript]
+----
+thresholds: {
+  checks: ['rate>=0.99'],
+  http_req_duration: ['p(95)<10000'],
+  http_req_failed: ['rate<0.05'],
+},
+----
+
+=== Throughput Minimum
+
+[source,bash]
+----
+mvn loadtest:run -Dk6.testFile=test.js \
+    -Dk6.threshold.custom="http_reqs:count>1000"
+----
+
+== k6 Metric Reference
+
+The following k6 built-in metrics can be used with custom thresholds.
+For the full reference, see the https://grafana.com/docs/k6/latest/using-k6/metrics/reference/[k6 metrics documentation].
+
+[cols="2,2,3", options="header"]
+|===
+| Metric | Type | Description
+
+| `http_req_duration`
+| Trend
+| Total time for the request (send + wait + receive)
+
+| `http_req_waiting`
+| Trend
+| Time spent waiting for response (Time to First Byte)
+
+| `http_req_connecting`
+| Trend
+| Time spent establishing TCP connection
+
+| `http_req_sending`
+| Trend
+| Time spent sending data
+
+| `http_req_receiving`
+| Trend
+| Time spent receiving data
+
+| `http_req_failed`
+| Rate
+| Rate of failed requests
+
+| `http_reqs`
+| Counter
+| Total number of requests
+
+| `checks`
+| Rate
+| Rate of successful checks
+|===
+
+*Trend* metrics support: `p(N)<value`, `avg<value`, `min<value`, `max<value`, `med<value` +
+*Rate* metrics support: `rate<value`, `rate>value` +
+*Counter* metrics support: `count<value`, `count>value`

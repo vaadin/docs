@@ -1,0 +1,84 @@
+---
+title: Session Context
+description: Pass per-turn ambient information -- date and time, tenant, locale, page state -- to the LLM through the AIOrchestrator.
+meta-description: Learn how to send per-turn session context to the LLM using the Vaadin AIOrchestrator withMetadata API, with a built-in current date and time default.
+order: 35
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Session Context#
+
+
+The AI orchestrator can pass a short, free-form string of session context to the LLM on every turn, such as the current date and time, the active tenant, the user's locale, the page the user is on, or anything else the model might need for each prompt. The string is captured before each request, so it always reflects the state at the time the user sent the prompt.
+
+
+== Default Current Date and Time
+
+By default, the orchestrator sends a single line with the server's current date and time so the LLM can interpret relative date references like "show sales from the past two months" or "schedule a follow-up for next Friday" without having to guess. No setup is needed beyond constructing the orchestrator as usual; the line the model receives looks like:
+
+[source]
+----
+Current server date and time: 2026-05-28T17:42+03:00 (Friday, Europe/Helsinki)
+----
+
+
+== Custom Context
+
+To pass anything else -- or to compose several pieces of context together -- register a supplier with [methodname]`withMetadata()`:
+
+[source,java]
+----
+AIOrchestrator.builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withMetadata(() -> {
+            String tenant = TenantContext.current().getName();
+            String locale = UI.getCurrent().getLocale().toLanguageTag();
+            return "Tenant: " + tenant + "\nUser locale: " + locale;
+        })
+        .build();
+----
+
+The supplier is invoked once per turn, right before the request goes out. The returned string is passed to the model without further interpretation; compose multiple pieces of context with plain string concatenation. Setting a supplier replaces the default current-date-and-time line; include it yourself if you still want it:
+
+[source,java]
+----
+.withMetadata(() -> "Tenant: " + TenantContext.current().getName()
+        + "\nServer time: " + ZonedDateTime.now())
+----
+
+A supplier that returns `null` or a blank string skips the context for that turn, which is convenient for "include this only when X" patterns:
+
+[source,java]
+----
+.withMetadata(() -> {
+    List<Incident> open = alertService.openIncidentsFor(currentUser());
+    return open.isEmpty()
+            ? null
+            : "Open incidents this user owns: " + open;
+})
+----
+
+
+== Disabling Session Context
+
+Pass `null` to disable session context entirely, including the default date-and-time line:
+
+[source,java]
+----
+AIOrchestrator.builder(provider, systemPrompt)
+        .withMetadata(null)
+        .build();
+----
+
+
+== Threading and Errors
+
+The supplier runs on the UI thread under the session lock, so it can read [methodname]`UI.getCurrent()` and any session-scoped state. Keep it fast -- anything that touches a database, a remote service, or the file system should be done outside the supplier and cached in session-scoped state.
+
+A supplier that throws an exception aborts the turn through the normal error path: the assistant placeholder is replaced with a generic error message, the [classname]`ResponseListener` (if registered) fires with the thrown exception, and the exception propagates to the caller of the prompt entry point.
+
+
+== Why Not the System Prompt
+
+The system prompt is sent verbatim on every turn. Many LLM providers use it as the cache prefix to keep latency and cost down between calls; putting per-turn values such as the current time or the active tenant into the system prompt invalidates that cache on every request. Session context is delivered through a separate per-turn channel that lives outside the system prompt, so the system prompt stays cacheable.

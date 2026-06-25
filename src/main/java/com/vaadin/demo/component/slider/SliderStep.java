@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.slider.Slider;
+import com.vaadin.flow.component.slider.DecimalSlider;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -10,7 +10,7 @@ public class SliderStep extends Div {
 
     public SliderStep() {
         // tag::snippet[]
-        Slider slider = new Slider("Volume", 0, 10);
+        DecimalSlider slider = new DecimalSlider("Volume", 0, 10);
         slider.setValue(5.0);
         slider.setStep(0.5);
         add(slider);

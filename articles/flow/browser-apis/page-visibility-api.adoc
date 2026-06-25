@@ -1,0 +1,181 @@
+---
+title: Page Visibility
+page-title: How to use the Page Visibility API in Vaadin
+description: Reacting to browser tab visibility and focus changes from the server.
+meta-description: Learn how to track browser tab visibility and focus state in Vaadin applications using the server-side Page Visibility API.
+order: 50
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Page Visibility#
+:toc:
+
+The Page Visibility API exposes the browser tab's visibility and focus state to server-side code as a reactive [classname]`Signal`. Use it to pause periodic work while the user can't see the page, route notifications to the right channel, refresh stale data when the user comes back, or show presence to other users. Read the signal with [methodname]`UI.getPage().pageVisibilitySignal()`.
+
+The signal carries a real value from the moment the UI is created, so it's safe to read from constructors and [methodname]`onAttach` without waiting for an event. It is built on the browser's https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API[Page Visibility API].
+
+
+== Visibility States
+
+The signal value is one of four [classname]`PageVisibility` enum constants:
+
+`VISIBLE`:: The tab is shown and focused. The user is actively looking at the page.
+`VISIBLE_NOT_FOCUSED`:: The tab is shown but another window or application has focus. The page is on screen but is unlikely to be receiving the user's attention.
+`HIDDEN`:: The tab is in the background, the window is minimized, or the tab is on a different virtual desktop. Browsers also throttle timers and animations in this state.
+`UNKNOWN`:: The initial sentinel value, used before the first value arrives from the browser. The signal is seeded during bootstrap before any user code runs, so this value is essentially never observed in practice; once a real value has arrived, the signal never returns to [code]`UNKNOWN`.
+
+
+== Reading the Signal
+
+The signal is read-only. There are two ways to consume it.
+
+When the visibility state drives a single component property, bind that property to a derived signal. Use [methodname]`map()` to turn the [classname]`PageVisibility` value into the property value, then pass the result to the component's [methodname]`bindText()` (or [methodname]`bindEnabled()`, [methodname]`bindVisible()`, and so on). This is the recommended approach for the common case: the property is set immediately, stays synchronized, and the binding is removed automatically when the component detaches -- no owner or cleanup to manage.
+
+[source,java]
+----
+Signal<String> statusText = UI.getCurrentOrThrow().getPage()
+        .pageVisibilitySignal().map(state -> switch (state) {
+    case VISIBLE -> "Active";
+    case VISIBLE_NOT_FOCUSED -> "Window not focused";
+    case HIDDEN -> "Tab hidden";
+    case UNKNOWN -> "";
+});
+status.bindText(statusText);
+----
+
+When the reaction is more than setting one property -- starting and stopping a task, sending a notification, updating several things at once -- subscribe with [methodname]`Signal.effect()` instead. Pass a component owner so the subscription stops automatically when the component detaches; most applications never need explicit cleanup. See <<Pausing Work While Hidden>> for a worked example. For a one-shot read outside a reactive context, call [methodname]`peek()`.
+
+
+== Pausing Work While Hidden
+
+A common use case is suspending periodic updates while the user can't see them. Cancel the scheduled task when the signal leaves [code]`VISIBLE`, and start a new one when it returns:
+
+[source,java]
+----
+private ScheduledFuture<?> tickTask;
+
+@Override
+protected void onAttach(AttachEvent event) {
+    super.onAttach(event);
+    UI ui = event.getUI();
+    Signal.effect(this, () -> {
+        if (ui.getPage().pageVisibilitySignal().get() == PageVisibility.VISIBLE) {
+            startTicking(ui);
+        } else {
+            stopTicking();
+        }
+    });
+}
+
+private void startTicking(UI ui) {
+    if (tickTask != null && !tickTask.isCancelled()) {
+        return;
+    }
+    tickTask = scheduler.scheduleAtFixedRate(
+            () -> ui.access(() -> counter.setText(Integer.toString(++updates))),
+            0, 1, TimeUnit.SECONDS);
+}
+
+private void stopTicking() {
+    if (tickTask != null) {
+        tickTask.cancel(false);
+        tickTask = null;
+    }
+}
+----
+
+This keeps the WebSocket idle while the tab is in the background or another application is focused. Whether to treat [code]`VISIBLE_NOT_FOCUSED` as "pause" or "keep updating" depends on the use case -- a dashboard the user glances at on a second monitor probably wants to keep updating; a clock or counter that only matters when interacted with can pause.
+
+
+== Routing Notifications
+
+When a notification fires while the tab is hidden, an in-page toast goes unseen. Inspect the signal at delivery time and pick the channel accordingly -- a Vaadin [classname]`Notification` when the user is looking at the page, a Web Push notification otherwise:
+
+[source,java]
+----
+void deliver(UI ui, String title, String body) {
+    PageVisibility state = ui.getPage().pageVisibilitySignal().peek();
+    if (state == PageVisibility.VISIBLE) {
+        ui.access(() -> Notification.show(body));
+    } else if (subscription != null) {
+        webPush.sendNotification(subscription, new WebPushMessage(title, body));
+    }
+}
+----
+
+[methodname]`peek()` is the right call here -- this code reads the value once, at delivery time, and doesn't need to react to subsequent changes.
+
+
+== Refreshing Stale Data on Return
+
+Use the signal to detect when the user comes back to a tab they had hidden, and reload data that may have grown stale. To avoid re-fetching on every quick alt-tab, gate the refresh on how long the tab was hidden:
+
+[source,java]
+----
+private Instant hiddenAt;
+private PageVisibility prevState = PageVisibility.VISIBLE;
+
+@Override
+protected void onAttach(AttachEvent event) {
+    super.onAttach(event);
+    UI ui = event.getUI();
+    Signal.effect(this, () -> {
+        PageVisibility state = ui.getPage().pageVisibilitySignal().get();
+        if (prevState != PageVisibility.HIDDEN && state == PageVisibility.HIDDEN) {
+            hiddenAt = Instant.now();
+        } else if (prevState == PageVisibility.HIDDEN
+                && state == PageVisibility.VISIBLE
+                && hiddenAt != null
+                && Duration.between(hiddenAt, Instant.now()).getSeconds() >= 5) {
+            refresh();
+        }
+        prevState = state;
+    });
+}
+----
+
+The threshold (5 seconds in this example) is a heuristic -- pick a value that balances "data is fresh enough" against "don't burn server cycles on every glance away".
+
+
+== Showing Presence to Other Users
+
+Combine [methodname]`pageVisibilitySignal()` with a shared signal to broadcast each user's state to every other connected UI. Each tab reports its own visibility into a shared registry; every other UI re-renders the avatar strip when any tab joins, leaves, or changes state:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent event) {
+    super.onAttach(event);
+    registry.join(new Presence(id, name, color, PageVisibility.VISIBLE));
+    registry.bindTo(avatarStrip, this::renderAvatar);
+
+    Signal.effect(this, () -> {
+        PageVisibility state = event.getUI().getPage()
+                .pageVisibilitySignal().get();
+        registry.updateState(id, state);
+    });
+}
+
+@Override
+protected void onDetach(DetachEvent event) {
+    super.onDetach(event);
+    registry.leave(id);
+}
+----
+
+The registry is a [classname]`SharedListSignal<Presence>` held on a Spring bean -- see <<{articles}/flow/ui-state/shared-signals#,Shared Signals>> for the cross-UI signal types.
+
+
+== Reliability Caveats
+
+The signal is best-effort; it reflects what the browser reports and is subject to a few known quirks:
+
+- Firefox defers the [code]`visibilitychange` event while the window is blurred, so transitions from [code]`VISIBLE` to [code]`HIDDEN` may take up to half a second longer than on Chromium or Safari.
+- The [code]`VISIBLE_NOT_FOCUSED` distinction relies on [code]`document.hasFocus()`, which depends on the OS reporting focus changes promptly. Some window-manager configurations can delay it briefly.
+- Rapid focus/blur bursts are intentionally coalesced (debounced by 100 ms) so the signal settles once the sequence ends instead of firing on each intermediate state.
+- Headless browsers and screen readers may report focus and visibility differently from a real interactive session.
+
+For decisions that affect billing, security, or user-visible state changes, treat the signal as an optimization hint rather than a source of truth.
+
+
+[discussion-id]`C2ED4C6F-B00D-45DA-A882-296BE2590471`

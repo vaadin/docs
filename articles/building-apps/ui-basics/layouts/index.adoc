@@ -1,0 +1,264 @@
+---
+title: Arrange with Layouts
+page-title: How to arrange components with layouts in Vaadin
+description: Learn how to arrange components horizontally, vertically, and in form grids using Vaadin's built-in layout components.
+meta-description: Arrange UI components in rows, columns, and responsive form grids using Horizontal Layout, Vertical Layout, and Form Layout in Vaadin.
+order: 6
+---
+
+= Arrange with Layouts
+:toclevels: 2
+
+Vaadin arranges components with layout components, and you build page structure by nesting them. This article is an *overview* of the three layouts you reach for most often -- `HorizontalLayout`, `VerticalLayout`, and `FormLayout` -- and of the sizing and alignment rules that trip people up when composing them. For the complete API of each, see the <</components/horizontal-layout#,Horizontal Layout>>, <</components/vertical-layout#,Vertical Layout>>, and <</components/form-layout#,Form Layout>> reference documentation.
+
+`HorizontalLayout` and `VerticalLayout` are one-dimensional CSS flexbox containers: they arrange components in a single row or column. Most of their behavior -- spacing, alignment, growing, and shrinking -- follows directly from flexbox.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that demonstrates the common patterns -- a header bar, a sidebar with a content area, and a footer:
+
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("layout-example")
+public class LayoutExampleView extends VerticalLayout {
+
+    public LayoutExampleView() {
+        // Header: title on the left, button pushed to the right
+        var header = new HorizontalLayout(new H2("Dashboard"), new Button("Settings"));
+        header.setWidthFull();
+        header.setAlignItems(FlexComponent.Alignment.CENTER);
+        header.setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
+
+        // Content: fixed-width sidebar + expanding main area
+        var sidebar = new VerticalLayout(new Span("Item 1"), new Span("Item 2"));
+        sidebar.setWidth("200px");
+
+        var main = new VerticalLayout(new Paragraph("Main content goes here."));
+        var mainScroller = new Scroller(main);
+
+        var content = new HorizontalLayout(sidebar, mainScroller);
+        content.setWidthFull();
+        content.setFlexShrink(0, sidebar); // keep the sidebar at 200px
+        content.expand(mainScroller);      // scroller fills the remaining width
+        content.setMinHeight("0");         // let the row shrink so the Scroller scrolls, not the page
+
+        // Footer: buttons pushed to the right
+        var save = new Button("Save");
+        save.addThemeVariants(ButtonVariant.PRIMARY);
+        var footer = new HorizontalLayout(new Button("Cancel"), save);
+        footer.setWidthFull();
+        footer.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+        add(header, content, footer);
+        expand(content);
+        setSizeFull();
+    }
+}
+----
+
+[NOTE]
+The main area scrolls because it's wrapped in a `Scroller`. For that to work in a full-height view, every layout between the `Scroller` and the sized root view must be allowed to shrink -- which is why `content.setMinHeight("0")` is there. See <<#overflow-and-scrolling,Overflow and Scrolling>>.
+
+
+== Choosing a Layout Component
+
+`HorizontalLayout` and `VerticalLayout` are right for arranging components in a single row or column -- toolbars, button groups, card contents, and view sections. Before reaching for them, check whether a more specialized component fits better:
+
+[cols="2,1,2",options="header"]
+|===
+| Need | Use | Don't use
+| Single column, stacked top to bottom | `VerticalLayout` | —
+| Single row, side by side | `HorizontalLayout` | —
+| Form fields with labels | `FormLayout` | A `VerticalLayout` of fields
+| Application shell: drawer, header, content | <</components/app-layout#,App Layout>> | Nested `HorizontalLayout`/`VerticalLayout`
+| Grid of cards or dashboard widgets | <</components/dashboard#,Dashboard>> or <<css-grid#,CSS Grid>> | Wrapped `HorizontalLayout` rows
+| True two-dimensional grid (rows *and* columns) | <<css-grid#,CSS Grid>> | Multiple rows in a `VerticalLayout`
+|===
+
+.Don't rebuild specialized components by hand
+[IMPORTANT]
+Building an app shell out of nested layouts, or a card grid out of wrapping rows, is a common mistake that produces worse results with more code. `AppLayout` handles responsive drawers and navbar placement; `Dashboard` and <<css-grid#,CSS Grid>> give proper two-dimensional control and reflow. Reach for them instead.
+
+
+== The Two Layouts
+
+`HorizontalLayout` places components in a row; `VerticalLayout` stacks them in a column. Add components through the constructor or `add()`:
+
+[source,java]
+----
+var row = new HorizontalLayout(new Button("First"), new Button("Second"));
+var column = new VerticalLayout(new H2("Title"), new Paragraph("Text"));
+----
+
+`HorizontalLayout` also offers `addToStart()`, `addToMiddle()`, and `addToEnd()` for positioning items at both ends of a row without alignment math. (These can't be combined with `setJustifyContentMode()` on the same layout.)
+
+[TIP]
+`VerticalLayout` is the most common base class for views, since most pages are a vertical stack of sections.
+
+
+== Defaults and the Asymmetry Trap
+
+The defaults of the two layouts are *asymmetric*, and this is the single most common source of layout surprises:
+
+[cols="1,1,1",options="header"]
+|===
+| Property | VerticalLayout | HorizontalLayout
+| Width | 100% (fills parent) | Undefined (hugs content)
+| Height | Undefined (hugs content) | Undefined (hugs content)
+| Spacing (gap between children) | On | On
+| Padding (inner space) | On | Off
+| Margin (outer space) | Off | Off
+| Align items (cross axis) | `START` | `STRETCH`
+|===
+
+.Watch the width asymmetry when nesting
+[WARNING]
+A `VerticalLayout` defaults to 100% width while a `HorizontalLayout` hugs its content, so a `VerticalLayout` nested inside a `HorizontalLayout` tries to take the full parent width, which is often not what you want. When composing layouts, set sizes explicitly rather than relying on the defaults.
+
+Spacing, padding, and margin are toggled with `setSpacing()`, `setPadding()`, and `setMargin()`. To change the *size* of the gap, use a spacing theme variant or the layout's CSS custom properties -- see the <</components/horizontal-layout#,component reference>> for the available variants and properties.
+
+[TIP]
+Nested layouts accumulate whitespace fast, because each level adds its own padding and spacing. When nesting, disable them on the inner layouts with `setPadding(false)` and `setSpacing(false)`.
+
+
+== Alignment
+
+Layouts align children along two axes: the *main axis* (the direction items flow) and the *cross axis* (perpendicular to it). For a `HorizontalLayout` the main axis is horizontal; for a `VerticalLayout` it's vertical.
+
+* `setAlignItems()` aligns children along the *cross axis* (`START`, `CENTER`, `END`, `STRETCH`; also `BASELINE` for `HorizontalLayout`). Note that `HorizontalLayout` defaults to `STRETCH`.
+* `setJustifyContentMode()` distributes children along the *main axis* (`START`, `CENTER`, `END`, `BETWEEN`, and more).
+* `setAlignSelf(alignment, child)` overrides cross-axis alignment for one child.
+
+The same methods work on both layouts -- only the visual direction differs, because their axes are swapped:
+
+[source,java]
+----
+// HorizontalLayout: main axis horizontal, cross axis vertical
+row.setAlignItems(FlexComponent.Alignment.CENTER);                // center children vertically
+row.setJustifyContentMode(FlexComponent.JustifyContentMode.END);  // pack children to the right
+
+// VerticalLayout: main axis vertical, cross axis horizontal
+column.setAlignItems(FlexComponent.Alignment.CENTER);                // center children horizontally
+column.setJustifyContentMode(FlexComponent.JustifyContentMode.END);  // pack children to the bottom
+----
+
+.Justification needs free space along the main axis
+[NOTE]
+====
+`setJustifyContentMode()` distributes the *free* space along the main axis, so it has a visible effect only when the layout is larger than its content on that axis. By default both layouts hug their content along the main axis, so you have to make room by sizing the layout along it:
+
+* In a `HorizontalLayout` (main axis horizontal), pair it with `setWidthFull()` or an explicit width -- for example, to push a toolbar's actions to the right edge.
+* In a `VerticalLayout` (main axis vertical), pair it with `setHeightFull()` or `setSizeFull()` -- for example, a full-height view with `setJustifyContentMode(CENTER)` vertically centers its content, which is how you center a login card on the page.
+====
+
+For the full list of alignment values, see the component reference.
+
+
+[#sizing]
+== Sizing, Growing, and the Shrinking Trap
+
+Set sizes with `setWidth()`, `setHeight()`, and their shorthands `setWidthFull()`, `setHeightFull()`, and `setSizeFull()` (plus `setMinWidth()`/`setMaxWidth()` and the height equivalents). To make a component fill the *remaining* space in a layout, use `expand()` or `setFlexGrow()`:
+
+[source,java]
+----
+var bar = new HorizontalLayout(searchField, goButton);
+bar.expand(searchField);          // searchField grows to fill the row; goButton keeps its size
+layout.setFlexGrow(2, mainPanel); // distribute proportionally:
+layout.setFlexGrow(1, sidePanel); // mainPanel gets 2/3, sidePanel gets 1/3
+----
+
+`expand(c)` is shorthand for `setFlexGrow(1, c)`.
+
+.setFlexGrow and setFlexShrink are called on the parent, not the child
+[WARNING]
+These are methods on the *parent layout*, taking the child as an argument -- there is no `child.setFlexGrow(1)`. The child argument is varargs, so `layout.setFlexGrow(1)` (with the child forgotten) compiles but *silently does nothing*. If a flex setting has no effect, first confirm you passed the target component.
+
+*The shrinking trap.* `setWidthFull()` sets a literal `width: 100%`, which inside a flex container means "100% of the parent," not "the remaining space." Because every flex child defaults to `flex-shrink: 1`, a full-width component next to a fixed-size sibling makes *both* shrink -- so the fixed sibling ends up smaller than specified. Two reliable fixes:
+
+[source,java]
+----
+// Preferred: expand the flexible component instead of sizing it to 100%
+layout.setFlexGrow(1, fullSizeComponent);
+
+// Or pin the fixed component so it can't shrink
+layout.setFlexShrink(0, fixedSizeComponent);
+----
+
+.Experimental: the layoutComponentImprovements feature flag
+[NOTE]
+Vaadin includes an experimental `layoutComponentImprovements` <</flow/configuration/feature-flags.adoc#,feature flag>> that makes `setWidthFull()` / `setHeightFull()` / `setSizeFull()` apply `flex: 1` instead of a literal percentage, avoiding the shrinking trap. It's *off by default* -- don't assume the behavior unless it's been enabled.
+
+
+[#overflow-and-scrolling]
+== Overflow and Scrolling
+
+If you put more into a layout than fits in the space it has, the content can spill past the layout's edges and produce scrollbars where you don't want them. This happens because, by default, a component refuses to become smaller than the content inside it needs -- so instead of shrinking to fit, it pushes past its boundaries.
+
+To let a component shrink to the space it's given instead of overflowing, set its minimum size to `0`:
+
+[source,java]
+----
+overflowingComponent.setMinHeight("0"); // use setMinWidth("0") for horizontal overflow
+----
+
+If a `HorizontalLayout` has too many items to fit on one line, you can instead let it wrap the extra items onto new lines:
+
+[source,java]
+----
+row.setWrap(true);
+----
+
+=== Making a Region Scroll
+
+When you *want* part of the view to scroll -- a long list next to a fixed sidebar, say -- wrap that part in a <</components/scroller#,Scroller>>. A `Scroller` is a component that shows a scrollbar when its content is taller than the space it has. Leave the content inside it at its natural height (don't set a height on it) so the `Scroller` can tell when the content has outgrown the available space:
+
+[source,java]
+----
+var content = new VerticalLayout(); // the long content; don't set its height
+var scroller = new Scroller(content);
+scroller.setSizeFull();
+----
+
+There's one catch in a view that fills the whole screen. For the `Scroller` to scroll, it needs a fixed amount of space to work within, and that space is handed down from the full-screen view through each layout in between. But those in-between layouts also refuse to shrink below their content by default, so they grow to fit everything and leave no fixed height for the `Scroller`. Give each layout between the `Scroller` and the screen-sized view permission to shrink by calling `setMinHeight("0")` on it -- exactly what the copy-paste example does on its content row.
+
+
+== Form Layout
+
+`FormLayout` arranges input fields in a responsive column grid, adjusting the number of columns to the available width (one column on narrow screens, two on wider ones by default). Enable auto-responsive mode and group fields into rows for finer control:
+
+[source,java]
+----
+var form = new FormLayout();
+form.setAutoResponsive(true);
+form.addFormRow(firstName, lastName); // side by side
+form.addFormRow(email);               // own row
+----
+
+For responsive steps, labels, colspans, and column configuration, see the <</components/form-layout#,Form Layout>> reference.
+
+
+== Troubleshooting
+
+A component renders smaller than its specified size:: It's shrinking because of the default `flex-shrink: 1`. Pin it with `parentLayout.setFlexShrink(0, component)`, or expand its sibling instead of sizing it to `100%` (see <<#sizing,the shrinking trap>>). Also check the parent sizing chain up to the root.
+
+Unwanted scrollbars or overflow:: Set `setMinHeight("0")` / `setMinWidth("0")` on the overflowing component, or enable `setWrap(true)` on a too-wide `HorizontalLayout`.
+
+Extra whitespace around content:: Disable padding and spacing on inner layouts (`setPadding(false)`, `setSpacing(false)`), and check that margin is off.
+
+A `setFlexGrow()` or alignment call does nothing:: Confirm it was called on the *parent* with the child passed as an argument, and that the layout is larger than its content along the relevant axis.
+
+To adapt these layouts to different screen sizes, see <<responsive#,Responsive Layouts>>.
+
+For text, headings, and semantic structure, see <<../write-html#,Write HTML>>. If you're comfortable with HTML and CSS, you can also use `Div` with CSS flexbox or grid for layouts beyond what these components offer.

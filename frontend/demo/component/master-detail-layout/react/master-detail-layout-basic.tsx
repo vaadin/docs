@@ -22,7 +22,7 @@ function Example() {
   return (
     <SplitLayout style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      <MasterDetailLayout masterSize="450px" detailSize="250px">
+      <MasterDetailLayout masterSize="450px" detailSize="250px" expandMaster>
         <MasterDetailLayout.Master>
           <PersonList
             people={items.value}

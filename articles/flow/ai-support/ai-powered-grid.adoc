@@ -1,0 +1,84 @@
+---
+title: AI-Generated Grids
+description: Use GridAIController to let users populate a Grid from the application database using natural language.
+meta-description: Learn how to configure the Vaadin GridAIController to populate a Grid from a database via natural language prompts and persist the resulting state.
+order: 60
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#AI-Powered Grid#
+
+
+[classname]`GridAIController` populates a <<{articles}/components/grid#,[classname]`Grid`>> (Vaadin's component for displaying tabular data) with data from the application database based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema and run SQL queries that drive the grid.
+
+When an LLM request completes, the queued query is executed and the grid re-renders with dynamically generated columns, type-appropriate renderers, right-aligned numeric columns, lazy loading via SQL `LIMIT`/`OFFSET`, and optional column grouping.
+
+
+== Basic Usage
+
+Create a grid typed as [classname]`Grid<AIDataRow>`, construct a controller with the grid and a [classname]`DatabaseProvider`, and attach it to an orchestrator. [classname]`AIDataRow` is a framework-owned row type -- you never construct instances yourself.
+
+[source,java]
+----
+Grid<AIDataRow> grid = new Grid<>();
+MessageInput messageInput = new MessageInput();
+
+DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
+GridAIController controller = new GridAIController(grid, databaseProvider);
+
+AIOrchestrator.builder(provider, systemPrompt)
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+
+add(messageInput, grid);
+----
+
+A message list is not required -- the grid itself is the output surface. Example prompts:
+
+* "Show product name and category grouped under Product, and monthly revenue."
+* "List the top 10 highest-paid employees with name, salary, and hire date."
+* "List all employees in the Sales department."
+
+.Built-In Workflow Instructions
+[TIP]
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior.
+
+
+== Query Validation
+
+Before queueing an update, the controller runs a lightweight probe against the database to validate the LLM's query. If the probe fails, the error is returned to the LLM so that it can correct the query on the next turn. Invalid queries never reach the grid.
+
+
+== Persisting Grid State
+
+Grid state is a single SQL query represented by the [classname]`GridState` record. Capture it with [methodname]`getState()` and restore it later with [methodname]`restoreState()`. Register a state change listener to persist the state automatically after each successful AI request:
+
+[source,java]
+----
+controller.addStateChangeListener(state ->
+        sessionStore.save(sessionId, state));
+
+// Restore on a new session
+GridState saved = sessionStore.load(sessionId);
+if (saved != null) {
+    controller.restoreState(saved);
+}
+----
+
+`sessionStore` here is a placeholder for your own storage -- a database table, a file, a [classname]`VaadinSession` attribute, or whatever fits your application.
+
+[methodname]`addStateChangeListener()` fires only when the grid is updated by the LLM, not when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
+
+
+== Reconnecting after Deserialization
+
+[classname]`GridAIController` is not serializable. After session restore, create a new controller, pass it to [methodname]`reconnect()` together with the new provider, and optionally re-apply the saved state:
+
+[source,java]
+----
+GridAIController controller = new GridAIController(grid, databaseProvider);
+orchestrator.reconnect(provider)
+        .withController(controller)
+        .apply();
+----
