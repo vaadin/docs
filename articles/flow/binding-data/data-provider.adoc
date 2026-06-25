@@ -563,6 +563,72 @@ gridDataView.removeFilters();
 ----
 
 
+== [since:com.vaadin:vaadin@V25.2]#Hierarchical Data#
+
+Components such as Tree Grid display hierarchical data, where each item can have child items. The [interfacename]`HierarchicalData` interface in the `com.vaadin.flow.data.provider.hierarchy` package represents such data. It defines three methods:
+
+* [methodname]`getChildren(T item)` returns the immediate child items of the given item, or the root items when the given item is `null`.
+* [methodname]`getParent(T item)` returns the parent of the given item, or `null` for root items.
+* [methodname]`contains(T item)` tells whether the given item is part of the hierarchy.
+
+The built-in [classname]`TreeData` class implements [interfacename]`HierarchicalData` and is a good choice when you need a ready-made, modifiable in-memory tree structure. See <<{articles}/components/tree-grid/data-binding#,Binding Data to Tree Grid>> for details.
+
+When your domain model is already hierarchical, you can implement [interfacename]`HierarchicalData` directly instead of copying the items into a [classname]`TreeData` instance. For example, consider a `Department` type whose items reference their parent department:
+
+[source,java]
+----
+public class DepartmentData implements HierarchicalData<Department> {
+
+    private final List<Department> departments;
+
+    public DepartmentData(List<Department> departments) {
+        this.departments = departments;
+    }
+
+    @Override
+    public List<Department> getChildren(Department item) {
+        // A null item means the root of the hierarchy
+        return departments.stream()
+                .filter(department -> Objects
+                        .equals(department.getParent(), item))
+                .toList();
+    }
+
+    @Override
+    public Department getParent(Department item) {
+        return item.getParent();
+    }
+
+    @Override
+    public boolean contains(Department item) {
+        // Must return true for null, which represents the root
+        return item == null || departments.contains(item);
+    }
+}
+----
+
+The [classname]`InMemoryHierarchicalDataProvider` class turns any [interfacename]`HierarchicalData` implementation into a hierarchical data provider with support for in-memory sorting and filtering, so there is no need to implement a data provider from scratch:
+
+[source,java]
+----
+TreeGrid<Department> treeGrid = new TreeGrid<>();
+treeGrid.addHierarchyColumn(Department::getName).setHeader("Department");
+
+InMemoryHierarchicalDataProvider<Department, DepartmentData> dataProvider =
+        new InMemoryHierarchicalDataProvider<>(
+                new DepartmentData(departmentService.findAll()));
+treeGrid.setDataProvider(dataProvider);
+
+// Show only active departments
+dataProvider.setFilter(Department::isActive);
+
+// Sort sibling items by name
+dataProvider.setSortOrder(Department::getName, SortDirection.ASCENDING);
+----
+
+The data provider doesn't track changes in the backing data structure: call [methodname]`refreshAll()` after modifying the underlying [interfacename]`HierarchicalData` instance. The built-in [classname]`TreeDataProvider` is an [classname]`InMemoryHierarchicalDataProvider` backed by a [classname]`TreeData` instance.
+
+
 == Recycling Data Binding Logic
 
 In large applications, you typically have multiple places where you display the same data type in a listing component. You can use various approaches to share the lazy data binding logic.
