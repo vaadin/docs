@@ -103,7 +103,9 @@ For every named binding (`bind("propertyName")`, `bindInstanceFields(this)`, or 
 
 == Options for Selection Fields
 
-Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`fieldValueOptions()` registers that set with the controller, and the labels are presented to the LLM as the field's choices. When the LLM picks a label, the controller resolves it to the field's value type and writes the result to the field.
+Selection fields like [classname]`ComboBox`, [classname]`Select`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup` take a value from a known set. [methodname]`fieldValueOptions()` registers that set with the controller.
+
+The registration carries the field's domain items. The controller renders each item to an LLM-facing label through the field's own [methodname]`setItemLabelGenerator()`. When the LLM picks a label, the controller applies the same labeler to the registered items and writes the matching one back.
 
 Use a fixed list when the values are small and known up front, or a query callback when they come from a service or database.
 
@@ -118,11 +120,26 @@ controller.fieldValueOptions(
                 .options(List.of("Software", "Manufacturing", "Healthcare")));
 ----
 
-No converter is needed -- the chosen label is the value.
+For a field over a domain type, set the field's item-label generator first; the controller picks it up automatically:
+
+[source,java]
+----
+List<Project> projects = projectService.findAll();
+
+ComboBox<Project> projectField = new ComboBox<>("Project");
+projectField.setItemLabelGenerator(Project::name);
+projectField.setItems(projects);
+
+controller.fieldValueOptions(
+        ValueOptions.forField(projectField).options(projects));
+----
+
+The LLM sees project names. When it picks one, the controller writes the matching [classname]`Project` instance to the field.
+
 
 === Service-Backed Lookup
 
-When the values come from a service or repository the application already uses, supply a callback the LLM can search:
+When the values come from a service or repository the application already uses, supply a callback that returns the matching items for each search the LLM runs:
 
 [source,java]
 ----
@@ -131,19 +148,13 @@ projectField.setItemLabelGenerator(Project::name);
 
 controller.fieldValueOptions(
         ValueOptions.forField(projectField)
-                .options((filter, limit) -> projectService.search(filter, limit)
-                        .stream().map(Project::name).toList()),
-        label -> projectService.findByName(label));
+                .options((filter, limit) ->
+                        projectService.search(filter, limit)));
 ----
 
-Two pieces are at play:
+The callback returns domain items; the controller derives the labels through the field's [methodname]`setItemLabelGenerator()` before showing them to the LLM. If the LLM picks a label and the matching item is no longer available (for example, because the application's data has changed since the search), the write is rejected and the model can try again on the next turn.
 
-* **The callback returns labels** (strings), not domain objects. Since the LLM only ever sees labels, map your domain objects to strings before returning -- typically the same labels the [classname]`ComboBox` renders via [methodname]`setItemLabelGenerator()`.
-* **The second argument is the label-to-value converter.** When the LLM picks a label, the controller calls this converter to resolve the label back to a domain object, then writes the resolved value to the field. The converter is required for any field whose value type is not [classname]`String`; the type system enforces this at compile time.
-
-If [methodname]`findByName()` returns `null` or throws -- because the LLM picked a label the service does not recognize -- the write is rejected with a reason the model reads, and the LLM can try again on the next turn.
-
-`projectService` here is a stand-in for whatever your application already uses to look up projects -- a Spring repository, a REST client, an in-memory list. The controller only needs two things from it: a label callback that returns strings, and a converter that turns a chosen string into a domain object.
+`projectService` here is a stand-in for whatever your application uses to look up projects: a Spring repository, a REST client, an in-memory list. The controller only needs the callback to return the matching items for the given filter and limit.
 
 .Eager Items as a Fallback
 [NOTE]
@@ -155,19 +166,37 @@ Single- and multi-select fields configured with [methodname]`setItems(...)` alre
 
 [source,java]
 ----
-MultiSelectComboBox<Project> projectsField = new MultiSelectComboBox<>("Projects");
+MultiSelectComboBox<Project> projectsField =
+        new MultiSelectComboBox<>("Projects");
+projectsField.setItemLabelGenerator(Project::name);
+projectsField.setItems(projects);
 
 controller.fieldValueOptions(
-        ValueOptions.forField(projectsField)
-                .options(List.of("Apollo", "Vega", "Helios")),
-        label -> projectService.findByName(label));
+        ValueOptions.forField(projectsField).options(projects));
 ----
 
-The converter runs once per chosen label, and the resolved values are written to the field as a set.
+The selected items are written to the field as a set, in the order the LLM returned them.
 
 .Multi-Value Fields Must Implement MultiSelect
 [NOTE]
 A field whose value type is a [classname]`Collection` must implement [classname]`MultiSelect`. The controller rejects two cases at registration time: a [classname]`MultiSelect` field passed through the single-value [methodname]`forField(HasValue)` overload, and a [classname]`Collection`-valued field that doesn't implement [classname]`MultiSelect`.
+
+
+=== Custom Labels for the LLM
+
+By default the LLM sees the same labels the field's [methodname]`setItemLabelGenerator()` produces for the UI. When the LLM should see a different label, for example a code rather than a display name, set an explicit generator on the registration:
+
+[source,java]
+----
+controller.fieldValueOptions(
+        ValueOptions.forField(projectField)
+                .options(projects)
+                .itemLabelGenerator(Project::code));
+----
+
+The explicit generator overrides the field's for both the labels surfaced to the LLM and the lookup that resolves a chosen label back to an item. The field's UI continues to render through its own generator.
+
+Items with the same label, such as two projects sharing a display name, resolve to the first one in registration order. The controller logs a warning at registration time when this happens with a fixed list; supply a unique generator (such as [methodname]`Project::code` above) to remove the ambiguity.
 
 
 == Validation
@@ -189,7 +218,7 @@ The model sees:
 
 * Each visible field's label, helper text, component type, and any [methodname]`describeField()` text or [classname]`Binder` property-name default.
 * The current value of every visible, non-ignored field, so it can decide which entries to overwrite. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
-* The eager items of a combo box or select, or the labels returned by a [methodname]`fieldValueOptions()` query callback for the filter the model supplies.
+* The available labels for a selection field, derived from a combo box or select's eager items, or from the items a [methodname]`fieldValueOptions()` query callback returns for the filter the model supplies.
 
 The model does not see:
 
