@@ -297,3 +297,67 @@ endif::[]
 ==== Enable Layout Improvements (Flow only, experimental)
 
 By enabling the `layoutComponentImprovements` <<{articles}/flow/configuration/feature-flags#,feature flag>>, the Flow APIs `setWidthFull`, `setHeightFull` and `setSizeFull` are rewired to also set the minimum size of nested Horizontal and Vertical Layouts to 0, allowing them to shrink below the size of their contents.
+
+
+=== A Nested Layout Takes All the Space
+
+When you nest a Vertical Layout or Horizontal Layout inside another layout, its *default size* -- not just the sizes you set explicitly -- affects how space is shared. A Vertical Layout defaults to `width: 100%`, so when nested as a child of a Horizontal Layout it claims the full width of the row and starves its siblings. (A nested Horizontal Layout defaults to hugging its content instead.)
+
+A typical symptom is a text column that should grow and truncate with an ellipsis, but instead collapses to zero width: a sibling layout's implicit 100% width has consumed the row. Adding the usual `min-width: 0` ellipsis recipe to the text column isn't enough on its own, because the sibling's default width is the real cause.
+
+To fix this, size both children explicitly: let the column that should only take the space it needs hug its content, and give the growing column `flex: 1 1 0` together with `width: 0`, `min-width: 0`, and `overflow: hidden` so it can shrink below its content size and truncate.
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-horizontal-layout>
+  <!-- Grows and truncates -->
+  <vaadin-vertical-layout
+      style="flex: 1 1 0; width: 0; min-width: 0; overflow: hidden;">
+    ...
+  </vaadin-vertical-layout>
+  <!-- Hugs its content (time + badge) -->
+  <vaadin-vertical-layout style="width: auto;">
+    ...
+  </vaadin-vertical-layout>
+</vaadin-horizontal-layout>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+HorizontalLayout row = new HorizontalLayout(textColumn, metaColumn);
+
+// The growing column truncates with an ellipsis
+textColumn.getStyle().set("flex", "1 1 0");
+textColumn.setWidth("0");
+textColumn.setMinWidth("0");
+textColumn.getStyle().setOverflow(Overflow.HIDDEN);
+
+// The meta column hugs its content instead of filling the row
+metaColumn.setWidth(null);
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<HorizontalLayout>
+  {/* Grows and truncates */}
+  <VerticalLayout style={{ flex: '1 1 0', width: 0, minWidth: 0, overflow: 'hidden' }}>
+    ...
+  </VerticalLayout>
+  {/* Hugs its content (time + badge) */}
+  <VerticalLayout style={{ width: 'auto' }}>
+    ...
+  </VerticalLayout>
+</HorizontalLayout>
+----
+endif::[]
+--

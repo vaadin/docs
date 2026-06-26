@@ -46,11 +46,11 @@ helloButton.addEventListener("click", this::handleClick)
     .addEventData("element.offsetWidth");
 
 private void handleClick(DomEvent event) {
-    JsonObject eventData = event.getEventData(); // <2>
+    JsonNode eventData = event.getEventData(); // <2>
     boolean shiftKey = eventData
-            .getBoolean("event.shiftKey"); // <3>
+            .get("event.shiftKey").asBoolean(); // <3>
     double width = eventData
-            .getNumber("element.offsetWidth");
+            .get("element.offsetWidth").asDouble();
 
     String text = "Shift " + (shiftKey ? "down" : "up");
     text += " on button whose width is " + width + "px";
@@ -60,11 +60,13 @@ private void handleClick(DomEvent event) {
 }
 ----
 <1> The requested event data values are sent as a JSON object from the client.
-<2> You can retrieve the event data using the [methodname]`DomEvent.getEventData()` method in the listener.
-<3> Make sure that you use:
-* the correct getter based on the data type;
-* the same keys that were provided as parameters in the [methodname]`addEventData()` method.
+<2> You can retrieve the event data using the [methodname]`DomEvent.getEventData()` method in the listener. It returns a Jackson [classname]`JsonNode` (from `tools.jackson.databind`).
+<3> Look up each value by the same key you passed to [methodname]`addEventData()`, then read it with the accessor that matches its type -- for example [methodname]`asBoolean()`, [methodname]`asInt()`, [methodname]`asDouble()`, or [methodname]`asText()`.
 ====
+
+.Return Type Changed in Vaadin 25
+[NOTE]
+In Vaadin 25, [methodname]`DomEvent.getEventData()` returns a Jackson [classname]`JsonNode` (`tools.jackson.databind.JsonNode`) instead of the previous Elemental `JsonObject`. Code written for earlier versions no longer compiles: replace `JsonObject` with [classname]`JsonNode`, and the Elemental getters such as `getString(key)`, `getBoolean(key)`, and `getNumber(key)` with `get(key).asText()`, `get(key).asBoolean()`, and `get(key).asDouble()`. See <<{articles}/upgrading#,the upgrade guide>> for the full list of Elemental-to-Jackson changes.
 
 
 == Filtering and Debouncing
