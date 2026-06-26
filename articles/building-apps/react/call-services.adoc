@@ -112,6 +112,32 @@ public @NonNull List<@NonNull City> findCities(@NonNull Query query) {
 If most types in your project should be non-nullable, apply Spring's [annotationname]`@NonNullApi` at the package level in `package-info.java`. For more control over nullability, see the <<{articles}/hilla/reference/type-nullability#,Type Nullability reference guide>>.
 
 
+== Pushing Updates with Reactive Services
+
+The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications.
+
+The following service emits the current date and time every second:
+
+[source,java]
+----
+@BrowserCallable
+public class TimeService {
+
+    @AnonymousAllowed
+    public Flux<@NonNull String> getClock() {
+        return Flux.interval(Duration.ofSeconds(1)) // <1>
+                .onBackpressureDrop() // <2>
+                .map(_interval -> Instant.now().toString()); // <3>
+    }
+}
+----
+<1> Emit a new value every second.
+<2> Drop values that can't be sent to the client in time.
+<3> Output the current date and time as a string.
+
+Vaadin generates the TypeScript types needed to subscribe to this service from the browser. For how to subscribe, handle errors, and update the UI from the stream, see <</building-apps/server-push/reactive#,Consuming Reactive Streams>>.
+
+
 == Next Steps
 
 - <<security#,Secure React Views>> -- control who can call your services and access your views.
