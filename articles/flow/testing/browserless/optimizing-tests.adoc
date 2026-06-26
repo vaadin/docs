@@ -80,6 +80,15 @@ class ViewTestConfig {
 }
 ----
 
+[NOTE]
+====
+Prefer replacing services this way -- a test [annotationname]`@Configuration` selected with [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
+
+A bean override changes the context definition, so Spring's test context cache stores a *separate* application context for that test class. In a multi-class run, the resulting context churn can leave the Vaadin and Spring Security integration in a state where the simulated user isn't applied during navigation, causing protected views to redirect to the login view in *unrelated* tests -- a confusing failure that disappears when the affected class is run on its own.
+
+For service-level tests that don't need the Vaadin context, an even simpler option is to construct the service directly with stub collaborators (for example `new ResourceService(repo, id -> 0L)`) instead of overriding a bean. Both approaches keep a single shared context.
+====
+
 
 == [since:com.vaadin:vaadin@V25.2]#Sharing the Vaadin Environment Across Tests#
 
