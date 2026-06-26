@@ -79,6 +79,18 @@ public class MainView extends VerticalLayout implements LocaleChangeObserver {
 }
 ----
 
+[since:com.vaadin:vaadin@V25.2]#Signals offer a reactive alternative#: `UI` and `VaadinSession` expose the current locale as a read-only signal through `localeSignal()`. Reading it with `get()` inside `Signal.effect()` re-runs the effect on every locale change, which fits the signal-based UI style and avoids implementing `LocaleChangeObserver`:
+
+[source,java]
+----
+Signal.effect(this, () -> {
+    UI.getCurrent().localeSignal().get(); // <1>
+    title.setText(getTranslation("app.title"));
+    greeting.setText(getTranslation("greeting", "World"));
+});
+----
+<1> Reading the signal registers it as a dependency, so the effect re-runs whenever the locale changes. Use `getLocale()` instead for a non-reactive read.
+
 [TIP]
 Use Copilot to automate extraction of static strings into translation files. See <<{articles}/tools/copilot/i18n#,Internationalization in Copilot>>.
 
@@ -134,6 +146,29 @@ public class LanguageSwitcher extends Select<Locale> {
     }
 }
 ----
+
+
+=== [since:com.vaadin:vaadin@V25.2]#Binding to the Locale Signal#
+
+The current locale is also available as a read-only signal through `UI.localeSignal()`. Rather than seeding the field's value and adding a value-change listener, you can two-way bind the switcher to the signal with `bindValue()`, passing `setLocale` as the write callback:
+
+[source,java]
+----
+public class LanguageSwitcher extends Select<Locale> {
+
+    public LanguageSwitcher() {
+        setItems(Locale.ENGLISH, Locale.FRENCH, Locale.GERMAN, new Locale("es"));
+        setItemLabelGenerator(locale -> locale.getDisplayLanguage(locale));
+
+        UI ui = UI.getCurrent();
+        bindValue(ui.localeSignal(), ui::setLocale);
+    }
+}
+----
+
+The field shows the current locale, user selections call `setLocale()`, and any programmatic `setLocale()` elsewhere updates the field automatically. Bind to `VaadinSession.getCurrent().localeSignal()` instead to follow the session locale, which applies to every UI in the session.
+
+The signal is read-only, so always change the locale through `setLocale()` -- this keeps locale propagation and `LocaleChangeObserver` notifications working.
 
 
 == Translating Vaadin Component Strings
