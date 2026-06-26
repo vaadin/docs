@@ -126,6 +126,37 @@ public class TrivialPlaywrightTest {
 <8> Asserts that there is an element with id `msg` in the page that contains the text, `Clicked!`. If you get instead the text using `+page.locator("#msg").textContent()+` and assert using standard JUnit API, it might fail as the server round-trip response might not yet be completed. Again, using the assertion method from Playwright helpers gives a bit of time for a single-page web application to render the response. Alternatively, you could add, for example, a `+page.getByText("Clicked!").waitFor();+` line before the assertion to ensure the server round-trip has been completed.
 
 
+== Selecting Vaadin Components
+
+Vaadin components are Web Components, so part of their structure lives in shadow DOM and part in slotted light DOM. Because Playwright has no Vaadin-specific element API, a couple of cases trip up hand-written selectors.
+
+=== Dialog Action Buttons Are Slotted
+
+A [classname]`ConfirmDialog`'s confirm, cancel, and reject buttons are *slotted light-DOM children* of `vaadin-confirm-dialog` -- they aren't inside its shadow DOM. Target the slotted button directly:
+
+[source,java]
+----
+page.locator("vaadin-confirm-dialog vaadin-button[slot='confirm-button']").click();
+// also: [slot='cancel-button'] and [slot='reject-button']
+----
+
+A visibility check based on `offsetParent` skips slotted content and misses these buttons, and synthesizing a `click()` on a guessed wrapper element is unreliable -- especially when a confirm dialog is stacked over another overlay, such as an editor, where you need the real button. See <<{articles}/components/confirm-dialog/styling#,ConfirmDialog styling>> for the full list of slot selectors.
+
+=== Grid Cell Content Is Recycled
+
+[classname]`Grid` renders each cell's content into a `vaadin-grid-cell-content` element and *reuses* these elements as rows scroll or the grid refreshes. Detached copies of previously rendered content can linger in the document, so a broad query such as `document.querySelectorAll('vaadin-grid-cell-content')` may report rows that the user no longer sees.
+
+Read grid state from the *live* cells only -- scope the query to the grid and let Playwright match attached, visible elements -- rather than enumerating every cell-content element in the document:
+
+[source,java]
+----
+// Matches only attached, visible cell content within the grid
+Locator cells = page.locator("vaadin-grid vaadin-grid-cell-content:visible");
+----
+
+Alternatively, wait for the refresh to settle (for example, with an explicit `waitFor()`) before asserting, or reload the page to clear detached content.
+
+
 == Running the Test
 
 As the test is annotated with the JUnit 5 @Test annotation, the most natural way to run it is via an IDE. Also, the test is picked up by convention if you call it like so:
