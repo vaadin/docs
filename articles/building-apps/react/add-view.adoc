@@ -1,0 +1,174 @@
+---
+title: Add a React View
+page-title: How to add a React view to a Vaadin application
+meta-description: Learn to create, name, and organize React views in a Vaadin application - file-based routing conventions, directory structures, route aliases, and explicit routes.
+order: 10
+---
+
+
+= Add a React View
+:toclevels: 2
+
+A React view is a client-side view that you add alongside the server-side Flow views in your Vaadin application. This guide shows how to create views, how their routes are determined, how to organize them into directories, and how to assign custom routes.
+
+
+== Creating a View
+
+A React view is a React component returned by the default exported function of a `.tsx` file under `src/main/frontend/views`:
+
+[source,tsx]
+.hello.tsx
+----
+export default function HelloView() {
+    return <h1>Hello, World!</h1>;
+}
+----
+
+Routes are determined from the file system. The route for a view depends on:
+
+1. where the file is located, relative to the `src/main/frontend/views` directory, and
+2. how the file is named.
+
+For example, if [filename]`hello.tsx` is located directly under `src/main/frontend/views`, the route for `HelloView` (its default export) is `/hello` -- the file name without the `.tsx` extension. If the application runs from the root context, users reach this view at `\https://example.com/hello`. Moving the file to `src/main/frontend/views/greeting` changes the route to `/greeting/hello`.
+
+Likewise, naming the file [filename]`hello-world.tsx` or [filename]`HelloWorld.tsx` results in the route `/hello-world` or `/HelloWorld`, respectively.
+
+To avoid repeating `src/main/frontend/views` throughout this guide, `views` is used as an alias for this directory.
+
+To target the root route, name the file [filename]`@index.tsx` and place it directly under `views`:
+
+[source,tsx]
+.@index.tsx
+----
+export default function HomeView() {
+    return <h1>Home</h1>;
+}
+----
+
+The route for the above component is `/`, so users reach it at `\https://example.com/`.
+
+
+== View Naming
+
+React only recognizes an exported function as a component if its name starts with an uppercase letter. For example, the following is recognized as a valid React component:
+
+[source,tsx]
+.customers.tsx
+----
+export default function CustomersView() {
+    return <h1>Customers</h1>;
+}
+----
+
+Naming the function `customersView` or `customerList` does not cause a compile or runtime error, but it is not recognized as a React component either.
+
+The routing system uses the component's name to create a default title for the view. For example, the title for `CustomersView` is `Customers`, and the title for `HelloWorldView` is `Hello World`. This automatic title is used when building a navigation menu from the routing API; see <<navigate#,Navigation and Layouts>>.
+
+Prefix a file or directory name with an underscore (`_`) to make the routing system ignore it. For example, a file named [filename]`_AddressFormComponent.tsx` is not turned into a route. This is useful for utility files and reusable components that aren't meant to be navigation targets.
+
+
+== Directory Structure
+
+Because the file system structure determines routes, organizing views into directories keeps both your views and your routes well structured.
+
+Simple views that consist of a single file can be placed directly under the `views` directory. For example, "About", "Contact Us", and "Home" don't need a complex composition of components, nor a long route, so it's good practice to place them directly under `views`:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            ├── @index.tsx
+            ├── about.tsx
+            └── contact-us.tsx
+----
+
+The routes for these views are `/`, `/about`, and `/contact-us`, respectively.
+
+For more complex views -- those composed of several components, or that accept route parameters -- place all related files under a directory named after the functionality it provides. For example, customer-related views can be grouped under a `customers` directory:
+
+[source]
+----
+src
+└── main
+    └── frontend
+        └── views
+            └── customers
+                ├── {id} <1>
+                │   ├── edit.tsx <2>
+                │   └── index.tsx <3>
+                ├── @index.tsx <4>
+                └── new.tsx <5>
+----
+1. The `{id}` directory is a placeholder for a route parameter. See <<navigate#,Navigation and Layouts>> for route parameters.
+2. [filename]`edit.tsx` edits a specific customer. Its route is `/customers/:id/edit`.
+3. [filename]`@index.tsx` displays a specific customer. Its route is `/customers/:id`.
+4. [filename]`index.tsx` displays the list of customers. Its route is `/customers`.
+5. [filename]`new.tsx` adds a new customer. Its route is `/customers/new`.
+
+
+== Route Aliases
+
+There's no shortcut for mapping multiple routes to the same view, but you can create an additional view file that returns the target component. For example, the following view targets the root route (`/`):
+
+[source,tsx]
+.@index.tsx
+----
+export default function RootView() {
+    return <h1>Home</h1>;
+}
+----
+
+To make the same view available at `/home` and `/main`, create two more view files that return it:
+
+[source,tsx]
+.home.tsx
+----
+export default function HomeView() {
+    return RootView();
+}
+----
+
+[source,tsx]
+.main.tsx
+----
+export default function MainView() {
+    return RootView();
+}
+----
+
+
+== Defining Explicit Routes
+
+Routes are normally resolved automatically from the file system. To override the automatically resolved path, export a `ViewConfig` object named `config` from the view file and set its `route` property:
+
+[source,tsx]
+.hello.tsx
+----
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+
+export const config: ViewConfig = {
+  route: "/custom-route",
+};
+
+export default function HelloView() {
+    return <h1>Hello, World!</h1>;
+}
+----
+
+Users can now reach this view at `\https://example.com/custom-route`.
+
+[NOTE]
+Avoid explicit routes unless necessary. Letting the routing system resolve routes from the file system keeps them consistent and predictable.
+
+
+== Building Forms in a View
+
+To collect and edit data in a React view, combine Vaadin input components with the `useForm` hook, which binds fields to a Java data type and applies the same validation rules on the client. Forms are an in-depth topic of their own; see the <<{articles}/hilla/guides/forms#,Forms reference guide>> for field binding, validation, and loading and saving data.
+
+
+== Next Steps
+
+- <<navigate#,Navigation and Layouts>> -- link between views and wrap them in shared layouts.
+- <<call-services#,Call Java Services>> -- load data from the server into your view.

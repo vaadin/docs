@@ -1,0 +1,342 @@
+---
+title: Secure React Views
+page-title: How to secure React views in a Vaadin application
+description: Add login and logout, require authentication, restrict access by role, and protect the services behind React views.
+meta-description: Secure React views in a Vaadin application - add login and logout, require authentication, restrict access by role, and protect browser-callable services.
+order: 40
+---
+
+
+= Secure React Views
+:toclevels: 2
+
+This guide shows how to secure the React views in a Vaadin application: adding login and logout, requiring authentication, restricting access by role, and protecting the services your views call. It builds on Spring Security, the same foundation used for <</building-apps/security#,Flow views>>.
+
+
+== The Security Model
+
+A React view runs in the browser, where its code can be inspected and manipulated using the browser's developer tools. View-level access control therefore *improves the user experience* -- by hiding views and features a user can't use -- but it *is not a real security boundary*.
+
+[IMPORTANT]
+The real security boundary is on the server, around the *browser-callable services* your views call. Always protect those services. View protection alone is not enough.
+
+In practice you do both: protect views so users see only what's relevant to them, and protect services so the data is actually safe.
+
+
+== Adding a Login View
+
+Vaadin includes a client-side security extension that integrates with Spring Security. Setting it up takes three steps: a user-information endpoint, a client-side authentication context, and wrapping the application in that context.
+
+=== Create a User-Information Endpoint
+
+Authentication happens on the server, so you need a service that exposes the current user's details to the client:
+
+[source,java]
+----
+@BrowserCallable
+public class UserInfoService {
+
+    @PermitAll // <1>
+    public @NonNull UserInfo getUserInfo() {
+        var auth = SecurityContextHolder.getContext().getAuthentication(); // <2>
+        var authorities = auth.getAuthorities()
+            .stream()
+            .map(GrantedAuthority::getAuthority)
+            .toList();
+        return new UserInfo(auth.getName(), authorities); // <3>
+    }
+}
+----
+<1> Allows any authenticated user to call this method.
+<2> Reads the user from Spring Security.
+<3> Returns the user details to the client.
+
+Vaadin has no built-in user-information type, so define your own. Add any extra fields you need, such as an email address or avatar URL:
+
+[source,java]
+----
+public record UserInfo(
+    @NonNull String name,
+    @NonNull Collection<String> authorities
+) {}
+----
+
+=== Set Up the Authentication Context
+
+Use Vaadin's `configureAuth()` helper to create a React context backed by the endpoint:
+
+[source,typescript]
+.frontend/security/auth.ts
+----
+import { configureAuth } from '@vaadin/hilla-react-auth';
+import { UserInfoService } from "Frontend/generated/endpoints";
+
+const auth = configureAuth(UserInfoService.getUserInfo); // <1>
+export const useAuth = auth.useAuth; // <2>
+export const AuthProvider = auth.AuthProvider; // <3>
+----
+<1> Fetches the user details from the server.
+<2> A React hook that exposes authentication state inside views.
+<3> A React context provider.
+
+=== Enable the Context
+
+Wrap the application's root component in `<AuthProvider>`. First move `index.tsx` from `src/main/frontend/generated` to `src/main/frontend`, then add the provider:
+
+[source,tsx]
+.frontend/index.tsx
+----
+import { RouterProvider } from 'react-router';
+import { router } from 'Frontend/generated/routes.js';
+import { AuthProvider } from "Frontend/security/auth";
+
+function App() {
+    return (
+        <AuthProvider>
+            <RouterProvider router={router} />
+        </AuthProvider>
+    );
+}
+----
+
+=== Create the Login View
+
+The login view is a regular <<add-view#,React view>>. The simplest implementation uses the <</components/login#,LoginForm>> component:
+
+[source,tsx]
+.frontend/views/login.tsx
+----
+import { LoginForm } from "@vaadin/react-components";
+import { ViewConfig } from "@vaadin/hilla-file-router/types.js";
+import { useSearchParams } from "react-router";
+
+export const config: ViewConfig = {
+    skipLayouts: true, // <1>
+    menu: { exclude: true } // <2>
+};
+
+export default function LoginView() {
+    const [searchParams] = useSearchParams();
+    const hasError = searchParams.has("error"); // <3>
+
+    return (
+        <main className="flex justify-center items-center w-full h-full">
+            <LoginForm error={hasError} action="login"/> {/* <4> */}
+        </main>
+    );
+}
+----
+<1> Renders the login view outside any <<navigate#,router layout>>.
+<2> Excludes the login view from the navigation menu.
+<3> Detects the `?error` query parameter, which Spring Security adds on a failed login.
+<4> Sends a `POST` request to `/login` for authentication.
+
+=== Configure the Server
+
+Tell Spring Security to use your login view:
+
+[source,java]
+.SecurityConfig.java
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView("/login");
+        });
+        return http.build();
+    }
+}
+----
+
+.Use a Real Authentication Source in Production
+[WARNING]
+In-memory authentication is convenient for development, but production applications should use a secure source such as JDBC, LDAP, or OAuth 2.0. See the https://docs.spring.io/spring-security/reference/servlet/authentication/index.html[Spring Security Reference Manual].
+
+
+== Requiring Authentication
+
+By default, React views are accessible without authentication. To require login, set `loginRequired` in the view's `ViewConfig`:
+
+[source,tsx]
+.frontend/views/protected-view.tsx
+----
+export const config: ViewConfig = {
+    title: 'Protected View',
+    loginRequired: true // <1>
+};
+
+export default function ProtectedView() {
+    return <main>This view requires login</main>;
+}
+----
+<1> Unauthenticated users are redirected to the login view.
+
+[IMPORTANT]
+The `ViewConfig` object is parsed on the server as JSON, so you can't use constants or other TypeScript code in it.
+
+To require authentication for all views at once, set `loginRequired` on the main layout instead:
+
+[source,tsx]
+.frontend/views/@layout.tsx
+----
+export const config: ViewConfig = {
+    loginRequired: true
+};
+----
+
+
+== Restricting Access by Role
+
+To grant access based on roles, first expose the current user's roles to the authentication context, then declare the required roles on each view.
+
+=== Expose Roles to the Context
+
+Pass a `getRoles` function as a second argument to `configureAuth`:
+
+[source,typescript]
+.frontend/security/auth.ts
+----
+const auth = configureAuth(UserInfoService.getUserInfo, {
+    getRoles: (user) => user.authorities
+        .filter(s => s.startsWith("ROLE_")) // <1>
+        .map(s => s.substring(5)) // <2>
+});
+----
+<1> Keep only role authorities. In Spring Security, roles use the `ROLE_` prefix by default.
+<2> Strip the prefix to get the role name.
+
+=== Declare Required Roles
+
+Add `rolesAllowed` to a view's or layout's `ViewConfig`:
+
+[source,tsx]
+.frontend/views/admin.tsx
+----
+export const config: ViewConfig = {
+    loginRequired: true,
+    rolesAllowed: [ "ADMIN" ] // <1>
+};
+----
+<1> An array of role names.
+
+=== Check Access Programmatically
+
+To conditionally render parts of a view -- for example, showing edit controls only to administrators -- check the current user's roles with `useAuth`:
+
+[source,tsx]
+.frontend/views/my-view.tsx
+----
+import { useAuth } from "Frontend/security/auth";
+
+export default function MyView() {
+    const auth = useAuth();
+    const isAdmin = auth.hasAccess({ rolesAllowed: [ "ADMIN" ] });
+
+    return (
+        <main>
+            {isAdmin && <p>Only admins see this</p>}
+            <p>Everyone can see this</p>
+        </main>
+    );
+}
+----
+
+
+== Adding Logout
+
+The `useAuth` hook provides a `logout()` function that logs the user out and redirects them to a configured success URL. Call it from a button or menu item:
+
+[source,tsx]
+----
+import { Button } from '@vaadin/react-components';
+import { useAuth } from "Frontend/security/auth";
+
+export default function LogoutButton() {
+    const { logout } = useAuth();
+    return <Button onClick={logout}>Logout</Button>;
+}
+----
+
+By default users are redirected to the root URL (`/`) after logging out. To change this, pass a logout success URL as the second argument to `loginView`:
+
+[source,java]
+.SecurityConfig.java
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+    configurer.loginView("/login", "/logged-out.html"); // <1>
+});
+----
+<1> Redirect to `/logged-out.html` after logout.
+
+.Relative Logout URLs Must Include the Context Path
+[IMPORTANT]
+A relative logout URL must include the application's context path. If the application is deployed at `\https://example.com/app`, use `/app/logged-out.html`.
+
+
+== Protecting Browser-Callable Services
+
+This is the real security boundary. All browser-callable services are *inaccessible by default* and require an explicit annotation to grant access.
+
+.Services Don't Use Spring Method Security
+[CAUTION]
+Vaadin protects browser-callable services *outside* Spring Security. If you inject a browser-callable service into another Java service or a Flow view, it is *not* protected by these annotations there.
+
+Annotate either the service class or individual methods. A class-level annotation applies to all public methods; a method-level annotation overrides the class-level one. The supported annotations are:
+
+* [annotationname]`@AnonymousAllowed` -- allows *unauthenticated* users. (Vaadin-specific.)
+* [annotationname]`@PermitAll` -- allows any *authenticated* user.
+* [annotationname]`@RolesAllowed` -- allows users with the specified *roles*.
+* [annotationname]`@DenyAll` -- denies *everyone*.
+
+[NOTE]
+[annotationname]`@AnonymousAllowed` is Vaadin-specific; the others are Jakarta (JSR-250) annotations.
+
+For example, allow all authenticated users to call a service, but restrict one method to administrators:
+
+[source,java]
+----
+@BrowserCallable
+@PermitAll // <1>
+public class ProtectedService {
+
+    public void callableByAllUsers() { // <2>
+    }
+
+    @RolesAllowed(Roles.ADMIN) // <3>
+    public void callableByAdminsOnly() {
+    }
+}
+----
+<1> Authenticated users may call the service.
+<2> Inherits access from the class-level annotation.
+<3> Overrides the class-level annotation to restrict this method.
+
+=== Using Spring Method Security
+
+If you want to protect a browser-callable service with Spring method security instead -- for example to reuse an existing protected Flow service -- add [annotationname]`@AnonymousAllowed` to bypass Vaadin's own check, then apply Spring's [annotationname]`@PreAuthorize`:
+
+[source,java]
+----
+@BrowserCallable
+@AnonymousAllowed // <1>
+@PreAuthorize("isAuthenticated()") // <2>
+public class ProtectedService {
+
+    public MyData callableByAllUsers() {
+    }
+
+    @PreAuthorize("hasRole('" + Roles.ADMIN + "')")
+    public void callableByAdminsOnly() {
+    }
+}
+----
+<1> Bypass Vaadin's access check.
+<2> Enforce access with Spring method security instead.
+
+.Don't Enable JSR-250 Annotations in Spring Security
+[WARNING]
+Spring method security can also process the JSR-250 annotations Vaadin uses, but it treats [annotationname]`@PermitAll` differently: Vaadin allows only *authenticated* users, whereas Spring Security allows *all* users. Enabling JSR-250 support in Spring Security can therefore unexpectedly widen access.

@@ -1,0 +1,339 @@
+---
+title: Navigation and Layouts
+page-title: How to navigate between React views in a Vaadin application
+description: Link and navigate between React and Flow views, pass route and query parameters, and wrap views in shared layouts.
+meta-description: Learn how to navigate between React and Flow views in a Vaadin application, pass route and query parameters, and wrap views in shared router layouts.
+order: 20
+---
+
+
+= Navigation and Layouts
+:toclevels: 2
+
+This guide covers how to navigate between views, pass data through route and query parameters, and wrap views in shared layouts. React views and Flow views share the same client-side router, so the same techniques work for navigating within and between them.
+
+
+== Linking Between Views
+
+The `<NavLink>` component from `react-router` renders a clickable link. In HTML, it corresponds to an anchor (`<a>`) element:
+
+[source,tsx]
+----
+import { NavLink } from 'react-router';
+
+<NavLink to="/some-view">Some View</NavLink>
+----
+
+[TIP]
+Prefer links to programmatic navigation. Links *improve accessibility* and let users open the target in a new browser tab.
+
+
+== Programmatic Navigation
+
+When you need to navigate in response to an event -- such as a successful form submission -- use the `useNavigate` hook:
+
+[source,tsx]
+----
+import { useNavigate } from 'react-router';
+
+function MyComponent() {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/target-view');
+  };
+
+  return (
+    <button onClick={handleClick}>
+      Go to Target View
+    </button>
+  );
+}
+----
+
+
+== Navigating To and From Flow Views
+
+Flow views and React views share a single client-side router, so navigating to a Flow view works exactly the same way as navigating to a React view -- use `<NavLink>` or `useNavigate` with the Flow view's route:
+
+[source,tsx]
+----
+<NavLink to="/flow-view">Flow View</NavLink>
+----
+
+To navigate the other way -- from a Flow view to a React view -- use the standard Flow navigation APIs in Java with the React view's route:
+
+[source,java]
+----
+// As a link:
+var link = new Anchor("react-view", "React View");
+
+// Or programmatically:
+UI.getCurrent().navigate("react-view");
+----
+
+
+== Route Parameters
+
+Route parameters let a single view handle a family of routes, such as `/products/123` and `/products/456`.
+
+=== Required Parameters
+
+To accept a required parameter, name the view file with the parameter name in curly braces (`{}`). For example, a view that accepts a required `productId` is named `{productId}.tsx`:
+
+[source]
+----
+views/
+└── products/
+    └── {productId}.tsx <1>
+----
+<1> Route `/products/{productId}`. Routes such as `/products/123` match; navigating to `/products` returns a 404 unless another view matches it.
+
+Parameters can also appear in the middle of a route by giving a *directory* a `{param-name}` name:
+
+[source]
+----
+views/
+└── products
+    └── {productId} <1>
+        └── edit.tsx
+----
+<1> Route `/products/{productId}/edit`, matching `/products/123/edit` and similar.
+
+Keep parameterized views in subdirectories to keep things organized.
+
+=== Reading a Parameter Value
+
+Read route parameters with the `useParams` hook:
+
+[source,tsx]
+.views/products/{productId}.tsx
+----
+import { useParams } from 'react-router';
+
+export default function ProductView() {
+  const { productId } = useParams(); // <1>
+
+  return (
+    <>
+        <h1>Product Details</h1>
+        <p>Product ID: {productId}</p>
+    </>
+  );
+}
+----
+<1> `useParams` returns an object with the route parameters.
+
+To navigate to such a view, link or navigate to the concrete path -- for example `<NavLink to="/products/123">` or `navigate('/products/123')`.
+
+=== Optional Parameters
+
+Wrap the parameter name in double curly braces to make it optional. A view named `{{categoryName}}.tsx` matches both `/products` and `/products/electronics`:
+
+[source]
+----
+views/
+└── products
+    └── {{categoryName}}.tsx
+----
+
+The view must handle both cases -- when the parameter is present and when it isn't:
+
+[source,tsx]
+.views/products/{{categoryName}}.tsx
+----
+import { useParams } from "react-router";
+import { useEffect } from "react";
+import { useSignal } from "@vaadin/hilla-react-signals";
+import { ProductService } from "Frontend/generated/endpoints.js";
+
+export default function ProductByCategoriesView() {
+  const { categoryName } = useParams();
+  const products = useSignal<string[]>([]);
+
+  useEffect(() => {
+    if (categoryName == undefined) { // <1>
+      ProductService.allProducts().then((data) => products.value = data);
+    } else {
+      ProductService.productsInCategory(categoryName).then((data) => products.value = data);
+    }
+  }, []);
+
+  return (
+    <ul>{products.value.map((product) => (
+      <li key={product}>{product}</li>
+    ))}</ul>
+  );
+}
+----
+<1> When the parameter is absent, fetch all products; otherwise fetch products in the given category.
+
+=== Wildcard Parameters
+
+A wildcard parameter matches any number of unmatched URL segments and is typically used as a fallback for unknown routes -- for example, a custom 404 page. Name the file `{...wildcard}.tsx`:
+
+[source]
+----
+views/
+├── @index.tsx
+├── about.tsx
+├── contact-us.tsx
+└── {...wildcard}.tsx <1>
+----
+<1> Matches any route not handled by another view.
+
+[source,tsx]
+.views/{...wildcard}.tsx
+----
+import { NavLink, useParams } from "react-router";
+
+export default function WildcardView() {
+  const wildcard = useParams()['*']; // <1>
+  return (
+    <>
+      <h3>Page Not Found!</h3>
+      <div>
+        The '<b>/{wildcard}</b>' route does not exist.
+        Go back to the <NavLink to="/">home page</NavLink>.
+      </div>
+    </>
+  );
+}
+----
+<1> The wildcard value is read from the `*` key. It can contain multiple segments.
+
+
+== Query Parameters
+
+Use the `useSearchParams` hook for query parameters, which are useful for shareable state that should survive a page reload, such as a search term or sort order. The hook returns a `URLSearchParams` object for reading and a function for updating:
+
+[source,tsx]
+----
+import { useSearchParams } from 'react-router';
+import { TextField } from '@vaadin/react-components/TextField.js';
+
+export default function ProductView() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchTerm = searchParams.get('category') || '';
+
+    return (
+        <TextField
+            label="Search for:"
+            value={searchTerm}
+            onValueChanged={(e) => {
+                const newValue = e.detail.value;
+                setSearchParams(newValue ? { category: newValue } : {}); // <1>
+            }}
+        />
+    );
+}
+----
+<1> Updating with an object sets the parameters; passing an empty object clears them.
+
+When updating one parameter among several, spread the existing ones to preserve them:
+
+[source,tsx]
+----
+const updateParams = (params: Record<string, string>) => {
+    setSearchParams({ ...Object.fromEntries(searchParams), ...params });
+};
+----
+
+[CAUTION]
+Query parameters are visible in the URL. Never put sensitive data such as security tokens in them.
+
+
+== Router Layouts
+
+A router layout is a React component that wraps other views to provide shared UI -- such as a header, navigation drawer, or footer. Layouts don't create routes of their own; they wrap the views that do.
+
+=== Creating a Layout
+
+Create a file named `@layout.tsx` in any directory under `views`. By convention, it wraps all views in that directory and its subdirectories. The layout must render an `<Outlet/>` where child views appear:
+
+[source,tsx]
+.frontend/views/@layout.tsx
+----
+import { Outlet } from 'react-router';
+
+export default function MainLayout() {
+    return (
+        <div>
+            <header><h1>My Application</h1></header>
+            <main>
+                <Outlet /> <1>
+            </main>
+            <footer><p>© My Company</p></footer>
+        </div>
+    );
+}
+----
+<1> Placeholder where child views render.
+
+=== Nested Layouts
+
+A `@layout.tsx` in a subdirectory wraps the views in that subdirectory, nested inside any parent layouts:
+
+[source]
+----
+views
+├── customers
+│   ├── @index.tsx
+│   └── @layout.tsx <1>
+├── @index.tsx
+└── @layout.tsx <2>
+----
+<1> Wraps all views under `customers`.
+<2> Wraps all views in the application.
+
+=== Skipping Layouts
+
+Some views, such as a login view, should not be rendered inside any layout. Set `skipLayouts` in the view's `ViewConfig`:
+
+[source,tsx]
+.frontend/views/login.tsx
+----
+import { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+
+export default function LoginView() {
+    return <div>Login form here</div>;
+}
+
+export const config: ViewConfig = {
+    skipLayouts: true, // <1>
+};
+----
+<1> Render this view outside all layouts.
+
+=== Building a Navigation Menu
+
+Use the `createMenuItems()` utility to generate menu items from your route structure. This is convenient inside a layout that renders an application shell, such as `AppLayout` with a `SideNav`:
+
+[source,tsx]
+.frontend/views/@layout.tsx
+----
+import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
+import { useLocation, useNavigate } from 'react-router';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
+import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
+import { Icon } from '@vaadin/react-components/Icon.js';
+
+export default function MainMenu() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    return (
+        <SideNav onNavigate={({path}) => path && navigate(path)} location={location}>
+            {createMenuItems().map(({ to, icon, title }) => (
+                <SideNavItem path={to} key={to}>
+                    {icon && <Icon icon={icon} slot="prefix"/>}
+                    {title}
+                </SideNavItem>
+            ))}
+        </SideNav>
+    );
+}
+----
+
+[NOTE]
+`createMenuItems()` returns all routes in the application, *including Flow views*. This lets a single shared menu link to both React and Flow views.
