@@ -114,7 +114,7 @@ If most types in your project should be non-nullable, apply Spring's [annotation
 
 == Pushing Updates with Reactive Services
 
-The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications.
+The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications. A browser-callable service can only return a `Flux` -- convert a `Mono` to one with `asFlux()`.
 
 The following service emits the current date and time every second:
 
@@ -135,7 +135,68 @@ public class TimeService {
 <2> Drop values that can't be sent to the client in time.
 <3> Output the current date and time as a string.
 
-Vaadin generates the TypeScript types needed to subscribe to this service from the browser. For how to subscribe, handle errors, and update the UI from the stream, see <</building-apps/server-push/reactive#,Consuming Reactive Streams>>.
+For how to produce reactive streams on the server, including from background jobs, see <</building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>>.
+
+=== Subscribing from a View
+
+Vaadin generates the TypeScript types for the service. Call the generated method to get a `Subscription`, then register a callback with `onNext()`:
+
+[source,typescript]
+----
+const subscription = TimeService.getClock().onNext(time => {
+    // Update the UI state
+});
+----
+
+A *cold* stream -- one that starts when subscribed and completes on its own, such as a single background-job result -- doesn't need to be cancelled. A *hot* stream -- one that emits continuously, such as a chat feed -- must be cancelled when the component is removed from the DOM. Subscribe inside a React effect and cancel in its cleanup function:
+
+[source,typescript]
+----
+useEffect(() => {
+    const subscription = ChatService.messages().onNext(onMessageReceived);
+    return () => subscription.cancel();
+}, []);
+----
+
+=== Handling Errors
+
+An error terminates the stream: the subscription is cancelled and no more values arrive. Register an error callback with `onError()`. For a hot stream, consider resubscribing as part of recovery:
+
+[source,typescript]
+----
+ChatService.messages().onNext(onMessageReceived).onError(onError);
+----
+
+The error callback receives no information about the error itself.
+
+=== Buffering High-Frequency Streams
+
+Don't push updates to the browser more than two to four times per second. If a stream emits faster than that, buffer it *in the service* with `Flux.buffer()` so the client receives batches instead. The generated method then emits arrays:
+
+[source,java]
+----
+@AnonymousAllowed
+public Flux<@NonNull List<@NonNull Event>> bufferedEventStream() {
+    return eventStream().buffer(Duration.ofMillis(250)); // <1>
+}
+----
+<1> Buffer events for 250 ms, then emit them as a `List<Event>`.
+
+=== Recovering Lost Subscriptions
+
+A subscription can be lost without being cancelled -- for example when the user's device sleeps or briefly loses its network connection. Vaadin re-establishes the connection automatically, but the subscription may no longer be valid. Register an `onSubscriptionLost()` callback to decide what happens:
+
+[source,typescript]
+----
+useEffect(() => {
+    const subscription = ChatService.messages()
+        .onNext(onMessageReceived)
+        .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE);
+    return () => subscription.cancel();
+}, []);
+----
+
+The callback returns `RESUBSCRIBE` to call the server method again, or `REMOVE` (the default) to leave the subscription closed until the client resubscribes explicitly.
 
 
 == Next Steps
