@@ -1,0 +1,133 @@
+---
+title: Optimizing Tests
+page-title: How to optimize Vaadin browserless tests for faster execution
+description: Speed up browserless tests by restricting package scanning and using reduced application contexts.
+meta-description: Optimize Vaadin browserless tests with package scanning restrictions and reduced Spring application contexts.
+order: 85
+---
+
+
+= Optimizing Browserless Tests
+
+By default, browserless tests scan the entire classpath for routes and error views and, in Spring Boot projects, load the full application context. For large projects this can slow down test startup. The following techniques help reduce bootstrap time.
+
+
+== Restricting Package Scanning
+
+To restrict the scan to specific packages and their sub-packages, annotate the test class with [annotationname]`@ViewPackages` and specify the packages by filling the [methodname]`classes()` array with classes that are members of the desired packages, or by providing the packages with fully qualified names in the [methodname]`packages()` property. Using [methodname]`classes()` is the preferred way, since it plays well with IDE refactoring when moving classes to different packages.
+
+.Package Scan Examples
+[source,java]
+----
+@SpringBootTest
+@ViewPackages(classes={ MyView.class, OtherView.class })
+class MyViewTest extends SpringBrowserlessTest {
+}
+
+@SpringBootTest
+@ViewPackages(packages={ "com.example.app.pgk1", "com.example.app.pgk2" })
+class MyViewTest extends SpringBrowserlessTest {
+}
+
+@SpringBootTest
+@ViewPackages(
+    classes={ MyView.class, OtherView.class },
+    packages={ "com.example.app.pgk1", "com.example.app.pgk2" }
+)
+class MyViewTest extends SpringBrowserlessTest {
+}
+----
+
+
+Using the annotation without providing [methodname]`classes()` or [methodname]`packages()` acts as a shortcut for restricting the scan to the current test class package and sub-packages.
+
+[source,java]
+----
+@SpringBootTest
+@ViewPackages // same as @ViewPackages(classes=MyViewTest.class)
+class MyViewTest extends SpringBrowserlessTest {
+}
+----
+
+
+== Using a Reduced Application Context
+
+Instead of [annotationname]`@SpringBootTest`, which loads the full application context, you can annotate the test with [annotationname]`@ContextConfiguration` to provide only the beans needed for the test. This is useful when you want to replace real services with test doubles.
+
+[source,java]
+----
+@ContextConfiguration(classes = ViewTestConfig.class)
+class ViewTest extends SpringBrowserlessTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+
+@Configuration
+class ViewTestConfig {
+
+        @Bean
+        GreetingService myService() {
+                return new TestingGreetingService();
+        }
+}
+----
+
+[NOTE]
+====
+Prefer replacing services this way -- a test [annotationname]`@Configuration` selected with [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
+
+A bean override changes the context definition, so Spring's test context cache stores a *separate* application context for that test class. In a multi-class run, the resulting context churn can leave the Vaadin and Spring Security integration in a state where the simulated user isn't applied during navigation, causing protected views to redirect to the login view in *unrelated* tests -- a confusing failure that disappears when the affected class is run on its own.
+
+For service-level tests that don't need the Vaadin context, an even simpler option is to construct the service directly with stub collaborators (for example `new ResourceService(repo, id -> 0L)`) instead of overriding a bean. Both approaches keep a single shared context.
+====
+
+
+== [since:com.vaadin:vaadin@V25.2]#Sharing the Vaadin Environment Across Tests#
+
+By default, the Vaadin environment -- the session, the UI, and all routes -- is created before every test method and torn down after. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
+
+To reuse a single Vaadin environment across all test methods in a class, register a static [classname]`BrowserlessClassExtension` with [annotationname]`@RegisterExtension`. The extension initializes the environment once before all tests and tears it down after all tests, sharing the same [classname]`UI` instance across every method. Instead of extending [classname]`BrowserlessTest`, implement the [interfacename]`TesterWrappers` and [interfacename]`Locators` interfaces to use the tester and locator DSL directly, and use the extension instance for navigation. This can significantly reduce runtime for suites with hundreds of tests on the same view.
+
+.Shared Environment Example
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+class CartViewTest implements TesterWrappers, Locators {
+
+    @RegisterExtension
+    static BrowserlessClassExtension extension = new BrowserlessClassExtension();
+
+    @BeforeAll
+    static void setup() {
+        extension.navigate(CartView.class);
+    }
+
+    @Test
+    void addItem_increasesCartSize() {
+        // same UI instance as the other tests
+        findButton().withText("Add").click();
+    }
+
+    @Test
+    void removeItem_decreasesCartSize() {
+        // state from the previous test is preserved
+    }
+}
+----
+
+[WARNING]
+With a shared environment, state leaks between tests. Tests must either tolerate leftover state or reset it explicitly -- for example, by re-navigating to the view in a [annotationname]`@BeforeEach` method. Prefer a shared environment for read-only or independent interactions; stick with the default per-method lifecycle when tests mutate shared state in conflicting ways.
+
+[NOTE]
+The base test classes -- [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- always reinitialize the Vaadin environment before each test method. Annotating them with [annotationname]`@TestInstance(PER_CLASS)` therefore does not share the Vaadin environment, although it can still be useful for sharing other per-class state. Use a static [classname]`BrowserlessClassExtension` as shown above to share the Vaadin environment.
+
+
+[discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`

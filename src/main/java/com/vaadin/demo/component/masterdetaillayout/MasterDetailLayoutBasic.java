@@ -13,13 +13,9 @@ public class MasterDetailLayoutBasic extends Div {
     public MasterDetailLayoutBasic() {
         // tag::snippet[]
         MasterDetailLayout layout = new MasterDetailLayout();
-        /*
-         * Sets the minimum size of the flexible master area to 450px, below
-         * which the detail area will be rendered as an overlay:
-         */
-        layout.setMasterMinSize("450px");
-        /* Sets the detail area size to a static size: */
+        layout.setMasterSize("450px");
         layout.setDetailSize("250px");
+        layout.setExpandMaster(true);
         // end::snippet[]
 
         PersonList personList = new PersonList(DataService.getPeople());

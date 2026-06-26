@@ -7,7 +7,7 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 function Example() {
   return (
     // tag::snippet[]
-    <VerticalLayout>
+    <VerticalLayout style={{ gap: '15px' }}>
       <CheckboxGroup label="Manufacturer" theme="vertical">
         <Checkbox value="0" label="Akuchi" />
         <Checkbox value="1" label="Broek" />

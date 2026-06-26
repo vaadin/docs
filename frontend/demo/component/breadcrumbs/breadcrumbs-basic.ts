@@ -1,0 +1,31 @@
+import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/breadcrumbs';
+import { html, LitElement } from 'lit';
+import { customElement } from 'lit/decorators.js';
+import { patchBreadcrumbsNavigation } from 'Frontend/demo/component/breadcrumbs/breadcrumbs-helper'; // hidden-source-line
+import { applyTheme } from 'Frontend/demo/theme';
+
+@customElement('breadcrumbs-basic')
+export class Example extends LitElement {
+  protected override createRenderRoot() {
+    const root = super.createRenderRoot();
+    applyTheme(root);
+    return root;
+  }
+
+  /* prettier-ignore */ protected firstUpdated() { // hidden-source-line
+    patchBreadcrumbsNavigation(this.shadowRoot!.querySelector('vaadin-breadcrumbs')!); // hidden-source-line
+  } // hidden-source-line
+
+  protected override render() {
+    return html`
+      <!-- tag::snippet[] -->
+      <vaadin-breadcrumbs>
+        <vaadin-breadcrumbs-item path="/">Home</vaadin-breadcrumbs-item>
+        <vaadin-breadcrumbs-item path="/components">Components</vaadin-breadcrumbs-item>
+        <vaadin-breadcrumbs-item>Breadcrumbs</vaadin-breadcrumbs-item>
+      </vaadin-breadcrumbs>
+      <!-- end::snippet[] -->
+    `;
+  }
+}

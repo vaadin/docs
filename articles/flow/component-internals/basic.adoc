@@ -24,13 +24,7 @@ You use the Element API to interact with the client-side elements, for example b
 ====
 [source,java]
 ----
-@Tag("input")
-public class TextField extends Component {
-
-    public TextField(String value) {
-        getElement().setProperty("value",value);
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/TextField.java[tag=basic,indent=0]
 ----
 ====
 
@@ -41,21 +35,12 @@ You can use predefined constants in the `@Tag` annotation. For example, the `@Ta
 
 A component can consist of multiple elements in the DOM tree. In this case, the root element is still defined using the `@Tag` annotation, and other elements are created and appended to the root element using the Element API.
 
-.Creating a `TextField` component with `<input>` and `<label>` elements inside a `<div>` root element
+.Creating a `LabeledTextField` component with `<input>` and `<label>` elements inside a `<div>` root element
 [example]
 ====
 [source,java]
 ----
-@Tag("div")
-public class TextField extends Component {
-
-    private final Element labelElement = new Element("label");
-    private final Element inputElement = new Element("input");
-
-    public TextField() {
-        getElement().appendChild(labelElement, inputElement);
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/LabeledTextField.java[indent=0]
 ----
 
 This generates the following DOM-tree structure in the browser:
@@ -73,20 +58,12 @@ This generates the following DOM-tree structure in the browser:
 
 If you extend an existing component, the root element is inherited from the parent component class. You can still use the Element API to manipulate the root element or create and append child elements. However, you don't need to use the `@Tag` annotation in this case.
 
-.Extending the `TextField` component created above
+.Extending the `LabeledTextField` component created above
 [example]
 ====
 [source,java]
 ----
-public class CustomTextField extends TextField {
-
-    private final Element errorElement = new Element("span");
-
-    public CustomTextField() {
-        super();
-        getElement().appendChild(errorElement);
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/CustomTextField.java[indent=0]
 ----
 
 This generates the following DOM-tree structure in the browser:
@@ -106,29 +83,12 @@ This generates the following DOM-tree structure in the browser:
 
 When you create a new component by combining existing components, you should extend the `Composite<T>` class, where `T` is the type of the root component. This does not affect the DOM structure, but prevents users of your component from accessing the API of the root component directly.
 
-.Creating a `TextField` component with `Input` and `NativeLabel` components inside a `Div` root component
+.Creating a `CompositeTextField` component with `Input` and `NativeLabel` components inside a `Div` root component
 [example]
 ====
 [source,java]
 ----
-public class TextField extends Composite<Div> {
-
-    private final NativeLabel label;
-    private final Input input;
-
-    public TextField(String labelText, String value) {
-        label = new NativeLabel();
-        label.setText(labelText);
-        input = new Input();
-        input.setValue(value);
-
-        getContent().add(label, input);
-    }
-}
-
-// In later code:
-TextField textField = new TextField("Name", "John Doe");
-// textField does not expose any of the methods of Div.
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/CompositeTextField.java[indent=0]
 ----
 
 This generates the following DOM-tree structure in the browser:
@@ -159,20 +119,7 @@ A Vaadin component API consists of:
 ====
 [source,java]
 ----
-@Synchronize("change")
-public String getValue() {
-    return getElement().getProperty("value");
-}
-
-public void setValue(String value) {
-    getElement().setProperty("value", value);
-    fireEvent(new ValueChangeEvent(this, false));
-}
-
-public Registration addValueChangeListener(
-        ComponentEventListener<ValueChangeEvent> listener) {
-    return addListener(ValueChangeEvent.class, listener);
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/TextField.java[tag=events,indent=0]
 ----
 ====
 
@@ -182,7 +129,7 @@ The topmost component in any component hierarchy is the `UI` instance. The `UI` 
 
 === Attach to UI
 
-Whenever a component is added to a `UI`, either directly or indirectly through another component, it is considered to be *attached* to the `UI`. When a component is removed from the `UI`, it is considered to be *detached* from the `UI`. 
+Whenever a component is added to a `UI`, either directly or indirectly through another component, it is considered to be *attached* to the `UI`. When a component is removed from the `UI`, it is considered to be *detached* from the `UI`.
 
 The `Component` class provides an `onAttach()` method that is called when the component has been attached to a `UI`. Override this method to perform initialization that requires the component to be attached. The default implementation is empty, so you don't need to call `super.onAttach()` unless you are extending another component class that requires it.
 
@@ -191,16 +138,7 @@ The `Component` class provides an `onAttach()` method that is called when the co
 ====
 [source,java]
 ----
-@Tag("div")
-public class UserNameLabel extends Component {
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        // This assumes the username has been stored in the session after login
-        String userName = (String) attachEvent.getSession().getAttribute("username");
-        getElement().setText("Hello %s, weclome back!".formatted(userName));
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/UserNameLabel.java[indent=0]
 ----
 ====
 
@@ -216,32 +154,7 @@ The `Component` class also provides a [methodname]`onDetach()` method that is ca
 ====
 [source,java]
 ----
-@Tag("div")
-public class ShoppingCartSummaryLabel extends Component {
-
-    private final Consumer<EventObject> eventHandler = this::onCartSummaryUpdate;
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        var eventBus = attachEvent.getSession().getAttribute(ShopEventBus.class);
-        eventBus.register(eventHandler);
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        var eventBus = detachEvent.getSession().getAttribute(ShopEventBus.class);
-        eventBus.unregister(eventHandler);
-    }
-
-    private void onCartSummaryUpdate(EventObject event) {
-        // update cart summary ...
-    }
-}
-
-interface ShopEventBus {
-    void register(Consumer<EventObject> eventHandler);
-    void unregister(Consumer<EventObject> eventHandler);
-}
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/ShoppingCartSummaryLabel.java[indent=0]
 ----
 ====
 
@@ -257,7 +170,7 @@ You can set an `Id` for any component. The `Id` is passed to the client side as 
 ====
 [source,java]
 ----
-component.setId("my-component");
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/SetIdView.java[tag=id,indent=0]
 ----
 ====
 

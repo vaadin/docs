@@ -57,24 +57,15 @@ export class Example extends LitElement {
   }
 
   // tag::renderer[]
-  // NOTE
-  // We are using inline styles here to keep the example simple.
-  // We recommend placing CSS in a separate style sheet and
-  // encapsulating the styling in a new component.
-
   private renderer: ComboBoxLitRenderer<Person> = (person) => html`
-    <div style="display: flex;">
+    <div class="person-item">
       <img
-        style="height: 2.25rem; margin-right: var(--lumo-space-s);"
         src="${person.pictureUrl}"
         alt="Portrait of ${person.firstName} ${person.lastName}"
+        style="width: 2.25rem;"
       />
-      <div>
-        ${person.firstName} ${person.lastName}
-        <div style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);">
-          ${person.profession}
-        </div>
-      </div>
+      <span>${person.firstName} ${person.lastName}</span>
+      <span>${person.profession}</span>
     </div>
   `;
   // end::renderer[]

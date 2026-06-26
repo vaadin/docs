@@ -6,6 +6,15 @@ import '@vaadin/dashboard/vaadin-dashboard-widget.js';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
+import {
+  renderBrowsersWidget,
+  renderConversionsWidget,
+  renderDownloadsWidget,
+  renderTrafficSourcesWidget,
+  renderVisitorsByCountryWidget,
+  renderVisitorsPerMonthWidget,
+  renderVisitorsWidget,
+} from './mock-widgets';
 
 @customElement('dashboard-sections')
 export class Example extends LitElement {
@@ -23,13 +32,13 @@ export class Example extends LitElement {
       >
         <vaadin-dashboard-section section-title="Monthly Funnel Stats">
           <vaadin-dashboard-widget widget-title="Visitors">
-            <div class="dashboard-widget-content"></div>
+            ${renderVisitorsWidget()}
           </vaadin-dashboard-widget>
           <vaadin-dashboard-widget widget-title="Downloads">
-            <div class="dashboard-widget-content"></div>
+            ${renderDownloadsWidget()}
           </vaadin-dashboard-widget>
           <vaadin-dashboard-widget widget-title="Conversions">
-            <div class="dashboard-widget-content"></div>
+            ${renderConversionsWidget()}
           </vaadin-dashboard-widget>
         </vaadin-dashboard-section>
         <!-- end::snippet[] -->
@@ -39,19 +48,19 @@ export class Example extends LitElement {
             widget-title="Visitors by country"
             style="--vaadin-dashboard-widget-rowspan: 2;"
           >
-            <div class="dashboard-widget-content"></div>
+            ${renderVisitorsByCountryWidget()}
           </vaadin-dashboard-widget>
           <vaadin-dashboard-widget widget-title="Browsers">
-            <div class="dashboard-widget-content"></div>
+            ${renderBrowsersWidget()}
           </vaadin-dashboard-widget>
-          <vaadin-dashboard-widget widget-title="A kittykat!">
-            <div class="dashboard-widget-content"></div>
+          <vaadin-dashboard-widget widget-title="Traffic sources">
+            ${renderTrafficSourcesWidget()}
           </vaadin-dashboard-widget>
           <vaadin-dashboard-widget
-            widget-title="Visitors by browser"
+            widget-title="Visitors per month"
             style="--vaadin-dashboard-widget-colspan: 2;"
           >
-            <div class="dashboard-widget-content"></div>
+            ${renderVisitorsPerMonthWidget()}
           </vaadin-dashboard-widget>
         </vaadin-dashboard-section>
         <!-- tag::snippet[] -->

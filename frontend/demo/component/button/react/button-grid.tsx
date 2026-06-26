@@ -25,9 +25,9 @@ function Example() {
 
   return (
     <VerticalLayout theme="spacing" style={{ alignItems: 'stretch' }}>
-      <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
-        <h2 style={{ margin: '0 auto 0 0' }}>Users </h2>
-        <Button>Add user</Button>
+      <HorizontalLayout style={{ alignItems: 'center' }}>
+        <h2>Users</h2>
+        <Button slot="end">Add user</Button>
       </HorizontalLayout>
       <Grid
         items={items.value}
@@ -42,15 +42,11 @@ function Example() {
         <GridColumn path="email" />
       </Grid>
 
-      <HorizontalLayout theme="spacing">
+      <HorizontalLayout theme="spacing wrap">
         <Button disabled={selectedItems.value.length !== 1}>Edit profile</Button>
         <Button disabled={selectedItems.value.length !== 1}>Manage permissions</Button>
         <Button disabled={selectedItems.value.length !== 1}>Reset password</Button>
-        <Button
-          theme="error"
-          disabled={selectedItems.value.length === 0}
-          style={{ marginInlineStart: 'auto' }}
-        >
+        <Button slot="end" theme="error" disabled={selectedItems.value.length === 0}>
           Delete
         </Button>
       </HorizontalLayout>

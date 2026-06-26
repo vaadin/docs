@@ -1,7 +1,8 @@
 package com.vaadin.demo.component.badge;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -12,44 +13,38 @@ public class BadgeColor extends VerticalLayout {
     public BadgeColor() {
         // tag::snippet1[]
         // Default variant
-        Span pending = new Span("Pending");
-        pending.getElement().getThemeList().add("badge");
+        Badge pending = new Badge("Pending");
         // end::snippet1[]
 
-        Span confirmed = new Span("Confirmed");
-        confirmed.getElement().getThemeList().add("badge success");
+        Badge confirmed = new Badge("Confirmed");
+        confirmed.addThemeVariants(BadgeVariant.SUCCESS);
 
-        Span warning = new Span("Warning");
-        warning.getElement().getThemeList().add("badge warning");
+        Badge warning = new Badge("Warning");
+        warning.addThemeVariants(BadgeVariant.WARNING);
 
-        Span denied = new Span("Denied");
-        denied.getElement().getThemeList().add("badge error");
-
-        Span onHold = new Span("On hold");
-        onHold.getElement().getThemeList().add("badge contrast");
+        Badge denied = new Badge("Denied");
+        denied.addThemeVariants(BadgeVariant.ERROR);
 
         // tag::snippet2[]
-        // Primary variant
-        Span pendingPrimary = new Span("Pending");
-        pendingPrimary.getElement().getThemeList().add("badge primary");
+        // Filled variant
+        Badge pendingFilled = new Badge("Pending");
+        pendingFilled.addThemeVariants(BadgeVariant.FILLED);
         // end::snippet2[]
 
-        Span confirmedPrimary = new Span("Confirmed");
-        confirmedPrimary.getElement().getThemeList()
-                .add("badge success primary");
+        Badge confirmedFilled = new Badge("Confirmed");
+        confirmedFilled.addThemeVariants(BadgeVariant.SUCCESS,
+                BadgeVariant.FILLED);
 
-        Span warningPrimary = new Span("Warning");
-        warningPrimary.getElement().getThemeList().add("badge warning primary");
+        Badge warningFilled = new Badge("Warning");
+        warningFilled.addThemeVariants(BadgeVariant.WARNING,
+                BadgeVariant.FILLED);
 
-        Span deniedPrimary = new Span("Denied");
-        deniedPrimary.getElement().getThemeList().add("badge error primary");
+        Badge deniedFilled = new Badge("Denied");
+        deniedFilled.addThemeVariants(BadgeVariant.ERROR, BadgeVariant.FILLED);
 
-        Span onHoldPrimary = new Span("On hold");
-        onHoldPrimary.getElement().getThemeList().add("badge contrast primary");
-
-        add(new HorizontalLayout(pending, confirmed, warning, denied, onHold),
-                new HorizontalLayout(pendingPrimary, confirmedPrimary,
-                        warningPrimary, deniedPrimary, onHoldPrimary));
+        add(new HorizontalLayout(pending, confirmed, warning, denied),
+                new HorizontalLayout(pendingFilled, confirmedFilled,
+                        warningFilled, deniedFilled));
         setPadding(false);
         setSizeUndefined();
     }

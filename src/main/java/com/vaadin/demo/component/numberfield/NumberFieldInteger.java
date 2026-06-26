@@ -1,14 +1,17 @@
 package com.vaadin.demo.component.numberfield;
 
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("number-field-integer")
-public class NumberFieldInteger extends HorizontalLayout {
+public class NumberFieldInteger extends FormLayout {
 
     public NumberFieldInteger() {
+        setAutoResponsive(true);
+        setAutoRows(true);
+
         // tag::snippet[]
         IntegerField xField = new IntegerField();
         xField.setLabel("X");

@@ -9,7 +9,7 @@ import { patchAppLayoutNavigation } from '../app-layout-helper';
 
 const h1Style: React.CSSProperties = {
   fontSize: '1.125rem',
-  left: 'var(--lumo-space-l)',
+  left: 'var(--vaadin-padding-l)',
   margin: 0,
   position: 'absolute',
 };

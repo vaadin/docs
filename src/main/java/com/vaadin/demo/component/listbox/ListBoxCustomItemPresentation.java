@@ -6,9 +6,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -25,26 +22,14 @@ public class ListBoxCustomItemPresentation extends Div {
         listBox.setItems(items);
         // tag::snippet[]
         listBox.setRenderer(new ComponentRenderer<>(person -> {
-            HorizontalLayout row = new HorizontalLayout();
-            row.setAlignItems(FlexComponent.Alignment.CENTER);
-
-            Avatar avatar = new Avatar();
-            avatar.setName(person.getFullName());
-            avatar.setImage(person.getPictureUrl());
-
+            Avatar avatar = new Avatar(person.getFullName(),
+                    person.getPictureUrl());
             Span name = new Span(person.getFullName());
             Span profession = new Span(person.getProfession());
-            profession.getStyle()
-                    .set("color", "var(--lumo-secondary-text-color)")
-                    .set("font-size", "0.875rem");
 
-            VerticalLayout column = new VerticalLayout(name, profession);
-            column.setPadding(false);
-            column.setSpacing(false);
-
-            row.add(avatar, column);
-            row.getStyle().set("line-height", "var(--lumo-line-height-m)");
-            return row;
+            Div personItem = new Div(avatar, name, profession);
+            personItem.addClassName("person-item");
+            return personItem;
         }));
         // end::snippet[]
         listBox.select(items.get(0), items.get(2));

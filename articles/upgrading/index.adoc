@@ -13,7 +13,7 @@ This guide goes through the changes you'll need to make in your applications whe
 
 .Upgrading from Earlier Version
 [TIP]
-See link:/docs/latest/upgrading[Vaadin 23 to 24 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 24.
+See link:/docs/v24/upgrading[Vaadin 23 to 24 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 24.
 
 Many of the breaking changes are needed because of fundamental changes in the Java platform and the major dependencies on which Vaadin relies. This includes the following:
 
@@ -38,7 +38,17 @@ Jackson 3::
 Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
 
 Node.js 24::
-Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active Long Term Support (LTS) before Vaadin 25.0.0 - guaranteeing the longest possible support.
+Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active Long Term Support (LTS) before Vaadin 25.0.0 -- guaranteeing the longest possible support.
++
+The way Vaadin installs and manages Node.js has also changed:
++
+--
+- Node.js is now installed into version-specific directories (e.g., `~/.vaadin/node-v24.14.0/`) instead of a single `~/.vaadin/node/` directory. Multiple versions can coexist side by side.
+- The complete Node.js distribution is now extracted, including `npm`, `npx`, and `corepack`, so these tools can be used directly from the installation directory.
+- The `node.auto.update` configuration property has been removed. Auto-update is no longer needed since each version is installed into its own directory.
+- A new `node.folder` configuration property allows pointing to a custom Node.js installation directory. See <<{articles}/flow/configuration/development-mode/node-js.adoc#node-folder, Custom Node.js Folder>> for details.
+- If you have scripts or CI configurations that reference `~/.vaadin/node/bin/node`, update them to use the version-specific path (e.g., `~/.vaadin/node-v24.14.0/bin/node`).
+--
 
 React 19::
 Vaadin 25 uses React 19 for the React-based components and views. Details about the changes in React 19 can be found in link:https://react.dev/blog/2024/04/25/react-19-upgrade-guide[React 19 Upgrade Guide].
@@ -151,7 +161,7 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
 </parent>
 ----
 
@@ -164,7 +174,7 @@ Before migrating, find the corresponding version of the Jakarta EE 11-compatible
 Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
 A safe choice: Maven 3.9.11 (or the latest in the 3.9 line) or Maven 4.0.x (once stable) if you are comfortable with that.
 
-To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the link:https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.0.0.
+To run Gradle on top of Java 21 and latest Spring Boot 4 versions, you'll need to use version 8.14 or later. See the link:https://docs.gradle.org/8.14/release-notes.html[Gradle release notes] for further details. If your project uses Spring Boot, upgrade the plugin `org.springframework.boot` to version 4.1.0 or later.
 
 If you're using a Gradle wrapper, update it to version 8.14 by executing the following from the command line:
 
@@ -174,6 +184,22 @@ If you're using a Gradle wrapper, update it to version 8.14 by executing the fol
 ----
 
 For Java 21 compatibility, you may need to update the `sourceCompatibility` setting in your project's build file to version 21. Check your project's build file and make any necessary changes.
+
+=== Gradle: `vaadinPrepareFrontend` No Longer Runs Automatically
+
+Starting with Vaadin 25.2, the `vaadinPrepareFrontend` Gradle task is no longer automatically bound to the `processResources` lifecycle task. In earlier versions, this binding caused the task to run on every compilation, including when IntelliJ IDEA or other IDEs triggered automatic Gradle builds. This could lead to generated frontend files (such as `index.ts`) being unexpectedly deleted, particularly when using hot deploy mode.
+
+The task can still be run explicitly if needed. If your build relied on the automatic execution, you can re-add the binding in your [filename]`build.gradle`:
+
+----
+tasks.named('processResources') {
+    dependsOn 'vaadinPrepareFrontend'
+}
+----
+
+=== Recently Published npm Packages Not Installed by Default
+
+Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
 
 == Development Tools
 
@@ -202,8 +228,14 @@ dependencies {
 
 More detailed instructions can be found in <<{articles}/flow/configuration/development-mode#development-mode, Development Mode>>.
 
+
+== Vaadin Router Deprecation
+
+The Vaadin Router library is no longer actively maintained, as Vaadin now uses React Router as its primary client-side routing solution. If your application currently uses Vaadin Router, you should migrate to React Router, by removing the `vaadin.react.enabled=false` property in your configuration.
+
+
 == Hilla
-Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have react views, add `hilla-spring-boot-starter` to work together with `vaadin-spring-boot-starter` in your build configuration.
+Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have React views, add `hilla-spring-boot-starter` to work together with `vaadin-spring-boot-starter` in your build configuration.
 
 .pom.xml
 [source,xml]
@@ -219,11 +251,17 @@ Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have
 </dependency>
 ----
 
+The `@vaadin/router` library, which is used for building Lit views in Hilla, is deprecated. Consider migrating Lit views to React.
+
 == Quarkus
 
 Vaadin Quarkus extension is changed to build production package by default. No need for production profile with exclusions for development tools in Maven configurations because Vaadin Quarkus extension has build-in Vaadin plugin handling production packaging.
 
 To allow project to keep build configuration unchanged, Vaadin Quarkus extension has `vaadin.build.enabled` property to change the default behavior. Disable Vaadin plugin by adding `vaadin.build.enabled=false` in `application.properties` file to keep using profile based configuration.
+
+=== Push Requests Dispatched on Worker Threads
+
+Starting with Vaadin 25.2, the Vaadin Quarkus extension sets `quarkus.websocket.dispatch-to-worker=true` by default, so that Server Push websocket frames are dispatched on Quarkus worker threads instead of the Vert.x event loop. This prevents application code that blocks while holding the Vaadin session lock from hanging the event loop. If your application explicitly relies on event-loop dispatch, set the property to `false` in [filename]`application.properties`. See <<{articles}/flow/integrations/quarkus#quarkus.push, Server Push in the Quarkus integration documentation>> for details.
 
 == Themes and Styling
 
@@ -233,37 +271,35 @@ Below are the main highlights of the changes and more detailed instructions are 
 
 The special `frontend/themes` folder, and the `components` sub-folder for CSS shadow-DOM injection, is deprecated (but still supported).
 
-Injecting CSS into Vaadin components’ shadow DOM through the components sub-folder in your theme folder is disabled by default. Shadow DOM styling is no longer recommended (as of V24), but if you still need to use it, it can be enabled with the feature flag `themeComponentStyles`.
+Injecting CSS into Vaadin components’ shadow DOM through the `components` sub-folder in your `frontend/themes/<mytheme>` folder is disabled by default. Shadow DOM styling is no longer recommended (as of V24), but if you still need to use it, it can be enabled with the <<{articles}/flow/configuration/feature-flags#,`themeComponentStyles`>> feature flag.
 
-The [classname]`@Theme` annotation is deprecated. Instead, [classname]`StyleSheet` annotation to be used for loading one or more stylesheets from public static resources locations (e.g. `META-INF/resources/`), whereas [classname]`CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
+The [annotationname]`@Theme` annotation is deprecated. Instead, the [annotationname]`@StyleSheet` annotation is to be used for loading one or more <<{articles}/styling/stylesheets#,stylesheets from public static resources locations>> (e.g. `META-INF/resources/`), whereas [annotationname]`@CssImport` loads one or more stylesheets from the `src/main/frontend/` folder and use mechanisms native to HTML, CSS, and React (e.g. `@import url("morestyles.css")` in CSS).
 
-`StyleSheet` annotation is now a recommended way to load Vaadin theme for the application — to be placed on the application class implementing [classname]`AppShellConfigurator`. Below are some examples of how to use it:
+The [annotationname]`@StyleSheet` annotation is now the recommended way to load Vaadin themes and styles for the application — to be placed on the application class implementing [classname]`AppShellConfigurator`. Below are some examples of how to use it:
 
 [source,java]
 ----
-// theme selection
+// Load Vaadin theme
 @StyleSheet(Aura.STYLESHEET) // or Lumo.STYLESHEET
+// Load application styles
+@StyleSheet("styles.css") // references src/main/resources/META-INF/resources/styles.css
 public class Application implements AppShellConfigurator {}
-
-// or loading custom styles and theme:
-
-@StyleSheet("styles.css")
-public class Application implements AppShellConfigurator {}
-
-// then using @import in the src/main/resources/META-INF/resources/styles.css:
-
-@import 'aura/aura.css'; /* or 'lumo/lumo.css' */
-// your custom styles go here ...
-
 ----
 
-The [filename]`theme.json` configuration file is deprecated (but still supported, except the `lumoImports` property).
+Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. [since:com.vaadin:vaadin@V25.2]#Stylesheet URLs are automatically resolved against the servlet context root, so they work also when the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications).# Prefixing the URL with the `context://` protocol is no longer necessary, but it's still supported.
+
+The [filename]`theme.json` configuration file is deprecated (but still supported in the `frontend/themes/<mytheme>/` folder, except for the `lumoImports` property).
+
+[IMPORTANT]
+====
+The `lumoImports` property in [filename]`theme.json` is silently ignored in Vaadin 25. If your application relied on `lumoImports` to load utility classes (e.g., `"lumoImports": ["utility"]`), views using [classname]`LumoUtility` CSS classes for layout (flex, grid, gap, padding, etc.) will render with broken layouts. The class names are still added to the DOM but have no backing CSS rules. See <<lumo-theme>> for instructions on loading the Lumo Utility stylesheet.
+====
 
 The `themeFor` parameter of the [classname]`@CssImport` annotation (for shadow-DOM injection) is deprecated (but still supported).
 
 The special [filename]`document.css` file (for loading styles into the document root in embedded components) is removed as no longer necessary.
 
-You can use [classname]`@ColorScheme` for choosing between light or dark color scheme. 
+You can use [classname]`@ColorScheme` for choosing between light or dark color scheme.
 See <<{articles}/styling/themes#color-schemes, Color Schemes>> for more details on using color schemes.
 
 === Spring Security and StyleSheet
@@ -301,23 +337,39 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 }
 ----
 
+[[lumo-theme]]
 === Lumo Theme
 
 The Lumo theme is no longer loaded by default, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. If you’re not using [classname]`@Theme`, then add a [classname]`@StyleSheet` annotation to either your application class or a root layout to load the Lumo theme:
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET);
+@StyleSheet(Lumo.STYLESHEET)
 public class Application implements AppShellConfigurator {}
 ----
 
-All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. To load the utility classes, add a separate [classname]`@StyleSheet` annotation:
+All Lumo styles, including badges, but excluding Lumo Utility Classes are included by default when the Lumo theme is loaded. This applies regardless of whether the theme is loaded through [classname]`@Theme` or [classname]`@StyleSheet`. To load the utility classes, add a [classname]`@StyleSheet` annotation:
 
 [source,java]
 ----
-@StyleSheet(Lumo.STYLESHEET);
-@StyleSheet(Lumo.UTILITY_STYLESHEET);
+@StyleSheet(Lumo.UTILITY_STYLESHEET)
 public class Application implements AppShellConfigurator {}
+----
+
+[NOTE]
+====
+If your Vaadin 24 application used `"lumoImports": ["utility"]` in [filename]`theme.json` to load the Lumo Utility Classes, you must add `@StyleSheet(Lumo.UTILITY_STYLESHEET)` when upgrading to Vaadin 25. The [classname]`@Theme` annotation does not load utility classes, and the `lumoImports` property in [filename]`theme.json` is no longer supported. Without this change, any layout built with [classname]`LumoUtility` constants (such as `Display.FLEX`, `FlexDirection.COLUMN`, `Gap.MEDIUM`, etc.) will appear broken, as the CSS class names are present in the HTML but have no associated styles.
+====
+
+The Lumo icon collection is not loaded by default anymore, except if you’re using the [classname]`@Theme` annotation to load an application theme folder. To ensure Lumo icons are included in your application bundle, use the [classname]`LumoIcon` enum instead of the general [classname]`Icon` class:
+
+[source,java,role="before"]
+----
+var icon = new Icon("lumo","cross");
+----
+[source,java,role="after"]
+----
+var icon = LumoIcon.CROSS.create();
 ----
 
 NOTE: The way the Lumo theme is injected into Vaadin components has been refactored to not use the `registerStyles()` helper. This should not cause any breaking changes in applications; please report issues at link:https://github.com/vaadin/web-components/issues[vaadin/web-components] if you find otherwise.
@@ -361,12 +413,18 @@ One exception is the `@vaadin/react-components/css/lumo/Utility.module.css` CSS 
 
 These changes are optional, as old approaches still work (with the exceptions listed in the Breaking Changes section), but recommended to get your application to the new best practices in Vaadin 25, and to avoid breaking changes in later major versions.
 
-* Refactor component styles from shadow DOM styles to normal CSS (this was the recommended approach already in V24)
+* Refactor component styles from shadow DOM styles to normal CSS (this was the recommended approach already in V24). (The _Styling_ sub-pages in the component documentation provide lists of css selectors and style properties that can be used to style components this way.)
+* Move stylesheets from `frontend/themes/<mytheme>` to `src/main/resources/META-INF/resources` in a Spring project, or to `src/main/webapp` in a non-Spring project.
 * Load custom styles through a master stylesheet with [classname]`@StyleSheet` instead of [classname]`@Theme` or multiple [classname]`@CssImport`-s
 * Load additional custom stylesheets through master stylesheet with `@import`
-* Move stylesheets from `frontend/themes/<mytheme>` to `src/main/resources/META-INF/resources`
+
+Note that `theme.json` and shadow-DOM styling of components through the `components` folder do not work in the new stylesheet location.
+
 
 == Components
+
+=== Accordion
+Starting with Vaadin 25.2, attaching an [classname]`Accordion` to the UI no longer fires an initial [classname]`OpenedChangeEvent`. In addition, [methodname]`isFromClient()` on the event now correctly returns `false` for changes made from server-side code; previously, it always returned `true`. Adjust any listeners that rely on receiving an event when the component is attached, or that use [methodname]`isFromClient()` to distinguish user-initiated changes.
 
 === App Layout
 The `bottom` attribute was removed and can no longer be used to target the bottom navbar. Instead, use the selector `::part(navbar-bottom)` to target it with CSS.
@@ -409,7 +467,7 @@ The “New Item” button in the CRUD component no longer uses the primary style
 [.example]
 [source,java]
 ----
-crud.getNewButton().addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+crud.getNewButton().addThemeVariants(ButtonVariant.PRIMARY);
 ----
 
 === Charts
@@ -573,7 +631,7 @@ vaadin-split-layout > * {
 The `SplitterDragendEvent` and `addSplitterDragendListener` have been renamed to `SplitterDragEndEvent` and `addSplitterDragEndListener`, respectively.
 
 === Spreadsheet
-The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. In order to achieve this, use one of the following constructors:
+The events [classname]`CellValueChangeEvent`, [classname]`FormulaValueChangeEvent`, and [classname]`SelectionChangeEvent` in Spreadsheet provide a set of cells. Calling [methodname]`contains` on these sets now requires the [classname]`CellReference` argument to have a non-null sheet name, otherwise an [classname]`IllegalArgumentException` will be thrown. To achieve this, use one of the following constructors:
 
 * `CellReference(Cell)`
 * `CellReference(String, int, int, boolean, boolean)`
@@ -590,7 +648,7 @@ The Time Picker no longer uses `vaadin-time-picker-combo-box` internally. This m
 The [classname]`TimePickerOverlayElement` TestBench element has been removed as the component now uses the native HTML popover mechanism for its drop-down. The [methodname]`getItem` and [methodname]`getLastItem` methods are now available on [classname]`TimePickerElement` itself.
 
 === Tree Grid
-Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, the web component now sends a single request for the visible range, and the server always returns the corresponding items as a flat list. On the server side, on the other hand, the data provider can now choose to provide hierarchical data in one of two formats: the existing <<../components/tree-grid/data-providers#hierarchyformat-nested-default,`HierarchyFormat.NESTED`>> (default) or the new <<../components/tree-grid/data-providers#hierarchyformat-flattened,`HierarchyFormat.FLATTENED`>>. These updates collectively introduce breaking changes, which are described below.
+Tree Grid's client-side approach to data loading has been refactored. Instead of requesting data for each hierarchy level separately, the web component now sends a single request for the visible range, and the server always returns the corresponding items as a flat list. On the server side, on the other hand, the data provider can now choose to provide hierarchical data in one of two formats: the existing <<../components/tree-grid/data-binding#hierarchyformat-nested-default,`HierarchyFormat.NESTED`>> (default) or the new <<../components/tree-grid/data-binding#hierarchyformat-flattened,`HierarchyFormat.FLATTENED`>>. These updates collectively introduce breaking changes, which are described below.
 
 The [propertyname]`pageSize` property now applies to the entire flattened hierarchy rather than to each level individually as before.
 
@@ -946,7 +1004,7 @@ public SecurityFilterChain vaadinSecurityFilterChain(HttpSecurity http) throws E
 ----
 --
 
-. Remove `extends VaadinWebSecurity` and import the Vaadin security context holder strategy
+. Remove `extends VaadinWebSecurity`.
 +
 [source,java]
 ----
@@ -981,17 +1039,49 @@ public class MainLayout extends AppLayout {
 ----
 
 
-== TestBench
+== Security Defaults in Vaadin 25.2
+
+Vaadin 25.2 hardens some security-related defaults. These changes may require action when upgrading.
+
+=== URL Scheme Validation
+
+Starting with Vaadin 25.2, URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, and [methodname]`Page.open(String)` are validated against a list of safe URL schemes. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted; relative URLs are always accepted. Applications that set URLs with other schemes -- such as `javascript:` -- now get an [classname]`IllegalArgumentException` from these methods.
+
+If your application needs to set such URLs, either configure the accepted schemes with the `com.vaadin.safeUrlSchemes` configuration parameter -- a comma-separated list of schemes, where the value `*` disables the validation -- or use the unsafe setter variants [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, and [methodname]`Page.openUnsafe(String)` for URLs that are fully under your control. See <<{articles}/flow/security/advanced-topics/vulnerabilities#,Common Vulnerabilities>> for details.
+
+=== X-Frame-Options Header Sent by Default
+
+Starting with Vaadin 25.2, the application page is served with the `X-Frame-Options: SAMEORIGIN` HTTP response header to protect against clickjacking. As a result, browsers refuse to show the application inside a frame on a different origin. Applications that are meant to be embedded in an iframe on another origin must set the `frameOptions` configuration parameter to an empty value to disable the header. The parameter can also be set to another header value, such as `DENY`. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
+
+
+== TestBench and Browserless Testing
 
 === JUnit 6 and Vintage Engine for JUnit 4 Tests
 
-Vaadin 25 with Spring Boot 4 uses JUnit 6 (JUnit Platform) as the default test framework. If you have JUnit 4 tests using [classname]`UIUnit4Test` (UI Unit) or [classname]`TestBenchTestCase` (End-to-End), they won't be detected or executed without adding the JUnit Vintage Engine dependency.
+Vaadin 25 with Spring Boot 4 uses JUnit 6 (JUnit Platform) as the default test framework. If you have JUnit 4 tests using [classname]`UIUnit4Test` (Browserless) or [classname]`TestBenchTestCase` (End-to-End), they won't be detected or executed without adding the JUnit Vintage Engine dependency.
 
-See <<{articles}/flow/testing/ui-unit/getting-started#,Getting Started with UI Unit Testing>> and <<{articles}/flow/testing/end-to-end/getting-started#,Getting Started with End-to-End Testing>> for the required dependencies.
+See <<{articles}/flow/testing/browserless/getting-started#,Getting Started with Browserless Testing>> and <<{articles}/flow/testing/end-to-end/getting-started#,Getting Started with End-to-End Testing>> for the required dependencies.
+
+=== Browserless Testing: Spring Support Moved to a Separate Artifact
+
+Starting with Vaadin 25.2, the Spring-specific browserless-testing classes -- [classname]`SpringBrowserlessTest` and the Spring mock infrastructure -- are no longer included in the `browserless-test` and `browserless-test-junit6` artifacts. If your tests extend [classname]`SpringBrowserlessTest`, add the new `browserless-test-spring` dependency, as the tests no longer compile without it:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Non-Spring projects aren't affected. See <<{articles}/flow/testing/browserless/migration#,Migrating to Browserless Testing>> for details.
 
 === ComponentTester Click Method
 
-[classname]`ComponentTester` in UI Unit test has been updated to prove a common [methodname]`void click()` method. However, the new method clashes with a similar existing method in [classname]`AnchorTester` and [classname]`RouterLinkTester` that returns an [classname]`HasElement` instance as a result of the navigation. Existing tests that rely on the return type have to migrate to the new [methodname]`navigate()` method; if the return value is not used, there is no need for changes.
+[classname]`ComponentTester` in browserless test has been updated to prove a common [methodname]`void click()` method. However, the new method clashes with a similar existing method in [classname]`AnchorTester` and [classname]`RouterLinkTester` that returns an [classname]`HasElement` instance as a result of the navigation. Existing tests that rely on the return type have to migrate to the new [methodname]`navigate()` method; if the return value is not used, there is no need for changes.
 
 Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.ClickHandler` class has been removed. The interface, meant to be used with [classname]`ComponentTester` subclasses, should not be needed anymore. In this case, [classname]`com.vaadin.testbench.unit.Clickable` is a valid substitute.
 
@@ -999,6 +1089,8 @@ The [methodname]`getPropertyString`, [methodname]`getPropertyBoolean`, [methodna
 
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
+
+[methodname]`Binder.writeBean()` and [methodname]`Binder.writeBeanIfValid()` no longer process hidden fields. Previously, all bound fields were validated and written to the bean regardless of visibility. Now, bindings for non-visible components are skipped by default. To restore the previous behavior, call [methodname]`binder.setApplyBindingsToHiddenFields(true)`, or set a per-binding predicate with [methodname]`binding.setIsAppliedPredicate(b -> true)`. See <<{articles}/flow/binding-data/components-binder-validation#conditionally-applying-bindings,Conditionally Applying Bindings>> for details.
 
 == Server-Side Modality
 [classname]`Dialog` has become less strict and allows background requests to server. Vaadin Flow allows to change this behavior if needed through [methodname]`Dialog.setModality(ModalityMode)` method.

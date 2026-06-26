@@ -2,6 +2,7 @@ package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -17,6 +18,8 @@ public class RadioButtonReadonly extends Div {
         radioGroup.setReadOnly(true);
         add(radioGroup);
         // end::snippet[]
+        // Only for Lumo
+        radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<RadioButtonReadonly> { // hidden-source-line

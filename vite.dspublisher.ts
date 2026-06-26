@@ -1,9 +1,15 @@
+import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import type { UserConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const dspConfig = JSON.parse(
+  readFileSync(resolve(__dirname, 'dspublisher/config/default.json'), 'utf-8')
+);
+const docsPort = dspConfig.docsPort;
 
 const allFlowImportsPath = resolve(__dirname, 'frontend/generated/flow/generated-flow-imports.js');
 
@@ -23,6 +29,12 @@ const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.
 const target = ['safari15', 'es2022'];
 
 const config: UserConfig = {
+  define: {
+    // True only for preview deployments, which set DOCS_PREVIEW_DIFF=true when
+    // building. Lets the preview diff overlay (dspublisher/theme/preview-diff.ts)
+    // detect a preview without relying on the hostname.
+    __DOCS_PREVIEW_DIFF__: JSON.stringify(process.env.DOCS_PREVIEW_DIFF === 'true'),
+  },
   resolve: {
     alias: {
       'Frontend/generated/endpoints': endpointMocks,
@@ -37,7 +49,7 @@ const config: UserConfig = {
     /* dev-mode proxy config */
     proxy: {
       '/vaadin': {
-        target: 'http://localhost:8080',
+        target: `http://localhost:${docsPort}`,
       },
     },
   },

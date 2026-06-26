@@ -11,12 +11,16 @@ order: 120
 
 The Vaadin Maven plugin contains configuration for most configurable properties. These can be set either as <<properties#system-properties, system properties>> or configuration parameters for the plugin.
 
+When setting plugin properties from the command line, use the `vaadin.`-prefixed property names, for example `-Dvaadin.pnpm.enable=true` or `-Dvaadin.node.download.root=https://example.com/node/`. [since:com.vaadin:vaadin@V25.2]#The unprefixed property names (e.g., `-Dpnpm.enable=true`) are deprecated; they still work, but log a deprecation warning.#
+
+Not every option can be set from the command line. In the <<properties,list of properties>> below, options that support a system property note it explicitly (for example, _Settable as the `-Dvaadin.generateBundle` system property_). Options without such a note can only be set through the plugin configuration. The system property name often differs from the Maven parameter name, so use the name given in the note.
+
 
 == Using Maven Plugin Configuration
 
 The best way to set persistent configuration properties for a Maven project is to set them in the plugin.
 
-.Enabling Node.js auto-update
+.Adding extra frontend file extensions
 [source,xml]
 ----
 <plugin>
@@ -31,7 +35,7 @@ The best way to set persistent configuration properties for a Maven project is t
         </execution>
     </executions>
     <configuration>
-        <nodeAutoUpdate>true</nodeAutoUpdate>
+        <frontendExtraFileExtensions>svg,ico</frontendExtraFileExtensions>
     </configuration>
 </plugin>
 ----
@@ -39,16 +43,71 @@ The best way to set persistent configuration properties for a Maven project is t
 See the <<properties,full list of properties>>.
 
 
+== Maven Daemon and Maven Shell Support
+
+https://github.com/apache/maven-mvnd[Maven Daemon] (`mvnd`) and Maven Shell (`mvnsh`, introduced in Maven 4) keep the JVM alive across builds to improve performance. This can cause stale build metadata to persist between builds. For example, the production mode token file created during a production build may not be removed, causing a subsequent development mode run to incorrectly start in production mode.
+
+To avoid this, add `<extensions>true</extensions>` to the Vaadin Maven plugin declaration. This enables a lifecycle participant that cleans up build metadata after each Maven session, regardless of whether the JVM exits.
+
+.Enabling extensions for Maven Daemon support
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <version>${vaadin.version}</version>
+    <extensions>true</extensions>
+    <executions>
+        <execution>
+            <goals>
+                <goal>build-frontend</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+----
+
+This setting is harmless for standard Maven builds and is recommended for all projects that use `mvnd` or `mvnsh`.
+
+
+== Plugin Goals
+
+The Vaadin Maven plugin provides the following goals:
+
+`prepare-frontend`::
+Prepares the frontend resources for development. This goal scans the classpath for frontend resources and prepares the project for development mode.
+
+`build-frontend`::
+Builds the frontend bundle for production. Supports all `prepare-frontend` options plus additional build-specific options.
+
+`clean-frontend`::
+Cleans the generated frontend files. Supports the same configuration options as `prepare-frontend`. Alias: `dance`.
+
+`download-license`::
+Downloads a license key for commercial Vaadin products. Can be executed without a Maven project. See <<licenses#,Licenses>> for more information.
+
+`download-offline-license`::
+Provides information for downloading an offline license key. Can be executed without a Maven project. See <<licenses#offline-license-key,Offline License Key>> for more information.
+
+`help`::
+[since:com.vaadin:vaadin@V25.2]#Displays help information about the plugin goals and their parameters.# Run `mvn vaadin:help` to list the available goals. To show the parameters of a specific goal, pass the `-Ddetail` and `-Dgoal` options, for example:
++
+[source,terminal]
+----
+mvn vaadin:help -Ddetail=true -Dgoal=build-frontend
+----
+
+
 [[properties]]
 == Plugin Configuration Options
 
-The following list shows all the configuration options and their default values:
+The following list shows the configuration options available for `prepare-frontend` and `clean-frontend` goals and their default values:
 
 `applicationProperties`::
 Location of the [filename]`application.properties` file in a Spring project. Defaults to [filename]`${project.basedir}/src/main/resources/application.properties`.
 
 `eagerServerLoad`::
-Whether to insert the initial User Interface Definition Language (UIDL) object in the bootstrap [filename]`index.html`. Defaults to `false`.
+Whether to insert the initial User Interface Definition Language (UIDL) object in the bootstrap [filename]`index.html`. Defaults to `false`. Settable as the `-Dvaadin.eagerServerLoad` system property.
 
 `frontendDirectory`::
 The directory with the project's frontend source files. Defaults to `"${project.basedir}/src/main/frontend"`. The legacy location `"${project.basedir}/frontend"` is used if the default location doesn't exist and this parameter isn't set.
@@ -63,16 +122,16 @@ Java source folders for scanning. Defaults to `"${project.basedir}/src/main/java
 Java resource folder. Defaults to `"${project.basedir}/src/main/resources"`.
 
 `nodeDownloadRoot`::
-URL to use for downloading Node.js. In environments behind a firewall, the Node.js download can be provided from an intranet mirror. Defaults to `null`, which downloads Node.js from `https://nodejs.org/dist/`.
+URL to use for downloading Node.js. In environments behind a firewall, the Node.js download can be provided from an intranet mirror. Defaults to `null`, which downloads Node.js from `https://nodejs.org/dist/`. Settable as the `-Dvaadin.node.download.root` system property.
+
+`nodeFolder`::
+The folder containing the Node.js executable to use. When specified, Node.js is exclusively used from this folder. If the binary isn't found there, the build fails with no fallback. Defaults to `null`. Settable as the `-Dvaadin.node.folder` system property.
 
 `nodeVersion`::
-The Node.js version to be used when Node.js is installed automatically. Should be in the format `"v16.0.0"`. Defaults to `FrontendTools.DEFAULT_NODE_VERSION`.
-
-`nodeAutoUpdate`::
-Flag to enable automatic update of the Node.js version installed in `~/.vaadin` if it's older than the default or defined `nodeVersion`. Note: any installed version below `should work` is automatically updated regardless of this flag. Defaults to `false`.
+The Node.js version to be used when Node.js is installed automatically. Should be in the format `"v24.14.0"`. Defaults to `FrontendTools.DEFAULT_NODE_VERSION`. Settable as the `-Dvaadin.node.version` system property.
 
 `npmExcludeWebComponents`::
-Excludes all Vaadin professional and core components from the `package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven dependencies. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. Defaults to `false`.
+Excludes all Vaadin professional and core components from the `package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven dependencies. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. Defaults to `false`. Settable as the `-Dvaadin.npm.excludeWebComponents` system property.
 
 `npmFolder`::
 The folder where the [filename]`package.json` file is located. Defaults to `${project.basedir}`.
@@ -81,10 +140,25 @@ The folder where the [filename]`package.json` file is located. Defaults to `${pr
 Default generated path of the OpenAPI JSON. Defaults to [filename]`${project.build.directory}/generated-resources/openapi.json`.
 
 `pnpmEnable`::
-Specifies to use `pnpm` to install `npm` frontend resources. Defaults to `true`.
+Specifies to use `pnpm` to install `npm` frontend resources. Defaults to `true`. Settable as the `-Dvaadin.pnpm.enable` system property.
 
 `useGlobalPnpm`::
-Specifies to use the globally installed `pnpm` tool or the default supported `pnpm` version. Defaults to `false`.
+Specifies to use the globally installed `pnpm` tool or the default supported `pnpm` version. Defaults to `false`. Settable as the `-Dvaadin.pnpm.global` system property.
+
+`bunEnable`::
+Specifies to use `bun` to install `npm` frontend resources. Defaults to `false`. Settable as the `-Dvaadin.bun.enable` system property.
+
+`postinstallPackages`::
+Additional npm packages to run post-install scripts for. Post-install is run automatically for internal dependencies that rely on it, such as `esbuild`. Defaults to an empty list. Settable as the `-Dvaadin.npm.postinstallPackages` system property, using a comma-separated list.
+
+`excludePostinstallPackages`::
+The npm packages to exclude from running post-install scripts. Used to skip built-in entries (for example, `esbuild`) when their post-install step is known to fail or isn't needed. Defaults to an empty list. Settable as the `-Dvaadin.npm.excludePostinstallPackages` system property, using a comma-separated list.
+
+`frontendHotdeploy`::
+Whether the frontend development server is used in development mode. When disabled, a development bundle is used instead. Defaults to `null`, in which case the development server is used only when Hilla views are present. Settable as the `-Dvaadin.frontend.hotdeploy` system property.
+
+`applicationIdentifier`::
+Identifier for the application. If not specified, defaults to a hash derived from `groupId:artifactId`. Settable as the `-Dvaadin.applicationIdentifier` system property.
 
 `productionMode`::
 Define whether the application is running in production mode. Defaults to `false`. For production, the frontend is bundled and optimized, as described in <<../production#,Deploying to Production>>.
@@ -93,31 +167,28 @@ Define whether the application is running in production mode. Defaults to `false
 The folder where the [filename]`package.json` file is located. Defaults to `${project.basedir}`.
 
 `reactEnable`::
-Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false` -- default is `true`. Configuration property `vaadin.react.enable` needs to be set to match this value. See <<../../upgrading#hilla-react-dependencies, Hilla & React Dependencies>> for more information.
+Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false` -- default is `true`. Configuration property `vaadin.react.enable` needs to be set to match this value. See <<../../upgrading#hilla-react-dependencies, Hilla & React Dependencies>> for more information. Settable as the `-Dvaadin.react.enable` system property.
 
 `requireHomeNodeExec`::
-Whether Vaadin home node executable usage is forced. If it's set to `true`, the Vaadin home 'node' is checked, and installed if absent. This is then used instead of a globally or locally installed 'node'. Defaults to `false`.
+Whether to skip the global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. If set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/`. If a suitable version isn't found, it's downloaded and installed automatically. Defaults to `false`. Settable as the `-Dvaadin.require.home.node` system property.
 
 `resourceOutputDirectory`::
 Defines the output directory for generated non-served resources, such as the token file. Defaults to `${project.build.outputDirectory}/vaadin-generated`.
-
-`useDeprecatedV14Bootstrapping`::
-Optionally use the legacy V14 bootstrap mode. Defaults to `false`.
 
 `frontendBundleOutput`::
 The folder where Vite (the default frontend build tool) should output [filename]`index.js` and other generated files. Defaults to `${project.build.outputDirectory}/META-INF/VAADIN/webapp/`.
 
 `projectBuildDir`::
-Build directory for the project. Defaults to `${project.build.directory}`.
+Build directory for the project. Defaults to `${project.build.directory}`. Settable as the `-Dvaadin.build.folder` system property.
 
 `skipDevBundleRebuild`::
-Prevents frontend development bundle from being re-built even if Vaadin decides to use an existing compiled development bundle. This is mainly needed when re-bundling checker in Flow has issues leading to false re-bundling and one needs a workaround while the problem is being resolved. Defaults to `false`.
+Prevents frontend development bundle from being re-built even if Vaadin decides to use an existing compiled development bundle. This is mainly needed when re-bundling checker in Flow has issues leading to false re-bundling and one needs a workaround while the problem is being resolved. Defaults to `false`. Settable as the `-Dvaadin.skip.dev.bundle` system property.
 
 `cleanFrontendFiles`::
-Clears the generated frontend files after building a project for production. It keeps the generated files if they existed before the build, or if this parameter is set to `false`. When building a bundle in development mode, the generated files are removed unless they existed before the build. Defaults to `true`.
+Clears the generated frontend files after building a project for production. It keeps the generated files if they existed before the build, or if this parameter is set to `false`. When building a bundle in development mode, the generated files are removed unless they existed before the build. Defaults to `true`. Settable as the `-Dvaadin.clean.build.frontend.files` system property.
 
 `frontendExtraFileExtensions`::
-Parameter for adding file extensions to a handle when generating bundles.
+Parameter for adding file extensions to a handle when generating bundles. Settable as the `-Dvaadin.devmode.frontendExtraFileExtensions` system property, using a comma-separated list (for example, `-Dvaadin.devmode.frontendExtraFileExtensions="svg,ico"`).
 
 `frontendScanner`::
 Allows fine-tuning of frontend resource detection by specifying which artifacts should be included or excluded during the class scanning process. This includes resource-related annotations like [annotationname]`@JsModule`, [annotationname]`@JavaScript`, [annotationname]`@CssImport`, and [annotationname]`@NpmPackage`, UI annotations such as [annotationname]`@Route` and [annotationname]`@Layout`, as well as Vaadin-related implementations like [interfacename]`UIInitListener`, [interfacename]`VaadinServiceInitListener`, [interfacename]`AppShellConfigurator`, [interfacename]`HasErrorParameter`, [interfacename]`WebComponentExporter`, and others.
@@ -158,34 +229,40 @@ Filtering can be completely skipped by setting `enabled` to `false`.
 ----
 
 `frontendIgnoreVersionChecks`::
-Makes Flow skip node and npm/pnpm/bun version checks during bundle build and development server startup. Note that disabling frontend tools version checking can cause failing builds and other issues that are difficult to debug.
+Makes Flow skip node and npm/pnpm/bun version checks during bundle build and development server startup. Note that disabling frontend tools version checking can cause failing builds and other issues that are difficult to debug. Settable as the `-Dvaadin.ignoreVersionChecks` system property.
+
+`commercialWithBanner`::
+Allows building a version of the application with a commercial banner when commercial components are used without a license key. Defaults to `false`. Settable as the `-Dvaadin.commercialWithBanner` system property.
 
 `skip`::
 Skips the execution of the maven plugin. Defaults to `false`. Use `-Dvaadin.skip` if you want to control this setting from the maven command line.
 
 === Build Frontend Goal Parameters
 
-The following parameters are used with the `build-frontend` goal, in addition to the parameters described above.
+The following parameters are available only with the `build-frontend` goal, in addition to the parameters described above.
 
 `generateBundle`::
-Whether to generate a bundle from the project frontend sources. Defaults to `true`.
+Whether to generate a bundle from the project frontend sources. Defaults to `true`. Settable as the `-Dvaadin.generateBundle` system property.
 
 `runNpmInstall`::
-Whether to run the `npm install` task after updating dependencies. This doesn't necessarily execute `npm install` if everything seems to be up to date. Defaults to `true`.
+Whether to run the `npm install` task after updating dependencies. This doesn't necessarily execute `npm install` if everything seems to be up to date. Defaults to `true`. Settable as the `-Dvaadin.runNpmInstall` system property.
 
 `generateEmbeddableWebComponents`::
-Whether to generate embeddable web components from [classname]`WebComponentExporter` inheritors. Defaults to `true`.
+Whether to generate embeddable web components from [classname]`WebComponentExporter` inheritors. Defaults to `true`. Settable as the `-Dvaadin.generateEmbeddableWebComponents` system property.
 
 `frontendResourcesDirectory`::
 Defines the project frontend directory from where resources should be copied to use with Vite. Defaults to `${project.basedir}/src/main/resources/META-INF/resources/frontend`.
 
 `optimizeBundle`::
-Whether to use a byte code scanner strategy to discover frontend components. Defaults to `true`.
+Whether to use a byte code scanner strategy to discover frontend components. Defaults to `true`. Settable as the `-Dvaadin.devmode.optimizeBundle` system property.
 
 `ciBuild`::
-Defines whether `npm ci` is run instead of `npm i` in production frontend builds. If you use pnpm, the install command is run with the `--frozen-lockfile` parameter. The build fails if the `package.json` and `package-lock.json` files have mismatching versions. Defaults to `false`.
+Defines whether `npm ci` is run instead of `npm i` in production frontend builds. If you use pnpm, the install command is run with the `--frozen-lockfile` parameter. The build fails if the `package.json` and `package-lock.json` files have mismatching versions. Defaults to `false`. Settable as the `-Dvaadin.ci.build` system property.
 
 `forceProductionBuild`::
-Forces Vaadin to create a new production bundle even if a pre-compiled one can be used. Usually needed to create an optimized production bundle and to load components sources to the browser on demand, i.e. once one opens a route where these components are used. Defaults to `false`.
+Forces Vaadin to create a new production bundle even if a pre-compiled one can be used. Usually needed to create an optimized production bundle and to load components sources to the browser on demand, i.e. once one opens a route where these components are used. Defaults to `false`. Settable as the `-Dvaadin.force.production.build` system property.
+
+`minimumFrontendPackageAgeDays`::
+Minimum age, in days, that a frontend (npm) package version must have before npm, pnpm, or bun is allowed to install it. This mitigates supply-chain attacks where a compromised version is briefly available on the registry. Defaults to `1`; set it to `0` to disable. Requires pnpm `>= 10.16.0` or bun `>= 1.3.0` when those tools are used. Settable as the `-Dvaadin.npm.minimumFrontendPackageAgeDays` system property.
 
 [discussion-id]`CD6D2FC7-ED44-442C-B32F-FABA5AF7294F`

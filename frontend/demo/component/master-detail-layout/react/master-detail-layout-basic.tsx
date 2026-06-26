@@ -1,10 +1,11 @@
+import '../master-detail-layout-full-height.js'; // hidden-source-line
+import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { MasterDetailLayout, SplitLayout } from '@vaadin/react-components';
 import PersonDetail from 'Frontend/demo/component/master-detail-layout/react/PersonDetail';
 import PersonList from 'Frontend/demo/component/master-detail-layout/react/PersonList';
-import { masterDetailLayoutExample } from 'Frontend/demo/component/master-detail-layout/react/wrapper'; // hidden-source-line
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -21,9 +22,7 @@ function Example() {
   return (
     <SplitLayout style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      {/* The master area's size is flexible, and will shrink down to 450px,
-          below which the fixed-size detail area will be rendered as an overlay: */}
-      <MasterDetailLayout masterMinSize="450px" detailSize="250px">
+      <MasterDetailLayout masterSize="450px" detailSize="250px" expandMaster>
         <MasterDetailLayout.Master>
           <PersonList
             people={items.value}
@@ -66,4 +65,4 @@ function Example() {
   );
 }
 
-export default masterDetailLayoutExample(Example); // hidden-source-line
+export default reactExample(Example); // hidden-source-line

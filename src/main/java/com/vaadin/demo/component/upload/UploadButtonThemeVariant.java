@@ -21,7 +21,7 @@ public class UploadButtonThemeVariant extends Div {
         upload.setAcceptedFileTypes("application/pdf", ".pdf");
 
         Button uploadButton = new Button("Upload PDF...");
-        uploadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        uploadButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         upload.setUploadButton(uploadButton);
 

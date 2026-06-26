@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.datetimepicker;
 
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
-import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.router.Route;
 
 import java.time.LocalDateTime;
@@ -9,9 +9,12 @@ import java.time.LocalDateTime;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("date-time-picker-range")
-public class DateTimePickerRange extends Div {
+public class DateTimePickerRange extends FormLayout {
 
     public DateTimePickerRange() {
+        setAutoResponsive(true);
+        setColumnWidth("20rem");
+
         // tag::snippet[]
         DateTimePicker startDateTimePicker = new DateTimePicker(
                 "Start date and time");

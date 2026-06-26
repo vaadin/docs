@@ -19,7 +19,7 @@ export class Example extends LitElement {
       <vaadin-vertical-layout theme="spacing">
         <!-- tag::snippet[] -->
         <vaadin-checkbox label="Label" helper-text="Helper text"></vaadin-checkbox>
-        <vaadin-checkbox-group label="Label" helper-text="Helper text">
+        <vaadin-checkbox-group label="Label" helper-text="Helper text" theme="vertical">
           <vaadin-tooltip slot="tooltip" text="Tooltip text"></vaadin-tooltip>
           <vaadin-checkbox value="1" label="Item 1"></vaadin-checkbox>
           <vaadin-checkbox value="2" label="Item 2"></vaadin-checkbox>

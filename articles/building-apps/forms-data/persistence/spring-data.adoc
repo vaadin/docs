@@ -1,0 +1,430 @@
+---
+title: JPA & Spring Data
+page-title: How to use JPA and Spring Data in Vaadin
+description: How to implement persistence with JPA and Spring Data.
+meta-description: Integrate JPA and Spring Data in Vaadin applications for aggregate-oriented persistence.
+order: 20
+---
+
+// Used for documenation links
+:hibernate-version: current
+
+
+= JPA & Spring Data
+:toclevels: 2
+
+Jakarta Persistence (formerly Java Persistence API, still abbreviated JPA) is a Java API for managing relational data. It maps Java objects to database tables and tracks changes automatically. https://hibernate.org/[Hibernate] is the JPA implementation supported by Spring Boot and recommended for Vaadin applications.
+
+https://spring.io/projects/spring-data-jpa[Spring Data JPA] builds on JPA to reduce boilerplate. It generates repository implementations at runtime based on interface definitions.
+
+JPA is well suited for <<index#,aggregate-oriented persistence>>—loading object graphs, working with entities that have lifecycles and business rules, and saving them back. If you need fine-grained control over SQL, complex reporting queries, or bulk operations, consider combining JPA with <<jooq#,jOOQ>> or using jOOQ alone.
+
+[NOTE]
+This page assumes you've already <<add-spring-data#,added Spring Data JPA>> to your project and are familiar with JPA concepts. If you're new to JPA, read the https://spring.io/guides/gs/accessing-data-jpa[Accessing Data with JPA] guide first.
+
+
+== Entities
+
+JPA entities represent your domain objects and their lifecycles. An `Order` entity might transition through states, enforce pricing rules, and maintain consistency with its line items.
+
+
+=== Constraints
+
+JPA imposes some restrictions on entity classes:
+
+- Classes cannot be `final`
+- Fields cannot be `final`
+- A default (parameter-less) constructor is required, but can be `protected` or package-private
+
+
+=== Naming
+
+JPA deduces table and column names from class and field names. To make <<add-flyway#,Flyway migrations>> easier to write, explicitly declare names:
+
+- `@Table` on entity classes
+- `@Column` on fields
+- `@JoinColumn` and `@JoinTable` on associations
+
+
+=== Identity
+
+Spring Data checks the `@Id` field to decide whether an entity is new. If the ID is `null`, the entity is new; otherwise, it's persistent.
+
+[NOTE]
+If you assign IDs before persisting, implement the Spring Data `Persistable` interface.
+
+Don't use Spring Data's `AbstractPersistable` base class. Declare the `@Id` field directly in each entity, or create your own base class. This gives you better control over ID generation.
+
+
+=== Equality
+
+Override `equals` and `hashCode` so that an entity equals itself or another entity of the same type with the same ID. Handle the case where the ID is `null` (before persistence):
+
+[source,java]
+----
+import jakarta.persistence.*;
+import org.springframework.data.util.ProxyUtils;
+
+@Entity
+@Table(name = "customer")
+public class Customer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "customer_id")
+    private Long id;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !getClass().equals(ProxyUtils.getUserClass(o))) return false; // <1>
+        Customer other = (Customer) o;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+}
+----
+<1> Use `ProxyUtils.getUserClass` because Hibernate may return proxied entities whose classes don't match directly.
+
+
+== Domain Primitives
+
+<<../consistency/domain-primitives#,Domain primitives>> can be integrated with JPA entities in several ways.
+
+
+=== Accessor Methods
+
+Use the unwrapped value in the field, converting in accessor methods:
+
+[source,java]
+----
+@Entity
+@Table(name = "customer")
+public class Customer {
+
+    @Column(name = "customer_email")
+    private String email;
+
+    public EmailAddress getEmail() {
+        return email == null ? null : new EmailAddress(email);
+    }
+
+    public void setEmail(EmailAddress email) {
+        this.email = email == null ? null : email.value();
+    }
+}
+----
+
+This also works for multi-value domain primitives:
+
+[source,java]
+----
+@Entity
+@Table(name = "offer")
+public class Offer {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency")
+    private CurrencyUnit currency;
+
+    @Column(name = "price")
+    private BigDecimal price;
+
+    public MonetaryAmount getPrice() {
+        return new MonetaryAmount(currency, price);
+    }
+
+    public void setPrice(MonetaryAmount amount) {
+        this.currency = amount.currency();
+        this.price = amount.value();
+    }
+}
+----
+
+This approach makes query specifications easier to write since you work with unwrapped types.
+
+
+=== Attribute Converters
+
+For single-value domain primitives, write an attribute converter:
+
+[source,java]
+----
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+
+@Converter
+public class EmailAddressConverter implements AttributeConverter<EmailAddress, String> {
+
+    @Override
+    public String convertToDatabaseColumn(EmailAddress attribute) {
+        return attribute == null ? null : attribute.value();
+    }
+
+    @Override
+    public EmailAddress convertToEntityAttribute(String dbData) {
+        return dbData == null ? null : new EmailAddress(dbData);
+    }
+}
+----
+
+Then apply it:
+
+[source,java]
+----
+@Column(name = "customer_email")
+@Convert(converter = EmailAddressConverter.class)
+private EmailAddress email;
+----
+
+This is cleaner but makes non-equality queries harder—`LIKE` queries require strings, not domain primitives. Attribute converters also don't work with primary keys.
+
+Use converters for domain primitives that are only queried by equality and aren't identifiers.
+
+
+=== Embeddable Records
+
+Multi-value domain primitives can be `@Embeddable`. Hibernate 6.2+ supports Java records:
+
+[source,java]
+----
+@Embeddable
+public record MonetaryAmount(
+    @Enumerated(EnumType.STRING) CurrencyUnit currency,
+    BigDecimal value
+) {
+    public MonetaryAmount {
+        requireNonNull(currency);
+        requireNonNull(value);
+    }
+}
+----
+
+Used in an entity:
+
+[source,java]
+----
+@Embedded
+@AttributeOverrides({
+    @AttributeOverride(name = "currency", column = @Column(name = "unit_price_currency")),
+    @AttributeOverride(name = "value", column = @Column(name = "unit_price"))
+})
+private MonetaryAmount unitPrice;
+----
+
+Non-record embeddables must be non-final with a parameter-less constructor, which conflicts with domain primitive immutability requirements.
+
+
+== Repositories
+
+Repository interfaces extend `JpaRepository`:
+
+[source,java]
+----
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface OrderRepository extends JpaRepository<Order, Long> {
+}
+----
+
+Spring Data implements the interface at runtime. Inject it like any Spring bean:
+
+[source,java]
+----
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+
+    OrderService(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+}
+----
+
+
+=== Entity State and Saving
+
+JPA entities can be *managed* or *detached*. While managed (within a transaction), changes are automatically saved when the transaction commits—even without calling `save`.
+
+Once the transaction completes, entities become detached. Further changes aren't persisted without an explicit `save`.
+
+[source,java]
+----
+@Transactional
+public void updateCustomer(Long id, String newName) {
+    var customer = customerRepository.findById(id).orElseThrow();
+    customer.setName(newName);
+    // Changes persist automatically at transaction commit
+}
+----
+
+For clarity, call `save` explicitly when you intend to persist changes:
+
+[source,java]
+----
+customer.setName(newName);
+customerRepository.save(customer);
+----
+
+[CAUTION]
+Don't modify managed entities if you don't intend to save the changes. Roll back the transaction to discard modifications.
+
+See <<../consistency/transactions#,Transactions>> for more on transaction management.
+
+
+== Locking
+
+JPA supports both <<../consistency/optimistic-locking#,optimistic>> and <<../consistency/pessimistic-locking#,pessimistic locking>>.
+
+
+=== Optimistic Locking
+
+Add a version field to detect concurrent modifications:
+
+[source,java]
+----
+@Entity
+@Table(name = "customer")
+public class Customer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "customer_id")
+    private Long id;
+
+    @Version
+    @Column(name = "_version")
+    private Long version;
+}
+----
+
+If two transactions load the same entity and both try to save, the second fails with an optimistic locking exception.
+
+
+=== Pessimistic Locking
+
+Use `@Lock` on query methods to acquire database locks:
+
+[source,java]
+----
+public interface AccountRepository extends JpaRepository<Account, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.id = :accountId")
+    Account lockForWriting(Long accountId);
+}
+----
+
+See the https://docs.jboss.org/hibernate/orm/{hibernate-version}/introduction/html_single/Hibernate_Introduction.html#optimistic-and-pessimistic-locking[Hibernate documentation] for details.
+
+
+== Query Methods
+
+Spring Data derives queries from method names:
+
+[source,java]
+----
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    List<Customer> findByNameContaining(String name);
+}
+----
+
+Always limit results to avoid memory issues:
+
+[source,java]
+----
+List<Customer> findTop100ByNameContainingOrderByNameAsc(String name);
+----
+
+Or use parameters:
+
+[source,java]
+----
+List<Customer> findByNameContaining(String name, Limit limit, Sort sort);
+----
+
+
+=== Pagination
+
+For large datasets, use pagination:
+
+[source,java]
+----
+Page<Customer> findByNameContaining(String name, Pageable pageable);
+----
+
+A `Page` includes total count (requires an extra query). Use `Slice` if you only need to know whether more results exist:
+
+[source,java]
+----
+Slice<Customer> findByNameContaining(String name, Pageable pageable);
+----
+
+
+== Query Specifications
+
+For dynamic queries, extend `JpaSpecificationExecutor`:
+
+[source,java]
+----
+public interface CustomerRepository extends JpaRepository<Customer, Long>,
+    JpaSpecificationExecutor<Customer> {
+}
+----
+
+Create specification factory methods:
+
+[source,java]
+----
+public final class CustomerSpecifications {
+
+    public static Specification<Customer> emailContaining(String term) {
+        return (root, query, cb) -> cb.like(root.get(Customer_.EMAIL), "%" + term + "%");
+    }
+
+    public static Specification<Customer> createdBetween(LocalDate from, LocalDate to) {
+        return (root, query, cb) -> cb.between(root.get(Customer_.CREATED_DATE), from, to);
+    }
+
+    private CustomerSpecifications() {}
+}
+----
+
+Combine them:
+
+[source,java]
+----
+var customers = customerRepository.findAll(
+    emailContaining("acme.com").and(createdBetween(startDate, endDate)),
+    PageRequest.ofSize(20)
+);
+----
+
+
+== Query Classes
+
+Not every query returns complete entities. List views often need only a few fields. Reports aggregate across tables. These are <<index#,table-oriented operations>>—data transformations rather than entity lifecycle management.
+
+For such queries, create separate query interfaces:
+
+[source,java]
+----
+public interface OrderSummaryQuery extends Repository<Order, Long> {
+
+    @Query("""
+        SELECT new com.example.OrderSummary(o.id, o.status, o.total, c.name)
+        FROM Order o JOIN o.customer c
+        WHERE o.createdDate >= :since
+        """)
+    Page<OrderSummary> findRecentOrders(@Param("since") LocalDate since, Pageable pageable);
+
+    record OrderSummary(Long orderId, OrderStatus status, BigDecimal total, String customerName) {}
+}
+----
+
+For complex reporting queries, consider <<jooq#,jOOQ>> instead. JPA and jOOQ work well together—use JPA for entity persistence and jOOQ for queries.

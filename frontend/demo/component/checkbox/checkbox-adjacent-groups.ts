@@ -17,7 +17,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-vertical-layout>
+      <vaadin-vertical-layout style="gap: 15px">
         <vaadin-checkbox-group label="Manufacturer" theme="vertical">
           <vaadin-checkbox value="0" label="Akuchi"></vaadin-checkbox>
           <vaadin-checkbox value="1" label="Broek"></vaadin-checkbox>

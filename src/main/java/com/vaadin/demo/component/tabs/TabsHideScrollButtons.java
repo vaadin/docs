@@ -22,7 +22,7 @@ public class TabsHideScrollButtons extends Div {
 
         Tabs tabs = new Tabs(analytics, customers, dashboards, documents,
                 orders, products, tasks);
-        tabs.addThemeVariants(TabsVariant.LUMO_HIDE_SCROLL_BUTTONS);
+        tabs.addThemeVariants(TabsVariant.HIDE_SCROLL_BUTTONS);
         tabs.setMaxWidth("100%");
         tabs.setWidth("400px");
         // end::snippet[]

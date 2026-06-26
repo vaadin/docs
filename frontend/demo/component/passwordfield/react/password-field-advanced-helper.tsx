@@ -11,31 +11,23 @@ import {
 
 type PasswordStrength = 'moderate' | 'strong' | 'weak';
 
-const StrengthColor: Record<PasswordStrength, string> = {
-  weak: 'var(--lumo-error-color)',
-  moderate: '#e7c200',
-  strong: 'var(--lumo-success-color)',
-};
+const pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*';
 
 function Example() {
   useSignals(); // hidden-source-line
-  const strengthText = useSignal<PasswordStrength>('weak');
-  const strengthColor = useSignal<string>(StrengthColor.weak);
-
-  const pattern = '^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*';
+  const password = useSignal<string>('');
 
   function onPasswordChanged(event: PasswordFieldValueChangedEvent) {
-    let strength: PasswordStrength = 'weak';
-    const { value } = event.detail;
-    if (value) {
-      if (value.length > 9) {
-        strength = 'strong';
-      } else if (value.length > 5) {
-        strength = 'moderate';
-      }
-    }
-    strengthText.value = strength;
-    strengthColor.value = StrengthColor[strength];
+    password.value = event.detail.value;
+  }
+
+  let strength: PasswordStrength;
+  if (password.value.length > 9) {
+    strength = 'strong';
+  } else if (password.value.length > 5) {
+    strength = 'moderate';
+  } else {
+    strength = 'weak';
   }
 
   return (
@@ -44,17 +36,14 @@ function Example() {
       label="Password"
       pattern={pattern}
       errorMessage="Not a valid password"
+      value={password.value}
       onValueChanged={onPasswordChanged}
+      style={{ width: '14em' }}
     >
-      <Icon
-        icon="vaadin:check"
-        slot="suffix"
-        style={{ color: StrengthColor.strong }}
-        hidden={strengthText.value !== 'strong'}
-      />
+      <Icon icon="vaadin:check" slot="suffix" className={strength} hidden={strength !== 'strong'} />
 
       <div slot="helper">
-        Password strength: <span style={{ color: strengthColor.value }}>{strengthText.value}</span>
+        Password strength: <span className={strength}>{strength}</span>
       </div>
     </PasswordField>
     // end::snippet[]

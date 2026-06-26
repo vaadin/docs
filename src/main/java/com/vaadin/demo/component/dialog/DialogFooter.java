@@ -23,13 +23,13 @@ public class DialogFooter extends Div {
 
         // tag::snippet1[]
         Button deleteButton = new Button("Delete", (e) -> dialog.close());
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,
-                ButtonVariant.LUMO_ERROR);
+        deleteButton.addThemeVariants(ButtonVariant.PRIMARY,
+                ButtonVariant.ERROR);
         deleteButton.getStyle().set("margin-right", "auto");
         dialog.getFooter().add(deleteButton);
 
         Button cancelButton = new Button("Cancel", (e) -> dialog.close());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        cancelButton.addThemeVariants(ButtonVariant.TERTIARY);
         dialog.getFooter().add(cancelButton);
         // end::snippet1[]
 

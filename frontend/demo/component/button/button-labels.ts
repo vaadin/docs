@@ -1,8 +1,8 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/button';
 import '@vaadin/email-field';
+import '@vaadin/form-layout';
 import '@vaadin/horizontal-layout';
-import '@vaadin/vertical-layout';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { EmailFieldValueChangedEvent } from '@vaadin/email-field';
@@ -31,7 +31,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-vertical-layout>
+      <vaadin-form-layout auto-responsive>
         <vaadin-horizontal-layout theme="spacing">
           <vaadin-email-field
             id="primary-email"
@@ -69,7 +69,7 @@ export class Example extends LitElement {
             Remove
           </vaadin-button>
         </vaadin-horizontal-layout>
-      </vaadin-vertical-layout>
+      </vaadin-form-layout>
       <!-- end::snippet[] -->
     `;
   }

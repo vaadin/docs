@@ -28,7 +28,11 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippethtml[] -->
-      <vaadin-menu-bar theme="icon primary" .items="${this.items}"></vaadin-menu-bar>
+      <vaadin-menu-bar
+        theme="icon primary"
+        .items="${this.items}"
+        style="--vaadin-icon-size: 0; --vaadin-button-gap: var(--vaadin-gap-xs);"
+      ></vaadin-menu-bar>
       <!-- end::snippethtml[] -->
     `;
   }
@@ -36,6 +40,7 @@ export class Example extends LitElement {
   private createItem() {
     const item = document.createElement('vaadin-menu-bar-item');
     const icon = document.createElement('vaadin-icon');
+    icon.style.setProperty('--vaadin-icon-size', '1rem');
     item.setAttribute('aria-label', 'Other save options');
     icon.setAttribute('icon', `vaadin:chevron-down`);
     item.appendChild(icon);

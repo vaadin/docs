@@ -78,8 +78,7 @@ public class GridBufferedInlineEditor extends VerticalLayout {
         Button saveButton = new Button("Save", e -> editor.save());
         Button cancelButton = new Button(VaadinIcon.CLOSE.create(),
                 e -> editor.cancel());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON,
-                ButtonVariant.LUMO_ERROR);
+        cancelButton.addThemeVariants(ButtonVariant.ERROR);
         HorizontalLayout actions = new HorizontalLayout(saveButton,
                 cancelButton);
         actions.setPadding(false);
@@ -95,8 +94,7 @@ public class GridBufferedInlineEditor extends VerticalLayout {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        getThemeList().clear();
-        getThemeList().add("spacing-s");
+        setSpacing("var(--vaadin-gap-s)");
         add(grid, firstNameValidationMessage, lastNameValidationMessage,
                 emailValidationMessage);
     }

@@ -1,4 +1,4 @@
-import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
+import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useCallback, useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
@@ -53,7 +53,7 @@ function Example() {
             : [...detailsOpenedItems.value, person];
         }}
       >
-        <Icon icon={isExpanded ? 'lumo:angle-down' : 'lumo:angle-right'} />
+        <Icon icon={isExpanded ? 'vaadin:angle-down' : 'vaadin:angle-right'} />
       </Button>
     );
   }, []);

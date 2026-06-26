@@ -2,6 +2,7 @@ package com.vaadin.demo.component.radiobutton;
 
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -18,6 +19,8 @@ public class RadioButtonGroupBasicFeatures extends HorizontalLayout {
         field.setTooltipText("Tooltip text");
         // end::snippet[]
         field.setItems("Item 1", "Item 2", "Item 3");
+        // Only for Lumo
+        field.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
         add(field);
     }

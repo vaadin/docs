@@ -6,7 +6,7 @@ import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    <RadioGroup label="Status" disabled>
+    <RadioGroup label="Status" theme="vertical" disabled>
       <RadioButton value="inProgress" label="In progress" checked />
       <RadioButton value="done" label="Done" />
       <RadioButton value="cancelled" label="Cancelled" />

@@ -6,7 +6,7 @@ import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 
 function Example() {
   return (
-    <VerticalLayout>
+    <VerticalLayout style={{ gap: '15px' }}>
       {/* tag::snippet[] */}
       <RadioGroup label="Job title" theme="vertical" value="analyst">
         <RadioButton value="analyst" label="Analyst" />

@@ -1,0 +1,166 @@
+---
+title: Add Images and Icons
+page-title: How to add images and icons to a Vaadin application
+description: Learn how to display images and use icons in your Vaadin application.
+meta-description: Add images from static resources or the classpath and use built-in Vaadin or custom SVG icons in your application.
+order: 10
+---
+
+= Add Images and Icons
+
+This article shows how to display images using the `Image` component and how to use icons from built-in collections or custom SVG files. For the full API details, see the <</flow/advanced/loading-resources#,Loading Resources>> and <</components/icons#,Icons>> reference documentation.
+
+
+== Copy-Paste into Your Project
+
+A self-contained view that displays an image and a button with an icon:
+
+[source,java]
+----
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("images-icons-example")
+public class ImagesAndIconsExampleView extends VerticalLayout {
+
+    public ImagesAndIconsExampleView() {
+        Image logo = new Image("images/logo.png", "Company logo");
+        Button call = new Button("Call", VaadinIcon.PHONE.create());
+        add(logo, call);
+    }
+}
+----
+
+Place the image file at `src/main/resources/META-INF/resources/images/logo.png` (Spring Boot).
+
+
+== Images
+
+The `Image` component wraps the HTML `<img>` element. You create one by providing a source and alt text.
+
+=== Static Images
+
+The most common approach is to place image files in your project's static resource directory and reference them by path.
+
+*Spring Boot (JAR)*: `src/main/resources/META-INF/resources/images/photo.png`
+
+*Non-Spring (WAR)*: `src/main/webapp/images/photo.png`
+
+In both cases, the code is the same:
+
+[source,java]
+----
+Image photo = new Image("images/photo.png", "A photo");
+----
+
+The servlet container or Spring MVC serves these files directly, giving you proper caching and range request support out of the box.
+
+[TIP]
+Avoid a leading `/` in paths. Use relative paths like `"images/photo.png"`, not `"/images/photo.png"`.
+
+=== Classpath Images
+
+If your images are packaged inside a JAR (for example, in a reusable library or add-on) and not in the static resource directory, serve them through `DownloadHandler.forClassResource()`:
+
+[source,java]
+----
+Image image = new Image(
+    DownloadHandler.forClassResource(getClass(), "/images/myimage.png"),
+    "My image");
+----
+
+If the path starts with `/`, it resolves from the classpath root (`src/main/resources`). Without a leading `/`, it resolves relative to the class's package.
+
+[NOTE]
+Prefer static resources over `DownloadHandler` when possible. Static resources benefit from the servlet container's built-in caching and range request handling. Use `DownloadHandler.forClassResource()` when the image is not in a static resource directory.
+
+See <</flow/advanced/downloads#,Downloads>> for more on `DownloadHandler`.
+
+=== External URLs
+
+The `Image` component also accepts full URLs:
+
+[source,java]
+----
+Image avatar = new Image("https://example.com/avatar.jpg", "User avatar");
+----
+
+=== Security Consideration
+
+When your application uses <<../security#,Spring Security>>, static resources are protected by default. You need to explicitly permit access to image paths in your security configuration. See the security documentation for details.
+
+
+== Icons
+
+Vaadin provides built-in icon collections and supports custom SVG icons. Many Vaadin components accept icons natively — in buttons, menu items, text field prefixes, and more.
+
+=== Built-in Icon Collections
+
+Vaadin includes two icon collections out of the box.
+
+*Vaadin Icons* — over 600 general-purpose icons:
+
+[source,java]
+----
+Icon icon = VaadinIcon.PHONE.create();
+----
+
+*Lumo Icons* — a curated set used by the default Lumo theme:
+
+[source,java]
+----
+Icon icon = LumoIcon.PHOTO.create();
+----
+
+The `VaadinIcon` and `LumoIcon` enums list all available icons. See the <</components/icons/default-icons#,Default Icons>> page for the full set.
+
+=== Icons in Components
+
+Many Vaadin components have built-in support for icons. A few common examples:
+
+*Button with icon:*
+
+[source,java]
+----
+Button edit = new Button("Edit", VaadinIcon.EDIT.create());
+----
+
+*Icon-only button* (needs an accessible label):
+
+[source,java]
+----
+Button close = new Button(VaadinIcon.CLOSE.create());
+close.setAriaLabel("Close");
+----
+
+*Text field with a prefix icon:*
+
+[source,java]
+----
+TextField address = new TextField("Address");
+address.setPrefixComponent(VaadinIcon.MAP_MARKER.create());
+----
+
+[TIP]
+When a button shows only an icon and no text, always set an accessible label with `setAriaLabel()` so screen readers can announce it.
+
+=== Custom SVG Icons
+
+For third-party or custom icons, use `SvgIcon` with the path to an SVG file in your static resources:
+
+[source,java]
+----
+SvgIcon icon = new SvgIcon("icons/custom-icon.svg");
+----
+
+For SVG sprite sheets containing multiple icons, append the symbol ID:
+
+[source,java]
+----
+SvgIcon icon = new SvgIcon("icons/sprites.svg#settings");
+----
+
+For icon fonts, icon styling (color, size), creating custom icon collection enums, and accessibility details, see the <</components/icons#,Icons>> component documentation.

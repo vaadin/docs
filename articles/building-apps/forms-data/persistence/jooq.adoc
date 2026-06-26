@@ -1,0 +1,492 @@
+---
+title: jOOQ
+page-title: How to use jOOQ in Vaadin applications
+description: How to implement persistence with jOOQ.
+meta-description: Use jOOQ for type-safe database access in Vaadin applications, from simple table operations to complex queries.
+order: 30
+---
+
+
+= jOOQ
+:toclevels: 2
+
+https://www.jooq.org/[jOOQ] generates Java code from your database schema and lets you write type-safe SQL. It's database-first: your schema is the source of truth, and your code reflects it.
+
+jOOQ supports both <<index#,persistence approaches>>. It excels at table-oriented work—queries, bulk operations, reports—but can also support aggregate-oriented persistence if you need it. Many Vaadin projects combine jOOQ with <<spring-data#,JPA>>: JPA for entity lifecycle management, jOOQ for everything else.
+
+[NOTE]
+This page assumes you've already <<add-jooq#,added jOOQ>> to your project and are familiar with jOOQ basics. If you're new to jOOQ, complete the https://www.jooq.org/learn/[jOOQ tutorial] first.
+
+
+== Table-Oriented Access
+
+jOOQ's natural style is working directly with tables. You write queries, get rows, transform data. The database structure is explicit in your code.
+
+
+=== Active Records
+
+jOOQ generates `UpdatableRecord` classes for each table. These are active records—objects that know how to load, save, and delete themselves:
+
+[source,java]
+----
+// Create
+var record = create.newRecord(CUSTOMER);
+record.setName("Acme Inc");
+record.setEmail("info@acme.com");
+record.store();
+
+// Read
+var record = create.fetchOne(CUSTOMER, CUSTOMER.CUSTOMER_ID.eq(42L));
+
+// Update
+record.setEmail("sales@acme.com");
+record.store();
+
+// Delete
+record.delete();
+----
+
+The `store()` method issues an `INSERT` or `UPDATE` depending on whether the record was created with `newRecord()` or fetched from the database.
+
+Active records are ideal for straightforward CRUD where you don't need rich domain logic. They map directly to table rows with no ceremony.
+
+
+=== Generated POJOs
+
+If you prefer plain objects over active records, configure jOOQ to generate POJOs:
+
+[source,xml]
+----
+<generator>
+    <generate>
+        <pojos>true</pojos>
+        <immutablePojos>true</immutablePojos> <!-- or false for mutable -->
+    </generate>
+</generator>
+----
+
+Fetch into POJOs:
+
+[source,java]
+----
+List<Customer> customers = create
+    .selectFrom(CUSTOMER)
+    .where(CUSTOMER.STATUS.eq("ACTIVE"))
+    .fetchInto(Customer.class);
+----
+
+POJOs are useful when you want to pass data across layers without carrying jOOQ dependencies.
+
+
+=== Queries
+
+jOOQ's query DSL gives you full SQL power with compile-time type checking:
+
+[source,java]
+----
+var results = create
+    .select(
+        CUSTOMER.NAME,
+        count().as("order_count"),
+        sum(ORDER.TOTAL).as("total_spent"))
+    .from(CUSTOMER)
+    .join(ORDER).on(ORDER.CUSTOMER_ID.eq(CUSTOMER.CUSTOMER_ID))
+    .where(ORDER.CREATED_DATE.ge(startOfYear))
+    .groupBy(CUSTOMER.CUSTOMER_ID, CUSTOMER.NAME)
+    .orderBy(sum(ORDER.TOTAL).desc())
+    .limit(10)
+    .fetch();
+----
+
+This is where jOOQ shines—complex joins, aggregations, window functions, etc. Queries that would be awkward in JPQL are natural in jOOQ.
+
+
+=== Bulk Operations
+
+For data transformations affecting many rows, write set-based operations:
+
+[source,java]
+----
+// Archive old orders
+int archived = create
+    .update(ORDER)
+    .set(ORDER.STATUS, "ARCHIVED")
+    .where(ORDER.CREATED_DATE.lt(cutoffDate))
+    .and(ORDER.STATUS.eq("COMPLETED"))
+    .execute();
+
+// Delete in bulk
+int deleted = create
+    .deleteFrom(AUDIT_LOG)
+    .where(AUDIT_LOG.CREATED_DATE.lt(retentionDate))
+    .execute();
+----
+
+No object instantiation, no loading thousands of entities—just efficient SQL.
+
+
+=== Query Classes
+
+Encapsulate queries in dedicated classes:
+
+[source,java]
+----
+@Component
+public class OrderDashboardQuery {
+
+    private final DSLContext create;
+
+    OrderDashboardQuery(DSLContext create) {
+        this.create = create;
+    }
+
+    public List<OrdersByStatus> getOrderCountsByStatus(LocalDate since) {
+        return create
+            .select(ORDER.STATUS, count().as("count"))
+            .from(ORDER)
+            .where(ORDER.CREATED_DATE.ge(since))
+            .groupBy(ORDER.STATUS)
+            .fetchInto(OrdersByStatus.class);
+    }
+
+    public record OrdersByStatus(String status, int count) {}
+}
+----
+
+Query classes keep complex SQL organized and testable. Create as many as you need—one per view, one per report, whatever makes sense.
+
+
+== Aggregate-Oriented Access
+
+If you need richer domain objects with business logic, jOOQ can support that too. You'll write more code than with JPA, but gain full control over mapping.
+
+
+=== Entities
+
+jOOQ has no entity concept—you design your own. Use records, classes, whatever fits:
+
+[source,java]
+----
+public class Order {
+    private final OrderId id;
+    private final CustomerId customerId;
+    private OrderStatus status;
+    private final List<OrderLine> lines = new ArrayList<>();
+
+    public void addLine(ProductId product, int quantity, MonetaryAmount price) {
+        if (status != OrderStatus.DRAFT) {
+            throw new IllegalStateException("Cannot modify non-draft order");
+        }
+        lines.add(new OrderLine(product, quantity, price));
+    }
+
+    public void submit() {
+        if (lines.isEmpty()) {
+            throw new IllegalStateException("Cannot submit empty order");
+        }
+        this.status = OrderStatus.SUBMITTED;
+    }
+
+    // ... more business logic
+}
+----
+
+
+=== Loading Aggregates with MULTISET
+
+When loading an aggregate with its children, naive approaches either require multiple queries (N+1 problem) or complex joins with duplicate data. jOOQ's `MULTISET` solves this by fetching nested collections in a single query:
+
+[source,java]
+----
+public Optional<Order> findById(OrderId id) {
+    return create
+        .select(
+            ORDER.ORDER_ID,
+            ORDER.STATUS,
+            ORDER.CREATED_DATE,
+            multiset(
+                select(ORDER_LINE.PRODUCT_ID, ORDER_LINE.QUANTITY, ORDER_LINE.UNIT_PRICE)
+                .from(ORDER_LINE)
+                .where(ORDER_LINE.ORDER_ID.eq(ORDER.ORDER_ID))
+            ).as("lines").convertFrom(r -> r.map(Records.mapping(OrderLine::new)))
+        )
+        .from(ORDER)
+        .where(ORDER.ORDER_ID.eq(id.value()))
+        .fetchOptional(Records.mapping(Order::new));
+}
+----
+
+This executes as a single SQL statement with a correlated subquery. The result maps directly to your domain objects—an `Order` containing a `List<OrderLine>`.
+
+MULTISET works with multiple levels of nesting and multiple child collections. It's particularly valuable when your aggregates have complex structures that would be painful to load with JPA's eager/lazy fetching.
+
+[NOTE]
+MULTISET requires jOOQ's commercial editions for some databases, or jOOQ 3.15+ with databases that support it natively (PostgreSQL, MySQL 8+, etc.). Check the https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/multiset-value-constructor/[jOOQ documentation] for details.
+
+
+=== Repositories
+
+Build your own repository classes:
+
+[source,java]
+----
+@Repository
+public class OrderRepository {
+
+    private final DSLContext create;
+
+    OrderRepository(DSLContext create) {
+        this.create = create;
+    }
+
+    public Optional<Order> findById(OrderId id) {
+        // Simple approach with two queries; consider MULTISET for single-query loading
+        var orderRecord = create.fetchOne(ORDER, ORDER.ORDER_ID.eq(id.value()));
+        if (orderRecord == null) {
+            return Optional.empty();
+        }
+
+        var lineRecords = create.fetch(ORDER_LINE, ORDER_LINE.ORDER_ID.eq(id.value()));
+
+        return Optional.of(mapToEntity(orderRecord, lineRecords));
+    }
+
+    public void save(Order order) {
+        if (order.getId() == null) {
+            insert(order);
+        } else {
+            update(order);
+        }
+    }
+
+    @Transactional
+    public void delete(OrderId id) {
+        create.deleteFrom(ORDER_LINE).where(ORDER_LINE.ORDER_ID.eq(id.value())).execute();
+        create.deleteFrom(ORDER).where(ORDER.ORDER_ID.eq(id.value())).execute();
+    }
+
+    private Order mapToEntity(OrderRecord record, Result<OrderLineRecord> lines) {
+        // Manual mapping from records to entity
+    }
+
+    private void insert(Order order) {
+        // Insert ORDER, get generated ID, insert ORDER_LINEs
+    }
+
+    private void update(Order order) {
+        // Update ORDER, reconcile ORDER_LINEs (insert/update/delete)
+    }
+}
+----
+
+This is more work than JPA. You're responsible for:
+
+- Mapping between records and entities
+- Deciding when to insert vs update
+- Managing related records (order lines)
+- Handling optimistic locking
+
+The payoff is complete control. No surprise lazy loading, no proxy magic, no wondering what SQL runs.
+
+
+=== When to Choose This Approach
+
+Use jOOQ for aggregate-oriented persistence when:
+
+- You need precise control over SQL and loading behavior
+- Your aggregates don't fit JPA's assumptions well
+- You're already using jOOQ heavily and want consistency
+- You prefer explicit code over framework conventions
+
+Otherwise, consider <<spring-data#,JPA>> for aggregates and jOOQ for queries—a combination that works well in practice.
+
+
+== Domain Primitives
+
+<<../consistency/domain-primitives#,Domain primitives>> integrate with jOOQ through converters.
+
+
+=== Converters
+
+Map database columns to domain primitives:
+
+[source,java]
+----
+public class EmailAddressConverter extends AbstractConverter<String, EmailAddress> {
+
+    public EmailAddressConverter() {
+        super(String.class, EmailAddress.class);
+    }
+
+    @Override
+    public EmailAddress from(String value) {
+        return value == null ? null : new EmailAddress(value);
+    }
+
+    @Override
+    public String to(EmailAddress value) {
+        return value == null ? null : value.value();
+    }
+}
+----
+
+
+=== Ad-Hoc Conversion
+
+Apply converters in specific queries:
+
+[source,java]
+----
+var result = create
+    .select(CUSTOMER.CUSTOMER_ID, CUSTOMER.EMAIL.convert(new EmailAddressConverter()))
+    .from(CUSTOMER)
+    .fetch();
+----
+
+
+=== Forced Types
+
+Apply converters globally via code generation:
+
+[source,xml]
+----
+<forcedTypes>
+    <forcedType>
+        <userType>com.example.domain.EmailAddress</userType>
+        <converter>com.example.jooq.EmailAddressConverter</converter>
+        <includeExpression>.*\.email</includeExpression>
+    </forcedType>
+</forcedTypes>
+----
+
+All columns matching `.*\.email` now use `EmailAddress` in generated code.
+
+For queries needing the raw type (like `LIKE` searches), cast back:
+
+[source,java]
+----
+.where(CUSTOMER.EMAIL.cast(SQLDataType.VARCHAR).contains(searchTerm))
+----
+
+
+== Locking
+
+jOOQ supports both <<../consistency/optimistic-locking#,optimistic>> and <<../consistency/pessimistic-locking#,pessimistic locking>>.
+
+
+=== Optimistic Locking
+
+Add a version column to tables, then configure jOOQ:
+
+[source,xml]
+----
+<database>
+    <recordVersionFields>_version</recordVersionFields>
+</database>
+----
+
+Enable in configuration:
+
+[source,java]
+----
+@Configuration
+class JooqConfig {
+
+    @Bean
+    DefaultConfigurationCustomizer jooqCustomizer() {
+        return c -> c.settings().withExecuteWithOptimisticLocking(true);
+    }
+}
+----
+
+When using `UpdatableRecord`, jOOQ checks the version on store:
+
+[source,java]
+----
+var record = create.fetchOne(PRODUCT, PRODUCT.PRODUCT_ID.eq(id));
+record.setPrice(newPrice);
+record.store(); // Fails if version changed
+----
+
+If you fetch a record and modify it, set the expected version first:
+
+[source,java]
+----
+record.setVersion(expectedVersion);
+record.store();
+----
+
+
+=== Pessimistic Locking
+
+Use `FOR UPDATE`:
+
+[source,java]
+----
+var record = create
+    .selectFrom(ACCOUNT)
+    .where(ACCOUNT.ACCOUNT_ID.eq(accountId))
+    .forUpdate()
+    .fetchOne();
+----
+
+The lock holds until the transaction completes.
+
+
+== Pagination and Sorting
+
+Reuse Spring Data's `Pageable` and `Sort`:
+
+[source,java]
+----
+public List<Customer> findByName(String name, Pageable pageable) {
+    var query = create
+        .selectFrom(CUSTOMER)
+        .where(CUSTOMER.NAME.contains(name));
+
+    if (pageable.getSort().isSorted()) {
+        query.orderBy(toOrderFields(pageable.getSort()));
+    }
+
+    return query
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetchInto(Customer.class);
+}
+
+private List<OrderField<?>> toOrderFields(Sort sort) {
+    return sort.stream()
+        .map(order -> {
+            var field = CUSTOMER.field(order.getProperty());
+            return order.isAscending() ? field.asc() : field.desc();
+        })
+        .toList();
+}
+----
+
+
+== Combining with JPA
+
+A practical pattern for Vaadin applications:
+
+[source,java]
+----
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;      // JPA - aggregates
+    private final OrderDashboardQuery dashboardQuery;   // jOOQ - queries
+
+    public void submitOrder(Long orderId) {
+        var order = orderRepository.findById(orderId).orElseThrow();
+        order.submit();
+        orderRepository.save(order);
+    }
+
+    public Page<OrderListItem> findOrders(OrderFilter filter, Pageable pageable) {
+        return dashboardQuery.findByFilter(filter, pageable);
+    }
+}
+----
+
+JPA handles entity state transitions. jOOQ handles data transformations. Both use the same data source and can participate in the same transactions.

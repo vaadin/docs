@@ -24,7 +24,7 @@ public class GridRowStripes extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
 
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants(GridVariant.ROW_STRIPES);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();

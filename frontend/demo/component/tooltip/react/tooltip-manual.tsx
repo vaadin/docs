@@ -1,4 +1,5 @@
 import '@vaadin/icons';
+import '@vaadin/vaadin-lumo-styles/vaadin-iconset.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
@@ -24,7 +25,8 @@ function Example() {
       />
       <Button
         slot="suffix"
-        theme="tertiary-inline icon"
+        theme="tertiary"
+        style={{ border: 0, padding: 0, minWidth: 0, height: '1.25rem' }}
         onClick={() => {
           tooltipOpened.value = !tooltipOpened.value;
         }}

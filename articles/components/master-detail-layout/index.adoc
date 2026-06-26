@@ -3,7 +3,6 @@ title: Master-Detail Layout
 page-title: Master-Detail component | Vaadin components
 description: Master-Detail Layout makes it easy to create responsive horizontally or vertically split UIs.
 meta-description: Learn to create layouts in your Vaadin application with the Master-Detail Layout component.
-section-nav: badge-preview
 page-links:
   - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/master-detail-layout}/elements/vaadin-master-detail-layout[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/masterdetaillayout/MasterDetailLayout.html[Java]'
   - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/master-detail-layout}/packages/master-detail-layout[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-master-detail-layout-flow-parent[Java]'
@@ -14,10 +13,6 @@ page-links:
 // tag::description[]
 Master-Detail Layout is component for building UIs with a horizontally or vertically split pair consisting of a master area and a detail area that can responsively switch to an overlay.
 // end::description[]
-
-:preview-feature: Master-Detail Layout
-:feature-flag: com.vaadin.experimental.masterDetailLayoutComponent
-include::{articles}/_preview-banner.adoc[opts=optional]
 
 ++++
 <style>
@@ -30,22 +25,19 @@ include::{articles}/_preview-banner.adoc[opts=optional]
 include::{articles}/components/_shared.adoc[tag=merge-examples]
 include::{articles}/components/_shared.adoc[tag=scaled-examples]
 
-In the example below, clicking a row in the table reveals the detail area which is rendered next to the master area by default. Drag the splitter to change the width of the layout: the detail area will switch to an overlay when the master area's minimum width is reached.
+In the example below, clicking a row in the table reveals the detail area which is rendered next to the master area by default. Drag the splitter to change the width of the layout: the detail area switches to an overlay when the combined master and detail sizes exceed the available space.
 
-[.example.render-only.merge,themes="lumo,aura"]
+[.example,themes="lumo,aura"]
 --
 [source,typescript]
 ----
-include::include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-basic.tsx[render,frame]
+include::{root}/frontend/demo/component/master-detail-layout/master-detail-layout-full-height.ts[preimport,hidden]
 ----
---
 
-[.example]
---
 ifdef::flow[]
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/component/masterdetaillayout/MasterDetailLayoutBasic.java[tags=snippet,indent=0,group=Flow]
+include::{root}/src/main/java/com/vaadin/demo/component/masterdetaillayout/MasterDetailLayoutBasic.java[render,frame,tags=snippet,indent=0,group=Flow]
 ----
 [source,java]
 ----
@@ -60,7 +52,7 @@ endif::[]
 ifdef::react[]
 [source,tsx]
 ----
-include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-basic.tsx[tags=snippet,indent=0,group=React]
+include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-basic.tsx[render,frame,tags=snippet,indent=0,group=React]
 ----
 [source,tsx]
 ----
@@ -73,9 +65,9 @@ include::{root}/frontend/demo/component/master-detail-layout/react/PersonDetail.
 endif::[]
 --
 
-== Setting the Overlay Breakpoint
+== Setting Sizes
 
-For each area, either a _fixed_ size or a _minimum_ size can be specified. The area with a minimum size takes whatever space is available next to the fixed size area. If the available space is smaller than the minimum size, the detail area is rendered as an overlay.
+The `masterSize` and `detailSize` properties define sizes for each area. When the combined master and detail sizes exceed the available space, the detail area switches to an overlay.
 
 [.example]
 --
@@ -83,7 +75,7 @@ ifdef::flow[]
 [source,Java]
 ----
 <source-info group="Flow"></source-info>
-layout.setMasterMinSize("600px");
+layout.setMasterSize("600px");
 layout.setDetailSize("300px");
 ----
 endif::[]
@@ -92,26 +84,22 @@ ifdef::react[]
 ----
 <source-info group="React"></source-info>
 <MasterDetailLayout
-  masterMinSize="600px"
+  masterSize="600px"
   detailSize="300px"
 />
 ----
 endif::[]
 --
 
-The two most common configurations are:
+The default `masterSize` is `30rem`. If `detailSize` is not set, it is automatically determined based on the detail content's minimum width and cached until new detail content is set.
 
-* A flexible master area with a minimum size, next to a fixed-size detail area;
-* A fixed-size master area, next to a flexible detail area with a minimum size.
+[NOTE]
+In earlier versions, `setMasterMinSize` and `setDetailMinSize` were used to set minimum sizes for each area. These have been replaced by `setMasterSize` / `setDetailSize` overloads that accept a boolean `expand` parameter, controlling whether the area expands to fill remaining space.
 
-If both areas are configured to be flexible, whichever reaches its minimum size first determines the overlay breakpoint.
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Expanding the Master or Detail Area
 
-If neither a minimum or a fixed size is explicitly set, the layout tries to determine an appropriate minimum size for each area automatically based on its content.
-
-
-== Stack Mode
-
-By default, the detail overlay is rendered as a drawer that opens from the right-hand side of the layout. By switching to _stack mode_, the two areas are rendered "stacked" on top of each other, with the detail area fully covering the master area, when rendered as an overlay.
+By default, both areas have fixed sizes. The master or detail area can be configured to expand and fill any available space beyond the specified sizes. When both are set to expand, they share the available space equally.
 
 [.example]
 --
@@ -119,21 +107,68 @@ ifdef::flow[]
 [source,Java]
 ----
 <source-info group="Flow"></source-info>
-layout.setOverlayMode(MasterDetailLayout.OverlayMode.STACK);
+// Detail area expands to fill remaining space
+layout.setMasterSize("300px");
+layout.setDetailSize("400px", true);
+
+// Both areas expand proportionally
+layout.setExpandMaster(true);
+layout.setExpandDetail(true);
 ----
 endif::[]
 ifdef::react[]
 [source,tsx]
 ----
 <source-info group="React"></source-info>
-<MasterDetailLayout stackOverlay />
+{/* Detail area expands to fill remaining space */}
+<MasterDetailLayout
+  masterSize="300px"
+  detailSize="400px"
+  expandDetail
+/>
+
+{/* Both areas expand proportionally */}
+<MasterDetailLayout
+  masterSize="300px"
+  detailSize="400px"
+  expandMaster
+  expandDetail
+/>
+----
+endif::[]
+--
+
+These settings apply only while the master and detail areas are shown side by side. In overlay mode, the detail's size is controlled separately by `overlaySize`, as described in the next section.
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Overlay Size
+
+By default, the detail overlay uses the detail size. The overlay size can be customized separately using `overlaySize`. For example, setting it to `100%` makes the detail overlay cover the full layout.
+
+[NOTE]
+In earlier versions, the same effect was achieved using `setOverlayMode(OverlayMode)` (Flow) / `stackOverlay` (React), which has been replaced by `overlaySize`.
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setOverlaySize("100%");
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout overlaySize="100%" />
 ----
 endif::[]
 --
 
 == Forced Overlay Mode
 
-The layout can be configured to _always_ render the detail area as an overlay (either as drawer or stack), regardless of minimum sizes:
+The layout can be configured to _always_ render the detail area as an overlay, even if there is enough space for master and detail to be shown next to each other using the default (split) mode:
 
 [.example]
 --
@@ -158,7 +193,7 @@ endif::[]
 The overlay can be configured to render in two different ways, called _containment modes_:
 
 * *Layout*: The overlay only covers the master area (default);
-* *Viewport*: The overlay covers the entire viewport (i.e. page).
+* *Page*: The overlay covers the entire page.
 
 [.example]
 --
@@ -166,42 +201,39 @@ ifdef::flow[]
 [source,Java]
 ----
 <source-info group="Flow"></source-info>
-layout.setContainment(MasterDetailLayout.Containment.VIEWPORT);
+layout.setOverlayContainment(MasterDetailLayout.OverlayContainment.PAGE);
 ----
 endif::[]
 ifdef::react[]
 [source,tsx]
 ----
 <source-info group="React"></source-info>
-<MasterDetailLayout containment="viewport" />
+<MasterDetailLayout overlayContainment="page" />
 ----
 endif::[]
 --
 
-.Limited Modality with Viewport-Containment
+.Limited Modality with Page-Containment
 [NOTE]
-Due to browser support constraints, the modality of the detail overlay in viewport containment mode is currently limited to pointer interactions. Elements behind the overlay can be focused by keyboard. This limitation is planned to be addressed in V25.
+The modality of the detail overlay in page containment mode is currently limited to pointer interactions. Elements behind the overlay can be focused by keyboard.
 
 
 == Orientation
 
 By default, the Master-Detail Layout is split horizontally. This can be changed to a vertical split.
 
-[.example.render-only.merge]
---
-[source,typescript]
-----
-include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-vertical.tsx[render,frame]
-----
+[.example,themes="lumo,aura"]
 --
 
-[.example]
---
+[source,typescript]
+----
+include::{root}/frontend/demo/component/master-detail-layout/master-detail-layout-full-height.ts[preimport,hidden]
+----
 
 ifdef::flow[]
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/component/masterdetaillayout/MasterDetailLayoutVertical.java[tags=snippet,indent=0,group=Flow]
+include::{root}/src/main/java/com/vaadin/demo/component/masterdetaillayout/MasterDetailLayoutVertical.java[render,frame,tags=snippet,indent=0,group=Flow]
 ----
 [source,java]
 ----
@@ -216,7 +248,7 @@ endif::[]
 ifdef::react[]
 [source,tsx]
 ----
-include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-vertical.tsx[tags=snippet,indent=0,group=React]
+include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-vertical.tsx[render,frame,tags=snippet,indent=0,group=React]
 ----
 [source,tsx]
 ----
@@ -225,6 +257,69 @@ include::{root}/frontend/demo/component/master-detail-layout/react/PersonList.ts
 [source,tsx]
 ----
 include::{root}/frontend/demo/component/master-detail-layout/react/PersonDetail.tsx[group=React]
+----
+endif::[]
+--
+
+== Animation
+
+When detail content is added, replaced, or removed, the layout animates the transition. The detail area slides and fades into place next to the master area, or slides in from the edge with a backdrop when shown as an overlay. Animations are skipped automatically when the user's operating system requests reduced motion.
+
+Animations are enabled by default. They can be disabled, for example to make detail changes apply instantly:
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setAnimationEnabled(false);
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout noAnimation />
+----
+endif::[]
+--
+
+.Avoiding Animation on Initial Render in React
+[NOTE]
+====
+When detail content is rendered conditionally based on state that is loaded asynchronously, for example in a `useEffect` hook, the detail appears after the layout has already rendered. The layout detects this as a change and animates the detail in, even though it is really the initial content. To avoid this, render the entire layout only once the data is available, instead of rendering the layout first and adding the detail afterwards.
+====
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Detail Placeholder
+
+A placeholder component can be shown in the detail area when no detail content is set. Unlike detail content, the placeholder simply hides when it doesn't fit rather than being rendered as an overlay.
+
+[.example]
+--
+ifdef::flow[]
+[source,Java]
+----
+<source-info group="Flow"></source-info>
+layout.setDetailPlaceholder(new Span("Select an item to see details"));
+----
+endif::[]
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<MasterDetailLayout>
+  <MasterDetailLayout.Master>
+    {/* master content */}
+  </MasterDetailLayout.Master>
+  <MasterDetailLayout.Detail>
+    {selectedItem && <ItemDetail item={selectedItem} />}
+  </MasterDetailLayout.Detail>
+  <MasterDetailLayout.DetailPlaceholder>
+    Select an item to see details
+  </MasterDetailLayout.DetailPlaceholder>
+</MasterDetailLayout>
 ----
 endif::[]
 --
@@ -339,6 +434,37 @@ export default function EmptyProductDetailView() {
 // frontend/views/products/{productId}/@index.tsx
 export default function ProductDetailView() { ... }
 ----
+--
+
+
+== Nesting Layouts
+
+Master-Detail Layouts can be nested inside each other to enable multi-level navigation.
+
+When nesting, it may help to omit the `detailSize` property to let layouts automatically calculate detail sizes based on their content's minimum size. In this case, each nested detail pushes its minimum size up to its ancestors, so when space gets tight, the outermost levels collapse into overlays first, keeping the levels closest to the user fully visible as long as possible.
+
+In contrast, with explicitly set sizes, the order is reversed: collapsing starts from the innermost levels, keeping the outermost ones open instead, which might cause the user to lose some context.
+
+[.example,themes="lumo,aura"]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/master-detail-layout/master-detail-layout-full-height.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/masterdetaillayout/MasterDetailLayoutNested.java[render,frame,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/master-detail-layout/react/master-detail-layout-nested.tsx[render,frame,tags=snippet,indent=0,group=React]
+----
+endif::[]
 --
 
 

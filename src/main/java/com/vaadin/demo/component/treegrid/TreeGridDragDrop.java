@@ -19,64 +19,68 @@ import java.util.stream.Collectors;
 @Route("tree-grid-drag-drop")
 public class TreeGridDragDrop extends Div {
 
-    private final List<Person> managers;
-    private final Map<Integer, List<Person>> staffGroupedByMangers;
+    private final List<Person> people = DataService.getPeople();
+    private final List<Person> managers = people.stream()
+            .filter(Person::isManager).toList();
+    private final Map<Integer, List<Person>> staffByManagerId = people.stream()
+            .filter(person -> person.getManagerId() != null)
+            .collect(Collectors.groupingBy(Person::getManagerId));
 
     private Person draggedItem;
 
     public TreeGridDragDrop() {
-        List<Person> people = DataService.getPeople();
-        managers = people.stream().filter(Person::isManager).toList();
-        staffGroupedByMangers = people.stream()
-                .filter(person -> person.getManagerId() != null)
-                .collect(Collectors.groupingBy(Person::getManagerId,
-                        Collectors.toList()));
-
         // tag::snippet[]
         TreeGrid<Person> treeGrid = setupTreeGrid();
-
         TreeData<Person> treeData = new TreeData<>();
-        treeData.addItems(managers, this::getStaff);
+        treeData.addItems(managers, this::getStaffByManager);
 
         // To preserve scroll position after refreshAll(), configure
-        // TreeDataProvider to return data in HierarchyFormat.FLATTENED –
-        // it supports this format out of the box. For custom data providers,
-        // you will need to implement this format manually, see the
-        // HierarchyFormat enum JavaDoc for guidance.
+        // TreeDataProvider to return data in the flattened hierarchy format.
+        // More details can be found in the JavaDoc of the HierarchyFormat enum.
         TreeDataProvider<Person> treeDataProvider = new TreeDataProvider<>(
                 treeData, HierarchyFormat.FLATTENED);
         treeGrid.setDataProvider(treeDataProvider);
 
-        // Enable drag-and-drop
+        // Enable drag and drop
         treeGrid.setRowsDraggable(true);
-        // Only allow dragging staff
+
+        // Set a filter to allow dragging staff only
         treeGrid.setDragFilter(person -> !person.isManager());
-        // Only allow dropping on managers
-        treeGrid.setDropFilter(Person::isManager);
 
         treeGrid.addDragStartListener(e -> {
-            treeGrid.setDropMode(GridDropMode.ON_TOP);
             draggedItem = e.getDraggedItems().get(0);
+
+            // Allow dropping on top of rows only
+            treeGrid.setDropMode(GridDropMode.ON_TOP);
+
+            // Set a filter to define valid drop targets
+            // @formatter:off hidden-source-line
+            treeGrid.setDropFilter(person ->
+                    // Allow dropping on supervisors only
+                    person.isManager() &&
+                    // Disallow dropping on the same manager
+                    !person.getId().equals(draggedItem.getManagerId()));
+                    // @formatter:on hidden-source-line
         });
 
         treeGrid.addDropListener(e -> {
             Person newManager = e.getDropTargetItem().orElse(null);
-            boolean isSameManager = newManager != null
-                    && newManager.getId().equals(draggedItem.getManagerId());
-
-            if (newManager == null || isSameManager)
+            if (newManager == null) {
                 return;
+            }
 
             draggedItem.setManagerId(newManager.getId());
             treeData.setParent(draggedItem, newManager);
 
-            // Reset TreeGrid's cache to trigger a re-render
+            // Reset TreeGrid's cache to reflect the hierarchy changes in the UI
             treeDataProvider.refreshAll();
         });
 
         treeGrid.addDragEndListener(e -> {
-            treeGrid.setDropMode(null);
             draggedItem = null;
+
+            treeGrid.setDropMode(null);
+            treeGrid.setDropFilter(null);
         });
         // end::snippet[]
 
@@ -93,8 +97,8 @@ public class TreeGridDragDrop extends Div {
         return treeGrid;
     }
 
-    private List<Person> getStaff(Person manager) {
-        return staffGroupedByMangers.getOrDefault(manager.getId(),
+    private List<Person> getStaffByManager(Person manager) {
+        return staffByManagerId.getOrDefault(manager.getId(),
                 Collections.emptyList());
     }
 

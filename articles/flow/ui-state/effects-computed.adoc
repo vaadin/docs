@@ -1,0 +1,429 @@
+---
+title: Effects and Computed Signals
+page-title: Effects and Computed Signals in Vaadin Flow
+description: Using effects and computed signals for reactive UI updates.
+meta-description: Learn how to use effects, computed signals, and standalone effects for reactive programming.
+order: 30
+---
+
+
+= Effects and Computed Signals
+
+Effects and computed signals are the core mechanisms for custom reactive logic. Effects automatically re-run when their signal dependencies change, while computed signals derive values from other signals.
+
+For binding signals directly to component properties like text, visibility, and form field values, see <<building-ui#,Component Bindings>>. This section covers effects for custom logic and computed signals for derived values.
+
+
+== When to Use Effects
+
+Use direct binding methods (covered in <<building-ui#,Component Bindings>>) when:
+
+- Binding text content with `bindText()`
+- Binding visibility with `bindVisible()`
+- Binding enabled state with `bindEnabled()`
+- Binding form field values with `bindValue()`
+- Binding styles, themes, or class lists
+
+Use [methodname]`Signal.effect()` when:
+
+- You need custom side effects beyond property binding
+- You're working with component APIs that don't have binding methods
+- You need to execute logic that isn't just setting a property
+
+
+== Component Effects
+
+Effects are callbacks that run immediately when created and automatically re-run when any signal value they depend on changes. Dependencies are automatically managed based on the signals that were used the last time the callback was run.
+
+
+=== Creating Effects
+
+The [methodname]`Signal.effect()` method creates an effect bound to a component's lifecycle. The effect is active while the component is attached and inactive while detached.
+
+[source,java]
+----
+Chart chart = new Chart(ChartType.AREASPLINE);
+ListSeries series = new ListSeries("My Series", new Number[0]);
+ListSignal<Number> seriesSignal = new ListSignal<>();
+// initialization details omitted
+
+Signal.effect(chart, () -> {
+    // This code runs immediately and again whenever seriesSignal changes
+    series.setData(seriesSignal.get().stream()
+        .map(Signal::get).toArray(Number[]::new));
+});
+----
+
+The method returns a [classname]`Registration` instance that can be used to remove the effect when it's no longer needed:
+
+[source,java]
+----
+Registration effectRegistration = Signal.effect(chart, () -> {
+    // effect logic
+});
+
+// Later, when you need to stop the effect
+effectRegistration.remove();
+----
+
+
+=== Contextual Effects
+
+Use the contextual variant of [methodname]`Signal.effect()` to receive an [classname]`EffectContext` parameter that provides information about why the effect is running:
+
+[source,java]
+----
+Signal.effect(this, ctx -> {
+    String value = priceSignal.get();
+    span.setText("$" + value);
+
+    if (!ctx.isInitialRun() && ctx.isBackgroundChange()) {
+        span.getElement().flashClass("highlight");
+    }
+});
+----
+
+The [classname]`EffectContext` provides:
+
+- [methodname]`isInitialRun()` — `true` on the first execution of the effect
+- [methodname]`isBackgroundChange()` — `true` when the effect was triggered by a change from another user session or a background thread
+
+[IMPORTANT]
+====
+Always read the signal values you depend on *before* branching on the context flags, as shown above where `priceSignal.get()` is read unconditionally. Reading a signal only inside a conditional branch — such as `if (!ctx.isInitialRun())` — breaks dependency tracking. See <<reading-signals-unconditionally,Read Signals Unconditionally>> for details.
+====
+
+
+=== Custom Effects for Non-Bindable Properties
+
+Use effects for component properties that don't have direct binding methods:
+
+[source,java]
+----
+Signal.effect(component, () -> {
+    component.setCustomProperty(signal.get());
+});
+----
+
+
+== Computed Signals
+
+Computed signals derive their values from other signals. They automatically update when any of their dependencies change.
+
+[source,java]
+----
+Signal<String> fullName = Signal.computed(() -> {
+    return firstNameSignal.get() + " " + lastNameSignal.get();
+});
+----
+
+Computed signals are read-only; you cannot set their value directly. The computation callback runs every time the signal value is read. For expensive computations, wrap the computed signal in [methodname]`Signal.cached()` to avoid repeating the work on every read (see <<#caching-with-signal-cached,Caching with Signal.cached()>>).
+
+
+=== Combining Multiple Signals
+
+The primary use case for computed signals is combining values from multiple source signals:
+
+[source,java]
+----
+ValueSignal<Double> price = new ValueSignal<>(100.0);
+ValueSignal<Double> quantity = new ValueSignal<>(2.0);
+ValueSignal<Double> taxRate = new ValueSignal<>(0.1);
+
+Signal<Double> total = Signal.computed(() -> {
+    double subtotal = price.get() * quantity.get();
+    return subtotal * (1 + taxRate.get());
+});
+// total.get() returns 220.0
+
+quantity.set(3.0);
+// total.get() now returns 330.0
+----
+
+
+[[caching-with-signal-cached]]
+=== Caching with Signal.cached()
+
+Neither a [methodname]`Signal.computed()` signal nor an inline lambda passed to a binding caches its value: the computation callback runs every time the value is read. This keeps the computation lightweight, but reading the value of an expensive computation from several places repeats the work.
+
+Use [methodname]`Signal.cached()` to add caching to such a computation. A cached signal stores the most recently computed value and returns it on subsequent reads. The cached value remains valid until the value of any dependency signal changes:
+
+[source,java]
+----
+Signal<Integer> expensiveComputation = Signal.cached(() ->
+    performExpensiveCalculation(inputSignal.get()));
+
+expensiveComputation.get(); // Computes the value
+expensiveComputation.get(); // Returns the cached value
+
+inputSignal.set(newInput);
+expensiveComputation.get(); // Recomputes because a dependency changed
+----
+
+Use plain [methodname]`Signal.computed()` for cheap derivations such as string concatenation or simple arithmetic, where the bookkeeping overhead of caching would outweigh the cost of recomputing the value. Use [methodname]`Signal.cached()` when the computation is expensive — for example, filtering or sorting a large list — and the value is read multiple times.
+
+[NOTE]
+An effect or an outer cached signal that uses the value from a cached signal isn't re-run when the inner computation is invalidated but produces the same value as before. This makes [methodname]`Signal.cached()` useful for cutting off update chains when an expensive intermediate result is unchanged.
+
+
+== Signal Mapping
+
+The [methodname]`map()` method transforms a signal's value. Use this when deriving a value from exactly one signal:
+
+[source,java]
+----
+ValueSignal<Integer> age = new ValueSignal<>(0);
+
+Signal<String> ageCategory = age.map(a ->
+    a < 18 ? "Child" : (a < 65 ? "Adult" : "Senior"));
+
+Signal<Boolean> adult = age.map(a -> a >= 18);
+----
+
+Use [methodname]`map()` for single-signal transformations. For transformations depending on multiple signals, use [methodname]`Signal.computed()` instead.
+
+[TIP]
+====
+The read-only [methodname]`map()` method shown above creates a one-way transformation. For two-way binding scenarios where changes need to flow in both directions (for example, binding a checkbox to a property of a record), use [methodname]`updater()` or [methodname]`modifier()`. See <<local-signals#two-way-mapping,Two-Way Signal Mapping>> for details.
+====
+
+
+== Negating Boolean Signals
+
+The [methodname]`Signal.not()` method creates a computed signal that negates a boolean signal:
+
+[source,java]
+----
+ValueSignal<Boolean> loading = new ValueSignal<>(true);
+
+// Create a negated signal
+Signal<Boolean> notLoading = Signal.not(loading);
+----
+
+
+== Reading without Dependencies
+
+
+=== Using peek() to Avoid Dependencies
+
+Use [methodname]`peek()` to read a signal's value without registering a dependency:
+
+[source,java]
+----
+Signal.effect(component, () -> {
+    // get() registers a dependency - effect will re-run when nameSignal changes
+    String name = nameSignal.get();
+
+    // peek() doesn't register a dependency - effect won't re-run when countSignal changes
+    int count = countSignal.peek();
+});
+----
+
+
+=== Executing Code without Tracking
+
+The [methodname]`Signal.untracked()` method executes a block of code without tracking any signal dependencies:
+
+[source,java]
+----
+Signal.effect(component, () -> {
+    // This read is tracked
+    String trackedValue = trackedSignal.get();
+
+    // Everything inside untracked() is not tracked
+    Signal.untracked(() -> {
+        String untrackedValue = anotherSignal.get(); // Not tracked
+        processValue(untrackedValue);
+    });
+});
+----
+
+This is useful when you need to read signal values for logging, analytics, or other side effects without creating dependencies.
+
+
+== Standalone Effects
+
+A standalone signal effect can be used for effects that aren't related to any UI component. The effect remains active until explicitly cleaned up.
+
+[source,java]
+----
+Registration cleanup = Signal.unboundEffect(() -> {
+    System.out.println("Counter updated to " + counter.get());
+});
+
+// Later, when the effect is no longer needed
+cleanup.remove();
+----
+
+[WARNING]
+Standalone effects can lead to memory leaks through any instances referenced by the closure of the effect callback. Always store the [classname]`Registration` and call [methodname]`remove()` when the effect is no longer needed.
+
+
+[[dependency-tracking]]
+== Dependency Tracking
+
+Dependencies are tracked dynamically based on which signals are actually read during execution:
+
+[source,java]
+----
+ValueSignal<Boolean> showDetails = new ValueSignal<>(false);
+ValueSignal<String> summary = new ValueSignal<>("");
+ValueSignal<String> details = new ValueSignal<>("");
+
+Signal.effect(component, () -> {
+    if (showDetails.get()) {
+        // Both showDetails and details are dependencies
+        component.setText(details.get());
+    } else {
+        // Only showDetails and summary are dependencies
+        component.setText(summary.get());
+    }
+});
+----
+
+When `showDetails` is false, changes to `details` won't trigger the effect because it wasn't read in the last execution.
+
+
+[[reading-signals-unconditionally]]
+== Read Signals Unconditionally
+
+Because dependencies are tracked only for the signals actually read during a run, where you read a signal matters. Two related rules follow from this:
+
+- An effect (and a computed signal) *must read at least one signal on every run*. A run that reads no signal throws a [classname]`MissingSignalUsageException` with the message _"Effect action must read at least one signal value."_ Such a callback could never be triggered again, so it's reported as a programming error rather than silently ignored.
+- A signal read only inside a conditional branch becomes a dependency *only on the runs where that branch executes*. If the branch doesn't run, the signal isn't tracked, and later changes to it won't re-run the effect.
+
+The safest pattern is the same as React hooks: read all the signal values you depend on at the top of the callback, then apply conditional logic afterwards.
+
+=== Guarding Reads Behind Context Flags
+
+A common way to hit both rules at once is to gate a signal read behind an [classname]`EffectContext` flag:
+
+[source,java]
+----
+// Broken: throws MissingSignalUsageException on the initial run
+Signal.effect(this, ctx -> {
+    if (!ctx.isInitialRun()) {
+        // Skipped on the first run, so no signal is read and the
+        // effect has no dependencies to ever trigger a later run
+        Notification.show("Value changed: " + valueSignal.get());
+    }
+});
+----
+
+On the initial run, `isInitialRun()` is `true`, the branch is skipped, no signal is read, and the effect throws. Even if it didn't throw, the effect would never have a dependency to re-run on.
+
+Read the signal unconditionally, then branch on the context flag:
+
+[source,java]
+----
+// Correct: the signal is always read, so the dependency is always tracked
+Signal.effect(this, ctx -> {
+    String value = valueSignal.get();
+    if (!ctx.isInitialRun()) {
+        Notification.show("Value changed: " + value);
+    }
+});
+----
+
+=== Branching Between Different Signals
+
+The same pitfall appears when each branch reads a *different* signal:
+
+[source,java]
+----
+// Broken: signal2 is never tracked, so the effect never reacts to it
+Signal.effect(this, ctx -> {
+    if (ctx.isInitialRun()) {
+        component.setText(signal1.get()); // tracked on the first run only
+    } else {
+        component.setText(signal2.get()); // never reached, never tracked
+    }
+});
+----
+
+Only `signal1` is read on the initial run, so only `signal1` becomes a dependency. Because the effect never re-runs on a `signal2` change, the `else` branch is never reached. Read both signals up front so both are tracked:
+
+[source,java]
+----
+// Correct: both signals are read, so both are dependencies
+Signal.effect(this, ctx -> {
+    String first = signal1.get();
+    String second = signal2.get();
+    component.setText(ctx.isInitialRun() ? first : second);
+});
+----
+
+[NOTE]
+====
+Conditional reads are still valid when *every* branch reads a signal that itself controls the condition — as in the <<dependency-tracking,Dependency Tracking>> example, where `showDetails.get()` is always read and decides which other signal to read. The pitfall is specifically reading a signal only on *some* runs, especially behind a context flag that is constant for a given run.
+====
+
+
+== Best Practices
+
+
+=== Prefer Direct Bindings Over Effects
+
+Use component binding methods for property updates. Effects are for custom logic that bindings can't handle:
+
+[source,java]
+----
+// Preferred: Direct binding
+label.bindText(signal);
+
+// Avoid: Effect for simple property binding
+Signal.effect(label, () -> label.setText(signal.get()));
+----
+
+See <<building-ui#,Component Bindings>> for available binding methods.
+
+
+=== Avoid Changing Signals in Effects
+
+Updating a signal in reaction to another signal might cause an infinite loop. Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes.
+
+Use a computed signal when one signal's value depends on another:
+
+[source,java]
+----
+// Good: Use computed signal for derived values
+Signal<String> derivedValue = Signal.computed(() -> {
+    return sourceSignal.get().toUpperCase();
+});
+----
+
+If you must modify a signal from an effect and are certain there's no risk of infinite loops, use [methodname]`runWithoutTransaction()`:
+
+[source,java]
+----
+Signal.effect(component, () -> {
+    String value = oneSignal.get();
+
+    // WARNING: This might lead to infinite loops.
+    // Do this only if absolutely necessary.
+    Signal.runWithoutTransaction(() -> {
+        otherSignal.set(value);
+    });
+});
+----
+
+
+=== Keep Effects Focused
+
+Each effect should have a single responsibility. For multiple property updates, use separate bindings.
+
+Using separate effects or bindings for different concerns improves efficiency: when a signal changes, only the components that depend on it are updated. For example, in a dashboard with charts and cards, separate effects ensure that a single data change triggers updates only in the specific dependent component, rather than re-rendering unrelated parts of the UI.
+
+[source,java]
+----
+// Good: Separate bindings for separate concerns
+nameLabel.bindText(userSignal.map(User::name));
+ageLabel.bindText(userSignal.map(u -> String.valueOf(u.age())));
+
+// Avoid: One large effect doing multiple things
+Signal.effect(container, () -> {
+    nameLabel.setText(userSignal.get().name());
+    ageLabel.setText(String.valueOf(userSignal.get().age()));
+    // ... more updates
+});
+----

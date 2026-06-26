@@ -33,12 +33,15 @@ export class Example extends LitElement {
       <vaadin-notification
         duration="0"
         ${notificationRenderer(
-          (notification) => html`
-            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+          () => html`
+            <vaadin-horizontal-layout
+              theme="spacing"
+              style="align-items: center; min-width: 350px;"
+            >
               <vaadin-icon icon="vaadin:check-circle"></vaadin-icon>
               <div>Application submitted!</div>
-              <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)"> View </vaadin-button>
-              <vaadin-button theme="tertiary-inline" aria-label="Close">
+              <vaadin-button slot="end">View</vaadin-button>
+              <vaadin-button slot="end" theme="icon" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -52,12 +55,15 @@ export class Example extends LitElement {
       <vaadin-notification
         duration="0"
         ${notificationRenderer(
-          (notification) => html`
-            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+          () => html`
+            <vaadin-horizontal-layout
+              theme="spacing"
+              style="align-items: center; min-width: 350px;"
+            >
               <vaadin-icon icon="vaadin:warning"></vaadin-icon>
               <div>Failed to generate report</div>
-              <vaadin-button style="margin: 0 0 0 var(--lumo-space-l)"> Retry </vaadin-button>
-              <vaadin-button theme="tertiary-inline" aria-label="Close">
+              <vaadin-button slot="end">Retry</vaadin-button>
+              <vaadin-button slot="end" theme="icon" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>
@@ -71,38 +77,14 @@ export class Example extends LitElement {
       <vaadin-notification
         duration="0"
         ${notificationRenderer(
-          (notification) => html`
-            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
+          () => html`
+            <vaadin-horizontal-layout
+              theme="spacing"
+              style="align-items: center; min-width: 350px;"
+            >
               <vaadin-avatar name="Jason Bailey"></vaadin-avatar>
               <div><b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a></div>
-              <vaadin-button theme="tertiary-inline" aria-label="Close">
-                <vaadin-icon icon="lumo:cross"></vaadin-icon>
-              </vaadin-button>
-            </vaadin-horizontal-layout>
-          `,
-          []
-        )}
-        position="middle"
-      ></vaadin-notification>
-
-      <vaadin-notification
-        duration="0"
-        ${notificationRenderer(
-          (notification) => html`
-            <vaadin-horizontal-layout theme="spacing" style="align-items: center">
-              <vaadin-icon
-                icon="vaadin:check-circle"
-                style="color: var(--lumo-success-color)"
-              ></vaadin-icon>
-              <div>
-                <b style="color: var(--lumo-success-text-color);">Upload successful</b>
-                <div
-                  style="font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color)"
-                >
-                  <b>Financials.xlsx</b> is now available in <a href="#">Documents</a>
-                </div>
-              </div>
-              <vaadin-button theme="tertiary-inline" aria-label="Close">
+              <vaadin-button slot="end" theme="icon" aria-label="Close">
                 <vaadin-icon icon="lumo:cross"></vaadin-icon>
               </vaadin-button>
             </vaadin-horizontal-layout>

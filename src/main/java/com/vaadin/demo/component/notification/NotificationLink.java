@@ -40,13 +40,14 @@ public class NotificationLink extends Div {
                 new Anchor("#", "Project Q4"));
 
         Button closeButton = new Button(new Icon("lumo", "cross"));
-        closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
         closeButton.setAriaLabel("Close");
         closeButton.addClickListener(event -> {
             notification.close();
         });
 
-        HorizontalLayout layout = new HorizontalLayout(text, closeButton);
+        HorizontalLayout layout = new HorizontalLayout(text);
+        layout.addToEnd(closeButton);
         layout.setAlignItems(Alignment.CENTER);
 
         notification.add(layout);

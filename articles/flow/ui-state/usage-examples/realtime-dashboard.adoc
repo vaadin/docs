@@ -1,0 +1,323 @@
+---
+title: Real-Time Dashboard
+page-title: Building a Real-Time Dashboard with Signals - Vaadin Docs
+description: Learn how to build a real-time dashboard using signals for reactive state management.
+meta-description: Build a real-time dashboard with Vaadin Signals using ValueSignal, ListSignal, computed signals, and effects for reactive updates.
+order: 10
+---
+
+
+= Real-Time Dashboard with Signals
+
+This guide demonstrates how to build a real-time dashboard using signals for reactive state management. The example shows a clean separation between backend data services and UI state, where signals serve as the reactive layer connecting them.
+
+
+== Architecture Overview
+
+The dashboard follows a signal-based architecture with clear separation of concerns:
+
+*Backend service layer* - Generates data and doesn't work with signals directly. It only calls callbacks with plain data objects (records, POJOs).
+
+*View callback layer* - Receives data from the service and updates signals. No UI manipulation happens here, only signal updates.
+
+*UI binding layer* - Components and charts are bound to signals via effects. When signals change, effects automatically update the UI.
+
+*No manual state management* - No state stored in regular class fields. All state lives in signals. No manual listeners, no `UI.access()` calls, no manual chart redraws.
+
+This separation makes the code easier to test, maintain, and reason about. The service layer can be tested without UI concerns, and the UI layer automatically stays in sync with state.
+
+
+== Design Principles
+
+The dashboard demonstrates key signal design principles:
+
+*Signals as the single source of truth* - All dashboard state (metrics, timeline data, service health) is stored in signals. Regular instance fields are only used for constants or non-reactive data.
+
+*Service-to-signal pattern* - Backend services call callbacks with plain data objects. The callback only updates signals, never touches the UI directly.
+
+*Effect-based UI updates* - Charts and components update via effects that watch signals. No manual update calls needed.
+
+*Separation of concerns* - Data generation (service), state management (signals), and UI rendering (effects) are cleanly separated.
+
+*No listeners* - Components don't need change listeners. Effects automatically detect signal changes and update the UI.
+
+
+== State Declaration
+
+All dashboard state is declared as signals:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=signals,indent=0]
+----
+
+Notice there are no regular instance fields for storing metric values or chart data. Everything that changes over time is a signal. This makes the reactive state explicit and easy to identify.
+
+The signals are organized by type:
+
+- `ValueSignal<Number>` for simple metrics (current users, view events)
+- `ListSignal<Number>` for time-series data (Berlin, London, New York timelines)
+- `ListSignal<String>` for category labels (timestamps)
+
+Each signal can be independently updated and watched, creating a flexible reactive system.
+
+
+== Service Integration
+
+The view registers a callback with the scheduler service:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=constructor,indent=0]
+----
+
+The service doesn't know about signals or UI components. It just calls the callback periodically with new data. The comment highlights an important point: you don't need `UI.access()` because signals handle thread safety internally.
+
+[NOTE]
+====
+For real-time updates to reach users immediately, you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> in your application. Without push, updates only appear when the user interacts with the UI.
+====
+
+
+== Data Update Callback
+
+The callback receives plain data objects and updates signals:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=callback,indent=0]
+----
+
+This method demonstrates the service-to-signal pattern:
+
+1. Receive plain data object (`DashboardData`)
+2. Extract values and update signals
+3. No UI manipulation, no chart redraws, no manual updates
+
+The callback is pure signal updates. It doesn't care what UI components are listening or how they render the data. This separation makes the code easier to test and maintain.
+
+
+=== Managing Sliding Window Data
+
+The helper method maintains a sliding window of the last N data points:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=update-helper,indent=0]
+----
+
+This pattern is common for time-series dashboards: when new data arrives, remove the oldest point and add the new one. The `ListSignal` API makes this straightforward with `remove()` and `insertLast()`.
+
+
+== Chart Updates with Effects
+
+Charts update automatically via effects that watch signals:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=chart,indent=0]
+----
+
+This code demonstrates several important patterns:
+
+
+=== Per-Series Effects
+
+Each chart series has its own effect via `bindChartData()`:
+
+[source,java]
+----
+// Each series gets its own effect to update data
+bindChartData(chart, berlinSeries, berlinTimelineSignal);
+bindChartData(chart, londonSeries, londonTimelineSignal);
+bindChartData(chart, newYorkSeries, newYorkTimelineSignal);
+
+// The binding method creates an effect per series
+private static void bindChartData(Chart chart, ListSeries series,
+        ListSignal<Number> signal) {
+    Signal.effect(chart, () -> {
+        series.setData(signal.get().stream()
+            .map(Signal::get)
+            .toArray(Number[]::new));
+    });
+}
+----
+
+Each effect watches one `ListSignal` and updates one series. This granular approach means only the affected series updates when its signal changes, not the entire chart.
+
+The effect reads the list of signals (`signal.get()`), then maps each entry signal to its value with `.map(Signal::get)`. This is necessary because `ListSignal` entries are themselves signals (`ValueSignal<Number>`).
+
+
+=== Multiple Effects for Different Concerns
+
+The chart has separate effects for different update concerns:
+
+1. *Data binding effects* - One per series, updates series data when its signal changes
+2. *Category effect* - Updates x-axis labels when `timelineCategoriesSignal` changes
+3. *Redraw effect* - Watches all timeline signals and triggers chart redraw
+
+This separation of concerns makes the code easier to understand and debug. Each effect has a single responsibility.
+
+
+=== Coordinated Redraw Effect
+
+The redraw effect demonstrates how to coordinate multiple signals:
+
+[source,java]
+----
+Signal.effect(chart, () -> {
+    berlinTimelineSignal.get();
+    londonTimelineSignal.get();
+    newYorkTimelineSignal.get();
+    chart.drawChart();
+});
+----
+
+This effect calls `get()` on each timeline signal to register dependencies, then calls `chart.drawChart()`. When any of the three signals change, the effect re-runs and redraws the chart.
+
+[TIP]
+====
+Reading a signal with `get()` inside an effect creates a dependency. The effect automatically re-runs when that signal changes. You can read multiple signals to create an effect that watches several sources.
+====
+
+
+== Change Tracking Pattern
+
+The highlight card demonstrates tracking value changes over time using the Change record pattern:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=highlight-card,indent=0]
+----
+
+This pattern uses:
+
+1. *Change record* - Holds both `previous` and `current` values
+2. *Change signal* - A `ValueSignal<Change>` tracking the value pair
+3. *Synchronization effect* - Updates `changeSignal` when main signal changes
+4. *Computed signals* - Derive percentage, prefix, icon from the change
+
+The effect uses `peek()` to read the previous current value without creating a circular dependency:
+
+[source,java]
+----
+Signal.effect(this, () -> {
+    double current = signal.get();      // Creates dependency
+    double previous = changeSignal.peek().current();  // No dependency
+    changeSignal.set(new Change(previous, current));
+});
+----
+
+If we used `changeSignal.get()` instead of `peek()`, the effect would re-run whenever `changeSignal` changes, creating an infinite loop since the effect itself changes `changeSignal`.
+
+
+=== Using Component Binding Methods
+
+The highlight card also demonstrates using component binding methods instead of manually creating and updating components with setters. Notice how components are bound to signals using `bindText()` and constructor-based binding:
+
+[source,java]
+----
+// Text binding via bindText()
+Span valueSpan = new Span();
+valueSpan.bindText(signal.map(format::apply));
+
+Badge badge = new Badge();
+badge.bindText(prefixSignal.map(prefix -> prefix + percentageSignal.get()));
+
+// Icon constructor accepts Signal<VaadinIcon>
+Icon icon = new Icon(iconSignal);
+
+// Theme list binding via bind()
+badge.getElement().getThemeList().bind("success", successSignal);
+badge.getElement().getThemeList().bind("error", Signal.not(successSignal));
+----
+
+These binding methods are preferred over manually creating and updating components with setters because:
+
+- *Less boilerplate* - No need to write `Signal.effect(component, () -> ...)` or manual setter calls in response to state changes
+- *Clearer intent* - The binding method name clearly states what's being bound
+- *Built-in lifecycle* - The framework manages effect cleanup when components are detached
+- *Type safety* - Binding methods are type-checked at compile time
+- *Automatic updates* - Component state stays in sync automatically; no need to manually call `setText()`, `setVisible()`, etc.
+
+Use `bindText()`, `bindValue()`, `bindVisible()`, and similar methods whenever available. Create manual effects only when you need custom logic that isn't covered by built-in binding methods.
+
+
+== Key Patterns Summary
+
+*Service callback pattern*
+[source,java]
+----
+// Service calls callback with plain data
+schedulerService.scheduleDashboardDataUpdate(this::onDataUpdate);
+
+// Callback only updates signals
+private void onDataUpdate(DashboardData data) {
+    currentUsersSignal.set(data.currentUsers());
+    // ... more signal updates
+}
+----
+
+*Effect-based chart updates*
+[source,java]
+----
+// Effect watches signal and updates series
+Signal.effect(chart, () -> {
+    series.setData(signal.get().stream()
+        .map(Signal::get)
+        .toArray(Number[]::new));
+});
+----
+
+*Coordinated multi-signal effects*
+[source,java]
+----
+// Effect watches multiple signals
+Signal.effect(chart, () -> {
+    signal1.get();
+    signal2.get();
+    signal3.get();
+    chart.drawChart();
+});
+----
+
+*Change tracking with peek()*
+[source,java]
+----
+// Effect tracks previous value without circular dependency
+Signal.effect(component, () -> {
+    double current = signal.get();
+    double previous = changeSignal.peek().current();
+    changeSignal.set(new Change(previous, current));
+});
+----
+
+== Best Practices
+
+*Store all reactive state in signals* - Don't mix signals with regular fields for state. Make it clear what's reactive.
+
+*Keep callbacks focused on signals* - Service callbacks should only update signals, never manipulate UI directly.
+
+*Use effects for UI updates* - Let effects watch signals and update components. Don't manually trigger updates.
+
+*Separate concerns with multiple effects* - Don't create one giant effect. Split into focused effects with single responsibilities.
+
+*Use peek() to avoid circular dependencies* - When reading a signal you're about to update inside an effect, use `peek()` not `get()`.
+
+*Prefer binding methods over manual effects* - Use `bindText()`, `bindValue()`, `bindVisible()`, and component constructors that accept signals when available.
+
+*Enable Vaadin Push feature for real-time updates* - Without <<{articles}/flow/advanced/server-push#,Vaadin Push>>, signal changes only propagate when users interact with the UI.
+
+
+== Summary
+
+This dashboard demonstrates a clean signal-based architecture:
+
+- Backend services work with plain data objects, not signals
+- A callback layer updates signals from service data
+- Effects watch signals and update UI automatically
+- Component binding methods (`bindText()`, constructors) preferred over manual component creation/updates with setters
+- No manual state management, listeners, or UI.access() calls needed
+- Charts update via separate effects for different concerns
+
+The result is maintainable, testable code with automatic UI synchronization.

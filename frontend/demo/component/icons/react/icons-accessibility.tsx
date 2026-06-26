@@ -7,7 +7,7 @@ function Example() {
   return (
     // tag::snippet[]
     <Button aria-label="Close dialog" theme="icon">
-      <Icon icon="vaadin:close" slot="prefix" />
+      <Icon icon="vaadin:close" />
     </Button>
     // end::snippet[]
   );

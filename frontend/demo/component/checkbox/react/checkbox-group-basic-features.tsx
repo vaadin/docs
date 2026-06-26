@@ -11,7 +11,7 @@ function Example() {
     <VerticalLayout theme="spacing">
       <Checkbox label="Label" helperText="Helper text" />
 
-      <CheckboxGroup label="Label" helperText="Helper text">
+      <CheckboxGroup label="Label" helperText="Helper text" theme="vertical">
         <Tooltip slot="tooltip" text="Tooltip text" />
 
         <Checkbox value="1" label="Item 1" />

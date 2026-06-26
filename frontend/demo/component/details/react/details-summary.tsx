@@ -3,6 +3,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
+import { Badge } from '@vaadin/react-components/Badge.js';
 import { ComboBox } from '@vaadin/react-components/ComboBox.js';
 import { Details } from '@vaadin/react-components/Details.js';
 import { DetailsSummary } from '@vaadin/react-components/DetailsSummary.js';
@@ -32,22 +33,13 @@ function Example() {
     // tag::snippet[]
     <Details opened>
       <DetailsSummary slot="summary">
-        <HorizontalLayout style={{ justifyContent: 'space-between', width: '100%' }}>
+        <HorizontalLayout theme="spacing" style={{ alignItems: 'center' }}>
           <span>Contact information</span>
 
-          <HorizontalLayout
-            style={{ color: 'var(--lumo-error-text-color)', marginLeft: 'var(--lumo-space-s)' }}
-          >
-            <Icon
-              icon="vaadin:exclamation-circle"
-              style={{
-                width: 'var(--lumo-icon-size-s)',
-                height: 'var(--lumo-icon-size-s)',
-                marginRight: 'var(--lumo-space-xs)',
-              }}
-            />
-            <span>2 errors</span>
-          </HorizontalLayout>
+          <Badge theme="error" number={2}>
+            <Icon slot="icon" icon="vaadin:exclamation-circle" />
+            <span>errors</span>
+          </Badge>
         </HorizontalLayout>
       </DetailsSummary>
 

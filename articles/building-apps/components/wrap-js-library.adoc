@@ -1,0 +1,238 @@
+---
+title: Wrap a JavaScript Library
+page-title: How to wrap a JavaScript library for use in Vaadin
+description: Learn how to create a Java API for a plain JavaScript library using @JsModule and the Element API.
+meta-description: Wrap any JavaScript library in a Vaadin component using a connector pattern with @JsModule, executeJs, callJsFunction, and @ClientCallable.
+order: 45
+---
+
+= Wrap a JavaScript Library
+:toclevels: 2
+
+This article shows how to wrap a plain JavaScript library — one that doesn't expose a web component or React component — as a Vaadin component. The approach uses `@JsModule` to load a small connector file that initializes the library on a DOM element, and the Element API, `callJsFunction` and `@ClientCallable`, to communicate between server and client. For libraries that offer a custom element, see <<wrap-web-component#,Wrap a Web Component>>. For React components, see <<wrap-react-component#,Wrap a React Component>>.
+
+
+== Copy-Paste Example
+
+A complete example wrapping https://refreshless.com/nouislider/[noUiSlider], a vanilla JavaScript range slider.
+
+*Connector file* — `frontend/nouislider-connector.js`:
+
+[source,javascript]
+----
+import noUiSlider from 'nouislider';
+import 'nouislider/dist/nouislider.css';
+
+window.NouisliderConnector = {
+    init(element, min, max, start) {
+        if (element._slider) return; // <1>
+        const slider = noUiSlider.create(element, {
+            start: [start],
+            range: { min, max },
+            connect: [true, false]
+        });
+        element._slider = slider;
+        slider.on('change', (values) => { // <2>
+            element.dispatchEvent(
+                new CustomEvent('slider-change', {
+                    detail: { value: parseFloat(values[0]) }
+                })
+            );
+        });
+    },
+
+    setValue(element, value) {
+        if (element._slider) {
+            element._slider.set([value]);
+        }
+    },
+
+    destroy(element) { // <3>
+        if (element._slider) {
+            element._slider.destroy();
+            element._slider = null;
+        }
+    }
+};
+----
+<1> Guard against double initialization.
+<2> Dispatch a DOM event so the server can listen for changes.
+<3> Clean up the library instance when the component is removed.
+
+*Java component* — `NouiSlider.java`:
+
+[source,java]
+----
+import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.shared.Registration;
+
+@Tag("div")
+@NpmPackage(value = "nouislider", version = "15.8.1")
+@JsModule("./nouislider-connector.js")
+public class NouiSlider extends Component implements HasSize {
+
+    private double min = 0;
+    private double max = 100;
+    private double value = 50;
+
+    public NouiSlider() {
+        this(0, 100, 50);
+    }
+
+    public NouiSlider(double min, double max, double initialValue) {
+        this.min = min;
+        this.max = max;
+        this.value = initialValue;
+    }
+
+    @Override
+    protected void onAttach(AttachEvent event) { // <1>
+        super.onAttach(event);
+        getElement().executeJs(
+                "window.NouisliderConnector.init(this, $0, $1, $2)",
+                min, max, value);
+    }
+
+    @Override
+    protected void onDetach(DetachEvent event) { // <2>
+        getElement().executeJs(
+                "window.NouisliderConnector.destroy(this)");
+        super.onDetach(event);
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+        getElement().executeJs(
+                "window.NouisliderConnector.setValue(this, $0)", value);
+    }
+
+    public Registration addValueChangeListener(
+            ComponentEventListener<SliderChangeEvent> listener) {
+        return addListener(SliderChangeEvent.class, listener);
+    }
+
+    @DomEvent("slider-change")
+    public static class SliderChangeEvent
+            extends ComponentEvent<NouiSlider> {
+        private final double value;
+
+        public SliderChangeEvent(NouiSlider source,
+                boolean fromClient,
+                @EventData("event.detail.value") double value) {
+            super(source, fromClient);
+            this.value = value;
+        }
+
+        public double getValue() {
+            return value;
+        }
+    }
+}
+----
+<1> Initialize the library in `onAttach` — the DOM element exists at this point.
+<2> Clean up in `onDetach` to prevent memory leaks.
+
+
+== How It Works
+
+The Java class uses `@Tag("div")` to create a plain `<div>` element in the browser. `@JsModule` loads the connector file, and `@NpmPackage` declares the npm dependency. In `onAttach()`, the component calls the connector's `init` function through `executeJs()`, which creates the slider on the element. Communication from client to server happens through DOM events, `CustomEvent`, captured by `@DomEvent`.
+
+----
+Java (server)  ──executeJs──>  Connector JS  ──library API──>  JS Library
+Java (server)  <──@DomEvent──  Connector JS  <──callbacks────  JS Library
+----
+
+
+== The Connector Pattern
+
+The connector is a small JavaScript file that bridges the Vaadin element and the library. It typically exports (or attaches to `window`) an object with these functions:
+
+- *`init(element, ...)`* — imports the library, creates an instance on the given DOM element, and wires up event listeners that dispatch custom events back to the element.
+- *`update(element, ...)`* or per-property setters — updates the library instance when server-side state changes.
+- *`destroy(element)`* — tears down the library instance and removes event listeners.
+
+Attaching the library instance to the element — for example, `element._slider` — keeps things self-contained and makes cleanup straightforward.
+
+
+== Sending Data to the Client
+
+Use `executeJs()` to run arbitrary JavaScript with parameters:
+
+[source,java]
+----
+getElement().executeJs(
+        "window.MyConnector.setOptions(this, $0, $1)", min, max);
+----
+
+`$0`, `$1`, etc. are placeholders for the method arguments. Supported types include string, number, boolean, and `JsonValue`.
+
+For functions defined directly on the element, you can also use `callJsFunction()`:
+
+[source,java]
+----
+getElement().callJsFunction("focus");
+----
+
+See <</flow/component-internals/element-api/calling-javascript#,Calling JavaScript>> for the full reference.
+
+
+== Receiving Data from the Server
+
+Two approaches exist for sending data from client to server:
+
+*DOM events* — dispatch a `CustomEvent` from JavaScript. The Java side picks it up with `@DomEvent` and `@EventData`:
+
+[source,javascript]
+----
+element.dispatchEvent(
+    new CustomEvent('value-changed', {
+        detail: { value: newValue }
+    })
+);
+----
+
+[source,java]
+----
+@DomEvent("value-changed")
+public static class ValueChangeEvent extends ComponentEvent<MyComponent> {
+    private final double value;
+
+    public ValueChangeEvent(MyComponent source, boolean fromClient,
+            @EventData("event.detail.value") double value) {
+        super(source, fromClient);
+        this.value = value;
+    }
+
+    public double getValue() { return value; }
+}
+----
+
+*`@ClientCallable`* — define a Java method the client can invoke directly:
+
+[source,java]
+----
+@ClientCallable
+private void onSelectionChanged(String itemId) {
+    // Handle on the server
+}
+----
+
+[source,javascript]
+----
+element.$server.onSelectionChanged(selectedId);
+----
+
+DOM events are simpler for most cases. Use `@ClientCallable` when you need to send structured data or trigger server logic that does not map to an event. See <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> for the full reference.
+
+
+== Pitfalls
+
+*Initialize in `onAttach`, not in the constructor.* The DOM element doesn't exist in the browser until the component is attached. Calling `executeJs()` in the constructor queues the call, but the element may not be ready for the library to use. Use `onAttach()` to ensure the element is in the DOM.
+
+*Clean up in `onDetach`.* Many JavaScript libraries assign event listeners, timers, or resize observers. If you don't destroy the instance when the component is removed, you get memory leaks. Always pair `init` with `destroy`.
+
+*Guard against double initialization.* If a component is detached and reattached — for example, during navigation — `onAttach()` runs again. Check whether the library is already initialized before creating a new instance.
+
+*Use `$0`, `$1` placeholders instead of string concatenation.* Never build JavaScript strings with user-provided values. The placeholder syntax in `executeJs()` handles escaping and type conversion for you.

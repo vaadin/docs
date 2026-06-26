@@ -76,14 +76,14 @@ export class Example extends LitElement {
       <vaadin-horizontal-layout theme="spacing">
         <vaadin-combo-box
           label="Year"
-          style="width: 6em;"
+          style="width: 7em;"
           .items="${this.years}"
           .selectedItem="${this.selectedYear}"
           @selected-item-changed="${this.handleYearChange}"
         ></vaadin-combo-box>
         <vaadin-combo-box
           label="Month"
-          style="width: 9em;"
+          style="width: 10em;"
           .items="${this.months}"
           .selectedItem="${this.selectedMonth}"
           .disabled="${!this.selectedYear}"
@@ -91,7 +91,7 @@ export class Example extends LitElement {
         ></vaadin-combo-box>
         <vaadin-combo-box
           label="Day"
-          style="width: 5em;"
+          style="width: 6em;"
           .items="${this.selectableDays}"
           .selectedItem="${this.selectedDay}"
           .disabled="${!this.selectedYear || !this.selectedMonth}"

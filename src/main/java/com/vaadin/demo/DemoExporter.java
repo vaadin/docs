@@ -38,15 +38,16 @@ public abstract class DemoExporter<T extends Component>
                 VaadinSession.getCurrent().getSession().getMaxInactiveInterval()
                         - 10 * 60)
                 .toMillis();
-        if (UI.getCurrent().getPollInterval() == -1) {
-            UI.getCurrent().setPollInterval(interval);
-            UI.getCurrent().addPollListener(e -> emitUpdateTimestamp(interval));
+        if (UI.getCurrentOrThrow().getPollInterval() == -1) {
+            UI.getCurrentOrThrow().setPollInterval(interval);
+            UI.getCurrentOrThrow()
+                    .addPollListener(e -> emitUpdateTimestamp(interval));
         }
         emitUpdateTimestamp(interval);
     }
 
     private void emitUpdateTimestamp(int interval) {
-        UI.getCurrent().getPage().executeJs(
+        UI.getCurrentOrThrow().getPage().executeJs(
                 "window.dispatchEvent(new CustomEvent('update-timestamp', {detail: $0}))",
                 interval);
     }

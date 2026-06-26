@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/combo-box';
 import '@vaadin/details';
 import '@vaadin/form-layout';
@@ -39,18 +40,13 @@ export class Example extends LitElement {
     return html`
       <vaadin-details opened>
         <vaadin-details-summary slot="summary">
-          <vaadin-horizontal-layout style="justify-content: space-between; width: 100%;">
+          <vaadin-horizontal-layout theme="spacing" style="align-items: center;">
             <span>Contact information</span>
 
-            <vaadin-horizontal-layout
-              style="color: var(--lumo-error-text-color); margin-left: var(--lumo-space-s)"
-            >
-              <vaadin-icon
-                icon="vaadin:exclamation-circle"
-                style="width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); margin-right: var(--lumo-space-xs)"
-              ></vaadin-icon>
-              <span>2 errors</span>
-            </vaadin-horizontal-layout>
+            <vaadin-badge theme="error" number="2">
+              <vaadin-icon slot="icon" icon="vaadin:exclamation-circle"></vaadin-icon>
+              <span>errors</span>
+            </vaadin-badge>
           </vaadin-horizontal-layout>
         </vaadin-details-summary>
 

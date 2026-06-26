@@ -15,7 +15,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-vertical-layout>
+      <vaadin-vertical-layout style="gap: 15px">
         <!-- tag::snippet[] -->
         <vaadin-radio-group label="Job title" theme="vertical">
           <vaadin-radio-button value="analyst" label="Analyst" checked></vaadin-radio-button>

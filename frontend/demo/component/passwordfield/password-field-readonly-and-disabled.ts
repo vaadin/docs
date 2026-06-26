@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/horizontal-layout';
 import '@vaadin/password-field';
+import '@vaadin/form-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -15,14 +15,17 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
+      <vaadin-form-layout auto-responsive auto-rows>
         <!-- tag::snippet[] -->
-        <vaadin-password-field readonly label="Read-only" value="Ex@mplePassw0rd">
-        </vaadin-password-field>
+        <vaadin-password-field
+          readonly
+          label="Read-only"
+          value="Ex@mplePassw0rd"
+        ></vaadin-password-field>
 
         <vaadin-password-field disabled label="Disabled"></vaadin-password-field>
         <!-- end::snippet[] -->
-      </vaadin-horizontal-layout>
+      </vaadin-form-layout>
     `;
   }
 }

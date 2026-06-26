@@ -1,15 +1,16 @@
 package com.vaadin.demo.component.textfield;
 
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("text-field-readonly-and-disabled")
-public class TextFieldReadonlyAndDisabled extends HorizontalLayout {
+public class TextFieldReadonlyAndDisabled extends FormLayout {
 
     public TextFieldReadonlyAndDisabled() {
-        setPadding(false);
+        setAutoResponsive(true);
+        setAutoRows(true);
 
         // tag::snippet[]
         TextField readonlyField = new TextField();

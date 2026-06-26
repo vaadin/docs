@@ -82,7 +82,7 @@ public class TomcatConfig implements WebServerFactoryCustomizer<TomcatServletWeb
         AbstractAjpProtocol<?> ajpProtocol = (AbstractAjpProtocol<?>) ajpConnector.getProtocolHandler();
         ajpProtocol.setSecret(ajpSecret);
         ajpProtocol.setAddress(ajpAddress);
-        factory.addAdditionalTomcatConnectors(ajpConnector);
+        factory.addAdditionalConnectors(ajpConnector);
     }
 }
 ----
@@ -107,7 +107,7 @@ error_log  /var/log/nginx/error.log notice;
 pid        /var/run/nginx.pid;
 
 http {
-    
+
     ## Example snippet goes here
 
 }
@@ -805,9 +805,9 @@ LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
 
 Sticky sessions are managed using a custom `ROUTEID` cookie, simplifying configuration and ensuring proper session affinity without relying on backend modifications like adding a `jvmRoute` to Tomcat configuration.
 
-For `nginx`, cookie based https://nginx.org/en/docs/http/ngx_http_upstream_module.html#sticky[sticky] session is available only as part of the commercial subscription.
+For `nginx`, cookie based https://nginx.org/en/docs/http/ngx_http_upstream_module.html#sticky[sticky] sessions are available in the open-source version since nginx 1.29.6. In earlier versions, the `sticky` directive was available only as part of the commercial subscription.
 
-On the free tier you can use the https://nginx.org/en/docs/http/ngx_http_upstream_module.html#ip_hash[`ip_hash`] directive, that uses the client IP address as a hashing key to determine what server in a server group should be selected for the client requests. The main drawback of the `ip_hash` approach is that it doesn't work well for clients behind proxies or NAT, since many clients share the same IP.
+If you're running an nginx version older than 1.29.6, you can use the https://nginx.org/en/docs/http/ngx_http_upstream_module.html#ip_hash[`ip_hash`] directive instead. It uses the client IP address as a hashing key to determine which server in a server group should be selected for the client requests. The main drawback of the `ip_hash` approach is that it doesn't work well for clients behind proxies or NAT, since many clients share the same IP.
 
 
 [.example]
@@ -881,7 +881,9 @@ map $http_upgrade $connection_upgrade {
 upstream application_balancer {
     server vaadin-app-1:8080;
     server vaadin-app-2:8080;
-    ip_hash;
+    # Cookie based sticky sessions, available in open-source nginx since 1.29.6.
+    # On older versions, replace the line below with `ip_hash;`.
+    sticky cookie ROUTEID path=/ httponly;
 }
 
 server {

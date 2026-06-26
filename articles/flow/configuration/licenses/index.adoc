@@ -63,7 +63,7 @@ mvn package -Dvaadin.commercialWithBanner
 [source,terminal]
 ----
 <source-info group="Gradle"></source-info>
-./gradlew build -Pvaadin.productionBuild -Pvaadin.commercialWithBanner
+./gradlew build -Pvaadin.productionMode -Pvaadin.commercialWithBanner
 ----
 --
 
@@ -97,13 +97,29 @@ mvn com.vaadin:vaadin-maven-plugin:download-license
 ----
 
 
-[since:com.vaadin:vaadin@V23.2]
 [[offline-license-key]]
 === Offline License Key
 
 If your local development environment is offline and can't reach `vaadin.com`, you'll need to get an offline license key.
 
 Each offline license key is tied to the machine ID, in the form of `mid-xxxxxxxx-xxxxxxxx` (License Checker version 2 or earlier) or `mid2-xxxxxxxx-xxxxxxxx` (`V2` key, since License Checker version 3). You'll have to submit that to `https://vaadin.com/myaccount/licenses`, so as to download an offline license key.
+
+The machine ID format you need depends on your Vaadin version:
+
+[cols="1,1,1"]
+|===
+|Machine ID Format |Key File |Vaadin Version
+
+|`mid-xxxxxxxx-xxxxxxxx`
+|[filename]`offlineKey`
+|24.9 and earlier
+
+|`mid2-xxxxxxxx-xxxxxxxx`
+|[filename]`offlineKeyV2`
+|24.10 and later
+|===
+
+Using the wrong key type causes an "Invalid offline key" error. If you work with both old and new Vaadin versions, download both key types.
 
 Once you've downloaded the [filename]`offlineKey` or [filename]`offlineKeyV2` file -- remove any [filename]`.txt` suffix-- you should place it in your home directory:
 
@@ -135,6 +151,16 @@ You can find the URL to download the offline key in the logs when you try to use
 mvn com.vaadin:vaadin-maven-plugin:download-offline-license
 ----
 
+[IMPORTANT]
+====
+The `download-offline-license` goal is only available in the Vaadin 24.10+ Maven plugin and always generates a `mid2` machine ID. This key does not work with Vaadin 24.9 or earlier.
+
+For **Vaadin 24.9 or earlier** projects, you must obtain the `mid` machine ID manually:
+
+. Attempt to build or run your project with a commercial component while offline. The `mid` machine ID is printed in the build error output.
+. Use that `mid` machine ID to download the correct offline key from https://vaadin.com/myaccount/licenses.
+====
+
 
 [[server-license-key]]
 == Validation on CI/CD or Build Server
@@ -164,17 +190,28 @@ You can also give the license key by using the `vaadin.offlineKey` system proper
 --
 [source,terminal]
 ----
-<source-info group="System property"></source-info>
+<source-info group="Maven"></source-info>
 mvn -Dvaadin.offlineKey=[contents of offlineKey file here] ...
 ----
 
 [source,terminal]
 ----
+<source-info group="Gradle"></source-info>
+./gradlew build -Pvaadin.productionMode -Dvaadin.offlineKey=[contents of offlineKey file here] ...
+----
+
+[source,terminal]
+----
 <source-info group="Environment variable"></source-info>
-VAADIN_OFFLINE_KEY=[contents of offlineKey file here] mvn ...
+VAADIN_OFFLINE_KEY=[contents of offlineKey file here] ...
 ----
 --
 
+NOTE: If you are using Quarkus with Gradle, the `-D` system property may not be propagated to the build process. See <<{articles}/flow/integrations/quarkus#license-validation-in-quarkus-builds, License Validation in Quarkus Builds>> for details.
+
+== Validation on Production Server
+
+Applications built using the newer Vaadin Extended Maintenance releases will also check the license key when the application starts in production mode. If the license key is not found, or if the check fails due to an expired key, or if the key does not include Extended Maintenance access, an error will be logged. This is not a blocking license check, so the application will still start. When you provide a valid license key by using the `vaadin.offlineKey` system property or the `VAADIN_OFFLINE_KEY` environment variable, the error will not be logged.
 
 == Troubleshooting
 

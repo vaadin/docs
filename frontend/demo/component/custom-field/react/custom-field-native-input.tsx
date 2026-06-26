@@ -14,12 +14,11 @@ function Example() {
       {/* tag::snippet[] */}
       <CustomField
         label="Payment information"
-        theme="whitespace"
         onValueChanged={(event) => {
           customFieldValue.value = event.detail.value ?? '';
         }}
       >
-        <HorizontalLayout theme="spacing-s">
+        <HorizontalLayout style={{ gap: '0.5rem', paddingTop: '0.25rem' }}>
           <input
             aria-label="Cardholder name"
             pattern="[\p{L} \-]+"

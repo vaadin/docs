@@ -22,7 +22,7 @@ public class DialogNoPadding extends Div {
         dialog.getFooter().add(createFilterButton(dialog));
 
         // tag::snippet[]
-        dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+        dialog.addThemeVariants(DialogVariant.NO_PADDING);
         // end::snippet[]
 
         Button button = new Button("Show dialog", e -> dialog.open());
@@ -36,14 +36,15 @@ public class DialogNoPadding extends Div {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addColumn(Person::getFullName).setHeader("Name");
 
-        grid.getStyle().set("width", "500px").set("max-width", "100%");
+        grid.getStyle().set("width", "500px").set("max-width", "100%")
+                .set("border-radius", "0");
 
         return grid;
     }
 
     private static Button createFilterButton(Dialog dialog) {
         Button filterButton = new Button("Filter", e -> dialog.close());
-        filterButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        filterButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         return filterButton;
     }

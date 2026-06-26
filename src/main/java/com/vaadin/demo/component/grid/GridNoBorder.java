@@ -24,7 +24,7 @@ public class GridNoBorder extends Div {
         grid.addColumn(Person::getLastName).setHeader("Last name");
         grid.addColumn(Person::getEmail).setHeader("Email");
 
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        grid.addThemeVariants(GridVariant.NO_BORDER);
         // end::snippet[]
 
         List<Person> people = DataService.getPeople();

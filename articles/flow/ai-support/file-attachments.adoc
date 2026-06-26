@@ -1,0 +1,102 @@
+---
+title: File Attachments
+description: Enable file uploads in the AIOrchestrator to send attachments to the LLM with user prompts.
+meta-description: Learn how to configure file attachments in the Vaadin AIOrchestrator using UploadManager, Upload, or custom AIFileReceiver implementations.
+order: 30
+---
+
+
+= File Attachments
+
+ifdef::flow[]
+
+Enable file uploads by passing an <<{articles}/components/upload#,[classname]`UploadManager`>>, <<{articles}/components/upload#,[classname]`Upload`>>, or any custom [classname]`AIFileReceiver` implementation to the builder via [methodname]`withFileReceiver()`. Uploaded files are sent to the LLM as attachments with the next prompt.
+
+[source,java]
+----
+var uploadManager = new UploadManager(this);
+var uploadButton = new UploadButton(uploadManager);
+
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withFileReceiver(uploadManager)
+        .build();
+----
+
+.Upload Handler Conflict
+[NOTE]
+When using [classname]`UploadManager` or [classname]`Upload`, the component must not already have an upload handler or receiver set. The orchestrator installs its own in-memory handler. If one is already set, an [classname]`IllegalArgumentException` is thrown at build time. This restriction does not apply to custom [classname]`AIFileReceiver` implementations.
+
+.Supported Attachment Types
+[NOTE]
+The following MIME type categories are supported: images (`image/*`), text (`text/*`), PDF (`application/pdf`), audio (`audio/*`), and video (`video/*`). Attachments with other MIME types are silently dropped and not sent to the LLM.
+
+.Duplicate File Names
+[NOTE]
+Uploading multiple files with the same name in a single batch throws an [classname]`IllegalArgumentException`. Ensure each file has a unique name.
+
+
+== Persisting Attachments
+
+The orchestrator passes attachments to the LLM with each request but does not store them afterward. To save attachments to your own storage and look them up later -- for example when the user clicks one in the message list -- use [methodname]`withRequestListener()` and [methodname]`withAttachmentClickListener()`:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withFileReceiver(uploadManager)
+        .withRequestListener(event -> {
+            // Store attachments keyed by message ID
+            saveAttachments(event.getMessageId(),
+                    event.getAttachments());
+        })
+        .withAttachmentClickListener(event -> {
+            // Retrieve and display the attachment
+            showAttachment(event.getMessageId(),
+                    event.getAttachmentIndex());
+        })
+        .build();
+----
+
+[methodname]`saveAttachments` and [methodname]`showAttachment` are placeholders for application code. The former persists the [classname]`AIAttachment` data, while the latter loads it back and displays it.
+
+
+== Programmatic Attachments
+
+Use [methodname]`prompt(message, attachments)` to send a prompt and attachments from application code -- a file the user dropped on the form, a PDF the application generated, or content fetched from a service. No chat UI is needed.
+
+[source,java]
+----
+var attachment = new AIAttachment("receipt.png", "image/png", receiptBytes);
+orchestrator.prompt("Fill the form from this receipt",
+        List.of(attachment));
+----
+
+[classname]`AIAttachment` is a record with [methodname]`name()`, [methodname]`mimeType()`, and [methodname]`data()` (raw bytes). All three are required.
+
+=== From a Vaadin Upload
+
+[methodname]`UploadHandler.inMemory()` is the simplest way to receive a file as a byte array. The callback runs on the UI thread, so [methodname]`prompt(...)` can be called directly:
+
+[source,java]
+----
+var handler = UploadHandler.inMemory((metadata, data) -> {
+    var attachment = new AIAttachment(metadata.fileName(),
+            metadata.contentType(), data);
+    orchestrator.prompt("Fill the form from this receipt",
+            List.of(attachment));
+});
+var upload = new Upload(handler);
+----
+
+The same handler can be passed to [classname]`UploadManager`.
+
+.Mixing With Chat Attachments
+[NOTE]
+[methodname]`prompt(message, attachments)` sends only the supplied list. Anything already queued in a configured [classname]`AIFileReceiver` stays there for the next [methodname]`prompt(message)` call or chat submit -- the two paths do not share state.
+
+endif::flow[]

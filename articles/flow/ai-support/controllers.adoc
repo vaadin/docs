@@ -1,0 +1,186 @@
+---
+title: Controllers
+description: Extend the AIOrchestrator with reusable, framework-agnostic tools and lifecycle hooks using the AIController interface.
+meta-description: Learn how to use AIController to add reusable tools and lifecycle hooks to the Vaadin AIOrchestrator, and how to expose a database to the LLM via DatabaseProvider.
+order: 45
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Controllers#
+
+
+Controllers expose your application's capabilities to the LLM as callable tools -- a customer database, an inventory lookup, a weather API, a form-filling routine -- and give you a lifecycle hook that fires after the LLM finishes each turn. Use a controller when you want reusable tools that don't depend on a specific AI framework's annotations, when you need to defer UI updates until after a multi-step AI response, or when you want to package an AI capability once and share it across applications.
+
+If you've registered tool objects via [methodname]`withTools()` elsewhere, controllers are the framework-agnostic equivalent: the same tool calling, but defined through the [classname]`AIController` interface instead of LangChain4j's or Spring AI's [annotationname]`@Tool` annotations.
+
+Vaadin provides three built-in controllers:
+
+* <<ai-powered-grid#,[classname]`GridAIController`>> -- populates a [classname]`Grid` from a database using natural-language requests.
+* <<ai-powered-chart#,[classname]`ChartAIController`>> -- creates and updates [classname]`Chart` visualizations from a database using natural-language requests.
+* <<ai-powered-form#,[classname]`FormAIController`>> -- fills any layout containing input fields, from natural-language input or attached files.
+
+The grid and chart controllers rely on a <<#database-provider,[classname]`DatabaseProvider`>> to expose schema information and execute queries on behalf of the LLM. The form controller works directly with the form's field components.
+
+
+== Attaching a Controller
+
+Pass a controller to the orchestrator's builder with [methodname]`withController()`:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+----
+
+Only one controller can be attached per orchestrator. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator merges their tool lists before each request.
+
+
+[[database-provider]]
+== Database Provider
+
+[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component only -- they are never sent back to the LLM.
+
+The interface defines two methods:
+
+* [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
+* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt.
+
+The following example is a straightforward JDBC implementation:
+
+[source,java]
+----
+public class JdbcDatabaseProvider implements DatabaseProvider {
+
+    private final DataSource readOnlyDataSource;
+
+    public JdbcDatabaseProvider(DataSource readOnlyDataSource) {
+        this.readOnlyDataSource = readOnlyDataSource;
+    }
+
+    @Override
+    public String getSchema() {
+        return """
+                Tables:
+                employees(id INT, name VARCHAR, department VARCHAR, salary NUMERIC, hired_on DATE)
+                departments(id INT, name VARCHAR)
+                Dialect: PostgreSQL.
+                """;
+    }
+
+    @Override
+    public List<Map<String, Object>> executeQuery(String sql) {
+        try (var conn = readOnlyDataSource.getConnection();
+                var stmt = conn.prepareStatement(sql);
+                var rs = stmt.executeQuery()) {
+            var meta = rs.getMetaData();
+            var rows = new ArrayList<Map<String, Object>>();
+            while (rs.next()) {
+                var row = new LinkedHashMap<String, Object>();
+                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                    row.put(meta.getColumnLabel(i), rs.getObject(i));
+                }
+                rows.add(row);
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new IllegalArgumentException("Query failed: " + e.getMessage(), e);
+        }
+    }
+}
+----
+
+The example returns a hardcoded string for clarity, but [methodname]`getSchema()` can return whatever helps the LLM. Build the description at runtime from [classname]`java.sql.DatabaseMetaData` if your schema changes often, and add free-form context -- column meanings, business rules, common joins, units, sample values -- in plain English. The LLM treats the entire string as guidance, so anything that improves its queries is fair game.
+
+.Read-Only Database Access
+[IMPORTANT]
+The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
+
+.Query Results Stay in the Application
+[IMPORTANT]
+The LLM receives only the schema, never the query results. Every row returned by [methodname]`executeQuery()` is rendered in the grid or chart component and discarded from the request cycle. This boundary is unconditional: sensitive row values cannot leak into a follow-up prompt, into the conversation history, or to the LLM provider.
+
+.Schema Scope
+[TIP]
+Return only the tables, columns, and relationships the LLM needs. A smaller, well-described schema produces better queries, uses fewer tokens, and reduces the chance of leaking sensitive columns.
+
+
+== Building a Custom Controller
+
+The built-in controllers cover grid and chart data exploration. To expose your own capabilities to the LLM, implement [classname]`AIController` directly.
+
+[classname]`AIController` defines three methods:
+
+* [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
+* [methodname]`onRequest()` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn.
+* [methodname]`onResponse(Throwable)` -- runs on the UI thread once the LLM stream has completed, either successfully (`error` is `null`) or with an error. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure.
+
+Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
+
+* [methodname]`getName()` -- the unique name the LLM uses to invoke the tool.
+* [methodname]`getDescription()` -- a human-readable description shown to the LLM.
+* [methodname]`getParametersSchema()` -- a JSON Schema string describing the tool's parameters, or `null` for tools that take no parameters.
+* [methodname]`execute(JsonNode arguments)` -- receives the arguments passed by the LLM as a [classname]`JsonNode` (from `tools.jackson.databind`) and returns the tool's result as a string.
+
+A minimal custom controller looks like this:
+
+[source,java]
+----
+public class WeatherController implements AIController {
+
+    @Override
+    public List<LLMProvider.ToolSpec> getTools() {
+        return List.of(new LLMProvider.ToolSpec() {
+            @Override
+            public String getName() {
+                return "get_weather";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Returns the current weather for a city.";
+            }
+
+            @Override
+            public String getParametersSchema() {
+                return """
+                        {
+                          "type": "object",
+                          "properties": {
+                            "city": { "type": "string" }
+                          },
+                          "required": ["city"]
+                        }""";
+            }
+
+            @Override
+            public String execute(JsonNode arguments) {
+                String city = arguments.get("city").asString();
+                return weatherService.lookup(city);
+            }
+        });
+    }
+
+    @Override
+    public void onResponse(Throwable error) {
+        if (error != null) {
+            return;
+        }
+        // Apply any deferred state changes here.
+    }
+}
+----
+
+Tool names must match the pattern `^[a-zA-Z0-9_-]{1,64}$`, as required by popular LLM APIs. Names are validated at build time; invalid names cause an [classname]`IllegalArgumentException`. Use a prefixed name such as `"MyController_getWeather"` to avoid collisions with tools from other controllers.
+
+.Generating JSON Schemas
+[TIP]
+Hand-writing JSON schemas is fine for small tools but becomes error-prone as they grow. For larger tools, use a schema generator to catch typos and structural mistakes at compile time. When using [classname]`SpringAILLMProvider`, Spring AI's `JsonSchemaGenerator` is already on the classpath -- pair it with a record annotated with `@JsonPropertyDescription` and parse the arguments via Jackson. Whichever approach you pick, verify the output stays inside the portable JSON Schema subset (string, integer, number, boolean, array, object, plus `anyOf` and `enum`); some generators emit keywords such as `format`, `pattern`, or `$ref` that not every LLM provider accepts.
+
+.Controller Serialization
+[NOTE]
+Controllers are not serialized with the orchestrator. After session restore, pass the controller to [methodname]`reconnect(provider).withController(controller).apply()` -- see <<conversation-history#,Conversation History & Session Persistence>>.
+

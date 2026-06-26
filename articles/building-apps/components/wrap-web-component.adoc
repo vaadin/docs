@@ -1,0 +1,378 @@
+---
+title: Wrap a Web Component
+page-title: How to wrap a web component for use in Vaadin
+description: Learn how to create a Java API for a web component, whether third-party or your own.
+meta-description: Create a Java API for any web component — third-party or custom — using annotations, properties, events, and JavaScript function calls in Vaadin Flow.
+order: 50
+---
+
+= Wrap a Web Component
+:toclevels: 2
+
+This article shows how to create a Java API for a web component so it can be used in Vaadin like any built-in component. The web component can come from an npm package or be one you <<writing-your-own-web-component,write yourself>>. Either way, the client-side code runs in the browser and your Java class controls it from the server. For JavaScript libraries that don't expose a custom element, see <<wrap-js-library#,Wrap a JavaScript Library>>. For wrapping React components, see <<wrap-react-component#,Wrap a React Component>>. For the full reference, see <</flow/component-internals/web-components#,Integrating Web Components>>.
+
+
+== Copy-Paste Example
+
+A complete wrapper for https://github.com/web-padawan/vanilla-colorful[vanilla-colorful], a tiny color picker web component:
+
+[source,java]
+----
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.DomEvent;
+import com.vaadin.flow.component.EventData;
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.shared.Registration;
+
+@Tag("hex-color-picker") // <1>
+@NpmPackage(value = "vanilla-colorful", version = "0.7.2") // <2>
+@JsModule("vanilla-colorful/hex-color-picker.js") // <3>
+public class ColorPicker extends Component {
+
+    public String getColor() {
+        return getElement().getProperty("color", "#000000");
+    }
+
+    public void setColor(String hex) {
+        getElement().setProperty("color", hex);
+    }
+
+    public Registration addColorChangeListener(
+            ComponentEventListener<ColorChangeEvent> listener) {
+        return addListener(ColorChangeEvent.class, listener);
+    }
+
+    @DomEvent("color-changed")
+    public static class ColorChangeEvent
+            extends ComponentEvent<ColorPicker> {
+        private final String color;
+
+        public ColorChangeEvent(ColorPicker source,
+                boolean fromClient,
+                @EventData("event.detail.value") String color) {
+            super(source, fromClient);
+            this.color = color;
+        }
+
+        public String getColor() {
+            return color;
+        }
+    }
+}
+----
+<1> The HTML tag name — must match what the web component registers.
+<2> The npm package that provides the web component.
+<3> The JavaScript module that defines the custom element.
+
+
+== The Three Annotations
+
+Every web component wrapper needs three annotations on the Java class:
+
+`@Tag("element-name")` — the custom element tag name that the web component registers with the browser. This must match, including case and hyphens.
+
+`@NpmPackage(value = "package-name", version = "x.y.z")` — the npm package to install. Vaadin runs `npm install` automatically during development builds.
+
+`@JsModule("package-name/entry-file.js")` — the JavaScript module to import. This triggers the web component's registration in the browser. Check the web component's documentation for the correct entry point file.
+
+[source,java]
+----
+@Tag("my-datepicker")
+@NpmPackage(value = "my-datepicker", version = "2.1.0")
+@JsModule("my-datepicker/my-datepicker.js")
+public class MyDatepicker extends Component {
+}
+----
+
+
+== Writing Your Own Web Component
+
+Sometimes no existing web component does what you need. You can write the client-side code yourself and wrap it the same way.
+
+Create a JavaScript file in the `frontend/` directory — for example, `frontend/my-rating-stars.js`:
+
+[source,javascript]
+----
+import { html, LitElement, css } from 'lit';
+
+class MyRatingStars extends LitElement {
+
+  static get properties() {
+    return {
+      rating: { type: Number, reflect: true },
+      max: { type: Number }
+    };
+  }
+
+  static get styles() {
+    return css`
+      span { cursor: pointer; font-size: 1.5em; }
+      .filled { color: gold; }
+      .empty { color: lightgray; }
+    `;
+  }
+
+  constructor() {
+    super();
+    this.rating = 0;
+    this.max = 5;
+  }
+
+  render() {
+    return html`${Array.from({ length: this.max }, (_, i) =>
+      html`<span class="${i < this.rating ? 'filled' : 'empty'}"
+                 @click="${() => this._select(i + 1)}">★</span>`
+    )}`;
+  }
+
+  _select(value) {
+    this.rating = value;
+    this.dispatchEvent(
+      new CustomEvent('rating-changed', { detail: { value } })
+    );
+  }
+}
+
+customElements.define('my-rating-stars', MyRatingStars);
+----
+
+Then create the Java wrapper. Since the file is local, use a `./` path in `@JsModule` and omit `@NpmPackage`:
+
+[source,java]
+----
+@Tag("my-rating-stars")
+@JsModule("./my-rating-stars.js")
+public class RatingStars extends Component {
+
+    public void setRating(int rating) {
+        getElement().setProperty("rating", rating);
+    }
+
+    public int getRating() {
+        return getElement().getProperty("rating", 0);
+    }
+
+    public void setMax(int max) {
+        getElement().setProperty("max", max);
+    }
+
+    public Registration addRatingChangeListener(
+            ComponentEventListener<RatingChangeEvent> listener) {
+        return addListener(RatingChangeEvent.class, listener);
+    }
+
+    @DomEvent("rating-changed")
+    public static class RatingChangeEvent
+            extends ComponentEvent<RatingStars> {
+        private final int value;
+
+        public RatingChangeEvent(RatingStars source,
+                boolean fromClient,
+                @EventData("event.detail.value") int value) {
+            super(source, fromClient);
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+}
+----
+
+The `./` prefix in `@JsModule("./my-rating-stars.js")` tells Vaadin to look in the `frontend/` directory instead of `node_modules/`. Everything else — properties, events, `callJsFunction()`, child content — works the same as with a third-party web component.
+
+If you plan to share the component across projects, see <<package-component#,Package a Component>> for how to structure it as a JAR add-on, including where to put frontend files: `META-INF/frontend`.
+
+
+== Properties
+
+Web components expose behavior through properties on their DOM element. Use `getElement().setProperty()` and `getElement().getProperty()` to read and write them:
+
+[source,java]
+----
+public void setLabel(String label) {
+    getElement().setProperty("label", label);
+}
+
+public String getLabel() {
+    return getElement().getProperty("label", "");
+}
+
+public void setMax(int max) {
+    getElement().setProperty("max", max);
+}
+
+public int getMax() {
+    return getElement().getProperty("max", 0);
+}
+----
+
+The second argument to `getProperty()` is the default value returned when the property has not yet received a value. It should match the web component's default.
+
+For components with many properties, use `PropertyDescriptor` to reduce repetition:
+
+[source,java]
+----
+private static final PropertyDescriptor<String, String> labelProperty =
+        PropertyDescriptors.propertyWithDefault("label", "");
+
+public void setLabel(String label) {
+    labelProperty.set(this, label);
+}
+
+public String getLabel() {
+    return labelProperty.get(this);
+}
+----
+
+See <</flow/component-internals/properties#,Properties>> for the full property API reference.
+
+
+== Events
+
+Web components fire DOM events to signal user interactions. Use `@DomEvent` to map a DOM event to a Java event class:
+
+[source,java]
+----
+@DomEvent("value-changed")
+public static class ValueChangeEvent extends ComponentEvent<MySlider> {
+    private final double value;
+
+    public ValueChangeEvent(MySlider source,
+            boolean fromClient,
+            @EventData("event.detail.value") double value) {
+        super(source, fromClient);
+        this.value = value;
+    }
+
+    public double getValue() {
+        return value;
+    }
+}
+----
+
+`@EventData` extracts data from the DOM event object. Common expressions:
+
+- `event.detail.value` — a value from the event's detail object
+- `element.value` — the current value of the element
+- `event.clientX` — mouse position from pointer events
+
+Add a listener registration method:
+
+[source,java]
+----
+public Registration addValueChangeListener(
+        ComponentEventListener<ValueChangeEvent> listener) {
+    return addListener(ValueChangeEvent.class, listener);
+}
+----
+
+See <</flow/component-internals/events#,Events>> for more on event data expressions and debouncing.
+
+
+== Value Synchronization
+
+If the web component is an input (the user enters a value), extend `AbstractSinglePropertyField` to get automatic value synchronization and `HasValue` support for use with Binder:
+
+[source,java]
+----
+@Tag("my-slider")
+@NpmPackage(value = "my-slider", version = "1.0.0")
+@JsModule("my-slider/my-slider.js")
+public class MySlider extends AbstractSinglePropertyField<MySlider, Double> {
+
+    public MySlider() {
+        super("value", 0.0, false);
+    }
+
+    public void setMin(double min) {
+        getElement().setProperty("min", min);
+    }
+
+    public void setMax(double max) {
+        getElement().setProperty("max", max);
+    }
+}
+----
+
+The constructor arguments are:
+
+. The property name that holds the value (`"value"`)
+. The default value (`0.0`)
+. Whether to allow null values (`false`)
+
+This gives you `getValue()`, `setValue()`, `addValueChangeListener()`, and Binder compatibility for free. See <</flow/component-internals/web-components/java-api-for-a-web-component#synchronizing-the-value,Synchronizing the Value>> for advanced cases like type conversion callbacks and `AbstractField`. See <</flow/component-internals/properties#,Properties>> for the `@Synchronize` annotation and `PropertyDescriptor` API.
+
+
+== Calling JavaScript Functions
+
+Some web component APIs are exposed as JavaScript functions rather than properties. Use `callJsFunction()` to invoke them:
+
+[source,java]
+----
+public void open() {
+    getElement().callJsFunction("open");
+}
+
+public void scrollToIndex(int index) {
+    getElement().callJsFunction("scrollToIndex", index);
+}
+----
+
+For functions that return a value, use the returned `PendingJavaScriptResult`:
+
+[source,java]
+----
+public void getSelectedItems(SerializableConsumer<JsonValue> callback) {
+    getElement().callJsFunction("getSelectedItems")
+            .then(callback);
+}
+----
+
+See <</flow/component-internals/client-server-rpc#,Remote Procedure Calls>> for supported parameter types, return values, and `@ClientCallable` methods.
+
+
+== Child Content
+
+If the web component accepts child elements, such as list items or menu options, you can support this from Java.
+
+For simple cases, implement `HasComponents`:
+
+[source,java]
+----
+@Tag("my-list")
+@NpmPackage(value = "my-list", version = "1.0.0")
+@JsModule("my-list/my-list.js")
+public class MyList extends Component implements HasComponents {
+}
+----
+
+This adds `add()`, `remove()`, and related methods.
+
+For named slots, where children go into specific parts of the component, use the Element API directly:
+
+[source,java]
+----
+public void setHeader(Component header) {
+    header.getElement().setAttribute("slot", "header");
+    getElement().appendChild(header.getElement());
+}
+----
+
+See <</flow/component-internals/container#,Component Containers>> for custom add/remove methods, hierarchy navigation, and child removal.
+
+
+== Pitfalls
+
+*Match the tag name.* The `@Tag` value must match what the web component registers with `customElements.define()`. Check the web component's source or documentation — a mismatch means the element never upgrades and nothing renders.
+
+*Use the correct entry point file.* The `@JsModule` path must point to the file that calls `customElements.define()`. Some packages have multiple entry points or require a specific sub-path. Check the package's documentation or its `package.json` `main`/`module` field.
+
+*Give correct default values.* The default value in `getProperty()` should match the web component's default. If the web component defaults `disabled` to `false`, your getter should too. Mismatched defaults cause the server and client to disagree about the component's state.
+
+*Don't forget to synchronize properties from the client.* If a property changes on the client side through user interaction, Vaadin doesn't automatically know about it. Either use `@Synchronize` on the getter, listen for the appropriate DOM event, or use `AbstractSinglePropertyField` for value-based components.

@@ -13,9 +13,8 @@ class ValidationMessage extends HorizontalLayout implements HasText {
     public ValidationMessage() {
         setVisible(false);
         setAlignItems(Alignment.CENTER);
-        getStyle().set("color", "var(--lumo-error-text-color)");
-        getThemeList().clear();
-        getThemeList().add("spacing-s");
+        getStyle().set("color", "red");
+        setSpacing("var(--vaadin-gap-s)");
 
         Icon icon = VaadinIcon.EXCLAMATION_CIRCLE_O.create();
         icon.setSize("16px");

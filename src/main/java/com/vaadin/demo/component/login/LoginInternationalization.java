@@ -11,9 +11,7 @@ public class LoginInternationalization extends Div {
 
     public LoginInternationalization() {
         // Demo purposes only
-        getStyle().set("background-color", "var(--lumo-contrast-5pct)")
-                .set("display", "flex").set("justify-content", "center")
-                .set("padding", "var(--lumo-space-l)");
+        getStyle().set("display", "flex").set("justify-content", "center");
 
         // tag::snippet[]
         LoginI18n i18n = LoginI18n.createDefault();

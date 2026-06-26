@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/horizontal-layout';
 import '@vaadin/text-area';
+import '@vaadin/form-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -15,14 +15,13 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
+      <vaadin-form-layout auto-responsive auto-rows>
         <!-- tag::snippet[] -->
-        <vaadin-text-area readonly label="Read-only" value="Value" style="width:100%">
-        </vaadin-text-area>
+        <vaadin-text-area readonly label="Read-only" value="Value"></vaadin-text-area>
 
-        <vaadin-text-area disabled label="Disabled" style="width:100%"></vaadin-text-area>
+        <vaadin-text-area disabled label="Disabled"></vaadin-text-area>
         <!-- end::snippet[] -->
-      </vaadin-horizontal-layout>
+      </vaadin-form-layout>
     `;
   }
 }

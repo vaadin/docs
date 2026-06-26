@@ -34,7 +34,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing">
+      <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
         <vaadin-multi-select-combo-box
           label="Countries"
           item-label-path="name"

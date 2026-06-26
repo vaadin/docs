@@ -8,7 +8,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Provides information about the current user.
@@ -24,8 +23,7 @@ public class UserInfoService {
                 .getAuthentication();
 
         final List<String> authorities = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+                .map(GrantedAuthority::getAuthority).toList();
 
         return new UserInfo(auth.getName(), authorities);
     }

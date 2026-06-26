@@ -12,7 +12,7 @@ order: 200
 Besides using the [classname]`Element` API to manipulate the DOM in the browser, you can also interact with the browser page by adding style sheets, executing JavaScript, and receiving browser resize events.
 
 These features are available through the [classname]`Page` object.
-You can access the page of the current request with [methodname]`UI.getCurrent().getPage()`.
+You can access the page of the current request with [methodname]`UI.getCurrentOrThrow().getPage()`.
 
 
 == Getting the Window Location URL
@@ -24,7 +24,7 @@ For example:
 .Getting the browser URL
 [source,java]
 ----
-UI.getCurrent().getPage().fetchCurrentURL(currentUrl -> {
+UI.getCurrentOrThrow().getPage().fetchCurrentURL(currentUrl -> {
     // This is your own method that you may do something with the url.
     // Note that this method runs asynchronously
     storeCurrentURL(currentUrl);
@@ -33,20 +33,23 @@ UI.getCurrent().getPage().fetchCurrentURL(currentUrl -> {
 
 == Accessing Browser Information
 
-During the initial HTTP request, Vaadin reads the user-agent information supplied by the browser and stores them in a [classname]`WebBrowser` instance, which is accessible from the current [classname]`VaadinSession`.
+During the initial HTTP request, Vaadin reads the user-agent information supplied by the browser and stores it in a [classname]`WebBrowser` instance, which is accessible from the current [classname]`VaadinSession`.
 
-Here’s an example how to get the `WebBrowser` instance and access some of the user-agent information:
+Use [methodname]`getUserAgent()` to get the raw user-agent string. For structured browser detection (e.g., browser name, version, or operating system), use a parsing library such as https://github.com/ua-parser/uap-java[ua-parser/uap-java].
 
 [source,java]
 ----
 WebBrowser browser = VaadinSession.getCurrent().getBrowser();
-// Print the raw user-agent string
-System.out.println(browser.getBrowserApplication());
-// Print some parsed browser details
-System.out.println("Is Windows: " + browser.isWindows());
-System.out.println("Is Chrome: " + browser.isChrome());
-System.out.println("Major version: " + browser.getBrowserMajorVersion());    
+String userAgent = browser.getUserAgent();
+// Use a parsing library for structured detection, for example:
+// Parser parser = new Parser();
+// Client client = parser.parse(userAgent);
+// String browserName = client.userAgent.family; // "Chrome"
+// String os = client.os.family; // "Windows"
 ----
+
+[NOTE]
+[since:com.vaadin:vaadin@V25]#The browser and OS detection methods# in [classname]`WebBrowser` -- such as [methodname]`getBrowserApplication()`, [methodname]`isChrome()`, [methodname]`isWindows()`, and [methodname]`getBrowserMajorVersion()` -- are deprecated. Use [methodname]`getUserAgent()` with a parsing library instead.
 
 
 == Getting the Extended Client-Side Details
@@ -60,7 +63,7 @@ For example, the following can be used to get the screen width:
 .Getting the screen width
 [source,java]
 ----
-UI.getCurrent().getPage().retrieveExtendedClientDetails(details -> {
+UI.getCurrentOrThrow().getPage().retrieveExtendedClientDetails(details -> {
     // This is your own method that you may do something with the screen width.
     // Note that this method runs asynchronously
     handleScreenWidth(details.getScreenWidth());
@@ -79,7 +82,7 @@ You can execute JavaScript in the browser and pass parameters as follows:
 ----
 public static void logElementSize(String name,
         Element element) {
-    Page page = UI.getCurrent().getPage();
+    Page page = UI.getCurrentOrThrow().getPage();
 
     page.executeJs(
             "console.log($0 + ' size:', "
@@ -96,6 +99,44 @@ The parameter value is `null` for a parameter of type [classname]`Element` that 
 The script is executed asynchronously, so you can't directly pass values back to the server.
 Instead, you can use the returned [classname]`PendingJavaScriptResult` instance to add a callback that's called when the result is available.
 
+== Scrolling a Component into View
+
+You can scroll any component into the visible area of the browser window using [methodname]`scrollIntoView()`. This calls the browser's native `scrollIntoView()` on the component's element.
+
+.Scrolling a component into view
+[source,java]
+----
+component.scrollIntoView();
+----
+
+Use [classname]`ScrollIntoViewOption` to control scrolling behavior and alignment:
+
+.Smooth scrolling
+[source,java]
+----
+component.scrollIntoView(ScrollIntoViewOption.Behavior.SMOOTH);
+----
+
+.Scrolling to align the component at the bottom of the viewport
+[source,java]
+----
+component.scrollIntoView(ScrollIntoViewOption.Block.END);
+----
+
+Options can be combined. [classname]`Behavior` controls the scrolling animation, [classname]`Block` controls vertical alignment, and [classname]`Inline` controls horizontal alignment.
+
+.Combining multiple options
+[source,java]
+----
+component.scrollIntoView(
+        ScrollIntoViewOption.Behavior.SMOOTH,
+        ScrollIntoViewOption.Block.END,
+        ScrollIntoViewOption.Inline.CENTER);
+----
+
+The available alignment values for both [classname]`Block` and [classname]`Inline` are `START`, `CENTER`, `END`, and `NEAREST`.
+
+
 == Browser Window Resize Events
 
 The [classname]`Page` class allows you to register a listener for events that affect the web page and the browser window in which the Vaadin UI lives.
@@ -105,7 +146,7 @@ You can get the browser window size by adding a resize listener, as follows:
 
 [source,java]
 ----
-Page page = UI.getCurrent().getPage();
+Page page = UI.getCurrentOrThrow().getPage();
 var listener = page.addBrowserWindowResizeListener(
         event -> Notification.show("Window width="
                 + event.getWidth()
@@ -113,13 +154,13 @@ var listener = page.addBrowserWindowResizeListener(
 ----
 
 [NOTE]
-When using [classname]`BrowserWindowResizeListener` you need to unregister it when you do not need to listen the events anymore in order to avoid memory leaks. For example you can do this when component detaches.
+To avoid memory leaks when using [classname]`BrowserWindowResizeListener` you need to unregister it when you don't need to listen the events anymore. For example you can do this when component detaches.
 
 [source,java]
 ----
 @Override
 protected void onDetach(DetachEvent detachEvent) {
-    // Listener needs to be eventually removed in order to avoid resource leak
+    // Listener needs to be eventually removed to avoid resource leak
     listener.remove();
     super.onDetach(detachEvent);
 }

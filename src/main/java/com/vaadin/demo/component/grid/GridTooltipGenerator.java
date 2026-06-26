@@ -3,9 +3,10 @@ package com.vaadin.demo.component.grid;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.router.Route;
 
@@ -25,7 +26,7 @@ public class GridTooltipGenerator extends Div {
         grid.addColumn(person -> getFormattedPersonBirthday(person))
                 .setTooltipGenerator(person -> "Age: " + getPersonAge(person))
                 .setHeader("Birthday");
-        grid.addComponentColumn(person -> createStatusIcon(person.getStatus()))
+        grid.addComponentColumn(person -> createStatusBadge(person.getStatus()))
                 .setTooltipGenerator(person -> person.getStatus())
                 .setHeader("Status");
         // end::snippet[]
@@ -55,18 +56,14 @@ public class GridTooltipGenerator extends Div {
         return birthday.format(birthdayFormatter);
     }
 
-    private Icon createStatusIcon(String status) {
+    private Badge createStatusBadge(String status) {
         boolean isAvailable = "Available".equals(status);
-        Icon icon;
-        if (isAvailable) {
-            icon = VaadinIcon.CHECK.create();
-            icon.getElement().getThemeList().add("badge success");
-        } else {
-            icon = VaadinIcon.CLOSE_SMALL.create();
-            icon.getElement().getThemeList().add("badge error");
-        }
-        icon.getStyle().set("padding", "var(--lumo-space-xs");
-        return icon;
+        Badge badge = new Badge();
+        badge.setIcon(isAvailable ? VaadinIcon.CHECK.create()
+                : VaadinIcon.CLOSE_SMALL.create());
+        badge.addThemeVariants(BadgeVariant.ICON_ONLY,
+                isAvailable ? BadgeVariant.SUCCESS : BadgeVariant.ERROR);
+        return badge;
     }
 
     public static class Exporter // hidden-source-line

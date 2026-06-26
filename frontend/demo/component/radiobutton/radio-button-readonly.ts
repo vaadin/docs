@@ -15,7 +15,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-radio-group label="Status" readonly>
+      <vaadin-radio-group label="Status" theme="vertical" readonly>
         <vaadin-radio-button value="inProgress" label="In progress" checked></vaadin-radio-button>
         <vaadin-radio-button value="done" label="Done"></vaadin-radio-button>
         <vaadin-radio-button value="cancelled" label="Cancelled"></vaadin-radio-button>

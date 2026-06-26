@@ -10,7 +10,7 @@ order: 20
 = Route Templates
 :toclevels: 2
 
-In this guide, you'll learn how to create a view that accepts multiple route parameters using route templates. You'll also learn how to use modifiers and regular expressions to tweak the behavior of the route parameters.
+In this guide, you'll learn how to create a view that accepts multiple route parameters using route templates, and how to read those parameters reactively with a <</flow/ui-state#,signal>>. You'll also learn how to use modifiers and regular expressions to tweak the behavior of the route parameters.
 
 Using a single <<route-parameters#,route parameter>> is easier than using a route template. If you can get the job done using the [interfacename]`HasUrlParameter<T>` interface, use that instead.
 
@@ -24,7 +24,7 @@ If you want to quickly try out route templates in your Vaadin application, copy-
 include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/RouteTemplateView.java[tags=snippet,indent=0]
 ----
 
-For more detailed instructions on how to use route templates, continue reading below.
+This view reads its route parameters from the router state signal and binds a [classname]`Paragraph` to each, so the displayed values update automatically whenever the URL changes. For more detailed instructions on how to use route templates, continue reading below.
 
 
 == Specifying Multiple Route Parameters
@@ -53,30 +53,35 @@ Now, if you navigate to `/customer/cu12345/edit`, the router renders the [classn
 
 == Accessing Route Parameter Values
 
-To access the route parameter values, your view must implement the [interfacename]`BeforeEnterObserver` interface. This interface defines the [methodname]`beforeEnter()` method, which is called by the router before navigating to the view. Inside the method, you can access the route parameters:
+The current route parameters are available as a <</flow/ui-state#,signal>>. Calling [methodname]`UI.getCurrentOrThrow().routerStateSignal()` returns a read-only signal whose value is a [classname]`RouterState` record; its [methodname]`routeParameters()` method gives you the [classname]`RouteParameters` for the active navigation.
+
+A convenient pattern is to derive a separate signal for each parameter. Because [interfacename]`Signal` is a functional interface, you can define one with a lambda that reads the value from the router state:
 
 [source,java]
 ----
-@Route("customer/:customerId/:action")
-public class CustomerView extends Main implements BeforeEnterObserver {
+private static final String PARAM_ID = "id"; // <1>
+private static final String PARAM_ACTION = "action";
 
-    private static final String PARAM_CUSTOMER_ID = "customerId"; // <1>
-    private static final String PARAM_ACTION = "action";
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        var customerId = event.getRouteParameters().get(PARAM_CUSTOMER_ID).get();
-        var action = event.getRouteParameters().get(PARAM_ACTION).get();
-        // Process the parameters
-    }
-    ...
-}
+private final Signal<String> idParam = () -> UI.getCurrentOrThrow()
+        .routerStateSignal().get().routeParameters().get(PARAM_ID)
+        .orElse(null);
 ----
 <1> *Tip:* To improve readability and maintainability, declare route parameter names as constants near the [annotationname]`@Route` annotation.
 
-The [classname]`RouteParameters` class defines methods for accessing route parameter values as `String`, `Integer`, or `Long`. They all return an `Optional<T>`. 
+Bind components to these parameter signals as you would to any other signal — for example, with [methodname]`bindText()`:
 
-In the example above, both `customerId` and `action` are required, so you can assume that those route parameter values are never empty. If you try to navigate to `/customer` or `/customer/cu12345`, the router returns a `404 Not Found` error.
+[source,java]
+----
+idParagraph.bindText(() -> "ID: " + idParam.get());
+----
+
+The value is read inside the binding's reactive context, so the paragraph re-renders automatically whenever the parameter changes — including when the view navigates to itself with new values. The [classname]`RouteParameters` class defines methods for reading values as `String`, `Integer`, or `Long`; they all return an `Optional<T>`. The sections below show just the relevant accessor call on `routeParameters` — that is, the body of each parameter signal's lambda.
+
+[IMPORTANT]
+Read each parameter defensively, supplying a default with [methodname]`orElse()` rather than [methodname]`orElseThrow()`. A binding is first evaluated while the view is being constructed — before the router has populated the state with the navigation's parameters — so even a required parameter is briefly absent. Returning a default keeps that first evaluation harmless, and the binding re-runs with the real value once navigation completes. (A missing _required_ parameter in the URL itself still yields a `404 Not Found`: navigating to `/customer` when the route requires more segments simply fails to match.)
+
+[NOTE]
+The router state signal is read-only. To change the parameters, navigate to the view with new values, as the [methodname]`showView()` method in the copy-paste example does. If you need to inspect parameters imperatively — for example, to redirect before the view renders — implement [interfacename]`BeforeEnterObserver` and read [methodname]`event.getRouteParameters()` inside [methodname]`beforeEnter()`.
 
 
 == Optional Route Parameters
@@ -85,27 +90,16 @@ By default, all route parameters are required. To make a route parameter optiona
 
 [source,java]
 ----
-// tag::snippet[]
 @Route("customer/:customerId/:action?") // <1>
-// end::snippet[]
-public class CustomerView extends Main implements BeforeEnterObserver {
-
-    private static final String PARAM_CUSTOMER_ID = "customerId";
-    private static final String PARAM_ACTION = "action";
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        var customerId = event.getRouteParameters().get(PARAM_CUSTOMER_ID).get();
-// tag::snippet[]
-        var action = event.getRouteParameters().get(PARAM_ACTION).orElse(null); // <2>
-// end::snippet[]
-        // Process the parameters
-    }
-    ...
-}
 ----
 <1> The `action` route parameter is now optional.
-<2> The route parameter value can now be empty.
+
+The route parameter value can now be empty, so read it with a default:
+
+[source,java]
+----
+routeParameters.get(PARAM_ACTION).orElse(null)
+----
 
 Now, if you navigate to `/customer/cu12345`, the `action` route parameter is empty. You can handle empty parameters by providing a default value, redirecting users, or displaying an error message.
 // TODO Link to conditional routing guide
@@ -126,33 +120,22 @@ To denote a route parameter a wildcard, use the `*` modifier:
 [source,java]
 ----
 @Route("api/:path*")
-public class ApiViewer extends Main implements BeforeEnterObserver {
+----
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        var path = event.getRouteParameters().get("path").orElse("");
-        // Process the path
-    }
-}
+Read the captured path as a single string:
+
+[source,java]
+----
+routeParameters.get("path").orElse("")
 ----
 
 Now, if you navigate to `api/com/vaadin/flow/`, the `path` route parameter has the value `"com/vaadin/flow"`.
 
-You can also access the URL segments captured by a wildcard route parameter individually:
+You can also access the URL segments captured by a wildcard route parameter individually with [methodname]`getWildcard()`:
 
 [source,java]
 ----
-@Route("api/:path*")
-public class ApiViewer extends Main implements BeforeEnterObserver {
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-// tag::snippet[]
-        List<String> segments = event.getRouteParameters().getWildcard("path");
-// end::snippet[]
-        // Process the segments
-    }
-}
+routeParameters.getWildcard("path")
 ----
 
 Now, if you navigate to the same URL, the `segments` variable contains the list `["com", "vaadin", "flow"]`.
@@ -163,7 +146,7 @@ If a route parameter is missing, `getWildcard()` returns an empty list.
 
 == Constraining Route Parameter Values with Regular Expressions
 
-In all the examples discussed, the route parameters accept any value. However, a specific value is often expected for a route parameter and the view should be shown only when that specific value is present in the URL. You can do this by defining a regular expression for the route parameter. This reduces the need for validation and sanitation of route parameter values in the [methodname]`beforeEnter()` method.
+In all the examples discussed, the route parameters accept any value. However, a specific value is often expected for a route parameter and the view should be shown only when that specific value is present in the URL. You can do this by defining a regular expression for the route parameter. This reduces the need for validation and sanitation of route parameter values in your view.
 
 [NOTE]
 The syntax of the regular expressions is checked at application startup. If there is an error, the application fails to start.
@@ -172,9 +155,7 @@ In the following example, the `customerId` route parameter is constrained to an 
 
 [source,java]
 ----
-// tag::snippet[]
 @Route("customer/:customerId([0-9]{1,9})/:action?(view|edit)")
-// end::snippet[]
 public class CustomerView extends Main {
     ...
 }

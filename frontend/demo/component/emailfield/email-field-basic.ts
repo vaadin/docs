@@ -1,6 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/email-field';
-import '@vaadin/horizontal-layout';
+import '@vaadin/form-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -15,7 +15,7 @@ export class Example extends LitElement {
 
   protected override render() {
     return html`
-      <vaadin-horizontal-layout theme="spacing" style="align-items: baseline">
+      <vaadin-form-layout auto-responsive auto-rows>
         <!-- tag::snippet[] -->
         <vaadin-email-field
           label="Email address"
@@ -34,7 +34,7 @@ export class Example extends LitElement {
           invalid
         ></vaadin-email-field>
         <!-- end::snippet[] -->
-      </vaadin-horizontal-layout>
+      </vaadin-form-layout>
     `;
   }
 }

@@ -14,11 +14,13 @@ public class RadioButtonGroupStyles extends HorizontalLayout {
 
         // tag::snippet[]
         RadioButtonGroup<String> field = new RadioButtonGroup<>();
-        field.addThemeVariants(RadioGroupVariant.LUMO_HELPER_ABOVE_FIELD);
+        field.addThemeVariants(RadioGroupVariant.HELPER_ABOVE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
         field.setItems("Item 1", "Item 2", "Item 3");
+        // Only for Lumo
+        field.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
 
         add(field);
     }

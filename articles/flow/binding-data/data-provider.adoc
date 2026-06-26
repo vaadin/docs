@@ -303,7 +303,7 @@ cb.setItemsWithFilterConverter(
 
 With the lazy data binding described above, the component doesn't know how many items are actually available. When a user scrolls to the end of the scrollable area, the component (e.g. `Grid` or `ComboBox`) polls your callbacks for more items. If new items are found, these are added to the component. This pattern, often called infinite scrolling, causes the scrollbar to be updated when new items are added on the fly and does not allow the user to immediately scroll to the end.
 
-The usability can be improved by either providing the exact number of items available or providing an estimate of the number of items. 
+The usability can be improved by either providing the exact number of items available or providing an estimate of the number of items.
 
 If your service is able to provide the exact number of items available, you can add an additional "count" callback to `setItems` or `setItemsPageable` like this:
 
@@ -380,6 +380,25 @@ This is an example of a call that scrolls to the item's position in the componen
 ----
 grid.scrollToIndex(dataView.getItemIndex(item));
 ----
+
+
+== Paginated Item Access
+
+Use [methodname]`DataView.getItems(int offset, int limit)` for efficient paginated access to displayed items. This returns a filtered and sorted stream of items from the specified range:
+
+[source,java]
+----
+GridDataView<Person> dataView = grid.getGenericDataView();
+
+// Get items 20-29 (page 3, page size 10)
+try (Stream<Person> page = dataView.getItems(20, 10)) {
+    List<Person> pageItems = page.toList();
+    // Process the page...
+}
+----
+
+[IMPORTANT]
+The returned stream must be used with try-with-resources to ensure proper resource cleanup. The method throws [classname]`IndexOutOfBoundsException` if offset or limit is negative.
 
 
 == Accessing Displayed Items
@@ -487,7 +506,7 @@ Span itemCountSpan = new Span("Total Item Count: " + dataView.getItemCount());
 ----
 
 
-=== Sorting In-Memory Data
+== Sorting In-Memory Data
 
 Consider the `Grid` as an example of a component with a sorting API. `Grid` rows are automatically sortable by columns that have a property type that implements [interfacename]`Comparable`. By defining a custom [classname]`Comparator`, you can also make other columns sortable.
 
@@ -544,6 +563,72 @@ gridDataView.removeFilters();
 ----
 
 
+== [since:com.vaadin:vaadin@V25.2]#Hierarchical Data#
+
+Components such as Tree Grid display hierarchical data, where each item can have child items. The [interfacename]`HierarchicalData` interface in the `com.vaadin.flow.data.provider.hierarchy` package represents such data. It defines three methods:
+
+* [methodname]`getChildren(T item)` returns the immediate child items of the given item, or the root items when the given item is `null`.
+* [methodname]`getParent(T item)` returns the parent of the given item, or `null` for root items.
+* [methodname]`contains(T item)` tells whether the given item is part of the hierarchy.
+
+The built-in [classname]`TreeData` class implements [interfacename]`HierarchicalData` and is a good choice when you need a ready-made, modifiable in-memory tree structure. See <<{articles}/components/tree-grid/data-binding#,Binding Data to Tree Grid>> for details.
+
+When your domain model is already hierarchical, you can implement [interfacename]`HierarchicalData` directly instead of copying the items into a [classname]`TreeData` instance. For example, consider a `Department` type whose items reference their parent department:
+
+[source,java]
+----
+public class DepartmentData implements HierarchicalData<Department> {
+
+    private final List<Department> departments;
+
+    public DepartmentData(List<Department> departments) {
+        this.departments = departments;
+    }
+
+    @Override
+    public List<Department> getChildren(Department item) {
+        // A null item means the root of the hierarchy
+        return departments.stream()
+                .filter(department -> Objects
+                        .equals(department.getParent(), item))
+                .toList();
+    }
+
+    @Override
+    public Department getParent(Department item) {
+        return item.getParent();
+    }
+
+    @Override
+    public boolean contains(Department item) {
+        // Must return true for null, which represents the root
+        return item == null || departments.contains(item);
+    }
+}
+----
+
+The [classname]`InMemoryHierarchicalDataProvider` class turns any [interfacename]`HierarchicalData` implementation into a hierarchical data provider with support for in-memory sorting and filtering, so there is no need to implement a data provider from scratch:
+
+[source,java]
+----
+TreeGrid<Department> treeGrid = new TreeGrid<>();
+treeGrid.addHierarchyColumn(Department::getName).setHeader("Department");
+
+InMemoryHierarchicalDataProvider<Department, DepartmentData> dataProvider =
+        new InMemoryHierarchicalDataProvider<>(
+                new DepartmentData(departmentService.findAll()));
+treeGrid.setDataProvider(dataProvider);
+
+// Show only active departments
+dataProvider.setFilter(Department::isActive);
+
+// Sort sibling items by name
+dataProvider.setSortOrder(Department::getName, SortDirection.ASCENDING);
+----
+
+The data provider doesn't track changes in the backing data structure: call [methodname]`refreshAll()` after modifying the underlying [interfacename]`HierarchicalData` instance. The built-in [classname]`TreeDataProvider` is an [classname]`InMemoryHierarchicalDataProvider` backed by a [classname]`TreeData` instance.
+
+
 == Recycling Data Binding Logic
 
 In large applications, you typically have multiple places where you display the same data type in a listing component. You can use various approaches to share the lazy data binding logic.
@@ -580,7 +665,7 @@ public static void listItems(Grid<Person> grid, PersonRepository repository) {
 }
 ----
 
-You can create a separate data provider class. The following example uses only the [classname]`FetchCallBack`, but you can also implement a full data provider by extending [classname]`AbstractbackendDataProvider`.
+To completely split off the lazy data binding logic from UI components, you can create a separate data provider class. The following example shows a data provider with only a fetch callback:
 
 [source,java]
 ----
@@ -588,7 +673,7 @@ You can create a separate data provider class. The following example uses only t
 public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Person, Void> {
 
     @Autowired
-    PersonRepository repo;
+    private PersonRepository repo;
 
     @Override
     public Stream<Person> fetch(Query<Person, Void> query) {
@@ -598,7 +683,53 @@ public class PersonDataProvider implements CallbackDataProvider.FetchCallback<Pe
 
 }
 
-personGrid.setItems(dataProvider);
+personGrid.setDataProvider(dataProvider);
+----
+
+You can also implement a full data provider by extending the [classname]`AbstractBackEndDataProvider` class like so:
+
+[source,java]
+----
+public class PersonDataProvider extends AbstractBackEndDataProvider<Person, String> {
+    @Autowired
+    private PersonRepository repo;
+
+    @Override
+    protected int sizeInBackEnd(Query<Person, String> query) {
+        String lastNameFilter = query.getFilter().orElse("");
+
+        return (int) repo.countByLastnameContaining(lastNameFilter);
+    }
+
+    @Override
+    protected Stream<Person> fetchFromBackEnd(Query<Person, String> query) {
+        String lastNameFilter = query.getFilter().orElse("");
+
+        return repo.findByLastnameContaining(lastNameFilter,
+                VaadinSpringDataHelpers.toSpringPageRequest(query),
+                VaadinSpringDataHelpers.toSpringDataSort(query)).stream();
+    }
+}
+----
+
+To use filtering with the data provider above, you need to instantiate it with a configurable filter type. This provides access to the [methodname]`setFilter()` method, which you can use to apply a filter value, as shown below:
+
+[source,java]
+----
+// Create a data provider
+PersonDataProvider dataProvider = new PersonDataProvider();
+
+// Wrap the original data provider to support configurable filtering
+ConfigurableFilterDataProvider<Person, Void, String>
+    configurableFilterDataProvider = dataProvider.withConfigurableFilter();
+
+// Set the wrapped data provider to the grid
+personGrid.setDataProvider(configurableFilterDataProvider);
+
+filterTextField.addValueChangeListener(e -> {
+    // Update the filter in the wrapped data provider on filter change
+    configurableFilterDataProvider.setFilter(e.getValue()));
+});
 ----
 
 

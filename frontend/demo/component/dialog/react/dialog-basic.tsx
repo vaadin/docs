@@ -4,8 +4,8 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
+import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import { VerticalLayout } from '@vaadin/react-components/VerticalLayout.js';
 import dialogBasicStyles from './dialog-basic-styles';
 
 function Example() {
@@ -41,10 +41,10 @@ function Example() {
           </>
         }
       >
-        <VerticalLayout style={{ alignItems: 'stretch', width: '18rem', maxWidth: '100%' }}>
+        <FormLayout autoResponsive columnWidth="18rem" expandFields>
           <TextField label="First name" />
           <TextField label="Last name" />
-        </VerticalLayout>
+        </FormLayout>
       </Dialog>
 
       <Button

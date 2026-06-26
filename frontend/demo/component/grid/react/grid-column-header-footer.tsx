@@ -13,12 +13,12 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 // tag::snippet[]
 function SubscriberHeader() {
   return (
-    <HorizontalLayout style={{ alignItems: 'center' }}>
+    <HorizontalLayout style={{ alignItems: 'center', gap: 'var(--vaadin-gap-xs)' }}>
       <span>Subscriber</span>
       <Icon
         icon="vaadin:info-circle"
         title="Subscribers are paying customers"
-        style={{ height: 'var(--lumo-font-size-m)', color: 'var(--lumo-contrast-70pct)' }}
+        style={{ '--vaadin-icon-visual-size': '80%', color: 'var(--vaadin-text-color-secondary)' }}
       />
     </HorizontalLayout>
   );
@@ -26,12 +26,12 @@ function SubscriberHeader() {
 
 function MembershipHeader() {
   return (
-    <HorizontalLayout style={{ alignItems: 'center' }}>
+    <HorizontalLayout style={{ alignItems: 'center', gap: 'var(--vaadin-gap-xs)' }}>
       <span>Membership</span>
       <Icon
         icon="vaadin:info-circle"
         title="Membership levels determines which features a client has access to"
-        style={{ height: 'var(--lumo-font-size-m)', color: 'var(--lumo-contrast-70pct)' }}
+        style={{ '--vaadin-icon-visual-size': '80%', color: 'var(--vaadin-text-color-secondary)' }}
       />
     </HorizontalLayout>
   );

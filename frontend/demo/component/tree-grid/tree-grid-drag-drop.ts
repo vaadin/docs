@@ -75,14 +75,13 @@ export class Example extends LitElement {
     return html`
       <vaadin-grid
         .dataProvider="${this.dataProvider}"
-        .itemIdPath="${'id'}"
-        .itemHasChildrenPath="${'manager'}"
+        item-id-path="id"
+        item-has-children-path="manager"
         .expandedItems="${this.expandedItems}"
         @expanded-items-changed="${(event: GridExpandedItemsChangedEvent<Person>) => {
           this.expandedItems = event.detail.value;
         }}"
         rows-draggable
-        .dropMode=${this.draggedItem ? 'on-top' : undefined}
         @grid-dragstart="${(event: GridDragStartEvent<Person>) => {
           this.draggedItem = event.detail.draggedItems[0];
         }}"
@@ -99,6 +98,7 @@ export class Example extends LitElement {
             this.grid.clearCache();
           }
         }}"
+        .dropMode="${this.draggedItem ? 'on-top' : undefined}"
         .dragFilter="${(model: GridItemModel<Person>) => {
           const { item } = model;
           return !item.manager; // Only drag non-managers

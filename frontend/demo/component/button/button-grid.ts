@@ -36,8 +36,8 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing" style="align-items: stretch;">
         <vaadin-horizontal-layout style="align-items: center;">
-          <h2 style="margin: 0 auto 0 0;">Users</h2>
-          <vaadin-button>Add user</vaadin-button>
+          <h2>Users</h2>
+          <vaadin-button slot="end">Add user</vaadin-button>
         </vaadin-horizontal-layout>
 
         <vaadin-grid
@@ -57,7 +57,7 @@ export class Example extends LitElement {
           <vaadin-grid-column path="email"></vaadin-grid-column>
         </vaadin-grid>
 
-        <vaadin-horizontal-layout theme="spacing" style="flex-wrap: wrap;">
+        <vaadin-horizontal-layout theme="spacing wrap">
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">Edit profile</vaadin-button>
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">
             Manage permissions
@@ -65,11 +65,7 @@ export class Example extends LitElement {
           <vaadin-button ?disabled="${this.selectedItems.length !== 1}">
             Reset password
           </vaadin-button>
-          <vaadin-button
-            theme="error"
-            ?disabled="${this.selectedItems.length === 0}"
-            style="margin-inline-start: auto;"
-          >
+          <vaadin-button slot="end" theme="error" ?disabled="${this.selectedItems.length === 0}">
             Delete
           </vaadin-button>
         </vaadin-horizontal-layout>

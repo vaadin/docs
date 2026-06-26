@@ -1,13 +1,14 @@
 package com.vaadin.demo.component.details;
 
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.badge.Badge;
+import com.vaadin.flow.component.badge.BadgeVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -21,17 +22,11 @@ public class DetailsSummary extends Div {
     public DetailsSummary() {
         // tag::snippet[]
         HorizontalLayout summary = new HorizontalLayout();
-        summary.setSpacing(false);
+        summary.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        Icon icon = VaadinIcon.EXCLAMATION_CIRCLE.create();
-        icon.getStyle().set("width", "var(--lumo-icon-size-s)");
-        icon.getStyle().set("height", "var(--lumo-icon-size-s)");
-
-        HorizontalLayout errorBadge = new HorizontalLayout(icon,
-                new Span(" 2 errors"));
-        errorBadge.setSpacing(false);
-        errorBadge.getStyle().set("color", "var(--lumo-error-text-color)");
-        errorBadge.getStyle().set("margin-left", "var(--lumo-space-s)");
+        Badge errorBadge = new Badge("errors", 2,
+                VaadinIcon.EXCLAMATION_CIRCLE.create());
+        errorBadge.addThemeVariants(BadgeVariant.ERROR);
 
         summary.add(new Text("Contact information"), errorBadge);
 

@@ -4,11 +4,10 @@ page-title: How to use threads in a Vaadin Flow user interface
 description: How to use threads in a Vaadin Flow user interface.
 meta-description: Learn how to use use virtual threads in a Vaadin Flow user interface by reading this guide.
 order: 10
-section-nav: badge-flow
 ---
 
 
-= User Interface Threads [badge-flow]#Flow#
+= User Interface Threads
 
 Developers often use server push to update the user interface from background jobs (see <</building-apps/business-logic/background-jobs/interaction#,Background Jobs - UI Interaction>>). However, in Vaadin Flow, there are also cases where you may want to start a separate thread for use by the user interface itself. You might, for instance, want to show the server date and time in "real time".
 
@@ -17,7 +16,7 @@ If you have experience with Swing, you might be tempted to use a `Timer`, or to 
 As a better strategy, use virtual threads, or Spring's `TaskExecutor` and `TaskScheduler`. These are explained in the following sections, with some examples.
 
 [NOTE]
-The examples on this page only work with push enabled. For information about how to do that, see the <<.#enabling-push-flow,Server Push>> documentation page.
+The examples on this page only work with push enabled. For information about how to do that, see the <<index.adoc#,Server Push>> documentation page.
 
 
 == Virtual Threads
@@ -29,7 +28,7 @@ Here is an example of a button click listener that starts a new virtual thread:
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    Thread.ofVirtual().start(UI.getCurrent().accessLater(() -> {
+    Thread.ofVirtual().start(UI.getCurrentOrThrow().accessLater(() -> {
         // Perform the UI operation here.
     }, null));
 });
@@ -42,9 +41,9 @@ For scheduled tasks, you should still use the `TaskScheduler`. This is covered l
 
 == Task Executor
 
-You can use Spring's `TaskExecutor` and `TaskScheduler` to start tasks directly from the user interface, as well. Configuring them is covered in the <</building-apps/business-logic/background-jobs#,Background Jobs>> documentation page. 
+You can use Spring's `TaskExecutor` and `TaskScheduler` to start tasks directly from the user interface, as well. Configuring them is covered in the <</building-apps/business-logic/background-jobs#,Background Jobs>> documentation page.
 
-Before starting a task with `TaskExecutor` and `TaskScheduler`, you should make sure it's actually UI-related and not a background job. To use them properly, you would inject them into your view, and then call them when needed. 
+Before starting a task with `TaskExecutor` and `TaskScheduler`, you should make sure it's actually UI-related and not a background job. To use them properly, you would inject them into your view, and then call them when needed.
 
 Here is an example of a view that gets the `TaskExecutor` as a constructor parameter:
 
@@ -67,7 +66,7 @@ This example uses a button click listener that starts a UI operation in a backgr
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    taskExecutor.execute(UI.getCurrent().accessLater(() -> {
+    taskExecutor.execute(UI.getCurrentOrThrow().accessLater(() -> {
         // Perform the UI operation here.
     }, null));
 });
@@ -105,3 +104,34 @@ The tasks that you execute in the task scheduler should be fast. If you need to 
 
 [CAUTION]
 Do not use the `@Scheduled` annotation in Flow views. It turns them into proxies that don't work with Vaadin.
+
+
+=== Updating the Scheduled Result With a Signal
+
+If the scheduled task only updates UI _state_, you can hold that state in a <</flow/ui-state#,signal>> and skip `UI.accessLater()` entirely. Bind the component to the signal once, then update the signal from the scheduled task. Flow pushes the change to the bound component automatically:
+
+[source,java]
+----
+private final ValueSignal<String> currentTime = new ValueSignal<>("");
+
+public MyView(TaskScheduler taskScheduler) {
+    this.taskScheduler = taskScheduler;
+    currentTimeLabel.bindText(currentTime); // <1>
+}
+
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var task = taskScheduler.scheduleAtFixedRate(
+        () -> currentTime.set(Instant.now().toString()), // <2>
+        Duration.ofSeconds(1));
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        task.cancel(true); // <3>
+    });
+}
+----
+<1> Bind the label to the signal once. The binding is active only while the component is attached and is removed automatically on detach.
+<2> The scheduled task updates the signal directly — no `UI.accessLater()` and no captured `UI` instance.
+<3> You still cancel the scheduled task on detach. Signals manage the _binding_ lifecycle, not the scheduler.
+
+For more on binding components to signals, see <<updates#pushing-state-with-signals,Pushing State with Signals>>.

@@ -16,7 +16,7 @@ public class GridProThemeHighlightEditableCells extends Div {
     public GridProThemeHighlightEditableCells() {
         // tag::snippet[]
         GridPro<Person> grid = new GridPro<>();
-        grid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_EDITABLE_CELLS);
+        grid.addThemeVariants(GridProVariant.HIGHLIGHT_EDITABLE_CELLS);
         // end::snippet[]
 
         grid.addColumn(Person::getFirstName).setHeader("First name");

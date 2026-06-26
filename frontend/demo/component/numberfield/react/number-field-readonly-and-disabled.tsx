@@ -1,17 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { NumberField } from '@vaadin/react-components/NumberField.js';
+import { FormLayout, NumberField } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
       <NumberField readonly label="Read-only" value="200" />
 
       <NumberField disabled label="Disabled" />
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

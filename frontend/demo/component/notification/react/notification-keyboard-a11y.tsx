@@ -42,7 +42,6 @@ function Example() {
       </Button>
 
       <Notification
-        theme="contrast"
         duration={10000}
         position="middle"
         opened={notificationOpened.value}
@@ -50,9 +49,9 @@ function Example() {
           notificationOpened.value = false;
         }}
       >
-        <HorizontalLayout style={{ alignItems: 'center' }}>
+        <HorizontalLayout style={{ alignItems: 'center', minWidth: '300px' }}>
           <div>5 tasks deleted</div>
-          <Button style={{ marginLeft: 'var(--lumo-space-xl)' }} theme="primary" onClick={close}>
+          <Button slot="end" onClick={close}>
             Undo
             {isMac ? '⌘' : 'Ctrl-'}Z
           </Button>

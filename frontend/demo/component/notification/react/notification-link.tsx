@@ -41,7 +41,7 @@ function Example() {
             Jason Bailey mentioned you in <a href="#">Project Q4</a>
           </div>
 
-          <Button theme="tertiary-inline" aria-label="Close" onClick={close}>
+          <Button slot="end" theme="tertiary" aria-label="Close" onClick={close}>
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>

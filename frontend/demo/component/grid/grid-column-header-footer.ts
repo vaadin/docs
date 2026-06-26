@@ -58,12 +58,12 @@ export class Example extends LitElement {
   }
 
   private subscriberHeaderRenderer = () => html`
-    <vaadin-horizontal-layout style="align-items: center;">
+    <vaadin-horizontal-layout style="align-items: center; gap: var(--vaadin-gap-xs);">
       <span>Subscriber</span>
       <vaadin-icon
         icon="vaadin:info-circle"
         title="Subscribers are paying customers"
-        style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+        style="--vaadin-icon-visual-size: 80%; color: var(--vaadin-text-color-secondary);"
       ></vaadin-icon>
     </vaadin-horizontal-layout>
   `;
@@ -72,12 +72,12 @@ export class Example extends LitElement {
     html`<span>${person.subscriber ? 'Yes' : 'No'}</span>`;
 
   private membershipHeaderRenderer = () => html`
-    <vaadin-horizontal-layout style="align-items: center;">
+    <vaadin-horizontal-layout style="align-items: center; gap: var(--vaadin-gap-xs);">
       <span>Membership</span>
       <vaadin-icon
         icon="vaadin:info-circle"
         title="Membership levels determines which features a client has access to"
-        style="height: var(--lumo-font-size-m); color: var(--lumo-contrast-70pct);"
+        style="--vaadin-icon-visual-size: 80%; color: var(--vaadin-text-color-secondary);"
       ></vaadin-icon>
     </vaadin-horizontal-layout>
   `;

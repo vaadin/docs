@@ -10,9 +10,7 @@ public class LoginBasic extends Div {
 
     public LoginBasic() {
         // Demo purposes only
-        getStyle().set("background-color", "var(--lumo-contrast-5pct)")
-                .set("display", "flex").set("justify-content", "center")
-                .set("padding", "var(--lumo-space-l)");
+        getStyle().set("display", "flex").set("justify-content", "center");
 
         // tag::snippet[]
         LoginForm loginForm = new LoginForm();

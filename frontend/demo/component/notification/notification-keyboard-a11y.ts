@@ -32,7 +32,6 @@ export class Example extends LitElement {
 
       <!-- tag::snippet[] -->
       <vaadin-notification
-        theme="contrast"
         duration="10000"
         position="middle"
         .opened="${this.notificationOpened}"
@@ -48,13 +47,9 @@ export class Example extends LitElement {
 
   // tag::renderer[]
   renderer: NotificationLitRenderer = () => html`
-    <vaadin-horizontal-layout style="align-items: center;">
+    <vaadin-horizontal-layout style="align-items: center; min-width: 300px;">
       <div>5 tasks deleted</div>
-      <vaadin-button
-        style="margin-left: var(--lumo-space-xl);"
-        theme="primary"
-        @click="${this.close}"
-      >
+      <vaadin-button slot="end" @click="${this.close}">
         Undo
         <!-- Ideally, this should be hidden if the
                  device does not have a physical keyboard -->

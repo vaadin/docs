@@ -7,10 +7,10 @@ function Example() {
   return (
     <div>
       {/* tag::snippet[] */}
-      <HorizontalLayout style={{ justifyContent: 'space-between' }}>
+      <HorizontalLayout style={{ marginBottom: 'var(--vaadin-gap-s)' }}>
         <label id="pblabel">Processing Financials.xlsx</label>
 
-        <span>50%</span>
+        <span slot="end">50%</span>
       </HorizontalLayout>
 
       <ProgressBar aria-labelledby="pblabel" value={0.5} />

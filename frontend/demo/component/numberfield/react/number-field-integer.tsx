@@ -1,17 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { IntegerField } from '@vaadin/react-components/IntegerField.js';
+import { FormLayout, IntegerField } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
       <IntegerField label="X" value="-1284" />
 
       <IntegerField label="Y" value="3910" />
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

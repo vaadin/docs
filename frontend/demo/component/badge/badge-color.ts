@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/horizontal-layout';
 import '@vaadin/vertical-layout';
 import { html, LitElement } from 'lit';
@@ -18,18 +19,16 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-vertical-layout theme="spacing">
         <vaadin-horizontal-layout theme="spacing">
-          <span theme="badge">Pending</span>
-          <span theme="badge success">Confirmed</span>
-          <span theme="badge warning">Warning</span>
-          <span theme="badge error">Denied</span>
-          <span theme="badge contrast">On hold</span>
+          <vaadin-badge>Pending</vaadin-badge>
+          <vaadin-badge theme="success">Confirmed</vaadin-badge>
+          <vaadin-badge theme="warning">Warning</vaadin-badge>
+          <vaadin-badge theme="error">Denied</vaadin-badge>
         </vaadin-horizontal-layout>
         <vaadin-horizontal-layout theme="spacing">
-          <span theme="badge primary">Pending</span>
-          <span theme="badge success primary">Confirmed</span>
-          <span theme="badge warning primary">Warning</span>
-          <span theme="badge error primary">Denied</span>
-          <span theme="badge contrast primary">On hold</span>
+          <vaadin-badge theme="filled">Pending</vaadin-badge>
+          <vaadin-badge theme="success filled">Confirmed</vaadin-badge>
+          <vaadin-badge theme="warning filled">Warning</vaadin-badge>
+          <vaadin-badge theme="error filled">Denied</vaadin-badge>
         </vaadin-horizontal-layout>
       </vaadin-vertical-layout>
       <!-- end::snippet[] -->

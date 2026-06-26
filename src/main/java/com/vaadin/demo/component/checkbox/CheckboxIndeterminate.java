@@ -29,7 +29,6 @@ public class CheckboxIndeterminate extends VerticalLayout {
         checkboxGroup.setItemLabelGenerator(
                 person -> person.getFirstName() + " " + person.getLastName());
         checkboxGroup.setItems(items);
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         checkboxGroup.addValueChangeListener(event -> {
             if (event.getValue().size() == items.size()) {
                 checkbox.setValue(true);
@@ -51,6 +50,8 @@ public class CheckboxIndeterminate extends VerticalLayout {
         checkboxGroup.select(items.get(0), items.get(2));
         add(checkbox, checkboxGroup);
         // end::snippet[]
+        // Only for Lumo
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<CheckboxIndeterminate> { // hidden-source-line

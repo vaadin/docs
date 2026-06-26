@@ -83,8 +83,7 @@ public class GridUnbufferedInlineEditor extends VerticalLayout {
         List<Person> people = DataService.getPeople();
         grid.setItems(people);
 
-        getThemeList().clear();
-        getThemeList().add("spacing-s");
+        setSpacing("var(--vaadin-gap-s)");
         add(grid, firstNameValidationMessage, lastNameValidationMessage,
                 emailValidationMessage);
     }

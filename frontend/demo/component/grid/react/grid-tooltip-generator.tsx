@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { differenceInYears, parseISO } from 'date-fns';
 import { useSignal } from '@vaadin/hilla-react-signals';
+import { Badge } from '@vaadin/react-components/Badge.js';
 import { Grid, type GridEventContext } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
@@ -16,11 +17,9 @@ const statusRenderer = ({ item: { status } }: { item: Person }) => {
   const theme = status === 'Available' ? 'success' : 'error';
 
   return (
-    <Icon
-      icon={`vaadin:${icon}`}
-      style={{ padding: 'var(--lumo-space-xs)' }}
-      {...{ theme: `badge ${theme}` }}
-    />
+    <Badge theme={`${theme} icon-only`}>
+      <Icon icon={`vaadin:${icon}`} slot="icon" />
+    </Badge>
   );
 };
 

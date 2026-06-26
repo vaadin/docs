@@ -1,6 +1,6 @@
 ---
 title: Session Replication Debug Tool
-page-title: How to debug Kubernetes Kit Session Replication | Vaadin 
+page-title: How to debug Kubernetes Kit Session Replication | Vaadin
 description: To help make HTTP sessions fully serializable and deserializable, Kubernetes Kit offers a tool for discovering serialization issues during development.
 meta-description: Learn how to debug session replication in Kubernetes deployments with Vaadin's Kubernetes Kit Session Replication Debug tool.
 order: 110
@@ -16,7 +16,7 @@ The tester tries to serialize and deserialize the HTTP session. The `RequestHand
 
 == Enabling Debug Tool
 
-The debug tool won't work in production builds. During development, it works only if a couple of conditions are met.
+The debug tool is installed automatically on Spring Boot projects by Kubernetes Kit autoconfiguration. No manual registration is required. However, the debug tool won't work in production builds, and during development it works only if a couple of conditions are met.
 
 First, `vaadin.devmode.sessionSerialization.enabled` application configuration property has to be set to `true`. You may set it either in a properties file or in a YAML file like so:
 
@@ -82,16 +82,22 @@ java \
 
 include::_shared.adoc[tag=extended-debug-info]
 
-The debug tool is installed automatically on Spring Boot projects. Otherwise, you can install it, manually. Configure the provided <<{articles}/flow/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
+[[non-spring-boot-projects]]
+=== Non-Spring Boot Projects
+
+For other project types, the debug tool must be installed manually. Configure the provided <<{articles}/flow/advanced/service-init-listener#,Service Init Listener>>, either by adding an entry in `META-INF/services/VaadinServiceInitListener` or by defining a bean if using the Vaadin Spring add-on.
 
 Additionally, the HTTP filter must be registered either as a Spring bean, or with a [classname]`ServletContextListener`.
 
+.Manual registration code
+[%collapsible]
+====
 [.example]
 --
 .`AppConfig.java`
 [source,java]
 ----
-<source-info group="Spring add-on"></source-info>
+<source-info group="Spring (no Spring Boot)"></source-info>
 @Configuration
 class AppConfig {
 
@@ -103,8 +109,10 @@ class AppConfig {
     @Bean
     @Order(Integer.MIN_VALUE)
     FilterRegistrationBean<SerializationDebugRequestHandler.Filter> sessionSerializationDebugToolFilter() {
-        return new FilterRegistrationBean<>(
-                new SerializationDebugRequestHandler.Filter());
+        FilterRegistrationBean<SerializationDebugRequestHandler.Filter> registration =
+            new FilterRegistrationBean<>(new SerializationDebugRequestHandler.Filter());
+        registration.setAsyncSupported(true);
+        return registration;
     }
 }
 ----
@@ -121,16 +129,19 @@ com.vaadin.kubernetes.starter.sessiontracker.serialization.SerializationDebugReq
 ----
 <source-info group="Plain Java"></source-info>
 @WebListener
-private static class SerializationDebugToolFilterRegistration implements ServletContextListener {
+public class SerializationDebugToolFilterRegistration implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        sce.getServletContext()
-          .addFilter(SerializationDebugRequestHandler.Filter.class.getName(), SerializationDebugRequestHandler.Filter.class)
-          .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+        var registration = sce.getServletContext()
+            .addFilter(SerializationDebugRequestHandler.Filter.class.getName(),
+                       SerializationDebugRequestHandler.Filter.class);
+        registration.setAsyncSupported(true);
+        registration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
     }
 }
 ----
 --
+====
 
 
 == Session Serialization Timeout

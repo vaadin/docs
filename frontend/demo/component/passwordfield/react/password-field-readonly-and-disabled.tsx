@@ -1,17 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import { PasswordField } from '@vaadin/react-components/PasswordField.js';
+import { FormLayout, PasswordField } from '@vaadin/react-components';
 
 function Example() {
   return (
-    <HorizontalLayout theme="spacing">
+    <FormLayout autoResponsive autoRows>
       {/* tag::snippet[] */}
       <PasswordField readonly label="Read-only" value="Ex@mplePassw0rd" />
 
       <PasswordField disabled label="Disabled" />
       {/* end::snippet[] */}
-    </HorizontalLayout>
+    </FormLayout>
   );
 }
 

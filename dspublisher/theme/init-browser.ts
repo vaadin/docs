@@ -2,6 +2,9 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
+// Highlights PR changes on preview deployments (no-op on the production site)
+import './preview-diff';
+
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
@@ -175,7 +178,7 @@ class TocFooter extends LitElement {
             }
 
             .toc-footer--img img {
-              margin-top: 1rem; 
+              margin-top: 1rem;
               width: 100%;
               height: auto;
               border-radius: 0.25rem;
@@ -191,11 +194,11 @@ class TocFooter extends LitElement {
               font-weight: 600;
               color: var(--docs-heading-text-color) !important;
             }
-           
+
             .toc-footer > a::after {
               content: none !important;
             }
-            
+
             /* Hide the footer on mobile when the TOC is closed */
             @media screen and (max-width: 65rem) {
               .toctoggle:not([open]) + .toc > dspublisher-toc-footer {
@@ -207,13 +210,13 @@ class TocFooter extends LitElement {
                 display: flex;
                 flex-direction: row-reverse;
                 align-items: flex-start;
-                gap: 1rem; 
+                gap: 1rem;
                 justify-content: flex-end;
               }
 
               .toc-footer--img {
-                flex-shrink: 0; 
-                width: 4rem; 
+                flex-shrink: 0;
+                width: 4rem;
               }
 
               .toc-footer--img img {
@@ -225,7 +228,7 @@ class TocFooter extends LitElement {
 
               .toc-footer--content {
                 flex: 1;
-                padding-top: 0.25rem; 
+                padding-top: 0.25rem;
               }
             }
           </style>
@@ -239,7 +242,7 @@ class TocFooter extends LitElement {
               </div>
 
               <div class="toc-footer--img">
-                <img src=${tocBanner.src} alt="Learn by watching"
+                <img src=${tocBanner.src} alt="Learn by watching">
               </div>
             </a>
           </div>

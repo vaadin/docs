@@ -14,7 +14,7 @@ export class Example extends LitElement {
   static override styles = css`
     h1 {
       font-size: 1.125rem;
-      margin: var(--lumo-space-m) var(--lumo-space-l);
+      margin: var(--vaadin-padding-m) var(--vaadin-padding-l);
     }
 
     /* hidden-source-line: the bottom navbar is forced on in the example */

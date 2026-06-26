@@ -57,7 +57,6 @@ function Example() {
         expandedItems.value = event.detail.value;
       }}
       rowsDraggable
-      dropMode={draggedItem.value ? 'on-top' : undefined}
       onGridDragstart={(event) => {
         draggedItem.value = event.detail.draggedItems[0];
       }}
@@ -71,13 +70,17 @@ function Example() {
           items.value = [...items.value];
         }
       }}
+      dropMode={draggedItem.value ? 'on-top' : undefined}
       dragFilter={(model) => {
         const { item } = model;
-        return !item.manager;
+        return !item.manager; // Only drag non-managers
       }}
       dropFilter={(model) => {
         const { item } = model;
-        return item.manager && item.id !== draggedItem.value?.managerId;
+        return (
+          item.manager && // Can only drop on a supervisor
+          item.id !== draggedItem.value?.managerId // Disallow dropping on the same manager
+        );
       }}
     >
       <GridTreeColumn path="firstName" />

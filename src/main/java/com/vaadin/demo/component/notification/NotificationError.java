@@ -1,14 +1,8 @@
 package com.vaadin.demo.component.notification;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -19,7 +13,7 @@ public class NotificationError extends Div {
         // tag::snippet[]
         Notification notification = Notification
                 .show("Failed to generate report");
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(NotificationVariant.ERROR);
         // end::snippet[]
         notification.setPosition(Notification.Position.MIDDLE);
         notification.setDuration(0);

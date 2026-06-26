@@ -9,12 +9,24 @@ function Example() {
   const items: MenuBarItem[] = [
     { text: 'Save' },
     {
-      component: <Icon icon="vaadin:chevron-down" aria-label="Other save options" />,
+      component: (
+        <Icon
+          icon="vaadin:chevron-down"
+          aria-label="Other save options"
+          style={{ '--vaadin-icon-size': '1rem' }}
+        />
+      ),
       children: [{ text: 'Save as draft' }, { text: 'Save as copy' }, { text: 'Save and publish' }],
     },
   ];
 
-  return <MenuBar theme="icon primary" items={items} />;
+  return (
+    <MenuBar
+      theme="icon primary"
+      items={items}
+      style={{ '--vaadin-icon-size': '0', '--vaadin-button-gap': 'var(--vaadin-gap-xs)' }}
+    />
+  );
   // end::snippet[]
 }
 

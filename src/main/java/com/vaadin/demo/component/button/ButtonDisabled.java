@@ -13,14 +13,14 @@ public class ButtonDisabled extends Div {
         // tag::snippet[]
         Button primaryButton = new Button("Primary");
         primaryButton.setEnabled(false);
-        primaryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        primaryButton.addThemeVariants(ButtonVariant.PRIMARY);
 
         Button secondaryButton = new Button("Secondary");
         secondaryButton.setEnabled(false);
 
         Button tertiaryButton = new Button("Tertiary");
         tertiaryButton.setEnabled(false);
-        tertiaryButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        tertiaryButton.addThemeVariants(ButtonVariant.TERTIARY);
         // end::snippet[]
 
         HorizontalLayout horizontalLayout = new HorizontalLayout(primaryButton,

@@ -99,6 +99,38 @@ dropTarget.addDropListener(event -> {
 See the <<drag-source#,Creating a Drag Source>> reference guide for information about setting server-side drag data. At the moment, there is no way to retrieve any client-side drag data from the drop event.
 
 
+[role="since:com.vaadin:vaadin@V25.2"]
+== Drop Position
+
+The [classname]`DropEvent` carries the coordinates of the drop, so you can use the drop position, for example, to place an item where it was dropped.
+
+The [methodname]`getOffsetX()` and [methodname]`getOffsetY()` methods return the coordinates of the drop position relative to the drop target element. This is useful for positioning dropped items within the drop target container using absolute or relative positioning.
+
+The [methodname]`getDragStartOffsetX()` and [methodname]`getDragStartOffsetY()` methods return the coordinates of the mouse pointer relative to the drag source element when the drag started. If the drag source isn't in the same UI, these methods return zero. Subtract these values from the drop position to make the dropped item appear where it was grabbed, instead of where the pointer is.
+
+.Placing the dragged component at the drop position
+[example]
+====
+[source,java]
+----
+dropTarget.addDropListener(event -> {
+    event.getDragSourceComponent().ifPresent(dragged -> {
+        // Maintain the relative grab position, so that the component
+        // appears where it was grabbed, not where the pointer is
+        int x = event.getOffsetX() - event.getDragStartOffsetX();
+        int y = event.getOffsetY() - event.getDragStartOffsetY();
+
+        dragged.getElement().getStyle()
+                .setPosition(Style.Position.ABSOLUTE)
+                .setLeft(x + "px")
+                .setTop(y + "px");
+        box.add(dragged);
+    });
+});
+----
+====
+
+
 == Controlling the Drop with Drop Effect
 
 The [classname]`DropEffect` property determines which operation (copy, move, link) the drop target wants to perform. For a drop to succeed, this must be compatible with the drag source's `effectAllowed` property.
@@ -106,7 +138,7 @@ The [classname]`DropEffect` property determines which operation (copy, move, lin
 The drop effect is one of the following values:
 
 * `COPY` - Data should be copied to the drop target
-* `MOVE` - Data should be moved to the drop target  
+* `MOVE` - Data should be moved to the drop target
 * `LINK` - A link/reference should be created
 * `NONE` - Drop is not allowed (no [classname]`DropEvent` fires)
 

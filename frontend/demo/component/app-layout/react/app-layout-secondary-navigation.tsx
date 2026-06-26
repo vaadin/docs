@@ -18,7 +18,7 @@ import { patchAppLayoutNavigation } from '../app-layout-helper';
 const h1Style = {
   fontSize: '1.125rem',
   lineHeight: '2.75rem',
-  margin: '0 var(--lumo-space-m)',
+  margin: '0 var(--vaadin-padding-m)',
 };
 
 const h2Style = {
@@ -96,7 +96,7 @@ function Example() {
 
       <div slot="navbar">
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <DrawerToggle />
+          <DrawerToggle style={{ marginInlineEnd: 'var(--vaadin-gap-s)' }} />
           <h2 style={h2Style}>Orders</h2>
         </div>
 

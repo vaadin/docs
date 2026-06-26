@@ -1,0 +1,116 @@
+---
+title: Wrap a React Component
+page-title: How to wrap a React component for use in Vaadin
+description: Learn how to create a Java API for an existing React component using ReactAdapterComponent.
+meta-description: Use React components in Vaadin Flow by creating a Java adapter with ReactAdapterComponent and a TypeScript adapter with ReactAdapterElement.
+order: 60
+---
+
+= Wrap a React Component
+:toclevels: 2
+
+This article shows how to use an existing React component in a Vaadin Flow application. The integration involves two files: a Java class that extends `ReactAdapterComponent` and a TypeScript file that bridges the React component to a web component. For wrapping plain web components, see <<wrap-web-component#,Wrap a Web Component>>. For JavaScript libraries that aren't web components or React, see <<wrap-js-library#,Wrap a JavaScript Library>>. For the full reference, see <</flow/integrations/react#,Using React Components in Flow>>.
+
+
+== Copy-Paste Example
+
+Two files that wrap the https://omgovich.github.io/react-colorful/[react-colorful] color picker.
+
+*Java component* — `RgbaColorPicker.java`:
+
+[source,java]
+----
+import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.NpmPackage;
+import com.vaadin.flow.component.react.ReactAdapterComponent;
+import com.vaadin.flow.function.SerializableConsumer;
+import com.vaadin.flow.shared.Registration;
+
+@NpmPackage(value = "react-colorful", version = "5.6.1")
+@JsModule("./rgba-color-picker.tsx")
+@Tag("rgba-color-picker")
+public class RgbaColorPicker extends ReactAdapterComponent {
+
+    public record RgbaColor(int r, int g, int b, double a) {} // <1>
+
+    public RgbaColorPicker() {
+        setColor(new RgbaColor(255, 0, 0, 1.0)); // <2>
+    }
+
+    public void setColor(RgbaColor color) {
+        setState("color", color); // <3>
+    }
+
+    public RgbaColor getColor() {
+        return getState("color", RgbaColor.class);
+    }
+
+    public Registration addColorChangeListener(
+            SerializableConsumer<RgbaColor> listener) {
+        return addStateChangeListener("color",
+                RgbaColor.class, listener); // <4>
+    }
+}
+----
+<1> A record that mirrors the JavaScript object shape. Field names must match the JS property names.
+<2> Always call `setState` in the constructor to support `@PreserveOnRefresh`.
+<3> `setState` sends data from server to client; `getState` reads it back.
+<4> `addStateChangeListener` fires when the client updates the state.
+
+*TypeScript adapter* — `frontend/rgba-color-picker.tsx`:
+
+[source,tsx]
+----
+import { type RgbaColor, RgbaColorPicker as ReactColorPicker }
+    from 'react-colorful';
+import { ReactAdapterElement, type RenderHooks }
+    from 'Frontend/generated/flow/ReactAdapter';
+
+class RgbaColorPickerElement
+    extends ReactAdapterElement { // <1>
+
+    render(hooks: RenderHooks): React.ReactElement | null {
+        const [color, setColor] =
+            hooks.useState<RgbaColor>("color"); // <2>
+        return <ReactColorPicker color={color}
+            onChange={setColor} />; // <3>
+    }
+}
+
+customElements.define(
+    "rgba-color-picker",
+    RgbaColorPickerElement); // <4>
+----
+<1> Extend `ReactAdapterElement` to create a web component that renders React.
+<2> `hooks.useState` creates a synchronized state property that the Java side can read and write.
+<3> Pass the state to the React component following its API.
+<4> Register the custom element with the same tag name used in `@Tag`.
+
+
+== How It Works
+
+The integration uses an intermediate web component as a bridge:
+
+----
+Java (server)  ←→  Web Component (adapter)  ←→  React (client)
+----
+
+. The *Java class* extends `ReactAdapterComponent` and communicates state through `setState`/`getState` — named properties on the intermediate web component.
+. The *TypeScript adapter* extends `ReactAdapterElement`, which is a web component that renders React. Its `render()` method uses `hooks.useState` to map web component properties to React state.
+. The *React component* renders in the browser, receiving props from and sending updates to the adapter.
+
+This means the React component doesn't need to know about Vaadin, and the Java code doesn't need to know about React. The adapter bridges the two worlds.
+
+See <</flow/integrations/react#,Using React Components in Flow>> for the full API reference, including `hooks.useCustomEvent` for non-state actions, `hooks.useContent` for embedding Flow components in React layouts, and using `AbstractSinglePropertyField` for Binder-compatible form fields.
+
+
+== Pitfalls
+
+*Call `setState` in the constructor.* If you skip this, `@PreserveOnRefresh` doesn't work because the server has no initial state to restore. Always set a default value in the constructor.
+
+*Match tag names between Java and TypeScript.* The `@Tag` annotation value and the string in `customElements.define()` must be the same. A mismatch means the web component never connects and nothing renders.
+
+*Keep the adapter thin.* The TypeScript adapter should only map between web component properties and React props. Don't put business logic or complex state management in the adapter — keep that on the server side in Java.
+
+*Use records for complex state.* When sending objects between Java and TypeScript, use Java records with field names that match the JavaScript property names. Vaadin handles JSON serialization automatically, but name mismatches cause silent failures.

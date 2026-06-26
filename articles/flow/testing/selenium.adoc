@@ -33,65 +33,9 @@ To use Selenium in a Vaadin application, you need to perform a few steps. First,
 </dependency>
 ----
 
-In a https://start.vaadin.com/[Vaadin Start] generated project, you can skip the version number here because it has already been declared by the `<selenium.version>` property in the [filename]`pom.xml` file. You can find the latest version of Selenium https://search.maven.org/artifact/org.seleniumhq.selenium/selenium-java[here].
+In a https://start.vaadin.com/[Vaadin Start] generated project, the Selenium version is already managed, so you can omit the version number. You can find the latest version of Selenium https://search.maven.org/artifact/org.seleniumhq.selenium/selenium-java[here].
 
-Next, use WebDriverManager to manage web browser drivers. Using WebDriverManager is the easiest way to manage drivers because you don't have to download and manually set up the driver.
-
-[loweralpha]
-Add the WebDriverManager dependency to your project's [filename]`pom.xml` file.
-
-.`pom.xml`
-[source,xml]
-----
-<!-- WebDriver Management Software -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>6.1.0</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.github.docker-java</groupId>
-                    <artifactId>docker-java-transport-httpclient5</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna-platform</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-----
-
-The latest version of WebDriverManager can be found https://search.maven.org/artifact/io.github.bonigarcia/webdrivermanager[here].
-
-Import WebDriverManager into your test class.
-
-.`SimpleIT.java`
-[source,java]
-----
-import io.github.bonigarcia.wdm.WebDriverManager;
-----
-
-Call [methodname]`setup()` on the driver that you would like to use. The code snippet below uses the Chrome driver. Drivers for other browsers can be found at the https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#quick-reference[official Selenium guide].
-
-.`SimpleIT.java`
-[source,java]
-----
-WebDriverManager.chromedriver().setup();
-----
-
-Apart from WebDriverManager, you can also install drivers by doing the following:
-
-- https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#2-the-path-environment-variable[adding the driver location to the PATH environment variable].
-- https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/#3-hard-coded-location[hard-coding the location in your test code].
+Since Selenium 4.6, a built-in https://www.selenium.dev/documentation/selenium_manager/[Selenium Manager] automatically downloads and manages browser drivers. There's no need to install or configure drivers manually -- instantiating a driver such as [classname]`ChromeDriver` takes care of everything.
 
 
 == Create Your First Selenium Test
@@ -101,7 +45,6 @@ As an example, the following code snippet tests whether the loaded [classname]`B
 .`SimpleIT.java`
 [source,java]
 ----
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -121,33 +64,31 @@ public class SimpleIT {
 
     @Test
     public void checkPageLoad() {
-        WebDriverManager.chromedriver().setup(); // <1>
-        var driver = new ChromeDriver(); // <2>
+        var driver = new ChromeDriver(); // <1>
 
-        try { // <3>
-            driver.get("http://localhost:8080/hello"); // <4>
+        try { // <2>
+            driver.get("http://localhost:8080/hello"); // <3>
 
             new WebDriverWait(driver, ofSeconds(30), ofSeconds(1))
-                    .until(titleIs("Hello World")); // <5>
+                    .until(titleIs("Hello World")); // <4>
 
-            var button = driver.findElement(By.xpath("//vaadin-button[contains(.,'Say hello')]")); // <6>
+            var button = driver.findElement(By.xpath("//vaadin-button[contains(.,'Say hello')]")); // <5>
 
-            assertEquals(button.getText(), "Say hello"); // <7>
+            assertEquals("Say hello", button.getText()); // <6>
         } finally {
-            driver.quit(); // <8>
+            driver.quit(); // <7>
         }
     }
 }
 ----
-<1> Set up the driver for the test.
-<2> Instantiate the [classname]`ChromeDriver`, which is used to interact with the Chrome web browser.
-<3> Wrap the test in a `try/finally` block so that the session closes even when the test fails.
-<4> Direct the [classname]`ChromeDriver` to load the URL.
-<5> Because Flow produces a single-page frontend, Selenium isn't aware of DOM manipulation after the initial page has been loaded.
+<1> Instantiate the [classname]`ChromeDriver`, which is used to interact with the Chrome web browser. Selenium Manager automatically downloads the required driver.
+<2> Wrap the test in a `try/finally` block so that the session closes even when the test fails.
+<3> Direct the [classname]`ChromeDriver` to load the URL.
+<4> Because Flow produces a single-page frontend, Selenium isn't aware of DOM manipulation after the initial page has been loaded.
 You can use Selenium's https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/support/ui/WebDriverWait.html[WebDriverWait] API to wait until the DOM has been _compiled_.
-<6> Once you're sure that the page title is available, try to retrieve a [classname]`Button` on this page.
-<7> Check whether the [classname]`Button` text reads "Say Hello".
-<8> Close the browser session after the test.
+<5> Once you're sure that the page title is available, try to retrieve a [classname]`Button` on this page.
+<6> Check whether the [classname]`Button` text reads "Say Hello".
+<7> Close the browser session after the test.
 
 
 == Running Tests
@@ -206,10 +147,6 @@ The following demonstrates a test that requires finding and interacting with a w
 ----
 @Test
 public void routeSwitch(){
-  //Set up the WebDriver
-  WebDriverManager.chromedriver().setup();
-
-  //Use this ChromeDriver to interact with Chrome
   var driver = new ChromeDriver();
 
   try {
@@ -252,10 +189,6 @@ The following test demonstrates how a long Selenium test might look. This test a
 ----
 @Test
 public void addUser(){
-  //Set up the WebDriver
-  WebDriverManager.chromedriver().setup();
-
-  //Use this ChromeDriver to interact with Chrome
   var driver = new ChromeDriver();
 
   try {
@@ -360,7 +293,6 @@ The `xpath` can be generated by the https://www.selenium.dev/selenium-ide/[Selen
 For more usage scenarios, see the official https://www.selenium.dev/documentation/webdriver/elements/[Selenium doc].
 
 
-[role="since:com.vaadin:vaadin@V24"]
 == Selenium-Jupiter Extension
 
 https://bonigarcia.dev/selenium-jupiter/[Selenium-Jupiter] is a JUnit 5 extension that can be used to initialize, run and manage browser-based tests.

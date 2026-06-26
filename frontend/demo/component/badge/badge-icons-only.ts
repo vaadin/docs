@@ -1,4 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
+import '@vaadin/badge';
 import '@vaadin/horizontal-layout';
 import '@vaadin/icon';
 import '@vaadin/icons';
@@ -18,20 +19,14 @@ export class Example extends LitElement {
     return html`
       <vaadin-horizontal-layout theme="spacing">
         <!-- tag::snippet[] -->
-        <vaadin-icon
-          aria-label="Confirmed"
-          icon="vaadin:check"
-          style="padding: var(--lumo-space-xs)"
-          theme="badge success"
-          title="Confirmed"
-        ></vaadin-icon>
-        <vaadin-icon
-          aria-label="Cancelled"
-          icon="vaadin:close-small"
-          style="padding: var(--lumo-space-xs)"
-          theme="badge error"
-          title="Cancelled"
-        ></vaadin-icon>
+        <vaadin-badge theme="success icon-only">
+          <vaadin-icon icon="vaadin:check" slot="icon"></vaadin-icon>
+          Confirmed
+        </vaadin-badge>
+        <vaadin-badge theme="error icon-only">
+          <vaadin-icon icon="vaadin:close-small" slot="icon"></vaadin-icon>
+          Cancelled
+        </vaadin-badge>
         <!-- end::snippet[] -->
       </vaadin-horizontal-layout>
     `;

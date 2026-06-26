@@ -27,6 +27,7 @@ public class ProgressBarCompletionTime extends Div {
         // readers:
         progressBar.getElement().setAttribute("aria-labelledby", "pblbl");
         progressBar.getElement().setAttribute("aria-describedby", "sublbl");
+        progressBar.getStyle().set("margin", "var(--vaadin-gap-s) 0");
 
         add(progressBarLabel, progressBar, progressBarSubLabel);
         // end::snippet[]

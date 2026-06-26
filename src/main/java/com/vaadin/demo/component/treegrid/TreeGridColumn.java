@@ -27,7 +27,6 @@ public class TreeGridColumn extends Div {
         treeGrid.addColumn(Person::getEmail).setHeader("Email");
 
         H3 employees = new H3("Employees");
-        employees.getStyle().set("margin", "0");
 
         // tag::snippet[]
         Button expand = new Button("Expand All");
@@ -37,11 +36,10 @@ public class TreeGridColumn extends Div {
         collapse.addClickListener(event -> treeGrid.collapse(managers));
         // end::snippet[]
 
-        HorizontalLayout header = new HorizontalLayout(employees, expand,
-                collapse);
+        HorizontalLayout header = new HorizontalLayout(employees);
+        header.addToEnd(expand, collapse);
         header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setHeight("var(--lumo-space-xl)");
-        header.setFlexGrow(1, employees);
+        header.setHeight("3.5rem");
 
         add(header, treeGrid);
     }

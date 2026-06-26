@@ -15,10 +15,10 @@ public class CardCombineVariants extends Div {
         Card card = new Card();
         // @formatter:off hidden-source-line
         card.addThemeVariants(
-                CardVariant.LUMO_OUTLINED,
-                CardVariant.LUMO_ELEVATED,
-                CardVariant.LUMO_HORIZONTAL,
-                CardVariant.LUMO_COVER_MEDIA
+                CardVariant.OUTLINED,
+                CardVariant.ELEVATED,
+                CardVariant.HORIZONTAL,
+                CardVariant.COVER_MEDIA
         );
         // @formatter:on hidden-source-line
 

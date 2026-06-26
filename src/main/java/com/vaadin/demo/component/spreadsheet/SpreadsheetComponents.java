@@ -78,11 +78,21 @@ public class SpreadsheetComponents extends Div {
 
     private void initCustomComponent() {
         customComponent = new Button("Click");
+        customComponent.setSizeFull();
+        customComponent.getElement().getStyle().set("color-scheme", "light")
+                .set("--vaadin-button-background", "hsl(0, 0%, 95%)")
+                .set("--vaadin-button-text-color", "hsl(0, 0%, 10%)")
+                .set("--vaadin-button-border-color", "hsl(0, 0%, 80%)");
     }
 
     private void initCustomEditor(int rowIndex, int columnIndex,
             Spreadsheet spreadsheet) {
         customEditor = new TextField();
+        customEditor.setSizeFull();
+        customEditor.getElement().getStyle().set("color-scheme", "light")
+                .set("--vaadin-input-field-background", "hsl(0, 0%, 95%)")
+                .set("--vaadin-input-field-value-color", "hsl(0, 0%, 10%)")
+                .set("--vaadin-input-field-border-color", "hsl(0, 0%, 80%)");
         customEditor.addValueChangeListener(e -> spreadsheet.refreshCells(
                 spreadsheet.createCell(rowIndex, columnIndex, e.getValue())));
     }

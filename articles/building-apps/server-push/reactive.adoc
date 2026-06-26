@@ -9,7 +9,7 @@ order: 40
 
 When building the user interface with either Vaadin Flow or Hilla, you can use reactive streams to allow a background job to update the user interface. This is covered in the <</building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>> documentation page.
 
-//RUSSELL: This opening paragraph gives the feeling that the reader shouldn't read this page since it immediately sends them elsewhere. You need a sentence or two that says the point of continuing, maybe something about subscribing, handling errors, etc.
+This page covers subscribing to reactive streams, handling errors, and buffering high-frequency updates.
 
 
 == Types of Subscriptions
@@ -41,7 +41,7 @@ In the following example, a background job returns a `Mono<String>`. The stream 
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    var ui = UI.getCurrent();
+    var ui = UI.getCurrentOrThrow();
     service.startBackgroundJob()
         .subscribe(ui.accessLater(this::onJobCompleted, null));
 });
@@ -59,7 +59,7 @@ private void onMessageReceived(ChatMessage message) {
 protected void onAttach(AttachEvent attachEvent) {
     var ui = attachEvent.getUI();
     var subscription = chatService.messages()
-        .subscribe(ui.accessLater(this::onMessageReceived, null));        
+        .subscribe(ui.accessLater(this::onMessageReceived, null));
     addDetachListener(detachEvent -> {
         detachEvent.unregisterListener();
         subscription.dispose();
@@ -67,10 +67,32 @@ protected void onAttach(AttachEvent attachEvent) {
 }
 ----
 
+For a hot stream that several users share, you can instead feed the stream into a shared <</flow/ui-state#,signal>> once, in a singleton bean, and let each view bind to it. This removes the per-view subscribe/unsubscribe and `UI.accessLater()` bookkeeping:
+
+[source,java]
+----
+@Component // Singleton: subscribed once for the whole application
+public class ChatMessages {
+    private final SharedListSignal<ChatMessage> messages =
+            new SharedListSignal<>(ChatMessage.class);
+
+    ChatMessages(ChatService chatService) {
+        chatService.messages().subscribe(messages::insertLast); // <1>
+    }
+
+    public SharedListSignal<ChatMessage> messages() {
+        return messages;
+    }
+}
+----
+<1> The bean holds a single subscription for all users. Views bind to `messages()` with [methodname]`bindChildren()`, and Flow pushes new messages to every connected user automatically.
+
+See <<updates#broadcasting-to-all-users,Broadcasting to All Users>> for the matching view code. Note that the <<#buffering,buffering>> guidance below still applies: signals don't rate-limit updates, so buffer a high-frequency stream before feeding it into the signal.
+
 
 === Subscribing with Hilla
 
-In Hilla, you can only use a `Flux` -- even if you're only emitting a single value. However, you can easily convert a `Mono` to a `Flux` by calling the `asFlux()` method. 
+In Hilla, you can only use a `Flux` -- even if you're only emitting a single value. However, you can easily convert a `Mono` to a `Flux` by calling the `asFlux()` method.
 
 This is an example of a reactive service that delegates to a worker to start a background job. The worker returns a `Mono<String>`, which the service converts to a `Flux<String>`:
 
@@ -145,7 +167,7 @@ In the following example, a button click listener starts a new background job, a
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    var ui = UI.getCurrent();
+    var ui = UI.getCurrentOrThrow();
     service.startBackgroundJob()
         .doOnError(ui.accessLater(this::onJobFailed, null))
         .subscribe(ui.accessLater(this::onJobCompleted, null));
@@ -179,7 +201,7 @@ Note, that the error callback function doesn't receive any information about the
 
 == Buffering
 
-You shouldn't push updates to the browser more than 2 to 4 times per second. If your `Flux` is emitting events faster than that, you should buffer them and update the user interface in batches. Buffering a `Flux` is easy, as it has built-in support for it through the `buffer()` method. 
+You shouldn't push updates to the browser more than 2 to 4 times per second. If your `Flux` is emitting events faster than that, you should buffer them and update the user interface in batches. Buffering a `Flux` is easy, as it has built-in support for it through the `buffer()` method.
 
 In the following example, the buffered stream buffers events for 250 milliseconds before it emits them in batches. Because of this, the user interface is receiving a `List<Event>` instead of an `Event`:
 
@@ -207,7 +229,7 @@ protected void onAttach(AttachEvent attachEvent) {
         .buffer(Duration.ofMillis(250))
         .subscribe(attachEvent.getUI().accessLater((eventList) -> {
             // Update your UI here
-        }, null));        
+        }, null));
     addDetachListener(detachEvent -> {
         detachEvent.unregisterListener();
         subscription.dispose();
@@ -215,7 +237,7 @@ protected void onAttach(AttachEvent attachEvent) {
 }
 ----
 
-If you're using Hilla, you have to do the buffering inside the reactive service. 
+If you're using Hilla, you have to do the buffering inside the reactive service.
 
 The following example shows a browser callable service that buffers the stream before it's returned. Because of this, the generated TypeScript service method emits arrays of `Event` objects:
 

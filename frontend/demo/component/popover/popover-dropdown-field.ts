@@ -72,7 +72,7 @@ export class Example extends LitElement {
           .value="${this.range}"
           @change="${this.onRangeChange}"
         ></vaadin-select>
-        <vaadin-horizontal-layout theme="spacing-s" style="align-items: baseline">
+        <vaadin-horizontal-layout style="align-items: baseline; gap: var(--vaadin-gap-s);">
           <vaadin-date-picker
             label="From"
             style="width: 150px"

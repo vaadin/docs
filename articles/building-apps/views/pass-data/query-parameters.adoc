@@ -1,6 +1,6 @@
 ---
 title: Query Parameters
-page-title: How to use query parameters in a Vaadin application 
+page-title: How to use query parameters in a Vaadin application
 description: Learn how to manage state with query parameters in Vaadin.
 meta-description: Learn how to use query parameters in Vaadin to store view state, manage sorting and filtering, and enhance navigation.
 order: 30
@@ -10,7 +10,7 @@ order: 30
 = Query Parameters
 :toclevels: 2
 
-In this guide, you'll learn how to access and set query parameters in a Vaadin view.
+In this guide, you'll learn how to read and set query parameters in a Vaadin view, and how to bind a field to a query parameter with a <</flow/ui-state#,signal>> so the two stay in sync.
 
 
 == Copy-Paste into Your Project
@@ -22,7 +22,7 @@ If you want to quickly try out query parameters in your Vaadin application, copy
 include::{root}/src/main/java/com/vaadin/demo/buildingapps/passdata/QueryParameterView.java[tags=snippet,indent=0]
 ----
 
-For more detailed instructions on how to use route parameters, continue reading below.
+This view reads the `filter` query parameter from the router state signal and two-way binds it to a text field: the field shows the current value, and editing it updates the URL. For more detailed instructions on how to use query parameters, continue reading below.
 
 
 == What Are Query Parameters?
@@ -42,45 +42,28 @@ Query parameters are commonly used to store view-related state, such as a grid's
 If you need required parameters, consider using <<route-parameters#,route parameters>> instead.
 
 
-== Accessing Query Parameter Values
+== Reading Query Parameters Reactively
 
-You access query parameters similarly to <<route-templates#accessing-route-parameter-values,multiple route parameters>>. Your view must implement the [interfacename]`BeforeEnterObserver` interface, which defines the [methodname]`beforeEnter()` method. Inside this method, you can retrieve query parameters:
+Query parameters are part of the current location, which is available as a <</flow/ui-state#,signal>>. Calling [methodname]`UI.getCurrentOrThrow().routerStateSignal()` returns a read-only signal whose value is a [classname]`RouterState` record; its [methodname]`location()` method gives you the [classname]`Location`, and [methodname]`getQueryParameters()` the [classname]`QueryParameters` for the active navigation.
+
+As with <<route-templates#accessing-route-parameter-values,route templates>>, a convenient pattern is to derive a separate signal for each parameter. Because [interfacename]`Signal` is a functional interface, you can define one with a lambda that reads the value from the location:
 
 [source,java]
 ----
-@Route
-public class OrdersView extends Main implements BeforeEnterObserver {
+private static final String QUERY_PARAM_FILTER = "filter"; // <1>
 
-    private static final String QUERY_PARAM_SORT = "sort"; // <1>
-    private static final String QUERY_PARAM_FILTER = "filter";
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        event.getLocation().getQueryParameters().getSingleParameter(QUERY_PARAM_SORT)
-            .ifPresent(sort -> {
-                // Process the sort parameter
-            });
-        event.getLocation().getQueryParameters().getSingleParameter(QUERY_PARAM_FILTER)
-            .ifPresent(filter -> {
-                // Process the filter parameter
-            });
-    }
-    ...
-}
+private final Signal<String> filterParam = () -> UI.getCurrentOrThrow()
+        .routerStateSignal().get().location().getQueryParameters()
+        .getSingleParameter(QUERY_PARAM_FILTER).orElse("");
 ----
 <1> *Tip:* To improve readability and maintainability, declare query parameter names as constants.
 
-Now, if you navigate to `/orders?sort=date&filter=shipped`, the query parameter values will be:
+Bind components to these parameter signals as you would to any other signal. Reading the value inside a binding's reactive context makes the component update automatically whenever the parameter changes.
 
-* `sort` -> `"date"`
-* `filter` -> `"shipped"`
-
-The [classname]`QueryParameters` class provides methods for accessing query parameter values. Familiarize yourself with its API if you frequently use query parameters in your application.
+The [classname]`QueryParameters` class provides methods for accessing query parameter values; familiarize yourself with its API if you use query parameters often. Since query parameters are always strings and always optional, they may be missing or contain invalid data, so always supply a default with [methodname]`orElse()` and validate as needed.
 
 [NOTE]
-You can also retrieve query parameters using [methodname]`UI.getCurrent().getActiveViewLocation().getQueryParameters()`.
-
-Since query parameters are always strings and optional, they may be empty or contain invalid data. To handle this, you can provide default values, redirect users to a different view, or display an error message.
+If you need to inspect query parameters imperatively — for example, to redirect before the view renders — implement [interfacename]`BeforeEnterObserver` and read [methodname]`event.getLocation().getQueryParameters()` inside [methodname]`beforeEnter()`.
 
 
 == Setting Query Parameters
@@ -99,9 +82,9 @@ public class OrdersView extends Main implements BeforeEnterObserver {
 
 // tag::snippet[]
     public static void showOrders(@Nullable String filter) {
-        var queryParameters = filter == null ? QueryParameters.empty() 
+        var queryParameters = filter == null ? QueryParameters.empty()
             : QueryParameters.of(QUERY_PARAM_FILTER, filter);
-        UI.getCurrent().navigate(OrdersView.class, queryParameters);
+        UI.getCurrentOrThrow().navigate(OrdersView.class, queryParameters);
     }
 // end::snippet[]
     ...
@@ -112,37 +95,24 @@ public class OrdersView extends Main implements BeforeEnterObserver {
 You _cannot_ set query parameters to `null`. To clear a query parameter, exclude it from the [classname]`QueryParameters` object.
 
 
-=== Updating Query Parameters Dynamically
+== Binding a Field to a Query Parameter
 
-Query parameters are often set dynamically, such as when users apply filters or change sort options. In such cases, the view must navigate to itself while updating query parameters.
-
-When navigating to the _same_ view, the existing view instance is reused. The browser URL updates, and [methodname]`beforeEnter()` is invoked again.
-
-The following example updates the `filter` query parameter when a user types in a text field:
+Query parameters often back a form field directly — a filter, a search term, or a sort option. With the parameter exposed as a signal, you can two-way bind a field to it using [methodname]`bindValue()`: the field shows the current value, and edits write back to the URL.
 
 [source,java]
 ----
-@Route
-public class OrdersView extends Main implements BeforeEnterObserver {
+filterField.bindValue(filterParam, this::setFilter); // <1>
 
-    private static final String QUERY_PARAM_SORT = "sort";
-    private static final String QUERY_PARAM_FILTER = "filter";
-
-// tag::snippet[]
-    public OrdersView() {
-        var filterField = new TextField();
-        add(filterField);
-
-        filterField.addValueChangeListener(event -> {
-            var queryParameters = UI.getCurrent().getActiveViewLocation()
-                .getQueryParameters()
-                .merging(QUERY_PARAM_FILTER, event.getValue());
-            UI.getCurrent().navigate(OrdersView.class, queryParameters);
-        });
-    }
-// end::snippet[]
-    ...
+private void setFilter(String filter) {
+    var queryParameters = UI.getCurrentOrThrow().getActiveViewLocation()
+            .getQueryParameters()
+            .merging(QUERY_PARAM_FILTER, filter); // <2>
+    UI.getCurrentOrThrow().navigate(QueryParameterView.class, queryParameters);
 }
 ----
+<1> `filterParam` is the parameter signal from <<#reading-query-parameters-reactively,Reading Query Parameters Reactively>>; [methodname]`setFilter()` is called whenever the field changes.
+<2> [methodname]`merging()` replaces only the `filter` parameter and leaves any others in the URL intact.
 
-If the original URL was `/orders?sort=date&filter=shipped`, and the user enters "foobar" in the text field, the URL updates to `/orders?sort=date&filter=foobar`.
+When the user edits the field, [methodname]`setFilter()` navigates the view to itself with the updated query parameters. The existing view instance is reused, the browser URL updates, and the router state signal — and therefore the bound field — reflects the new value. The binding works in both directions, so the field also updates if the URL changes by other means, such as the browser's back button.
+
+[methodname]`merging()` preserves the other parameters: if the URL was `/orders?sort=date&filter=shipped` and the user enters "foobar", it becomes `/orders?sort=date&filter=foobar`.

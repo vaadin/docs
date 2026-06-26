@@ -1,0 +1,258 @@
+---
+title: Load Testing With Playwright
+page-title: Load Testing Vaadin Applications with k6 and Playwright
+description: Reuse Playwright end-to-end tests to generate k6 load tests for your Vaadin application.
+meta-description: Learn how to convert Vaadin Playwright end-to-end tests into k6 load tests to measure application performance under realistic user traffic.
+order: 120
+version: since:com.vaadin:vaadin@V25.2
+---
+
+= [since:com.vaadin:vaadin@V25.2]#Load Testing With Playwright#
+
+This page covers the Playwright-specific aspects of load testing. For general load testing concepts, running tests, configuring think times, understanding k6 output, and more, see <<index#, Load Testing>>. For an introduction to writing Playwright tests for Vaadin applications, see <<../playwright#, Testing with Playwright>>.
+
+== Overview
+
+Unlike the <<index#, TestBench path>>, which requires a BrowserMob Proxy to capture HTTP traffic, the Playwright path uses **native HAR recording** built into the browser.
+This results in fewer moving parts, and no proxy to run requests through.
+
+The workflow is as follows:
+
+1. **Write** standard Playwright integration tests that simulate real user scenarios
+2. **Record** HTTP traffic automatically via Playwright's native HAR capture
+3. **Convert** the captured HAR into Vaadin-aware k6 scripts
+4. **Run** the generated k6 scripts at scale against any target server
+
+All steps after writing the tests are fully automated by the Maven plugin.
+
+=== Playwright vs TestBench
+
+[cols="2,3,3", options="header"]
+|===
+| Aspect | Playwright | TestBench
+
+| Recording method
+| Native HAR recording (built-in)
+| BrowserMob Proxy (MITM)
+
+| Proxy required
+| No
+| Yes
+
+| Maven goal
+| `loadtest:record-playwright`
+| `loadtest:record`
+|===
+
+== Prerequisites
+
+The Playwright path requires the same base tools as the <<index#, TestBench path>> (Java 21+, Maven 3.9+, k6), but does **not** require Chrome or ChromeDriver.
+Playwright downloads and manages its own browser binaries automatically.
+
+== Adapting Playwright Tests for Load Testing
+
+Playwright tests for load testing are standard JUnit 5 integration tests -- see <<../playwright#, Testing with Playwright>> for the basics of writing them.
+The only load-testing-specific requirement is using `PlaywrightHelper.createBrowserContext(browser)` to create the browser context.
+This enables transparent HAR recording when the test is run by the Maven plugin, and is a no-op during normal development runs.
+
+[source,java]
+----
+context = PlaywrightHelper.createBrowserContext(browser);  // <1>
+page = context.newPage();
+page.navigate(PlaywrightHelper.getBaseUrl() + "/my-view");  // <2>
+----
+<1> `PlaywrightHelper.createBrowserContext()` enables HAR recording when the `k6.harOutputPath` system property is set by the Maven plugin. When running tests normally (e.g., during development), it creates a plain browser context with no recording overhead.
+<2> `PlaywrightHelper.getBaseUrl()` resolves the deployment URL from the `HOSTNAME` environment variable and `server.port` system property, defaulting to `http://localhost:8080`.
+
+=== Best Practices for Load Test Scenarios
+
+* **One scenario per test class** -- each test class maps to one k6 script. Keep scenarios focused on a single user journey.
+* **Use semantic locators** -- prefer `getByLabel()`, `getByRole()`, and `getByText()` over CSS selectors. They are more resilient to UI changes.
+* **Include assertions** -- assertions verify correctness during recording and serve as documentation. They don't affect the generated k6 script.
+* **Avoid destructive-only tests** -- if a test only deletes data, mark it with `@Destructive` so it can be skipped during recording runs. Prefer tests that create-then-delete.
+* **Run headless during recording** -- use `setHeadless(true)` for CI and recording runs.
+
+== Project Setup
+
+=== Application Module Dependencies
+
+Add the `testbench-loadtest-support` and Playwright dependencies to your Vaadin application module:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>testbench-loadtest-support</artifactId>
+    <version>${vaadin.testbench.version}</version>
+</dependency>
+
+<dependency>
+    <groupId>com.microsoft.playwright</groupId>
+    <artifactId>playwright</artifactId>
+    <version>1.58.0</version>
+    <scope>test</scope>
+</dependency>
+----
+
+=== Load Test Orchestration
+
+Add a load test profile or create a separate Maven module (packaging `pom`) that orchestrates the recording and load test execution.
+
+The key difference from the TestBench orchestration module is using the `record-playwright` goal instead of the `record` goal.
+
+.Minimal Load Test
+[source,xml]
+----
+<properties>
+    <app.port>8081</app.port>
+    <management.port>8082</management.port>
+    <k6.vus>100</k6.vus>
+    <k6.duration>30s</k6.duration>
+    <k6.testDir>${project.build.directory}/k6/tests</k6.testDir>
+</properties>
+
+<build>
+    <plugins>
+        <!-- Load test plugin -->
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>testbench-converter-plugin</artifactId>
+            <version>${vaadin.testbench.version}</version>
+            <executions>
+                <!-- 1. Start the application -->
+                <execution>
+                    <id>start-server</id>
+                    <goals><goal>start-server</goal></goals>
+                    <configuration>
+                        <serverJar>${project.build.directory}/my-app.jar</serverJar>
+                        <serverPort>${app.port}</serverPort>
+                        <managementPort>${management.port}</managementPort>
+                    </configuration>
+                </execution>
+
+                <!-- 2. Record Playwright scenarios -->
+                <execution>
+                    <id>record</id>
+                    <phase>integration-test</phase>
+                    <goals><goal>record-playwright</goal></goals>
+                    <configuration>
+                        <testClasses>
+                            <testClass>MyScenarioPlaywrightIT</testClass>
+                        </testClasses>
+                        <appPort>${app.port}</appPort>
+                        <testWorkDir>${project.basedir}</testWorkDir>
+                        <harDir>${project.build.directory}</harDir>
+                        <outputDir>${k6.testDir}</outputDir>
+                    </configuration>
+                </execution>
+
+                <!-- 3. Run k6 load tests -->
+                <execution>
+                    <id>run</id>
+                    <phase>integration-test</phase>
+                    <goals><goal>run</goal></goals>
+                    <configuration>
+                        <testDir>${k6.testDir}</testDir>
+                        <virtualUsers>${k6.vus}</virtualUsers>
+                        <duration>${k6.duration}</duration>
+                        <appPort>${app.port}</appPort>
+                        <managementPort>${management.port}</managementPort>
+                    </configuration>
+                </execution>
+
+                <!-- 4. Stop the application -->
+                <execution>
+                    <id>stop-server</id>
+                    <goals><goal>stop-server</goal></goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+== PlaywrightHelper API
+
+The `PlaywrightHelper` class in `testbench-loadtest-support` provides the following static methods:
+
+=== `createBrowserContext(Browser browser)`
+
+Creates a Playwright `BrowserContext`.
+When the `k6.harOutputPath` system property is set (automatically by the `loadtest:record-playwright` goal), HAR recording is enabled in `FULL` mode.
+Otherwise, a plain context is created.
+
+=== `createBrowserContext(Browser browser, Browser.NewContextOptions options)`
+
+Same as above, but creates the context with the given `Browser.NewContextOptions`.
+Use this overload when your test needs custom context options -- for example a specific viewport size, locale, or extra HTTP headers -- while still enabling HAR recording transparently during recording runs.
+
+=== `getBaseUrl()`
+
+Returns the base URL of the application under test.
+Resolution order:
+
+1. `HOSTNAME` environment variable (if set) for the host, otherwise `localhost`
+2. `server.port` system property (if set) for the port, otherwise `8080`
+
+== `loadtest:record-playwright` Goal
+
+Records Playwright tests and converts captured HAR files to k6 scripts.
+
+[cols="2,1,1,4", options="header"]
+|===
+| Parameter | Type | Default | Description
+
+| `testClasses`
+| List<String>
+| _required_
+| Playwright test class names to record (without package prefix).
+
+| `appPort`
+| int
+| `8080`
+| Port where the application is running.
+
+| `testWorkDir`
+| String
+| _required_
+| Working directory of the application module (where `mvn` commands run for test execution).
+
+| `harDir`
+| String
+| `target`
+| Directory where HAR files are written.
+
+| `outputDir`
+| String
+| `target/k6/tests`
+| Directory where generated k6 scripts are placed.
+
+| `skip`
+| boolean
+| `false`
+| Skip recording.
+|===
+
+For parameters related to running the generated k6 scripts (`loadtest:run`), configuring think times, combined scenarios, and understanding k6 output, see the <<index#, main Load Testing documentation>>.
+
+== Troubleshooting
+
+=== Playwright Test Fails During Recording
+
+The test runs inside the application module's Maven context.
+Ensure the application module builds successfully with `mvn install` before running the load test module.
+
+=== HAR File is Empty or Missing
+
+Verify that your test uses `PlaywrightHelper.createBrowserContext(browser)` and not `browser.newContext()` directly.
+The helper is what enables HAR recording.
+
+== Related Documentation
+
+* <<../playwright#, Testing with Playwright>> -- Setting up Playwright and writing your first tests
+* <<index#, Load Testing>> -- General load testing setup, running tests, think time, k6 output, server metrics, and remote testing
+* <<thresholds#, Load Testing Thresholds>> -- Configure thresholds for load tests
+* <<load-profiles#, Load Profiles and Ramping>> -- configure load patterns (ramp, stress, soak, custom)
+* <<response-checks#, Custom Response Checks>> -- Add custom validation to generated k6 scripts
+* https://playwright.dev/java/docs/intro[Playwright for Java Documentation]
+* https://grafana.com/docs/k6/latest/[k6 Documentation]

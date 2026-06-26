@@ -5,6 +5,7 @@ import com.vaadin.demo.domain.Country;
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.Route;
@@ -36,6 +37,7 @@ public class MultiSelectComboBoxSelectionChange extends Div {
 
         HorizontalLayout layout = new HorizontalLayout(comboBox,
                 selectedCountries);
+        layout.setAlignItems(FlexComponent.Alignment.BASELINE);
         add(layout);
     }
 

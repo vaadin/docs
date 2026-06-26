@@ -1,0 +1,109 @@
+---
+title: Conversation History & Session Persistence
+description: Persist and restore conversation history, and reconnect the AIOrchestrator after session deserialization.
+meta-description: Learn how to persist, restore, and manage conversation history in the Vaadin AIOrchestrator, including session persistence and reconnection.
+order: 50
+---
+
+
+= Conversation History & Session Persistence
+
+ifdef::flow[]
+
+The orchestrator tracks conversation history internally. Use [methodname]`getHistory()` to get a snapshot and [methodname]`withHistory()` to restore it.
+
+
+== Persisting History
+
+Use [classname]`ResponseListener` to persist conversation state after each exchange:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withResponseListener(event -> {
+            if (event.getError().isPresent()) {
+                return;
+            }
+            var history = orchestrator.getHistory();
+            saveToDatabase(sessionId, history);
+        })
+        .build();
+----
+
+[methodname]`saveToDatabase` is a placeholder for application code. Write the [classname]`ChatMessage` list to whichever storage the application uses, so the history can be loaded again later.
+
+The listener fires once per turn for both successful and failed exchanges -- check [methodname]`event.getError()` to tell them apart. It is not called when history is restored via [methodname]`withHistory()`, and empty responses (turns where the model emitted only tool calls or no visible content) are not appended to history.
+
+.UI Updates from ResponseListener
+[IMPORTANT]
+The listener runs on a background thread. It is safe to perform blocking I/O (such as database writes) directly. However, to update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+
+
+== Restoring History
+
+Restore a previously saved conversation when creating a new orchestrator. The following example pre-populates the message list with a saved exchange:
+
+[.example.show-code]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/flow/aicomponents/ai-orchestrator-history.ts[preimport,hidden]
+----
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AIOrchestratorHistory.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+--
+
+This replays messages into the LLM provider's memory, populates the Message List UI, and rebuilds internal mappings for attachment click handling.
+
+[NOTE]
+[methodname]`getHistory()` returns a point-in-time snapshot. If called while a streaming response is in progress, the snapshot may include the user message without its corresponding assistant response. Use [classname]`ResponseListener` to capture history at the right time.
+
+
+== Data Model
+
+Conversation history is represented as a list of [classname]`ChatMessage` records with four fields:
+
+- [methodname]`role()` -- `USER` or `ASSISTANT`
+- [methodname]`content()` -- the text content
+- [methodname]`messageId()` -- UUID assigned to user messages; `null` for assistant messages. Used as the correlation key for attachments.
+- [methodname]`time()` -- timestamp; may be `null`
+
+File attachments are represented as [classname]`AIAttachment` records with [methodname]`name()`, [methodname]`mimeType()`, and [methodname]`data()` (raw bytes). Attachments are not stored in [classname]`ChatMessage` -- they are correlated separately via the message ID.
+
+
+== Session Persistence
+
+[classname]`AIOrchestrator` is serializable. Conversation history, UI component bindings, listener registrations, and display names are preserved across serialization. However, the LLM provider and tool objects are transient -- they are not serialized and must be restored after deserialization.
+
+=== Reconnecting after Deserialization
+
+After the session is restored, call [methodname]`reconnect(LLMProvider)` to supply a new provider and optionally restore tools and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
+
+[source,java]
+----
+orchestrator.reconnect(provider)
+        .withTools(tools)                   // optional
+        .withController(controller)         // optional
+        .withAttachments(savedAttachments)  // optional
+        .apply();
+----
+
+.Controller Reattachment
+[NOTE]
+[classname]`AIController` instances, including [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController`, are not serialized with the orchestrator. Create a new controller after session restore and pass it to [methodname]`withController()` on the reconnector. The grid and chart controllers each have their own state capture and restoration API. The form controller has no separate state object, because the form fields themselves are persisted with the [classname]`VaadinSession`. See <<ai-powered-grid#,AI-Powered Grid>>, <<ai-powered-chart#,AI-Powered Chart>>, and <<ai-powered-form#,AI Form Filler>> for the specifics.
+
+If [methodname]`prompt()` is called before reconnecting, it throws an [classname]`IllegalStateException`.
+
+.LLMProvider Implementations
+[NOTE]
+[classname]`LLMProvider` implementations are not serializable. Always create a new provider instance after session restore and pass it to [methodname]`reconnect()`.
+
+endif::flow[]

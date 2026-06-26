@@ -14,7 +14,7 @@ public class MenuBarRightAligned extends Div {
     public MenuBarRightAligned() {
         // tag::snippet[]
         MenuBar menuBar = new MenuBar();
-        menuBar.addThemeVariants(MenuBarVariant.LUMO_END_ALIGNED);
+        menuBar.addThemeVariants(MenuBarVariant.ALIGN_END);
         // end::snippet[]
 
         menuBar.addItem("View");

@@ -1,8 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react'; // hidden-source-line
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import type { Options, PointOptionsObject, SeriesOptionsType } from 'highcharts';
-import { useSignal } from '@vaadin/hilla-react-signals';
 import { Chart } from '@vaadin/react-components-pro/Chart.js';
 import { ChartSeries } from '@vaadin/react-components-pro/ChartSeries.js';
 
@@ -13,26 +11,12 @@ const hostStyle: React.CSSProperties = {
   gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
   backgroundColor: 'var(--docs-surface-color-2)',
   padding: '0.5rem',
-  paddingTop: '1.5rem',
-  position: 'relative',
+  boxSizing: 'border-box',
 };
 
 const chartStyle: React.CSSProperties = {
   padding: '0.5rem',
   boxSizing: 'border-box',
-};
-
-const labelStyle: React.CSSProperties = {
-  zIndex: 1,
-  top: '0.5rem',
-  left: '1rem',
-  fontSize: 'var(--docs-font-size-2xs)',
-  fontWeight: 'var(--docs-font-weight-emphasis)',
-  position: 'absolute',
-};
-
-const selectStyle = {
-  font: 'inherit',
 };
 
 const columnOptions: Options = { yAxis: { title: { text: '' } } };
@@ -96,18 +80,10 @@ const seriesOptions: SeriesOptionsType = {
 };
 
 function Example() {
-  useSignals(); // hidden-source-line
-  const theme = useSignal('');
-
-  function changeTheme(e: React.ChangeEvent<HTMLSelectElement>) {
-    theme.value = e.target.value;
-  }
-
   return (
     <div style={hostStyle}>
       {/* tag::snippet[] */}
       <Chart
-        theme={theme.value}
         style={chartStyle}
         type="column"
         categories={['Jan', 'Feb', 'Mar']}
@@ -121,7 +97,6 @@ function Example() {
       <Chart
         type="area"
         stacking="normal"
-        theme={theme.value}
         style={chartStyle}
         categories={months}
         additionalOptions={areaOptions}
@@ -141,17 +116,11 @@ function Example() {
         />
       </Chart>
 
-      <Chart
-        theme={theme.value}
-        style={chartStyle}
-        type="pie"
-        tooltip
-        additionalOptions={pieOptions}
-      >
+      <Chart style={chartStyle} type="pie" tooltip additionalOptions={pieOptions}>
         <ChartSeries title="Brands" values={pieValues} />
       </Chart>
 
-      <Chart theme={theme.value} style={chartStyle} polar additionalOptions={polarOptions}>
+      <Chart style={chartStyle} polar additionalOptions={polarOptions}>
         <ChartSeries
           type="column"
           title="Column"
@@ -161,16 +130,6 @@ function Example() {
         <ChartSeries type="line" title="Line" values={[1, 2, 3, 4, 5, 6, 7, 8]} />
         <ChartSeries type="area" title="Area" values={[1, 8, 2, 7, 3, 6, 4, 5]} />
       </Chart>
-
-      <label style={labelStyle}>
-        Theme:
-        <select style={selectStyle} onChange={changeTheme}>
-          <option value="">Default</option>
-          <option value="gradient">Gradient</option>
-          <option value="monotone">Monotone</option>
-          <option value="classic">Classic</option>
-        </select>
-      </label>
       {/* end::snippet[] */}
     </div>
   );

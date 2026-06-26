@@ -17,9 +17,11 @@ public class CheckboxGroupBasic extends Div {
         checkboxGroup.setItems("Order ID", "Product name", "Customer",
                 "Status");
         checkboxGroup.select("Order ID", "Customer");
-        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
         add(checkboxGroup);
         // end::snippet[]
+
+        // Only for Lumo
+        checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
     }
 
     public static class Exporter extends DemoExporter<CheckboxGroupBasic> { // hidden-source-line
