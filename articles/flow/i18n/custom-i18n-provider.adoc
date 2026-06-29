@@ -1,0 +1,92 @@
+---
+title: Custom I18N Provider
+page-title: Implementing a Custom I18N Provider in Vaadin - Vaadin Docs
+description: Implementing a custom I18NProvider for advanced localization needs.
+meta-description: Learn how to implement a custom I18NProvider in Vaadin for loading translations from databases, using custom file structures, or other advanced i18n needs.
+order: 10
+---
+
+
+= Custom I18N Provider
+
+The built-in `DefaultI18NProvider` loads translations from property files in `src/main/resources/vaadin-i18n/`. If you need more control -- loading translations from a database, using a different file structure, or applying custom fallback logic -- implement the `I18NProvider` interface.
+
+
+== Implementing I18NProvider
+
+The following example enables Finnish and English, with Finnish as the default. Translation files use the `translate` prefix (e.g., `translate.properties`, `translate_fi_FI.properties`, `translate_en_GB.properties`) and are loaded from the classpath (e.g., `src/main/resources/`):
+
+[source,java]
+----
+public class TranslationProvider implements I18NProvider {
+
+    public static final String BUNDLE_PREFIX = "translate";
+
+    public final Locale LOCALE_FI = new Locale("fi", "FI");
+    public final Locale LOCALE_EN = new Locale("en", "GB");
+
+    private List<Locale> locales = Collections
+            .unmodifiableList(Arrays.asList(LOCALE_FI, LOCALE_EN));
+
+    @Override
+    public List<Locale> getProvidedLocales() {
+        return locales;
+    }
+
+    @Override
+    public String getTranslation(String key, Locale locale, Object... params) {
+        if (key == null) {
+            LoggerFactory.getLogger(TranslationProvider.class.getName())
+                    .warn("Got lang request for key with null value!");
+            return "";
+        }
+
+        final ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE_PREFIX, locale);
+
+        String value;
+        try {
+            value = bundle.getString(key);
+        } catch (final MissingResourceException e) {
+            LoggerFactory.getLogger(TranslationProvider.class.getName())
+                    .warn("Missing resource", e);
+            return "!" + locale.getLanguage() + ": " + key;
+        }
+        if (params.length > 0) {
+            value = MessageFormat.format(value, params);
+        }
+        return value;
+    }
+}
+----
+
+
+== Configuring the Provider
+
+For Spring Boot projects, annotate your provider with `@Component` and it's automatically detected -- no further configuration needed:
+
+[source,java]
+----
+@Component
+public class TranslationProvider implements I18NProvider {
+    // ...
+}
+----
+
+CDI-based projects can use a similar approach with CDI beans.
+
+For other setups, set the `i18n.provider` property to the fully qualified class name of your provider, either as a system property:
+
+[source,terminal]
+----
+mvn jetty:run -Dvaadin.i18n.provider=com.vaadin.example.ui.TranslationProvider
+----
+
+Or via the `@WebServlet` annotation:
+
+[source,java]
+----
+@WebServlet(urlPatterns = "/*", name = "slot", asyncSupported = true, loadOnStartup = 1,
+   initParams = { @WebInitParam(name = "i18n.provider", value = "com.vaadin.example.ui.TranslationProvider") })
+public class ApplicationServlet extends VaadinServlet {
+}
+----
