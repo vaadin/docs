@@ -22,7 +22,7 @@ function Example() {
   return (
     <SplitLayout orientation="vertical" style={{ height: '100%' }}>
       {/* tag::snippet[] */}
-      <MasterDetailLayout orientation="vertical" masterSize="150px" detailSize="250px">
+      <MasterDetailLayout orientation="vertical" masterSize="150px" detailSize="250px" expandMaster>
         {/* end::snippet[] */}
         <MasterDetailLayout.Master>
           <PersonList

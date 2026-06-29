@@ -1,8 +1,8 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.slider.RangeSlider;
-import com.vaadin.flow.component.slider.RangeSliderValue;
+import com.vaadin.flow.component.slider.IntegerRangeSlider;
+import com.vaadin.flow.component.slider.IntegerRangeSliderValue;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -33,7 +33,8 @@ public class RangeSliderCustomValidation extends Div {
 
     public RangeSliderCustomValidation() {
         // tag::snippet[]
-        RangeSlider rangeSlider = new RangeSlider("Price Range", 0, 1000);
+        IntegerRangeSlider rangeSlider = new IntegerRangeSlider("Price Range",
+                0, 1000);
         rangeSlider.setStep(50);
         rangeSlider.setMinMaxVisible(true);
 
@@ -42,11 +43,11 @@ public class RangeSliderCustomValidation extends Div {
                 .withValidator(value -> value.end() - value.start() >= 200,
                         "Price range must span at least $200")
                 .bind(product -> {
-                    return new RangeSliderValue(product.getMinPrice(),
+                    return new IntegerRangeSliderValue(product.getMinPrice(),
                             product.getMaxPrice());
                 }, (product, value) -> {
-                    product.setMinPrice((int) value.start());
-                    product.setMaxPrice((int) value.end());
+                    product.setMinPrice(value.start());
+                    product.setMaxPrice(value.end());
                 });
 
         binder.setBean(new PriceFilter());

@@ -1,7 +1,7 @@
 package com.vaadin.demo.component.slider;
 
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.slider.Slider;
+import com.vaadin.flow.component.slider.IntegerSlider;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -10,7 +10,7 @@ public class SliderBasicFeatures extends Div {
 
     public SliderBasicFeatures() {
         // tag::snippet[]
-        Slider slider = new Slider("Label");
+        IntegerSlider slider = new IntegerSlider("Label");
         slider.setHelperText("Helper text");
         add(slider);
         // end::snippet[]

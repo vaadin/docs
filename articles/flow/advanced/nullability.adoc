@@ -1,0 +1,252 @@
+---
+title: Nullability Annotations
+page-title: Nullability Annotations with JSpecify - Vaadin Docs
+description: Using JSpecify annotations and NullAway for compile-time null safety in Vaadin projects.
+meta-description: Learn how Vaadin uses JSpecify nullability annotations and how to enable compile-time null checking with NullAway in your project.
+order: 820
+---
+
+
+= Nullability Annotations
+
+Vaadin uses https://jspecify.dev/[JSpecify] annotations to express nullability contracts in its APIs. These annotations indicate whether method parameters, return types, and generic type arguments can be `null`. Combined with a static analysis tool like https://github.com/uber/NullAway[NullAway], they catch potential `NullPointerException` errors at compile time.
+
+
+== What Are Nullability Annotations?
+
+Java has no built-in way to express whether a reference can be `null`. https://jspecify.dev/[JSpecify] fills this gap with a standard set of annotations:
+
+`@NullMarked`:: Marks a class or package as having non-null types by default. All unannotated type usages within the scope are treated as non-null.
+`@Nullable`:: Explicitly marks a type as potentially `null`. Used on parameters, return types, and type arguments that may legitimately be `null`.
+
+Together, these annotations express nullability contracts across three areas:
+
+[source,java]
+----
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+@NullMarked
+public class UserService {
+    // Return type: non-null by default
+    public String getName() {
+        return "John";
+    }
+
+    // Parameter: explicitly nullable
+    public void setNickname(@Nullable String nickname) {
+        // nickname can be null
+    }
+
+    // Type argument: nullable generic
+    public ValueSignal<@Nullable String> optionalName() {
+        return new ValueSignal<>(null);
+    }
+}
+----
+
+
+== How Vaadin Uses Nullability Annotations
+
+Vaadin's Signal APIs are annotated with JSpecify nullability annotations. All signal types use the bounded type parameter pattern `<T extends @Nullable Object>`, which allows callers to choose whether a signal holds nullable or non-null values:
+
+[source,java]
+----
+// Non-null signal: get() returns String
+ValueSignal<String> name = new ValueSignal<>("John");
+
+// Nullable signal: get() returns @Nullable String
+ValueSignal<@Nullable String> optionalName = new ValueSignal<>(null);
+----
+
+Nullability annotations are expected to expand across more Vaadin APIs in the future.
+
+
+== Enabling Null Checking in Your Project
+
+Vaadin's APIs are annotated with JSpecify nullability information. To take advantage of this, enable https://github.com/uber/NullAway[NullAway] with https://errorprone.info/[Error Prone] in your project. This gives you compile-time errors when you misuse Vaadin's nullability contracts — for example, passing `null` where a non-null parameter is expected, or ignoring a `@Nullable` return value. This requires JDK 22 or later.
+
+=== Maven Setup
+
+Use the https://github.com/making/nullability-maven-plugin[nullability-maven-plugin] to configure Error Prone and NullAway automatically:
+
+[source,xml]
+----
+<plugin>
+    <groupId>am.ik.maven</groupId>
+    <artifactId>nullability-maven-plugin</artifactId>
+    <version>0.3.0</version>
+    <extensions>true</extensions>
+    <executions>
+        <execution>
+            <goals>
+                <goal>configure</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+----
+
+The plugin configures Error Prone and NullAway for you. By default, it enables JSpecify mode and checks all code in `@NullMarked` scopes.
+
+=== Gradle Setup
+
+For Gradle, use the https://github.com/tbroyer/gradle-errorprone-plugin[gradle-errorprone-plugin]:
+
+[source,groovy]
+----
+plugins {
+    id "net.ltgt.errorprone" version "4.1.0"
+}
+
+dependencies {
+    errorprone "com.google.errorprone:error_prone_core:2.36.0"
+    errorprone "com.uber.nullaway:nullaway:0.12.6"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        disableAllChecks = true
+        error("NullAway")
+        option("NullAway:JSpecifyMode", "true")
+        option("NullAway:AnnotatedPackages", "com.example")
+    }
+}
+----
+
+=== Checking Vaadin Types
+
+After adding the tooling, mark classes that use Vaadin APIs with `@NullMarked`. NullAway then enforces Vaadin's nullability contracts in those classes at compile time:
+
+[source,java]
+----
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+@NullMarked
+public class SignalExample extends Div {
+    // Compiler ensures non-null signal is never set to null
+    private final ValueSignal<String> name = new ValueSignal<>("John");
+
+    // Compiler requires null checks when reading nullable signals
+    private final ValueSignal<@Nullable String> nickname = new ValueSignal<>(null);
+
+    public SignalExample() {
+        @Nullable String value = nickname.get();
+        // Compiler error if you call value.toUpperCase() without a null check
+        add(new Span(value != null ? value : "No nickname"));
+    }
+}
+----
+
+=== Extending to Your Own Code
+
+You can go further and apply `@NullMarked` at the package level to get null-safety defaults for your own APIs. Create a `package-info.java` file:
+
+[source,java]
+----
+@NullMarked
+package com.example.myapp;
+
+import org.jspecify.annotations.NullMarked;
+----
+
+All classes in the package are then non-null by default. Use `@Nullable` only where `null` is a valid value:
+
+[source,java]
+----
+package com.example.myapp;
+
+import org.jspecify.annotations.Nullable;
+
+public class CustomerService {
+    // Non-null return type (default)
+    public Customer findById(long id) { ... }
+
+    // Explicitly nullable return type
+    public @Nullable Customer findByEmail(String email) { ... }
+}
+----
+
+
+== Nullability with Signals
+
+Signal types use `<T extends @Nullable Object>`, so the nullability of the value depends on the type argument you provide.
+
+=== Non-Null and Nullable Signals
+
+By default, signals hold non-null values:
+
+[source,java]
+----
+ValueSignal<String> nameSignal = new ValueSignal<>("John");
+String name = nameSignal.get(); // Never null
+----
+
+To allow null values, annotate the type argument with `@Nullable`:
+
+[source,java]
+----
+import org.jspecify.annotations.Nullable;
+
+ValueSignal<@Nullable String> optionalName = new ValueSignal<>(null);
+@Nullable String value = optionalName.get(); // May be null
+
+if (value != null) {
+    System.out.println(value.toUpperCase());
+}
+----
+
+=== Handling Null in Signal Operations
+
+When transforming nullable signals, account for null values:
+
+[source,java]
+----
+ValueSignal<@Nullable String> input = new ValueSignal<>(null);
+
+// Transform to non-null
+Signal<String> output = input.map(str -> str != null ? str.toUpperCase() : "");
+----
+
+When binding nullable signals to components, convert null to a suitable default:
+
+[source,java]
+----
+ValueSignal<@Nullable String> optionalText = new ValueSignal<>(null);
+
+TextField field = new TextField();
+field.bindValue(
+    optionalText.map(text -> text != null ? text : ""),
+    value -> optionalText.set(value.isEmpty() ? null : value)
+);
+----
+
+=== Collection Type Nullability
+
+Nullability applies independently to a collection and its elements:
+
+[source,java]
+----
+// Non-null list, non-null elements
+ValueSignal<List<String>> names = new ValueSignal<>(List.of("a", "b"));
+
+// Non-null list, nullable elements
+ValueSignal<List<@Nullable String>> sparse = new ValueSignal<>(new ArrayList<>());
+
+// Nullable list, non-null elements
+ValueSignal<@Nullable List<String>> optionalList = new ValueSignal<>(null);
+----
+
+
+== Best Practices
+
+- *Prefer non-null by default.* Use `@Nullable` only when `null` is a meaningful value in your domain, not as a convenience.
+- *Apply `@NullMarked` at the package level.* This provides consistent defaults and reduces annotation noise across your codebase.
+- *Handle null explicitly in transformations.* When mapping or binding nullable signals, convert to non-null values early rather than propagating null through chains of operations.
+
+
+== Related Topics
+
+* https://jspecify.dev/docs/user-guide/[JSpecify User Guide]
+* https://github.com/uber/NullAway[NullAway on GitHub]

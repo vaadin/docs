@@ -1,0 +1,212 @@
+---
+title: Breadcrumbs
+page-title: Breadcrumbs component | Vaadin components
+description: Breadcrumbs show the user's location within a hierarchy and provide links back to higher levels.
+meta-description: Use the Vaadin Breadcrumbs component to show the user's location within an application's hierarchy and provide links back to higher levels.
+section-nav: badge-preview
+page-links:
+  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/breadcrumbs}/elements/vaadin-breadcrumbs[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/breadcrumbs/Breadcrumbs.html[Java]'
+  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/breadcrumbs}/packages/breadcrumbs[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-breadcrumbs-flow-parent[Java]'
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Breadcrumbs#
+
+// tag::description[]
+Breadcrumbs show the user's location within an application's hierarchy and provide links back to higher levels.
+// end::description[]
+
+:preview-feature: Breadcrumbs
+:feature-flag: com.vaadin.experimental.breadcrumbsComponent
+:ticket-url: https://github.com/vaadin/web-components/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+
+== Basic Usage
+
+A Breadcrumbs component contains an ordered set of items that represent the path from a top-level location to the current page. Each item that has a path renders as a link, while the last item -- which has no path -- represents the current page and isn't a link.
+
+.Navigation Disabled in Examples
+[NOTE]
+====
+For technical reasons, actual navigation is disabled in the examples on this page.
+====
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/breadcrumbs/breadcrumbs-basic.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/breadcrumbs/BreadcrumbsBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/breadcrumbs/react/breadcrumbs-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Items
+
+Each item in a Breadcrumbs is a `BreadcrumbsItem` (Flow) or a `<vaadin-breadcrumbs-item>` (Lit) / `<BreadcrumbsItem>` (React). An item's role depends on whether it has a path:
+
+- An item *with a path* renders as a link that navigates to the corresponding location.
+- An item *without a path* represents the current page. The component automatically marks the last path-less item as current, rendering it as plain, non-interactive text.
+
+=== Prefix Icons
+
+An item can include an icon, or other content, in its prefix slot. This is useful for adding a visual cue, such as a home icon for the root of the hierarchy.
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/breadcrumbs/breadcrumbs-icons.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/breadcrumbs/BreadcrumbsIcons.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/breadcrumbs/react/breadcrumbs-icons.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Modes
+
+In Flow, the Breadcrumbs component operates in one of two modes, defined by the `Breadcrumbs.Mode` enum: `ROUTER` (the default) and `MANUAL`.
+
+=== Router Mode
+
+In `ROUTER` mode -- the default -- the trail is built automatically from the route hierarchy. On every navigation, the component resolves the chain of routes leading to the current view, adding a linked item for each ancestor route and a non-link item for the current page.
+
+Parent routes are resolved from the `@RouteParent` annotation or, when routes follow the URL structure, from the URL path. Each item's label is the route's page title (set with `@PageTitle`, `HasDynamicTitle`, or a `PageTitleGenerator`), resolved without instantiating the ancestor views. For more, see <<{articles}/flow/routing/route-hierarchy#,Route Hierarchy>> and <<{articles}/flow/routing/page-titles#,Page Titles>>.
+
+[source,java]
+----
+@Route("orders")
+@PageTitle("Orders")
+public class OrdersView extends VerticalLayout {
+}
+
+@Route("order-details")
+@RouteParent(OrdersView.class)
+@PageTitle("Order Details")
+public class OrderDetailsView extends VerticalLayout {
+
+    public OrderDetailsView() {
+        // In ROUTER mode, the trail is built automatically from the route
+        // hierarchy; no items are added manually.
+        add(new Breadcrumbs());
+    }
+}
+----
+
+[NOTE]
+====
+In `ROUTER` mode, adding, removing, or replacing items manually throws an `IllegalStateException`. To manage items yourself, use `MANUAL` mode.
+====
+
+=== Manual Mode
+
+In `MANUAL` mode, you build the trail explicitly by adding `BreadcrumbsItem` instances. This is useful when the breadcrumb structure doesn't map directly onto the route hierarchy. Switching modes clears the existing trail.
+
+[source,java]
+----
+Breadcrumbs breadcrumbs = new Breadcrumbs(Breadcrumbs.Mode.MANUAL);
+
+BreadcrumbsItem home = new BreadcrumbsItem("Home", "/");
+BreadcrumbsItem orders = new BreadcrumbsItem("Orders", "/orders");
+BreadcrumbsItem current = new BreadcrumbsItem("Order Details");
+
+breadcrumbs.add(home, orders, current);
+----
+
+
+== Overflow
+
+Breadcrumbs adapts responsively to the available width. When the items don't all fit, the leading items collapse into an overflow menu, accessible through a button at the start of the trail. The last item, representing the current page, never collapses.
+
+[.example]
+--
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/breadcrumbs/breadcrumbs-overflow.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/breadcrumbs/BreadcrumbsOverflow.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/breadcrumbs/react/breadcrumbs-overflow.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Internationalization (i18n)
+
+Breadcrumbs provides an API for localization. Currently, only the accessible label for the overflow menu button (announced by screen readers) can be customized.
+
+[.example]
+--
+ifdef::lit[]
+[source,typescript]
+----
+<source-info group="Lit"></source-info>
+breadcrumbs.i18n = { moreItems: 'More items' };
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+breadcrumbs.setI18n(new Breadcrumbs.BreadcrumbsI18n().setMoreItems("More items"));
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<Breadcrumbs i18n={{ moreItems: 'More items' }}>
+  {/* ... */}
+</Breadcrumbs>
+----
+endif::[]
+--
+
+
+== Accessibility
+
+The component renders with the `navigation` landmark role, so assistive technologies announce it as a navigation region. The current page -- the last path-less item -- is marked with `aria-current="page"`. Items that have a path are rendered as links and are reachable and operable with the keyboard.

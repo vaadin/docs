@@ -1,5 +1,7 @@
 package com.vaadin.demo.domain;
 
+import java.util.Objects;
+
 import jakarta.annotation.Nonnull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // hidden-source-line
@@ -55,7 +57,7 @@ public class Country {
             return false;
         }
         Country other = (Country) obj;
-        return id == other.id;
+        return Objects.equals(id, other.id);
     }
 }
 // end::snippet[]

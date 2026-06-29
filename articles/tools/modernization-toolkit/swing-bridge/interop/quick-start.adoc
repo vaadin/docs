@@ -1,0 +1,260 @@
+---
+title: Quick Start
+page-title: SwingBridge Interop Quick Start | Vaadin Tools
+description: Make your first Vaadin-to-Swing call and handle your first Swing event in Vaadin, using only the defaults.
+meta-description: Expose a Swing method with @ExposedMethod, call it from a Vaadin view, and handle a Swing event with @VaadinCallback — the minimal end-to-end interop setup.
+order: 1
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.interop.quick-start]]
+= Interop Quick Start
+
+This page walks through the minimal end-to-end setup for both interop directions, using only the defaults:
+
+- *Vaadin → Swing*: a Vaadin button calls a `void` method on the Swing application's main window.
+- *Swing → Vaadin*: a Swing button fires an event that a Vaadin view handles with a notification.
+
+Everything here uses the simplest possible shape — a `JFrame` target (no instance discovery configuration), `void` methods and `String` parameters (no async shapes, no domain types), and default dispatch. The following pages cover every variant: <<calling-swing-methods#, invocation shapes and instance discovery>>, <<listening-to-swing-events#, dispatch modes and listener wiring>>, and <<sharing-domain-types#, passing your own types across the bridge>>.
+
+.Prerequisites
+[NOTE]
+====
+You need a Swing application already embedded and rendering in a Vaadin view. If you don't have that yet, follow the <<../quick-start-guide#, SwingBridge Quick Start>> first.
+====
+
+
+[[swing-bridge.interop.quick-start.swing-side]]
+== Step 1: Add the Annotations JAR to the Swing Application
+
+The Swing side needs one compile-only JAR, `swing-bridge-annotations`. In a Maven build:
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-annotations</artifactId>
+    <version>{swing-bridge-version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+For Gradle, Ant, IDE-managed `lib/` folders, or projects without a build tool, see <<index#swing-bridge.interop.prerequisites.annotations, Adding the Annotations JAR>>.
+
+
+[[swing-bridge.interop.quick-start.expose]]
+== Step 2: Expose a Swing Method
+
+Annotate a `public` method on the application's main window with `@ExposedMethod`. Because the class extends `JFrame`, the framework finds the live instance automatically — no extra configuration:
+
+[source,java]
+----
+package com.example.swingapp;
+
+import com.vaadin.swingbridge.interop.ExposedMethod;
+import javax.swing.JFrame;
+
+public class MainWindow extends JFrame {
+
+    @ExposedMethod
+    public void showMessage(String message) {
+        statusLabel.setText(message);
+    }
+}
+----
+
+The class stays a normal Swing class — it imports nothing from Vaadin. Rebuild the Swing application's JAR so the annotation is in the bytecode.
+
+
+[[swing-bridge.interop.quick-start.codegen]]
+== Step 3: Generate the Bridge in the Vaadin Application
+
+Add the codegen plugin to the Vaadin application's `pom.xml`:
+
+[source,xml,subs="+attributes"]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>swing-bridge-codegen-maven-plugin</artifactId>
+            <version>{swing-bridge-version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>generate-bridge</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+At build time the plugin scans the Swing JARs in `applibs/`, finds `MainWindow`, and emits a typed interface into `target/generated-sources/swing-bridge/`:
+
+[source,java]
+----
+// Generated — don't edit
+package com.example.swingapp;
+
+public interface MainWindowBridge {
+    void showMessage(String message);
+}
+----
+
+The generated sources are added to the Maven compile source roots automatically, so Vaadin code can import `MainWindowBridge` with no further wiring. Run `mvn compile` (or refresh the Maven project in your IDE) to see it.
+
+
+[[swing-bridge.interop.quick-start.call]]
+== Step 4: Call the Swing Method from Vaadin
+
+In the Vaadin view, obtain a handle with `SwingBridge.interop().of(...)` and call the method inside `onReady`:
+
+[source,java]
+----
+package com.example.application;
+
+import com.example.swingapp.MainWindowBridge;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.swingbridge.SwingBridge;
+
+@Route("main")
+public class MainView extends VerticalLayout {
+
+    public MainView() {
+        add(new SwingBridge("com.example.swingapp.SwingAppMain"));
+
+        add(new Button("Greet Swing", click ->
+                SwingBridge.interop()
+                    .of(MainWindowBridge.class)
+                    .onReady(main -> main.showMessage("Hello from Vaadin!"))));
+    }
+}
+----
+
+`onReady` runs the callback as soon as the bridge is available — immediately, if the Swing application has already started. The call is dispatched onto the Swing Event Dispatch Thread for you.
+
+Run the application, click the button, and the Swing status label updates. That's the whole Vaadin → Swing direction.
+
+
+[[swing-bridge.interop.quick-start.listen]]
+== Step 5: Fire a Swing Event into Vaadin
+
+The other direction uses a plain listener interface. Define it in the Swing application:
+
+[source,java]
+----
+package com.example.swingapp;
+
+public interface MessageListener {
+    void messageSubmitted(String message);
+}
+----
+
+Let the main window accept a listener through an `@ExposedMethod` setter, and fire it from any Swing event handler:
+
+[source,java]
+----
+public class MainWindow extends JFrame {
+
+    private MessageListener messageListener;
+
+    @ExposedMethod
+    public void setMessageListener(MessageListener listener) {
+        this.messageListener = listener;
+    }
+
+    private void onSendButtonClicked() {
+        if (messageListener != null) {
+            messageListener.messageSubmitted(inputField.getText());
+        }
+    }
+}
+----
+
+Rebuild the Swing JAR. The codegen plugin also emits a stub of `MessageListener` for the Vaadin side, so there's nothing extra to share.
+
+On the Vaadin view, implement the listener method as a `@VaadinCallback` and register it. The framework proxies the listener, hops onto the Vaadin UI thread, and invokes your handler:
+
+[source,java]
+----
+package com.example.application;
+
+import com.example.swingapp.MainWindowBridge;
+import com.example.swingapp.MessageListener;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
+import com.vaadin.swingbridge.SwingBridge;
+import com.vaadin.swingbridge.interop.VaadinCallback;
+
+@Route("main")
+public class MainView extends VerticalLayout {
+
+    private Registration callbackRegistration;
+
+    public MainView() {
+        add(new SwingBridge("com.example.swingapp.SwingAppMain"));
+        // ... the "Greet Swing" button from Step 4 ...
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        callbackRegistration = SwingBridge.interop()
+            .of(MainWindowBridge.class)
+            .registerCallback(this);
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (callbackRegistration != null) {
+            callbackRegistration.remove();
+            callbackRegistration = null;
+        }
+        super.onDetach(detachEvent);
+    }
+
+    @VaadinCallback(observerFor = MessageListener.class)
+    public void messageSubmitted(String message) {
+        Notification.show("Swing says: " + message);
+    }
+}
+----
+
+Run the application again, type something into the Swing text field, click the Swing button — a Vaadin notification pops up with the text. That's the Swing → Vaadin direction.
+
+Always pair `registerCallback` in `onAttach` with `Registration.remove()` in `onDetach`, as above — it keeps listeners from piling up as the user navigates. The reasoning is in <<listening-to-swing-events#swing-bridge.interop.listening-to-swing-events.cleanup, The Cleanup Pattern>>.
+
+
+[[swing-bridge.interop.quick-start.next]]
+== Where to Go Next
+
+This page used the simplest variant of every ingredient. Each has more capable forms:
+
+[cols="3,4", options="header"]
+|===
+| You need to… | Read
+
+| Return a value from Swing, or call a method that might block the EDT (dialogs, slow work) — the `SYNC`/`ASYNC` invocation shapes and `requestAsync`
+| <<calling-swing-methods#, Calling Swing Methods>>
+
+| Expose methods on a class that isn't a `Window` — `@InstanceProvider` factories and static-only utility classes
+| <<calling-swing-methods#swing-bridge.interop.calling-swing-methods.discovery, Calling Swing Methods → Instance Discovery>>
+
+| Support multiple subscribers with clean removal, return a value from Vaadin back to Swing, or drop events safely on navigation — adder/remover wiring and the three `Dispatch` modes
+| <<listening-to-swing-events#, Listening to Swing Events>>
+
+| Pass your own entity or DTO classes across the bridge without `ClassCastException`
+| <<sharing-domain-types#, Sharing Domain Types>>
+
+| Combine the ingredients — Vaadin-rendered lookup dialogs, navigation guards, `runInAppContext`
+| <<patterns#, Patterns and Cookbook>>
+|===

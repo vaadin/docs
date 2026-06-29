@@ -1,0 +1,204 @@
+---
+title: Call Java Services
+page-title: How to call Java services from a React view in Vaadin
+meta-description: Make a Java service browser-callable and call it from a React view in Vaadin in a type-safe way, with automatically generated TypeScript clients.
+order: 30
+---
+
+
+= Call Java Services from React Views
+:toclevels: 2
+
+A React view runs in the browser, so it gets its data from the server by calling Java services. Vaadin lets you do this in a type-safe way -- without writing a REST controller -- by making a service _browser-callable_ and generating a TypeScript client for it. This guide covers the basics; for the full details, see the <<{articles}/hilla/guides/endpoints#,Endpoints reference guide>>.
+
+
+== Making a Service Browser-Callable
+
+Annotate a Java service with [annotationname]`@BrowserCallable`. Vaadin then exposes a server endpoint for it and generates a matching TypeScript client, so you can call it from the browser without configuring URLs by hand:
+
+[source,java]
+----
+@BrowserCallable
+@AnonymousAllowed // <1>
+public class CounterService {
+    public int addOne(int number) {
+        return number + 1;
+    }
+}
+----
+<1> Browser-callable services are inaccessible by default. You must add a security annotation to grant access. See <<security#,Secure React Views>>.
+
+The TypeScript client is regenerated automatically when the application starts in development mode, when a service is hot-swapped, and during a production build. The generator reads compiled Java byte code, so the classes must be compiled first.
+
+
+== Calling a Service
+
+Import the generated client from `Frontend/generated/endpoints` and call its methods. Client functions are always `async`, so use `await` or handle the returned `Promise`:
+
+[source,tsx]
+----
+import { Button } from "@vaadin/react-components";
+import { useSignal } from "@vaadin/hilla-react-signals";
+import { CounterService } from "Frontend/generated/endpoints";
+
+export default function CounterView() {
+    const number = useSignal(0);
+    const addOne = async () => {
+        number.value = await CounterService.addOne(number.value);
+    };
+    return (
+        <main>
+            <div>{number}</div>
+            <Button onClick={addOne}>Add One</Button>
+        </main>
+    );
+}
+----
+
+
+== Passing Objects
+
+Services can receive and return objects, not only primitives. Vaadin generates a TypeScript interface for each Java type used. You can use classes or records:
+
+.Prefer Records
+[TIP]
+If you're unsure whether to use a class or a record, use a record. Records are concise and immutable, reducing boilerplate.
+
+[source,java]
+.City.java
+----
+public record City(String name, String country) {}
+----
+
+generates:
+
+[source,typescript]
+.city.ts
+----
+interface City {
+    name?: string;
+    country?: string;
+}
+export default City;
+----
+
+Vaadin uses Jackson for serialization, so Jackson annotations can customize the generated types. See the <<{articles}/hilla/reference/type-conversion#,Type Conversion reference guide>> for details.
+
+
+== Nullability
+
+By default, Java primitive types (`int`, `boolean`, and similar) become non-nullable in TypeScript, while reference types (`String`, `LocalDate`, and similar) become nullable -- which is why `name` and `country` above are generated as optional (`?`).
+
+To make a reference type non-nullable, annotate it with the *JSpecify* [annotationname]`@NonNull` annotation:
+
+[source,java]
+----
+import org.jspecify.annotations.NonNull;
+
+public record City(@NonNull String name, @NonNull String country) {}
+----
+
+The same applies to method parameters and return values, including the elements of collections:
+
+[source,java]
+----
+public @NonNull List<@NonNull City> findCities(@NonNull Query query) {
+    // ...
+}
+----
+
+.Change the Default
+[TIP]
+If most types in your project should be non-nullable, apply Spring's [annotationname]`@NonNullApi` at the package level in `package-info.java`. For more control over nullability, see the <<{articles}/hilla/reference/type-nullability#,Type Nullability reference guide>>.
+
+
+== Pushing Updates with Reactive Services
+
+The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications. A browser-callable service can only return a `Flux` -- convert a `Mono` to one with `asFlux()`.
+
+The following service emits the current date and time every second:
+
+[source,java]
+----
+@BrowserCallable
+public class TimeService {
+
+    @AnonymousAllowed
+    public Flux<@NonNull String> getClock() {
+        return Flux.interval(Duration.ofSeconds(1)) // <1>
+                .onBackpressureDrop() // <2>
+                .map(_interval -> Instant.now().toString()); // <3>
+    }
+}
+----
+<1> Emit a new value every second.
+<2> Drop values that can't be sent to the client in time.
+<3> Output the current date and time as a string.
+
+For how to produce reactive streams on the server, including from background jobs, see <</building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>>.
+
+=== Subscribing from a View
+
+Vaadin generates the TypeScript types for the service. Call the generated method to get a `Subscription`, then register a callback with `onNext()`:
+
+[source,typescript]
+----
+const subscription = TimeService.getClock().onNext(time => {
+    // Update the UI state
+});
+----
+
+A *cold* stream -- one that starts when subscribed and completes on its own, such as a single background-job result -- doesn't need to be cancelled. A *hot* stream -- one that emits continuously, such as a chat feed -- must be cancelled when the component is removed from the DOM. Subscribe inside a React effect and cancel in its cleanup function:
+
+[source,typescript]
+----
+useEffect(() => {
+    const subscription = ChatService.messages().onNext(onMessageReceived);
+    return () => subscription.cancel();
+}, []);
+----
+
+=== Handling Errors
+
+An error terminates the stream: the subscription is cancelled and no more values arrive. Register an error callback with `onError()`. For a hot stream, consider resubscribing as part of recovery:
+
+[source,typescript]
+----
+ChatService.messages().onNext(onMessageReceived).onError(onError);
+----
+
+The error callback receives no information about the error itself.
+
+=== Buffering High-Frequency Streams
+
+Don't push updates to the browser more than two to four times per second. If a stream emits faster than that, buffer it *in the service* with `Flux.buffer()` so the client receives batches instead. The generated method then emits arrays:
+
+[source,java]
+----
+@AnonymousAllowed
+public Flux<@NonNull List<@NonNull Event>> bufferedEventStream() {
+    return eventStream().buffer(Duration.ofMillis(250)); // <1>
+}
+----
+<1> Buffer events for 250 ms, then emit them as a `List<Event>`.
+
+=== Recovering Lost Subscriptions
+
+A subscription can be lost without being cancelled -- for example when the user's device sleeps or briefly loses its network connection. Vaadin re-establishes the connection automatically, but the subscription may no longer be valid. Register an `onSubscriptionLost()` callback to decide what happens:
+
+[source,typescript]
+----
+useEffect(() => {
+    const subscription = ChatService.messages()
+        .onNext(onMessageReceived)
+        .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE);
+    return () => subscription.cancel();
+}, []);
+----
+
+The callback returns `RESUBSCRIBE` to call the server method again, or `REMOVE` (the default) to leave the subscription closed until the client resubscribes explicitly.
+
+
+== Next Steps
+
+- <<security#,Secure React Views>> -- control who can call your services and access your views.

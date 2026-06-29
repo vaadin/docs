@@ -74,3 +74,28 @@ Re-synchronization is initiated by the client when it can't find a message with 
 - It clears all old pending messages, updates the last known `syncId` to the newly received value, and rebuilds the DOM tree from scratch based on the server's current state.
 
 This process ensures UI consistency, even in the presence of errors or unexpected behavior. The application remains robust against transient network problems or client-side interruptions. Additionally, the user experience is preserved without requiring a full page reload, as Vaadin rebuilds the UI without reloading the entire bundle from the server.
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Triggering a Server-Side Task After a Delay
+
+The [methodname]`UI.triggerAfter(Duration, SerializableRunnable)` method runs a task on the server after a given delay, without enabling <<server-push#,server push>>.
+
+The delay is measured by the browser: a one-shot timer is armed on the client when the response to the current request is sent, and when the timer elapses, the client makes a round trip back to the server that runs the callback. The task runs in the same way as any other event handler, with the session locked. This makes it possible to defer a single piece of server-side work without configuring push for that purpose alone.
+
+[source,java]
+----
+Span status = new Span("Saved");
+add(status);
+
+// Hide the status message after five seconds
+Registration registration = UI.getCurrent()
+        .triggerAfter(Duration.ofSeconds(5),
+                () -> status.setVisible(false));
+----
+
+The returned [classname]`Registration` cancels the task by clearing the client-side timer, so a task that's cancelled before its delay elapses doesn't run. A cancellation that races an already-elapsed timer, whose round trip is in flight, may still run once.
+
+Because the timer lives in the browser, the task isn't run if the page is reloaded, navigated away from, or closed before the delay elapses.
+
+[methodname]`triggerAfter()` must be called while holding the session lock, that is, from a regular event handler or from inside [methodname]`UI.access()`. The same applies to calling [methodname]`Registration.remove()` on the returned registration.

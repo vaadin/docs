@@ -1,0 +1,268 @@
+---
+title: Load Testing Response Checks
+page-title: Custom checks for Load Test responses
+description: How to add checks for responses to load test responses
+meta-description: Learn how to add checks for responses to load test responses
+order: 80
+version: since:com.vaadin:vaadin@V25.2
+---
+
+= [since:com.vaadin:vaadin@V25.2]#Load Testing Response Checks#
+
+== Overview
+
+By default, every generated k6 script validates responses with built-in Vaadin checks (status codes, session validity, CSRF tokens, error detection).
+**Custom response checks** let you add your own `check()` assertions on top of these defaults -- for example verifying that a specific element appears in the page, that no application-level warning is returned, or that response times stay within an acceptable range.
+
+Custom checks are injected into the same `check(response, { ... })` blocks as the built-in checks.
+They participate in the k6 `checks` threshold, meaning a failing custom check can abort the test (when `checksAbortOnFail` is enabled) and is reported in k6 output alongside the standard checks.
+
+== Quick Start
+
+.Command line
+[source,bash]
+----
+mvn loadtest:record \
+  -Dk6.testClass=MyScenarioIT \
+  -Dk6.checks.custom="INIT|has page title|(r) => r.body.includes('<title>')"
+----
+
+.POM configuration
+[source,xml]
+----
+<configuration>
+    <testClass>MyScenarioIT</testClass>
+    <customChecks>INIT|has page title|(r) => r.body.includes('&lt;title&gt;')</customChecks>
+</configuration>
+----
+
+The generated k6 script will contain:
+
+[source,javascript]
+----
+if (!check(response, {
+    'init request succeeded': (r) => r.status === 200,
+    'session is valid': (r) => !r.body.includes('Your session needs to be refreshed'),
+    'valid init response': (r) => r.body.includes('"v-uiId"') && r.body.includes('"Vaadin-Security-Key"'),
+    'has page title': (r) => r.body.includes('<title>'),  // <-- custom check
+})) {
+    fail(`Request 2 (GET ...): init failed ...`)
+}
+----
+
+== Scopes
+
+Each check has a **scope** that controls where it is injected in the generated script.
+
+[cols="1,3", options="header"]
+|===
+| Scope | Description
+
+| `INIT`
+| Injected after **init requests** only (the initial page load that returns Vaadin bootstrap JSON).
+
+| `UIDL`
+| Injected after **UIDL requests** only (Vaadin client-server RPC calls).
+
+| `ALL`
+| Injected after **both** init and UIDL requests.
+|===
+
+== String Format
+
+The `k6.checks.custom` Maven property accepts checks in a delimited string format:
+
+----
+scope|name|expression
+----
+
+* **scope** -- `INIT`, `UIDL`, or `ALL` (case-insensitive). Optional; defaults to `ALL` when omitted.
+* **name** -- the check description displayed in k6 output.
+* **expression** -- a JavaScript function that receives the k6 response object `r` and returns a boolean.
+
+Multiple checks are separated by semicolons (`;`).
+
+.Format examples
+----
+# Scope + name + expression (3 parts)
+INIT|has page title|(r) => r.body.includes('<title>')
+
+# Name + expression only, scope defaults to ALL (2 parts)
+fast response|(r) => r.timings.duration < 3000
+
+# Multiple checks separated by semicolons
+INIT|has title|(r) => r.body.includes('<title>');UIDL|no warning|(r) => !r.body.includes('warning')
+----
+
+NOTE: Semicolons (`;`) separate entries and pipes (`|`) separate fields within an entry.
+Avoid using literal `|` or `;` inside check names or expressions.
+
+== Maven Configuration
+
+=== Command Line
+
+[source,bash]
+----
+# Single check
+mvn loadtest:record \
+  -Dk6.testClass=MyScenarioIT \
+  -Dk6.checks.custom="INIT|has title|(r) => r.body.includes('<title>')"
+
+# Multiple checks
+mvn loadtest:record \
+  -Dk6.testClass=MyScenarioIT \
+  -Dk6.checks.custom="INIT|has title|(r) => r.body.includes('<title>');UIDL|no timeout|(r) => !r.body.includes('timeout');ALL|fast|(r) => r.timings.duration < 3000"
+----
+
+=== POM Plugin Configuration
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>testbench-converter-plugin</artifactId>
+    <configuration>
+        <testClass>MyScenarioIT</testClass>
+        <customChecks>
+            INIT|has page title|(r) =&gt; r.body.includes('&lt;title&gt;');
+            UIDL|no application warning|(r) =&gt; !r.body.includes('warning');
+            ALL|response under 3s|(r) =&gt; r.timings.duration &lt; 3000
+        </customChecks>
+    </configuration>
+</plugin>
+----
+
+NOTE: In XML, escape `<` as `\&lt;` and `>` as `\&gt;`.
+
+=== Parameter Reference
+
+[cols="2,1,4", options="header"]
+|===
+| Parameter | Default | Description
+
+| `k6.checks.custom`
+| _(none)_
+| Custom response validation checks in `scope\|name\|expression` format, separated by `;`.
+|===
+
+== Java API
+
+For programmatic use (e.g., in custom Maven plugins or test harnesses), `ResponseCheckConfig` provides a fluent builder API.
+
+[source,java]
+----
+import com.vaadin.testbench.loadtest.util.ResponseCheckConfig;
+import com.vaadin.testbench.loadtest.util.ResponseCheckConfig.Scope;
+
+ResponseCheckConfig checks = ResponseCheckConfig.EMPTY
+        .withCheck(Scope.INIT, "has page title",
+                "(r) => r.body.includes('<title>')")
+        .withCheck(Scope.UIDL, "no application warning",
+                "(r) => !r.body.includes('warning')")
+        .withCheck(Scope.ALL, "response under 3s",
+                "(r) => r.timings.duration < 3000");
+----
+
+Parse from string format:
+
+[source,java]
+----
+ResponseCheckConfig checks = ResponseCheckConfig.EMPTY.withChecks(
+        "INIT|has title|(r) => r.body.includes('<title>');"
+        + "UIDL|no warning|(r) => !r.body.includes('warning')");
+----
+
+Pass to the converter:
+
+[source,java]
+----
+HarToK6Converter converter = new HarToK6Converter();
+converter.convert(harFile, outputFile, thresholdConfig, checks);
+----
+
+== Examples
+
+=== Validate page content after init
+
+Ensure the init response contains a specific page marker:
+
+[source,bash]
+----
+-Dk6.checks.custom="INIT|has navigation menu|(r) => r.body.includes('side-nav')"
+----
+
+=== Detect application errors in UIDL responses
+
+Catch domain-specific error patterns that the built-in checks don't cover:
+
+[source,bash]
+----
+-Dk6.checks.custom="UIDL|no validation error|(r) => !r.body.includes('ValidationException')"
+----
+
+=== Enforce response time limits
+
+Add a per-request response time check (complementing the aggregate p95/p99 thresholds):
+
+[source,bash]
+----
+-Dk6.checks.custom="ALL|response under 5s|(r) => r.timings.duration < 5000"
+----
+
+== How It Works
+
+. The user configures custom checks via the `k6.checks.custom` Maven parameter (or `ResponseCheckConfig` Java API).
+. During HAR-to-k6 conversion, `HarToK6Converter` injects the custom check expressions into the `check(response, { ... })` blocks:
+** Checks with scope `INIT` (or `ALL`) are appended to the init request check block.
+** Checks with scope `UIDL` (or `ALL`) are appended to each UIDL request check block.
+. The generated k6 script includes custom checks alongside the built-in Vaadin checks.
+. When k6 runs, custom checks are evaluated per-request and contribute to the `checks` pass rate metric.
+. If <<{articles}/flow/testing/load-testing/thresholds#default-threshold-parameters,`checksAbortOnFail`>> is enabled (default: `true`), any failing check -- built-in or custom -- aborts the test.
+
+=== Built-in Checks Reference
+
+These checks are always present in generated scripts. Custom checks are appended after them.
+
+.Init request checks
+[cols="2,3", options="header"]
+|===
+| Check Name | Assertion
+
+| `init request succeeded`
+| `r.status === 200`
+
+| `session is valid`
+| `!r.body.includes('Your session needs to be refreshed')`
+
+| `valid init response`
+| `r.body.includes('"v-uiId"') && r.body.includes('"Vaadin-Security-Key"')`
+|===
+
+.UIDL request checks
+[cols="2,3", options="header"]
+|===
+| Check Name | Assertion
+
+| `UIDL request succeeded`
+| `r.status === 200`
+
+| `no server error`
+| `!r.body.includes('"appError"')`
+
+| `no exception`
+| `!r.body.includes('Exception')`
+
+| `session is valid`
+| `!r.body.includes('Your session needs to be refreshed')`
+
+| `security key valid`
+| `!r.body.includes('Invalid security key')`
+
+| `valid UIDL response`
+| `syncIdMatch !== null`
+|===
+
+== Related
+
+* https://grafana.com/docs/k6/latest/using-k6/checks/[k6 Checks documentation] -- Full reference for the k6 `check()` API
+* https://grafana.com/docs/k6/latest/using-k6/thresholds/[k6 Thresholds documentation] -- How thresholds interact with check pass rates

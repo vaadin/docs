@@ -44,8 +44,7 @@ my-component/
 │   │   │       └── TheAddon.java
 │   │   └── resources/
 │   │       └── META-INF/
-│   │           └── resources/
-│   │               └── frontend/
+│   │           └── frontend/
 │   └── test/
 │       └── java/
 │           └── org/vaadin/addons/mygroup/
@@ -85,41 +84,53 @@ The starter includes a `directory` Maven profile that builds a ZIP file for the 
 
 == Frontend Resources
 
-If your add-on includes CSS, JavaScript, or TypeScript files, place them under:
+If your add-on includes JavaScript or TypeScript modules, or CSS files that should be included in the frontend bundle, place them under:
 
 ----
-src/main/resources/META-INF/resources/frontend/
+src/main/resources/META-INF/frontend/
 ----
 
-Files in this location are automatically discovered by Vaadin when the add-on JAR is on the classpath. Reference them from your Java component with `@JsModule` or `@CssImport`:
+Files in this location are automatically discovered by Vaadin when the add-on JAR is on the classpath, and are processed by the Vite build pipeline. Reference them from your Java component with `@JsModule` or `@CssImport`:
 
 [source,java]
 ----
-@CssImport("./my-component/status-badge.css")
+@JsModule("./my-component/status-badge.js")
 public class StatusBadge extends Composite<HorizontalLayout> {
     // ...
 }
 ----
 
-The `./` prefix maps to the `frontend/` directory on the classpath, which includes your `META-INF/resources/frontend/` files.
+The `./` prefix maps to the `frontend/` directory on the classpath, which includes your `META-INF/frontend/` files.
 
-Add-ons use `@CssImport` rather than `@StyleSheet` because their frontend resources are placed in `META-INF/resources/frontend/`, which is processed by the Vite build pipeline. `@StyleSheet` resolves against the static resources root, `META-INF/resources/`, and is the standard approach for application code — see <<style-component#,Style a Component>>.
+During development, you can also use `src/main/frontend/` for convenience — Vaadin picks up files from there as well. However, only files in `META-INF/frontend/` are included in the published JAR.
 
-During development, you can also use `src/main/frontend/` for convenience — Vaadin picks up files from there as well. However, only files in `META-INF/resources/frontend/` are included in the published JAR.
+[NOTE]
+.Deprecated Location
+Some earlier add-ons place frontend files in `src/main/resources/META-INF/resources/frontend/` instead. That location still works, but it's deprecated: everything under `META-INF/resources/` is also published as static resources, so the un-bundled source files are served directly to browsers — which is usually not what you want. Use `META-INF/frontend/` so the files are only used as input for the frontend bundle.
 
 
 == Including Stylesheets
 
-For components that need CSS, you have two options:
+CSS files typically go in the static resources folder, `src/main/resources/META-INF/resources/`, and are loaded with `@StyleSheet` — the same approach as in application code (see <<style-component#,Style a Component>>):
 
-*Application-scoped CSS* — use `@CssImport` to load a stylesheet into the application:
+[source,java]
+----
+@StyleSheet("my-component/status-badge.css")
+public class StatusBadge extends Composite<HorizontalLayout> {
+    // ...
+}
+----
+
+The path resolves against the static resources root, so the example above loads `src/main/resources/META-INF/resources/my-component/status-badge.css`.
+
+If you want the CSS to be included in the frontend bundle instead of served as a separate file, place it in `META-INF/frontend/` and load it with `@CssImport`:
 
 [source,java]
 ----
 @CssImport("./my-component/status-badge.css")
 ----
 
-*Component-scoped CSS for Vaadin components* — to inject styles into a Vaadin component's shadow DOM, use the `themeFor` attribute:
+`@CssImport` is also needed to inject styles into a Vaadin component's shadow DOM, using the `themeFor` attribute:
 
 [source,java]
 ----

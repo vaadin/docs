@@ -1,0 +1,338 @@
+---
+title: Installation from Scratch
+page-title: Install SwingBridge from Scratch | Vaadin Tools
+description: Install the SwingBridge license and set up a Maven project from scratch.
+meta-description: Step-by-step license installation and from-scratch Maven configuration for Vaadin SwingBridge, including the full JVM flag reference.
+order: 2
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.installation-from-scratch]]
+= Installation from Scratch
+
+This page covers the installation steps for a SwingBridge project that is not based on the skeleton starter:
+
+. Install the Vaadin commercial license.
+. Configure a Maven project from scratch.
+. Apply the JVM flags SwingBridge needs at compile time and at runtime.
+. Enable server push in the application shell class.
+
+If you only want a quick try-out, the <<quick-start-guide#, Quick Start>> page uses the skeleton starter and skips most of the manual configuration below.
+
+
+[[swing-bridge.installation-from-scratch.license]]
+== License Installation
+
+SwingBridge requires a commercial Vaadin subscription or a trial license. You can get one automatically or install it manually. Automatic license installation is the preferred choice. You are asked to either create a new vaadin.com account or login to an existing one in the following process.
+
+
+[[swing-bridge.installation-from-scratch.license.automated]]
+=== Automated License Installation
+
+When you launch your application that uses SwingBridge or any other commercial Vaadin component, you are asked to login to https://vaadin.com/[vaadin.com]. This process downloads the relevant files to the directory shown below and the application proceeds to execute the commercial components automatically. You may proceed with the project setup if you prefer this approach.
+
+[.example]
+--
+[source,filesystem]
+----
+<source-info group="Windows"></source-info>
+%userprofile%\.vaadin\proKey
+----
+
+[source,filesystem]
+----
+<source-info group="macOS/Linux"></source-info>
+~/.vaadin/proKey
+----
+--
+
+
+[[swing-bridge.installation-from-scratch.license.manual]]
+=== Manual License Installation
+
+Create a Vaadin account if you don't have one by visiting https://vaadin.com/register
+
+Under menu:My Account[Licences], click *Start Trial* to start a trial license if you don't have an active subscription.
+
+Follow the instructions in the *Licenses* section after logging in to your account to make sure you have a valid license, or at least a trial license (`proKey` and `userKey` files) in the following directory:
+
+[.example]
+--
+[source,filesystem]
+----
+<source-info group="Windows"></source-info>
+%userprofile%\.vaadin\
+----
+
+[source,filesystem]
+----
+<source-info group="macOS/Linux"></source-info>
+~/.vaadin/
+----
+--
+
+For more information about licensing see <</flow/configuration/licenses#, License Validation & Troubleshooting>>.
+
+
+[[swing-bridge.installation-from-scratch.project-setup]]
+== Project Setup
+
+Add the following parent section, properties, and dependencies to your `pom.xml`:
+
+.`pom.xml`
+[source,xml,subs="+attributes"]
+----
+<properties>
+  <maven.compiler.source>21</maven.compiler.source>
+  <vaadin.version>{vaadin-version}</vaadin.version>
+  <swing-bridge.version>{swing-bridge-version}</swing-bridge.version>
+  <swing-bridge.path>${settings.localRepository}/com/vaadin</swing-bridge.path>
+</properties>
+
+<parent>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <version>{spring-boot-version}</version>
+  <relativePath/>
+</parent>
+
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-bom</artifactId>
+      <version>${vaadin.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
+<dependencies>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-patch</artifactId>
+    <version>${swing-bridge.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-graphics</artifactId>
+    <version>${swing-bridge.version}</version>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-flow</artifactId>
+    <version>${swing-bridge.version}</version>
+    <exclusions>
+      <exclusion>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j2-impl</artifactId>
+      </exclusion>
+    </exclusions>
+  </dependency>
+
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-spring-boot-starter</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-dev</artifactId>
+    <optional>true</optional>
+  </dependency>
+</dependencies>
+----
+
+SwingBridge requires certain JVM flags so that Maven can access internal Java modules during compilation. Create a `.mvn/jvm.config` file in the project root with the following content:
+
+.`.mvn/jvm.config`
+[source]
+----
+--add-exports=java.desktop/sun.font=ALL-UNNAMED
+--add-exports=java.desktop/sun.awt=ALL-UNNAMED
+--add-exports=java.desktop/sun.awt.dnd=ALL-UNNAMED
+--add-exports=java.desktop/sun.awt.dnd.peer=ALL-UNNAMED
+--add-exports=java.base/sun.nio.cs=ALL-UNNAMED
+--add-exports=java.desktop/sun.java2d=ALL-UNNAMED
+--add-exports=java.desktop/sun.java2d.pipe=ALL-UNNAMED
+--add-exports=java.desktop/sun.awt.datatransfer=ALL-UNNAMED
+--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED
+--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED
+--add-exports=java.desktop/java.awt.dnd=ALL-UNNAMED
+--add-exports=java.desktop/java.awt.dnd.peer=ALL-UNNAMED
+--add-exports=java.desktop/sun.print=ALL-UNNAMED
+--add-exports=java.desktop/sun.swing=ALL-UNNAMED
+--add-opens=java.desktop/java.awt.event=ALL-UNNAMED
+--add-opens=java.desktop/sun.awt=ALL-UNNAMED
+--add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED
+--add-reads=java.desktop=ALL-UNNAMED
+----
+
+These flags are applied to the Maven JVM process itself, allowing the compiler to access the internal `java.desktop` module APIs that SwingBridge depends on. This is separate from the runtime JVM arguments configured in the build plugin below.
+
+To launch the application through Maven CLI, add the following build plugin to your `pom.xml`:
+
+.`pom.xml`
+[source,xml]
+----
+<build>
+  <defaultGoal>spring-boot:run</defaultGoal>
+  <plugins>
+    <plugin>
+      <groupId>com.vaadin</groupId>
+      <artifactId>vaadin-maven-plugin</artifactId>
+      <version>${vaadin.version}</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>prepare-frontend</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+      <configuration>
+        <!-- all JVM flags as one space-separated string -->
+        <jvmArguments>
+          --patch-module java.desktop=${swing-bridge.path}/swing-bridge-patch/${swing-bridge.version}/swing-bridge-patch-${swing-bridge.version}.jar
+          -Xbootclasspath/a:${swing-bridge.path}/swing-bridge-graphics/${swing-bridge.version}/swing-bridge-graphics-${swing-bridge.version}.jar
+          --add-reads=java.desktop=ALL-UNNAMED
+          --add-exports=java.desktop/sun.font=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.dnd=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.dnd.peer=ALL-UNNAMED
+          --add-exports=java.base/sun.nio.cs=ALL-UNNAMED
+          --add-exports=java.desktop/sun.java2d=ALL-UNNAMED
+          --add-exports=java.desktop/sun.java2d.pipe=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.datatransfer=ALL-UNNAMED
+          --add-exports=java.desktop/sun.awt.image=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.peer=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.dnd=ALL-UNNAMED
+          --add-exports=java.desktop/java.awt.dnd.peer=ALL-UNNAMED
+          --add-exports=java.desktop/sun.print=ALL-UNNAMED
+          --add-exports=java.desktop/sun.swing=ALL-UNNAMED
+          --add-opens=java.desktop/java.awt.event=ALL-UNNAMED
+          --add-opens=java.desktop/sun.awt=ALL-UNNAMED
+          --add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED
+          -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        </jvmArguments>
+
+        <!-- JVM -D system properties -->
+        <systemPropertyVariables>
+          <java.awt.headless>false</java.awt.headless>
+          <!--<applibs.dir>${project.basedir}/some-lib-dir</applibs.dir>-->
+        </systemPropertyVariables>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+The trailing `-agentlib:jdwp=…` flag enables remote debugging on port 5005. Remove it (or change `suspend=n` to `suspend=y`) to suit your needs — see <<running-and-debugging#swing-bridge.running-and-debugging.remote-debug, Remote Debugging>>.
+
+[IMPORTANT]
+====
+The `java.awt.headless=false` system property is mandatory. SwingBridge needs a real (non‑headless) AWT toolkit to render Swing components into images on the server. Without it, the application throws `HeadlessException` on startup.
+====
+
+
+[[swing-bridge.installation-from-scratch.push]]
+=== Enable Server Push
+
+SwingBridge renders the Swing application on the server and streams the frame updates to the browser from a background AWT thread. Those updates can only reach the client when server push is enabled, so annotate the application shell class — the class implementing [interfacename]`AppShellConfigurator` — with [annotationname]`@Push`:
+
+.`Application.java`
+[source,java]
+----
+@SpringBootApplication
+@Push
+public class Application implements AppShellConfigurator {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+----
+
+[IMPORTANT]
+====
+The [annotationname]`@Push` annotation is mandatory. Without it the Swing application launches on the server, but the browser shows only an empty component: the rendered frames are queued server-side and never delivered to the client.
+====
+
+For details on how push works, see <</flow/advanced/server-push#, Server Push>>.
+
+
+[[swing-bridge.installation-from-scratch.jvm-flags]]
+== JVM Flags Reference
+
+The runtime `<jvmArguments>` block above bundles three categories of flags. The table below lists each one with its purpose, so you can tell which lines are load-bearing versus which only widen access for specific Swing APIs.
+
+[cols="3,5", options="header"]
+|===
+|Flag |Purpose
+
+|`--patch-module java.desktop=…/swing-bridge-patch-<v>.jar`
+|Replaces internal `java.desktop` classes with SwingBridge's patched versions. Required.
+
+|`-Xbootclasspath/a:…/swing-bridge-graphics-<v>.jar`
+|Prepends SwingBridge's graphics interception JAR to the bootstrap classpath so it is available before `Toolkit.getDefaultToolkit()` runs. Required.
+
+|`--add-reads=java.desktop=ALL-UNNAMED`
+|Allows the patched `java.desktop` to read classes loaded from the unnamed module (the application's own JARs).
+
+|`--add-exports=java.desktop/sun.font=ALL-UNNAMED`
+|Exposes the internal font manager to SwingBridge's font handling.
+
+|`--add-exports=java.desktop/sun.awt=ALL-UNNAMED`
+|Exposes core internal AWT classes (`AppContext`, `SunToolkit`, …) used by SwingBridge's per‑session isolation.
+
+|`--add-exports=java.desktop/sun.awt.dnd=ALL-UNNAMED` +
+`--add-exports=java.desktop/sun.awt.dnd.peer=ALL-UNNAMED` +
+`--add-exports=java.desktop/java.awt.dnd=ALL-UNNAMED` +
+`--add-exports=java.desktop/java.awt.dnd.peer=ALL-UNNAMED`
+|Drag-and-drop internals. Needed because SwingBridge replaces the default `DragSource` to keep one user's drag from blocking another.
+
+|`--add-exports=java.base/sun.nio.cs=ALL-UNNAMED`
+|Charset internals used during text rendering.
+
+|`--add-exports=java.desktop/sun.java2d=ALL-UNNAMED` +
+`--add-exports=java.desktop/sun.java2d.pipe=ALL-UNNAMED`
+|Java 2D internals — `SurfaceManager`, `SurfaceData`, `Region` — needed for the off‑screen image SwingBridge draws into.
+
+|`--add-exports=java.desktop/sun.awt.datatransfer=ALL-UNNAMED`
+|Clipboard internals used by SwingBridge's per‑session clipboard.
+
+|`--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED`
+|Image-pipeline internals used by the synthetic image peers.
+
+|`--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED`
+|AWT peer interfaces required to install SwingBridge's custom peers.
+
+|`--add-exports=java.desktop/sun.print=ALL-UNNAMED`
+|Printing internals (used opportunistically by some Swing apps).
+
+|`--add-exports=java.desktop/sun.swing=ALL-UNNAMED`
+|Swing internals — `SwingUtilities` helpers and the repaint manager hook.
+
+|`--add-opens=java.desktop/java.awt.event=ALL-UNNAMED` +
+`--add-opens=java.desktop/sun.awt=ALL-UNNAMED` +
+`--add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED`
+|Reflective access. SwingBridge reads/writes a small number of private fields (focus state, drag flag, event queue) to plumb its multi-tenant model.
+|===
+
+The dev-time list in `.mvn/jvm.config` is the same minus `--patch-module` and `-Xbootclasspath/a` — those only apply at runtime.
+
+
+[[swing-bridge.installation-from-scratch.next-steps]]
+== Next Steps
+
+- Bring in your own Swing JAR: <<adding-your-app#, Adding Your Swing Application>>.
+- Tune JAR-loading paths, and error reporting: <<configuration#, Configuration>>.
+- Run, debug, and attach an IDE: <<running-and-debugging#, Running and Debugging>>.

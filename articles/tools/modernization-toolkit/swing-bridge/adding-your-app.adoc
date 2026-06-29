@@ -1,0 +1,171 @@
+---
+title: Adding Your Swing Application
+page-title: Add a Swing App to SwingBridge | Vaadin Tools
+description: Wire your Swing application's JARs into SwingBridge and create a Vaadin view that hosts it.
+meta-description: Bring your Swing JAR into a SwingBridge project, choose a JAR-loading strategy, and wrap the application in a Vaadin view.
+order: 3
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.adding-your-app]]
+= Adding Your Swing Application
+
+This page covers two things:
+
+. *Make your Swing JAR (and its dependencies) visible to SwingBridge* using one of two loading strategies — the `applibs` directory or a `swing-app-jar-list.conf` file.
+. *Create a Vaadin view* that wraps the Swing application's `main` class.
+
+The instructions apply equally whether you started from the skeleton starter (<<quick-start-guide#, Quick Start>>) or set up the project from scratch (<<installation-from-scratch#, Installation from Scratch>>).
+
+
+[[swing-bridge.adding-your-app.jar-loading]]
+== JAR Loading Strategies
+
+SwingBridge needs to load your Swing application from a separate classloader so that each user session gets an isolated `AppContext`. There are two ways to provide it the JARs.
+
+[cols="1,3,3", options="header"]
+|===
+| | `applibs` directory | `swing-app-jar-list.conf`
+
+| When to use
+| Default. You drop JARs into a directory and SwingBridge picks them all up.
+| You want explicit control over the order and identity of each JAR (useful for hand-curated classpath ordering, or for loading from a non-standard location).
+
+| Format
+| Any number of `.jar` files in the directory.
+| One JAR path per line. Lines starting with `#` are comments; blank lines are ignored.
+
+| Default location
+| `applibs/` next to the running application JAR or, in dev, next to the project root.
+| `swing-app-jar-list.conf` at the classpath root (in a Spring Boot project, that is `src/main/resources/`).
+
+| Override
+| `-Dapplibs.dir=<path>`
+| Paths inside the file resolve against `-Dswingbridge.jarlist.baseDir=<path>` (defaults to the working directory).
+|===
+
+[NOTE]
+====
+The `applibs` directory name is case-sensitive. The `swing-app-jar-list.conf` filename is also fixed.
+====
+
+
+[[swing-bridge.adding-your-app.jar-loading.applibs]]
+=== Using the `applibs` Directory
+
+Copy your Swing application's main JAR and all its dependency JARs into `applibs`. All `.jar` files in the directory become part of the SwingBridge classpath at runtime.
+
+[source,filesystem]
+----
+my-swingbridge-project/
+├── pom.xml
+├── applibs/
+│   ├── my-swing-app.jar
+│   ├── dependency-a.jar
+│   └── dependency-b.jar
+└── src/...
+----
+
+To use a custom directory, pass `-Dapplibs.dir=<path>` on the command line or configure it under `<systemPropertyVariables>` in your `pom.xml` (see <<installation-from-scratch#, Installation from Scratch>>).
+
+
+[[swing-bridge.adding-your-app.jar-loading.jar-list]]
+=== Using `swing-app-jar-list.conf`
+
+Place a file named `swing-app-jar-list.conf` at the classpath root (`src/main/resources/swing-app-jar-list.conf` in a Spring Boot project) listing one JAR path per line:
+
+[source]
+----
+# My Swing application's classpath (order matters)
+${maven.multiModuleProjectDirectory}/my-app/target/my-app.jar
+${maven.multiModuleProjectDirectory}/libs/legacy-utils.jar
+/opt/shared-libs/customer-shared.jar
+----
+
+Path resolution rules:
+
+- Lines beginning with `#` and blank lines are skipped.
+- The placeholder `${maven.multiModuleProjectDirectory}` expands to the system property of the same name (set automatically by Maven for multi‑module builds).
+- Absolute paths are kept as‑is.
+- Relative paths resolve against `-Dswingbridge.jarlist.baseDir=<path>` if set, otherwise against `user.dir` (the JVM's working directory).
+- Order is preserved on the classloader, so place override JARs ahead of the JARs they shadow.
+
+
+[[swing-bridge.adding-your-app.view]]
+== Create a Vaadin View
+
+Wrap the Swing application's `main` class in a Vaadin view by passing its fully qualified name to `SwingBridge`:
+
+[source,java]
+----
+@Route("myapp")
+public class MyAppView extends VerticalLayout {
+    public MyAppView() {
+        add(new SwingBridge("com.mycompany.swingapp.MySwingAppMain"));
+        setSizeFull();
+    }
+}
+----
+
+[NOTE]
+====
+Server push must be enabled with the [annotationname]`@Push` annotation on your application shell class — without it the view stays empty, because the Swing frame updates never reach the browser. The skeleton starter has the annotation in place; for a from-scratch project, see <<installation-from-scratch#swing-bridge.installation-from-scratch.push, Enable Server Push>>.
+====
+
+Start the server:
+
+[source,terminal]
+----
+mvn spring-boot:run
+----
+
+Navigate to `http://localhost:8888/myapp` to see the application. If you configured a custom port (the Spring Boot default is `8080`), navigate to that port instead.
+
+
+[[swing-bridge.adding-your-app.constructors]]
+== Constructor Variants
+
+`SwingBridge` provides three constructors for the common cases:
+
+[source,java]
+----
+// 1. Main-class FQN, default classloader (uses the applibs directory)
+new SwingBridge("com.mycompany.swingapp.MySwingAppMain");
+
+// 2. Main-class FQN with command-line arguments forwarded to main()
+new SwingBridge("com.mycompany.swingapp.MySwingAppMain",
+        new String[] { "--config", "production" });
+
+// 3. Main-class FQN with a custom classloader supplier
+new SwingBridge("com.mycompany.swingapp.MySwingAppMain",
+        () -> SwingBridgeRunner.createClassLoader(
+                SwingBridgeRunner.loadSwingAppJarList(),
+                getClass().getClassLoader()));
+----
+
+The third form is the most explicit — it pairs the Swing app with a JAR list (or a directory load) of your choice. For example, to use the `swing-app-jar-list.conf` file described above, subclass `SwingBridge` and override the supplier:
+
+[source,java]
+----
+public class MyApp extends SwingBridge {
+    public MyApp() {
+        super("com.mycompany.swingapp.MySwingAppMain");
+    }
+
+    @Override
+    protected Supplier<URLClassLoader> createClassLoaderSupplier() {
+        return () -> SwingBridgeRunner.createClassLoader(
+                SwingBridgeRunner.loadSwingAppJarList(),
+                getClass().getClassLoader());
+    }
+}
+----
+
+
+[[swing-bridge.adding-your-app.next-steps]]
+== Next Steps
+
+- Tune behaviour with system properties: <<configuration#, Configuration>>.
+- Public API surface and lifecycle hooks (`beforeInit`, `afterInit`): <<reference#, Reference>>.
+- Run and debug from your IDE: <<running-and-debugging#, Running and Debugging>>.

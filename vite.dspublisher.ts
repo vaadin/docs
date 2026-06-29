@@ -29,6 +29,12 @@ const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.
 const target = ['safari15', 'es2022'];
 
 const config: UserConfig = {
+  define: {
+    // True only for preview deployments, which set DOCS_PREVIEW_DIFF=true when
+    // building. Lets the preview diff overlay (dspublisher/theme/preview-diff.ts)
+    // detect a preview without relying on the hostname.
+    __DOCS_PREVIEW_DIFF__: JSON.stringify(process.env.DOCS_PREVIEW_DIFF === 'true'),
+  },
   resolve: {
     alias: {
       'Frontend/generated/endpoints': endpointMocks,

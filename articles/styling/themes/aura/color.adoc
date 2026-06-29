@@ -7,28 +7,23 @@ order: 10
 ---
 
 = Aura Color
-:toclevels: 2
 
-Aura defines its own color system, which it then maps to the base style color properties. Unless you need absolute control of the exact color values defined for text, borders, or backgrounds, you only need to override a few Aura color properties to get a customized color palette.
+Aura defines a set of color properties that define the look and feel of Vaadin components and allow for easy customization of the theme. They can also be used to style custom UI compositions.
 
-.Safari 17 Support
-[CAUTION.small]
-If you need to support Safari 17, avoid using the `light-dark()` function when overriding color properties, as the CSS relative color syntax – which Aura and base styles use – doesn't work together with the `light-dark()` function in Safari 17. This is why Aura defines color-scheme-specific light and dark properties.
-
-.Read-Only Properties
-[NOTE.small]
-Properties which are marked “read-only” aren't technically read-only. While you can override their values, the intention is to use them only to set values of other properties.
+As Aura is applied on top of Vaadin base styles, all base style properties (prefixed with `--vaadin-`) can also be used together with Aura.
 
 
-== Color Scheme
+== Light & Dark Color Schemes
 
-You can choose between a light or a dark color scheme (i.e., light or dark mode), or configure the app to follow the user's operating system preference. The light color scheme is used by default.
+Aura includes two color schemes: light and dark. By default only the light scheme is used. You can configure your application to use the dark scheme or to switch dynamically between light and dark schemes based on user preference.
 
-The color properties you can customize in Aura have both a light and dark variant, suffixed with `-light` and `-dark`. If you support both color schemes, remember to redefine both color properties if those are available.
+The `color-scheme` CSS property is used to configure the application to use the light or dark scheme, or to switch automatically based on the operating system's settings as follows:
 
-Use the native `color-scheme` property to control the app's global color scheme. See <</styling/themes#color-schemes,Color Schemes>> for more information about the related Java API.
+- `color-scheme: light;` – only the light scheme is used (default).
+- `color-scheme: dark;` – only the dark scheme is used.
+- `color-scheme: light dark;` – the operating system's settings decide the scheme.
 
-.Allowing the application color scheme to follow the operating system's color scheme.
+.The global color scheme is either light or dark, depending on the operating system preference.
 [example]
 ====
 [source,css]
@@ -39,18 +34,25 @@ html {
 }
 ----
 
-.The global color scheme is either light or dark, depending on the operating system preference.
 [.device]
 image::_images/color-scheme-light-dark.png[]
 ====
 
-In addition to the global color scheme, you can configure the Notification and App Layout content area color schemes separately. This allows, for example, to always use the dark color scheme for the main navigation area while allowing the content/view area to follow the user's preference.
+You can also apply this setting <</styling/themes#color-schemes,statically or dynamically in Flow>> through the `@ColorScheme` annotation and the `Page::setColorScheme()` API.
 
+Correct use of Aura color properties ensures that appropriate colors are used for the active color scheme, but any other color values you use should be tested manually in both schemes.
+
+
+=== Scoped Color Scheme
+
+Typically the same color scheme is applied globally to the entire UI, but Aura also allows you to apply a different color scheme to notifications and to the App Layout's content area, where most of your UI is rendered. This allows, for example, to always use the dark color scheme for the main navigation area while allowing the content/view area to follow the operating system's setting.
+
+[.property-table]
 `--aura-content-color-scheme`::
-Defines the color scheme of the content area of the App Layout component, and is only effective when the App Layout component is used. Follows the global color scheme by default.
+Applies a separate color scheme to the content area of App Layout. The App Layout drawer and navbar use the global color-scheme property. Has no effect if App Layout is not used.
 
 `--aura-notification-color-scheme`::
-Defines the color scheme of all notifications. Follows the global color scheme by default.
+Applies a separate color scheme to all Notifications.
 
 
 .Use a different color scheme for the navigation and main content areas.
@@ -70,57 +72,156 @@ html {
 image::_images/content-color-scheme.png[]
 ====
 
+.Changing the color scheme on all components and elements in the application isn't supported.
+[CAUTION]
+Applying the `color-scheme` property is only supported on a limited set of components and elements. You can view the link:https://github.com/vaadin/web-components/blob/c8681c44ee581fe51958ca1ae306e8f0d55c6353/packages/aura/src/color.css#L57-L93[list of supported CSS selectors].
 
-== Background Color
 
-`--aura-background-color` **Read-only**::
-The base background color. Adapts to the color scheme. Don't override this property directly. Use the color-scheme-specific `--aura-background-color-light` and `--aura-background-color-dark` properties instead.
 
-`--aura-background-color-light`::
-The base background color for the light color scheme.
+=== Ensuring Compatibility with Both Light & Dark Schemes
 
-`--aura-background-color-dark`::
-The base background color for the dark color scheme.
+To ensure that any custom styling you apply to the UI works in the applied color scheme:
 
-`--aura-app-background`::
-The main app background, used for the `<html>` element and the App Layout content area. By default this is a computed gradient, based on the `--aura-background-color` property, which becomes more prominent with more saturated background colors. You can set it to a solid color if you want to, for example, to `var(--aura-background-color)`.
+- Use the `-light` and `-dark` suffixed properties, like `--aura-background-color-light` and `--aura-background-color-dark` to _customize_ that color.
+- Use Aura color properties without the `-light` or `-dark` suffix, such as `--aura-background-color`, when _applying_ color values to UI elements.
 
-You can also use the <<../base#background,base style background color properties>>.
-
-.Using custom and highly saturated background colors, making the gradient background more prominent.
-[example]
-====
 [source,css]
 ----
+/* Use light/dark-suffixed properties for customization */
 html {
-  --aura-background-color-light: #ffd06b;
-  --aura-background-color-dark: #1b0f38;
+  --aura-accent-color-light: #ffd06b;
+  --aura-accent-color-dark: #1b0f38;
+}
+
+/* Use un-suffixed properties as values */
+.some-ui-element {
+  background-color: var(--aura-accent-color);
 }
 ----
 
-.Using a dark purple for the dark color scheme (global/navigation areas) and a bright yellow for the light color scheme (content area).
+Any other color values you use won't automatically adapt to the color scheme, unless you provide separate values for each using the `light-dark()` CSS function:
+
+[source,css]
+----
+.some-ui-element {
+  background-color: light-dark(white, black);
+}
+----
+
+[[light-dark-function]]
+.Customizing light-dark() Colors
+[IMPORTANT]
+====
+Aura defines properties marked with the [.badge.light-dark]#light-dark()# badge by using the native CSS `light-dark()` function. That function allows you to define a color that adapts to the active color scheme, by providing one color value for each color scheme. In Aura, the light and dark color values for these properties are calculated based on other color properties.
+
+These properties are considered read-only, similarly as properties marked with the xref:./#read-only-properties[Read-only,role=badge] badge. Technically, you can override these read-only properties, but then it's your responsibility to make sure all color combinations meet contrast requirements in both light and dark color schemes.
+====
+
+
+== Background Color
+
+.Surface Color
+[TIP]
+In addition to the style properties listed here, Aura defines many background colors with the <<#surface-color,surface color>>.
+
+[.property-table]
+`--aura-app-background` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+The main background image, used for the `<html>` element and the App Layout content area. By default this is a computed gradient, based on the `--aura-background-color` property, which becomes more prominent with more saturated background colors. You can set it to a solid color as well.
+
+`--aura-background-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+The primary background color that defines the overall tone of the application. This color is used to compute <<#text-color,text>>, <<#border-color,border>>, and <<#surface-color,surface>> colors. Automatically assigned the value of the `-light` or `-dark` suffixed property, depending on the active color scheme.
+
+`--aura-background-color-light`::
+The primary background color of the application for the light color scheme.
+
+`--aura-background-color-dark`::
+The primary background color of the application for the dark color scheme.
+
+`--vaadin-background-container` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+Background for “containers”, buttons, toolbars, notifications, and other highlighted content areas. By default computed from `--aura-background-color` and `--aura-contrast-level`. Use this color if you want a darker background in the light color scheme and a lighter color in the dark color scheme.
+
+`--vaadin-background-container-strong` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A more prominent variant of the `--vaadin-background-container` color.
+
+
+.Using custom and highly saturated background colors, making the gradient background more prominent
+[example]
+====
+In the following example, a dark blue color is used for the dark color scheme in the global/navigation areas and a bright yellow for the light color scheme in the content area.
+[source,css]
+----
+html {
+  --aura-background-color-light: khaki;
+  --aura-background-color-dark: darkslateblue;
+
+  /* Set the main color scheme to dark */
+  color-scheme: dark;
+
+  /* Set the color scheme of the AppLayout content area to light */
+  --aura-content-color-scheme: light;
+}
+----
+
 [.device]
 image::_images/background-colors.png[]
 ====
 
 
-[[text-and-border-colors]]
-== Text & Border Colors
+[[text-color]]
+== Text Color
 
-Aura redefines the base style <<../base#text-color,text color>> and <<../base#border-color,border color>> properties. These colors are computed based on the background color properties, and automatically adapt to the color scheme.
+Aura uses the `--vaadin`-prefixed <<../base#text-color,base style text properties>> by assigning its own computed, color-scheme-adapted values to them. Aura also defines a text color that is tinted with the <<#accent-color,accent color>> as well as text colors for each of the <<#palette,palette colors>>.
 
-In addition to base style border colors, Aura defines a border that is tinted with the <<accent-color>>.
+[.property-table]
+`--vaadin-text-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+The main text color used in the UI. Defaults to the <<#neutral-color,neutral color>>.
 
-`--aura-accent-border-color` **Read-only**::
-A border color that is slightly tinted with the `--aura-accent-color` and that you can pair together with the `--aura-accent-surface` color.
+`--vaadin-text-color-secondary` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A secondary text color, with at least 4.5:1 contrast ratio with the main background color. Computed from `--vaadin-text-color` by default.
+
+`--vaadin-text-color-disabled` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+Text color for disabled text. Computed from `--vaadin-text-color` by default.
+
+`--aura-accent-text-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A text color derived from the accent color, with at least 4.5:1 contrast ratio with `--aura-background-color`.
+
+`--aura-accent-text-color-light`::
+The accent text color for the light color scheme. Computed from `--aura-accent-color-light` by default. If you use a custom color, make sure it has at least 4.5:1 contrast with the background color.
+
+`--aura-accent-text-color-dark`::
+The accent text color for the dark color scheme. Computed from `--aura-accent-color-dark` by default. If you use a custom color, make sure it has at least 4.5:1 contrast with the background color.
+
+`--aura-*-text`::
+See <<#saturated-palette,saturated palette colors>>.
 
 
-=== Text & Border Color Contrast
 
+[[border-color]]
+== Border Color
+
+Aura uses the `--vaadin`-prefixed <<../base#border-color,base border properties>> by assigning its own computed, color-scheme-adapted values to them, but also provides its own <<#accent-color,accent>> border color.
+
+Border colors are by default computed based on other color properties and the <<#contrast,contrast>> level. The most common way to customize border colors is to adjust the contrast level.
+
+[.property-table]
+`--aura-accent-border-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A border color that is slightly tinted with the <<#accent-color,accent color>>, designed to be paired together with the `--aura-accent-surface` color.
+
+`--vaadin-border-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A high-contrast border color. By default computed from `--aura-background-color` and `--aura-contrast-level` in Aura.
+
+`--vaadin-border-color-secondary` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A low-contrast border color. By default computed from `--aura-background-color` and `--aura-contrast-level` in Aura.
+
+
+
+== Contrast
+
+All text and border colors in Aura are by default computed based on the customizable `--aura-contrast-level` property. This is an efficient way to adjust the overall color contrast in your UI.
+
+[.property-table]
 `--aura-contrast-level`::
-Increase or decrease the contrast of the computed text border colors with this property.
-
-If you explicitly override any text or border color properties the `--aura-contrast-level` property no longer affects them, unless you use it in your own computed colors.
+Increase or decrease the contrast of the computed text and border colors with this property. Reasonable values range between `0` and `5`. The default value is `1`.
 
 .Increase the contrast level to make text and border colors stronger.
 [example]
@@ -128,239 +229,460 @@ If you explicitly override any text or border color properties the `--aura-contr
 [source,css]
 ----
 html {
-  --aura-contrast-level: 10;
+  --aura-contrast-level: 5;
 }
 ----
 
-[.device]
-image::_images/contrast-level.png[]
+.The screenshot on the left uses contrast level 0, while the screenshot on the right uses contrast level 5.
+image::_images/contrast-level.png[Two screenshots side by size, one showing a low contrast and the other high contrast text and border colors]
 ====
+
+.Use caution when using low contrast levels.
+[CAUTION]
+The default Aura colors are evaluated to meet WCAG 2.1 color contrast requirements. Make sure to evaluate the color contrast manually when using a contrast level lower than the default.
+
+If you explicitly override any text or border color properties the `--aura-contrast-level` property no longer affects them, unless you use it in your own computed colors.
 
 
 == Palette
 
-Aura offers a palette of seven colors: **neutral**, **red**, **orange**, **yellow**, **green**, **blue**, and **purple**. The palette doesn't offer traditional color scales that many design systems include, where you have 10 to 12 colors per hue ranging from almost white to almost black, commonly named from 50/100 to 900.
+Aura offers a palette of seven colors: **neutral**, **red**, **orange**, **yellow**, **green**, **blue**, and **purple**.
 
-The palette consists of single color values, from which all necessary variations of that color are computed automatically (the text, border and surface/background variants). If you need more than what Aura and the <<../base#,base styles>> offer out of the box, you can use the native CSS https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/color-mix[`color-mix()`] and https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Colors/Using_relative_colors[relative color functions].
 
-.Example: Create a semi-transparent version of the `--aura-red` color
+[[neutral-color]]
+=== Neutral Color (Grayscale)
+
+The neutral color, which is computed from the `--aura-background-color-light` and `--aura-background-color-dark` properties by default, is used for the <<#text-color,text>> and <<#border-color,border>> colors.
+
+[.property-table]
+`--aura-neutral` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+Automatically assigned the value of the `-light` or `-dark` suffixed property, depending on the active color scheme.
+
+`--aura-neutral-light`::
+A dark gray by default.
+
+`--aura-neutral-dark`::
+White by default.
+
+
+[[saturated-palette]]
+=== Saturated Colors
+
+image::_images/palette.png[]
+
+These saturated palette colors are meant to be used as <<#accent-color,accent>> colors, for example, with the <</components/badge#,Badge>> component together with the <<#accent-color-class-names,accent color class names>>. You can override the palette with custom colors, for example, from your brand guidelines.
+
+Each color has a corresponding text color property that provides appropriate <<#contrast,contrast>> against the background.
+
+[%header]
+|===
+|Generic Color | Text Color
+|`--aura-red` | `--aura-red-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|`--aura-orange` | `--aura-orange-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|`--aura-yellow` | `--aura-yellow-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|`--aura-green` | `--aura-green-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|`--aura-blue` | `--aura-blue-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|`--aura-purple` | `--aura-purple-text` xref:#light-dark-function[light-dark(),role="badge light-dark"]
+|===
+
+
+
+=== Custom Brightness or Opacity Variants
+
+Aura doesn't offer traditional color scales that many design systems include, where you have 10 to 12 colors per hue ranging from almost white to almost black, commonly named from 50/100 to 900, or as `10pct` to `90pct` in the Lumo theme.
+
+The Aura palette consists of single saturated color values, from which all necessary variations of that color are computed automatically (the text, border, and surface/background variants). If you need more than what Aura and the <<../base#,base styles>> offer out of the box, you can use the native CSS https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/color-mix[`color-mix()`] and https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Colors/Using_relative_colors[relative color functions] to compute more color properties.
+
+.Example: Computing color variants based on the `--aura-red` property
+[example]
+====
 [source,css]
 ----
 html {
-  --aura-red-200: color-mix(in srgb, var(--aura-red) 20%, transparent);
+  /* A variant of --aura-red mixed with 20% --aura-background-color */
+  --aura-red-light: color-mix(in srgb, var(--aura-red) 80%, var(--aura-background-color));
+
+  /* A variant of --aura-red with 20% opacity */
+  --aura-red-20pct: color-mix(in srgb, var(--aura-red) 20%, transparent);
 }
 ----
-
-
-=== Neutral Color (Grayscale)
-
-The neutral color forms the basis of your theme, as it's used for text and border colors by default. The `--aura-neutral` color adapts to the color scheme, using either the light or dark version of the property, where the light version is a dark gray and the dark version is off-white color by default.
-
-`--aura-neutral`, `--aura-neutral-light`, `--aura-neutral-dark`.
-
-
-=== Saturated Colors
-
-These saturated palette colors are meant to be used as accent colors. You can override the palette with custom colors, for example, from your brand guidelines.
-
-`--aura-red`,
-`--aura-orange`,
-`--aura-yellow`,
-`--aura-green`,
-`--aura-blue`,
-`--aura-purple`.
-
-
-=== Text Colors
-
-Each palette color (excluding neutral, use the <<../base#text, base style text colors>>) has a corresponding text color property which has more contrast against the background color, making it suitable to be used for colored text.
-
-`--aura-red-text`,
-`--aura-orange-text`,
-`--aura-yellow-text`,
-`--aura-green-text`,
-`--aura-blue-text`,
-`--aura-purple-text`.
+====
 
 
 == Accent Color
 
-.Aura Does Not Use Lumo CSS Variables
-[TIP]
-Aura has its own color system and does not use Lumo CSS custom properties like `--lumo-primary-color` or `--lumo-error-color`. To change the primary/accent color in Aura, use `--aura-accent-color-light` and `--aura-accent-color-dark` as described below. If you are migrating from Lumo, replace `--lumo-primary-color` with the Aura accent color properties.
+The accent color is used to highlight certain UI parts and states, such as buttons, selections, and keyboard focus (similarly to the primary color in the Lumo theme).
 
-`--aura-accent-color` **Read-only**::
-The accent color, used to highlight certain parts of the UI, like some interactive elements and selection states. Adapts to the color scheme. Don't override this property directly. Use the color-scheme-specific `--aura-accent-color-light` and `--aura-accent-color-dark` properties instead.
+[.property-table]
+`--aura-accent-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+Automatically assigned the value of the `-light` or `-dark` suffixed property, depending on the active color scheme.
 
 `--aura-accent-color-light`::
-The accent color for the light color scheme.
+The accent color for the light color scheme. The default is `var(--aura-blue)`.
 
 `--aura-accent-color-dark`::
-The accent color for the dark color scheme.
+The accent color for the dark color scheme. The default is `var(--aura-blue)`.
 
-`--aura-accent-contrast-color` **Read-only**::
-A color that has strong contrast when paired with `--aura-accent-color`. The contrast color is either pure white or a semi-transparent black, depending on the lightness of the accent color.
+`--aura-accent-contrast-color` xref:#light-dark-function[light-dark(),role="badge light-dark"]::
+A color that provides strong contrast against the `--aura-accent-color`, for example, button label color when the button background uses the accent color. The default contrast color is either white or a semi-transparent black, depending on the lightness of the accent color.
 
-`--aura-accent-contrast-color-light` **Read-only**::
+`--aura-accent-contrast-color-light`::
 The accent contrast color for the light color scheme.
 
-`--aura-accent-contrast-color-dark` **Read-only**::
+`--aura-accent-contrast-color-dark`::
 The accent contrast color for the dark color scheme.
 
-`--aura-accent-text-color` **Read-only**::
-A text color derived from the accent color, providing more contrast against the background. Adapts to the color scheme. Don't override this property directly. Use the color-scheme-specific `--aura-accent-text-color-light` and `--aura-accent-text-color-dark` properties instead.
 
-`--aura-accent-text-color-light` **Read-only**::
-The accent text color for the light color scheme.
-
-`--aura-accent-text-color-dark` **Read-only**::
-The accent text color for the dark color scheme.
-
-
-.Define accent colors for the light and dark color schemes.
+.Define accent colors for the light and dark color schemes
 [example]
 ====
-.Provide Enough Contrast
-[CAUTION.small]
-Choose a color that has at least 3:1 contrast ratio with the background color in your application. The accent color is used as is for the focus outline color, which needs to be visible for all users.
-
-
 [source,css]
 ----
-/* If you want, you can apply different colors for light and dark color schemes */
+/* You can apply different colors for light and dark color schemes */
 html {
-  --aura--accent-color-light: var(--aura-orange);
-  --aura--accent-color-dark: var(--aura-purple);
+  --aura-accent-color-light: var(--aura-orange);
+  --aura-accent-color-dark: var(--aura-purple);
 }
 ----
 
-.Using the orange accent color in the light color scheme and the purple accent color in the dark color scheme.
-[.device]
+.Using the orange accent color in the light color scheme and the purple accent color in the dark color scheme
 image::_images/accent-colors.png[]
 ====
 
 
 === Accent Color Class Names
 
-Use any of the following class names on the `<html>` element to set the accent color to the whole UI, or any component to set the accent color to only that part of the UI.
+The accent color is applied globally to the entire UI, but you can also scope it to individual elements.
 
-`.aura-accent-neutral`,
-`.aura-accent-red`,
-`.aura-accent-orange`,
-`.aura-accent-yellow`,
-`.aura-accent-green`,
-`.aura-accent-blue`,
-`.aura-accent-purple`.
+Aura provides the following CSS utility classes, based on the <<#saturated-palette,saturated color palette>>, that you can apply to any part of the UI to give it a different accent color:
 
-.Use the purple palette color as the global accent color.
+- `aura-accent-neutral`
+- `aura-accent-red`
+- `aura-accent-orange`
+- `aura-accent-yellow`
+- `aura-accent-green`
+- `aura-accent-blue`
+- `aura-accent-purple`
+
+.Use the purple palette color as the accent color of a button
 [example]
 ====
+[.example]
+--
+[source,java]
+----
+<source-info group="Java"></source-info>
+var button = new Button("Generate with AI");
+button.addClassNames("aura-accent-purple");
+----
 [source,html]
 ----
-<html class="aura-accent-purple">
+<source-info group="HTML"></source-info>
+<vaadin-button class="aura-accent-purple">Generate with AI</vaadin-button>
 ----
+--
 ====
+
+Furthermore, you can use the `aura-accent-color` class name to reset the accent color back to global accent color, for example, if a parent container has applied another accent color.
 
 
 == Surface Color
 
-The surface color, used as backgrounds, is used to create visual hierarchies in the UI. In general, a lighter color implies more “elevation” – being closer to the user. Aura provides a system for applying surface colors of varying elevation on the built-in components and layouts in your application.
+The Aura surface color can be used to make UI elements lighter or darker than the <<#background-color, page background color>>. The surface color can be used to make parts of the UI look "elevated" over the background or "recessed" into it. It's based on the `--aura-background-color` property.
 
-.Regular and accent surface colors for levels from -1 to 4, in both light and dark color schemes.
-image::_images/surface-colors.png[]
+You can apply the surface color either with the `aura-surface` class name or with the `--aura-surface-color` style property in CSS:
 
+.Applying the surface color to a component
+[example]
+====
+[.example]
+--
+[source,java]
+----
+<source-info group="Java"></source-info>
+var box = new Div();
+box.setWidth("300px");
+box.setHeight("150px");
+box.addClassNames("aura-surface");
+// Border styles are omitted
+----
+
+.styles.css
+[source,css]
+----
+<source-info group="CSS"></source-info>
+/* In Java:
+var box = new Div();
+box.addClassNames("elevated-box");
+*/
+
+.elevated-box {
+  background-color: var(--aura-surface-color);
+  /* Border styles are omitted */
+}
+----
+--
+
+image::_images/surface.png[width=300]
+====
+
+
+=== Surface Level (Brightness)
+
+The brightness of the surface color is controlled by the `--aura-surface-level` property – a number that defaults to 1, which creates a brighter or "elevated" surface. Negative numbers create a darker or "recessed" surface. Level 0 is essentially the same color as `--aura-background-color`.
+
+The surface color turns to pure white (with positive levels) or to pure black (with negative levels) after a certain level, depending on `--aura-background-color`.
+
+.Surface colors for levels from -1 to 4, in both light and dark color schemes.
+image::_images/surface-colors.png[width=500]
+
+To make the surface look "recessed" (darker), you can set the level, for example, to -1, either in a stylesheet or with an inline style. The number can be any integer or decimal.
+
+.Use the Surface Color Class Names
+[IMPORTANT]
+You need to use the `aura-surface` or `aura-surface-solid` class name if you want to change the `--aura-surface-level` property. Changing it on other elements doesn't work.
+
+.Setting the surface level on a component
+[example]
+====
+[source,java]
+----
+var box = new Div();
+box.addClassNames("aura-surface", "recessed-box");
+----
+
+You can choose to set the surface level with either inline styles in Java, or with CSS in a stylesheet:
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Java"></source-info>
+box.getStyle().set("--aura-surface-level", "-1");
+// Border styles are omitted
+----
+
+.styles.css
+[source,css]
+----
+<source-info group="CSS"></source-info>
+.recessed-box {
+  --aura-surface-level: -1;
+  /* Border styles are omitted */
+}
+----
+--
+
+image::_images/surface-level.png[width=300]
+====
+
+.Surface level is inherited by child elements.
 [NOTE]
-If you need a background color that is darker than the base background color in the light color scheme and lighter in the dark color scheme, use the `--vaadin-background-container` and `--vaadin-background-container-strong` colors from the base styles.
+Any child element to which the Aura surface color is applied inherits the surface level of its parent. You can override that by applying a different surface level on the child element.
 
-`--aura-surface-color` **Read-only**::
-A computed color that you can apply to an element to give it elevation. The color is computed based on the `--aura-background-color` property, and adapts to the color scheme. The final value of the computed color depends on the effective values of the  `--aura-surface-level` and `--aura-surface-opacity` properties.
+
+=== Accent Surface
+
+A more colorful variant of the surface color can be achieved with the `--aura-accent-surface` property, which blends the surface color with the <<#accent-color,accent color>>.
+
+.Applying the accent surface color to a component
+[example]
+====
+[source,java]
+----
+var box = new Div();
+box.addClassNames("aura-surface", "elevated-box");
+----
+
+.styles.css
+[source,css]
+----
+.elevated-box {
+  background-color: var(--aura-accent-surface);
+}
+----
+
+image::_images/accent-surface.png[width=300]
+====
+
+You can change the color blended into the surface color by overriding the accent color for the element, either in CSS or using one of the accent color class names.
+
+.Use the Accent Color Class Names
+[IMPORTANT]
+You need to use one of the <<#accent-color-class-names,accent color class names>> if you want to change the accent color of a surface. Changing it on other elements doesn't work.
+
+.Using a different accent color to tint the surface color
+[example]
+====
+[source,java]
+----
+var box = new Div();
+box.addClassNames("aura-accent-orange", "aura-surface", "elevated-box");
+----
+
+.styles.css
+[source,css]
+----
+.elevated-box {
+  background-color: var(--aura-accent-surface);
+}
+----
+
+image::_images/accent-surface-orange.png[width=300]
+====
+
+The accent surface color can be adjusted with the level and opacity properties the same as the regular surface color.
+
+.Accent surface colors for levels from -1 to 4, in both light and dark color schemes.
+image::_images/accent-surface-colors.png[width=500]
+
+
+=== Surface Opacity
+
+By default, the Aura surface color is semi-transparent, to achieve a brighter or darker surface on top of _any_ background color.
+
+The surface opacity is controlled by the `--aura-surface-opacity` property, which defaults to 0.5 (i.e., 50% opacity). You can set it to any value between 0 (fully transparent) and 1 (fully opaque).
+
+The surface's opaqueness naturally affects its brightening or darkening effect over the background, and the extent to which it blends with the background color.
+
+.Use the Surface Color Class Names
+[IMPORTANT]
+You need to use the `aura-surface` or `aura-surface-solid` class name if you want to change the `--aura-surface-opacity` property. Changing it on other elements doesn't work.
+
+.Changing the surface opacity on a container that uses the surface color
+[example]
+====
+[source,java]
+----
+var box = new Div();
+box.addClassNames("aura-surface", "elevated-box");
+----
+
+You can choose to set the opacity with either inline styles in Java, or with CSS in a stylesheet:
+[.example]
+--
+[source,java]
+----
+<source-info group="Java"></source-info>
+box.getStyle().set("--aura-surface-opacity", "0.8");
+----
+
+.styles.css
+[source,css]
+----
+<source-info group="CSS"></source-info>
+.elevated-box {
+  --aura-surface-opacity: 0.8;
+}
+----
+--
+
+image::_images/surface-opacity.png[width=300]
+====
+
+A fully opaque surface color can also be applied with the `aura-surface-solid` class name:
+
+.Using the solid surface color on a generic container
+[example]
+====
+[source,java]
+----
+box.addClassNames("aura-surface-solid");
+----
+
+image::_images/surface-solid.png[width=300]
+====
+
+
+=== Surface Colors in Vaadin Components
+
+Many Vaadin components use the surface color by default when using the Aura theme. You can change the brightness and opacity of the surface color used in these components by overriding the `--aura-surface-level` and `--aura-surface-opacity` properties in CSS, using the selectors listed here.
+
+|===
+| Component or Part | CSS Selector
+
+| Buttons
+| `vaadin-button` +
+`vaadin-upload-button` +
+`vaadin-menu-bar-button` +
+`vaadin-drawer-toggle`
+| Text input fields
+| `::part(input-field)`
+| Checkboxes
+| `vaadin-checkbox::part(checkbox)`
+| Radio buttons
+| `vaadin-radio-button::part(radio)`
+| Slider and Range Slider
+| `vaadin-slider, vaadin-range-slider`
+| Tabs
+| `vaadin-tab`
+| Cards
+| `vaadin-card`
+| Dashboard widgets
+| `vaadin-dashboard-widget`
+| Dialogs and other overlays
+| `::part(overlay)`
+| Filled Accordion panels
+| `vaadin-accordion-panel[theme~='filled']`
+| Filled Details
+| `vaadin-details[theme~='filled']`
+| Message attachments
+| `vaadin-message::part(attachment)`
+| Upload
+| `vaadin-upload`
+| Upload thumbnail chips
+| `vaadin-upload-file`
+| Grid
+| `vaadin-grid`
+| The detail area in Master-Detail Layout
+| `vaadin-master-detail-layout::part(detail)`
+| Side Navigation items
+| `vaadin-side-nav-item::part(content)`
+| App Layout's navbar
+| `vaadin-app-layout::part(navbar)`
+| App Layout's drawer
+| `vaadin-app-layout::part(drawer)`
+|===
+
+.Change the surface color of buttons and input fields
+[example]
+====
+[source,css]
+----
+/* Make buttons dark instead of light: */
+vaadin-button {
+  --aura-surface-level: 0;
+}
+
+/* Make input fields more transparent: */
+::part(input-field) {
+  --aura-surface-opacity: 0.25;
+}
+----
+
+image:_images/button-surface-level.png[width=160]
+image:_images/text-field-surface-opacity.png[width=300]
+====
+
+
+=== Surface Style Property Reference
+
+[.property-table]
+`--aura-surface-color` xref:./#read-only-properties[Read-only,role=badge]::
+A computed color that you can apply to an element to give it elevation. The color is computed based on the `--aura-background-color` property. The final value of the computed color depends on the effective values of the `--aura-surface-level` and `--aura-surface-opacity` properties.
+
+`--aura-surface-color-solid` xref:./#read-only-properties[Read-only,role=badge]::
+An opaque version of the effective surface color. Essentially the same as if `--aura-surface-opacity` was `1`. Useful for situations when a semi-transparent color is not suitable (e.g., when a surface needs to fully cover something).
+
+`--aura-accent-surface` xref:./#read-only-properties[Read-only,role=badge]::
+A surface color that is tinted with the effective <<#accent-color,accent color>>.
 
 `--aura-surface-level`::
-The “elevation level” of the computed surface color. Can be any fractional number, positive, or negative. Default is 1. In light mode, level 3–4 usually results in a white color in the light color scheme. In the dark color scheme, level 8 starts to be an upper limit, after which text colors are likely to not have enough contrast (depending on the surface opacity).
+The “elevation level” of the computed surface color. Can be any fractional number, positive, or negative. The default is `1`. The level is inherited by nested surfaces.
++
+With the light color scheme, levels 3–4 usually result in a white color, depending on the lightness of `--aura-background-color-light`.
++
+With the dark color scheme, level 8 starts to be an upper limit, after which text colors are likely to not have enough <<#contrast,contrast>> (depending on the surface opacity).
 
 `--aura-surface-opacity`::
-The transparency of the computed surface color. Defaults to 0.5. Transparency allows you to nest the same surface color on top of each other to create more sense of elevation.
-
-`--aura-overlay-surface-opacity`::
-Surface opacity specifically for overlay elements. You can set this to 1 if you don't like the default semi-transparent overlays.
-
-`--aura-surface-color-solid` **Read-only**::
-An opaque version of the effective surface color. Essentially the same as if `--aura-surface-opacity` was 1. Useful for situations when you need an opaque color.
-
-`--aura-accent-surface` **Read-only**::
-A surface color that is tinted with the effective accent color.
-
-=== Customizing Surface Level & Opacity
-
-The surface level and opacity can only change on a predefined set of elements.
-
-While you might expect to be able to set the `--aura-surface-level` and `--aura-surface-opacity` property values at any level of the DOM hierarchy, that doesn't work. You can only change the level and opacity on elements that match the hard-coded list of selectors in Aura (https://github.com/vaadin/web-components/blob/4004d14275e2727147bcd085308f7f92481a9cf8/packages/aura/src/color.css#L49-L73[see full list]).
-
-.Change the surface level of an element that matches the supported list of selectors.
-[example]
-====
-The `input-field` part of the Text Field component is one of the supported elements where you can adjust the surface color.
-
-First, apply a unique class name on the Text Field to be able to target it with CSS.
-
-[source,java]
-----
-var searchField = new TextField();
-searchField.addClassNames("search-field");
-----
-
-Then, adjust the surface level with CSS, targeting the `input-field` part in the shadow DOM of the Text Field component.
-
-[source,css]
-----
-.search-field::part(input-field) {
-  --aura-surface-level: -1;
-}
-----
-
-.A comparison of the Text Field component with the default surface color and with an adjusted surface color level.
-[.fill.white]
-image::_images/surface-level.png[]
-====
-
-
-=== Surface Color Class Names
-
-This list of supported selectors (see the earlier section), that allow you to customize the surface color level and opacity, include the general-purpose `.aura-surface` and `.aura-surface-solid` class names. You can apply these class names to any element and then adjust the level and opacity on that element.
-
-As a side effect, these class names apply the corresponding semi-transparent or opaque surface color as the background of the element your apply them to. You can override the background to transparent, if you only want to use the newly computed surface color in some nested level of the element, for example, its shadow DOM.
-
-You can only have one computed surface color inside the style scope of the `.aura-surface` and `.aura-surface-solid` class names. A new color can be computed for a nested element if it matches the supported list of selectors.
-
-.Change the surface color of an element that doesn't match the supported list of selectors, in the shadow DOM of a component.
-[example]
-====
-To apply a custom surface color level on the internal `group-field` part of the Checkbox Group component, apply the `.aura-surface` class name on the component. Add another, unique class name to target this component instance specifically.
-
-[source,java]
-----
-var checkboxGroup = new CheckboxGroup("Options");
-checkboxGroup.addClassNames("aura-surface", "my-checkbox-group");
-----
-
-Then, adjust the surface level and opacity on the component element, and reset its background to transparent. Finally, apply the recomputed surface color, which is inherited, to the part in the shadow DOM (and a couple more visual adjustments).
-
-[source,css]
-----
-.my-checkbox-group {
-  --aura-surface-level: -1;
-  --aura-surface-opacity: 0.4;
-  background: transparent;
-}
-
-.my-checkbox-group::part(group-field) {
-  background: var(--aura-surface-color);
-  padding: var(--vaadin-padding-s);
-  border-radius: var(--vaadin-radius-m);
-}
-----
-
-.A Checkbox Group component with a customized surface color applied on an internal part.
-[.fill.white]
-image::_images/custom-surface-color.png[width=140]
-====
+The transparency of the computed surface color. The default is `0.5`, and each surface resets its opacity to this value unless explicitly overridden. Transparency allows you to nest the same surface color on top of each other to create more sense of elevation.

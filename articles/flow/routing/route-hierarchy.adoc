@@ -1,0 +1,116 @@
+---
+title: Route Hierarchy
+page-title: How to define a logical route hierarchy in Vaadin
+description: How to declare logical parent routes and resolve the route hierarchy for breadcrumbs and menus.
+meta-description: Learn how to declare logical parent routes in Vaadin and resolve the route hierarchy to build breadcrumbs and hierarchical menus.
+order: 95
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Route Hierarchy#
+
+Routes can declare a logical parent route, forming a route hierarchy. The hierarchy is used to build navigation aids such as breadcrumb trails and hierarchical menus.
+
+The route hierarchy is independent of the layout chain declared through [annotationname]`@Route` `layout` and [annotationname]`@RoutePrefix`: a route may be rendered inside one layout while logically belonging under a completely different route. The hierarchy is also resolved without creating an instance of the route or its parent, which makes it usable for routes that aren't currently shown, such as the ancestors of a breadcrumb trail.
+
+
+== Declaring a Static Parent
+
+Use the [annotationname]`@RouteParent` annotation to declare the logical parent of a navigation target:
+
+[source,java]
+----
+@Route("dashboard")
+public class DashboardView extends Div {
+}
+
+@Route("reports")
+@RouteParent(DashboardView.class)
+public class ReportsView extends Div {
+}
+----
+
+The parent inherits the [classname]`RouteParameters` of the annotated route, narrowed to the names that the parent's own route template declares. A parent with fewer or no parameters therefore still resolves to a working link.
+
+
+== Resolving the Parent Dynamically
+
+When the parent — or the parameters it should be resolved with — needs to be computed, set a [interfacename]`RouteParentResolver` through the `resolver` attribute of [annotationname]`@RouteParent`. The resolver receives a [classname]`RouteParentContext` describing the navigation target class and its [classname]`RouteParameters`, and returns a [classname]`RouteReference` pointing to the parent:
+
+[source,java]
+----
+@Route("orgs/:orgId/projects/:projectId")
+@RouteParent(resolver = OrgParentResolver.class)
+public class ProjectView extends Div {
+}
+
+public class OrgParentResolver implements RouteParentResolver {
+    @Override
+    public Optional<RouteReference> resolveParent(
+            RouteParentContext context) {
+        // carry over only the parameters the parent route needs
+        RouteParameters parentParameters = new RouteParameters("orgId",
+                context.routeParameters().get("orgId").orElseThrow());
+        return Optional.of(
+                new RouteReference(OrgView.class, parentParameters));
+    }
+}
+----
+
+A [classname]`RouteReference` carries both the parent navigation target class and the [classname]`RouteParameters` it should be resolved with. The parameters are part of the reference because a parent route typically declares only a subset of the child parameters, and that subset is needed both to build a link to the parent and to resolve its parent in turn.
+
+Returning an empty [classname]`Optional` marks the top of the hierarchy. When a resolver is set, the static `value` of the annotation is ignored.
+
+Resolver implementations must be stateless and cheap to create: they're instantiated through the application [interfacename]`Instantiator` — so dependency injection is available — every time a parent is resolved. The route itself is never instantiated.
+
+
+== URL-Derived Parents
+
+Routes without a [annotationname]`@RouteParent` annotation get their logical parent derived from the route URL: the path is walked upwards until a registered route serving the nearest ancestor path is found. For example, the parent of a route serving `users/:userId/orders` is the route serving `users/:userId`, if one is registered.
+
+This means that route hierarchies that follow the URL structure work without any annotations; [annotationname]`@RouteParent` is only needed when the logical hierarchy differs from the URL paths.
+
+
+== Resolving the Hierarchy
+
+[classname]`RouteConfiguration` exposes the resolved hierarchy:
+
+- [methodname]`getRouteParent(Class, RouteParameters)` resolves the logical parent of a navigation target, returning an [classname]`Optional<RouteReference>`.
+- [methodname]`getRouteHierarchy(Class, RouteParameters)` resolves the whole chain of the target and its logical ancestors, ordered from the hierarchy root to the given target, which is the last element.
+
+Neither method instantiates any of the routes. Combined with the <<navigation#observing-navigation-state, router state signal>>, the hierarchy can be used to render a breadcrumb trail that updates on every navigation:
+
+[source,java]
+----
+public class Breadcrumbs extends Div {
+
+    public Breadcrumbs() {
+        Signal<RouterState> routerState = UI.getCurrent().routerStateSignal();
+        Signal.effect(this, () -> update(routerState.get()));
+    }
+
+    private void update(RouterState state) {
+        removeAll();
+        if (state.navigationTarget() == null) {
+            return;
+        }
+        RouteConfiguration configuration = RouteConfiguration
+                .forSessionScope();
+        Router router = VaadinService.getCurrent().getRouter();
+        for (RouteReference entry : configuration.getRouteHierarchy(
+                state.navigationTarget(), state.routeParameters())) {
+            String title = router.resolvePageTitle(entry.navigationTarget(),
+                    entry.routeParameters()).orElse("");
+            add(new RouterLink(title, entry.navigationTarget(),
+                    entry.routeParameters()));
+        }
+    }
+}
+----
+
+[methodname]`Router.resolvePageTitle(Class, RouteParameters)` resolves the title of each entry without instantiating the route, applying the same [annotationname]`@DynamicPageTitle` generator and application-wide default [interfacename]`PageTitleGenerator` chain used during navigation. Because the ancestor routes are never instantiated, instance-based title APIs such as [interfacename]`HasDynamicTitle` aren't consulted; titles are resolved from the navigation target class and its route parameters alone.
+
+See <<page-titles#generating-page-titles, Generating Page Titles>> for how to declare title generators on routes and application-wide.
+
+
+[discussion-id]`7E1B2F64-9C45-4A1B-BF1F-2D5E8A0C3D91`
