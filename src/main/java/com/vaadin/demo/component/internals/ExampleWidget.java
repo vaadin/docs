@@ -10,16 +10,16 @@ import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.shared.Registration;
 
 // tag::annotations[]
-@Tag("acme-widget-wrapper")
+@Tag("example-widget-wrapper")
 // end::annotations[]
 // tag::body[]
-@JsModule("./component-internals/acme-widget-wrapper.ts")
-public class AcmeWidget extends Component {
+@JsModule("./component-internals/example-widget-wrapper.ts")
+public class ExampleWidget extends Component {
 
     public record WidgetConfig(String type, boolean animate) {
     }
 
-    public AcmeWidget() {
+    public ExampleWidget() {
     }
 
     public void setTitle(String title) {
@@ -48,12 +48,12 @@ public class AcmeWidget extends Component {
     }
 
     @DomEvent("widget-change")
-    public static class WidgetChangeEvent extends ComponentEvent<AcmeWidget> {
+    public static class WidgetChangeEvent extends ComponentEvent<ExampleWidget> {
 
         private final String label;
         private final double value;
 
-        public WidgetChangeEvent(AcmeWidget source, boolean fromClient,
+        public WidgetChangeEvent(ExampleWidget source, boolean fromClient,
                 @EventData("event.detail.label") String label,
                 @EventData("event.detail.value") double value) {
             super(source, fromClient);

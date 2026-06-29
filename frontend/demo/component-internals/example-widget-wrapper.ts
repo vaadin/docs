@@ -3,7 +3,7 @@ import { css, html, LitElement, type PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 // In a real project, you would import from the npm package:
-// import { Widget, type WidgetConfig } from '@acme/widget';
+// import { Widget, type WidgetConfig } from '@example/widget';
 //
 // For this example, the types are defined locally to illustrate the pattern.
 
@@ -41,8 +41,8 @@ class Widget {
   }
 }
 
-@customElement('acme-widget-wrapper')
-class AcmeWidgetWrapper extends LitElement {
+@customElement('example-widget-wrapper')
+class ExampleWidgetWrapper extends LitElement {
   // -- Reactive properties (synced with Java via element properties) --
 
   @property({ type: String })
@@ -144,5 +144,5 @@ class AcmeWidgetWrapper extends LitElement {
   }
 }
 
-export { AcmeWidgetWrapper };
+export { ExampleWidgetWrapper };
 // end::class[]
