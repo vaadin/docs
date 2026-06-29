@@ -48,7 +48,8 @@ public class ExampleWidget extends Component {
     }
 
     @DomEvent("widget-change")
-    public static class WidgetChangeEvent extends ComponentEvent<ExampleWidget> {
+    public static class WidgetChangeEvent
+            extends ComponentEvent<ExampleWidget> {
 
         private final String label;
         private final double value;
