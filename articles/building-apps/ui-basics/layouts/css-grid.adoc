@@ -1,0 +1,114 @@
+---
+title: CSS Grid Layouts
+page-title: How to use CSS Grid in a Vaadin application
+description: Learn how to arrange Vaadin components in two-dimensional grids using CSS Grid, including fluid card grids that wrap automatically.
+meta-description: Arrange Vaadin components into rows and columns with CSS Grid, including fluid card grids that wrap automatically without media queries.
+order: 20
+---
+
+= CSS Grid Layouts
+:toclevels: 2
+
+CSS Grid is a _two-dimensional_ layout system: it arranges children into rows *and* columns at the same time. Use it when the one-dimensional layouts -- `HorizontalLayout` and `VerticalLayout`, which arrange a single row or column -- aren't enough, such as for card grids or fixed page grids. For those one-dimensional layouts, see the <<index#,Arrange with Layouts>> overview.
+
+CSS Grid is plain CSS, so it works with any theme. Vaadin has no dedicated grid layout component; instead you apply grid styling to an ordinary container.
+
+.CSS Grid is not the Vaadin Grid component
+[IMPORTANT]
+This article is about _CSS Grid_, the browser layout system. It is unrelated to the Vaadin <</components/grid#,Grid>> component, which is a data table for displaying rows of items.
+
+
+== When to Use CSS Grid
+
+[cols="2,1",options="header"]
+|===
+| Need | Use
+| A single row or column of components | <<index#,HorizontalLayout / VerticalLayout>>
+| Form fields with labels | <</components/form-layout#,Form Layout>>
+| User-rearrangeable dashboard widgets | <</components/dashboard#,Dashboard>>
+| A fixed two-dimensional grid, or a card grid | CSS Grid (this article)
+|===
+
+
+== Applying CSS Grid
+
+Because there's no grid layout component, add `display: grid` to a container through a CSS class, then add the components as its children -- each child becomes a cell:
+
+[source,java]
+----
+Div productGrid = new Div();
+productGrid.addClassName("product-grid");
+productGrid.add(card1, card2, card3, card4, card5, card6);
+----
+
+[source,css]
+----
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* three equal-width columns */
+    gap: 1rem;                             /* space between cells */
+}
+----
+
+`1fr` is a _fraction_ of the available space, so `repeat(3, 1fr)` makes three columns that share the width equally. Rows are created automatically as items fill the columns. Use `gap` for spacing between cells rather than margins on the children.
+
+For how to attach a stylesheet and apply class names from Java, see <<../add-styling#,Add Styling>>.
+
+
+[#fluid-grids-that-wrap-automatically]
+== Fluid Grids That Wrap Automatically
+
+For a card grid that should fit as many columns as the screen allows, combine `repeat()` with `auto-fill` and `minmax()`. This adapts to the available width *without any media queries*:
+
+[source,css]
+----
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+}
+----
+
+Each column is at least `220px` wide and grows to fill leftover space; the browser packs in as many columns as fit and wraps the rest to new rows. For most card grids this is simpler and smoother than defining breakpoints by hand. When you do need breakpoint-based changes, see <<responsive#,Responsive Layouts>>.
+
+
+== Spanning Multiple Cells
+
+A child can span several columns or rows. Add a class to the component and set `grid-column` or `grid-row`:
+
+[source,java]
+----
+featuredCard.addClassName("featured");
+----
+
+[source,css]
+----
+.featured {
+    grid-column: span 2; /* take up two columns */
+}
+----
+
+
+== Lumo Utility Classes
+
+[NOTE]
+Utility classes require the *Lumo theme*. With the Aura theme, write the CSS shown above.
+
+If you use Lumo, you can build a grid without a separate stylesheet by applying utility classes from Java -- `LumoUtility.Display.GRID` together with the grid-column and `LumoUtility.Gap` utilities:
+
+[source,java]
+----
+productGrid.addClassNames(
+        LumoUtility.Display.GRID,
+        LumoUtility.Gap.MEDIUM);
+----
+
+For the full list of grid and gap utility classes, see the <</styling/themes/lumo/utility-classes#,Lumo Utility Classes>> reference.
+
+
+== Best Practices
+
+. *Use CSS Grid for two-dimensional layouts only.* For a single row or column, `HorizontalLayout` or `VerticalLayout` is simpler -- see <<index#,Arrange with Layouts>>.
+. *Prefer `auto-fill` with `minmax()` for card grids.* It wraps fluidly without media queries; reach for breakpoints only when the layout must change in a way `minmax()` can't express.
+. *Use `gap` for spacing,* not margins on the children.
+. *Don't confuse CSS Grid with the Vaadin `Grid` component* -- one is a layout system, the other a data table.

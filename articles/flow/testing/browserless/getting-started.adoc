@@ -9,13 +9,19 @@ order: 10
 
 = Getting Started with Browserless Testing
 
-To start creating browserless tests in an existing project, you need to add the `browserless-test-junit6` dependency with a `test` scope. For Spring Boot projects, also ensure the Spring Boot test starter is present. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
+To start creating browserless tests in an existing Spring Boot project, add the `browserless-test-spring` dependency with a `test` scope. Spring Boot's test starter must also be present -- it's typically already on the classpath in Spring Boot projects.
+
+.Non-Spring Projects
+[TIP]
+This guide assumes a Spring Boot project. If you aren't using Spring, see <<non-spring#, Non-Spring Projects>> for a simpler setup.
+
+Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
 
 [source,xml]
 ----
 <dependency>
     <groupId>com.vaadin</groupId>
-    <artifactId>browserless-test-junit6</artifactId>
+    <artifactId>browserless-test-spring</artifactId>
     <scope>test</scope>
 </dependency>
 <dependency>
@@ -29,10 +35,6 @@ To start creating browserless tests in an existing project, you need to add the 
 == First Browserless Test
 
 In Spring Boot projects, views typically use dependency injection for services and other components. To handle this correctly, browserless testing provides a specialized base class: [classname]`SpringBrowserlessTest`. Annotate your test class with [annotationname]`@SpringBootTest` so that the full application context is available.
-
-.Non-Spring Projects
-[TIP]
-This guide assumes a Spring Boot project. If you aren't using Spring, see <<non-spring#, Non-Spring Projects>> for a simpler setup.
 
 Given a simple view like this:
 
@@ -71,7 +73,7 @@ class HelloWorldViewTest extends SpringBrowserlessTest {
         test(helloView.name).setValue("Test");
         test(helloView.sayHello).click();
 
-        Notification notification = $(Notification.class).single();
+        Notification notification = find(Notification.class).single();
         Assertions.assertEquals("Hello Test", test(notification).getText());
     }
 
@@ -127,17 +129,18 @@ Each Vaadin component has a tester tailored to its behavior. For example, a [cla
 
 === Finding Components
 
-Not every component is stored in a view field. For example, the [classname]`Notification` in the test above is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`$()` query method to find components in the UI by their type:
+Not every component is stored in a view field. For example, the [classname]`Notification` in the test above is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`find()` query method to find components in the UI by their type:
 
 [source,java]
 ----
 // Find the single Notification currently open
-Notification notification = $(Notification.class).single();
+Notification notification = find(Notification.class).single();
 ----
 
 The query API supports filtering by properties, predicates, and scoping to specific parts of the component tree. See <<component-query#, Querying Components>> for details.
 
 
+[#test-ids]
 == Test IDs
 
 Use [methodname]`Component.setTestId()` to assign a stable identifier to a component for use in tests. This sets the `data-testid` HTML attribute on the component's element, which can be used by testing frameworks like Playwright to locate elements reliably:
@@ -159,6 +162,15 @@ In a Playwright test, you can locate the element using the `data-testid` attribu
 ----
 page.locator("[data-testid='submit-button']").click();
 ----
+
+Browserless tests can use the same identifier: the [since:com.vaadin:vaadin@V25.2]#`testId()` terminal operator and the `withTestId()` filter# look up components by their test ID:
+
+[source,java]
+----
+Button submit = find(Button.class).testId("submit-button");
+----
+
+See <<component-query#test-ids, Querying Components>> for details.
 
 
 == Running Tests
@@ -213,6 +225,31 @@ fireShortcut(Key.ENTER);
 // Simulate Ctrl+S
 fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
 ----
+
+
+[#signals]
+== Testing Signal-Based UIs
+
+Views built on <<{articles}/flow/ui-state#, signals>> are testable without extra setup: [classname]`BrowserlessTest` registers a test [classname]`SignalEnvironment`, so signal effects run deterministically on the test thread instead of on a background thread pool. Signal changes made directly by a simulated user action are reflected in the UI immediately, so the testers and queries see the updated state right away.
+
+When a signal is changed from a background thread -- for example, by a service callback or another part of the application -- call [methodname]`runPendingSignalsTasks()` to process the pending signal effects before asserting:
+
+[source,java]
+----
+// Application code updates a signal from a background thread
+test(view.start).click();
+
+// Process the pending signal effects, then assert
+runPendingSignalsTasks();
+Assertions.assertEquals("Completed", test(view.status).getText());
+----
+
+The same method is available on the JUnit extension as [methodname]`ext.runPendingSignalsTasks()` (see <<extensions#, JUnit 6 Extensions>>) and on each window in multi-user tests (see <<multi-user#signals, Signals in Multi-User Tests>>).
+
+
+.Multiple Users or Windows?
+[TIP]
+This setup drives a single user with a single window. For tests that need several concurrent users or multiple windows of the same user, see <<multi-user#, Multi-User and Multi-Window Testing>>.
 
 
 [discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`

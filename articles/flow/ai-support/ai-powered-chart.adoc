@@ -1,0 +1,114 @@
+---
+title: AI-Generated Charts
+description: Use ChartAIController to let users build and update Highcharts visualizations from the application database using natural language.
+meta-description: Learn how to configure the Vaadin ChartAIController to create and update Charts from a database via natural language prompts and persist the resulting state.
+order: 70
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#AI-Powered Chart#
+
+
+[classname]`ChartAIController` creates and updates a <<{articles}/components/charts#,[classname]`Chart`>> (Vaadin's interactive charting component) visualization based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
+
+Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
+
+== Basic Usage
+
+Create a [classname]`Chart`, construct a controller, and wire it to the orchestrator:
+
+[source,java]
+----
+Chart chart = new Chart();
+MessageInput messageInput = new MessageInput();
+
+DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
+ChartAIController controller = new ChartAIController(chart, databaseProvider);
+
+AIOrchestrator.builder(provider, systemPrompt)
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+
+add(messageInput, chart);
+----
+
+Example prompts:
+
+* "Plot monthly revenue for the last year as a column chart."
+* "Show revenue by region as a pie chart."
+* "Compare 2025 and 2026 quarterly sales side-by-side with a legend."
+* "Turn this into an area chart and add a 'Revenue (USD)' y-axis title."
+
+.Built-In Workflow Instructions
+[TIP]
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior.
+
+.Provider Compatibility
+[NOTE]
+[classname]`ChartAIController` does not support OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in are affected.
+
+
+== Persisting Chart State
+
+[classname]`ChartState` captures both the SQL queries and the Highcharts configuration. Register a state change listener to persist the state automatically after each successful AI request:
+
+[source,java]
+----
+controller.addStateChangeListener(state ->
+        sessionStore.save(sessionId, state));
+
+// Restore on a new session
+ChartState saved = sessionStore.load(sessionId);
+if (saved != null) {
+    controller.restoreState(saved);
+}
+----
+
+`sessionStore` here is a placeholder for your own storage -- a database table, a file, a [classname]`VaadinSession` attribute, or whatever fits your application.
+
+Listeners do not fire when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
+
+
+== Reconnecting after Deserialization
+
+[classname]`ChartAIController` is not serializable. After session restore, create a new controller, pass it to [methodname]`reconnect()` together with the new provider, and optionally re-apply the saved state:
+
+[source,java]
+----
+ChartAIController controller = new ChartAIController(chart, databaseProvider);
+orchestrator.reconnect(provider)
+        .withController(controller)
+        .apply();
+----
+
+
+== Custom Data Conversion
+
+[classname]`DefaultDataConverter` maps SQL result rows to Highcharts series automatically. To take full control -- for example, to post-process rows, merge data from multiple queries into a single series, or apply custom formatting -- implement [classname]`DataConverter` and register it with [methodname]`setDataConverter()`:
+
+[source,java]
+----
+public class CurrencyDataConverter implements DataConverter {
+
+    @Override
+    public List<Series> convertToSeries(List<Map<String, Object>> data) {
+        DataSeries series = new DataSeries();
+        for (Map<String, Object> row : data) {
+            String name = (String) row.get("category");
+            Number value = (Number) row.get("value");
+            series.add(new DataSeriesItem(name, roundToCents(value)));
+        }
+        return List.of(series);
+    }
+}
+
+controller.setDataConverter(new CurrencyDataConverter());
+----
+
+The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
+
+
+== Combining with Dashboard
+
+[classname]`ChartAIController` manages a single chart, but you can combine several of them with the <<{articles}/components/dashboard#,[classname]`Dashboard`>> component to build an AI-generated dashboard that users arrange themselves and whose layout and chart state can be saved across sessions. Each dashboard widget hosts its own [classname]`Chart` and [classname]`ChartAIController` instance; persist each controller's state alongside the dashboard's own layout state to let users return to the same chart set and layout in a later session.

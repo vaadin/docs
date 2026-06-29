@@ -66,6 +66,9 @@ To use Spring Security test annotations, first make sure the dependency is added
 </dependency>
 ----
 
+[CAUTION]
+Overriding beans with [annotationname]`@MockitoBean` or [annotationname]`@MockBean` makes Spring cache a separate application context for that test class. In a multi-class run, this can prevent the simulated user from being applied during navigation, causing protected views to redirect unexpectedly to the login view -- sometimes in *other* test classes. If security navigation tests fail only when the whole suite runs, suspect a bean override elsewhere. See <<optimizing-tests#using-a-reduced-application-context,Using a Reduced Application Context>> for a context-friendly way to replace services.
+
 Then extend [classname]`SpringBrowserlessTest` and annotate test methods to set up an authentication scenario. For the simplest use cases, use [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser`, providing the username and roles that should be granted.
 
 .Tests with Mock Users
@@ -86,7 +89,7 @@ public class ViewSecurityTest extends SpringBrowserlessTest {
         // public view is default page
         Assertions.assertInstanceOf(PublicView.class, getCurrentView());
 
-        Anchor anchor = $(Anchor.class).withText("Sign in").single();
+        Anchor anchor = find(Anchor.class).withText("Sign in").single();
         Assertions.assertTrue(
                 test(anchor).isUsable(),
                 "Sign in link should be available for anonymous user");
@@ -98,7 +101,7 @@ public class ViewSecurityTest extends SpringBrowserlessTest {
         navigate(AdminRoleView.class);
 
         Assertions.assertTrue(
-                $(Avatar.class).single().isVisible(),
+                find(Avatar.class).single().isVisible(),
                 "Avatar should be visible for logged users");
     }
 }
@@ -118,7 +121,7 @@ class SpringUnitSecurityTest extends SpringBrowserlessTest {
         navigate(AdminRoleView.class);
 
         Assertions.assertTrue(
-                $(Avatar.class).single().isVisible(),
+                find(Avatar.class).single().isVisible(),
                 "Avatar should be visible for logged users");
     }
 
@@ -167,6 +170,11 @@ class SecurityTestConfig {
     }
 }
 ----
+
+
+.Multiple Users or Windows?
+[TIP]
+This setup drives a single user with a single window. For tests that need several concurrent users or multiple windows of the same user, see <<multi-user#, Multi-User and Multi-Window Testing>>.
 
 
 [discussion-id]`2A8B3F1E-9C47-4D5A-B621-8E3F2A7C9D10`

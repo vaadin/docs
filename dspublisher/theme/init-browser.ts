@@ -2,6 +2,9 @@ import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { iframeResizer } from 'iframe-resizer';
 
+// Highlights PR changes on preview deployments (no-op on the production site)
+import './preview-diff';
+
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
@@ -239,7 +242,7 @@ class TocFooter extends LitElement {
               </div>
 
               <div class="toc-footer--img">
-                <img src=${tocBanner.src} alt="Learn by watching"
+                <img src=${tocBanner.src} alt="Learn by watching">
               </div>
             </a>
           </div>

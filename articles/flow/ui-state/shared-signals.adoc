@@ -112,6 +112,32 @@ items.insertAt("New Last", ListPosition.last());
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.2"]
+==== Inserting Multiple Items
+
+Use [methodname]`insertAllFirst()`, [methodname]`insertAllLast()`, or [methodname]`insertAllAt()` to insert several items in one operation. All inserts are performed within a single transaction, so other users see the entire batch as one atomic change and only one synchronization is needed:
+
+[source,java]
+----
+import com.vaadin.flow.signals.operations.BulkInsertOperation;
+
+SharedListSignal<String> items = new SharedListSignal<>(String.class);
+
+// Insert at the end, preserving the collection order
+BulkInsertOperation<SharedValueSignal<String>> operation =
+    items.insertAllLast(List.of("A", "B", "C"));
+
+// Insert at the beginning
+items.insertAllFirst(List.of("First", "Second"));
+
+// Insert at a specific position
+items.insertAllAt(List.of("X", "Y"),
+    ListPosition.after(operation.signals().get(0)));
+----
+
+Each method returns a [classname]`BulkInsertOperation` that provides the signals for the inserted entries through [methodname]`signals()` and tracks the entire batch with a single result future through [methodname]`result()`. The signals can be used immediately, even before the result of the operation is confirmed.
+
+
 ==== Reordering Items with moveTo
 
 Use [methodname]`moveTo()` to change the position of an existing list entry without removing and re-inserting it:
@@ -256,6 +282,110 @@ SharedNumberSignal counter = new SharedNumberSignal();
 // Multiple users can safely increment concurrently
 counter.incrementBy(1); // Atomic operation, UI updates automatically
 ----
+
+
+== Signal Scope Patterns
+
+Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@VaadinUIScope`, or `@VaadinRouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
+
+
+=== Session-Scoped Signals
+
+Use `@VaadinSessionScope` to create one signal instance per user session, i.e. shared across all browser tabs and windows for that session.
+
+[source,java]
+----
+@Component
+@VaadinSessionScope
+public class CurrentUserSignal {
+    private final ValueSignal<String> usernameSignal;
+
+    public CurrentUserSignal(AuthenticationContext authContext) {
+        this.usernameSignal = new ValueSignal<>(
+            authContext.getAuthenticatedUser(UserDetails.class)
+                .map(UserDetails::getUsername)
+                .orElse("anonymous")
+        );
+    }
+
+    public ValueSignal<String> getUsernameSignal() {
+        return usernameSignal;
+    }
+}
+----
+
+*Use case*: Session-specific data like authentication state, preferences, or shopping cart contents.
+
+*Result*: Each HTTP session has its own `CurrentUserSignal` instance, completely separate from other sessions.
+
+
+=== Application-Scoped Signals (Global)
+
+Use `@Component` (singleton) or static fields to create signals shared by all users.
+
+[source,java]
+----
+@Component
+public class SystemStatusSignal {
+    private final ValueSignal<String> statusSignal;
+
+    public SystemStatusSignal() {
+        this.statusSignal = new ValueSignal<>("ONLINE");
+    }
+
+    public ValueSignal<String> getStatusSignal() {
+        return statusSignal;
+    }
+}
+----
+
+*Use case*: Server-wide notifications, global configuration, or shared counters.
+
+*Result*: All users see the same signal value. When it updates, all connected users are notified.
+
+
+=== View-Scoped Signals (Per Component Instance)
+
+Declare signals as private instance fields in your view or component class.
+
+[source,java]
+----
+@Route("dashboard")
+public class DashboardView extends VerticalLayout {
+    private final ValueSignal<Integer> counterSignal = new ValueSignal<>(0);
+
+    public DashboardView() {
+        Button increment = new Button("Increment");
+        increment.addClickListener(e ->
+            counterSignal.set(counterSignal.get() + 1));
+
+        Span counter = new Span();
+        counter.bindText(counterSignal.map(count -> "Count: " + count));
+        add(increment, counter);
+    }
+}
+----
+
+*Use case*: Component-specific UI state that shouldn't be shared between different instances.
+
+*Result*: Each browser tab or navigation to the view creates a new signal instance.
+
+[cols="1,2,2"]
+|===
+|Scope |Declaration |Lifetime
+
+|*Global*
+|`@Component` bean or static field
+|Application lifetime, shared by all users
+
+|*Per Session*
+|`@Component @VaadinSessionScope` bean
+|HTTP session lifetime, one per session
+
+|*Per View*
+|Private instance field
+|View instance lifetime, new for each navigation
+|===
 
 
 == Best Practices

@@ -37,6 +37,7 @@ export default [
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
       '@typescript-eslint/prefer-readonly': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/prefer-destructuring': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'simple-import-sort/imports': [
         'error',

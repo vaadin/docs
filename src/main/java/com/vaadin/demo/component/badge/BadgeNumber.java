@@ -11,7 +11,7 @@ public class BadgeNumber extends HorizontalLayout {
 
     public BadgeNumber() {
         // tag::snippet[]
-        Badge inbox = new Badge("Inbox", 12);
+        Badge inbox = new Badge("New messages", 12);
 
         Badge completed = new Badge("Completed", 3);
         completed.addThemeVariants(BadgeVariant.SUCCESS);

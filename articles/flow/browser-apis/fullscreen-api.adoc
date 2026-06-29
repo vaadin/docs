@@ -1,0 +1,97 @@
+---
+title: Fullscreen
+page-title: How to use the Fullscreen API in Vaadin Flow
+description: Using the Fullscreen API to enter, exit, and observe fullscreen mode from the server side.
+meta-description: Use the server-side Fullscreen API in Vaadin Flow to enter and exit browser fullscreen mode for the entire page or a single component from Java code.
+order: 20
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Fullscreen#
+:toc:
+
+The [classname]`Fullscreen` API gives server-side Java code access to the https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API[browser Fullscreen API]. It can fullscreen the entire page or a single component, exit fullscreen on demand, and expose the current fullscreen state as a reactive signal.
+
+[NOTE]
+The browser only allows a fullscreen request during a user gesture -- a click, a key press, or a touch tap. The API enforces this by attaching requests to a trigger component, so the request runs inside the DOM event that fires it. Bypassing the API and calling [code]`requestFullscreen` directly via [methodname]`executeJs` from a constructor, a background thread, or a server push is rejected by the browser.
+
+
+== Entering Fullscreen
+
+Bind a fullscreen request to a component the user can click. [methodname]`Fullscreen.onClick(Component)` returns a [classname]`FullscreenBinding` whose [methodname]`enter()` method registers the request with that component's click. The request then runs inside the browser's click handler and inherits the user gesture:
+
+[source,java]
+----
+Button fullscreenButton = new Button("Fullscreen");
+Fullscreen.onClick(fullscreenButton).enter();
+----
+
+To fullscreen a single component instead of the whole page, pass it to [methodname]`enter(Component)`:
+
+[source,java]
+----
+Button fullscreenButton = new Button("Fullscreen video");
+Fullscreen.onClick(fullscreenButton).enter(videoPanel);
+----
+
+Component fullscreen moves the target into a Vaadin wrapper element and hides the rest of the view, so themes and overlay components ([classname]`Notification`, [classname]`ComboBox` popups, dialogs) keep working while fullscreen is active. When fullscreen exits -- whether programmatically, via the user pressing kbd:[Esc], or because a later request supersedes this one -- the component is restored to its original DOM position.
+
+[methodname]`enter(Component)` is safe to call before the target component is attached: the request is wired to the trigger as soon as the component attaches.
+
+
+== Exiting Fullscreen
+
+Call [methodname]`Fullscreen.exit()` to leave fullscreen mode. Unlike entering, exiting doesn't require a user gesture, so it can be called from any handler, including a server push:
+
+[source,java]
+----
+Button closeButton = new Button("Close", e -> Fullscreen.exit());
+----
+
+The call is a no-op when the page isn't currently fullscreen. The user can also press kbd:[Esc] -- the browser handles that itself, and the state signal updates accordingly.
+
+
+== Observing Fullscreen State
+
+[methodname]`Fullscreen.stateSignal()` returns a read-only signal of the current fullscreen state. Use it to drive UI that depends on whether the page is fullscreen, or to hide controls in browsers that don't support fullscreen at all:
+
+[source,java]
+----
+viewLayout.bindClassName("is-fullscreen", Fullscreen.stateSignal()
+        .map(state -> state == FullscreenState.FULLSCREEN));
+
+Signal.effect(this, () -> {
+    if (Fullscreen.stateSignal().get() == FullscreenState.UNSUPPORTED) {
+        fullscreenButton.setVisible(false);
+    }
+});
+----
+
+The signal value is one of four [classname]`FullscreenState` enum constants:
+
+[code]`FULLSCREEN`:: The page is currently in fullscreen mode.
+[code]`NOT_FULLSCREEN`:: Fullscreen is supported but the page is not in it. The starting state in most browsers.
+[code]`UNSUPPORTED`:: The browser does not support fullscreen, or the document is not permitted to enter it (for example, inside an iframe without the right permissions policy). Fullscreen requests fail in this state.
+[code]`UNKNOWN`:: Sentinel value used only before the first client handshake delivers a real state. The signal is seeded from the initial bootstrap, so user code essentially never observes [code]`UNKNOWN` in practice.
+
+The signal is per-UI: each browser tab has its own state.
+
+
+== Handling the Outcome
+
+The plain [methodname]`enter()` and [methodname]`enter(Component)` calls are fire-and-forget -- the server never sees whether the browser accepted the request. To react to the outcome, use the overloads that take an [code]`onSuccess` runnable and an [code]`onError` consumer:
+
+[source,java]
+----
+Fullscreen.onClick(fullscreenButton).enter(videoPanel,
+        () -> Notification.show("Entered fullscreen"),
+        err -> Notification.show(
+                "Could not enter fullscreen: " + err.message()));
+----
+
+Both callbacks fire on the UI thread, so they can update components directly. Pass [code]`() -> {}` or [code]`err -> {}` to opt out of one side.
+
+The [code]`onError` consumer receives a record with the browser's error name and message. The spec-documented rejection is [code]`NotAllowedError`, raised when the request isn't backed by a user gesture or is blocked by the document's permissions policy. The state signal already reflects [code]`UNSUPPORTED` when the browser refuses outright, so the error callback is mainly useful for diagnostics and for surfacing a message to the user when a request fails despite a click backing it.
+
+
+[discussion-id]`F0E1A4B2-3D7A-4E61-9B2C-7C0D5A5C9F33`

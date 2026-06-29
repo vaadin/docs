@@ -65,7 +65,7 @@ class ViewTest extends SpringBrowserlessTest {
         test(helloView.name).setValue("Test");
         test(helloView.sayHello).click();
 
-        Notification notification = $(Notification.class).single();
+        Notification notification = find(Notification.class).single();
         Assertions.assertEquals("Hello Test", test(notification).getText());
     }
 }
@@ -79,6 +79,55 @@ class ViewTestConfig {
         }
 }
 ----
+
+[NOTE]
+====
+Prefer replacing services this way -- a test [annotationname]`@Configuration` selected with [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
+
+A bean override changes the context definition, so Spring's test context cache stores a *separate* application context for that test class. In a multi-class run, the resulting context churn can leave the Vaadin and Spring Security integration in a state where the simulated user isn't applied during navigation, causing protected views to redirect to the login view in *unrelated* tests -- a confusing failure that disappears when the affected class is run on its own.
+
+For service-level tests that don't need the Vaadin context, an even simpler option is to construct the service directly with stub collaborators (for example `new ResourceService(repo, id -> 0L)`) instead of overriding a bean. Both approaches keep a single shared context.
+====
+
+
+== [since:com.vaadin:vaadin@V25.2]#Sharing the Vaadin Environment Across Tests#
+
+By default, the Vaadin environment -- the session, the UI, and all routes -- is created before every test method and torn down after. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
+
+To reuse a single Vaadin environment across all test methods in a class, register a static [classname]`BrowserlessClassExtension` with [annotationname]`@RegisterExtension`. The extension initializes the environment once before all tests and tears it down after all tests, sharing the same [classname]`UI` instance across every method. Instead of extending [classname]`BrowserlessTest`, implement the [interfacename]`TesterWrappers` and [interfacename]`Locators` interfaces to use the tester and locator DSL directly, and use the extension instance for navigation. This can significantly reduce runtime for suites with hundreds of tests on the same view.
+
+.Shared Environment Example
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+class CartViewTest implements TesterWrappers, Locators {
+
+    @RegisterExtension
+    static BrowserlessClassExtension extension = new BrowserlessClassExtension();
+
+    @BeforeAll
+    static void setup() {
+        extension.navigate(CartView.class);
+    }
+
+    @Test
+    void addItem_increasesCartSize() {
+        // same UI instance as the other tests
+        findButton().withText("Add").click();
+    }
+
+    @Test
+    void removeItem_decreasesCartSize() {
+        // state from the previous test is preserved
+    }
+}
+----
+
+[WARNING]
+With a shared environment, state leaks between tests. Tests must either tolerate leftover state or reset it explicitly -- for example, by re-navigating to the view in a [annotationname]`@BeforeEach` method. Prefer a shared environment for read-only or independent interactions; stick with the default per-method lifecycle when tests mutate shared state in conflicting ways.
+
+[NOTE]
+The base test classes -- [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- always reinitialize the Vaadin environment before each test method. Annotating them with [annotationname]`@TestInstance(PER_CLASS)` therefore does not share the Vaadin environment, although it can still be useful for sharing other per-class state. Use a static [classname]`BrowserlessClassExtension` as shown above to share the Vaadin environment.
 
 
 [discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`
