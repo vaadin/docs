@@ -260,7 +260,7 @@ These are accessible in the TypeScript component as reactive properties.
 
 === Complex Objects with `setPropertyBean`
 
-For objects and arrays, use `setPropertyBean()` to pass a Java record or bean directly to the client. Vaadin handles the JSON serialization automatically:
+For objects, use `setPropertyBean()` to pass a Java record or bean directly to the client. Vaadin handles the JSON serialization automatically:
 
 *Java side:*
 [source,java]
@@ -287,11 +287,19 @@ You can also read the bean back on the server using `getPropertyBean()`:
 ChartConfig config = getElement().getPropertyBean("config", ChartConfig.class);
 ----
 
-For cases where you need lower-level control, `setPropertyJson()` accepts an elemental `JsonValue`:
+For lists and maps, use `setPropertyList()` and `setPropertyMap()`. Vaadin serializes the elements with Jackson:
 
 [source,java]
 ----
-JsonObject config = Json.createObject();
+getElement().setPropertyList("selectedIds", List.of(1, 2, 3));
+getElement().setPropertyMap("labels", Map.of("x", "Revenue", "y", "Quarter"));
+----
+
+For cases where you need lower-level control, `setPropertyJson()` accepts a Jackson `BaseJsonNode`:
+
+[source,java]
+----
+ObjectNode config = JacksonUtils.createObjectNode();
 config.put("type", "bar");
 config.put("animate", true);
 getElement().setPropertyJson("config", config);
@@ -313,32 +321,38 @@ this.dispatchEvent(new CustomEvent('selection-changed', {
 ----
 
 *Java side using `@DomEvent`:*
+
+Event data is deserialized with Jackson, so you can bind the expression directly to a typed value such as a `List<Integer>`:
+
 [source,java]
 ----
 @DomEvent("selection-changed")
 public static class SelectionChangedEvent
         extends ComponentEvent<MyComponent> {
 
-    private final JsonArray selectedIds;
+    private final List<Integer> selectedIds;
 
     public SelectionChangedEvent(MyComponent source, boolean fromClient,
-            @EventData("event.detail.selectedIds") JsonArray selectedIds) {
+            @EventData("event.detail.selectedIds") List<Integer> selectedIds) {
         super(source, fromClient);
         this.selectedIds = selectedIds;
     }
 
-    public JsonArray getSelectedIds() {
+    public List<Integer> getSelectedIds() {
         return selectedIds;
     }
 }
 ----
 
 *Java side using `addEventListener`:*
+
+The low-level listener receives the raw event data as a Jackson `JsonNode`. Use `getEventData(TypeReference)` to deserialize the whole event payload into a typed object, or navigate the `JsonNode` manually:
+
 [source,java]
 ----
 getElement().addEventListener("selection-changed", event -> {
-    JsonArray ids = event.getEventData().getArray("event.detail.selectedIds");
-    // process selection
+    JsonNode ids = event.getEventData().get("event.detail.selectedIds");
+    // process selection, e.g. ids.get(0).asInt()
 }).addEventData("event.detail.selectedIds");
 ----
 
