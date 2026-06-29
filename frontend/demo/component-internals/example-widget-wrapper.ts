@@ -46,21 +46,21 @@ class ExampleWidgetWrapper extends LitElement {
   // -- Reactive properties (synced with Java via element properties) --
 
   @property({ type: String })
-  accessor title: string = '';
+  title: string = '';
 
   @property({ type: Object })
-  accessor config: WidgetConfig = {};
+  config: WidgetConfig = {};
 
   @property({ type: Boolean })
-  accessor interactive: boolean = true;
+  interactive: boolean = true;
 
   // -- Internal state (not exposed as attributes) --
 
   @state()
-  private accessor _widget: Widget | null = null;
+  private _widget: Widget | null = null;
 
   @state()
-  private accessor _loading: boolean = true;
+  private _loading: boolean = true;
 
   // -- Styles --
 
