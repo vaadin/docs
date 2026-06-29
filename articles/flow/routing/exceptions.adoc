@@ -55,6 +55,7 @@ You can override the default exception handlers by extending them. The example h
 [source,java]
 ----
 @ParentLayout(MainLayout.class)
+@AnonymousAllowed // <1>
 public class CustomNotFoundTarget
         extends RouteNotFoundError {
 
@@ -67,6 +68,18 @@ public class CustomNotFoundTarget
     }
 }
 ----
+<1> Lets navigation access control render the error view for unauthenticated users. Use `@PermitAll` instead if only authenticated users should see it. Under Spring Security, this annotation alone isn't enough -- see the note below.
+
+.Spring Security Integration
+[IMPORTANT]
+====
+When using [classname]`VaadinSecurityConfigurer` (or the deprecated [classname]`VaadinWebSecurity`), making a custom not-found view work requires two separate things:
+
+. *Annotate the view* so that navigation access control allows it to render -- for example with [annotationname]`@AnonymousAllowed` (as above) or [annotationname]`@PermitAll`.
+. *Relax the catch-all HTTP rule* so that requests for non-existing pages reach the Vaadin servlet. By default, any request that doesn't match a Vaadin route -- including a request for a non-existing page -- is denied at the HTTP layer before navigation occurs, so the custom view is never rendered. The annotation by itself doesn't change this, because the request is blocked before the framework resolves the not-found target.
+
+See <<{articles}/flow/security/vaadin-security-configurer#configurer,Vaadin Security Configurer>> for how to relax the catch-all rule with [methodname]`anyRequest()`, and <<{articles}/building-apps/security/protect-views#,Protect Views>> for more on view-level annotations.
+====
 
 Only extending instances are allowed. Exception targets may define [classname]`ParentLayouts`. [classname]`BeforeNavigationEvent` and [classname]`AfterNavigationEvent` are still sent, as with normal navigation. One exception may only have one exception handler.
 

@@ -174,6 +174,26 @@ public VaadinSecurityConfigurer anyRequest(Consumer<AuthorizeHttpRequestsConfigu
 
 Configures the access rule for any request not matching other configured rules. The default rule is to forbid the access, which is the equivalent of passing `AuthorizedUrl::denyAll()` to this method. This means that extra security rules (path matchers) are required for protected URLs not handled by the framework.
 
+.Catch-all Rule and Custom Not-Found Pages
+[NOTE]
+====
+Because the default rule denies access, any request that doesn't match a Vaadin route -- including a request for a non-existing page -- is blocked at the HTTP layer before it reaches the Vaadin servlet. As a result, a custom [classname]`RouteNotFoundError` view isn't rendered for such requests; unauthenticated users are redirected to the login page (or receive an error) instead.
+
+To show a custom not-found page, relax this rule so that unmatched requests can reach the Vaadin servlet -- for example, by permitting them:
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+    configurer.loginView(LoginView.class)
+            .anyRequest(AuthorizedUrl::permitAll);
+});
+----
+
+Alternatively, pass `null` to [methodname]`anyRequest()` to disable the automatic catch-all rule and configure the access rules for unmatched requests yourself with Spring Security.
+
+Relaxing the catch-all rule doesn't expose protected views: real routes are still guarded by the secured-route request matchers at the HTTP layer and by navigation access control at the navigation level. The custom error view itself still needs an appropriate security annotation (such as [annotationname]`@AnonymousAllowed`) to be rendered. See <<{articles}/flow/routing/exceptions#,Router Exception Handling>> for details on annotating custom error views.
+====
+
 [source,java]
 ----
 public RequestMatcher defaultPermitMatcher()
