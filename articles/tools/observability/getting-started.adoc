@@ -9,107 +9,163 @@ order: 10
 
 = Getting Started with Observability Kit
 
-Observability is the ability to answer questions about an application and its infrastructure. The Vaadin Observability Kit can assist in implementing this ability for Flow-based applications to obtain traceable, actionable information about applications in production.
+Observability is the ability to answer questions about an application and its infrastructure.
+The Vaadin Observability Kit implements this for Flow-based applications, giving you actionable insight into applications running in production.
 
-To help you get started with Observability Kit, this page covers the following topics:
+Observability Kit is built on https://micrometer.io[Micrometer].
+It instruments the Vaadin runtime -- sessions, UIs, navigation, requests, errors, and real browser-side timing -- and records everything into your application's Micrometer [classname]`MeterRegistry`, so it shows up in whatever backend you already use (Prometheus, OTLP, Graphite, and so on).
+Tracing spans are emitted through the Micrometer Observation API.
 
-- Downloading and configuring Observability Kit to export data to the infrastructure;
-- Setting up an infrastructure for collecting and viewing observability data, such as traces and metrics; and
-- Running a Vaadin application with Observability Kit.
+With Spring Boot, the kit is a drop-in: you add one dependency and you're done.
+There's no agent to download, no `-javaagent` flag, and no separate configuration file.
+
+.Migrating From Version 4?
+[NOTE]
+Earlier versions of Observability Kit were a standalone OpenTelemetry Java agent.
+If you're upgrading an existing project, see the <<migrating-to-v5#,Migrating to Version 5>> page.
 
 
+== Requirements
 
-== Download & Configure
+* Java 21 or newer.
+* Vaadin 25.2 or newer (Flow 25.2+).
+* A Micrometer [classname]`MeterRegistry` -- the Spring Boot starter provides one out of the box.
+* Spring Boot 4, for the `observability-kit-starter`.
+Plain-Spring and standalone setups are also supported; see <<#other-setups,Other Setups>>.
 
-Observability Kit consists of two parts: the Starter dependency and the Agent. They're explained in these sub-sections.
 
+== Add the Dependency
 
-=== Starter Dependency
-
-The Starter dependency can be added to your project by adding the following to the [filename]`pom.xml` file:
+For a Spring Boot application, add the starter to your [filename]`pom.xml`:
 
 .`pom.xml`
 [source,xml]
 ----
 <dependency>
-  <groupId>com.vaadin</groupId>
-  <artifactId>observability-kit-starter</artifactId>
+    <groupId>com.vaadin</groupId>
+    <artifactId>observability-kit-starter</artifactId>
 </dependency>
 ----
 
-////
-TODO ask from the dev team what to do with this section
+That's the whole setup.
+On startup the kit auto-configures a [classname]`MeterRegistry` through Spring Boot's Micrometer support and wires the Vaadin instrumentation onto it.
+Sessions, UIs, navigation, request handling, errors, and client-side timing all start recording automatically.
 
-If you're using Hilla, the starter includes a Hilla endpoint. To include and activate the endpoint, add the following configuration to your `hilla-engine-plugin`.
 
+== Export the Metrics
+
+The kit only *records* into a registry.
+To *export* the metrics to a backend, add Spring Boot Actuator and the registry of your choice.
+For example, for https://prometheus.io[Prometheus]:
+
+.`pom.xml`
 [source,xml]
 ----
-<configuration>
-    <parser>
-        <packages>
-            <package>com.vaadin.hilla.observability</package>
-        </packages>
-    </parser>
-</configuration>
-----
-////
-
-
-=== Agent
-
-The Agent is based on the OpenTelemetry standard and is packaged as a `.jar` file. See the <<{articles}/tools/observability/reference#,Observability Kit Reference>> documentation page for more information.
-
-.Download the Agent JAR File
-[IMPORTANT]
-The Agent cannot be used as a dependency. It must be downloaded separately.
-
-link:https://repo1.maven.org/maven2/com/vaadin/observability-kit-agent/2.2.1/observability-kit-agent-2.2.1.jar[Download Observability Kit Agent, role="button secondary water"]
-
-Once the Agent has finished downloading to the project directory, it needs to be configured to export telemetry to one or more observability tools. In this guide, traces are exported to Jaeger; metrics are sent to Prometheus. To do this, create an [filename]`agent.properties` file in the project directory with the following content:
-
-include::./integrations/jaeger-prometheus.adoc[tag=agent-properties]
-
-
-== Setup Infrastructure
-
-This guide uses Jaeger to process traces, and Prometheus to process metrics. They both run locally and are suitable for development and testing. For integration with other vendors, see the <<{articles}/tools/observability/integrations#,Integrations>> page.
-
-include::./integrations/jaeger-prometheus.adoc[tag=jaeger-setup]
-
-include::./integrations/jaeger-prometheus.adoc[tag=prometheus-setup]
-
-== Setup Frontend Package (Hilla)
-
-To complete the setup process, you need to install and initialize the client-side component of the kit.
-
-Execute the following in your terminal to install the package:
-
-[source,terminal]
-----
-npm install @hilla/observability-kit-client
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
 ----
 
-Next, open the `frontend/index.ts` file and add the following code:
+Then expose the Prometheus endpoint:
 
-[source,typescript]
+.`application.properties`
+[source,properties]
 ----
-import { init } from '@hilla/observability-kit-client';
-import { ObservabilityEndpoint } from 'Frontend/generated/endpoints.js'
-
-init(ObservabilityEndpoint.export);
+management.endpoints.web.exposure.include=prometheus
 ----
 
-== Run the Application
+The metrics are then available at `GET /actuator/prometheus`.
 
-You're now ready to run your application. If you don't have one, though, you can download an application from https://start.vaadin.com[Vaadin Start], and create a production build with the following command:
+For traces, add a Micrometer tracing bridge -- for example OpenTelemetry or Zipkin -- as you would for any Micrometer-instrumented application.
+See the <<integrations#,Integrations>> page for vendor-specific setup.
 
-[source,terminal]
+
+== Run & Verify
+
+Start your application and exercise a few views.
+Then open `http://localhost:8080/actuator/prometheus` and look for the Vaadin meters -- for example `vaadin_sessions_active` or `vaadin_request_duration_seconds_count`.
+
+If you don't have an application yet, you can download one from https://start.vaadin.com[Vaadin Start], add the dependencies above, and run it.
+
+For the full list of built-in meters, see the <<reference#,Reference>> page.
+
+
+[[other-setups]]
+== Other Setups
+
+The starter is the easiest path, but the kit also runs without Spring Boot.
+
+
+=== Plain Spring (Without Spring Boot)
+
+Add the Spring module, import the configuration, and provide a [classname]`MeterRegistry` bean:
+
+.`pom.xml`
+[source,xml]
 ----
-./mvnw package
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>observability-kit-spring</artifactId>
+</dependency>
 ----
 
-Then run the packaged JAR file from the [filename]`target` folder:
+.`ObservabilityConfig.java`
+[source,java]
+----
+@Configuration
+@Import(ObservabilityConfiguration.class)
+class ObservabilityConfig {
 
-include::./integrations/_run-app.adoc[]
+    @Bean
+    MeterRegistry meterRegistry() {
+        return new SimpleMeterRegistry();
+    }
+}
+----
 
-include::./integrations/jaeger-prometheus.adoc[tag=view-traces-metrics]
+An [classname]`ObservationRegistry` is used for tracing if a bean is present.
+
+
+=== Standalone (Without Spring)
+
+Add the core module and install the kit at servlet-context startup -- for example from a [classname]`ServletContextListener` -- so the registry is in place before [classname]`VaadinService` initializes.
+For background on when this happens during deployment, see <</flow/advanced/application-lifecycle#,Application Lifecycle>>.
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>observability-kit-micrometer</artifactId>
+</dependency>
+----
+
+.`ObservabilitySetup.java`
+[source,java]
+----
+@WebListener
+public class ObservabilitySetup implements ServletContextListener {
+
+    @Override
+    public void contextInitialized(ServletContextEvent event) {
+        MeterRegistry registry = new SimpleMeterRegistry();
+        ObservabilityKit.install(registry,
+                ObservabilitySettings.builder().build());
+    }
+}
+----
+
+
+== Next Steps
+
+* <<configuration#,Configuration>> -- turn features on or off and tune the kit.
+* <<customization#,Custom Instrumentation>> -- record your own metrics and traces alongside the built-in ones.
+* <<reference#,Reference>> -- the full list of meters and spans.
+* <<integrations#,Integrations>> -- export to Prometheus, Grafana, Datadog, New Relic, and others.
+
+[discussion-id]`336FFD66-12AC-466E-AA92-993809F623C6`
