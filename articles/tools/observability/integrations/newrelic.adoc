@@ -1,0 +1,98 @@
+---
+title: New Relic
+page-title: How to use New Relic with Observability Kit | Vaadin
+description: Learn how to export Observability Kit metrics and traces to New Relic over OTLP.
+meta-description: Configure a Vaadin application to export Observability Kit telemetry to New Relic through the native OpenTelemetry Protocol endpoint.
+order: 50
+page-links:
+  - https://newrelic.com[Website]
+---
+
+
+= New Relic Integration
+
+New Relic is an observability SaaS platform with support for metrics, traces, and logs.
+It accepts OpenTelemetry Protocol (OTLP) natively, so the kit's telemetry can be sent directly to New Relic's OTLP endpoint with no collector in between.
+
+
+== New Relic Account
+
+Sign up for an account at https://newrelic.com/signup[newrelic.com/signup].
+You can export up to 100 GB of data per month at no charge.
+
+You need an ingest license key.
+Find it in your account settings under [guilabel]*API Keys*; use a key of type `INGEST - LICENSE`.
+
+
+== Configure the Application
+
+Add Actuator with the OTLP metrics registry, and a tracing bridge with the OTLP exporter:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-otlp</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-tracing-bridge-otel</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-exporter-otlp</artifactId>
+</dependency>
+----
+
+Point both pipelines at the New Relic OTLP endpoint and authenticate with the license key:
+
+.`application.properties`
+[source,properties]
+----
+spring.application.name=vaadin
+
+# Metrics over OTLP to New Relic
+management.otlp.metrics.export.url=https://otlp.nr-data.net/v1/metrics
+management.otlp.metrics.export.headers.api-key=LICENSE_KEY
+
+# Traces over OTLP to New Relic
+management.otlp.tracing.endpoint=https://otlp.nr-data.net/v1/traces
+management.otlp.tracing.headers.api-key=LICENSE_KEY
+management.tracing.sampling.probability=1.0
+----
+
+Replace `LICENSE_KEY` with your ingest license key.
+Use the EU endpoint (`https://otlp.eu01.nr-data.net`) instead if your account is in the EU region.
+Setting `spring.application.name` determines the service name your data appears under in New Relic.
+
+
+== Viewing Data
+
+After exercising the application for a while -- traces show up with a short delay -- log in to New Relic.
+From the [guilabel]*All entities* view, select your service name under [guilabel]*Services - OpenTelemetry*.
+
+
+=== Viewing Traces
+
+Open the [guilabel]*Monitor - Distributed tracing* view, which shows application traces with their count, duration, and errors.
+
+See the New Relic https://docs.newrelic.com/docs/more-integrations/open-source-telemetry-integrations/opentelemetry/view-your-data/opentelemetry-distributed-tracing-page[Distributed tracing] documentation for more.
+
+
+=== Viewing Metrics
+
+Open the [guilabel]*Data - Metrics explorer* view, where you can explore all reported metrics.
+
+See the New Relic https://docs.newrelic.com/docs/more-integrations/open-source-telemetry-integrations/opentelemetry/view-your-data/opentelemetry-metrics-explorer-page[Metrics explorer] documentation for more.
+
+
+=== Viewing Logs
+
+Open the [guilabel]*Monitor - Logs* view, which shows application logs linked to traces through `trace.id`.
+
+See the New Relic https://docs.newrelic.com/docs/more-integrations/open-source-telemetry-integrations/opentelemetry/view-your-data/opentelemetry-logs-page[Logs] documentation for more.
