@@ -1,0 +1,94 @@
+---
+title: Prometheus
+page-title: How to export Observability Kit metrics to Prometheus | Vaadin
+description: Learn how to export Observability Kit metrics to Prometheus from a Vaadin application.
+meta-description: Configure a Vaadin application to expose Observability Kit metrics to Prometheus through Spring Boot Actuator and Micrometer.
+order: 10
+page-links:
+  - https://prometheus.io[Website]
+---
+
+
+= Prometheus Integration
+
+https://prometheus.io[Prometheus] is a pull-based metrics system: it scrapes a metrics endpoint that your application exposes.
+Micrometer has a native Prometheus registry, so exposing the kit's metrics is a matter of adding the registry and an Actuator endpoint.
+
+Prometheus handles metrics only.
+To collect traces as well, pair it with a tracing backend -- see <<jaeger-prometheus#,Jaeger & Prometheus>> for a local setup, or <<grafana#,Grafana>> for metrics, traces, and logs in one tool.
+
+
+== Expose the Metrics Endpoint
+
+Add Spring Boot Actuator and the Prometheus registry:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+----
+
+Then expose the Prometheus endpoint:
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=prometheus
+spring.application.name=vaadin
+----
+
+The metrics are now served at `GET /actuator/prometheus`.
+Setting `spring.application.name` tags every meter with a consistent service name.
+
+Start your application, exercise a few views, then open `http://localhost:8080/actuator/prometheus` and confirm the Vaadin meters appear -- for example `vaadin_sessions_active` or `vaadin_request_duration_seconds_count`.
+
+
+== Scrape the Endpoint
+
+Configure Prometheus to scrape the Actuator endpoint.
+The scrape path is `/actuator/prometheus`, not the Prometheus default of `/metrics`:
+
+.`prometheus.yml`
+[source,yaml]
+----
+global:
+  scrape_interval: 15s # Default is every 1 minute.
+
+scrape_configs:
+  - job_name: 'vaadin'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8080']
+----
+
+https://prometheus.io/download/[Download Prometheus, role="button secondary water"]
+
+Extract the archive, then start Prometheus with the configuration file:
+
+[source,terminal]
+----
+./prometheus --config.file=/PATH/TO/prometheus.yml
+----
+
+Remember to substitute the correct path to the [filename]`prometheus.yml` file.
+
+
+== Viewing Metrics
+
+The default address for the Prometheus user interface is `http://localhost:9090`.
+Enter a metric name into the search field and click [guibutton]*Execute*.
+
+If you don't know the metric name, click the globe icon next to [guibutton]*Execute* to open the metrics explorer, which lists the available metrics alphabetically.
+
+To view a result as a graph, click the [guilabel]*Graph* tab.
+
+Prometheus renders Micrometer's dotted meter names in its own convention.
+For example, the `vaadin.request.duration` timer appears as `vaadin_request_duration_seconds` with `_count`, `_sum`, and bucket suffixes.
+See the <<../reference#,Reference>> page for the full list of meters.
