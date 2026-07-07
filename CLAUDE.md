@@ -184,17 +184,32 @@ The repository uses Vale for automated style checking. Configuration is in `.val
 
 ### Version References
 
-Avoid explicit Vaadin version numbers in text. Instead, use a `since` badge.
+Avoid explicit Vaadin version numbers in text. Instead, use a `since` badge. The badge attaches to a
+section heading or to a phrase in body text, and it is written differently in each case.
 
-The badge is an inline AsciiDoc role. It **must be immediately followed (no space) by a formatted
-text span** that holds the text the badge applies to — usually `#...#`, but any inline formatting
-works (e.g. `*...*`). Without a following span the badge shows up as literal `[since:...]` brackets
-or is dropped entirely. Place it on a heading or wrapping a phrase in body text.
+**Section headings (`==`, `===`, …): use the role attribute.** Put `[role="since:..."]` on its own
+line directly above the heading. This is the preferred form for section headings — keep them
+consistent rather than mixing both styles.
 
 ```asciidoc
-// Correct — on a page title or section heading:
+// Correct — section heading:
+[role="since:com.vaadin:vaadin@V25.2"]
+== Hierarchical Data
+
+// The heading text can still carry other badges:
+[role="since:com.vaadin:vaadin@V25.2"]
+== Focus Selected Item [badge-flow]#Flow#
+```
+
+**Top-level heading (`=`) and body text: use a formatted span.** The role attribute is not allowed on
+the page title (`=`), so there — and when wrapping a phrase in running text — write the badge as an
+inline role **immediately followed (no space) by a formatted text span** that holds the text the badge
+applies to. This is usually `#...#`, but any inline formatting works (e.g. `*...*`). Without a
+following span the badge shows up as literal `[since:...]` brackets or is dropped entirely.
+
+```asciidoc
+// Correct — page title (top-level heading):
 = [since:com.vaadin:vaadin@V25.1]#Slider#
-== [since:com.vaadin:vaadin@V25.2]#Hierarchical Data#
 
 // Correct — wrapping a phrase in body text:
 The component can also [since:com.vaadin:vaadin@V25.2]#do the sanitization itself#.
@@ -204,7 +219,7 @@ The component can also [since:com.vaadin:vaadin@V25.2]#do the sanitization itsel
 // WRONG — badge after the heading text, with no span (renders literal brackets):
 == Hierarchical Data [since:com.vaadin:vaadin@V25.2]
 
-// WRONG — badge alone on its own line (no span to attach to):
+// WRONG — bare inline badge alone on its own line; use the quoted role attribute instead:
 [since:com.vaadin:vaadin@V25.2]
 ```
 
