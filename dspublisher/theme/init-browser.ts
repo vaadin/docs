@@ -12,6 +12,16 @@ if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
 }
 
+declare global {
+  interface Window {
+    DiscourseEmbed?: {
+      discourseUrl: string;
+      topicId?: number;
+      discourseEmbedUrl?: string;
+    };
+  }
+}
+
 // Add stylesheet links to document head once
 if (process.env.NODE_ENV !== 'development') {
   const stylesheets = [
@@ -80,57 +90,68 @@ class Footer extends LitElement {
   createRenderRoot() {
     return this;
   }
-
+  
   @state()
-  private documentTitle = document.title;
+  private topicId: number | null = null;
 
-  private __titleObserver = new MutationObserver(() => {
-    this.documentTitle = document.title;
-  });
+  private static readonly FORUM_URL = window.location.hostname == 'vaadin.com' ? 'https://vaadin.com/forum/' : 'https://preview.vaadin.com/forum/';
 
   connectedCallback() {
     super.connectedCallback();
 
-    const titleElement = document.head.querySelector('title');
-    if (titleElement) {
-      this.__titleObserver.observe(titleElement, {
-        subtree: true,
-        characterData: true,
-        childList: true,
-      });
-    } else {
-      console.warn('No title element found in the document');
+    const discussionId = document
+      .querySelector('.discussion-id')
+      ?.textContent?.trim();
+
+    if (discussionId && process.env.NODE_ENV !== 'development') {
+      this.resolveTopicId(discussionId);
     }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-
-    this.__titleObserver.disconnect();
   }
-
-  protected firstUpdated() {
-    iframeResizer({ log: true }, '#discussion-iframe');
+  
+  private async resolveTopicId(discussionId: string): Promise<void> {
+    try {
+      const res = await fetch(
+        `${Footer.FORUM_URL}t/external_id/${discussionId}.json`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) {
+        console.warn(`No topic for ${discussionId} (${res.status})`);
+        return;
+      }
+      const data = await res.json();
+      this.topicId = data.id;
+    } catch (err) {
+      console.error('Discourse resolve failed:', err);
+    }
   }
-
+  
+  protected updated(changed: Map<string, unknown>) {
+    if (changed.has('topicId') && this.topicId !== null) {
+      const existing = document.querySelector(
+        `script[src="${Footer.FORUM_URL}javascripts/embed.js"]`
+      );
+      if (existing) return;
+      
+      window.DiscourseEmbed = {
+        discourseUrl: Footer.FORUM_URL,
+        topicId: this.topicId,
+      };
+      const d = document.createElement('script');
+      d.async = true;
+      d.src = Footer.FORUM_URL + 'javascripts/embed.js';
+      document.head.appendChild(d);
+    }
+  }
+    
   render() {
-    const id = document.querySelector('.discussion-id')?.textContent;
-
     // Don't render discussions in development builds and if no discussion ID is set
-    if (process.env.NODE_ENV === 'development' || !id) {
+    if (process.env.NODE_ENV === 'development' || !this.topicId) {
       return nothing;
     }
-
-    const url = encodeURI(document.location.pathname);
-
-    let iframeSrc =
-      window.location.hostname == 'preview.vaadin.com'
-        ? 'https://preview.vaadin.com'
-        : 'https://vaadin.com';
-
-    iframeSrc += `/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
-      this.documentTitle
-    )}&description=`;
 
     return html`
       <style>
@@ -143,20 +164,12 @@ class Footer extends LitElement {
         .discussion-wrapper p b {
           color: var(--docs-heading-text-color);
         }
-
-        .discussion-wrapper iframe {
-          color-scheme: normal;
-          border: 0;
-          margin: 0 -8px;
-          width: calc(100% + 16px);
-          max-width: none;
-        }
       </style>
       <section class="discussion-wrapper">
         <p>
-          <b>Was this page helpful?</b><br />Leave a comment below or <a href="https://vaadin.com/forum/" rel="noopened">join our forum</a> for further discussions, questions, and sharing your code examples.
+          <b>Was this page helpful?</b><br />Join the forum discussion below or go and browse<a href="https://vaadin.com/forum/" rel="noopened">other discussions</a>.
         </p>
-        <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
+        <div id="discourse-comments"></div>
       </section>
     `;
   }
