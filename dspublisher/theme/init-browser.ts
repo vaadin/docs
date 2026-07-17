@@ -107,10 +107,6 @@ class Footer extends LitElement {
       this.resolveTopicId(discussionId);
     }
   }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-  }
   
   private async resolveTopicId(discussionId: string): Promise<void> {
     try {
@@ -129,26 +125,30 @@ class Footer extends LitElement {
     }
   }
   
-  protected updated(changed: Map<string, unknown>) {
-    if (changed.has('topicId') && this.topicId !== null) {
-      const existing = document.querySelector(
-        `script[src="${Footer.FORUM_URL}javascripts/embed.js"]`
-      );
-      if (existing) return;
-      
-      window.DiscourseEmbed = {
-        discourseUrl: Footer.FORUM_URL,
-        topicId: this.topicId,
-      };
-      const d = document.createElement('script');
-      d.async = true;
-      d.src = Footer.FORUM_URL + 'javascripts/embed.js';
-      document.head.appendChild(d);
-    }
+  protected async updated(changed: Map<string, unknown>) {
+    super.updated(changed);
+    
+    if (!changed.has('topicId') || this.topicId === null) return;
+    
+    const topicId = this.topicId;
+    await this.updateComplete;
+
+    if (document.querySelector(
+      `script[src="${Footer.FORUM_URL}javascripts/embed.js"]`
+    )) return;
+
+    window.DiscourseEmbed = {
+      discourseUrl: Footer.FORUM_URL,
+      topicId
+    };
+    const d = document.createElement('script');
+    d.async = true;
+    d.src = Footer.FORUM_URL + 'javascripts/embed.js';
+    document.head.appendChild(d);
   }
     
   render() {
-    // Don't render discussions in development builds and if no discussion ID is set
+    // Don't render discussions in development builds or if no discussion ID is set
     if (process.env.NODE_ENV === 'development' || !this.topicId) {
       return nothing;
     }
@@ -167,7 +167,7 @@ class Footer extends LitElement {
       </style>
       <section class="discussion-wrapper">
         <p>
-          <b>Was this page helpful?</b><br />Join the forum discussion below or go and browse<a href="https://vaadin.com/forum/" rel="noopened">other discussions</a>.
+          <b>Was this page helpful?</b><br />Join the forum discussion below or go browse <a href="https://vaadin.com/forum/" rel="noopener">other discussions</a>.
         </p>
         <div id="discourse-comments"></div>
       </section>
