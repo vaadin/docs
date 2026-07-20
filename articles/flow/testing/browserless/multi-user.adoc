@@ -182,7 +182,7 @@ Assertions.assertNotSame(w1.getUI(), w2.getUI());
 [#signals]
 == Signals
 
-The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
+The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. For signal testing in single-user tests -- and a fuller treatment of synchronous propagation -- see <<testing-signals#, Testing Signals>>. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
 
 .Two Users Observing a Shared Signal
 [source,java]
@@ -258,6 +258,8 @@ class MultiUserSecurityTest {
 ----
 
 [methodname]`newUser(String username, String... roles)` is a convenience that produces an [classname]`Authentication` with the conventions of [annotationname]`@WithMockUser`. To install a custom [classname]`Authentication` directly, pass it to [methodname]`newUser(Authentication)`. Calling [methodname]`newUser()` without arguments creates an anonymous user; the handler installs Spring's [classname]`AnonymousAuthenticationToken`.
+
+A logout performed in one window leaves the user logged out in all of that user's windows, both already open and opened afterwards. To authenticate again, create a fresh user context with [methodname]`newUser(...)` rather than reusing the logged-out one.
 
 
 == Authenticated Users with Quarkus Security
@@ -364,7 +366,7 @@ Common gotchas worth keeping in mind:
 
 - *Always close the application context.* Use try-with-resources or call [methodname]`close()` in [annotationname]`@AfterEach`. Closing the application cascades to every user and window. Leaking a context across tests leaves Vaadin thread-locals pointing at torn-down state.
 - *No parallel access.* Every context is thread-affine. Driving the same [classname]`BrowserlessApplicationContext` from multiple threads in the same test is unsupported.
-- *Security snapshot is per user, not per window.* Two windows of the same user share one snapshot; a security mutation made while one window is active is visible to the user's other windows. The snapshot is re-captured only on cross-user switches.
+- *Security snapshot is per user, not per window.* Two windows of the same user share one snapshot; a security mutation made while one window is active -- including a logout -- is visible to the user's other windows, both already open and opened afterwards. The snapshot is re-captured only on cross-user switches.
 - *Calling Vaadin APIs directly.* DSL methods on [classname]`BrowserlessUIContext` activate the window automatically. If the test reaches for [methodname]`UI.getCurrent()`, [methodname]`VaadinSession.getCurrent()`, or [classname]`SecurityContextHolder` between DSL calls, call [methodname]`window.activate()` first to make sure the thread-locals reflect the intended window.
 - *Anonymous users still go through the handler.* On a secured context, [methodname]`newUser()` with no arguments delegates to the handler, which installs its anonymous-equivalent state (for example, Spring's [classname]`AnonymousAuthenticationToken`).
 
