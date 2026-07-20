@@ -31,6 +31,7 @@ Observability Kit records the meter types Micrometer provides:
 Counter:: A value that only increases, such as the number of sessions created.
 Gauge:: A value sampled at a point in time, such as the number of active sessions.
 Timer:: Records both a count of events and the distribution of their durations.
+Distribution summary:: Records both a count of events and the distribution of a non-time measurement, such as the number of rows read from a query.
 
 
 === Session Metrics
@@ -120,6 +121,22 @@ Tagged by `type` and `outcome`.
 |===
 
 
+=== Resync Metrics
+
+Controlled by `vaadin.observability.resync`.
+These track UIDL message-recovery events, which indicate a flaky client-server connection.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.resync`
+|Counter
+|Client-server message-recovery events.
+Tagged by `type`: `resend` when the client re-sends a request it never got a response for (the server replays its cached response), or `resync` when the client gives up on a missing server message and asks for a full UI-state rebuild.
+|===
+
+
 === Error Metrics
 
 Controlled by `vaadin.observability.errors`.
@@ -178,6 +195,29 @@ These are observed in the browser and reported back to the server, subject to th
 |===
 
 
+=== Database Metrics
+
+Controlled by `vaadin.observability.database` (off by default, Spring Boot starter only).
+When enabled, every [classname]`DataSource` bean is wrapped so that JDBC access -- Spring Data, [classname]`JdbcTemplate`, or raw JDBC -- is measured, attributed to the Vaadin `route` that triggered it.
+See <<#database-monitoring,Database Monitoring>> for how this works and when to use it.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.db.fetch.rows`
+|Distribution summary
+|Rows read from a JDBC result set.
+Tagged by `route`.
+
+|`vaadin.db.query`
+|Timer
+|JDBC query duration.
+Tagged by `route`.
+Produced alongside the `vaadin.db.query` span when both database monitoring and tracing are enabled.
+|===
+
+
 [[common-tags]]
 === Common Tag Values
 
@@ -196,16 +236,18 @@ Distinct values are capped by [propertyname]`vaadin.observability.route-cardinal
 |`request` or `access`.
 
 |`type`
-|The RPC invocation type, as reported by Flow.
+|On RPC meters and spans, the RPC invocation type as reported by Flow.
+On `vaadin.resync`, the recovery kind: `resend` or `resync`.
 
 |`exception`
 |The simple class name of the handled exception.
 |===
 
-.JVM, Process, and Database Metrics
+.JVM, Process, and Connection-Pool Metrics
 [NOTE]
-Observability Kit no longer records JVM, process, or database connection-pool metrics itself.
+Observability Kit doesn't record JVM, process, or database connection-pool metrics itself.
 Those come from Micrometer's standard binders -- Spring Boot Actuator registers them out of the box, and you can add others as needed.
+The kit's own database metrics above measure query behavior per route, not the connection pool.
 
 
 == Tracing
@@ -230,6 +272,10 @@ Carries the request-level attributes below.
 
 |`vaadin.rpc.<type>`
 |A server-side RPC invocation (DOM event, [annotationname]`@ClientCallable`, property sync, or return channel), nested under the request.
+
+|`vaadin.db.query`
+|A single JDBC query, nested under the request or RPC span that ran it.
+Emitted only when database monitoring is enabled (see <<#database-monitoring,Database Monitoring>>).
 
 |`vaadin.ui.access`
 |Work executed through [methodname]`UI.access()`.
@@ -269,11 +315,48 @@ Added only when [propertyname]`vaadin.observability.traces-session-id` is enable
 
 The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
 
+The RPC span additionally carries two span-only, high-cardinality attributes when they can be resolved: `vaadin.rpc.event` (the invocation name, such as a DOM event name, invoked method name, or navigation location) and `vaadin.rpc.component` (the class name of the targeted [classname]`Component`).
+These are attached to the span only, never as timer tags, because of their cardinality.
+
+The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
+
 
 === Errors
 
 When a request or a nested operation handles an exception, the observation is marked as error, so the span records the error and the `outcome` tag becomes `error`.
 A server-side error also increments the `vaadin.errors` counter, tagged by exception type.
+
+
+[[database-monitoring]]
+== Database Monitoring
+
+With the Spring Boot starter, the kit can watch how many rows your queries return and how long they take, without touching application code.
+Enable it with:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.database=true
+----
+
+Every [classname]`DataSource` bean is then wrapped so that each JDBC [classname]`ResultSet` reports its row count into the `vaadin.db.fetch.rows` distribution summary, *tagged by the Vaadin `route`* that triggered the fetch.
+This lets you see which view issues the large reads.
+Watch the p95/p99 of that summary and alert on it in your backend -- for example a Prometheus rule on `vaadin_db_fetch_rows` -- to catch runaway result sets in production.
+
+This is off by default: it reaches outside the Vaadin runtime into the persistence layer and adds a small per-row cost.
+It covers all JDBC access -- Spring Data, [classname]`JdbcTemplate`, and raw JDBC -- that flows through a managed [classname]`DataSource`.
+Row counting is best-effort and attributes to `_unknown` when no view is active, such as for background tasks.
+
+=== Locating Slow or Large Queries in a Trace
+
+When tracing is also enabled (`vaadin.observability.traces=true`, the default), each query additionally opens a `vaadin.db.query` span.
+Because it starts on the request-handling thread inside the Vaadin request span, it nests under that request or RPC span automatically.
+In Jaeger -- or any backend fed by your Micrometer tracing bridge -- you can open a slow interaction and see the individual queries it ran, each carrying the `route` and a `db.rows` attribute.
+The same observation also yields a `vaadin.db.query` duration timer: database time per view.
+
+The span doesn't include the SQL text by default.
+Set `vaadin.observability.database-statement=true` to attach the parameterized statement as `db.statement`.
+This is useful for pinpointing the offending query, but it's opt-in because SQL is higher cardinality and can be sensitive.
 
 
 == Extending Built-In Instrumentation
