@@ -238,7 +238,49 @@ The [methodname]`validateHeader()` method takes the number of leading bytes to b
 
 The [methodname]`validateComplete()` callback receives an [classname]`UploadContent` handle to the received data, offering [methodname]`getInputStream()`, [methodname]`size()`, and [methodname]`asPath()` -- the last present only for the file-based handlers. The content is valid only for the duration of the call: don't retain it or pass its path to a background process, since the underlying file may be deleted as soon as the call returns.
 
-To combine several phases in a single reusable validator, implement [classname]`UploadValidator` directly and register it with [methodname]`withValidator()`. Override [methodname]`headerSize()` to return a positive value to opt into the header phase.
+To combine several phases in a single reusable validator, implement [classname]`UploadValidator` directly and register it with [methodname]`withValidator()`. Override [methodname]`headerSize()` to return a positive value to opt into the header phase; leaving it at the default of `0` skips [methodname]`validateHeader()` altogether.
+
+[source,java]
+----
+public class PngUploadValidator implements UploadValidator {
+
+    @Override
+    public void validateMetadata(UploadEvent event) {
+        if (!"image/png".equals(event.getContentType())) {
+            event.reject("Only PNG images are accepted");
+        }
+    }
+
+    @Override
+    public int headerSize() {
+        // Number of leading bytes to buffer for validateHeader().
+        return 8;
+    }
+
+    @Override
+    public void validateHeader(UploadEvent event, ByteBuffer header) {
+        if (!isPngSignature(header)) {
+            event.reject("File is not a valid PNG image");
+        }
+    }
+
+    @Override
+    public void validateComplete(UploadEvent event, UploadContent content) {
+        content.asPath().ifPresent(path -> {
+            if (containsMalware(path)) {
+                event.reject("File failed the virus scan");
+            }
+        });
+    }
+}
+----
+
+[source,java]
+----
+FileUploadHandler handler = UploadHandler
+    .toFile(successHandler, fileFactory)
+    .withValidator(new PngUploadValidator());
+----
 
 [NOTE]
 Prefer [methodname]`reject()` over throwing an exception. In a multipart upload with several files, a rejection lets the remaining files still be processed (the response is HTTP 207), whereas a thrown exception stops the whole request.
