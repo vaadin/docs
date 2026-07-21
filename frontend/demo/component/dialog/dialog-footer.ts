@@ -3,7 +3,6 @@ import '@vaadin/button';
 import '@vaadin/dialog';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -36,17 +35,15 @@ export class Example extends LitElement {
         @closed="${() => {
           this.dialogOpened = false;
         }}"
-        ${dialogRenderer(() => html`Are you sure you want to delete this user permanently?`, [])}
-        ${dialogFooterRenderer(
-          () => html`
-            <vaadin-button theme="primary error" @click="${this.close}" style="margin-right: auto;">
-              Delete
-            </vaadin-button>
-            <vaadin-button theme="tertiary" @click="${this.close}">Cancel</vaadin-button>
-          `,
-          []
-        )}
-      ></vaadin-dialog>
+      >
+        <div>Are you sure you want to delete this user permanently?</div>
+        <div slot="footer">
+          <vaadin-button theme="primary error" @click="${this.close}" style="margin-right: auto;">
+            Delete
+          </vaadin-button>
+          <vaadin-button theme="tertiary" @click="${this.close}">Cancel</vaadin-button>
+        </div>
+      </vaadin-dialog>
       <!-- end::snippet[] -->
       <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;
