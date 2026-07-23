@@ -1,349 +1,342 @@
 ---
-title: Customization
-page-title: How to customize observability in Vaadin applications
+title: Custom Instrumentation
+page-title: Adding custom instrumentation to Observability Kit
+description: How to record your own metrics and traces alongside the kit's built-in instrumentation, using annotations, the fluent Micrometer API, or raw registry beans.
+meta-description: Learn the three ways to add custom metrics and traces to a Vaadin application instrumented with Observability Kit.
 order: 30
-description: How to add custom instrumentation traces and metrics to an application.
-meta-description: Learn how to tailor observability features to monitor and analyze Vaadin applications effectively.
 ---
 
 
-= Customizing Observability Kit
+= Custom Instrumentation
 
-.Vaadin Flow Only
-[NOTE]
-This page is only useful if you're using Vaadin Flow.
+Observability Kit records everything it measures into your application's Micrometer [classname]`MeterRegistry`, and emits tracing spans through the Micrometer Observation API.
+Your own instrumentation uses the *same* registry and the *same* Observation API, so any meters and spans you add sit right alongside the built-in ones and export through whatever backend you already configured -- Prometheus, OTLP, Zipkin, and so on.
+There's nothing kit-specific to learn: if you know Micrometer, you know how to extend the kit.
 
-The default instrumentation of Observability Kit provides a reasonable amount of data out-of-the-box. However, it can't cover all the specifics of an application. Writing custom instrumentation allows the collection of application-specific telemetry data for possible problematic places or performance hotspots of an application.
-
-
-== Customizing Traces
-
-Custom instrumentation allows the execution of specific pieces of code to be recorded as spans. These are automatically be added to the current trace, and provide more details, such as attributes and errors.
-
-Custom spans can be added either by using annotations, or by using the OpenTelemetry API to create and end spans, manually. The following sections gives instructions for each of these methods.
-
-
-=== Using Annotations
-
-The easiest way to add custom spans is to annotate methods whose executions should be recorded. Annotations require the OpenTelemetry instrumentation annotations dependency to be in the project.
-
-.pom.xml
-[source, xml]
-----
-<dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-instrumentation-annotations</artifactId>
-    <version>1.18.0</version>
-</dependency>
-----
-
-.Use Matching Versions
-[NOTE]
-The OpenTelemetry API version should match the version that's used by Observability Kit. The used version is available in the release notes and it's also visible when running the Java agent.
-
-Now methods that should be recorded, and can be annotated with the [annotationname]`@WithSpan` annotation.
-
-.Record image fetch
-[source,java]
-----
-import io.opentelemetry.instrumentation.annotations.WithSpan;
-
-public class ImageListView {
-  @WithSpan
-  public void fetchImages() {
-      // execution code
-  }
-}
-----
-
-Method parameters can be added as attributes to the span by using the [annotationname]`@SpanAttribute` annotation like so:
-
-.Store Fetch URL as Annotation
-[source,java]
-----
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.annotations.WithSpan;
-
-public class ImageListView {
-  @WithSpan
-  public void fetchImages(@SpanAttribute("fetch.url") String fetchUrl) {
-      // execution code
-  }
-}
-----
-
-For more details, see the https://opentelemetry.io/docs/instrumentation/java/automatic/annotations/[OpenTelemetry Annotations docs].
-
-
-=== Creating Spans Manually
-
-Spans can be created manually using the OpenTelemetry API. This provides finer control over when spans are started, ended, and what data they should contain.
-
-Creating manual spans requires adding the OpenTelemetry API dependency to the project:
-
-.pom.xml
-[source, xml]
-----
-<dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-api</artifactId>
-    <version>1.18.0</version>
-</dependency>
-----
-
-.Use Matching Versions
-[NOTE]
-The OpenTelemetry API version should match the version that's used by Observability Kit. The used version is available in the release notes and it's also visible when running the Java agent.
-
-To create a span manually, get a tracer instance from the OpenTelemetry API, and then start and end a span around the code that should be traced. For example:
-
-[source, java]
-----
-public class ImageListView {
-    void fetchImages() {
-        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
-        "1.0");
-        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
-        try {
-            // Do possibly problematic task
-        } finally {
-            span.end();
-        }
-    }
-}
-----
-
-The started span is automatically added to the currently active trace on the thread.
-
-https://opentelemetry.io/docs/concepts/signals/traces/#attributes[Attributes] can be added to the span for more details on the state of the application. Attributes can be non-null string, boolean, floating point and integer values, or an array of these.
-
-[source, java]
-----
-public class ImageListView {
-    void fetchImages(String fetchUrl) {
-        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
-        "1.0");
-        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
-        try {
-            // Do possibly problematic task
-
-            // Set attribute on span
-            span.setAttribute("fetch.url", fetchUrl);
-        } finally {
-            span.end();
-        }
-    }
-}
-----
-
-https://opentelemetry.io/docs/concepts/signals/traces/#span-events[Events] can be also recorded on spans to get a timestamp when something happened during the execution. Like spans, events may also contain attributes that are associated with an event.
-
-[source, java]
-----
-public class ImageListView {
-    void fetchImages(String fetchUrl) {
-        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
-        "1.0");
-        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
-        try {
-            // Record start of the operation as span
-            span.addEvent("Image fetch start");
-
-            // load images...
-
-            // Add event with attributes
-            Attributes attributes = Attributes.builder().put("images.count", 42).build();
-            span.addEvent("Images loaded", attributes);
-        } finally {
-            span.end();
-        }
-    }
-}
-----
-
-Spans should be marked as errors if the code execution fails. Exceptions can be recorded in a span event, which provides detailed information such as exception type and stack trace when looking at the traces.
-
-[source,java]
-----
-public class ImageListView {
-    void fetchImages(String fetchUrl) {
-        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
-        "1.0");
-        final Span span = trace.spanBuilder("My Problematic Task").startSpan();
-        try {
-            // Do possibly problematic task
-            span.addEvent("Image fetch start");
-            // load from external
-            span.addEvent("Images loaded");
-        } catch(Exception exception) {
-            // Handle exception
-            // Mark the span as having an error
-            span.setStatus(StatusCode.ERROR, exception.getMessage());
-            // Add exception trace to the span
-            span.recordException(throwable);
-        } finally {
-            span.end();
-        }
-    }
-}
-----
-
-For more details about manual instrumentation, see the  https://opentelemetry.io/docs/instrumentation/java/manual/[OpenTelemetry manual instrumentation docs].
-
-
-=== Long Running Spans
-
-At times, the important information isn't the method execution time, but in the execution of a threaded piece of code.
-
-For the annotation [annotationname]`@WithSpan`, if the annotated method returns a future or promise, then the span ends only when the future completes. For supported future types, see https://opentelemetry.io/docs/instrumentation/java/automatic/annotations/#creating-spans-around-methods-with-withspan[Creating spans around methods with @WithSpan]
-
-.Span for JavaScript Result
-[source,java]
-----
-    @WithSpan
-    private CompletableFuture<JsonValue> getJsResult(String js) {
-        return getElement().executeJs(js).toCompletableFuture();
-    }
-----
-
-For manual implementation, it's possible to keep the span open until a threaded task completes.
-
-.Window Width from Browser
-[source,java]
-----
-    private void getWindowWidth() {
-        Tracer trace = GlobalOpenTelemetry.getTracer("app-instrumentation",
-        "1.0");
-        final Span span = trace.spanBuilder("Fetch window width").startSpan();
-
-        getJsResult("return window.outerWidth").whenComplete((value, throwable) -> {
-            System.out.println(value);
-            span.end();
-        });
-    }
-
-    private CompletableFuture<JsonValue> getJsResult(String js) {
-        return getElement().executeJs(js).toCompletableFuture();
-    }
-----
-
-
-
-== Creating Custom Metrics
-
-Creating manual metrics requires adding the OpenTelemetry API dependency to the project:
-
-.pom.xml
-[source, xml]
-----
-<dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-api</artifactId>
-    <version>1.18.0</version>
-</dependency>
-----
-
-It's possible to make synchronous and asynchronous metric instrumentation. Synchronous is when measurements are recorded as they happen. Asynchronous is related to when a collection of measurements is invoked.
-
-.Create Meter Instance
-[source,java]
-----
-class MyMetrics {
-    void generateMetrics() {
-        Meter meter = GlobalOpenTelemetry.meterBuilder("app-instrumentation")
-            .setInstrumentationVersion("1.0.0").build();
-    }
-}
-----
-
-With the [classname]`Meter`, you can now create metric instrumentation for Counter, UpDownCounter, Gauge and Histogram. Each can be either a Long or a Double metric.
+Three ways exists for adding custom instrumentation, listed here from the most declarative to the most explicit:
 
 [unordered]
-Counter:: records only positive values.
-UpDownCounter:: records positive and negative values.
-Gauge:: measures an instantaneous value with an asynchronous callback.
-Histogram:: records measurements that are most useful to analyze as a histogram distribution.
+<<#annotation-based,Annotation-based>>:: Add [annotationname]`@Timed`, [annotationname]`@Counted`, or [annotationname]`@Observed` to a method and let an aspect do the work.
+Least code, requires Spring AOP.
+<<#fluent-helpers,Fluent helpers>>:: Build a meter or observation with Micrometer's fluent builders.
+Full control over names, tags, and descriptions, no AOP required.
+<<#raw-beans,Raw registry beans>>:: Inject the [classname]`MeterRegistry` (or [classname]`ObservationRegistry`) and call it directly.
+The lowest-level option, useful for dynamic meters and gauges.
 
-Adding a synchronous count for amount of generated images:
-
-.Counter Sample
-[source,java]
-----
-class MyMetrics {
-    static LongCounter counter;
-    void generateMetrics() {
-        // ...
-         counter = meter
-            .counterBuilder("generated_image")
-            .setDescription("Amount of images generated")
-            .setUnit("1").build();
-    }
-
-    public void generateImage() {
-        // generation code
-        counter.add(1);
-    }
-}
-----
-
-Adding an asynchronous gauge for measuring open sessions would could be the following:
-
-.Gauge Sample
-[source,java]
-----
-class MyMetrics {
-    void generateMetrics() {
-        // ...
-        meter.gaugeBuilder("vaadin.session.count").ofLongs()
-            .setDescription("Number of open sessions").setUnit("count")
-            .buildWithCallback(measurement -> {
-                measurement.record(getOpenSessions());
-            });
-    }
-}
-----
-
-Metrics can also be annotated with attributes to help describe what the metric represents.
-
-For more details about manual metrics, see https://opentelemetry.io/docs/instrumentation/java/manual/#metrics[OpenTelemetry metrics]
+Fluent helpers and raw beans work in every deployment -- Spring Boot, plain-Spring, and standalone.
+Annotation-based instrumentation is the exception: it depends on an AOP proxying container, so it's available only in Spring-based setups (Spring Boot or plain Spring), not in a standalone deployment.
 
 
-== System & Process Metrics
+[[before-you-start]]
+== Before You Start
 
-It's possible to collect systems and process metrics using https://github.com/oshi/oshi[Operating System and Hardware Information] (OSHI) with OpenTelemetry instrumentation.
+Custom instrumentation needs access to a [classname]`MeterRegistry`, and -- for tracing -- an [classname]`ObservationRegistry`.
+How you obtain them depends on how the kit is set up:
 
-First, the application needs to get the `opentelemetry-oshi` and `oshi-core` dependencies:
+[cols="1,3"]
+|===
+|Setup |How to obtain the registries
 
-.pom.xml
+|Spring Boot starter
+|Both registries are Spring beans.
+Inject them anywhere, including into a Vaadin view's constructor.
+The starter pulls in Boot's Micrometer auto-configuration, and Actuator supplies the [classname]`ObservationRegistry`.
+
+|Plain Spring
+|You define the [classname]`MeterRegistry` bean yourself; inject it as usual.
+An [classname]`ObservationRegistry` is used if a bean is present.
+
+|Standalone
+|You create the registries when you call [methodname]`ObservabilityKit.install()`.
+Hold onto those references (for example in a static holder or your own service) to use them for custom instrumentation.
+|===
+
+NOTE: A meter or span is only *exported* if a registry backend is configured.
+See the <<configuration#,Configuration>> page for adding Actuator and a registry such as Prometheus.
+
+
+[[annotation-based]]
+== Annotation-Based Instrumentation
+
+The least intrusive way to instrument a method is to annotate it.
+Micrometer ships three method-level annotations, each backed by an aspect:
+
+[NOTE]
+.What is Spring AOP?
+====
+Aspect-Oriented Programming (AOP) lets you attach behavior to method calls without changing the method's own code.
+Spring implements it by wrapping each managed bean in a proxy: when one bean calls another, the call passes through the proxy first, which runs the extra behavior (here, starting and stopping a timer or span) and then forwards to your real method.
+This is how the annotations below take effect -- and why they only work on Spring-managed beans, since a plain object created with `new` has no proxy around it.
+====
+
+[unordered]
+[annotationname]`@Timed`:: Records a [classname]`Timer` -- how long the method takes and how often it's called.
+[annotationname]`@Counted`:: Records a [classname]`Counter` -- how many times the method is invoked.
+[annotationname]`@Observed`:: Creates an Observation, producing *both* a timer *and* a tracing span.
+This is the annotation that ties into the kit's trace tree.
+
+=== Enabling the Aspects
+
+The annotations do nothing on their own -- a corresponding aspect bean must be present, and the application context must support AOP proxying.
+
+[.example]
+--
+With the *Spring Boot* starter, add the AOP starter and the aspects are registered automatically by Boot ([classname]`TimedAspect` and [classname]`CountedAspect` from the metrics auto-configuration, [classname]`ObservedAspect` from the observation auto-configuration).
+No further wiring is needed.
+
 [source,xml]
 ----
+<source-info group="Spring Boot"></source-info>
 <dependency>
-  <!-- contains the implementation of the process- and systems-metrics collection for JavaAgent -->
-  <groupId>io.opentelemetry.instrumentation</groupId>
-  <artifactId>opentelemetry-oshi</artifactId>
-  <version>1.23.0-alpha</version>
-  <scope>compile</scope>
-</dependency>
-<dependency>
-  <groupId>com.github.oshi</groupId>
-  <artifactId>oshi-core</artifactId>
-  <version>5.3.1</version>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
 </dependency>
 ----
 
-Then, to enable and register the metrics and observers, call [methodname]`SystemMetrics.registerObservers()` and [methodname]`ProcessMetrics.registerObservers()` once.
-
-For instance, here is how it might look in a Spring Boot application:
+In a *plain-Spring* (non-Boot) application, register whichever aspects you use as beans in a configuration class.
+The [annotationname]`@Observed` aspect needs the [classname]`ObservationRegistry`; the others need the [classname]`MeterRegistry`.
 
 [source,java]
 ----
-@SpringBootApplication
-public class YourApplication implements AppShellConfigurator {
+<source-info group="Plain Spring"></source-info>
+@Configuration
+@EnableAspectJAutoProxy
+class MetricsAspectsConfig {
 
-    static {
-        SystemMetrics.registerObservers(GlobalOpenTelemetry.get());
-        ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
+    @Bean
+    TimedAspect timedAspect(MeterRegistry registry) {
+        return new TimedAspect(registry);
     }
-    //  other code
+
+    @Bean
+    CountedAspect countedAspect(MeterRegistry registry) {
+        return new CountedAspect(registry);
+    }
+
+    @Bean
+    ObservedAspect observedAspect(ObservationRegistry registry) {
+        return new ObservedAspect(registry);
+    }
 }
 ----
+--
+
+[IMPORTANT]
+====
+The aspects intercept calls through a Spring proxy, so an annotation only fires when the method is called *from another bean*.
+Self-invocation (a bean calling its own annotated method) and calls on plain, non-managed objects are not intercepted.
+For those cases, use the <<#fluent-helpers,fluent helpers>> instead.
+====
+
+=== Using the Annotations
+
+Annotate a service method to time it and count its errors.
+The `value` becomes the meter name; `extraTags` adds static tags.
+
+.`CheckoutService.java`
+[source,java]
+----
+@Service
+public class CheckoutService {
+
+    @Timed(value = "app.checkout.duration",
+            description = "Time to complete a checkout",
+            extraTags = { "module", "checkout" })
+    @Counted(value = "app.checkout.count", description = "Checkout attempts")
+    public Receipt checkout(Cart cart) {
+        // business logic
+    }
+}
+----
+
+For an [annotationname]`@Observed` method you get a timer *and* a span.
+When the call happens during a Vaadin request, the span is automatically parented under the kit's `vaadin.request` (or `vaadin.rpc`) span, so it shows up in the same trace.
+
+.`PricingService.java`
+[source,java]
+----
+@Service
+public class PricingService {
+
+    @Observed(name = "app.pricing",
+            contextualName = "calculate-price",
+            lowCardinalityKeyValues = { "tier", "standard" })
+    public Money calculatePrice(Order order) {
+        // produces both an `app.pricing` timer and an `app.pricing` span,
+        // nested inside the current Vaadin request trace
+    }
+}
+----
+
+NOTE: Keep [methodname]`extraTags` and [methodname]`lowCardinalityKeyValues` to a small, fixed set of values.
+See <<#naming,Naming and Cardinality>>.
+
+
+[[fluent-helpers]]
+== Fluent Helpers
+
+When you need control over the meter -- custom percentiles, SLA buckets, dynamically computed tags -- or when AOP proxying isn't an option, use Micrometer's fluent builders.
+They give you the full meter definition and work in any deployment, including standalone.
+
+=== Metrics
+
+Every meter type has a `builder(...)` that ends in [methodname]`register(registry)`.
+Registration is idempotent: calling it again with the same name and tags returns the existing meter, so it's safe to build inside a hot path.
+
+.Recording a timer with the fluent builder
+[source,java]
+----
+Timer timer = Timer.builder("app.report.duration")
+        .description("Time to render a report")
+        .tag("format", "pdf")
+        .publishPercentiles(0.5, 0.95, 0.99)
+        .register(registry);
+
+timer.record(() -> renderReport());
+----
+
+.A counter and a gauge
+[source,java]
+----
+Counter exports = Counter.builder("app.report.exports")
+        .description("Reports exported")
+        .tag("format", "pdf")
+        .register(registry);
+exports.increment();
+
+// A gauge tracks a live value by holding a weak reference to the source.
+Gauge.builder("app.queue.depth", workQueue, Queue::size)
+        .description("Pending background jobs")
+        .register(registry);
+----
+
+=== Traces
+
+For a custom span, build an Observation and wrap the work in [methodname]`observe(...)`.
+The observation opens a scope, so any span started inside it -- including the kit's own RPC and navigation spans -- nests correctly, and it's stopped (and marked error on exception) for you.
+
+.Wrapping work in an Observation
+[source,java]
+----
+Observation.createNotStarted("app.import", observationRegistry)
+        .contextualName("import-customers")
+        .lowCardinalityKeyValue("source", "csv")
+        .observe(() -> importCustomers(file));
+----
+
+When tracing is enabled, this also emits an `app.import` timer through the kit's [classname]`DefaultMeterObservationHandler` -- one annotation-free way to get a metric and a span from a single call.
+
+
+[[raw-beans]]
+== Raw Registry Beans
+
+The most direct option is to inject the registry and call it.
+This is what you reach for when meter names or tags are computed at runtime, or when you want to read the kit's own meters back out.
+Because the kit records into the very same registry, a custom meter recorded here is indistinguishable from a built-in one to your backend.
+
+The following Vaadin view records a custom timer next to the kit's meters, and reads the built-in `vaadin.request.duration` timer back out:
+
+.`LatencyView.java`
+[source,java]
+----
+@Route("latency")
+public class LatencyView extends VerticalLayout {
+
+    private static final String SERVER_TIMER = "vaadin.request.duration";
+
+    private final transient MeterRegistry registry;
+
+    public LatencyView(MeterRegistry registry) {
+        this.registry = registry;
+
+        add(new Button("Do work", e -> timed("do-work", this::doWork)));
+        add(new Button("Show server timing", e -> {
+            Timer timer = registry.find(SERVER_TIMER).timer();
+            if (timer != null) {
+                Notification.show("%d requests, max %.0f ms".formatted(
+                        timer.count(), timer.max(TimeUnit.MILLISECONDS)));
+            }
+        }));
+    }
+
+    /** Record a custom timer next to the kit's built-in meters. */
+    private void timed(String action, Runnable work) {
+        Timer.Sample sample = Timer.start(registry);
+        try {
+            work.run();
+        } finally {
+            sample.stop(registry.timer("app.interaction", "action", action));
+        }
+    }
+}
+----
+
+The convenience methods -- [methodname]`registry.timer(name, tags...)`, [methodname]`registry.counter(name, tags...)`, [methodname]`registry.gauge(...)` -- create the meter on first use and return the existing one thereafter.
+Use [classname]`Timer.Sample` (as above) when start and stop happen at different points in the code.
+
+For a custom span at this level, drive the [classname]`Observation` lifecycle yourself with an explicit scope -- the same pattern the kit uses internally:
+
+.Manually managing an Observation scope
+[source,java]
+----
+Observation observation = Observation
+        .createNotStarted("app.batch", observationRegistry)
+        .contextualName("nightly-batch")
+        .start();
+try (Observation.Scope ignored = observation.openScope()) {
+    runBatch();
+} catch (Throwable t) {
+    observation.error(t);
+    throw t;
+} finally {
+    observation.stop();
+}
+----
+
+[TIP]
+====
+In a standalone deployment, retrieve the registries from wherever you stashed them at [methodname]`ObservabilityKit.install()` time.
+The kit also exposes the live registry it bound instrumentation to through [methodname]`ObservabilityKit.getActiveMeterRegistry()`, which returns `null` until the [classname]`VaadinService` has initialized.
+====
+
+
+[[which]]
+== Choosing an Approach
+
+[cols="1,3"]
+|===
+|Approach |Use it when
+
+|Annotations
+|You want declarative, low-noise instrumentation of service methods, and you're on Spring with AOP.
+Best for coarse-grained "how long does this operation take" measurements.
+
+|Fluent helpers
+|You need control over the meter definition (percentiles, SLAs, descriptions), self-invocation defeats the aspect, or you're standalone.
+The default choice for most explicit instrumentation.
+
+|Raw beans
+|Meter names or tags are computed at runtime, you're recording inside a tight loop, or you need to read existing meters back out of the registry.
+|===
+
+
+[[naming]]
+== Naming and Tag Cardinality
+
+Custom meters and spans share a namespace and a backend with the kit's, so follow the same conventions:
+
+[unordered]
+Use dotted, lowercase names::
+Match Micrometer/OpenTelemetry convention -- `app.checkout.duration`, not `checkoutTime`.
+Prefix application meters with a stable namespace such as `app.` to keep them clearly separate from the `vaadin.` meters.
+Keep tag values low-cardinality::
+Every distinct combination of tag values creates a new time series.
+Tag with bounded values (a status, a small enum, a fixed module name) -- never with user IDs, session IDs, full URLs, or anything unbounded.
+The kit guards its own `route` tag with a cardinality limit (see [propertyname]`vaadin.observability.route-cardinality-limit`); apply the same discipline to your tags.
+Reuse meters, don't recreate state::
+Builders and the [methodname]`registry.timer(...)` shortcuts are idempotent -- they return the existing meter for a given name+tags.
+Don't cache a [classname]`Counter` keyed by a high-cardinality value.
+
+See the <<reference#,Reference>> page for the full list of built-in meter and span names so your own names don't collide with them.
+
+[discussion-id]`D4A8490D-0E40-4BFA-839C-E542512F69E3`

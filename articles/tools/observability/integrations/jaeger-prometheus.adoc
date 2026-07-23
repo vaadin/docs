@@ -1,134 +1,152 @@
 ---
 title: Jaeger pass:[&] Prometheus
 page-title: How to integrate Jaeger and Prometheus in Vaadin
-description: How to integrate Jaeger and Prometheus.
-meta-description: Set up Jaeger and Prometheus for monitoring and observability in Vaadin applications.
+description: Set up a local Jaeger and Prometheus stack to collect traces and metrics from Observability Kit.
+meta-description: Set up Jaeger and Prometheus for local monitoring and observability of Vaadin applications with Observability Kit.
+order: 30
 ---
 
 
 = Jaeger & Prometheus Integration
 
-This page contains instructions on how to set up local Jaeger and Prometheus, a simple local setup that can be used for testing with support for metrics and traces, that collects telemetry from a Vaadin application with Observability Kit.
+This page shows how to set up local Jaeger and Prometheus -- a simple stack for testing, with support for traces and metrics -- to collect telemetry from a Vaadin application running Observability Kit.
+Jaeger receives traces over OpenTelemetry Protocol (OTLP); Prometheus scrapes metrics from Actuator.
 
 .Not Production-Ready
 [CAUTION]
-This setup is intended for local testing, only. It's not ready for use in production. See the https://www.jaegertracing.io/[Jaeger documentation] for more information on how to prepare your setup for production.
+This setup is intended for local testing only.
+See the https://www.jaegertracing.io/[Jaeger documentation] for how to prepare a setup for production.
 
 
 == Download & Run Jaeger
 
-// tag::jaeger-setup[]
-
-https://www.jaegertracing.io/[Jaeger] is a tool for collecting traces. Download it by clicking on the button here:
+https://www.jaegertracing.io/[Jaeger] is a tool for collecting and viewing traces.
+Recent versions accept OTLP directly, so no collector is needed for local use.
 
 https://www.jaegertracing.io/download/[Download Jaeger, role="button secondary water"]
 
-Then extract the contents of the downloaded archive (i.e., the `tar.gz`) file. After you've done that, open a terminal to the Jaeger directory and start Jaeger:
+Extract the contents of the downloaded archive, open a terminal in the Jaeger directory, and start it:
 
 [source,terminal]
 ----
 ./jaeger-all-in-one
 ----
 
-// end::jaeger-setup[]
+Jaeger's OTLP receiver listens on port `4318` (HTTP) and `4317` (gRPC), and the user interface on `http://localhost:16686`.
 
 
 == Download & Run Prometheus
 
-// tag::prometheus-setup[]
+https://prometheus.io[Prometheus] is a tool for collecting metrics.
+Configure it to scrape the application's Actuator endpoint at `/actuator/prometheus`:
 
-https://prometheus.io/[Prometheus] is a tool for collecting metrics.
-
-https://prometheus.io/download/[Download Prometheus, role="button secondary water"]
-
-Extract the contents of the downloaded archive (i.e., the `tar.gz` file). Create a Prometheus configuration with a scraper that reads metrics data from the OpenTelemetry exporter:
-
-.config.yml
+.`prometheus.yml`
 [source,yaml]
 ----
 global:
   scrape_interval: 15s # Default is every 1 minute.
 
 scrape_configs:
-  - job_name: 'opentelemetry'
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
+  - job_name: 'vaadin'
+    metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['localhost:9464']
-    # Host and port need to match the
-    # OpenTelemetry prometheus exporter configuration
+      - targets: ['localhost:8080']
 ----
 
-Open a terminal to the Prometheus directory and start Prometheus with the configuration file:
+https://prometheus.io/download/[Download Prometheus, role="button secondary water"]
+
+Extract the archive, open a terminal in the Prometheus directory, and start it with the configuration file:
 
 [source,terminal]
 ----
-./prometheus --config.file=/PATH/TO/config.yml
+./prometheus --config.file=/PATH/TO/prometheus.yml
 ----
 
-Remember to substitute the correct path to the [filename]`config.yml` file.
-
-// end::prometheus-setup[]
+Remember to substitute the correct path to the [filename]`prometheus.yml` file.
 
 
-[[configuration-file]]
-== Observability Kit Configuration
+== Configure the Application
 
-Create a new properties file named [filename]`agent.properties` and add the following lines to it:
+Add Actuator and the Prometheus registry for metrics, and the OpenTelemetry starter for OTLP trace export:
 
-// tag::agent-properties[]
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-opentelemetry</artifactId>
+</dependency>
+----
 
-.`*agent.properties*`
+Then point traces at Jaeger's OTLP endpoint and expose the Prometheus endpoint:
+
+.`application.properties`
 [source,properties]
 ----
-otel.traces.exporter=jaeger
-otel.exporter.jaeger.endpoint=http://localhost:14250
-otel.metrics.exporter=prometheus
-otel.exporter.prometheus.host=0.0.0.0
-otel.exporter.prometheus.port=9464
+spring.application.name=vaadin
+
+# Metrics: scraped by Prometheus
+management.endpoints.web.exposure.include=prometheus
+# The OpenTelemetry starter also brings in the OTLP metrics registry; disable it so metrics go through Prometheus only
+management.otlp.metrics.export.enabled=false
+
+# Traces: pushed to Jaeger over OTLP
+management.opentelemetry.tracing.export.otlp.endpoint=http://localhost:4318/v1/traces
+management.tracing.sampling.probability=1.0
 ----
 
-// end::agent-properties[]
-
-
-== Running the Application
-
-include::./_run-app.adoc[]
-
-// tag::view-traces-metrics[]
+The sampling probability is set to `1.0` so that every request produces a span while testing.
+Lower it for production.
 
 
 == Viewing Traces in Jaeger
 
-The default address for the Jaeger user interface is `http://localhost:16686`. From there you can select your service name -- [guilabel]*vaadin* by default -- from the [guilabel]*Service* field and click the [guibutton]*Find Traces* button.
+The default address for the Jaeger user interface is `http://localhost:16686`.
+From there, select your service name -- [guilabel]*vaadin* if you set `spring.application.name=vaadin` -- from the [guilabel]*Service* field and click the [guibutton]*Find Traces* button.
 
 // Allow 'time period' in this context
 pass:[<!-- vale Vaadin.Wordiness = NO -->]
 
-The default time period to search is within the last hour. To search further back, select a time period from the [guilabel]*Lookback* field.
+The default time period to search is within the last hour.
+To search further back, select a time period from the [guilabel]*Lookback* field.
 
 pass:[<!-- vale Vaadin.Wordiness = YES -->]
 
-The default number of results is 20. To see more results, increase the value in the [guilabel]*Limit Results* field.
+The default number of results is 20.
+To see more, increase the value in the [guilabel]*Limit Results* field.
 
-On the right, there is now a graph of timeline versus duration. From there you can see events that are causing delays, expressed by larger circles, or errors, expressed by red circles. Clicking one of the circles opens the <<#trace-detail,trace detail page>>.
+On the right, there is a graph of time versus duration.
+Larger circles indicate events causing delays; red circles indicate errors.
+Clicking a circle opens the <<#trace-detail,trace detail page>>.
 
-A list of the root spans is also available. Each span shows the duration relative to the other root spans, how many nested spans it contains, and how many errors. Once again, clicking on an item opens up the trace detail page.
+A list of the root spans is also available.
+Each span shows its duration relative to the others, how many nested spans it contains, and how many errors.
+Clicking an item opens the trace detail page.
 
 
+[[trace-detail]]
 === Trace Detail
 
-The trace detail page has a tree list showing the root span and all nested spans. If any of the spans has an error, it's be marked by a red exclamation (!) icon.
+The trace detail page has a tree list showing the root span and all nested spans.
+If a span has an error, it's marked with a red exclamation (!) icon.
 
-For each of the spans, you can view more details by clicking on the row. In the span details, you can expand [guilabel]*Tags* to view attributes for the span. Vaadin-specific attributes are detailed in the <<{articles}/tools/observability/reference#span-attributes,reference page>>. If there has been an error, you can find any related stack traces under [guilabel]*Logs*.
+Click a row to view a span's details.
+Expand [guilabel]*Tags* to see the span's attributes -- the Vaadin-specific ones are described on the <<../reference#span-attributes,Reference>> page.
 
 
 == Viewing Metrics in Prometheus
 
-The default address for the Prometheus user interfaces is `http://localhost:9090`. Enter a metric name into the search field and click [guibutton]*Execute*.
+The default address for the Prometheus user interface is `http://localhost:9090`.
+Enter a metric name into the search field and click [guibutton]*Execute*.
 
-If you don't know the metric name, you can use the metrics explorer, by clicking the Earth icon next to [guibutton]*Execute*. This provides an alphabetical list of available metrics.
+If you don't know the metric name, click the globe icon next to [guibutton]*Execute* to open the metrics explorer, which lists the available metrics alphabetically.
 
-To view the results as a graph, click the [guilabel]*Graph* tab.
-
-// end::view-traces-metrics[]
+To view a result as a graph, click the [guilabel]*Graph* tab.
