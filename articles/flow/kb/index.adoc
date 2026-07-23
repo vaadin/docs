@@ -148,4 +148,31 @@ This error can occur in the following situations:
 See <<{articles}/flow/configuration/licenses#offline-license-key,Offline License Key>> for details on which key type to use for your Vaadin version.
 ====
 
+[[license-prefs-backing-store]]
+.+++<h3>Repeated "Could Not Lock User Prefs" Warnings During License Validation</h3>+++
+[%collapsible]
+====
+When the JVM user has no writable home directory -- for example, a hardened Tomcat deployment, a CI agent, or any other process running as a locked-down user -- the JVM may repeatedly log warnings like the following while a Vaadin tool performs license validation:
+
+[source]
+----
+WARNING: Could not lock User prefs. Unix error code 2.
+WARNING: Couldn't flush user prefs: java.util.prefs.BackingStoreException: Couldn't get file lock.
+----
+
+The Vaadin license checker uses the Java `Preferences` API as part of license validation. On Linux and other Unix-like systems, the JVM stores those preferences as files under `~/.java/.userPrefs/` and starts a background thread that periodically flushes them. If that directory is not writable, every flush attempt produces a warning.
+
+Point the Java Preferences store to a directory the JVM user can write to by setting the `java.util.prefs.userRoot` system property on the JVM running the affected tool -- the application server, the Maven or Gradle build, the TestBench test runner, and so on. For example:
+
+[source,terminal]
+----
+-Djava.util.prefs.userRoot=/path/to/writable/dir
+----
+
+The directory is created on first use if it doesn't exist. Any location the JVM user can write to works -- somewhere under the server's instance directory, `/var/tmp`, or similar.
+
+[NOTE]
+This affects only Linux and other Unix-like operating systems. Windows and macOS use different mechanisms that don't write to the user's home directory, so they aren't affected by this issue, and the `java.util.prefs.userRoot` property has no effect there.
+====
+
 // end::licenses[]
