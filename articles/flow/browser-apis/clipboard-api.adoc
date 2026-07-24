@@ -16,6 +16,24 @@ The [classname]`Clipboard` API lets server-side Java code copy text, HTML, and i
 The Clipboard API requires a secure context (HTTPS), except on `localhost` during development. Browsers also require the [code]`write` call to happen inside a short-lived user gesture (click, key press, …) -- writes triggered outside of a gesture, for example from a background thread or a timer, will fail with a [code]`NotAllowedError`.
 
 
+[#how-the-binding-works]
+== How the Click Binding Works
+
+[methodname]`Clipboard.onClick(component)` does not register a click listener. It _arms_ a clipboard action that the browser runs synchronously inside the click event, while the user gesture is active -- a browser requirement for clipboard writes. The action must therefore be assigned during the same server request that creates the binding.
+
+Chain the action method directly onto [methodname]`onClick(...)`. The [methodname]`write*` and [methodname]`read*` methods return [code]`void`, so there is nothing to keep:
+
+[source,java]
+----
+Button copy = new Button("Copy");
+Clipboard.onClick(copy).writeText("Hello, world!");
+----
+
+Assigning the action later -- for example storing the [classname]`ClipboardBinding` and calling [methodname]`writeText()` from a separate [methodname]`addClickListener` callback -- arms the binding one request too late, after the gesture window has closed. A binding left with no action does nothing on the client, so the framework throws an [classname]`IllegalStateException` when the response is built.
+
+The same arming model applies to the <<{articles}/flow/browser-apis/fullscreen-api#,Fullscreen>> and <<{articles}/flow/browser-apis/web-share-api#,Web Share>> APIs, which share the user-gesture requirement.
+
+
 == Copying Text
 
 [methodname]`Clipboard.onClick(component)` returns a [classname]`ClipboardBinding` -- a fluent surface that attaches a clipboard action to the component's [code]`click` event. The typical "Copy to clipboard" button is one line:
@@ -27,6 +45,13 @@ Clipboard.onClick(copy).writeText("Hello, world!");
 ----
 
 Every subsequent click of the button copies the literal string to the clipboard. The call returns immediately and does not subscribe to the result -- see <<#observing-the-outcome,Observing the Outcome>> if you need to know whether the write succeeded.
+
+[IMPORTANT]
+====
+A literal string is captured *when the action is armed*, not when the click fires. Building it from a value that changes -- for example concatenating [methodname]`LocalTime.now()` into the text -- therefore copies a stale, build-time snapshot on every click, frozen at the moment the action was armed.
+
+To copy a value that changes, drive it through a component and pass the component (not a string) to [methodname]`writeText()` -- the value is then read on the client at click time, as shown next. Pre-arming has no equivalent for content that must be computed at the exact instant of the click; route such values through a field your server keeps up to date.
+====
 
 
 == Copying a Field Value
