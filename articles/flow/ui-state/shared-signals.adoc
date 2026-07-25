@@ -293,23 +293,44 @@ Signals can be composed into beans that use any Vaadin scope annotation, such as
 
 Use `@VaadinSessionScope` to create one signal instance per user session, i.e. shared across all browser tabs and windows for that session.
 
+Because the bean is constructed after the user has logged in, its constructor is a convenient place to seed the signal from the authenticated user. Hold the data as an immutable record, expose the signal read-only, and mutate it through named methods so that all changes go through the bean:
+
 [source,java]
 ----
 @Component
 @VaadinSessionScope
 public class CurrentUserSignal {
-    private final ValueSignal<String> usernameSignal;
+    public record CurrentUser(String name, String email, String pictureUrl) {
+        CurrentUser withName(String name) {
+            return new CurrentUser(name, email(), pictureUrl());
+        }
 
-    public CurrentUserSignal(AuthenticationContext authContext) {
-        this.usernameSignal = new ValueSignal<>(
-            authContext.getAuthenticatedUser(UserDetails.class)
-                .map(UserDetails::getUsername)
-                .orElse("anonymous")
-        );
+        CurrentUser withPictureUrl(String pictureUrl) {
+            return new CurrentUser(name(), email(), pictureUrl);
+        }
     }
 
-    public ValueSignal<String> getUsernameSignal() {
-        return usernameSignal;
+    private final ValueSignal<CurrentUser> user;
+
+    public CurrentUserSignal(AuthenticationContext authContext) {
+        this.user = new ValueSignal<>(
+            authContext.getAuthenticatedUser(UserDetails.class)
+                .map(u -> new CurrentUser(u.getUsername(), "", ""))
+                .orElse(new CurrentUser("anonymous", "", "")));
+    }
+
+    // Expose the signal read-only so views can bind but not write directly
+    public Signal<CurrentUser> user() {
+        return user.asReadonly();
+    }
+
+    // Mutate through named methods; every bound component updates reactively
+    public void updateName(String name) {
+        user.update(u -> u.withName(name));
+    }
+
+    public void updatePictureUrl(String pictureUrl) {
+        user.update(u -> u.withPictureUrl(pictureUrl));
     }
 }
 ----
@@ -317,6 +338,31 @@ public class CurrentUserSignal {
 *Use case*: Session-specific data like authentication state, preferences, or shopping cart contents.
 
 *Result*: Each HTTP session has its own `CurrentUserSignal` instance, completely separate from other sessions.
+
+
+==== Updating Session-Scoped State
+
+The main reason to keep session-scoped state in a signal — rather than in a plain session attribute — is that updates propagate reactively to every component bound to it. Setting the initial value at login is rarely the interesting case, because logging in typically triggers a navigation or page reload anyway. The payoff comes when you change *details* of an already-established value and want the UI to follow.
+
+For example, a `MainLayout` header can bind to the current user's name, and a separate profile-settings view can update it. When the user saves a new name, the header updates on its own — no manual refresh of the layout, and no reload:
+
+[source,java]
+----
+// In MainLayout: bind the header to the read-only signal
+Span userName = new Span();
+userName.bindText(currentUser.user().map(CurrentUser::name));
+----
+
+[source,java]
+----
+// In the profile-settings view: update through the bean on save
+saveButton.addClickListener(e ->
+    currentUser.updateName(nameField.getValue()));
+----
+
+Because the record is immutable, [methodname]`update()` with a wither method changes only the affected field while still triggering reactivity. Components bound to other fields are unaffected.
+
+Since the bean is session-scoped, the update reaches every browser tab and window of the same session. For those other tabs to update immediately, the application must have <<{articles}/flow/advanced/server-push#push.configuration.enabling,push enabled>>; otherwise they update on their next server round trip.
 
 
 === Application-Scoped Signals (Global)
