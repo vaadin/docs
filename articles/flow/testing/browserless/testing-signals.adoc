@@ -1,0 +1,204 @@
+---
+title: Testing Signals
+page-title: How to test signal-based UIs in Vaadin browserless tests
+description: Assert on UI built with ValueSignal, ListSignal, computed signals, effects, and component bindings in browserless tests.
+meta-description: Learn how to write browserless tests for Vaadin signal-based UIs, including synchronous effect propagation and background-thread updates.
+order: 35
+---
+
+
+= Testing Signals
+
+Views built on <<{articles}/flow/ui-state#, signals>> are testable without any extra setup. When a test starts, [classname]`BrowserlessTest` registers a test [classname]`SignalEnvironment`, so signal effects run deterministically on the test thread instead of on a background thread pool.
+
+The practical consequence is the guarantee this page is built around: a signal change made by a simulated user action is reflected in the UI *immediately*. There's nothing to wait for and no scheduler to flush — the testers and queries you call right after the action already see the updated state.
+
+The one exception is a signal mutated from a background thread, which is queued rather than applied synchronously. That case is covered in <<#background-threads, Updates From Background Threads>>.
+
+
+[#synchronous]
+== Synchronous Propagation
+
+A user action that mutates a signal on the test thread runs the dependent effects and bindings before the action call returns. The two tests below assert exactly that — neither one waits or flushes anything between the action and the assertion.
+
+
+=== ValueSignal, Computed Signal, and bindText
+
+This view holds a count in a [classname]`ValueSignal`, derives a label string with [methodname]`Signal.computed()`, and binds it to a [classname]`Span` with [methodname]`bindText()`:
+
+[source,java]
+----
+@Route("counter-signal")
+public class CounterSignalView extends Div {
+    final ValueSignal<Integer> count = new ValueSignal<>(0);
+    final Span label = new Span();
+    final NativeButton increment =
+            new NativeButton("Increment", e -> count.update(c -> c + 1));
+
+    public CounterSignalView() {
+        label.bindText(Signal.computed(() -> "Count: " + count.get()));
+        add(label, increment);
+    }
+}
+----
+
+The test clicks the button and asserts the label right away:
+
+[source,java]
+----
+@ViewPackages(classes = CounterSignalView.class)
+class CounterSignalTest extends BrowserlessTest {
+
+    @Test
+    void clickIncrement_labelUpdatesSynchronously() {
+        var view = navigate(CounterSignalView.class);
+        Assertions.assertEquals("Count: 0", test(view.label).getText());
+
+        test(view.increment).click();
+
+        // No waiting and no runPendingSignalsTasks() — the computed signal
+        // and bindText effect already ran on the test thread.
+        Assertions.assertEquals("Count: 1", test(view.label).getText());
+    }
+}
+----
+
+
+=== ListSignal and bindChildren
+
+Structural changes propagate the same way. This view binds a layout's children to a [classname]`ListSignal`, rendering one [classname]`Span` per entry. Clicking the button inserts an entry:
+
+[source,java]
+----
+@Route("tags-signal")
+public class TagListView extends Div {
+    final ListSignal<String> tags = new ListSignal<>();
+    final VerticalLayout list = new VerticalLayout();
+    final NativeButton addButton =
+            new NativeButton("Add tag", e -> tags.insertLast("tag"));
+
+    public TagListView() {
+        list.bindChildren(tags, entry -> new Span(entry.peek()));
+        add(list, addButton);
+    }
+}
+----
+
+The inserted child is present as soon as the click returns:
+
+[source,java]
+----
+@ViewPackages(classes = TagListView.class)
+class TagListTest extends BrowserlessTest {
+
+    @Test
+    void addTag_childAppearsSynchronously() {
+        var view = navigate(TagListView.class);
+        Assertions.assertEquals(0, view.list.getComponentCount());
+
+        test(view.addButton).click();
+
+        // The bindChildren effect rebuilt the list synchronously.
+        Assertions.assertEquals(1, view.list.getComponentCount());
+    }
+}
+----
+
+Both tests pass without flushing anything because the mutation happens on the test thread — which is the UI thread — while the components are attached. The effect runs inline, as part of the [methodname]`set()`, [methodname]`update()`, or [methodname]`insertLast()` call.
+
+
+== What You Can Bind
+
+Most signal-driven UI is wired up with the [methodname]`bind*` family rather than explicit effects. From a test's perspective, each binding is just a different property to assert on after a signal changes:
+
+- [methodname]`bindText(signal)` — assert with [methodname]`test(component).getText()` or [methodname]`component.getText()`.
+- [methodname]`bindVisible(signal)` / [methodname]`bindEnabled(signal)` — assert visibility or enabled state; a tester's [methodname]`isUsable()` reflects both.
+- [methodname]`bindValue(signal, setter)` — two-way. Mutate the signal and assert the field value, or set the field value through its tester and assert the signal with [methodname]`signal.peek()`.
+- [methodname]`bindChildren(listSignal, factory)` — assert the rendered child count or the individual entries.
+
+This page focuses on testing. For the full binding API, see <<{articles}/flow/ui-state/building-ui#, Component Bindings>> and <<{articles}/flow/ui-state/element-bindings#, Element Bindings>>.
+
+
+== Custom Effects
+
+A side effect created with [methodname]`Signal.effect()` runs under the same test environment as the bindings, so it also executes synchronously when a dependency changes on the test thread. Use this to assert behavior that isn't a simple property binding — for example, showing a notification.
+
+This view writes the field value into a [classname]`ValueSignal` and registers an effect that opens a [classname]`Notification` whenever the amount crosses a threshold:
+
+[source,java]
+----
+@Route("threshold")
+public class ThresholdView extends Div {
+    final ValueSignal<Integer> amountSignal = new ValueSignal<>(0);
+    final TextField amount = new TextField();
+
+    public ThresholdView() {
+        amount.bindValue(
+                amountSignal.map(String::valueOf),
+                v -> amountSignal.set(Integer.parseInt(v)));
+
+        // The effect re-runs whenever amountSignal changes.
+        Signal.effect(this, () -> {
+            if (amountSignal.get() > 100) {
+                Notification.show("Over limit");
+            }
+        });
+
+        add(amount);
+    }
+}
+----
+
+The test changes the field and asserts the notification right away:
+
+[source,java]
+----
+@ViewPackages(classes = ThresholdView.class)
+class ThresholdTest extends BrowserlessTest {
+
+    @Test
+    void valueExceedsLimit_notificationShownSynchronously() {
+        var view = navigate(ThresholdView.class);
+
+        test(view.amount).setValue("150");
+
+        Assertions.assertEquals("Over limit",
+                test(find(Notification.class).single()).getText());
+    }
+}
+----
+
+
+[#background-threads]
+== Updates From Background Threads
+
+A signal mutated *off* the UI thread — from a service callback, a [classname]`CompletableFuture`, or another session — doesn't propagate synchronously. The test [classname]`SignalEnvironment` queues the effect instead of running it inline. Call [methodname]`runPendingSignalsTasks()` to drain the queue before asserting:
+
+[source,java]
+----
+// The view starts asynchronous work that mutates a signal on a background thread
+test(view.startBackgroundWork).click();
+
+// Drain the queued signal effects, then assert
+runPendingSignalsTasks();
+Assertions.assertEquals("Done", test(view.status).getText());
+----
+
+[methodname]`runPendingSignalsTasks()` waits up to 100 milliseconds for the first pending task and then drains the queue, returning [code]`true` if any tasks were processed. Use the [methodname]`runPendingSignalsTasks(long, TimeUnit)` overload to set a different wait time for slower background work.
+
+The same method is available on the JUnit extension as [methodname]`ext.runPendingSignalsTasks()` (see <<extensions#, JUnit 6 Extensions>>) and on each window in multi-user tests (see <<multi-user#signals, Signals in Multi-User Tests>>).
+
+
+=== Shared Signals
+
+<<{articles}/flow/ui-state/shared-signals#, Shared signals>> -- [classname]`SharedValueSignal`, [classname]`SharedNumberSignal`, [classname]`SharedListSignal`, and the other shared types -- are the most common source of background updates in a test. A change made in one session is propagated to every other session that observes the signal, and that propagation is inherently asynchronous: the observing side sees it through a queued effect rather than inline.
+
+As a result, a change that an observer should react to needs the same treatment as any other off-thread mutation. After triggering the change, call [methodname]`runPendingSignalsTasks()` before asserting on the observing side. A change made and observed on the same test thread -- such as mutating a shared signal and asserting a binding on the same view -- still propagates synchronously and needs no flush. For tests that drive several sessions or windows observing one shared signal, see <<multi-user#signals, Signals in Multi-User Tests>>.
+
+
+.Quick Start and Collaborative Scenarios
+[TIP]
+For a brief introduction to testing signal-based views, see <<getting-started#signals, Testing Signal-Based UIs>>. For collaborative features where several windows or users observe the same shared signal, see <<multi-user#signals, Signals in Multi-User Tests>>.
+
+
+[discussion-id]`6518E8AD-13F8-48D7-A826-289115FB9A1A`

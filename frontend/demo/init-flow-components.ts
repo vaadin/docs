@@ -23,7 +23,6 @@ import '@vaadin/flow-frontend/gridProConnector.js';
 import '@vaadin/flow-frontend/vaadin-map/mapConnector.js';
 import '@vaadin/flow-frontend/menubarConnector.js';
 import '@vaadin/flow-frontend/messageListConnector.js';
-import '@vaadin/flow-frontend/selectConnector.js';
 import '@vaadin/flow-frontend/vaadin-upload-manager-connector.js';
 import '@vaadin/flow-frontend/vaadin-time-picker/timepickerConnector.js';
 import '@vaadin/flow-frontend/virtualListConnector.js';
