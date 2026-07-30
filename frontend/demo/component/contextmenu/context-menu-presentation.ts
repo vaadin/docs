@@ -6,7 +6,7 @@ import '@vaadin/icon';
 import '@vaadin/icons';
 import { html, LitElement, render } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ContextMenuItem } from '@vaadin/context-menu';
+import type { ContextMenuItemData } from '@vaadin/context-menu';
 import type { Grid } from '@vaadin/grid';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -25,7 +25,7 @@ export class Example extends LitElement {
   private gridItems: Person[] = [];
 
   @state()
-  private items: ContextMenuItem[] | undefined;
+  private items: ContextMenuItemData[] | undefined;
 
   // tag::snippet[]
   protected override async firstUpdated() {
