@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
-import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
+import { ContextMenu, type ContextMenuItemData } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
@@ -51,14 +51,14 @@ function renderApplicant({ item }: { item: Person }) {
 function Example() {
   useSignals(); // hidden-source-line
   const gridItems = useSignal<Person[]>([]);
-  const items = useSignal<ContextMenuItem[]>([]);
+  const items = useSignal<ContextMenuItemData[]>([]);
   const gridRef = useRef<GridElement>(null);
 
   useEffect(() => {
     getPeople({ count: 5 }).then(({ people }) => {
       gridItems.value = people;
       // tag::snippet[]
-      const contextMenuItems: ContextMenuItem[] = [
+      const contextMenuItems: ContextMenuItemData[] = [
         { component: createItem('vaadin:file-search', 'Open') },
         {
           component: createItem('vaadin:user-check', 'Assign'),
