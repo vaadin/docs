@@ -17,9 +17,9 @@ export class Example extends LitElement {
       <!-- tag::snippet[] -->
       <vaadin-switch
         label="Two-factor authentication"
-        helper-text="Required by your workspace security policy"
         required
-        error-message="Two-factor authentication can't be turned off"
+        checked
+        error-message="Required by your workplace security policy"
       ></vaadin-switch>
       <!-- end::snippet[] -->
     `;

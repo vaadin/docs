@@ -7,9 +7,9 @@ function Example() {
     // tag::snippet[]
     <Switch
       label="Two-factor authentication"
-      helperText="Required by your workspace security policy"
       required
-      errorMessage="Two-factor authentication can't be turned off"
+      checked
+      errorMessage="Required by your workplace security policy"
     />
     // end::snippet[]
   );
