@@ -1,33 +1,24 @@
 package com.vaadin.demo.component.switchcomponent;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Switch;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.component.checkbox.Switch.SwitchI18n;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
-import com.vaadin.demo.domain.UserPermissions;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
 @Route("switch-validation")
-public class SwitchValidation extends HorizontalLayout {
+public class SwitchValidation extends Div {
 
     public SwitchValidation() {
         // tag::snippet[]
-        Switch confirmation = new Switch("I confirm the details are correct");
-        confirmation.setRequiredIndicatorVisible(true);
-
-        Binder<UserPermissions> binder = new Binder<>(UserPermissions.class);
-        binder.forField(confirmation).asRequired("You must confirm to continue")
-                .bind(UserPermissions::getView, UserPermissions::setView);
+        Switch twoFactor = new Switch("Two-factor authentication");
+        twoFactor.setRequiredIndicatorVisible(true);
+        twoFactor.setI18n(new SwitchI18n().setRequiredErrorMessage(
+                "Two-factor authentication can't be turned off"));
         // end::snippet[]
+        twoFactor.setHelperText("Required by your workspace security policy");
 
-        Button button = new Button("Submit", e -> {
-            binder.validate();
-        });
-
-        setAlignItems(FlexComponent.Alignment.BASELINE);
-        add(confirmation, button);
+        add(twoFactor);
     }
 
     public static class Exporter extends DemoExporter<SwitchValidation> { // hidden-source-line
