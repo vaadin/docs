@@ -1,0 +1,340 @@
+---
+title: Migrating to Version 5
+page-title: Migrating Observability Kit to version 5 (Micrometer)
+description: How to move a Vaadin application from the version 4 OpenTelemetry agent to the Micrometer-based version 5 of Observability Kit.
+meta-description: Step-by-step guide to migrating Vaadin Observability Kit from the version 4 Java agent to the version 5 Micrometer integration.
+order: 15
+---
+
+
+= Migrating to Version 5
+
+Observability Kit 5 is a ground-up rewrite.
+Earlier versions shipped as a standalone *OpenTelemetry Java agent* that you attached to the JVM and configured through an [filename]`agent.properties` file.
+Version 5 is a plain *https://micrometer.io[Micrometer]* library: you add it as a dependency, and it records into your application's [classname]`MeterRegistry` and emits tracing spans through the Micrometer Observation API.
+
+The practical upshot is that, with Spring Boot, the kit becomes a true drop-in -- add one dependency and you're done.
+There's no agent to download, no `-javaagent` flag, and no separate configuration file.
+In exchange, the telemetry now flows through Spring Boot Actuator and the Micrometer registry backends you already use, rather than through the kit's own OpenTelemetry exporters.
+
+This page describes what changed and how to move an existing version 4 setup to version 5.
+
+.Breaking Change
+[IMPORTANT]
+Version 5 is not a drop-in replacement for version 4.
+Meter names, the configuration model, the tracing data, and the custom-instrumentation API have all changed.
+Plan to update your dashboards, alerts, and any custom instrumentation as part of the upgrade.
+
+
+== What Changed at a Glance
+
+[cols="1,2,2"]
+|===
+| | Version 4 (OpenTelemetry agent) | Version 5 (Micrometer)
+
+|Packaging
+|A separate agent JAR, downloaded manually, plus a starter dependency.
+|A single Maven dependency.
+No agent, no manual download.
+
+|Startup
+|`-javaagent:observability-kit-agent.jar` on the JVM command line.
+|Nothing -- the kit auto-configures on the classpath.
+
+|Telemetry pipeline
+|OpenTelemetry SDK, exported directly to a backend or collector over OTLP.
+|Micrometer [classname]`MeterRegistry` for metrics, Observation API for traces.
+
+|Export
+|Built into the agent and configured in [filename]`agent.properties`.
+|Spring Boot Actuator plus a Micrometer registry of your choice.
+
+|Configuration
+|[filename]`agent.properties`, `OTEL_*` environment variables, or `otel.*` system properties.
+|`vaadin.observability.*` Spring properties, or an [classname]`ObservabilitySettings` builder.
+
+|Frontend
+|`@hilla/observability-kit-client` npm package, initialized with `init()`.
+|Built in and server-side.
+No npm package, no client code.
+
+|Custom instrumentation
+|OpenTelemetry API -- [annotationname]`@WithSpan`, [classname]`GlobalOpenTelemetry`, [classname]`Tracer`.
+|Micrometer -- [annotationname]`@Observed`/[annotationname]`@Timed`, [classname]`MeterRegistry`, Observation API.
+
+|Requirements
+|Java 21+.
+|Java 21+, Vaadin 25.3+, and Spring Boot 4 for the starter.
+|===
+
+
+== Step 1: Update Dependencies
+
+Remove the agent and switch the dependency to the module that matches your deployment.
+
+=== Spring Boot
+
+For a Spring Boot application, keep the starter but update its version.
+Boot's Micrometer auto-configuration does the rest.
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>observability-kit-starter</artifactId>
+</dependency>
+----
+
+To actually *export* the metrics, add Spring Boot Actuator and the registry backend you want.
+The kit only records into the registry; it no longer exports anything itself.
+For example, for Prometheus:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+----
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=prometheus
+----
+
+The metrics are then served at `GET /actuator/prometheus`.
+
+=== Plain Spring
+
+Use the `observability-kit-spring` module, import the configuration, and supply a [classname]`MeterRegistry` bean.
+See the <<getting-started#,Getting Started>> page for details.
+
+=== Standalone (Without Spring)
+
+Use the `observability-kit-micrometer` module and install the kit at servlet-context startup, before [classname]`VaadinService` initializes:
+
+[source,java]
+----
+ObservabilityKit.install(meterRegistry,
+        ObservabilitySettings.builder().build());
+----
+
+
+== Step 2: Remove the Agent
+
+Delete everything related to the version 4 agent:
+
+* The downloaded `observability-kit-agent-*.jar` file.
+* The `-javaagent:.../observability-kit-agent.jar` argument from every launch command, container image, and run configuration.
+* The [filename]`agent.properties` file (its settings are migrated in <<#step-4-migrate-configuration,Step 4>>).
+* Any `OTEL_*` environment variables or `-Dotel.*` system properties used to configure the agent.
+
+With the new version there is no longer anything to download or attach.
+The kit activates by being on the classpath.
+
+
+== Step 3: Remove the Frontend Package
+
+Version 4 required a separate client package for frontend observability.
+In version 5, browser-side timing is built in and collected through a server-side channel, so the npm package and its initialization code are gone.
+
+Remove the dependency and the `init()` call:
+
+* Uninstall `@hilla/observability-kit-client`.
+* Delete the `import { init } from '@hilla/observability-kit-client'` block and the `init(...)` call from [filename]`frontend/index.ts`.
+
+Client-side instrumentation is now enabled by default and toggled with a single property, `vaadin.observability.client`.
+
+
+[[step-4-migrate-configuration]]
+== Step 4: Migrate Configuration
+
+Move settings out of [filename]`agent.properties` and into `vaadin.observability.*` Spring properties (or, for standalone, the [classname]`ObservabilitySettings` builder).
+The configuration model is much smaller: instead of OpenTelemetry's fine-grained instrumentation switches, version 5 exposes a handful of feature toggles.
+
+[cols="2,2"]
+|===
+|Version 4 | Version 5
+
+|`otel.instrumentation.vaadin.frontend.enabled`
+|`vaadin.observability.client`
+
+|`otel.instrumentation.vaadin.frontend.*` (per-module toggles)
+|No equivalent -- client instrumentation is a single on/off toggle.
+
+|Tracing on/off (agent-level)
+|`vaadin.observability.traces`
+
+|(no equivalent)
+|`vaadin.observability.sessions`, `.uis`, `.navigation`, `.requests`, `.errors`, `.resync`, `.database`
+
+|`otel.service.name`, `otel.resource.attributes`
+|Configured through Spring/Micrometer (for example `spring.application.name` and your registry's common tags or OTLP resource settings), not through the kit.
+|===
+
+A typical version 5 configuration:
+
+.`application.properties`
+[source,properties]
+----
+# Turn the whole kit off
+vaadin.observability.enabled=false
+
+# Or toggle individual feature groups
+vaadin.observability.client=false
+vaadin.observability.traces=false
+----
+
+Every feature is enabled by default, so most applications need no configuration at all.
+For the complete list of properties, see the <<configuration#,Configuration>> page.
+
+.Service Identity Moves to Micrometer
+[NOTE]
+The `service.name`, `service.namespace`, and related OpenTelemetry resource attributes are no longer set on the kit.
+Service identity is now part of your Micrometer/Actuator setup -- for example, common registry tags or the OTLP exporter's resource configuration.
+Set them there so every meter and span is tagged consistently.
+
+
+== Step 5: Update Custom Instrumentation
+
+If you wrote custom traces or metrics with the OpenTelemetry API, port them to Micrometer.
+The concepts map closely.
+
+[cols="2,2"]
+|===
+|Version 4 (OpenTelemetry) | Version 5 (Micrometer)
+
+|[annotationname]`@WithSpan`
+|[annotationname]`@Observed` (timer + span) or [annotationname]`@Timed` (timer only)
+
+|[annotationname]`@SpanAttribute("key")`
+|`lowCardinalityKeyValues = { "key", "value" }` on [annotationname]`@Observed`, or a tag on the meter
+
+|[classname]`GlobalOpenTelemetry.getTracer(...)` + [classname]`Span`
+|[classname]`Observation` from an injected [classname]`ObservationRegistry`
+
+|[classname]`Meter` / [classname]`LongCounter` / `gaugeBuilder`
+|[classname]`Counter` / [classname]`Gauge` / [classname]`Timer` builders, or [classname]`MeterRegistry` shortcuts
+|===
+
+For example, a manually traced method:
+
+.Version 4 -- OpenTelemetry
+[source,java]
+----
+Tracer tracer = GlobalOpenTelemetry.getTracer("app-instrumentation", "1.0");
+Span span = tracer.spanBuilder("My Task").startSpan();
+try {
+    doWork();
+} finally {
+    span.end();
+}
+----
+
+.Version 5 -- Micrometer Observation
+[source,java]
+----
+Observation.createNotStarted("app.task", observationRegistry)
+        .contextualName("my-task")
+        .observe(() -> doWork());
+----
+
+Because the kit records into the same registry and Observation API, your custom meters and spans sit alongside the built-in ones and export through the same backend.
+For the full set of options -- annotations, fluent builders, and raw registry beans -- see the <<customization#,Customization>> page.
+
+.AOP Required for Annotations
+[NOTE]
+The [annotationname]`@Observed`, [annotationname]`@Timed`, and [annotationname]`@Counted` annotations are backed by Spring AOP aspects.
+Add `spring-boot-starter-aop` (or register the aspects yourself in plain Spring) for them to take effect.
+The version 4 [annotationname]`@WithSpan` annotation worked through the agent and needed no AOP.
+
+
+== Step 6: Update Dashboards and Alerts
+
+Meter names changed, so any saved queries, dashboards, and alerts must be updated.
+The most common renames:
+
+[cols="2,2,1"]
+|===
+|Version 4 | Version 5 | Notes
+
+|`vaadin.session.count` (Gauge)
+|`vaadin.sessions.active` (Gauge)
+|
+
+|`vaadin.session.duration` (Histogram)
+|`vaadin.sessions.duration` (Timer)
+|
+
+|`vaadin.ui.count` (Gauge)
+|`vaadin.ui.active` (Gauge)
+|
+
+|(none)
+|`vaadin.sessions.created`, `vaadin.ui.created`
+|New counters.
+
+|(none)
+|`vaadin.navigation`, `vaadin.request.duration`, `vaadin.rpc.duration`, `vaadin.errors`
+|New server-side timers and error counter.
+
+|(none)
+|`vaadin.session.lock.wait`, `vaadin.session.lock.hold`
+|New session-lock timers.
+
+|(none)
+|`vaadin.client.*`
+|Browser-observed timing (bootstrap, navigation, RPC round trip, Web Vitals, errors).
+
+|`db.client.connections.*`
+|Use Micrometer's own pool metrics
+|No longer emitted by the kit.
+Spring Boot/Micrometer instrument the connection pool directly.
+
+|`process.runtime.jvm.*`
+|Use Micrometer's JVM binders
+|No longer emitted by the kit.
+Actuator registers JVM and process metrics out of the box.
+|===
+
+For the complete, current list of meters, see the <<reference#,Reference>> page.
+
+.Tracing Data Is Leaner
+[NOTE]
+Version 4 produced a rich span tree with many Vaadin-specific attributes (browser events, element synchronization, server calls, data-provider fetches).
+Version 5 emits spans for the core request lifecycle -- request handling, navigation, and RPC -- through the Observation API.
+Add your own spans with [annotationname]`@Observed` or the Observation API where you need finer-grained tracing; see <<customization#,Customization>>.
+
+
+== Step 7: Update Backend Integrations
+
+Because the kit no longer exports telemetry itself, integration with backends now goes through standard Micrometer mechanisms rather than the OpenTelemetry agent's exporters:
+
+* *Metrics* are exported by adding the corresponding `micrometer-registry-*` dependency (Prometheus, OTLP, Graphite, and others) and exposing it through Actuator.
+* *Traces* are exported by adding a Micrometer tracing bridge -- for example OpenTelemetry (`micrometer-tracing-bridge-otel`) or Zipkin (`micrometer-tracing-bridge-brave`) -- as you would for any Micrometer-instrumented application.
+
+Vendors such as Prometheus, Grafana, Datadog, and New Relic are all reachable this way, either through a native Micrometer registry or through an OTLP bridge to an OpenTelemetry collector.
+See the <<integrations#,Integrations>> page for vendor-specific setup.
+
+
+== Migration Checklist
+
+* [ ] Remove the `observability-kit-agent` JAR and the `-javaagent` flag.
+* [ ] Update or switch the kit dependency to the version 5 module for your deployment.
+* [ ] Add Spring Boot Actuator and a `micrometer-registry-*` backend to export metrics.
+* [ ] Add a Micrometer tracing bridge if you export traces.
+* [ ] Delete [filename]`agent.properties` and any `OTEL_*` / `otel.*` settings.
+* [ ] Re-create any needed settings as `vaadin.observability.*` properties.
+* [ ] Remove the `@hilla/observability-kit-client` package and its `init()` call.
+* [ ] Port custom OpenTelemetry instrumentation to the Micrometer API (add `spring-boot-starter-aop` if you use the annotations).
+* [ ] Update dashboards, queries, and alerts to the new meter names.
+* [ ] Re-verify backend integrations end to end.
+
+[discussion-id]`A82D8720-A226-41EF-9CC5-3391AE5EF262`

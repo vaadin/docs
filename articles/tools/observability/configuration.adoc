@@ -1,7 +1,7 @@
 ---
 title: Configuration
 page-title: Configuring Observability Kit for Vaadin applications
-description: How to configure Observability Kit and what are its default settings.
+description: How to configure Observability Kit and what its default settings are.
 meta-description: Learn to set up and manage the Observability Kit for monitoring your Vaadin applications effectively.
 order: 20
 ---
@@ -9,229 +9,173 @@ order: 20
 
 = Configuring Observability Kit
 
-Instrumentation can be configured in the [filename]`agent.properties` file that's used with the Java agent.
+Every feature of Observability Kit is enabled by default, so most applications need no configuration at all.
+When you do need to turn features off or tune them, how you configure the kit depends on how it's set up.
 
-
-== Service Configuration
-
-The `service` attributes are used to differentiate traces from services or applications which might have many instances running simultaneously, such as horizontally scaled services.
-
-The service attributes are as follows:
-
-[unordered]
-`service.name`:: is an attribute that's used to distinguish a service by name. The default value is `vaadin` -- the only attribute with a default value. It's also the only one required.
-`service.namespace`:: helps to distinguish a group of services.
-`service.instance.id`:: helps to distinguish instances of the same service that exist simultaneously. It must be unique for each instance of the same `service.namespace`, `service.name` pair.
-`service.version`:: is the semantic versioning string of the service version.
-
-The `service.name` attribute is configured using the `otel.service.name` property, either in the [filename]`agent.properties` configuration file as a system property, or as an environment variable.
-
-[.example]
---
-Add the following line to the [filename]`agent.properties` file:
-
-[source,properties]
-----
-<source-info group="Configuration file"></source-info>
-otel.service.name=myapp
-----
-
-Pass the `otel.service.name` system property when starting the Java process.
-[source,terminal]
-----
-<source-info group="System property"></source-info>
-java -Dotel.service.name="myapp" ...
-----
-
-Define the `OTEL_SERVICE_NAME` environment variable before starting the Java process.
-[source,terminal]
-----
-<source-info group="Environment variable"></source-info>
-# Linux / macOS
-export OTEL_SERVICE_NAME="myapp"
-# Windows
-set OTEL_SERVICE_NAME="myapp"
-----
-
---
-
-Other service attributes are configured using the `otel.resource.attributes` property, either in the [filename]`agent.properties` configuration file as a system property, or as en environment variable. Multiple attributes are separated by commas.
-
-[.example]
---
-Add the following line to the [filename]`agent.properties` file:
-[source,properties]
-----
-<source-info group="Configuration file"></source-info>
-otel.resource.attributes=service.namespace=myservices,service.instance.id=myapp-eu
-----
-
-Pass the `otel.resource.attributes` system property when starting the Java process.
-[source,terminal]
-----
-<source-info group="System property"></source-info>
-java -Dotel.resource.attributes="service.namespace=myservices,service.instance.id=myapp-eu" ...
-----
-
-Define the `OTEL_RESOURCE_ATTRIBUTES` environment variable before starting the Java process.
-[source,terminal]
-----
-<source-info group="Environment variable"></source-info>
-# Linux / macOS
-export OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
-# Windows
-set OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
-----
-
---
-
-For more information about service configuration, see the https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#service[OpenTelemetry documentation].
-
-
-== Default OpenTelemetry Instrumentation
-
-The custom distribution disables default OpenTelemetry instrumentation for Vaadin and servlets.
-
-The default instrumentation is disabled because logging all requests for a single-page application isn't helpful -- although it does generate plenty of data. It was disabled to have control over which requests generate a trace.
-
-The `jetty`, `servlet`, and `tomcat` instrumentation modules are disabled by default. To enable any of them, add the following line to the [filename]`agent.properties` file:
-
-[source,properties]
-----
-otel.instrumentation.${instrumentationName}.enabled=true
-----
-
-== Frontend Observability Configuration
-
-:prerelease-feature: Frontend Observability
-:artifact-id: observability-kit-starter
-:version: 2.1-SNAPSHOT
-include::{articles}/flow/_prerelease-banner.adoc[opts=optional]
-
-Frontend observability is enabled by default, with all the client-side instrumentation active. The configuration can be tuned in two ways: statically by editing the [filename]`agent.properties` file, or by providing environment variables or system properties; or dynamically by implementing the [interfacename]`ObservabilityClientConfigurer` interface, which applies changes at runtime.
-
-With static configuration, the same settings are applied to all UI instances. Changes to the configuration require a server restart.
-
-With dynamic configuration, the instrumentation can be enabled or disabled at runtime, without restarting the server. The configuration can also be tuned for a specific browser tab. Changes are applied when the browser page is reloaded.
-
-
-=== Frontend Observability Static Configuration
-
-Static frontend observability configuration can be provided by adding entries to the [filename]`agent.properties` file or with environment variables or system properties, as mentioned earlier.
-
-The following properties can be used to tune frontend instrumentation:
-
-[cols="4,4,1"]
+[cols="1,3"]
 |===
-|Property Name |Description |Default Value
+|Setup |How to configure
 
-|`otel.instrumentation.vaadin.frontend.enabled`
-|Enables or disables all frontend instrumentation.
-|`true`
+|Spring Boot starter
+|`vaadin.observability.*` properties in [filename]`application.properties` (or any Spring property source).
 
-|`otel.instrumentation.vaadin.frontend.document-load`
-|Enables or disables the Document Load instrumentation.
-|`true`
+|Plain Spring
+|The same `vaadin.observability.*` keys, read with `@Value`.
 
-|`otel.instrumentation.vaadin.frontend.user-interaction`
-|Enables or disables the User Interaction instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.xml-http-request`
-|Enables or disables the XML HTTP Request instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.long-task`
-|Enables or disables the Long Task instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.frontend-error`
-|Enables or disables the Frontend Error instrumentation.
-|`true`
+|Standalone
+|An [classname]`ObservabilitySettings` instance, built with its builder and passed to [methodname]`ObservabilityKit.install()`.
 |===
 
-For more information about the frontend instrumentation, consult the <<reference#frontend-traces,Observability Kit Reference>> page.
+NOTE: Configuration covers only the kit's own instrumentation.
+Service identity (service name and resource attributes) and metric *export* are part of your Micrometer and Spring Boot Actuator setup, not the kit -- see <<getting-started#export-the-metrics,Export the Metrics>>.
 
 
-=== Frontend Observability Runtime Configuration (Flow)
+== Spring Boot Properties
 
-By default, frontend observability enables all out-of-the-box client-side instrumentation. Observability Kit provides a way to enable, disable and tune the instrumentation at runtime.
+With the Spring Boot starter, configure the kit through `vaadin.observability.*` properties:
 
-This is done by implementing the [interfacename]`ObservabilityClientConfigurer` interface and applying the desired settings to the [interfacename]`ObservabilityClientConfiguration` instance provided to the [methodname]`configure` method. The configuration is applied during UI initialization: The Configurer logic can access the current [classname]`VaadinRequest`. If a security infrastructure has been configured for a project and the user is logged into the application, the user details can also be accessed. This allows fine-tuning of observability to single-user level.
+.`application.properties`
+[source,properties]
+----
+# Turn the whole kit off
+vaadin.observability.enabled=false
 
-For example, the following implementation shows how to set up observability based on a mutable configuration tied to the currently logged-in user.
+# Or toggle individual feature groups
+vaadin.observability.client=false
+vaadin.observability.traces=false
+----
 
-.`UserBasedFrontendObservability.java`
+The full set of properties:
+
+[cols="2,1,3"]
+|===
+|Property |Default |Description
+
+|`vaadin.observability.enabled`
+|`true`
+|Master switch for the auto-configuration.
+Spring Boot only.
+
+|`vaadin.observability.sessions`
+|`true`
+|Session count, lifetime, and lock metrics.
+
+|`vaadin.observability.uis`
+|`true`
+|UI count metrics.
+
+|`vaadin.observability.navigation`
+|`true`
+|Navigation timing.
+
+|`vaadin.observability.requests`
+|`true`
+|Server-side request and RPC timing.
+
+|`vaadin.observability.errors`
+|`true`
+|Error counters.
+
+|`vaadin.observability.client`
+|`true`
+|Browser-side timing collected from the client.
+
+|`vaadin.observability.resync`
+|`true`
+|Observe UIDL message resends and client-requested resynchronizations.
+
+|`vaadin.observability.database`
+|`false`
+|Wrap [classname]`DataSource` beans to record JDBC result-set row counts per route and, when tracing is on, emit a span per query.
+Spring Boot starter only.
+
+|`vaadin.observability.database-statement`
+|`false`
+|Attach the parameterized SQL as `db.statement` on the query span.
+Off by default, since SQL is higher cardinality and can be sensitive.
+
+|`vaadin.observability.traces`
+|`true`
+|Emit tracing spans through the Observation API.
+
+|`vaadin.observability.traces-session-id`
+|`false`
+|Include the session ID as a span attribute.
+
+|`vaadin.observability.route-cardinality-limit`
+|`200`
+|Maximum number of distinct `route` tag values before they collapse to `_other`.
+
+|`vaadin.observability.client-rate-per-session`
+|`100`
+|Maximum number of client-side samples accepted per session, as a throttling guard.
+|===
+
+
+== Plain Spring
+
+In a plain-Spring (non-Boot) application, the same feature-toggle keys are read with `@Value`, so you set them the same way in your property source.
+The `vaadin.observability.enabled` master switch is specific to the Spring Boot auto-configuration; to disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
+
+See the <<getting-started#other-setups,Getting Started>> page for the plain-Spring setup.
+
+
+== Standalone
+
+In a standalone (non-Spring) deployment, build an [classname]`ObservabilitySettings` instance and pass it to [methodname]`ObservabilityKit.install()`.
+Each builder method matches one of the properties above.
+
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/observability/UserBasedFrontendObservability.java[tags=full-class,indent=0]
+ObservabilitySettings settings = ObservabilitySettings.builder()
+        .client(false)
+        .traces(false)
+        .routeCardinalityLimit(500)
+        .build();
+
+ObservabilityKit.install(meterRegistry, settings);
 ----
 
-With the above implementation, the configuration can be fetched from a database table. This allows changes to be applied at runtime after a browser page reload.
-
-The Configurer is loaded through the Java ServiceLoader API, by adding the file [filename]`com.vaadin.observability.ObservabilityClientConfigurer` to the [filename]`src/main/resources/META-INF/services/` directory, with the content being the fully qualified name of the Configurer class. For this example, the file looks like this:
-
-`com.vaadin.observability.ObservabilityClientConfigurer`
-[source]
-----
-org.example.UserBasedFrontendObservability
-----
-
-For details on observability client settings, consult the Javadocs of the [interfacename]`ObservabilityClientConfiguration` interface.
-
-.Load Configurer in Spring Project
-[NOTE]
-For Spring based projects, the Configurer can be loaded by exposing the implementation as a Spring managed [annotationname]`@Bean`, without the need to register the class for the ServiceLoader API.
+For standalone no `enabled` flag exists; to disable the kit, don't call [methodname]`install()`.
 
 
-== Frontend Observability Configuration (Hilla)
+== What the Features Control
 
-:prerelease-feature: Frontend Observability
-:artifact-id: observability-kit-starter
-:version: 2.1.1
+The feature toggles map directly to the built-in meters and spans:
 
-To enable frontend observability, you need to add the `@hilla/observability-kit-client` package to your `package.json` file. After that, you can use the `init` function provided by the package.
+[cols="1,3"]
+|===
+|Feature |What it records
 
-The `init` function requires two parameters: the `export` method from the `ObservabilityEndpoint` that comes with the starter artifact; and a list of options.
+|`sessions`
+|Active session gauge, session-created counter, session-lifetime timer, and session-lock wait/hold timers.
 
-The options list has the following structure:
+|`uis`
+|Active UI gauge and UI-created counter.
 
-[source,typescript]
-----
-export interface TelemetryInitializationOptions {
-  /** Specifies URLs to ignore */
-  ignoredURLs?: readonly string[];
-  /** Disables tracking of internal Vaadin/Hilla URLs */
-  ignoreVaadinURLs?: boolean;
-  /** Frontend-specific `service.instance.id` attribute */
-  instanceId?: string;
-  /** Frontend-specific `service.name` attribute */
-  serviceName?: string;
-  /** Frontend-specific `service.version` attribute */
-  serviceVersion?: string;
-  /** Enables or disables the Document Load instrumentation. */
-  traceDocumentLoad?: boolean;
-  /** Enables or disables the Frontend Error instrumentation. */
-  traceErrors?: boolean;
-  /** Enables or disables the Long Task instrumentation. */
-  traceLongTask?: boolean;
-  /** Enables or disables the User Interaction instrumentation. */
-  traceUserInteraction?: readonly EventName[] | null;
-  /** Enables or disables the XML HTTP Request instrumentation. */
-  traceXmlHTTPRequest?: boolean;
-}
-----
+|`navigation`
+|Server-side navigation timing, tagged by route and outcome.
 
-By default, the options are set as follows:
+|`requests`
+|Server-side request and RPC timing.
 
-[source,typescript]
-----
-const options = {
-  serviceName: 'hilla',
-  traceDocumentLoad: true,
-  traceErrors: true,
-  traceLongTask: true,
-  traceUserInteraction: ['click'],
-  traceXmlHTTPRequest: true,
-};
-----
+|`errors`
+|Server-side error counter, tagged by exception.
+
+|`client`
+|Browser-observed timing -- bootstrap, navigation, server round trip, Web Vitals, and client errors.
+
+|`resync`
+|A counter of UIDL message resends and client-requested resynchronizations, tagged by type.
+
+|`database`
+|JDBC result-set row counts per route and, when tracing is on, a span per query.
+Spring Boot starter only, off by default.
+
+|`traces`
+|Tracing spans for the request lifecycle, navigation, and RPC, emitted through the Observation API.
+|===
+
+For the exact meter and span names produced by each feature, see the <<reference#,Reference>> page.
+
+[discussion-id]`27B2E4EF-7AF3-41F8-9CFF-928963337D56`
