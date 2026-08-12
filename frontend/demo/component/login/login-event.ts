@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/login/vaadin-login-form.js';
 import { css, html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { LoginFormDisabledChangedEvent } from '@vaadin/react-components';
+import type { LoginFormDisabledChangedEvent } from '@vaadin/login/vaadin-login-form.js';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('login-event')
@@ -17,16 +17,6 @@ export class Example extends LitElement {
     }
   `;
 
-  _onDisabledChanged(event: LoginFormDisabledChangedEvent) {
-    this.disabled = event.detail.value;
-  }
-
-  private onLogin() {
-    setTimeout(() => {
-      this.disabled = false; // Re-enable login button
-    }, 1000);
-  }
-
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
     applyTheme(root);
@@ -39,11 +29,21 @@ export class Example extends LitElement {
       <!-- no-autofocus is used to prevent the example from stealing focus when browsing the documentation -->
       <vaadin-login-form
         no-autofocus
-        @login=${this.onLogin}
         .disabled=${this.disabled}
-        @disabled-changed=${this._onDisabledChanged}
+        @login=${this.onLogin}
+        @disabled-changed=${this.onDisabledChanged}
       ></vaadin-login-form>
       <!-- end::snippet[] -->
     `;
+  }
+
+  private onDisabledChanged(event: LoginFormDisabledChangedEvent) {
+    this.disabled = event.detail.value;
+  }
+
+  private onLogin() {
+    setTimeout(() => {
+      this.disabled = false; // Re-enable login button
+    }, 1000);
   }
 }
