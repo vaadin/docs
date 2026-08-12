@@ -234,42 +234,71 @@ Every visible field's current value is forwarded to the LLM provider on every tu
 
 == Field Locking During a Fill Turn
 
-While a fill is in progress, every field the user can currently edit -- visible, enabled, and not already read-only -- is set to read-only so the user cannot type into a field the AI is about to overwrite. Fields the application had already disabled or set read-only stay as they were. Locks are released automatically when the turn ends, whether it succeeded or failed.
+While a fill is in progress, every field the AI can write -- visible, enabled, and not read-only -- shows an "AI is working" shimmer and is guarded against user edits, so the user cannot type into a field the AI is about to overwrite. The guard is applied on the client only: the field's server-side read-only state is never changed, so it doesn't affect what the LLM sees or writes, and a field's application-set read-only state is left untouched. Fields the application had already disabled or set read-only stay as they were, and fields excluded with [methodname]`ignoreField()` stay editable throughout. The working state clears automatically when the turn ends, whether it succeeded or failed.
 
 .Read-Only Toggles During a Turn
 [NOTE]
-If application code changes a field's read-only state during a turn, for example from a [interfacename]`ValueChangeListener` that reacts to one of the model's writes, that change is overridden when the controller releases its own locks at the end of the turn.
+Avoid toggling a field's server-side read-only state while a turn runs, for example from a [interfacename]`ValueChangeListener` that reacts to one of the model's writes. A field switched to read-only mid-turn still has its client-side guard cleared at turn end, which can briefly leave the field editable in the browser while the server treats it as read-only.
 
 
-== Highlighting AI Changes
+== Marking AI Changes
 
-When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller exposes two APIs for this:
+When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller handles this automatically: when a turn ends, every field whose value changed is marked with an "AI" badge. Selecting the badge opens a popover that explains the value was filled by AI and offers a revert control, which restores the field's value from before the AI's first change to it.
 
-* [methodname]`addFieldValueChangeListener()` registers a listener that fires once per changed field after a successful turn.
-* [methodname]`showFieldHighlight()` and [methodname]`hideFieldHighlight()` toggle a per-field highlight rendered by the `vaadin-field-highlighter` web component.
+The marker needs no application code:
 
-A typical pattern flashes every changed field after each fill:
+* A field marked in an earlier turn keeps its mark -- and with it the original revert value -- when a later turn changes it again, so reverting always restores the value the field held before the AI touched it.
+* The marker clears itself as soon as the user edits or reverts the field, so a stale cue never lingers over a value the user changed.
+* The marker survives detaching and re-attaching the field.
+
+=== Disabling the Marker
+
+Call [methodname]`setFieldMarkerEnabled(false)` for a form that should carry no trace of the AI's edits:
+
+[source,java]
+----
+controller.setFieldMarkerEnabled(false);
+----
+
+Only the mark is affected: the "AI is working" state shown while a turn runs still applies, and <<#reacting-to-ai-changes,change events>> still report what the AI wrote. Turning the marker off doesn't clear marks already shown; fields marked by earlier turns stay marked until the user edits or reverts them.
+
+=== Localizing the Marker
+
+The marker's texts -- the "AI" badge, its tooltip, and the popover with the revert control -- default to English. Replace them with [methodname]`setFieldMarkerI18n()`:
+
+[source,java]
+----
+controller.setFieldMarkerI18n(new FieldMarkerI18n()
+        .setBadgeLabel("KI")
+        .setBadgeTooltip("Von KI ausgefüllt")
+        .setMessage("Dieser Wert wurde von KI ausgefüllt.")
+        .setRevert("Zurücksetzen"));
+----
+
+The texts are applied to every marker the controller puts on a field, so set them before the first turn to localize them all. Texts left `null` fall back to the built-in defaults. The message is also announced to screen readers when a field is marked.
+
+[[reacting-to-ai-changes]]
+== Reacting to AI Changes
+
+For applications that need to react to the AI's edits beyond the marker, [methodname]`addFieldValueChangeListener()` registers a listener that fires once per changed field after a successful turn:
 
 [source,java]
 ----
 controller.addFieldValueChangeListener(event ->
-        controller.showFieldHighlight(event.getField()));
+        auditLog.record(event.getField(), event.getOldValue(),
+                event.getNewValue()));
 ----
 
 Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignoreField()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
 
 A field hidden at turn start that is revealed and written into the same turn is reported with its real pre-turn value rather than `null`, so cascades into conditional fields show up correctly.
 
-The listener runs on the UI thread with the session lock held, so it can call [methodname]`showFieldHighlight()`, update components, or any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
-
-Repeated [methodname]`showFieldHighlight()` calls on the same field are idempotent -- exactly one highlight remains. Each controller marks its highlight with an identifier unique to that instance, so the AI highlight coexists with any other `vaadin-field-highlighter` consumers the application keeps on the field, for example a collaboration session showing other users' edits. The highlight survives detach and re-attach: the controller re-applies it whenever the field returns to the DOM. The field passed to [methodname]`showFieldHighlight()` does not need to belong to the controller's form -- any [classname]`HasValue` [classname]`Component` works.
-
-Highlights stay visible until the application removes them. Call [methodname]`hideFieldHighlight()` to clear a field's highlight -- for example from a [interfacename]`ValueChangeListener` when the user starts editing the field.
+The listener runs on the UI thread with the session lock held, so it can update components or call any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
 
 
 == Reconnecting after Deserialization
 
-[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
+[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, any field-marker configuration, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
 
 [source,java]
 ----
@@ -277,9 +306,8 @@ FormAIController controller = new FormAIController(form, binder);
 controller.describeField(discount, "Discount as a percentage between 0 and 100.")
         .fieldValueOptions(ValueOptions.forField(industry)
                 .options(List.of("Software", "Manufacturing", "Healthcare")))
-        .ignoreField(internalIdField);
-controller.addFieldValueChangeListener(event ->
-        controller.showFieldHighlight(event.getField()));
+        .ignoreField(internalIdField)
+        .setFieldMarkerI18n(markerTexts);
 
 orchestrator.reconnect(provider)
         .withController(controller)
