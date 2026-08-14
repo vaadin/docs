@@ -2,7 +2,7 @@
 title: RTL Support for Custom Elements
 page-title: Adding RTL Support to Custom Elements - Vaadin Docs
 description: Adding right-to-left support to custom web components and styles.
-meta-description: Learn how to add right-to-left (RTL) support to custom web components, styles, icons, and keyboard navigation in Vaadin applications using DirMixin and CSS.
+meta-description: Learn how to add right-to-left (RTL) support to custom web components, styles, icons, and keyboard navigation in Vaadin apps using the CSS :dir() selector.
 order: 20
 ---
 
@@ -12,20 +12,21 @@ order: 20
 Vaadin components support right-to-left (RTL) text direction out of the box. If you have custom elements or custom styles, there are additional steps to enable RTL support.
 
 
-== DirMixin for Custom Elements
+== Detecting Text Direction
 
-If your element extends Vaadin's `ElementMixin`, no changes are needed. Otherwise, have the element extend `DirMixin` (from `@vaadin/component-base`):
+The text direction of an element can be detected with the native CSS https://developer.mozilla.org/en-US/docs/Web/CSS/:dir[`:dir()`] pseudo-class. In styles, elements in right-to-left mode can be targeted with the `:dir(rtl)` selector. In JavaScript, the current direction can be checked with `matches()`:
 
 [source,javascript]
 ----
-import { LitElement } from 'lit';
-import { DirMixin } from '@vaadin/component-base/src/dir-mixin.js';
-import { PolylitMixin } from '@vaadin/component-base/src/polylit-mixin.js';
-
-class MyElement extends DirMixin(PolylitMixin(LitElement)) {}
+const isRTL = element.matches(':dir(rtl)');
 ----
 
-`DirMixin` synchronizes the element's `dir` attribute with the document-level `dir` attribute, allowing CSS and JS code to respond to text direction changes.
+The pseudo-class matches based on the effective directionality, so it responds to the document-level `dir` attribute without any changes to the element itself.
+
+[NOTE]
+====
+Previously, custom elements had to extend Vaadin's `DirMixin` (from `@vaadin/component-base`), which synchronized the element's `dir` attribute with the document-level `dir` attribute so that styles and JavaScript code could respond to text direction changes. The mixin is now deprecated in favor of the native `:dir()` selector, and it's scheduled for removal in a future major version, after which components no longer set the `dir` attribute on themselves.
+====
 
 
 == Adjusting Styles for RTL
@@ -44,7 +45,7 @@ Add an RTL override:
 
 [source,css]
 ----
-:host([dir="rtl"]) {
+:host(:dir(rtl)) {
     padding-right: 2em;
     padding-left: 1em;
 }
@@ -62,11 +63,11 @@ If your element uses icons or Unicode symbols that indicate direction (e.g., a _
 
 == Keyboard Navigation
 
-If keyboard interactions use arrow keys for navigation, adjust the direction based on the `dir` attribute:
+If keyboard interactions use arrow keys for navigation, adjust the direction based on the text direction:
 
 [source,javascript]
 ----
-const dirIncrement = this.getAttribute('dir') === 'rtl' ? -1 : 1;
+const dirIncrement = this.matches(':dir(rtl)') ? -1 : 1;
 
 switch (event.key) {
     // ...
