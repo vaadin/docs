@@ -100,6 +100,9 @@ Controlled by `vaadin.observability.navigation`.
 Tagged by `route` and `outcome`.
 |===
 
+A navigation is recorded when it completes, so `outcome` is currently always `success`.
+When a [methodname]`beforeEnter()` listener reroutes or forwards, the navigation is recorded once, against the route it ended up on.
+
 
 === Request Metrics
 
@@ -120,6 +123,14 @@ Tagged by `outcome`.
 Tagged by `type` and `outcome`.
 |===
 
+.Extra Request Tags When Tracing Is Enabled
+[NOTE]
+====
+With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it also carries that span's low-cardinality attributes as tags: `vaadin.request.type`, `vaadin.interaction`, `http.method`, `ui.id`, and `vaadin.client.location`.
+`ui.id` and `vaadin.client.location` are unbounded, which multiplies the number of time series in your metrics backend.
+Set `vaadin.observability.traces=false` if you need the timer reduced to `outcome` alone.
+====
+
 
 === Resync Metrics
 
@@ -137,6 +148,7 @@ Tagged by `type`: `resend` when the client re-sends a request it never got a res
 |===
 
 
+[[error-metrics]]
 === Error Metrics
 
 Controlled by `vaadin.observability.errors`.
@@ -147,9 +159,19 @@ Controlled by `vaadin.observability.errors`.
 
 |`vaadin.errors`
 |Counter
-|Server-side errors handled during a request.
+|Exceptions that propagate out of Vaadin request handling.
 Tagged by `exception` (the exception's simple class name).
 |===
+
+.What This Counter Does and Doesn't Count
+[IMPORTANT]
+====
+This counter tracks exceptions that escape request handling -- for example one thrown by a custom [classname]`RequestHandler`.
+It does *not* count exceptions thrown inside a component listener, such as a button-click or value-change listener.
+Flow catches those and routes them to the session's [classname]`ErrorHandler`, so they never reach the request interceptor.
+Such a failure is still visible in tracing: the `vaadin.rpc.<type>` span records the error and its `outcome` tag becomes `error`, and it carries the component and event that triggered it.
+It is also visible in `vaadin.rpc.duration` as an `outcome=error` sample.
+====
 
 
 === Client Metrics
@@ -168,10 +190,6 @@ These are observed in the browser and reported back to the server, subject to th
 |`vaadin.client.navigation.duration`
 |Timer
 |Browser-observed navigation time.
-
-|`vaadin.client.rpc.duration`
-|Timer
-|Browser-observed server round trip.
 
 |`vaadin.client.web_vitals.lcp`
 |Timer
@@ -193,6 +211,9 @@ These are observed in the browser and reported back to the server, subject to th
 |Counter
 |Client samples rejected by the per-session rate limit.
 |===
+
+Server round-trip timing isn't collected in the browser.
+Use the server-side `vaadin.request.duration` and `vaadin.rpc.duration` timers for that.
 
 
 === Database Metrics
@@ -276,10 +297,10 @@ Carries the request-level attributes below.
 |`vaadin.db.query`
 |A single JDBC query, nested under the request or RPC span that ran it.
 Emitted only when database monitoring is enabled (see <<#database-monitoring,Database Monitoring>>).
-
-|`vaadin.ui.access`
-|Work executed through [methodname]`UI.access()`.
 |===
+
+Spans cover work done on the request-handling thread.
+Work handed to another thread -- for example a background task that later calls [methodname]`UI.access()` -- isn't linked to the request that started it, and the [methodname]`UI.access()` command itself is recorded under whichever request thread runs it.
 
 
 === Span Attributes
@@ -294,7 +315,7 @@ The root `vaadin.request` span carries these attributes:
 |The protocol-level request type: `uidl`, `heartbeat`, `push`, `static`, or `other`.
 
 |`vaadin.interaction`
-|What the request actually did, when it can be determined: `poll`, `navigation`, or `rpc`.
+|What the request actually did: `poll`, `navigation`, or `rpc`, and `none` for requests where no interaction applies, such as heartbeats and static resources.
 
 |`http.method`
 |The HTTP method of the request.
@@ -307,24 +328,27 @@ The root `vaadin.request` span carries these attributes:
 
 |`outcome`
 |`success` or `error`.
-
-|`vaadin.session.id`
-|The Vaadin session ID.
-Added only when [propertyname]`vaadin.observability.traces-session-id` is enabled.
 |===
 
 The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
 
 The RPC span additionally carries two span-only, high-cardinality attributes when they can be resolved: `vaadin.rpc.event` (the invocation name, such as a DOM event name, invoked method name, or navigation location) and `vaadin.rpc.component` (the class name of the targeted [classname]`Component`).
 These are attached to the span only, never as timer tags, because of their cardinality.
+Together they let you trace a failure back to the interaction that caused it -- which component, and which event.
+
+Flow doesn't report an invocation name for property syncs, which is how a field's value change arrives at the server.
+Those spans carry `type` and `vaadin.rpc.component`, but no `vaadin.rpc.event`.
 
 The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
 
 
 === Errors
 
-When a request or a nested operation handles an exception, the observation is marked as error, so the span records the error and the `outcome` tag becomes `error`.
-A server-side error also increments the `vaadin.errors` counter, tagged by exception type.
+When a request or a nested operation fails, its observation is marked as error, so the span records the exception and the `outcome` tag becomes `error`.
+
+For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event -- rather than on the enclosing `vaadin.request` span, which still ends as `success`.
+Flow hands such an exception to the session's [classname]`ErrorHandler` instead of letting it escape request handling, which is also why it doesn't increment the `vaadin.errors` counter.
+See <<#error-metrics,Error Metrics>> for what that counter measures.
 
 
 [[database-monitoring]]

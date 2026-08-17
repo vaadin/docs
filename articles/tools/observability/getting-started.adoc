@@ -135,6 +135,7 @@ class ObservabilityConfig {
 An [classname]`ObservationRegistry` is used for tracing if a bean is present.
 
 
+[[standalone]]
 === Standalone (Without Spring)
 
 Add the core module and install the kit at servlet-context startup -- for example from a [classname]`ServletContextListener` -- so the registry is in place before [classname]`VaadinService` initializes.
@@ -163,6 +164,30 @@ public class ObservabilitySetup implements ServletContextListener {
     }
 }
 ----
+
+This two-argument overload creates an [classname]`ObservationRegistry` for you and wires it to the meter registry, so the observation-backed timers are recorded.
+It doesn't register a tracing handler, so no spans leave the application.
+
+To export spans -- or to write your own Observations, which needs a registry you can reach -- create the [classname]`ObservationRegistry` yourself and pass it to the three-argument overload:
+
+.Inside `contextInitialized()`
+[source,java]
+----
+MeterRegistry registry = new SimpleMeterRegistry();
+
+ObservationRegistry observationRegistry = ObservationRegistry.create();
+observationRegistry.observationConfig()
+        // Produces the timers from the kit's observations.
+        .observationHandler(new DefaultMeterObservationHandler(registry))
+        // Exports the spans; tracer comes from your tracing bridge.
+        .observationHandler(new DefaultTracingObservationHandler(tracer));
+
+ObservabilityKit.install(registry, observationRegistry,
+        ObservabilitySettings.builder().build());
+----
+
+With this overload the kit registers no handlers of its own, so the registry needs at least [classname]`DefaultMeterObservationHandler` for the timers.
+Keep a reference to both registries -- for example in a static holder -- if you want to use them for <<customization#,custom instrumentation>>.
 
 
 == Next Steps
