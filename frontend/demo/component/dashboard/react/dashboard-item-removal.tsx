@@ -5,9 +5,7 @@ import type { DashboardItem, DashboardItemBeforeRemoveEvent } from '@vaadin/reac
 import { Dashboard } from '@vaadin/react-components-pro';
 
 export function Example() {
-  const items = useSignal<DashboardItem[]>([
-    /* Item definitions */
-  ]);
+  const items = useSignal<DashboardItem[]>([]);
 
   const itemToRemove = useSignal<DashboardItem | null>(null);
 

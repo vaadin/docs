@@ -8,9 +8,7 @@ import type { DashboardItem, DashboardItemBeforeRemoveEvent } from '@vaadin/dash
 
 export class Example extends LitElement {
   @state()
-  items: DashboardItem[] = [
-    /* Item definitions */
-  ];
+  items: DashboardItem[] = [];
 
   @state()
   itemToRemove: DashboardItem | null = null;

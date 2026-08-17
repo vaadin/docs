@@ -67,9 +67,11 @@ export class Example extends LitElement {
         </vaadin-button>
       </vaadin-horizontal-layout>
 
-      ${this.invitedPeople.length === 0
-        ? this.renderNoInvitationAlert()
-        : this.renderInvitedPeopleTable()}
+      ${
+        this.invitedPeople.length === 0
+          ? this.renderNoInvitationAlert()
+          : this.renderInvitedPeopleTable()
+      }
     `;
   }
 
