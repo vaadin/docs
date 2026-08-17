@@ -126,9 +126,10 @@ Tagged by `type` and `outcome`.
 .Extra Request Tags When Tracing Is Enabled
 [NOTE]
 ====
-With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it also carries that span's low-cardinality attributes as tags: `vaadin.request.type`, `vaadin.interaction`, `http.method`, `ui.id`, and `vaadin.client.location`.
-`ui.id` and `vaadin.client.location` are unbounded, which multiplies the number of time series in your metrics backend.
-Set `vaadin.observability.traces=false` if you need the timer reduced to `outcome` alone.
+With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it also carries that span's low-cardinality attributes as tags: `vaadin.request.type`, `vaadin.interaction`, and `http.method`, plus Micrometer's own `error` tag.
+All of these have a bounded set of values.
+The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer.
+With tracing off, the timer carries `outcome` alone.
 ====
 
 
@@ -320,14 +321,17 @@ The root `vaadin.request` span carries these attributes:
 |`http.method`
 |The HTTP method of the request.
 
-|`ui.id`
-|The ID of the UI associated with the request, or `_unknown`.
-
-|`vaadin.client.location`
-|The browser location associated with the request, or `_unknown`.
-
 |`outcome`
 |`success` or `error`.
+
+|`ui.id`
+|The ID of the UI associated with the request, or `_unknown`.
+Span-only, since UI IDs are unbounded.
+
+|`vaadin.client.location`
+|The browser location the request was sent from, or `_unknown`.
+Span-only: it's the literal path, not a route template.
+For templated, cardinality-capped view attribution, use the `route` tag on the navigation meters.
 |===
 
 The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
