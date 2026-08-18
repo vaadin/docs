@@ -1,13 +1,16 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useState } from 'react';
+import React from 'react';
+import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import type { RangeSliderChangeEvent } from '@vaadin/react-components/RangeSlider.js';
 import { RangeSlider } from '@vaadin/react-components/RangeSlider.js';
 
 function Example() {
+  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const [invalid, setInvalid] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [value, setValue] = useState([200, 800]);
+  const currentValue = useSignal<number[]>([200, 800]);
+  const errorMessage = useSignal('');
+  const invalid = useSignal(false);
 
   return (
     <RangeSlider
@@ -15,17 +18,18 @@ function Example() {
       min={0}
       max={1000}
       step={50}
-      value={value}
-      invalid={invalid}
-      errorMessage={errorMessage}
+      value={currentValue.value}
+      invalid={invalid.value}
+      errorMessage={errorMessage.value}
       onChange={(e: RangeSliderChangeEvent) => {
-        setValue(e.target.value);
+        currentValue.value = e.target.value;
         const [start, end] = e.target.value;
         if (end - start < 200) {
-          setErrorMessage('Price range must span at least $200');
-          setInvalid(true);
+          errorMessage.value = 'Price range must span at least $200';
+          invalid.value = true;
         } else {
-          setInvalid(false);
+          errorMessage.value = '';
+          invalid.value = false
         }
       }}
     />

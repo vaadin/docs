@@ -3,7 +3,7 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { AutoGrid } from '@vaadin/hilla-react-crud';
 import { useComputed, useSignal } from '@vaadin/hilla-react-signals';
-import { Select, type SelectItem } from '@vaadin/react-components/Select.js';
+import { Select, type SelectItemData } from '@vaadin/react-components/Select.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import type AndFilter from 'Frontend/generated/com/vaadin/hilla/crud/filter/AndFilter';
@@ -12,7 +12,7 @@ import Matcher from 'Frontend/generated/com/vaadin/hilla/crud/filter/PropertyStr
 import { ProductService } from 'Frontend/generated/endpoints';
 import { autoGridHostStyles } from './auto-grid-host-styles'; // hidden-source-line
 
-const categories: SelectItem[] = [
+const categories: SelectItemData[] = [
   { label: 'All', value: 'All' },
   { label: 'Fruit', value: 'Fruit' },
   { label: 'Vegetable', value: 'Vegetable' },
