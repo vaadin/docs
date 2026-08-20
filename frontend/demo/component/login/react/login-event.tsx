@@ -2,7 +2,10 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { LoginForm, type LoginFormDisabledChangedEvent } from '@vaadin/react-components/LoginForm.js';
+import {
+  LoginForm,
+  type LoginFormDisabledChangedEvent,
+} from '@vaadin/react-components/LoginForm.js';
 import { loginHostStyles } from './login-host-styles';
 
 function Example() {
