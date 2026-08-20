@@ -1,6 +1,8 @@
 package com.vaadin.demo.component.messages;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 import com.vaadin.demo.component.messages.LLMClient.Message;
@@ -8,10 +10,20 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.upload.UploadButton;
+import com.vaadin.flow.component.upload.UploadFileList;
+import com.vaadin.flow.component.upload.UploadFileListVariant;
+import com.vaadin.flow.component.upload.UploadManager;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 
 @Route("message-list-ai-chat")
 public class MessageListAiChat extends Div {
+
+    private final Map<String, byte[]> pendingFiles = new LinkedHashMap<>();
 
     private MessageListItem createItem(String text, boolean assistant) {
         MessageListItem item = new MessageListItem(text,
@@ -28,6 +40,21 @@ public class MessageListAiChat extends Div {
         // end::snippet[]
         MessageInput input = new MessageInput();
 
+        // Modular upload for file attachments
+        var handler = UploadHandler.inMemory((metadata, data) -> {
+            pendingFiles.put(metadata.fileName(), data);
+        });
+        var manager = new UploadManager(this, handler);
+        manager.setMaxFiles(5);
+        manager.setMaxFileSize(10L * 1024 * 1024); // 10 MB
+        manager.addFileRemovedListener(
+                event -> pendingFiles.remove(event.getFileName()));
+
+        var uploadButton = new UploadButton(manager);
+        var fileList = new UploadFileList(manager);
+        fileList.addThemeVariants(UploadFileListVariant.THUMBNAILS);
+        fileList.setWidthFull();
+
         // Live region for screen reader announcements
         Div liveRegion = new Div();
         liveRegion.getElement().setAttribute("aria-live", "polite");
@@ -43,8 +70,17 @@ public class MessageListAiChat extends Div {
         input.addSubmitListener(e -> {
             String userInput = e.getValue();
 
-            // Add the user message to the list
-            list.addItem(createItem(userInput, false));
+            // Add the user message with any pending attachments
+            MessageListItem userMessage = createItem(userInput, false);
+            for (var entry : pendingFiles.entrySet()) {
+                userMessage.addAttachment(new MessageListItem.Attachment(
+                        entry.getKey(), "#", "application/octet-stream"));
+            }
+            list.addItem(userMessage);
+
+            // Clear pending attachments
+            pendingFiles.clear();
+            manager.clearFileList();
 
             // Add the Assistant message to the list
             MessageListItem newAssistantMessage = createItem("", true);
@@ -78,7 +114,15 @@ public class MessageListAiChat extends Div {
             });
         });
 
-        add(list, input);
+        var inputLayout = new HorizontalLayout(uploadButton, input);
+        inputLayout.setWidthFull();
+        inputLayout.expand(input);
+        inputLayout.setAlignItems(FlexComponent.Alignment.END);
+
+        var chatLayout = new VerticalLayout(list, fileList, inputLayout);
+        chatLayout.expand(list);
+        chatLayout.setSizeFull();
+        add(chatLayout);
 
         com.vaadin.demo.component.messages.LLMClient.initPolling(list); // hidden-source-line
     }
