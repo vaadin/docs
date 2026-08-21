@@ -45,9 +45,13 @@ Two Collaboration Kit capabilities have no signals equivalent at all, and both a
 Both are covered in detail, with the reasoning and the observable symptoms, in <<#gaps,Gaps and Cases That Can't Be Migrated>>. That section also lists the features that *can* be migrated but only by rebuilding behavior Collaboration Kit provides out of the box, and the smaller API-level differences worth knowing before starting.
 
 
-=== Push Is Required
+=== Enable Push Explicitly
 
-Cross-user updates only reach the browser immediately if <<{articles}/flow/advanced/server-push#push.configuration.annotation,server push>> is enabled. This is the same requirement Collaboration Kit has, so an application that already uses Collaboration Kit is already configured correctly.
+Cross-user updates only reach the browser immediately if <<{articles}/flow/advanced/server-push#push.configuration.annotation,server push>> is enabled. Both products need it, but only one of them arranges it: Collaboration Kit turns push on by itself. When a topic connection activates in a UI that has neither push nor polling, it sets [constantname]`PushMode.AUTOMATIC` and logs a warning. Signals never touch the push configuration.
+
+An application that relied on that default has no `@Push` annotation anywhere, and migrating removes the thing that was compensating. The result is easy to miss in testing: everything still works for the user making a change, and other users see it only the next time they interact with the page. Add `@Push` before migrating, while Collaboration Kit is still there to make the two behave the same.
+
+To confirm which case you're in, look for the Collaboration Kit warning in the server log at startup, or set [methodname]`setAutomaticallyActivatePush(false)` and check that real-time updates still arrive.
 
 
 === Migrate Incrementally
@@ -988,6 +992,10 @@ Use this to confirm the migration covers everything before removing the Collabor
 | Background updates
 | Direct
 | Write to the signal from any thread
+
+| Automatic push activation
+| Missing
+| Add `@Push` yourself
 
 | Topic lookup by identifier
 | Build it
