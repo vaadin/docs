@@ -398,16 +398,16 @@ orchestrator.reconnect(provider)
         .apply();
 ----
 
-Field ids remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
+Field ids and <<#source-tracking,source data>> remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
 
-The exception is <<#source-tracking,source data>>, which lives in the controller and is lost with it. To carry sources across the round-trip, store each field's [classname]`ValueSource` -- the record is serializable -- and reattach it to the new controller with [methodname]`restoreFieldSource()`:
+[methodname]`restoreFieldSource()` covers a different round-trip: a form rebuilt from application data rather than restored from the session. When the application persists the filled values itself -- a draft saved to a database, for example -- it can store each field's [classname]`ValueSource` alongside them (the record is serializable) and reattach it in the new session:
 
 [source,java]
 ----
 controller.restoreFieldSource(email, storedEmailSource);
 ----
 
-The source binds to the field's value at the moment of the call and goes stale on the next edit, just like a fresh one. The field values themselves survive with the UI tree, so restoring the sources is the only extra step.
+Restore the field's value first and the source after: the source binds to the field's value at the moment of the call and goes stale on the next edit, just like a fresh one.
 
 
 == Composing Multiple Forms
