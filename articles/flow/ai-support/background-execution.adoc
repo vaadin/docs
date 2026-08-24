@@ -1,0 +1,105 @@
+---
+title: Background Execution
+description: Run LLM turns on a background thread to keep the UI responsive while a synchronous provider waits for the model.
+meta-description: Learn how to enable background execution in the Vaadin AIOrchestrator to keep the UI responsive with synchronous LLM providers, using push or polling.
+order: 25
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Background Execution#
+
+By default, the orchestrator runs each turn in the request that triggered it. With a streaming provider that works well: the request returns quickly, and tokens arrive over server push as the model produces them. With a synchronous provider, the request does not return until the model has produced the complete response, including any tool calls along the way. The interface freezes for the whole wait, and since the request holds the session lock, other views in the same session wait too. A progress indicator set before the prompt only becomes visible once the response has already arrived.
+
+Background execution moves the exchange off the request thread. The user's message and an empty assistant message appear immediately, the UI stays responsive, and the response is filled in when the model finishes. The orchestrator still processes one prompt at a time -- messages submitted while a turn is running are dropped, which a responsive UI makes possible in the first place (see <<tool-calling#,Tool Calling & Programmatic Prompts>>).
+
+
+== Enabling Background Execution
+
+Call [methodname]`withBackgroundExecution()` on the builder:
+
+[source,java]
+----
+AIOrchestrator orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withBackgroundExecution()
+        .build();
+----
+
+Turns then run on a shared pool intended for blocking work. To control the threads yourself, pass an [classname]`Executor` -- see <<#custom-executor,Using a Custom Executor>>.
+
+Synchronous execution remains the default, because tool implementations written against it may rely on running in the request thread. Enabling background execution is a deliberate step; check the <<#threading,threading section>> before turning it on for an orchestrator with existing tools.
+
+.Streaming Providers
+[NOTE]
+With a streaming provider, the model already does its work off the request thread, so this option has no visible effect. It's safe to leave enabled -- switching the provider between streaming and synchronous mode later requires no orchestrator changes.
+
+
+== Delivering Updates to the Browser
+
+UI changes made while the turn runs in the background reach the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The orchestrator logs a warning when it detects this combination.
+
+Manual push mode is not enough on its own: the orchestrator never calls `ui.push()`, so with `PushMode.MANUAL` its updates sit in the queue until the application pushes for its own reasons. The same warning is logged in this mode. Use automatic push or polling instead.
+
+
+[[threading]]
+== What Runs on Which Thread
+
+Everything that happens before the model is called still runs in the request thread: the request interceptor, adding the user's message and the empty assistant message to the Message List, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. This is why the message shows up right away even though the response takes time.
+
+The rest of the turn runs on the background thread: the model calls, every tool execution, and the [classname]`ResponseListener`. Two consequences follow for application code:
+
+*Tools* -- whether framework-annotated tool methods or [classname]`LLMProvider.ToolSpec` implementations -- can no longer assume Vaadin thread locals. [methodname]`UI.getCurrent()` and [methodname]`VaadinSession.getCurrent()` return `null` on the background thread, and components must not be touched directly. Either wrap component access in `ui.access()`, or capture what the tool needs while still on the request thread -- [methodname]`AIController.onRequest()` is the natural place for that. The built-in controllers ([classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController`) already handle this.
+
+[source,java]
+----
+@Override
+public String execute(JsonNode arguments) {
+    var count = orderService.countPendingOrders();
+    ui.access(() -> badge.setText(String.valueOf(count)));
+    return count + " orders pending";
+}
+----
+
+Here `ui` was captured earlier on the request thread, for example in [methodname]`onRequest()` or when the tool was created.
+
+*The [classname]`ResponseListener`* runs on the background thread, so blocking I/O such as a database write is fine there. As everywhere else, updating components from it requires `ui.access()`.
+
+If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server. The response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual, so persistence is not lost. Only the UI updates are skipped, and [methodname]`AIController.onResponse()` -- which needs an attached UI -- is not called for that turn.
+
+
+[[custom-executor]]
+== Using a Custom Executor
+
+Pass an [classname]`Executor` to choose the threads that carry the turns:
+
+[source,java]
+----
+ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+
+AIOrchestrator orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withBackgroundExecution(executor)
+        .build();
+----
+
+Each turn occupies one thread for its entire duration -- with a synchronous provider, possibly minutes. Size a fixed pool by the number of concurrent turns the application should allow. Virtual threads are a good fit, since the thread spends that time waiting on the model. The executor's lifecycle belongs to the application: the orchestrator never shuts it down, and one executor can serve any number of orchestrators.
+
+With a synchronous provider, a custom executor is also how framework contexts reach tool code. Thread-bound state such as Spring Security's [classname]`SecurityContext` does not propagate to background threads by itself. Wrap the executor in a context-propagating one -- Spring Security ships [classname]`DelegatingSecurityContextExecutor` for this -- and tools see the same context as the request that started the turn. Streaming providers run tools on their own threads, which the executor never carries. There, capture what the tools need in [methodname]`AIController.onRequest()` instead.
+
+
+== Session Persistence
+
+The background execution setting survives serialization. A custom executor does not -- like the provider, it is a live object that has to be supplied again after the session is restored:
+
+[source,java]
+----
+orchestrator.reconnect(provider)
+        .withBackgroundExecution(executor)
+        .apply();
+----
+
+If it isn't passed, turns keep running in the background on the shared pool. See <<conversation-history#,Conversation History & Session Persistence>> for the full reconnection flow.
