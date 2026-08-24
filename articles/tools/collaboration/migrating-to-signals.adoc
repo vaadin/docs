@@ -156,6 +156,8 @@ Collaboration Kit and signals can run side by side in the same application, and 
 
 A topic identifier in Collaboration Kit is a lookup key into a global namespace. Reproduce that with an application-scoped bean that owns the signals for each identifier.
 
+This is where the state belongs rather than a workaround for a missing feature. Which entities are live in memory, and how they relate to what is stored, is a service-layer concern -- the same layer that already knows how the entity is persisted. Collaboration Kit hid that decision behind a string identifier; signals make you make it.
+
 Group the signals that belong to one topic in a record, so that a view resolves everything it needs in a single lookup:
 
 [source,java]
@@ -174,6 +176,24 @@ public record DocumentState(
     }
 }
 ----
+
+.A Transaction Can't Span Two of These
+[IMPORTANT]
+====
+Each shared signal created with a public constructor is an independent tree, committed independently, so a transaction that touches two of them throws. Grouping them in a record keeps them together for lookup, not for atomicity.
+
+[source,java]
+----
+// Throws: form and messages are independent shared signals
+Signal.runInTransaction(() -> {
+    state.form().update(f -> f.withStatus("approved"));
+    state.messages().insertLast(approvalMessage);
+});
+----
+
+A Collaboration Kit topic has no such restriction: its named maps and lists share one topic, so a single change could span them. Where a migration relies on that, put the values in one signal instead -- entries of one map or list, or a [classname]`SharedNodeSignal` root with a map child and a list child, which is the same shape as the topic it replaces.
+====
+
 
 The registry itself is a singleton bean holding a concurrent map. Because the state is created lazily, the first user to open a document seeds it from the backend -- the same job the bean supplier callback does in [methodname]`CollaborationBinder::setTopic`:
 
@@ -321,9 +341,23 @@ public static void trackPresence(Component owner,
 
 [methodname]`insertLast()` returns an [classname]`InsertOperation` whose [methodname]`signal()` is available immediately, before the insert is confirmed. That signal is the handle used to remove the entry later, in the same way a [classname]`ListKey` is in Collaboration Kit.
 
-.Detach Isn't Guaranteed
+.Don't Reach for an Effect Here
+[WARNING]
+====
+[methodname]`Signal.effect()` looks like the right tool, because it's already component-bound and already survives detach and re-attach. It can't work, in three separate ways:
+
+* An effect that reads the list with [methodname]`peek()` and inserts throws [classname]`MissingSignalUsageException` on creation, because it reads no signal.
+* An effect that reads with [methodname]`get()` and inserts depends on its own output, and is disposed with an infinite-loop error -- delivered to the uncaught exception handler rather than to the caller.
+* Even a well-formed effect wouldn't re-add the user, because an effect doesn't re-run on re-attach when nothing has changed.
+
+Attach and detach listeners are the correct construction.
+====
+
+A detach listener covers more than it looks like it does. Flow sends an unload beacon when the page is hidden, closes the UI on the server, and detaching the UI fires detach for the whole component tree -- so closing a browser tab removes the entry within about a second, the same as Collaboration Kit.
+
+.Two Cases the Beacon Doesn't Cover
 [IMPORTANT]
-A detach listener runs on navigation and on an orderly tab close, but not when a session expires or a server dies. Collaboration Kit handles those cases with connection scoping. To avoid stale avatars, remove the user's entries from a [interfacename]`SessionDestroyListener` as well, and treat presence as advisory rather than authoritative.
+Eager close on the beacon is deliberately skipped for `@PreserveOnRefresh` views, so an entry written from one survives until the heartbeat timeout. And if no beacon arrives at all -- a crashed browser, a killed process, a dead network -- the UI is closed by the inactivity check at roughly three heartbeat intervals, or at session expiry. Collaboration Kit has the same weakness in that second case, because it relies on the same beacon. Clean up from a [interfacename]`SessionDestroyListener` as well, and treat presence as advisory rather than authoritative.
 
 
 === Rendering Avatars
@@ -773,7 +807,21 @@ Signal.runInTransaction(() -> {
 * `ifFirst(key)` and `ifLast(key)` become [methodname]`verifyPosition()` with `ListPosition.first()` or `ListPosition.last()`.
 * `ifPrev(key, prev)` and `ifNext(key, next)` become [methodname]`verifyPosition()` with `ListPosition.after()` or `ListPosition.before()`.
 * A conditional map replace becomes [methodname]`replace()` on the entry signal, or [methodname]`verifyValue()` on the entry inside a transaction. It doesn't become [methodname]`verifyKey()`, which compares child signals rather than values.
-* `ifEmpty()` and `ifNotEmpty()` have no direct equivalent. Where they guard against duplicate initialization, [methodname]`putIfAbsent()` on a map signal expresses the intent better.
+* `ifEmpty()` and `ifNotEmpty()` become a read inside the transaction. Reading a shared signal with [methodname]`get()` inside [methodname]`runInTransaction()` registers a condition on that node automatically, so the transaction is rejected if the list changed between the read and the commit:
++
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    if (checklist.get().isEmpty()) {
+        checklist.insertLast("Check licences");
+        checklist.insertLast("Sign off");
+    }
+});
+----
++
+This is more capable than the Collaboration Kit conditions, because the predicate is ordinary Java: "fewer than ten items" or "this tag isn't in the list yet" work the same way. For a single insert into an empty list there's also a positional form, `insertAt(value, ListPosition.between(null, null))`, which succeeds only while the list has no entries.
+
+A transaction is scoped to one shared signal and its children. Reaching into a second, independent shared signal from inside one throws, as described in <<#step-1-replace-topics-with-a-signal-registry,Step 1>>.
 
 Use [methodname]`verifyChild()` before updating an entry that another user might have removed in the meantime. Collaboration Kit's conditions are per-operation; a signals transaction can verify several conditions and apply several changes atomically, which is more expressive.
 
@@ -844,11 +892,17 @@ These migrate, and the guide shows how, but Collaboration Kit does the work for 
 
 ==== Cleanup When a User Disconnects
 
-`EntryScope.CONNECTION` removes an entry the moment the connection that wrote it deactivates. Collaboration Kit makes that prompt even for a closed tab by installing a beacon request handler, so the browser reports the unload and the avatar disappears within moments.
+`EntryScope.CONNECTION` removes an entry the moment the connection that wrote it deactivates, with no code in the application.
 
-Signals have neither the scope nor the beacon. A detach listener covers navigation and an orderly close of the view, and that's what <<#tracking-presence,`trackPresence()`>> uses, but nothing fires when the tab is killed, the network drops, or the server is replaced. Those entries survive until the session expires, which is minutes rather than moments.
+The prompt-cleanup half of this is not actually missing. Flow has its own unload beacon, independent of Collaboration Kit's: the browser reports the unload, the server closes the UI, and closing the UI detaches the component tree. A detach listener therefore fires within about a second of a tab closing, which is what <<#tracking-presence,`trackPresence()`>> relies on.
 
-Treat presence as advisory. Clear entries from a [interfacename]`SessionDestroyListener` in addition to the detach listener, and if stale avatars are unacceptable, store a timestamp alongside each collaborator and filter out entries that haven't been refreshed recently.
+What's missing is the declarative part and two edge cases:
+
+* *No scope on the write.* Nothing ties the lifetime of a shared signal entry to a UI or a session, so every application writes the attach and detach pair itself, and every application can get it wrong.
+* *`@PreserveOnRefresh` views.* Eager close on the beacon is skipped for them, so entries written from such a view outlive the tab until the heartbeat timeout. Collaboration Kit's own handler deactivates regardless of the annotation, so this one is a genuine regression.
+* *Disconnects with no beacon.* A crashed browser or a dead network leaves the entry until the inactivity check or session expiry. Collaboration Kit is no better here, for the same reason.
+
+Clear entries from a [interfacename]`SessionDestroyListener` as well as on detach. If stale entries are unacceptable in the no-beacon case, store a timestamp alongside each entry and filter out ones that haven't been refreshed recently.
 
 
 ==== Topic and Entry Expiration
@@ -862,7 +916,28 @@ Signals have no lifecycle of their own, so both jobs move to the registry. <<#di
 
 Collaboration Kit assigns each user a color index on first sight, from a registry kept in [classname]`CollaborationEngine`. On the default local backend it hands out the seven available values in order of first appearance, which spreads colors better than hashing does for the first users it sees. The guarantee is weaker than it looks, though: the registry never shrinks, so the eighth distinct user to appear since startup collides with the first even if both are online, and on a non-local backend the index falls back to a hash of the user identifier.
 
-Nothing equivalent ships with signals. Hashing the identifier, as <<#step-2-replace-userinfo,Step 2>> does, matches what Collaboration Kit itself falls back to, and it's stable and needs no coordination -- but two users in the same topic can collide. Allocating indexes from the current collaborator list when a user joins is the only approach that guarantees distinct colors among the users actually present, and neither product does it for you.
+Nothing equivalent ships with signals. Hashing the identifier, as <<#step-2-replace-userinfo,Step 2>> does, matches what Collaboration Kit itself falls back to, and it needs no coordination -- but two users in the same topic can collide.
+
+Allocating from the users actually present is better than either, and the transaction machinery makes it safe. Reading the list inside the transaction makes the whole insert conditional on that list not having changed, so two simultaneous joins can't claim the same index -- the loser is rejected and retries:
+
+[source,java]
+----
+static SharedValueSignal<Collaborator> join(
+        SharedListSignal<Collaborator> collaborators, String name) {
+    return Signal.runInTransaction(() -> {
+        Set<Integer> taken = collaborators.get().stream()
+                .map(SharedValueSignal::peek).filter(Objects::nonNull)
+                .map(Collaborator::colorIndex).collect(Collectors.toSet());
+        int free = 0;
+        while (taken.contains(free)) {
+            free++;
+        }
+        return collaborators.insertLast(new Collaborator(name, free)).signal();
+    }).returnValue();
+}
+----
+
+This gives distinct colors to everyone present and reuses an index once its user leaves. Two decisions it leaves open: what to do once `free` passes the number of colors in the palette, and whether to prefer a returning user's previous index over the lowest free one, trading collision-freedom for a stable color per person.
 
 
 ==== The Collaborative Binder Wiring
@@ -890,25 +965,41 @@ Smaller gaps, but each one is a place where a direct translation compiles and th
 
 ==== Parameterized Value Types
 
-Collaboration Kit has two ways to name a parameterized type. The topic API takes a Jackson [classname]`TypeReference` wherever it takes a [classname]`Class`, so [methodname]`CollaborationMap::get` can read a `Set<String>`. [classname]`CollaborationBinder` instead takes the two classes separately -- `forField(field, Set.class, String.class)` -- to bind a multi-select field such as a [classname]`CheckboxGroup`.
+Tracked in https://github.com/vaadin/collaboration-kit/issues/147[collaboration-kit#147].
 
-Shared signals have neither. Every constructor and conversion takes a plain [classname]`Class`, so a parameterized value type can't be named at all: `new SharedValueSignal<>(Set.class)` has nowhere to put the element type, and reading the value back loses it.
+Collaboration Kit has two ways to name a parameterized type. The topic API takes a Jackson [classname]`TypeReference` wherever it takes a [classname]`Class`, so [methodname]`CollaborationMap::get` can read a `Set<Role>`. [classname]`CollaborationBinder` instead takes the two classes separately -- `forField(field, Set.class, Role.class)` -- to bind a multi-select field such as a [classname]`CheckboxGroup`.
 
-Wrap the collection in a record, which is typed all the way down and serializes as an object rather than as a bare array:
+Shared signals have neither. Every constructor and conversion takes a plain [classname]`Class`, so the element type has nowhere to go.
+
+The way this fails is worth knowing, because the obvious test passes. `new SharedValueSignal<Set<Role>>(Set.class)` doesn't compile, since `Set.class` is a `Class<Set>`. The constructor that takes an initial value does compile, and silently stores the erased runtime class:
 
 [source,java]
 ----
-public record Selection(Set<String> values) {
-}
-
-SharedValueSignal<Selection> selection = new SharedValueSignal<>(
-        new Selection(Set.of()));
-
-CheckboxGroup<String> group = new CheckboxGroup<>("Options");
-group.setItems("a", "b", "c");
-group.bindValue(selection.map(Selection::values),
-        values -> selection.set(new Selection(values)));
+// Compiles with no warning. The stored type token is the erased Set class.
+var roles = new SharedValueSignal<>(Set.of(Role.ADMIN));
 ----
+
+What comes back out depends on the element type. A `Set<String>` or a `Set<Long>` round-trips correctly, because those are what Jackson produces from a JSON array anyway. A `Set` of enums comes back as a set of strings, and a `Set` of records comes back as a set of maps. Both then fail with [classname]`ClassCastException` at the point of use, not at the read, which is why this can survive a review and a test of the string case.
+
+The most faithful workaround keeps the stored JSON unchanged -- a bare array -- by holding a [classname]`JsonNode` and converting where a [classname]`TypeReference` is available:
+
+[source,java]
+----
+private static final ObjectMapper MAPPER = new ObjectMapper();
+private static final TypeReference<Set<Role>> ROLES = new TypeReference<>() {
+};
+
+SharedValueSignal<JsonNode> roles = new SharedValueSignal<>(JsonNode.class);
+
+CheckboxGroup<Role> group = new CheckboxGroup<>("Roles");
+group.setItems(Role.values());
+group.bindValue(
+        roles.map(json -> json != null ? MAPPER.treeToValue(json, ROLES)
+                : Set.<Role> of()),
+        value -> roles.set(MAPPER.valueToTree(value)));
+----
+
+Two shorter options, each with a cost. A named subclass -- `class RoleSet extends HashSet<Role> {}` -- gives a non-generic class to pass as the token, at the price of a type that exists only to satisfy the API. Wrapping the collection in a record is tidier to read, but it changes the stored JSON from an array to an object, so a topic written by the Collaboration Kit version of the same application can no longer be read. Prefer the record only when nothing else shares the data.
 
 
 ==== No Previous Value in Effects
@@ -917,16 +1008,43 @@ A Collaboration Kit subscriber receives an event, and the event describes the ch
 
 An effect receives nothing. It re-runs and observes the current state, and the framework doesn't tell it what changed or what the value was before. [classname]`EffectContext` reports only whether this is the initial run and whether the change came from another session.
 
-Keep the previous value yourself, in a second signal updated from the effect. The <<{articles}/flow/ui-state/usage-examples/realtime-dashboard#,real-time dashboard example>> shows the pattern: a `Change` record holding the previous and current values, written with [methodname]`peek()` so the effect doesn't depend on its own output. Classifying a list change as an insert, a move, or a value change means diffing two snapshots by hand; if the code needs that, an append-only [classname]`SharedListSignal` of change records is a better fit than reconstructing the change after the fact.
+Effects also coalesce. Several changes inside one transaction produce a single effect run, so an effect never sees the intermediate values. That rules out rebuilding an audit trail from effects, whatever the API offers for the previous value.
+
+For an audit trail, record the change where it's made rather than where it's observed, in the same transaction as the write. Both have to live in one tree for that to be allowed -- a [classname]`SharedNodeSignal` root with the form as a map child and the log as a list child:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    SharedValueSignal<String> cell = form.peek().get("firstName");
+    String previous = cell.peek();
+    cell.set("John");
+    log.insertLast(
+            new AuditEntry("First name", previous, "John", localUser.id()));
+});
+----
+
+This records every change rather than every observation, carries the author without a second lookup, and survives a page reload because the log is shared data. It's also closer to what the Collaboration Kit demo does than any effect-based reconstruction.
+
+Bear in mind that an audit trail usually belongs in a database rather than in UI state. Signals manage UI state; treat a shared log as a view of the audit trail rather than as the record of it.
+
+For the smaller case -- flashing a field another user has changed -- no previous value is needed. [methodname]`EffectContext.isBackgroundChange()` already reports that the change came from another session.
+
+Where a previous value genuinely is needed inside an effect, keep it yourself in a second signal, as the <<{articles}/flow/ui-state/usage-examples/realtime-dashboard#,real-time dashboard example>> does: a `Change` record holding the previous and current values, written with [methodname]`peek()` so the effect doesn't depend on its own output.
 
 Collaboration Kit doesn't help here either: [classname]`ListChangeEvent` tracks a change type internally, but neither the accessor nor the enum is public, so a subscriber can't read it. The gap is the previous value and the surrounding keys, not the classification.
 
 
-==== No Emptiness Conditions on Lists
+==== No Named Emptiness Condition on Lists
 
-[classname]`ListOperation` offers `ifEmpty()` and `ifNotEmpty()`. [classname]`SharedListSignal` verifies only [methodname]`verifyPosition()` and [methodname]`verifyChild()`, both of which need an existing entry to point at, so neither expresses "the list is empty". [classname]`SharedMapSignal` is better served: [methodname]`verifyHasKey()` and [methodname]`verifyKeyAbsent()` cover key presence, and [methodname]`putIfAbsent()` covers first-writer-wins initialization directly.
+Tracked in https://github.com/vaadin/collaboration-kit/issues/149[collaboration-kit#149].
 
-Where `ifEmpty()` guards a one-time seeding of a list, seed it in the registry when the state is created instead. That happens once by construction, so no condition is needed.
+The behavior of `ifEmpty()` and `ifNotEmpty()` is available, as <<#conditional-operations,Conditional Operations>> shows: read the list inside the transaction, or insert at `ListPosition.between(null, null)`. What's missing is narrower than it first appears, and in two directions.
+
+*Nothing is named for it.* [classname]`SharedMapSignal` has [methodname]`verifyHasKey()`, [methodname]`verifyKeyAbsent()`, and [methodname]`putIfAbsent()`. [classname]`SharedListSignal` has [methodname]`verifyPosition()` and [methodname]`verifyChild()`, both of which need an existing entry to point at. The `between(null, null)` idiom isn't documented as "only if empty" anywhere, and it sits one character away from `new ListPosition(null, null)`, which means the opposite -- no position constraint at all.
+
+*The read is stricter than the predicate.* A read inside a transaction registers a condition on the node's last update, not on the predicate you wrote. An item inserted and removed again elsewhere leaves the list empty but still rejects the transaction. On a busy list that shows up as spurious rejections the application has to retry, where `ifEmpty()` would have succeeded.
+
+Neither is a blocker. Both are worth knowing before assuming that a transaction reading a list behaves like a state predicate.
 
 
 ==== Rendering Shared Data in a Data Component
@@ -1025,9 +1143,9 @@ Use this to confirm the migration covers everything before removing the Collabor
 | Direct
 | [methodname]`asReadonly()`, which Collaboration Kit has no counterpart for
 
-| Automatic disconnect cleanup
-| Missing
-| Detach and session-destroy listeners, best effort
+| Disconnect cleanup
+| Build it
+| Detach listeners, which Flow's unload beacon already triggers on tab close
 
 | Previous value in change events
 | Missing
@@ -1038,8 +1156,8 @@ Use this to confirm the migration covers everything before removing the Collabor
 | Wrap the collection in a record
 
 | List emptiness conditions
-| Missing
-| Seed in the registry instead
+| Direct
+| Read the list inside the transaction
 
 | Cluster membership events
 | Missing
