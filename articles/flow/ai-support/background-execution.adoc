@@ -10,7 +10,7 @@ order: 25
 
 By default, the orchestrator runs each turn in the request that triggered it. With a streaming provider that works well: the request returns quickly, and tokens arrive over server push as the model produces them. With a synchronous provider, the request does not return until the model has produced the complete response, including any tool calls along the way. The interface freezes for the whole wait, and since the request holds the session lock, other views in the same session wait too. A progress indicator set before the prompt only becomes visible once the response has already arrived.
 
-Background execution moves the exchange off the request thread. The user's message and an empty assistant message appear immediately, the UI stays responsive, and the response is filled in when the model finishes. The orchestrator still processes one prompt at a time -- messages submitted while a turn is running are dropped, which a responsive UI makes possible in the first place (see <<tool-calling#,Tool Calling & Programmatic Prompts>>).
+Background execution moves the exchange off the request thread. The user's message and an empty assistant message appear immediately, the UI stays responsive, and the response is filled in when the model finishes.
 
 
 == Enabling Background Execution
@@ -30,6 +30,10 @@ AIOrchestrator orchestrator = AIOrchestrator
 Turns then run on a shared pool intended for blocking work. To control the threads yourself, pass an [classname]`Executor` -- see <<#custom-executor,Using a Custom Executor>>.
 
 Synchronous execution remains the default, because tool implementations written against it may rely on running in the request thread. Enabling background execution is a deliberate step; check the <<#threading,threading section>> before turning it on for an orchestrator with existing tools.
+
+.One Prompt at a Time
+[NOTE]
+The orchestrator processes one prompt at a time. In the default mode, a message submitted while a turn is running waits for the session lock and is processed when the turn ends. With background execution the lock is free, so the same message is rejected and dropped with a server-side warning -- and the Message Input has already cleared its text. Disable the input while a turn is running, for example from [methodname]`AIController.onRequest()` and [methodname]`AIController.onResponse()`, or from the request and response listeners.
 
 .Streaming Providers
 [NOTE]
