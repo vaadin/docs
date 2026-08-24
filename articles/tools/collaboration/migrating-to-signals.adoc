@@ -951,11 +951,19 @@ What [classname]`CollaborationBinder` provides on top is the wiring: initializin
 flow#23868 proposes bringing a collaborative binder into Flow, built on signals rather than on Collaboration Kit data structures. Until it lands, collaborative form editing is a matter of writing more code, not of waiting.
 
 
-==== The Message Persistence Protocol
+==== Keeping Shared State Consistent With a Database
 
-[interfacename]`CollaborationMessagePersister` is a small protocol rather than a single save hook. The first manager to connect to a topic fetches the history with a [classname]`FetchQuery`, the result is cached in the topic so later managers don't re-query, each submit is written to the backend and then re-fetched from the last known timestamp, and duplicates from the timestamp overlap are filtered out.
+Tracked in https://github.com/vaadin/collaboration-kit/issues/150[collaboration-kit#150].
 
-With signals the shared list *is* the cache, so most of that protocol becomes unnecessary -- <<#persisting-messages,Persisting Messages>> is a save call followed by an insert. What you lose is the framework's handling of the edge cases the protocol existed for: a write that succeeds in the database but fails before the insert leaves the list short until the state is discarded and reloaded, and messages written to the database by another part of the system don't appear until then either. If either matters, reconcile the list against the backend when the state is created and after a failed write.
+[interfacename]`CollaborationMessagePersister` is a protocol rather than a single save hook. The first manager to connect to a topic fetches the history with a [classname]`FetchQuery`, the result is cached in the topic so later managers don't re-query, each submit is written to the backend and then re-fetched from the last known timestamp, and duplicates from the timestamp overlap are filtered out.
+
+With signals the shared list *is* the cache, so most of that disappears -- <<#persisting-messages,Persisting Messages>> is a save call followed by an insert. Three things the protocol was doing become yours:
+
+* *The save and the insert aren't atomic.* A shared signal can't take part in a database transaction, so a failure between the two leaves the row written and the list short until the state is discarded and reloaded.
+* *Writes from outside the UI don't arrive.* A batch import or an admin tool writing straight to the database is invisible to every user with the view open. Collaboration Kit's re-fetch after each submit picked those up as a side effect.
+* *Initialization has no defined ordering.* Seeding the shared state from the database is a plain read. On a single node that's fine in practice. It stops being fine with clustering, where another node can commit a change to the same entity while the seeding read is in flight, leaving the shared copy stale from birth.
+
+For now, reconcile against the backend when the state is created and after a failed write, and treat the database as the source of truth rather than the shared list. The first two points are manageable that way; the third is why this is worth watching rather than solving locally.
 
 
 === API-Level Differences
@@ -1133,7 +1141,7 @@ Use this to confirm the migration covers everything before removing the Collabor
 
 | Message persistence
 | Build it
-| Write through to your repository
+| Write through to your repository, reconciling on failure
 
 | Topic expiration
 | Build it
