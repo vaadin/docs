@@ -3,6 +3,7 @@ title: AI Form Filler
 description: Use FormAIController to let users fill any Vaadin form from natural-language input or attached files.
 meta-description: Configure the Vaadin FormAIController to fill form fields from natural language or attached files, with Binder validation and select-options support.
 order: 80
+section-nav: commercial
 ---
 
 
@@ -12,6 +13,9 @@ order: 80
 [classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each write is validated through the [classname]`Binder`, or through the component's built-in validators if [classname]`Binder` is not used. Rejected values are reported back so the model can correct them on the next turn.
 
 The controller works with any combination of standard Vaadin field components, such as [classname]`TextField`, [classname]`ComboBox`, [classname]`DatePicker`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup`. No extra wiring is needed beyond constructing the controller around the layout and attaching it to the orchestrator.
+
+:commercial-feature: AI Form Filler
+include::{articles}/_commercial-banner.adoc[opts=optional]
 
 
 == Basic Usage
@@ -237,6 +241,7 @@ Every visible field's current value is forwarded to the LLM provider on every tu
 While a fill is in progress, every field the AI can write -- visible, enabled, and not read-only -- shows an "AI is working" shimmer and is guarded against user edits, so the user cannot type into a field the AI is about to overwrite. The guard is applied on the client only: the field's server-side read-only state is never changed, so it doesn't affect what the LLM sees or writes, and a field's application-set read-only state is left untouched. Fields the application had already disabled or set read-only stay as they were, and fields excluded with [methodname]`ignoreField()` stay editable throughout. The working state clears automatically when the turn ends, whether it succeeded or failed. A field switched to read-only on the server mid-turn, for example by a [interfacename]`ValueChangeListener` reacting to one of the model's writes, stays read-only when the guard is released.
 
 
+[[marking-ai-changes]]
 == Marking AI Changes
 
 When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller handles this automatically: when a turn ends, every field whose value changed is marked with an "AI" badge. Selecting the badge opens a popover that explains the value was filled by AI and offers a revert control, which restores the field's value from before the AI's first change to it.
@@ -292,16 +297,96 @@ controller.addFieldValueChangeListener(event ->
                 event.getNewValue()));
 ----
 
-Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignoreField()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
+Each event carries the field, its pre-turn value, and its post-turn value, available as [methodname]`getField()`, [methodname]`getOldValue()`, and [methodname]`getNewValue()`. When <<#source-tracking,source tracking>> is enabled, [methodname]`getFieldSource()` on the event also returns the source the model reported for the written value. Events fire in document order, one per changed field. Fields the application has marked with [methodname]`ignoreField()` produce no events. The listener is not called when the turn ended in error or when no field's value changed. Multiple listeners can be registered; each is independent, and the returned [classname]`Registration` removes the listener when its [methodname]`remove()` is called.
 
 A field hidden at turn start that is revealed and written into the same turn is reported with its real pre-turn value rather than `null`, so cascades into conditional fields show up correctly.
 
 The listener runs on the UI thread with the session lock held, so it can update components or call any other Vaadin API directly -- no [methodname]`ui.access()` wrapper is needed.
 
 
+[[source-tracking]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Source Tracking
+
+When the values come from an attached document -- a resume, an invoice, a scanned contract -- a user reviewing the fill often needs more than the values themselves: which part of the document each value came from, and how sure the model was about it. Source tracking records both. For each value the LLM writes, the controller stores the snippets the model reports having read, their locations in the document, and a confidence level.
+
+Source tracking is off by default, since it costs extra output tokens on every fill and brings document snippets to the server. Enable it with [methodname]`setSourceTrackingEnabled()` when the application uses the data:
+
+[source,java]
+----
+controller.setSourceTrackingEnabled(true);
+----
+
+Source data is best effort and never blocks a fill: a malformed part, such as an unknown confidence level or a rectangle with no size, is dropped and logged while the value is still written.
+
+.One Attachment per Prompt
+[NOTE]
+Send at most one attachment per prompt while source tracking is on. A reported location doesn't identify which document it points into, so with several attachments there is no way to tell them apart.
+
+=== Reading Sources
+
+[methodname]`getFieldSource()` returns the source recorded for a field's current value:
+
+[source,java]
+----
+controller.getFieldSource(email).ifPresent(source -> {
+    ConfidenceLevel confidence = source.confidence();
+    source.extracts().forEach(extract ->
+            sourcePanel.add(extract.text()));
+});
+----
+
+A [classname]`ValueSource` carries the reported [classname]`ConfidenceLevel` and a list of [classname]`SourceExtract` records. Each extract holds the snippet text the model reports having read and, when reported, a location pointing into the document. The snippet is the model's own account of what it read; the controller doesn't verify it against the document.
+
+A source lasts as long as the value it describes. Once the field's value no longer equals the one the source was reported with -- the user edited the field, the application overwrote it, or a revert restored the old value -- the source no longer applies and [methodname]`getFieldSource()` returns empty. A later fill that writes the field without reporting a source also clears the previous one. Sources are not limited to the turn that produced them: a field filled in an earlier turn keeps its source until the value changes or a later fill overwrites it.
+
+The same data is available per changed field through the <<#reacting-to-ai-changes,change events>>, via [methodname]`getFieldSource()` on the event. A value with nothing to point at, for example one taken from the chat prompt rather than an attachment, carries no source.
+
+=== Source Locations
+
+An extract's location is a [classname]`PageRegion`: a 1-based page number and a rectangle. For a single-surface source such as an image, the page is 1. The rectangle's [methodname]`x()`, [methodname]`y()`, [methodname]`width()`, and [methodname]`height()` are fractions of the page dimensions in the 0..1 range, measured from the page's top-left corner, so they map onto a rendered page regardless of its pixel size:
+
+[source,java]
+----
+source.extracts().forEach(extract -> {
+    if (extract.location() instanceof PageRegion region) {
+        Rect rect = region.rect();
+        documentViewer.highlight(region.page(),
+                rect.x() * pageWidth, rect.y() * pageHeight,
+                rect.width() * pageWidth, rect.height() * pageHeight);
+    }
+});
+----
+
+For a rotated PDF page, the coordinates refer to the page as it is displayed.
+
+=== Confidence Levels
+
+The model rates each sourced value with one of three [classname]`ConfidenceLevel` values:
+
+* `HIGH` -- the value is written in the document and copied as it is.
+* `MEDIUM` -- the value follows from the document but needed some interpretation: fields combined, units converted, or one candidate chosen over another.
+* `LOW` -- the document is unclear, or the value is a guess.
+
+These meanings are part of the instructions sent to the model. When your domain draws the lines differently, redefine a level's meaning with [methodname]`describeConfidenceLevel()`:
+
+[source,java]
+----
+controller.describeConfidenceLevel(ConfidenceLevel.MEDIUM,
+        "the value follows from the document but was reformatted "
+                + "or combined from several fields");
+----
+
+The description replaces the built-in wording for that level in the LLM-facing instructions. A value reported without a level carries no confidence: it means the model didn't rate the value, not that the value is uncertain.
+
+=== Confidence on the Field Marker
+
+While the automatic <<#marking-ai-changes,field marker>> is enabled, a marked field also shows the reported confidence level as an indicator in the field's helper area, so a reviewer can see at a glance which values the model itself was unsure about. A value reported without a confidence level shows no indicator, and a later fill that writes the field without a source clears the indicator. While a fill is in progress, the indicator is hidden, since it describes a value that may be about to be replaced.
+
+
 == Reconnecting after Deserialization
 
-[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, any field-marker configuration, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
+[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, any field-marker and source-tracking configuration, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
 
 [source,java]
 ----
@@ -317,7 +402,16 @@ orchestrator.reconnect(provider)
         .apply();
 ----
 
-Field ids remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
+Field ids and <<#source-tracking,source data>> remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
+
+[methodname]`restoreFieldSource()` covers a different round-trip: a form rebuilt from application data rather than restored from the session. When the application persists the filled values itself -- a draft saved to a database, for example -- it can store each field's [classname]`ValueSource` alongside them (the record is serializable) and reattach it in the new session:
+
+[source,java]
+----
+controller.restoreFieldSource(email, storedEmailSource);
+----
+
+Restore the field's value first and the source after: the source binds to the field's value at the moment of the call and goes stale on the next edit, just like a fresh one.
 
 
 == Composing Multiple Forms
