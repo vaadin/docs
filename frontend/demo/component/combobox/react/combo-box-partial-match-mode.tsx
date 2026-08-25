@@ -19,7 +19,7 @@ function Example() {
   return (
     // tag::snippet[]
     <ComboBox
-      autoFocusPartialMatch="first-match"
+      partialMatchMode="first-match"
       label="Country"
       itemLabelPath="name"
       itemValuePath="id"

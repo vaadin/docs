@@ -6,7 +6,7 @@ import { getCountries } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Country from 'Frontend/generated/com/vaadin/demo/domain/Country';
 
-@customElement('combo-box-auto-focus-partial-match')
+@customElement('combo-box-partial-match-mode')
 export class Example extends LitElement {
   protected override createRenderRoot() {
     const root = super.createRenderRoot();
@@ -27,7 +27,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-combo-box
-        auto-focus-partial-match="first-match"
+        partial-match-mode="first-match"
         label="Country"
         item-label-path="name"
         item-value-path="id"
