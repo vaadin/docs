@@ -178,7 +178,7 @@ It is also visible in `vaadin.rpc.duration` as an `outcome=error` sample.
 === Client Metrics
 
 Controlled by `vaadin.observability.client`.
-These are observed in the browser and reported back to the server, subject to the per-session rate limit (see [propertyname]`vaadin.observability.client-rate-per-session`).
+These are observed in the browser and reported back to the server, subject to a rate limit of [propertyname]`vaadin.observability.client-rate-per-session` samples per UI in each ten-second window.
 
 [cols="2,1,3"]
 |===
@@ -203,18 +203,22 @@ These are observed in the browser and reported back to the server, subject to th
 |`vaadin.client.errors`
 |Counter
 |Errors reported by the browser.
-
-|`vaadin.client.dropped`
-|Counter
-|Client samples dropped before recording.
+Tagged by `kind`.
 
 |`vaadin.client.throttled`
 |Counter
-|Client samples rejected by the per-session rate limit.
+|Client samples rejected by the rate limit.
+Untagged.
 |===
+
+Every client timer is tagged by `route`, resolved from the browser location to a route template on the server and capped by the same cardinality limit as the server-side meters.
+`vaadin.client.navigation.duration` additionally carries `trigger`.
 
 Server round-trip timing isn't collected in the browser.
 Use the server-side `vaadin.request.duration` and `vaadin.rpc.duration` timers for that.
+
+The browser buffers samples and flushes them every five seconds, and when the page is hidden.
+Only the meters in the table above are accepted; a sample under any other name is dropped at ingest, which caps the cardinality a buggy or malicious client can create.
 
 
 === Database Metrics
@@ -258,11 +262,17 @@ Distinct values are capped by [propertyname]`vaadin.observability.route-cardinal
 |`request` or `access`.
 
 |`type`
-|On RPC meters and spans, the RPC invocation type as reported by Flow.
+|On RPC meters and spans, the RPC invocation type as reported by Flow -- `event` for a DOM event, `mSync` for a property sync, `publishedEventHandler` for an [annotationname]`@ClientCallable` method, `channel` for a return channel, and `navigation`.
 On `vaadin.resync`, the recovery kind: `resend` or `resync`.
 
 |`exception`
 |The simple class name of the handled exception.
+
+|`trigger`
+|On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call.
+
+|`kind`
+|On `vaadin.client.errors`, the source of the browser error: `uncaught` or `promise`.
 |===
 
 .JVM, Process, and Connection-Pool Metrics
@@ -295,13 +305,27 @@ Carries the request-level attributes below.
 |`vaadin.rpc.<type>`
 |A server-side RPC invocation (DOM event, [annotationname]`@ClientCallable`, property sync, or return channel), nested under the request.
 
+|`vaadin.ui.access`
+|One task run on the Vaadin service executor, nested under whatever trace was active when the task was submitted.
+See <<#background-work,Background Work>>.
+
 |`vaadin.db.query`
 |A single JDBC query, nested under the request or RPC span that ran it.
 Emitted only when database monitoring is enabled (see <<#database-monitoring,Database Monitoring>>).
 |===
 
-Spans cover work done on the request-handling thread.
-Work handed to another thread -- for example a background task that later calls [methodname]`UI.access()` -- isn't linked to the request that started it, and the [methodname]`UI.access()` command itself is recorded under whichever request thread runs it.
+
+[[background-work]]
+=== Background Work
+
+With tracing enabled, the kit wraps the Vaadin service [classname]`Executor` so that the trace context active when a task is *submitted* is restored when the task *runs*.
+A background task started from a request thread therefore stays in the same trace across the thread hop, under its own `vaadin.ui.access` span, instead of appearing as an unrelated root span.
+
+This covers the executor Vaadin dispatches signal effects and result notifications on, and that applications are expected to use for their own background work -- typically a task that ends by pushing its result through [methodname]`UI.access()`.
+It isn't [methodname]`UI.access()` itself: a command queued with [methodname]`UI.access()` runs on whichever thread unlocks the session, and is recorded there.
+
+Work you hand to an executor of your own isn't wrapped.
+To keep such work in the trace, submit it through the Vaadin service executor, or propagate the context yourself with Micrometer's [classname]`ContextSnapshot`.
 
 
 === Span Attributes
@@ -345,6 +369,9 @@ Those spans carry `type` and `vaadin.rpc.component`, but no `vaadin.rpc.event`.
 
 The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
 
+The `vaadin.ui.access` span carries no attributes of its own.
+Its value is structural: it shows where a submitted task ran, under the trace it was submitted from.
+
 
 === Errors
 
@@ -353,6 +380,9 @@ When a request or a nested operation fails, its observation is marked as error, 
 For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event -- rather than on the enclosing `vaadin.request` span, which still ends as `success`.
 Flow hands such an exception to the session's [classname]`ErrorHandler` instead of letting it escape request handling, which is also why it doesn't increment the `vaadin.errors` counter.
 See <<#error-metrics,Error Metrics>> for what that counter measures.
+
+The same failure is also retained as an interaction insight, which reports it without a tracing backend and points at the application stack frame behind it.
+See the <<insights#,Interaction Insights>> page.
 
 
 [[database-monitoring]]

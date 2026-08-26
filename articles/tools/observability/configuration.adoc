@@ -20,7 +20,8 @@ When you do need to turn features off or tune them, how you configure the kit de
 |`vaadin.observability.*` properties in [filename]`application.properties` (or any Spring property source).
 
 |Plain Spring
-|The same `vaadin.observability.*` keys, read with `@Value`.
+|Most of the same `vaadin.observability.*` keys, read with `@Value`.
+See <<#plain-spring,Plain Spring>> for the ones it doesn't bind.
 
 |Standalone
 |An [classname]`ObservabilitySettings` instance, built with its builder and passed to [methodname]`ObservabilityKit.install()`.
@@ -98,20 +99,46 @@ Off by default, since SQL is higher cardinality and can be sensitive.
 |`true`
 |Emit tracing spans through the Observation API.
 
+|`vaadin.observability.insights`
+|`true`
+|Retain failed and over-budget user interactions for the insights endpoint.
+Failures also need `errors`, and slow interactions also need `requests`.
+See the <<insights#,Interaction Insights>> page.
+
+|`vaadin.observability.insights-details`
+|`false`
+|Allow retained interactions to carry the exception message, the top stack frames, and the raw session ID.
+Off by default, since the insights payload is meant to be forwarded.
+
+|`vaadin.observability.insights-capacity`
+|`100`
+|Maximum number of retained interactions.
+The oldest is evicted once the cap is reached.
+
 |`vaadin.observability.route-cardinality-limit`
 |`200`
 |Maximum number of distinct `route` tag values before they collapse to `_other`.
 
 |`vaadin.observability.client-rate-per-session`
 |`100`
-|Maximum number of client-side samples accepted per session, as a throttling guard.
+|Client-sample throttling guard: the maximum number of browser samples accepted per UI in each ten-second window.
+Samples beyond it are rejected and counted in `vaadin.client.throttled`.
+Set it to `0` to accept every sample.
 |===
 
 
+[[plain-spring]]
 == Plain Spring
 
-In a plain-Spring (non-Boot) application, the same feature-toggle keys are read with `@Value`, so you set them the same way in your property source.
+In a plain-Spring (non-Boot) application, [classname]`ObservabilityConfiguration` reads the feature-toggle keys with `@Value`, so you set them the same way in your property source.
 The `vaadin.observability.enabled` master switch is specific to the Spring Boot auto-configuration; to disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
+
+Three properties aren't bound there, because the features behind them are wired by the Spring Boot auto-configuration rather than by the instrumentation itself:
+
+`vaadin.observability.database` and `vaadin.observability.database-statement`:: Database monitoring wraps the [classname]`DataSource` beans through a Boot bean post-processor, so it's available only with the starter.
+
+`vaadin.observability.resync`:: The property gates the servlet filter that the starter registers.
+In plain Spring, register [classname]`SpringResyncDetectionFilter` yourself, mapped to `/*` at the highest precedence, and leave it out to turn the feature off.
 
 See the <<getting-started#other-setups,Getting Started>> page for the plain-Spring setup.
 
@@ -119,7 +146,7 @@ See the <<getting-started#other-setups,Getting Started>> page for the plain-Spri
 == Standalone
 
 In a standalone (non-Spring) deployment, build an [classname]`ObservabilitySettings` instance and pass it to [methodname]`ObservabilityKit.install()`.
-Each builder method matches one of the properties above.
+Each builder method matches one of the properties above, except that the database toggles have no effect here: wrapping the [classname]`DataSource` beans is Spring Boot work.
 
 [source,java]
 ----
@@ -134,8 +161,19 @@ ObservabilityKit.install(meterRegistry, settings);
 
 For standalone no `enabled` flag exists; to disable the kit, don't call [methodname]`install()`.
 
-This two-argument overload creates an [classname]`ObservationRegistry` internally and doesn't expose it.
-To use your own -- which you need for exporting spans or for writing custom Observations -- pass it explicitly; see <<getting-started#standalone,Standalone (Without Spring)>>.
+This two-argument overload creates an [classname]`ObservationRegistry` internally -- but only when `traces` is left on -- and doesn't expose it.
+To use your own, which you need for exporting spans or for writing custom Observations, pass it explicitly; see <<getting-started#standalone,Standalone (Without Spring)>>.
+
+Resync detection has no auto-configuration outside Spring.
+Register the portable [classname]`ResyncDetectionFilter` yourself against `/*`, early enough that it precedes anything else reading the request body:
+
+[source,java]
+----
+FilterRegistration.Dynamic registration = servletContext.addFilter(
+        "vaadinResyncDetection", new ResyncDetectionFilter(meterRegistry));
+// isMatchAfter=false, so it precedes already-registered filters.
+registration.addMappingForUrlPatterns(null, false, "/*");
+----
 
 
 == What the Features Control
@@ -172,7 +210,11 @@ The feature toggles map directly to the built-in meters and spans:
 Spring Boot starter only, off by default.
 
 |`traces`
-|Tracing spans for the request lifecycle, navigation, and RPC, emitted through the Observation API.
+|Tracing spans for the request lifecycle, navigation, RPC, and executor tasks, emitted through the Observation API.
+
+|`insights`
+|Retained failed and over-budget interactions, served by the insights endpoint.
+This one records no meters or spans; see the <<insights#,Interaction Insights>> page.
 |===
 
 For the exact meter and span names produced by each feature, see the <<reference#,Reference>> page.

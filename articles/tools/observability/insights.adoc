@@ -1,0 +1,246 @@
+---
+title: Interaction Insights
+page-title: Backtracking user reports with Observability Kit insights
+description: How the insights endpoint turns a vague user report into a replicable interaction, with the route, component, event, and exception that caused it.
+meta-description: Use the Vaadin Observability Kit insights endpoint to trace failed and slow user interactions back to the component and event that caused them.
+order: 35
+---
+
+
+= Interaction Insights
+
+Metrics tell you that something is wrong; they don't tell you what a user clicked.
+Interaction insights close that gap.
+Observability Kit retains the user interactions that went wrong -- the ones that failed, and the ones that took too long -- together with the route, the component, the event, and the exception behind them.
+An endpoint then serves them grouped and ready to act on, so a report like "I clicked something on the orders page and got an error" becomes a concrete, replicable interaction.
+
+The payload is a stable, machine-readable contract.
+Each insight carries a [propertyname]`replay` list a person can follow to reproduce the problem, and a [propertyname]`suggestion` plus an [propertyname]`applicationFrame` that an AI agent with access to the codebase can open to verify the problem and propose a fix.
+
+Insight collection is on by default and works in production mode.
+
+
+== What Gets Captured
+
+The collector listens to server-side RPC invocations -- the client-to-server calls behind a button click, a value change, an [annotationname]`@ClientCallable` method, or a return channel -- and retains two kinds:
+
+Failed interactions:: An invocation whose handler threw.
+Requires `vaadin.observability.errors` (on by default), which supplies the failure path.
+These are the interactions that never reach the `vaadin.errors` counter, because Flow routes such an exception to the session's [classname]`ErrorHandler` rather than letting it escape request handling.
+
+Slow interactions:: An invocation that succeeded but took longer than the 1000 ms UX budget.
+Requires `vaadin.observability.requests` (on by default), which supplies the timing path.
+Beyond roughly a second a user stops feeling that they're operating directly on the UI, so the budget is absolute rather than relative to a historical baseline.
+
+Everything else is dropped.
+Retained interactions live in a bounded in-memory ring buffer -- [propertyname]`vaadin.observability.insights-capacity` entries, 100 by default -- and the oldest is evicted once it's full.
+Nothing is written to disk, and the buffer doesn't survive a restart.
+
+Collection is best-effort: if capturing an interaction fails, the error is swallowed rather than interfering with the framework's own error handling.
+
+
+== Exposing the Endpoint
+
+With the Spring Boot starter, the insights are served by an Actuator endpoint with the ID `vaadin`, at `/actuator/vaadin/observability`.
+Like every Actuator endpoint, it's registered but not web-exposed until you say so:
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=vaadin
+----
+
+Add it to whatever else you already expose, for example `prometheus,vaadin`.
+
+[IMPORTANT]
+====
+The payload describes what users did and what broke, so treat the endpoint as privileged.
+Secure it as you would any other Actuator endpoint -- put it behind authentication, or bind the management port to an internal interface with `management.server.port` and `management.server.address`.
+====
+
+The endpoint is part of the Spring Boot starter and needs Actuator on the classpath.
+In plain-Spring and standalone deployments the collector still runs, and you can read the buffer yourself through [methodname]`ObservabilityKit.getRecentInteractions()`, passing it to an [classname]`InsightsService` to render the same payload.
+
+
+== Reading the Payload
+
+A `GET` on the endpoint returns the current insights:
+
+[source,json]
+----
+{
+  "schemaVersion": 1,
+  "generated": "2026-08-26T09:14:02.117Z",
+  "instrumentation": "active",
+  "insights": [ ... ]
+}
+----
+
+[propertyname]`instrumentation` is `active` when the collector is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
+An empty `insights` array with `instrumentation: active` means the same thing it says: nothing went wrong.
+An empty array with `instrumentation: inactive` means nothing was watching.
+
+Interactions are grouped, so ten users hitting the same problem produce one insight with ten occurrences.
+Errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
+The route is a *template*, so `orders/17` and `orders/18` group under one `orders/:orderId` insight instead of one per parameter value.
+
+
+=== A Failed Interaction
+
+[source,json]
+----
+{
+  "type": "user-interaction-error",
+  "severity": "error",
+  "category": "reliability",
+  "summary": "User interaction 'click' on Button failed with NullPointerException (3 occurrences)",
+  "evidence": {
+    "route": "orders/:orderId",
+    "component": "com.example.orders.OrderView$SaveButton",
+    "event": "click",
+    "rpcType": "event",
+    "occurrences": 3,
+    "firstSeen": "2026-08-26T08:51:44.002Z",
+    "lastSeen": "2026-08-26T09:12:31.884Z",
+    "exception": "java.lang.NullPointerException",
+    "detail": "message and stack frames withheld; enable vaadin.observability.insights-details to collect them",
+    "applicationFrame": "com.example.orders.OrderView.save(OrderView.java:88)"
+  },
+  "replay": [
+    "Open route '/orders/17'",
+    "Locate component SaveButton",
+    "Trigger a 'click' event on it",
+    "Expect NullPointerException"
+  ],
+  "suggestion": "Inspect com.example.orders.OrderView.save(OrderView.java:88); the 'click' handler in SaveButton throws NullPointerException. ...",
+  "examples": [ ... ]
+}
+----
+
+[propertyname]`applicationFrame` is the first stack frame that isn't framework code -- the JDK, Vaadin, Spring, Hibernate, the servlet container, and bytecode generators are all skipped -- so it points at the application code most likely to hold the bug.
+The exception reported is the root cause, not the wrapper.
+
+
+=== A Slow Interaction
+
+[source,json]
+----
+{
+  "type": "slow-user-interaction",
+  "severity": "warning",
+  "category": "performance",
+  "summary": "Server handling of user interaction 'click' on Button took 2140 ms at the median (worst 3980 ms), over the 1000 ms UX budget (7 occurrences)",
+  "evidence": {
+    "route": "reports",
+    "component": "com.example.reports.ReportView$ExportButton",
+    "event": "click",
+    "rpcType": "event",
+    "occurrences": 7,
+    "firstSeen": "2026-08-26T08:22:10.441Z",
+    "lastSeen": "2026-08-26T09:13:57.203Z",
+    "medianDurationMs": 2140,
+    "maxDurationMs": 3980,
+    "thresholdMs": 1000,
+    "measures": "server-side RPC handling only; excludes session-lock wait, network transfer and client-side rendering"
+  },
+  "replay": [ ... ],
+  "suggestion": "The 'click' handler in ExportButton occupies the request thread for about 2140 ms at the median ...",
+  "examples": [ ... ]
+}
+----
+
+The headline number is the *median*, not the worst case, so a single outlier doesn't describe a group that's only just over budget.
+Note what [propertyname]`measures` says: the duration is server-side invocation handling alone, so what the user actually felt is at least this much.
+
+
+=== Examples
+
+Each insight carries up to three of its most recent occurrences:
+
+[source,json]
+----
+"examples": [
+  {
+    "timestamp": "2026-08-26T09:12:31.884Z",
+    "location": "orders/17",
+    "durationMs": 41,
+    "sessionId": "5f2a91c40b7e",
+    "uiId": 3
+  }
+]
+----
+
+[propertyname]`location` is the concrete path, as opposed to the template the insight groups on.
+[propertyname]`sessionId` is a short one-way hash by default: enough to tell whether three occurrences came from one user or three, without identifying the session.
+[propertyname]`stackTop` is present only when detail collection is enabled.
+
+
+[[detail]]
+== Sensitive Detail
+
+The insights payload is meant to travel -- into an issue tracker, an AI agent, a chat message -- so anything that could carry personal or secret data is withheld unless you ask for it.
+By default an insight omits the exception message, the stack frames, and the raw session ID.
+What remains is still actionable: the route, the component, the event, the exception type, and the first application frame.
+
+Turn the rest on when you need it:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.insights-details=true
+----
+
+This adds the exception message (truncated to 200 characters), the top five stack frames as [propertyname]`stackTop`, and the raw Vaadin session ID in place of the hash.
+An exception message is free-form text and can carry a whole payload, which is exactly why it's opt-in.
+
+
+== Configuration
+
+[cols="2,1,3"]
+|===
+|Property |Default |Description
+
+|`vaadin.observability.insights`
+|`true`
+|Retain failed and over-budget interactions.
+Also requires `errors` for failures and `requests` for slow interactions.
+
+|`vaadin.observability.insights-details`
+|`false`
+|Allow retained interactions to carry the exception message, the top stack frames, and the raw session ID.
+See <<#detail,Sensitive Detail>>.
+
+|`vaadin.observability.insights-capacity`
+|`100`
+|Maximum number of retained interactions.
+The oldest is evicted once the cap is reached.
+|===
+
+In a standalone deployment, use the matching [classname]`ObservabilitySettings` builder methods -- [methodname]`insights()`, [methodname]`insightsDetails()`, and [methodname]`insightsCapacity()`.
+
+
+== Insights, Metrics, and Traces
+
+The three views answer different questions, and the same failing interaction shows up in all of them:
+
+[cols="1,3"]
+|===
+|View |What it tells you
+
+|Insights
+|Which interaction failed or was slow, on which route, in which component, and where in your code to look.
+Grouped, bounded, and current -- not a time series.
+
+|Metrics
+|How often, and how the durations are distributed over time.
+`vaadin.rpc.duration` with `outcome=error`, and the `vaadin.errors` counter for exceptions that escape request handling.
+
+|Traces
+|The full call tree of one occurrence, including nested navigation and database spans.
+The `vaadin.rpc.<type>` span carries the same component and event.
+|===
+
+Insights need no backend and no dashboard, which is what makes them the fastest way from a user report to a line of code.
+For the meters and spans, see the <<reference#,Reference>> page.
+
+[discussion-id]`7A1C4D82-6E35-4B90-8F2D-1B5E9C0A4736`

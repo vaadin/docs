@@ -28,7 +28,7 @@ If you're upgrading an existing project, see the <<migrating-to-v5#,Migrating to
 == Requirements
 
 * Java 21 or newer.
-* Vaadin 25.2 or newer (Flow 25.2+).
+* Vaadin 25.3 or newer (Flow 25.3+).
 * A Micrometer [classname]`MeterRegistry` -- the Spring Boot starter provides one out of the box.
 * Spring Boot 4, for the `observability-kit-starter`.
 Plain-Spring and standalone setups are also supported; see <<#other-setups,Other Setups>>.
@@ -99,6 +99,23 @@ This panel is development-mode only and has no effect in production.
 For the full list of built-in meters, see the <<reference#,Reference>> page.
 
 
+== See What Users Ran Into
+
+Metrics need a backend and a dashboard before they tell you anything.
+Interaction insights don't: the kit retains the user interactions that failed or ran over the UX budget, and serves them grouped -- with the route, the component, the event, and the application stack frame behind them -- from a single Actuator endpoint.
+
+Expose it alongside whatever else you already expose:
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=prometheus,vaadin
+----
+
+Then read them at `GET /actuator/vaadin/observability`.
+See the <<insights#,Interaction Insights>> page for the payload and its options.
+
+
 [[other-setups]]
 == Other Setups
 
@@ -165,8 +182,9 @@ public class ObservabilitySetup implements ServletContextListener {
 }
 ----
 
-This two-argument overload creates an [classname]`ObservationRegistry` for you and wires it to the meter registry, so the observation-backed timers are recorded.
+As long as tracing is left enabled, this two-argument overload creates an [classname]`ObservationRegistry` for you and wires it to the meter registry, so the observation-backed timers are recorded.
 It doesn't register a tracing handler, so no spans leave the application.
+With `traces` turned off, it creates no observation registry at all and the binders record their timers directly.
 
 To export spans -- or to write your own Observations, which needs a registry you can reach -- create the [classname]`ObservationRegistry` yourself and pass it to the three-argument overload:
 
@@ -194,6 +212,7 @@ Keep a reference to both registries -- for example in a static holder -- if you 
 
 * <<configuration#,Configuration>> -- turn features on or off and tune the kit.
 * <<customization#,Custom Instrumentation>> -- record your own metrics and traces alongside the built-in ones.
+* <<insights#,Interaction Insights>> -- backtrack a user report to the interaction that caused it.
 * <<reference#,Reference>> -- the full list of meters and spans.
 * <<integrations#,Integrations>> -- export to Prometheus, Grafana, Datadog, New Relic, and others.
 
