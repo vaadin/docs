@@ -31,9 +31,8 @@ public class CrudEditorButtons extends Div {
 
         // tag::snippet[]
         // Records in this dataset are archived rather than removed, so the
-        // editor shouldn't offer a Delete action at all. Hide it with CSS:
-        // CRUD manages the button's `hidden` attribute itself, which makes
-        // setVisible(false) ineffective.
+        // editor shouldn't offer a Delete action at all. There's no API for
+        // removing the Button, so hide it with CSS.
         crud.getDeleteButton().getStyle().set("display", "none");
         // end::snippet[]
 
