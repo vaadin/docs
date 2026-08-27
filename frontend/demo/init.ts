@@ -1,4 +1,3 @@
-// Legacy Polymer-based dom-module styling
 import './init-flow-namespace';
 import './init-flow-components';
 import '../generated/activate-vaadin-featureflags.js';
@@ -16,7 +15,7 @@ if (window.location.pathname.endsWith('/example')) {
 }
 
 // @ts-expect-error Inserted by DS Publisher
-client.prefix = __VAADIN_CONNECT_PREFIX__; // eslint-disable-line no-undef
+client.prefix = __VAADIN_CONNECT_PREFIX__;
 
 // Ensures standalone UI sample pags have a lang attribute
 document.documentElement.setAttribute('lang', 'en');
