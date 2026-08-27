@@ -1,0 +1,91 @@
+package com.vaadin.demo.component.crud;
+
+import java.util.Arrays;
+import java.util.List;
+
+import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.demo.domain.Person;
+import com.vaadin.flow.component.crud.BinderCrudEditor;
+import com.vaadin.flow.component.crud.Crud;
+import com.vaadin.flow.component.crud.CrudEditor;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.router.Route;
+
+@Route("crud-editor-buttons")
+public class CrudEditorButtons extends Div {
+
+    private Crud<Person> crud;
+
+    private String FIRST_NAME = "firstName";
+    private String LAST_NAME = "lastName";
+    private String EMAIL = "email";
+    private String EDIT_COLUMN = "vaadin-crud-edit-column";
+
+    public CrudEditorButtons() {
+        crud = new Crud<>(Person.class, createEditor());
+
+        // tag::snippet[]
+        // Records in this dataset are archived rather than removed, so the
+        // editor shouldn't offer a Delete action at all. Hide it with CSS:
+        // CRUD manages the button's `hidden` attribute itself, which makes
+        // setVisible(false) ineffective.
+        crud.getDeleteButton().getStyle().set("display", "none");
+        // end::snippet[]
+
+        setupGrid();
+        setupDataProvider();
+
+        add(crud);
+    }
+
+    private CrudEditor<Person> createEditor() {
+        TextField firstName = new TextField("First name");
+        TextField lastName = new TextField("Last name");
+        EmailField email = new EmailField("Email");
+        FormLayout form = new FormLayout(firstName, lastName, email);
+
+        Binder<Person> binder = new Binder<>(Person.class);
+        binder.forField(firstName).asRequired().bind(Person::getFirstName,
+                Person::setFirstName);
+        binder.forField(lastName).asRequired().bind(Person::getLastName,
+                Person::setLastName);
+        binder.forField(email).asRequired().bind(Person::getEmail,
+                Person::setEmail);
+
+        return new BinderCrudEditor<>(binder, form);
+    }
+
+    private void setupGrid() {
+        Grid<Person> grid = crud.getGrid();
+
+        // Only show these columns (all columns shown by default):
+        List<String> visibleColumns = Arrays.asList(FIRST_NAME, LAST_NAME,
+                EMAIL, EDIT_COLUMN);
+        grid.getColumns().forEach(column -> {
+            String key = column.getKey();
+            if (!visibleColumns.contains(key)) {
+                grid.removeColumn(column);
+            }
+        });
+
+        // Reorder the columns (alphabetical by default)
+        grid.setColumnOrder(grid.getColumnByKey(FIRST_NAME),
+                grid.getColumnByKey(LAST_NAME), grid.getColumnByKey(EMAIL),
+                grid.getColumnByKey(EDIT_COLUMN));
+    }
+
+    private void setupDataProvider() {
+        PersonDataProvider dataProvider = new PersonDataProvider();
+        crud.setDataProvider(dataProvider);
+        crud.addSaveListener(
+                saveEvent -> dataProvider.persist(saveEvent.getItem()));
+    }
+
+    public static class Exporter extends DemoExporter<CrudEditorButtons> { // hidden-source-line
+    } // hidden-source-line
+}
