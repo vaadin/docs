@@ -1,0 +1,113 @@
+---
+title: Threads & UI Updates
+description: Which thread carries each step of an AI turn, and how its UI updates reach the browser, in streaming, synchronous, and background execution modes.
+meta-description: Learn which threads carry an AI turn in the Vaadin AI components and how its UI updates reach the browser, in streaming and synchronous modes.
+order: 25
+---
+
+
+= Threads & UI Updates
+
+An AI turn -- the exchange triggered by one prompt, including model calls, tool executions, and listener callbacks -- runs on different threads depending on the provider mode. This page describes the three modes, which thread carries each step of a turn, and how the turn's UI updates reach the browser. It's the reference to consult when a tool needs [methodname]`UI.getCurrent()`, a response doesn't appear until the next click, or the interface freezes during a prompt.
+
+
+== The Three Modes
+
+[cols="1,2,2"]
+|===
+|Mode |The turn runs |UI during the turn
+
+|Streaming (default)
+|On the LLM client's own threads; the triggering request returns quickly.
+|Responsive; tokens appear as the model produces them.
+
+|Synchronous
+|In the request that triggered it, from the first model call to the last tool result.
+|Frozen until the turn ends; the response appears all at once.
+
+|Synchronous + background execution
+|On a background thread.
+|Responsive; the response is filled in when the model finishes.
+|===
+
+In synchronous mode, the request does not return until the model has produced the complete response, including any tool calls along the way. The interface freezes for the whole wait, and since the request holds the session lock, other views in the same session wait too. A progress indicator set before the prompt only becomes visible once the response has already arrived. Background execution removes exactly this problem: the user's message and an empty assistant message appear immediately, the UI stays responsive, and the response is filled in when the model finishes.
+
+
+[[background-execution]]
+== [since:com.vaadin:vaadin@V25.3]#Background Execution#
+
+Call [methodname]`setBackgroundExecution(true)` on the provider:
+
+[source,java]
+----
+SpringAILLMProvider provider = new SpringAILLMProvider(chatModel);
+provider.setStreaming(false);
+provider.setBackgroundExecution(true);
+----
+
+The same method exists on [classname]`LangChain4JLLMProvider`. Turns then run on a shared pool intended for blocking work. The setting is read for each prompt, so it can be changed at any time; the next prompt uses the new mode. Custom [classname]`LLMProvider` implementations are not affected -- whether a turn runs in the background is decided entirely by the provider's [methodname]`stream()` implementation.
+
+Synchronous execution remains the default, because tool implementations written against it may rely on running in the request thread. Enabling background execution is a deliberate step; check the <<#threading,threading section>> before turning it on for an application with existing tools.
+
+.One Prompt at a Time
+[NOTE]
+The orchestrator processes one prompt at a time. In the default synchronous mode, a message submitted while a turn is running waits for the session lock and is processed when the turn ends. With background execution the lock is free, so the same message is rejected and dropped with a server-side warning -- and the Message Input has already cleared its text. Disable the input while a turn is running, for example from [methodname]`AIController.onRequest()` and [methodname]`AIController.onResponse()`, or from the request and response listeners.
+
+.Streaming Providers
+[NOTE]
+The setting has no effect with a streaming model, whose response already arrives on the LLM client's own threads. It's safe to leave enabled -- switching the provider between streaming and synchronous mode later requires no further changes.
+
+
+== Delivering Updates to the Browser
+
+Whenever the turn runs off the request thread -- streamed tokens in the default mode, or the whole response with background execution -- its UI changes reach the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The provider logs a warning, once per provider instance, when it detects this combination, for streaming and background turns alike.
+
+Manual push mode is not enough on its own: nothing in the framework calls `ui.push()` for the application, so with `PushMode.MANUAL` the updates sit in the queue until the application pushes for its own reasons. The same warning is logged in this mode. Use automatic push or polling instead.
+
+A turn in the default synchronous mode needs no delivery channel -- its updates travel back with the request itself, which is also why no warning is logged in that mode.
+
+
+[[threading]]
+== What Runs on Which Thread
+
+The start of a turn runs in the request thread in every mode: the request interceptor, adding the user's message and the empty assistant message to the Message List, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. This is why the message shows up right away even when the response takes time.
+
+The rest of the turn -- the model calls, every tool execution, and the [classname]`ResponseListener` -- runs where the mode dictates: on the LLM client's threads with a streaming provider, in the request thread in synchronous mode, and on the background pool with background execution. Two consequences follow for application code whenever the turn is off the request thread:
+
+*Tools* -- whether framework-annotated tool methods or [classname]`LLMProvider.ToolSpec` implementations -- cannot assume Vaadin thread locals. [methodname]`UI.getCurrent()` and [methodname]`VaadinSession.getCurrent()` return `null` off the request thread, and components must not be touched directly. Other thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason. Either wrap component access in `ui.access()`, or capture what the tool needs while still on the request thread -- [methodname]`AIController.onRequest()` is the natural place for that. The built-in controllers ([classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController`) already handle this.
+
+[source,java]
+----
+@Override
+public String execute(JsonNode arguments) {
+    var count = orderService.countPendingOrders();
+    ui.access(() -> badge.setText(String.valueOf(count)));
+    return count + " orders pending";
+}
+----
+
+Here `ui` was captured earlier on the request thread, for example in [methodname]`onRequest()` or when the tool was created.
+
+*The [classname]`ResponseListener`* runs on the same thread as the rest of the turn. With a streaming provider or background execution, that's a background thread, where blocking I/O such as a database write is fine. In the default synchronous mode the listener runs in the request itself, so blocking work extends that request. As everywhere else, updating components from it requires `ui.access()`.
+
+[methodname]`AIController.onResponse()` is the exception: the orchestrator always calls it through `ui.access()`, so it can update components directly in every mode. See <<controllers#,AI Controllers>>.
+
+
+== When the Browser Tab Closes Mid-Turn
+
+If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server. The response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual, so persistence is not lost. Only the UI updates are skipped, and [methodname]`AIController.onResponse()` -- which needs an attached UI -- is not called for that turn.
+
+
+== Session Persistence
+
+The background execution setting lives on the provider, and the provider is not serialized with the session -- it has to be recreated after the session is restored. Apply the setting to the new instance before passing it to [methodname]`reconnect()`:
+
+[source,java]
+----
+LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
+provider.setBackgroundExecution(true);
+
+orchestrator.reconnect(provider).apply();
+----
+
+See <<conversation-history#,Conversation History & Session Persistence>> for the full reconnection flow.
