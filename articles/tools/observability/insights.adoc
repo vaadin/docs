@@ -12,31 +12,47 @@ order: 35
 Metrics tell you that something is wrong; they don't tell you what a user clicked.
 Interaction insights close that gap.
 Observability Kit retains the user interactions that went wrong -- the ones that failed, and the ones that took too long -- together with the route, the component, the event, and the exception behind them.
+It does the same for the data provider queries behind a slow lazy-loading component, which no interaction can account for.
 An endpoint then serves them grouped and ready to act on, so a report like "I clicked something on the orders page and got an error" becomes a concrete, replicable interaction.
 
 The payload is a stable, machine-readable contract.
-Each insight carries a [propertyname]`replay` list a person can follow to reproduce the problem, and a [propertyname]`suggestion` plus an [propertyname]`applicationFrame` that an AI agent with access to the codebase can open to verify the problem and propose a fix.
+Every insight carries a [propertyname]`replay` list a person can follow to reproduce the problem.
+An interaction insight also carries a [propertyname]`suggestion` and an [propertyname]`applicationFrame` that an AI agent with access to the codebase can open to verify the problem and propose a fix.
 
 Insight collection is on by default and works in production mode.
 
 
 == What Gets Captured
 
-The collector listens to server-side RPC invocations -- the client-to-server calls behind a button click, a value change, an [annotationname]`@ClientCallable` method, or a return channel -- and retains two kinds:
+Two collectors run, one over user interactions and one over data provider queries.
+
+=== User Interactions
+
+The interaction collector listens to server-side RPC invocations -- the client-to-server calls behind a button click, a value change, an [annotationname]`@ClientCallable` method, or a return channel -- and retains two kinds:
 
 Failed interactions:: An invocation whose handler threw.
 Requires `vaadin.observability.errors` (on by default), which supplies the failure path.
-These are the interactions that never reach the `vaadin.errors` counter, because Flow routes such an exception to the session's [classname]`ErrorHandler` rather than letting it escape request handling.
 
 Slow interactions:: An invocation that succeeded but took longer than the 1000 ms UX budget.
 Requires `vaadin.observability.requests` (on by default), which supplies the timing path.
 Beyond roughly a second a user stops feeling that they're operating directly on the UI, so the budget is absolute rather than relative to a historical baseline.
 
-Everything else is dropped.
-Retained interactions live in a bounded in-memory ring buffer -- [propertyname]`vaadin.observability.insights-capacity` entries, 100 by default -- and the oldest is evicted once it's full.
-Nothing is written to disk, and the buffer doesn't survive a restart.
+=== Data Provider Queries
 
-Collection is best-effort: if capturing an interaction fails, the error is swallowed rather than interfering with the framework's own error handling.
+A slow data load never reaches the interaction collector.
+The invocation that triggers it only registers a flush, so a combo box that takes four seconds to fetch a page ends its invocation in microseconds and never qualifies as a slow interaction.
+A second collector therefore watches the queries themselves, retaining the ones that threw and the ones that ran over the same 1000 ms budget -- a query is part of what the user waits for, so it earns attention at the same point.
+
+This one additionally requires `vaadin.observability.data` (on by default).
+
+=== What Happens to the Rest
+
+Everything else is dropped.
+Retained records live in bounded in-memory ring buffers of [propertyname]`vaadin.observability.insights-capacity` entries each, 100 by default, and the oldest is evicted once a buffer is full.
+Interactions and queries are retained separately, so with both active the total is twice the capacity.
+Nothing is written to disk, and the buffers don't survive a restart.
+
+Collection is best-effort: if capturing a record fails, the error is swallowed rather than interfering with data loading or the framework's own error handling.
 
 
 == Exposing the Endpoint
@@ -59,7 +75,7 @@ Secure it as you would any other Actuator endpoint -- put it behind authenticati
 ====
 
 The endpoint is part of the Spring Boot starter and needs Actuator on the classpath.
-In plain-Spring and standalone deployments the collector still runs, and you can read the buffer yourself through [methodname]`ObservabilityKit.getRecentInteractions()`, passing it to an [classname]`InsightsService` to render the same payload.
+In plain-Spring and standalone deployments the collectors still run, and you can read the buffers yourself through [methodname]`ObservabilityKit.getRecentInteractions()` and [methodname]`ObservabilityKit.getRecentQueries()`, passing both to an [classname]`InsightsService` to render the same payload.
 
 
 == Reading the Payload
@@ -76,13 +92,33 @@ A `GET` on the endpoint returns the current insights:
 }
 ----
 
-[propertyname]`instrumentation` is `active` when the collector is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
+[propertyname]`instrumentation` is `active` when at least one collector is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
 An empty `insights` array with `instrumentation: active` means the same thing it says: nothing went wrong.
 An empty array with `instrumentation: inactive` means nothing was watching.
 
-Interactions are grouped, so ten users hitting the same problem produce one insight with ten occurrences.
-Errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
+Records are grouped, so ten users hitting the same problem produce one insight with ten occurrences.
+Interaction errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
+Query errors group by route, component, query kind, and exception type; slow queries group by route, component, and query kind.
 The route is a *template*, so `orders/17` and `orders/18` group under one `orders/:orderId` insight instead of one per parameter value.
+
+Four insight types can appear in the array:
+
+[cols="1,3"]
+|===
+|`type` |Meaning
+
+|`user-interaction-error`
+|A user interaction whose handler threw.
+
+|`slow-user-interaction`
+|A user interaction that succeeded but ran over the UX budget.
+
+|`data-query-error`
+|A data provider count or fetch query that threw.
+
+|`slow-data-query`
+|A data provider query that succeeded but ran over the UX budget.
+|===
 
 
 === A Failed Interaction
@@ -153,9 +189,52 @@ The headline number is the *median*, not the worst case, so a single outlier doe
 Note what [propertyname]`measures` says: the duration is server-side invocation handling alone, so what the user actually felt is at least this much.
 
 
+=== A Slow Data Query
+
+A query insight describes a load rather than a user action, so its evidence carries a range and a row count where an interaction carries a DOM event and a stack frame:
+
+[source,json]
+----
+{
+  "type": "slow-data-query",
+  "severity": "warning",
+  "category": "performance",
+  "summary": "The fetch query for OrderGrid takes 2310 ms (max 4120 ms), over the 1000 ms budget. The component cannot render until it returns, so this is time the user waits.",
+  "evidence": {
+    "route": "orders",
+    "component": "com.vaadin.flow.component.grid.Grid",
+    "queryKind": "fetch",
+    "filtered": false,
+    "requested": 200,
+    "returned": 200,
+    "occurrences": 4,
+    "firstSeen": "2026-08-26T08:40:11.004Z",
+    "lastSeen": "2026-08-26T09:11:52.617Z"
+  },
+  "replay": [
+    "Open route 'orders'",
+    "Load data into Grid",
+    "Expect the fetch query to take around 2310 ms"
+  ],
+  "examples": [ ... ]
+}
+----
+
+[propertyname]`queryKind` is `fetch` for a query loading one page of items, or `count` for one asking how many items a level holds.
+[propertyname]`filtered` separates a combo box loading matches for typed text from one loading the whole data set.
+
+The remaining evidence depends on the kind.
+A fetch reports [propertyname]`requested` against [propertyname]`returned`, which is where over-fetching and short pages show up.
+A slow count reports [propertyname]`counted` instead -- the total it arrived at -- because "took four seconds" is far less actionable than "took four seconds counting 2,000,000 items".
+
+A failed query is reported the same way as `data-query-error`, with an [propertyname]`exception` field holding the root cause and no duration figures.
+Query insights carry no [propertyname]`suggestion` or [propertyname]`applicationFrame`: the failing code is the data provider the component was given, which the kit can't name from the query alone.
+
+
 === Examples
 
-Each insight carries up to three of its most recent occurrences:
+Each insight carries up to three of its most recent occurrences.
+For an interaction:
 
 [source,json]
 ----
@@ -173,6 +252,23 @@ Each insight carries up to three of its most recent occurrences:
 [propertyname]`location` is the concrete path, as opposed to the template the insight groups on.
 [propertyname]`sessionId` is a short one-way hash by default: enough to tell whether three occurrences came from one user or three, without identifying the session.
 [propertyname]`stackTop` is present only when detail collection is enabled.
+
+A query example is keyed differently -- [propertyname]`at` rather than [propertyname]`timestamp` -- and reports the range it asked for instead of a session:
+
+[source,json]
+----
+"examples": [
+  {
+    "at": "2026-08-26T09:11:52.617Z",
+    "durationMs": 4120,
+    "offset": 0,
+    "limit": 200,
+    "rows": 200
+  }
+]
+----
+
+The [propertyname]`offset`, [propertyname]`limit`, and [propertyname]`rows` fields are present for a fetch and omitted for a count.
 
 
 [[detail]]
@@ -202,8 +298,8 @@ An exception message is free-form text and can carry a whole payload, which is e
 
 |`vaadin.observability.insights`
 |`true`
-|Retain failed and over-budget interactions.
-Also requires `errors` for failures and `requests` for slow interactions.
+|Retain failed and over-budget interactions and data provider queries.
+Also requires `errors` for failures and `requests` for slow records; the query insights additionally require `data`.
 
 |`vaadin.observability.insights-details`
 |`false`
@@ -212,8 +308,9 @@ See <<#detail,Sensitive Detail>>.
 
 |`vaadin.observability.insights-capacity`
 |`100`
-|Maximum number of retained interactions.
-The oldest is evicted once the cap is reached.
+|Maximum number of retained records per buffer.
+Interactions and queries are retained separately, so with both active the total is twice this.
+The oldest is evicted once a buffer's cap is reached.
 |===
 
 In a standalone deployment, use the matching [classname]`ObservabilitySettings` builder methods -- [methodname]`insights()`, [methodname]`insightsDetails()`, and [methodname]`insightsCapacity()`.
@@ -233,10 +330,10 @@ Grouped, bounded, and current -- not a time series.
 
 |Metrics
 |How often, and how the durations are distributed over time.
-`vaadin.rpc.duration` with `outcome=error`, and the `vaadin.errors` counter for exceptions that escape request handling.
+`vaadin.rpc.duration` with `outcome=error`, the `vaadin.errors` counter, and the `vaadin.data.*` timers for query behavior.
 
 |Traces
-|The full call tree of one occurrence, including nested navigation and database spans.
+|The full call tree of one occurrence, including nested navigation, data provider, and database spans.
 The `vaadin.rpc.<type>` span carries the same component and event.
 |===
 

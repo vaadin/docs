@@ -9,8 +9,10 @@ order: 20
 
 = Configuring Observability Kit
 
-Every feature of Observability Kit is enabled by default, so most applications need no configuration at all.
-When you do need to turn features off or tune them, how you configure the kit depends on how it's set up.
+Everything that instruments ordinary request handling is enabled by default, so most applications need no configuration at all.
+Four groups of features are opt-in: the two that reach beyond ordinary request handling -- <<reference#ui-state-size,UI state size>> and <<reference#database-monitoring,database monitoring>> -- and the two that would add sensitive or high-cardinality detail to what leaves the application, `database-statement` and `insights-details`.
+
+When you need to turn features off or tune them, how you configure the kit depends on how it's set up.
 
 [cols="1,3"]
 |===
@@ -65,6 +67,12 @@ Spring Boot only.
 |`true`
 |UI count metrics.
 
+|`vaadin.observability.ui-state`
+|`false`
+|Per-UI state size: how much component-tree state the server holds for live users.
+Opt-in, because it costs a tree walk that ordinary request handling doesn't.
+See <<reference#ui-state-size,UI State Size>>.
+
 |`vaadin.observability.navigation`
 |`true`
 |Navigation timing.
@@ -72,6 +80,10 @@ Spring Boot only.
 |`vaadin.observability.requests`
 |`true`
 |Server-side request and RPC timing.
+
+|`vaadin.observability.data`
+|`true`
+|Data provider count and fetch query timing, plus the page sizes lazy-loading components ask for.
 
 |`vaadin.observability.errors`
 |`true`
@@ -112,33 +124,48 @@ Off by default, since the insights payload is meant to be forwarded.
 
 |`vaadin.observability.insights-capacity`
 |`100`
-|Maximum number of retained interactions.
-The oldest is evicted once the cap is reached.
+|Maximum number of retained records, applied to each buffer rather than shared.
+Interactions and data provider queries are retained separately, so with both active the total is twice this.
+The oldest is evicted once a buffer's cap is reached.
 
 |`vaadin.observability.route-cardinality-limit`
 |`200`
 |Maximum number of distinct `route` tag values before they collapse to `_other`.
+Also caps the `component` and `exception` tag values of `vaadin.errors`, since all three derive from application classes and multiply with each other.
 
 |`vaadin.observability.client-rate-per-session`
 |`100`
 |Client-sample throttling guard: the maximum number of browser samples accepted per UI in each ten-second window.
 Samples beyond it are rejected and counted in `vaadin.client.throttled`.
 Set it to `0` to accept every sample.
+
+|`vaadin.observability.ui-state-sample-interval`
+|`10000`
+|Minimum milliseconds between two measurements of the same UI.
+One measurement walks that UI's whole component tree under its session lock, so this is the knob that bounds the cost of `ui-state`.
+
+|`vaadin.observability.ui-state-bytes-per-node`
+|`0`
+|Bytes per state-tree node, used to project `vaadin.ui.state.size`.
+`0` publishes no byte figure.
+See <<reference#nodes-not-bytes,the reference>> for how to measure a value for your own application.
 |===
 
 
 [[plain-spring]]
 == Plain Spring
 
-In a plain-Spring (non-Boot) application, [classname]`ObservabilityConfiguration` reads the feature-toggle keys with `@Value`, so you set them the same way in your property source.
-The `vaadin.observability.enabled` master switch is specific to the Spring Boot auto-configuration; to disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
+In a plain-Spring (non-Boot) application, [classname]`ObservabilityConfiguration` reads every `vaadin.observability.*` key from the Spring [classname]`Environment`, so you set them the same way in your property source and the defaults match the Spring Boot ones.
+The `vaadin.observability.enabled` master switch is the exception: it's specific to the Boot auto-configuration.
+To disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
 
-Three properties aren't bound there, because the features behind them are wired by the Spring Boot auto-configuration rather than by the instrumentation itself:
+Three keys are read but have no consumer outside Spring Boot, because the features behind them are wired by the auto-configuration rather than by the instrumentation itself:
 
 `vaadin.observability.database` and `vaadin.observability.database-statement`:: Database monitoring wraps the [classname]`DataSource` beans through a Boot bean post-processor, so it's available only with the starter.
+Setting these in plain Spring has no effect.
 
 `vaadin.observability.resync`:: The property gates the servlet filter that the starter registers.
-In plain Spring, register [classname]`SpringResyncDetectionFilter` yourself, mapped to `/*` at the highest precedence, and leave it out to turn the feature off.
+In plain Spring, register [classname]`SpringResyncDetectionFilter` yourself, mapped to `/*` at the highest precedence, and leave it out to turn the feature off -- the property alone won't switch it on or off.
 
 See the <<getting-started#other-setups,Getting Started>> page for the plain-Spring setup.
 
@@ -190,14 +217,23 @@ The feature toggles map directly to the built-in meters and spans:
 |`uis`
 |Active UI gauge and UI-created counter.
 
+|`ui-state`
+|Aggregate gauges of retained UI state -- state-tree nodes, components, and views, as totals and per-UI and per-session maxima.
+Off by default.
+
 |`navigation`
 |Server-side navigation timing, tagged by route and outcome.
 
 |`requests`
 |Server-side request and RPC timing.
 
+|`data`
+|Data provider count and fetch query timing, and the items each fetch asked for against what it returned.
+Also gates the data query insights.
+
 |`errors`
-|Server-side error counter, tagged by exception.
+|Server-side error counter, tagged by exception, route, and component.
+Also decorates the session error handler, which is what makes the failures Flow routes there countable and attributable to a component.
 
 |`client`
 |Browser-observed timing -- bootstrap, navigation, Web Vitals, and client errors.
@@ -210,10 +246,10 @@ The feature toggles map directly to the built-in meters and spans:
 Spring Boot starter only, off by default.
 
 |`traces`
-|Tracing spans for the request lifecycle, navigation, RPC, and executor tasks, emitted through the Observation API.
+|Tracing spans for the request lifecycle, navigation, RPC, executor tasks, data provider queries, and -- with database monitoring on -- JDBC queries, emitted through the Observation API.
 
 |`insights`
-|Retained failed and over-budget interactions, served by the insights endpoint.
+|Retained failed and over-budget interactions and data provider queries, served by the insights endpoint.
 This one records no meters or spans; see the <<insights#,Interaction Insights>> page.
 |===
 

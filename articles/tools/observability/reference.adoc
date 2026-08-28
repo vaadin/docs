@@ -86,6 +86,62 @@ Controlled by `vaadin.observability.uis`.
 |===
 
 
+[[ui-state-metrics]]
+=== UI State Metrics
+
+Controlled by `vaadin.observability.ui-state`, which is off by default.
+Session and UI counts tell you how many users are connected; these gauges tell you what each of them costs.
+See <<#ui-state-size,UI State Size>> for how the measurement is scheduled and how to read it.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.ui.state.nodes`
+|Gauge
+|State-tree nodes retained across all tracked UIs -- how much UI state the server currently holds for live users.
+
+|`vaadin.ui.state.nodes.max`
+|Gauge
+|State-tree nodes held by the largest single UI.
+
+|`vaadin.ui.state.components`
+|Gauge
+|Server-side component instances retained across all UIs.
+
+|`vaadin.ui.state.views`
+|Gauge
+|Route-target and router-layout instances retained across all UIs.
+One navigation into a nested layout legitimately retains one per level, so this is a capacity figure rather than a leak signal.
+
+|`vaadin.ui.state.views.stale`
+|Gauge
+|Retained views that are no longer part of their UI's active navigation -- views that outlived it.
+Normally zero.
+
+|`vaadin.ui.state.size`
+|Gauge
+|Retained UI state in bytes, projected from the node count.
+Registered only when [propertyname]`vaadin.observability.ui-state-bytes-per-node` is set.
+
+|`vaadin.ui.state.sample.age.max`
+|Gauge
+|Age in seconds of the stalest per-UI measurement in the aggregate.
+
+|`vaadin.session.state.nodes.max`
+|Gauge
+|State-tree nodes held by the largest single session.
+
+|`vaadin.session.uis.max`
+|Gauge
+|Most UIs (browser tabs) held open by one session.
+|===
+
+These gauges are aggregates only -- totals and maxima, never one series per session or per UI, which would grow unbounded with traffic.
+They carry no tags.
+
+
+[[navigation-metrics]]
 === Navigation Metrics
 
 Controlled by `vaadin.observability.navigation`.
@@ -100,8 +156,40 @@ Controlled by `vaadin.observability.navigation`.
 Tagged by `route` and `outcome`.
 |===
 
-A navigation is recorded when it completes, so `outcome` is currently always `success`.
-When a [methodname]`beforeEnter()` listener reroutes or forwards, the navigation is recorded once, against the route it ended up on.
+Every navigation that *starts* is recorded, including the ones that never complete -- which would otherwise leave a span dangling.
+The `outcome` tag says how it ended:
+
+[cols="1,3"]
+|===
+|`outcome` |Recorded for
+
+|`success`
+|The navigation reached `afterNavigation`.
+
+|`rerouted`
+|A listener called [methodname]`rerouteTo()`, so this navigation was replaced by another.
+This is a routing decision -- an access guard sending the user elsewhere -- not a failure.
+
+|`forwarded`
+|A listener called [methodname]`forwardTo()` or [methodname]`forwardToUrl()`, or handed off to a client-side route.
+
+|`error`
+|The navigation failed: [methodname]`rerouteToError()`, or an exception while the view was being built.
+
+|`unknown`
+|The navigation was neither completed nor redirected.
+A re-entrant [methodname]`UI.navigate()` from a view's [methodname]`beforeEnter()` or [methodname]`onAttach()` superseded it, or its UI was detached while it was still open.
+|===
+
+.Building an Error Rate on This Timer
+[IMPORTANT]
+====
+Two consequences follow from timing the router's own chain -- an error view is a navigation in its own right, and it's one that succeeds:
+
+* An unknown URL never reaches a [methodname]`beforeEnter()` that could fail, so it's recorded as the error view rendering successfully: `route=RouteNotFoundError, outcome=success`.
+Alert on that route rather than on `outcome`.
+* A view that throws while being built produces *two* samples: the failed navigation to the view (`outcome=error`), and the navigation to the error view that replaces it (`route=InternalServerError, outcome=success`).
+====
 
 
 === Request Metrics
@@ -115,21 +203,23 @@ Controlled by `vaadin.observability.requests`.
 |`vaadin.request.duration`
 |Timer
 |Server-side request handling time.
-Tagged by `outcome`.
+Tagged by `vaadin.request.type`, `vaadin.interaction`, `http.method`, `outcome`, and `error`.
 
 |`vaadin.rpc.duration`
 |Timer
 |Server-side RPC invocation time.
-Tagged by `type` and `outcome`.
+Tagged by `type`, `outcome`, and `error`.
 |===
 
-.Extra Request Tags When Tracing Is Enabled
+.The Tags Are the Same With Tracing On or Off
 [NOTE]
 ====
-With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it also carries that span's low-cardinality attributes as tags: `vaadin.request.type`, `vaadin.interaction`, and `http.method`, plus Micrometer's own `error` tag.
-All of these have a bounded set of values.
-The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer.
-With tracing off, the timer carries `outcome` alone.
+With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it carries that span's low-cardinality attributes as tags, plus the `error` tag Micrometer's [classname]`DefaultMeterObservationHandler` adds.
+With tracing off, the binder records the timer directly and tags it with exactly the same keys.
+This is deliberate: Prometheus rejects same-named meters whose tag-key sets differ, so the two recording paths must never publish `vaadin.request.duration` under differing keys.
+The same holds for `vaadin.rpc.duration` and `vaadin.navigation`.
+
+The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer on both paths.
 ====
 
 
@@ -160,18 +250,32 @@ Controlled by `vaadin.observability.errors`.
 
 |`vaadin.errors`
 |Counter
-|Exceptions that propagate out of Vaadin request handling.
-Tagged by `exception` (the exception's simple class name).
+|Every server-side failure the kit observes.
+Tagged by `exception`, `route`, and `component`.
 |===
 
-.What This Counter Does and Doesn't Count
+The counter covers both kinds of server-side failure:
+
+Exceptions that escape request handling:: For example one thrown by a custom [classname]`RequestHandler`.
+These reach a [classname]`VaadinRequestInterceptor`.
+
+Failures Flow routes to the session's error handler:: Everything a user can trigger -- a click or value-change listener that throws, a [methodname]`UI.access()` body, a detach listener, or a [methodname]`beforeEnter()` callback.
+Flow catches these and hands them to [methodname]`VaadinSession.getErrorHandler()` rather than letting them escape, so they never reach a request interceptor.
+The kit therefore decorates that handler, which is also what lets it attribute a failure to a component.
+
+All three tags derive from application classes and multiply with each other, so all three are capped at [propertyname]`vaadin.observability.route-cardinality-limit`.
+Values beyond the limit collapse to `_other`, and a `route` or `component` that can't be resolved is `_unknown`.
+
+.How the Error Handler Is Decorated
 [IMPORTANT]
 ====
-This counter tracks exceptions that escape request handling -- for example one thrown by a custom [classname]`RequestHandler`.
-It does *not* count exceptions thrown inside a component listener, such as a button-click or value-change listener.
-Flow catches those and routes them to the session's [classname]`ErrorHandler`, so they never reach the request interceptor.
-Such a failure is still visible in tracing: the `vaadin.rpc.<type>` span records the error and its `outcome` tag becomes `error`, and it carries the component and event that triggered it.
-It is also visible in `vaadin.rpc.duration` as an `outcome=error` sample.
+The decoration always delegates, so an application's own error handler keeps receiving every error it received before.
+It's applied at session init and re-applied at UI init and at the start of every RPC invocation, so installing your own handler after session init doesn't switch error metrics off.
+
+One consequence: a handler read back from [methodname]`VaadinSession.getErrorHandler()` is the kit's wrapper rather than the instance you set.
+Delegating to it works as expected, and the failure is still counted exactly once.
+An `instanceof` check or a cast to your own type does not.
+Set `vaadin.observability.errors=false` to opt out of the decoration entirely.
 ====
 
 
@@ -207,7 +311,12 @@ Tagged by `kind`.
 
 |`vaadin.client.throttled`
 |Counter
-|Client samples rejected by the rate limit.
+|Client samples rejected by the per-UI rate limit.
+Untagged.
+
+|`vaadin.client.dropped`
+|Counter
+|Client samples dropped before recording, for example a sample submitted under a name that isn't on the ingest allowlist.
 Untagged.
 |===
 
@@ -219,6 +328,46 @@ Use the server-side `vaadin.request.duration` and `vaadin.rpc.duration` timers f
 
 The browser buffers samples and flushes them every five seconds, and when the page is hidden.
 Only the meters in the table above are accepted; a sample under any other name is dropped at ingest, which caps the cardinality a buggy or malicious client can create.
+
+
+[[data-metrics]]
+=== Data Provider Metrics
+
+Controlled by `vaadin.observability.data`.
+These measure the queries that lazy-loading components -- [classname]`Grid`, [classname]`ComboBox`, [classname]`VirtualList`, and others -- issue to their data providers.
+Where the database metrics below measure the persistence layer, these measure what the component asked for, so they apply whatever the data provider is backed by.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.data.count.duration`
+|Timer
+|Duration of a count query -- how many items a level holds.
+Tagged by `outcome` and `filtered`.
+A hierarchical component issues one count per expanded parent, so many counts within few requests is the signature of an expensive hierarchy.
+
+|`vaadin.data.fetch.duration`
+|Timer
+|Duration of a fetch query -- loading one page of items.
+Tagged by `outcome` and `filtered`.
+Measured around consumption of the items, so it covers the backend round-trip of a lazily evaluated stream.
+
+|`vaadin.data.fetch.requested`
+|Distribution summary
+|Items a fetch query asked for.
+Tagged by `route`.
+
+|`vaadin.data.fetch.rows`
+|Distribution summary
+|Items a fetch query actually returned.
+Tagged by `route`.
+|===
+
+Compare `vaadin.data.fetch.rows` against `vaadin.data.fetch.requested` to spot a component asking for far more than it renders, or a data provider returning short pages.
+The two duration timers carry no `route` tag; use the `vaadin.data.component` span attribute or the <<insights#,interaction insights>> to attribute a slow query to a view.
+
+When tracing is enabled, each query also opens a span -- see <<#data-spans,Data Provider Spans>>.
 
 
 === Database Metrics
@@ -253,10 +402,19 @@ Produced alongside the `vaadin.db.query` span when both database monitoring and 
 
 |`outcome`
 |`success` or `error`.
+On `vaadin.navigation`, also `rerouted`, `forwarded`, and `unknown` -- see <<#navigation-metrics,Navigation Metrics>>.
+
+|`error`
+|The simple class name of the exception that ended the operation, or `none` when it raised none.
+Distinct from `exception`, which tags the `vaadin.errors` counter.
 
 |`route`
 |The target route template.
 Distinct values are capped by [propertyname]`vaadin.observability.route-cardinality-limit`; beyond the limit they collapse to `_other`, and an unresolvable route is `_unknown`.
+
+|`component`
+|On `vaadin.errors`, the simple class name of the component the failure was thrown for.
+Capped by the same cardinality limit as `route`: `_unknown` when it can't be resolved, `_other` beyond the limit.
 
 |`context`
 |`request` or `access`.
@@ -266,7 +424,12 @@ Distinct values are capped by [propertyname]`vaadin.observability.route-cardinal
 On `vaadin.resync`, the recovery kind: `resend` or `resync`.
 
 |`exception`
-|The simple class name of the handled exception.
+|The simple class name of the counted exception, capped by the same cardinality limit as `route`.
+Types beyond the limit are bucketed as `_other`.
+
+|`filtered`
+|On the data provider meters, whether the query carried a filter: `true` or `false`.
+This separates a combo box loading matches for typed text from one loading the whole data set.
 
 |`trigger`
 |On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call.
@@ -309,10 +472,20 @@ Carries the request-level attributes below.
 |One task run on the Vaadin service executor, nested under whatever trace was active when the task was submitted.
 See <<#background-work,Background Work>>.
 
+|`vaadin.data.count`
+|A data provider count query, nested under the request or RPC span that triggered the load.
+Controlled by `vaadin.observability.data`.
+
+|`vaadin.data.fetch`
+|A data provider fetch query, nested under the request or RPC span that triggered the load.
+Controlled by `vaadin.observability.data`.
+
 |`vaadin.db.query`
 |A single JDBC query, nested under the request or RPC span that ran it.
 Emitted only when database monitoring is enabled (see <<#database-monitoring,Database Monitoring>>).
 |===
+
+With both data provider and database monitoring on, a slow interaction opens up in full: the `vaadin.rpc.<type>` span that the user triggered, the `vaadin.data.fetch` span for the page the component asked for, and the individual `vaadin.db.query` spans that fetch ran.
 
 
 [[background-work]]
@@ -373,16 +546,95 @@ The `vaadin.ui.access` span carries no attributes of its own.
 Its value is structural: it shows where a submitted task ran, under the trace it was submitted from.
 
 
+[[data-spans]]
+=== Data Provider Spans
+
+The `vaadin.data.count` and `vaadin.data.fetch` spans carry `filtered` and `outcome` as low-cardinality attributes, alongside these span-only ones:
+
+[cols="2,3"]
+|===
+|Attribute |Description
+
+|`vaadin.data.component`
+|The class name of the component whose data is being loaded.
+Span-only, because of its cardinality -- this is what attributes a slow query to a view, since the duration timers carry no `route` tag.
+
+|`vaadin.data.offset`
+|Index of the first item a fetch query asked for.
+Fetch spans only.
+
+|`vaadin.data.limit`
+|Number of items a fetch query asked for.
+Fetch spans only.
+
+|`vaadin.data.rows`
+|Number of items a fetch query returned.
+Fetch spans only, and only when the query succeeded.
+|===
+
+
 === Errors
 
 When a request or a nested operation fails, its observation is marked as error, so the span records the exception and the `outcome` tag becomes `error`.
 
-For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event -- rather than on the enclosing `vaadin.request` span, which still ends as `success`.
-Flow hands such an exception to the session's [classname]`ErrorHandler` instead of letting it escape request handling, which is also why it doesn't increment the `vaadin.errors` counter.
-See <<#error-metrics,Error Metrics>> for what that counter measures.
+For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event.
+The enclosing `vaadin.request` span is marked `outcome=error` as well: Flow hands such an exception to the session's [classname]`ErrorHandler` rather than letting it escape request handling, and the kit relays that back to the request observation, so the request doesn't claim success for an interaction that failed.
+The failure also increments the `vaadin.errors` counter; see <<#error-metrics,Error Metrics>>.
 
 The same failure is also retained as an interaction insight, which reports it without a tracing backend and points at the application stack frame behind it.
 See the <<insights#,Interaction Insights>> page.
+
+
+[[ui-state-size]]
+== UI State Size
+
+Session and UI counts tell you how many users are connected; they say nothing about what each of them costs.
+Because Flow keeps every open tab's component tree in server memory, *size* is the signal that predicts when a server-driven application has to scale: a hundred users on a dashboard with three grids cost nothing like a hundred users on a login form.
+
+Turn the measurement on with:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.ui-state=true
+----
+
+Each UI then reports its own state-tree size, and the kit publishes the aggregates listed in <<#ui-state-metrics,UI State Metrics>>.
+Charted next to `vaadin.sessions.active`, they answer a question the counts can't: state climbing while the session count is flat means capacity is going into what users have open, not into how many of them there are.
+
+Watch the maxima as much as the totals.
+`vaadin.ui.state.nodes.max` and `vaadin.session.state.nodes.max` describe the worst-case tab and the worst-case user, and it's the tail that exhausts a heap, not the mean.
+`vaadin.ui.state.views.stale` is the one leak signal in the set: anything above zero means views are outliving their navigation.
+A plain view count can't tell you that, because one navigation into a nested layout legitimately retains a view per level.
+
+=== How Measurement Is Scheduled
+
+A component tree may only be read under its own session lock, so no UI is ever measured by another user's request thread.
+Every UI measures itself: at UI init, after each navigation, and when an RPC invocation ends -- the last of these throttled to one tree walk per UI per [propertyname]`vaadin.observability.ui-state-sample-interval` milliseconds.
+
+This is why the feature is off by default: it costs a tree walk that ordinary request handling doesn't.
+It's also why an idle user contributes their state as of their last interaction, and why `vaadin.ui.state.sample.age.max` exists -- it publishes how stale the oldest measurement in the aggregate is, so a reading can be judged rather than assumed current.
+
+The cost of one walk is proportional to the size of the tree it measures, and it's paid on the request thread while the session lock is held.
+The interval is therefore what bounds the overhead: tree size times interaction rate, capped at one walk per UI per interval.
+The default of ten seconds keeps a capacity trend legible on a grid-heavy application with many concurrent users.
+Lower it for a sharper signal, and raise it if the measurement becomes visible in `vaadin.session.lock.hold`.
+
+[[nodes-not-bytes]]
+=== Nodes, Not Bytes
+
+A node count is a proxy for retained heap, not a measurement of it: one [classname]`Grid` node backed by 100,000 rows counts as a single node.
+The kit therefore publishes no byte figure by default, because a guessed per-user cost is worse than a missing one.
+
+If you measure the cost for your own application -- settle the heap, build a number of copies of a representative view, keep them reachable, and read the difference from [classname]`MemoryMXBean` -- set the result and the projection becomes available as `vaadin.ui.state.size`:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.ui-state-bytes-per-node=96
+----
+
+Divided into the heap headroom, that's an estimate of how many more tabs the instance can hold.
 
 
 [[database-monitoring]]

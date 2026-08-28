@@ -173,7 +173,7 @@ The configuration model is much smaller: instead of OpenTelemetry's fine-grained
 |`vaadin.observability.traces`
 
 |(no equivalent)
-|`vaadin.observability.sessions`, `.uis`, `.navigation`, `.requests`, `.errors`, `.resync`, `.database`, `.insights`
+|`vaadin.observability.sessions`, `.uis`, `.ui-state`, `.navigation`, `.requests`, `.data`, `.errors`, `.resync`, `.database`, `.insights`
 
 |`otel.service.name`, `otel.resource.attributes`
 |Configured through Spring/Micrometer (for example `spring.application.name` and your registry's common tags or OTLP resource settings), not through the kit.
@@ -192,7 +192,8 @@ vaadin.observability.client=false
 vaadin.observability.traces=false
 ----
 
-Every feature is enabled by default, so most applications need no configuration at all.
+Everything that instruments ordinary request handling is enabled by default, so most applications need no configuration at all.
+The opt-in features are UI state size, database monitoring, and the two detail toggles that would add sensitive or high-cardinality data to what leaves the application.
 For the complete list of properties, see the <<configuration#,Configuration>> page.
 
 .Service Identity Moves to Micrometer
@@ -290,6 +291,14 @@ The most common renames:
 |New session-lock timers.
 
 |(none)
+|`vaadin.data.count.duration`, `vaadin.data.fetch.duration`, `vaadin.data.fetch.requested`, `vaadin.data.fetch.rows`
+|New data provider query timers and page sizes for lazy-loading components.
+
+|(none)
+|`vaadin.ui.state.*`, `vaadin.session.state.nodes.max`, `vaadin.session.uis.max`
+|New, opt-in gauges of retained UI state, for capacity planning.
+
+|(none)
 |`vaadin.client.*`
 |Browser-observed timing (bootstrap, navigation, Web Vitals, errors).
 
@@ -315,15 +324,16 @@ Actuator registers JVM and process metrics out of the box.
 
 For the complete, current list of meters, see the <<reference#,Reference>> page.
 
-.Tracing Data Is Leaner
+.Tracing Data Is Shaped Differently
 [NOTE]
-Version 4 produced a rich span tree with many Vaadin-specific attributes (browser events, element synchronization, server calls, data-provider fetches).
-Version 5 emits spans for the core request lifecycle -- request handling, navigation, RPC, service-executor tasks, and, when database monitoring is on, JDBC queries -- through the Observation API.
+Version 4 produced a rich span tree with many Vaadin-specific attributes, some of them per element synchronization.
+Version 5 emits spans for the request lifecycle, navigation, RPC, service-executor tasks, data provider count and fetch queries, and -- when database monitoring is on -- JDBC queries, through the Observation API.
+Spans that would have been unbounded as timer tags, such as the invoked component and event, are attached as span-only attributes.
 Add your own spans with [annotationname]`@Observed` or the Observation API where you need finer-grained tracing; see <<customization#,Customization>>.
 
 .New in Version 5: Interaction Insights
 [NOTE]
-Version 5 also retains the interactions that failed or ran over the UX budget and serves them, grouped and ready to act on, from an Actuator endpoint.
+Version 5 also retains the interactions that failed or ran over the UX budget -- and the data provider queries behind a slow component -- and serves them, grouped and ready to act on, from an Actuator endpoint.
 This has no version 4 equivalent, and it's the fastest way from a user report to a line of code.
 See the <<insights#,Interaction Insights>> page.
 
