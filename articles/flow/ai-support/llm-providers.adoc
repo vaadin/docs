@@ -43,7 +43,7 @@ Streaming is enabled by default. To disable it, call [methodname]`setStreaming(f
 provider.setStreaming(false);
 ----
 
-In synchronous mode, the whole exchange runs in the request that triggered it and blocks the UI until the response is complete. See <<threads-and-ui-updates#,Threads & UI Updates>> for keeping the UI responsive during long prompts.
+In synchronous mode, the whole exchange runs in the request that triggered it and blocks the UI until the response is complete. See <<#background-execution,Background Execution>> for keeping the UI responsive during long prompts.
 
 .History Restoration with ChatClient
 [NOTE]
@@ -69,7 +69,35 @@ LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
 
 The provider manages its own conversation memory using a 30-message window.
 
-Synchronous mode blocks the UI for the duration of each exchange; see <<threads-and-ui-updates#,Threads & UI Updates>>.
+Synchronous mode blocks the UI for the duration of each exchange; see <<#background-execution,Background Execution>>.
+
+
+[[background-execution]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Background Execution
+
+A synchronous provider produces the response on the thread that asks for it. For a prompt sent from the browser, that is the request thread: the request does not return until the model has produced the complete response, including any tool calls along the way. The interface freezes for the whole wait, and since the request holds the session lock, other views in the same session wait too.
+
+Background execution moves the exchange to a background thread instead. Enable it on either built-in provider:
+
+[source,java]
+----
+provider.setBackgroundExecution(true);
+----
+
+The user's message and an empty assistant message then appear immediately, the UI stays responsive, and the response is filled in when the model finishes. The setting is off by default, because tool implementations written for synchronous execution may rely on running in the request thread. It's read for each prompt, so it can be changed at any time; the next prompt uses the new mode. It has no effect with a streaming model, whose response already arrives on the LLM client's own threads.
+
+The response is now produced outside any request, so it reaches the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The provider logs a warning, once per provider instance, when neither is active. Manual push mode is not enough on its own, because nothing in the framework calls `ui.push()` for the application.
+
+Everything that happens before the model is called still runs in the request thread: the request interceptor, adding the user's message and the empty assistant message to the Message List, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. The model calls, every tool execution, and the [classname]`ResponseListener` run on the background thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
+
+Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AIController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this. [methodname]`AIController.onResponse()` is the exception: the orchestrator calls it through `ui.access()`, so it can update components directly.
+
+.One Prompt at a Time
+[NOTE]
+The orchestrator processes one prompt at a time. In the default synchronous mode, a message submitted while a turn is running waits for the session lock and is processed when the turn ends. With background execution the lock is free, so the same message is rejected and dropped with a server-side warning -- and the Message Input has already cleared its text. Disable the input while a turn is running, for example from [methodname]`AIController.onRequest()` and [methodname]`AIController.onResponse()`.
+
+If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server: the response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual. Only the UI updates are skipped, along with [methodname]`AIController.onResponse()`, which needs an attached UI. The setting itself lives on the provider and is not serialized with the session -- apply it again to the recreated provider after a session restore, before passing it to [methodname]`reconnect()`. See <<conversation-history#,Conversation History & Session Persistence>>.
 
 
 == Custom LLM Providers
@@ -97,6 +125,6 @@ public class MyLLMProvider implements LLMProvider {
 }
 ----
 
-The orchestrator calls [methodname]`stream()` on the thread that triggers the prompt and subscribes to the returned stream on that same thread -- whether a turn runs in the background is decided entirely by the implementation. An implementation whose LLM call blocks should schedule that call itself; otherwise it occupies the request thread and holds the session lock for the whole turn. See <<threads-and-ui-updates#background-execution,Threads & UI Updates>> for how the built-in providers expose this as a setting.
+The orchestrator calls [methodname]`stream()` on the thread that triggers the prompt and subscribes to the returned stream on that same thread -- whether a turn runs in the background is decided entirely by the implementation. An implementation whose LLM call blocks should schedule that call itself; otherwise it occupies the request thread and holds the session lock for the whole turn. See <<#background-execution,Background Execution>> for how the built-in providers expose this as a setting.
 
 endif::flow[]
