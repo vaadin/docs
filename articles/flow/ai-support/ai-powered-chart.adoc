@@ -53,6 +53,13 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 [classname]`ChartAIController` does not support OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in are affected.
 
 
+== Query and Configuration Validation
+
+Before queueing an update, the controller validates the LLM's work within the turn: series queries are executed against the database, and configuration JSON is parsed eagerly. Invalid updates are rejected and never reach the chart.
+
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#: configuration parse errors are relayed as-is, since the LLM authored the configuration. Query errors are relayed only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()`; any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
+
+
 == Persisting Chart State
 
 [classname]`ChartState` captures both the SQL queries and the Highcharts configuration. Register a state change listener to persist the state automatically after each successful AI request:
