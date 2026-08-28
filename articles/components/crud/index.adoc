@@ -244,10 +244,146 @@ endif::[]
 --
 
 
-==== Editor Actions
+=== Editor Actions
 
 The editor contains three Buttons: _Delete_, _Cancel_, and _Save_. The Delete shows a confirmation dialog asking the user to verify whether they wish to delete the item. Whereas the Cancel closes the editor unless there are unsaved changes. If so, a confirmation dialog is shown and the user can either discard the changes or go back to editing. The Save button, when clicked, saves the changes and closes the editor. This is disabled until a change is made.
 
+
+[#save-button-state]
+==== Save Button State [badge-flow]#Flow#
+
+Save is enabled as soon as the editor becomes dirty -- that is, as soon as the user changes the value of a field in it. Validity doesn't factor into this: Save is enabled for invalid input, too. Clicking it runs the editor's [methodname]`validate()` method, and when validation fails, the editor stays open and nothing is saved.
+
+An editor that doesn't propagate its field changes -- one built from a composite component that wraps its fields, for example -- can leave Save permanently disabled. Call [methodname]`setDirty(true)` on the CRUD to enable it explicitly in such a case.
+
+Some applications need Save to be enabled at all times. A common accessibility pattern is to let the user submit at any point and then show a summary of what needs fixing. Set the enabled state of the Save Button directly to get this: CRUD stops managing that Button's state from then on, leaving it enabled regardless of whether the editor is dirty. The editor's [methodname]`validate()` method still decides whether a save goes through.
+
+[source,java]
+----
+crud.getSaveButton().setEnabled(true);
+----
+
+See <<#custom-editor,Custom Editor>> for an editor that pairs this with an error summary.
+
+
+[#editor-button-access]
+==== Editor Button Access [badge-flow]#Flow#
+
+CRUD's Buttons are ordinary [classname]`Button` instances that you can access from the server to change their state, appearance, or behavior:
+
+[cols="1,3"]
+|===
+|Method |Description
+
+|[methodname]`getSaveButton()`
+|The editor's Save Button. Setting its enabled state hands its management over to you -- see <<#save-button-state,Save Button State>>.
+
+|[methodname]`getCancelButton()`
+|The editor's Cancel Button.
+
+|[methodname]`getDeleteButton()`
+|The editor's Delete Button. CRUD hides it automatically while a new item is being created.
+
+|[methodname]`getNewButton()` and [methodname]`setNewButton()`
+|The toolbar's _New item_ Button. See <<#toolbar,Toolbar>> for an example of replacing it.
+|===
+
+Set the Button labels through <<#localization,Localization>>, not [methodname]`setText()`: CRUD writes the localized labels onto its default Buttons, overwriting anything set that way.
+
+Some datasets shouldn't allow deletion at all -- for example, records that are archived or deactivated instead of removed, so that history is preserved. There's no API for removing the Delete Button, so the only way to do this at present is to hide it with CSS.
+
+[.example,themes="lumo,aura"]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/crud/crud-editor-content.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/crud/CrudEditorButtons.java[render,tags=snippet,indent=0]
+----
+--
+
+.Hiding Delete Is a Workaround
+[NOTE]
+Setting `display: none` isn't advocated by the CRUD API; it's the only thing that works today. Don't reach for [methodname]`setVisible(false)`: CRUD manages the Delete Button's `hidden` attribute itself, and it clears the attribute each time the editor opens for an existing item, which makes the Button reappear.
+
+
+[#custom-editor]
+=== Custom Editor [badge-flow]#Flow#
+
+[classname]`BinderCrudEditor` is the stock editor implementation, but it isn't the only option. [interfacename]`CrudEditor` is a public interface, so you can supply any implementation -- with its own layout, its own state handling, and its own validation -- through the [classname]`Crud` constructor or [methodname]`setEditor()`.
+
+CRUD calls the interface's methods at these points:
+
+[cols="1,3"]
+|===
+|Method |When It's Called
+
+|[methodname]`setItem(item, validate)`
+|When the editor is opened, for a new or an existing item. The second parameter tells the editor whether to validate the item immediately.
+
+|[methodname]`getItem()`
+|Whenever CRUD needs the item currently being edited, such as when it builds a save or delete event.
+
+|[methodname]`validate()`
+|When Save is clicked. Returning `false` keeps the editor open and cancels the save.
+
+|[methodname]`writeItemChanges()`
+|After [methodname]`validate()` passes, to copy the input into the item, before the save event is fired.
+
+|[methodname]`clear()`
+|When the editor is closed, whether by saving, deleting, or cancelling.
+
+|[methodname]`getView()`
+|When the editor is set, to get the form to place inside CRUD.
+|===
+
+The editor in the example below validates the item itself and renders all problems in a summary at the top of the form. It's paired with an always-enabled Save Button, so the user can submit at any point and be told what's missing.
+
+[.example,themes="lumo,aura"]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/crud/crud-editor-content.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/crud/CrudCustomEditor.java[render,tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/crud/PersonCrudEditor.java[indent=0]
+----
+--
+
+
+=== Controlling the Editor Programmatically [badge-flow]#Flow#
+
+The editor doesn't have to be opened by the user. These methods drive it from the server:
+
+[cols="1,3"]
+|===
+|Method |Description
+
+|[methodname]`edit(item, EditMode.EXISTING_ITEM)`
+|Opens the editor for an item that's already in the dataset.
+
+|[methodname]`edit(item, EditMode.NEW_ITEM)`
+|Opens the editor for a new item, which is what the _New item_ Button does. See <<#toolbar,Toolbar>> for an example.
+
+|[methodname]`setOpened(boolean)`
+|Opens or closes the editor without changing the item being edited.
+
+|[methodname]`setEditorPosition(CrudEditorPosition)`
+|Sets where the editor is rendered: `OVERLAY`, which is the default, `ASIDE`, or `BOTTOM`. See <<#editor-position,Editor Position>>.
+
+|[methodname]`setEditOnClick(boolean)`
+|Opens the editor when the user clicks a row, instead of requiring the edit Button. This removes the edit column from CRUD's built-in grid.
+|===
 
 
 == Grid Replacement
@@ -360,6 +496,10 @@ endif::[]
 
 By default, CRUD allows sorting and filtering of any column. For more information about sorting and filtering, see the <<../grid#,Grid documentation>>.
 
+.No Manual Reordering
+[NOTE]
+CRUD sorts and filters, but it doesn't support manual reordering -- letting the user drag rows or move them with up and down controls to set a display order of their own. If you need that, use <<#grid-replacement,Grid Replacement>> and add the reordering controls to the replacement Grid.
+
 
 === Disabling Sorting & Filtering
 
@@ -402,6 +542,26 @@ include::{root}/frontend/demo/component/crud/react/crud-sorting-filtering.tsx[re
 endif::[]
 --
 
+
+=== Lazy Backend Loading [badge-flow]#Flow#
+
+CRUD's built-in grid passes the user's sorting and filtering to the data provider as a [classname]`CrudFilter`, so that the backend can do the work instead of the server holding the full dataset in memory. A data provider used with that grid has to accept this filter type: [classname]`CrudGrid` throws an [classname]`IllegalArgumentException` for anything that isn't a `DataProvider<E, CrudFilter>`.
+
+[classname]`CrudFilter` carries two maps, both keyed by column key:
+
+- [methodname]`getConstraints()` maps a column to the text the user typed into its filter field. Translate these into a `WHERE` clause.
+- [methodname]`getSortOrders()` maps a column to a [classname]`SortDirection`. Translate these into an `ORDER BY` clause.
+
+The filter is handed to the data provider on every fetch, and CRUD refreshes the grid whenever the user changes a filter field or a sort order. The [classname]`PersonDataProvider` used in the examples on this page shows the full pattern: it extends [classname]`AbstractBackEndDataProvider<Person, CrudFilter>`, converts the constraints into a predicate and the sort orders into a comparator, and applies the offset and limit from the query.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/crud/PersonDataProvider.java[indent=0]
+----
+
+.Honoring the Filter
+[NOTE]
+The data provider is responsible for applying the filter. If [methodname]`fetchFromBackEnd()` ignores it, the grid's filter fields and sort indicators still appear, but using them has no effect.
 
 
 == Item Initialization
