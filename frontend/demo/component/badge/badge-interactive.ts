@@ -1,5 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/flow-frontend/comboBoxConnector'; // hidden-source-line
+import '@vaadin/flow-frontend/vaadin-combo-box/comboBoxConnector'; // hidden-source-line
 import '@vaadin/badge';
 import '@vaadin/button';
 import '@vaadin/combo-box';

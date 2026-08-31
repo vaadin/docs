@@ -1,6 +1,5 @@
 import './init-flow-namespace';
 import './init-flow-components';
-import '../generated/activate-vaadin-featureflags.js';
 import '../generated/vaadin-featureflags';
 import { applyTheme } from 'Frontend/demo/theme';
 import client from 'Frontend/generated/connect-client.default';

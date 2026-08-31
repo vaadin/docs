@@ -11,6 +11,21 @@ declare module '*.css?inline' {
 
 declare module '*.css';
 
+// The Flow jar-resources (connectors etc.) are excluded from type checking
+// because their global type declarations conflict across component jars when
+// compiled in a single program. Vite resolves these imports through its own
+// @vaadin/flow-frontend alias; for tsc they are untyped modules.
+declare module '@vaadin/flow-frontend/*';
+
+// The window.Vaadin.Flow namespace set up by init-flow-namespace.ts and used
+// by the Flow connectors (whose own declarations are excluded, see above).
+// Augments the global Vaadin interface declared by @vaadin/component-base.
+interface Vaadin {
+  Flow?: {
+    loadOnDemand?: (id: string) => Promise<unknown>;
+  };
+}
+
 // Allow any CSS Custom Properties
 declare module 'csstype' {
   interface Properties {
