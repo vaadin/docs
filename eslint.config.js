@@ -21,7 +21,7 @@ export default [
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['scripts/*.js', 'scripts/pick/*.js', '*.ts'],
+          allowDefaultProject: ['scripts/*.js', 'scripts/*.mjs', 'scripts/pick/*.js', 'vite.*.ts'],
         },
       },
     },
@@ -37,7 +37,9 @@ export default [
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
       '@typescript-eslint/prefer-readonly': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/return-await': 'off',
       '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'simple-import-sort/imports': [
         'error',
@@ -68,6 +70,7 @@ export default [
       'max-params': 'off',
       'no-console': 'off',
       'no-plusplus': 'off',
+      'one-var': 'off',
       'prefer-destructuring': 'off',
       radix: 'off',
       'require-unicode-regexp': 'off',
