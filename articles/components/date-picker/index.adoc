@@ -64,6 +64,24 @@ include::{articles}/components/_input-field-common-features.adoc[tags=bad-input;
 The valid input range of Date Picker can be restricted by defining `min` and `max` values. Dates before the `min` and after the `max` are disabled in the overlay. Helper text can be used to inform the user about the accepted range.
 ====
 
+[#disabled-weekdays]
+.Disabled Weekdays
+[%collapsible]
+====
+Whole weekdays can [since:com.vaadin:vaadin@V25.3]#be excluded from selection#, for example to restrict a booking to business days. Dates that fall on a disabled weekday are shown as disabled in the overlay, and typing one into the field makes it invalid.
+====
+
+[#disabled-dates]
+.Disabled Dates
+[%collapsible]
+====
+Individual dates can [since:com.vaadin:vaadin@V25.3]#also be excluded from selection#, for example public holidays. Like disabled weekdays, they're shown as disabled in the overlay, and typing one into the field makes it invalid.
+
+This is meant for a small set of dates that's known in advance. When the set is large, changes while the application runs, or when particular dates should also be styled, use the date metadata callback instead. See <<#configuring-individual-dates,Configuring Individual Dates>>.
+====
+
+All constraints apply together: a date can be selected only if none of them disables it.
+
 The following example demonstrates how to specify these constraints and provide error messages:
 
 [.example,themes="lumo,aura"]
@@ -95,7 +113,7 @@ It's important to ensure an appropriate error message is configured for each con
 
 === Custom Validation
 
-For more complex cases where constraint validation isn't enough, Flow and Hilla offer the Binder API that allows you to define custom validation rules. This is useful, for example, when you want to limit the options to Monday through Friday. In the following example, try selecting a date that's on a Sunday or on a Saturday to see a custom validation message.
+For more complex cases where constraint validation isn't enough, Flow and Hilla offer the Binder API that allows you to define custom validation rules. This is useful, for example, when the rule depends on the value of another field. The following example limits the options to Monday through Friday -- which the <<#disabled-weekdays,Disabled Weekdays>> constraint can also express. Try selecting a date that's on a Sunday or on a Saturday to see a custom validation message.
 
 [.example,themes="lumo,aura"]
 --
@@ -123,6 +141,58 @@ endif::[]
 --
 
 Binder can also be used to organize data binding and validation for multiple fields, creating forms. You can learn more about Binder from the corresponding <<{articles}/flow/binding-data/components-binder-validation#,Flow>> and <<{articles}/hilla/lit/guides/forms/binder-validation#,Hilla>> articles.
+
+
+[[configuring-individual-dates]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Configuring Individual Dates
+
+Individual dates in the calendar overlay can be given metadata: whether the date can be selected, and custom CSS part names for styling it. The metadata comes from a callback that Date Picker invokes for the dates it's about to render, so the data can be fetched from a backend and can change while the application runs.
+
+Use this when the set of special dates is large, isn't known in advance, or when particular dates should stand out visually. For a small, fixed set of dates, the simpler <<#disabled-dates,Disabled Dates>> and <<#disabled-weekdays,Disabled Weekdays>> constraints are enough, and a continuous range is best expressed with <<#min-and-max-value,Min & Max Values>>.
+
+In the following example, an appointment field marks fully booked dates as unselectable, and highlights the dates that have only a few slots left. Try opening the overlay and navigating between months.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/datepicker/date-picker-date-metadata.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/datepicker/DatePickerDateMetadata.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/datepicker/react/date-picker-date-metadata.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+
+[source,css]
+----
+include::{root}/frontend/themes/docs/date-picker-date-metadata.css[]
+----
+--
+
+
+=== Disabling Individual Dates
+
+A date whose metadata marks it as disabled can't be selected: it's shown as disabled in the overlay, and typing it into the field makes the field invalid. The same error message is used as for the <<#disabled-dates,Disabled Dates>> and <<#disabled-weekdays,Disabled Weekdays>> constraints.
+
+The callback is invoked during server-side validation as well, with the single date being validated, so a disabled date can't be committed even if the browser was never told about it.
+
+=== Custom Part Names
+
+Metadata can add one or more CSS part names to a date, which a style sheet can then target with the `::part()` selector. Part names affect only the appearance of a date; they never change whether it can be selected. This is useful for providing additional information without disabling a date.
 
 
 == Week Numbers
