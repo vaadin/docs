@@ -1,8 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { format as dateFnsFormat } from 'date-fns/format';
-import { parse as dateFnsParse } from 'date-fns/parse';
+import { format, parse } from 'date-fns';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   DatePicker,
@@ -15,18 +14,18 @@ function formatDateIso8601(dateParts: DatePickerDate) {
   const { year, month, day } = dateParts;
   const date = new Date(year, month, day);
 
-  return dateFnsFormat(date, 'yyyy-MM-dd');
+  return format(date, 'yyyy-MM-dd');
 }
 
 function parseDateIso8601(inputValue: string) {
-  const date = dateFnsParse(inputValue, 'yyyy-MM-dd', new Date());
+  const date = parse(inputValue, 'yyyy-MM-dd', new Date());
 
   return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
 }
 
 function Example() {
   useSignals(); // hidden-source-line
-  const selectedDateValue = useSignal(dateFnsFormat(new Date(), 'yyyy-MM-dd'));
+  const selectedDateValue = useSignal(format(new Date(), 'yyyy-MM-dd'));
 
   const datePickerRef = useRef<DatePickerElement>(null);
   useEffect(() => {

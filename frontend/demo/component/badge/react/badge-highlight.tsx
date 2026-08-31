@@ -1,19 +1,14 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { format } from 'date-fns';
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Badge, Grid, GridColumn } from '@vaadin/react-components';
 import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/DataService';
 
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-});
-
 // tag::snippet[]
 function renderDueDate({ item: report }: { item: Report }) {
-  return <span>{dateFormatter.format(new Date(report.due))}</span>;
+  return <span>{format(new Date(report.due), 'PP')}</span>;
 }
 
 function renderStatus({ item: report }: { item: Report }) {

@@ -1,8 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-time-picker';
-import { addMonths } from 'date-fns/addMonths';
-import { formatISO } from 'date-fns/formatISO';
-import { startOfMonth } from 'date-fns/startOfMonth';
+import { addMonths, formatISO, startOfMonth } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';

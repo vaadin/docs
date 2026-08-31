@@ -3,17 +3,12 @@ import '@vaadin/badge';
 import '@vaadin/grid';
 import '@vaadin/icon';
 import '@vaadin/icons';
+import { format } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
-
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-});
 
 @customElement('badge-highlight')
 export class Example extends LitElement {
@@ -37,10 +32,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due date"
-          ${columnBodyRenderer<Report>(
-            ({ due }) => html`${dateFormatter.format(new Date(due))}`,
-            []
-          )}
+          ${columnBodyRenderer<Report>(({ due }) => html`${format(new Date(due), 'PP')}`, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
         <vaadin-grid-column

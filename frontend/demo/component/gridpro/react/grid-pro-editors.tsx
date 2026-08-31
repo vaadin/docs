@@ -10,7 +10,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 function birthdayRenderer({ item: { birthday } }: { item: Person }) {
-  return format(parseISO(birthday), 'MM/dd/yyyy');
+  return format(parseISO(birthday), 'P');
 }
 
 function Example() {

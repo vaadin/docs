@@ -42,7 +42,7 @@ export class Example extends LitElement {
         <vaadin-grid-pro-edit-column
           path="birthday"
           ${columnBodyRenderer<Person>(
-            ({ birthday }) => html`${format(parseISO(birthday), 'MM/dd/yyyy')}`,
+            ({ birthday }) => html`${format(parseISO(birthday), 'P')}`,
             []
           )}
           ${columnEditModeRenderer<Person>(
