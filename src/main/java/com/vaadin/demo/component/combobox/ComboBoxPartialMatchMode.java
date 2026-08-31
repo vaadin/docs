@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.combobox;
 
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.PartialMatchMode;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
@@ -13,7 +14,7 @@ public class ComboBoxPartialMatchMode extends Div {
     public ComboBoxPartialMatchMode() {
         // tag::snippet[]
         ComboBox<Country> comboBox = new ComboBox<>("Country");
-        comboBox.getElement().setProperty("partialMatchMode", "first-match");
+        comboBox.setPartialMatchMode(PartialMatchMode.FIRST_MATCH);
         add(comboBox);
         // end::snippet[]
         comboBox.setItems(DataService.getCountries());
