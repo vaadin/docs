@@ -29,7 +29,7 @@ export class Example extends LitElement {
 
   protected override async firstUpdated() {
     const countries = await getCountries();
-    this.items = countries
+    this.items = countries;
     this.selectedCountries = countries.slice(0, 3);
   }
 

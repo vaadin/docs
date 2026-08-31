@@ -21,6 +21,10 @@ Vaadin provides three built-in controllers:
 
 The grid and chart controllers rely on a <<#database-provider,[classname]`DatabaseProvider`>> to expose schema information and execute queries on behalf of the LLM. The form controller works directly with the form's field components.
 
+.Built-In Controllers Are a Commercial Feature
+[NOTE]
+The built-in controllers are part of the commercial `vaadin-ai-extensions-flow` module and require a commercial Vaadin subscription. The [classname]`AIController` interface and [classname]`DatabaseProvider` belong to the open-source `vaadin-ai-core-flow` module, so building and using <<#custom-controller,custom controllers>> is free.
+
 
 == Attaching a Controller
 
@@ -87,13 +91,18 @@ public class JdbcDatabaseProvider implements DatabaseProvider {
             }
             return rows;
         } catch (SQLException e) {
-            throw new IllegalArgumentException("Query failed: " + e.getMessage(), e);
+            // ToolException relays the message to the LLM so it can
+            // correct its query. Check what your database includes in
+            // its error messages before relaying them like this.
+            throw new ToolException("Query failed: " + e.getMessage(), e);
         }
     }
 }
 ----
 
 The example returns a hardcoded string for clarity, but [methodname]`getSchema()` can return whatever helps the LLM. Build the description at runtime from [classname]`java.sql.DatabaseMetaData` if your schema changes often, and add free-form context -- column meanings, business rules, common joins, units, sample values -- in plain English. The LLM treats the entire string as guidance, so anything that improves its queries is fair game.
+
+When a query fails -- for example, because it references an unknown column -- the exception type determines what the LLM learns about the failure. The example above [since:com.vaadin:vaadin@V25.3]#throws a `ToolException`#, whose message is relayed to the LLM so it can correct the query on its next attempt; any other exception is replaced with a generic error message. See <<#tool-error-handling,Tool Error Handling>>.
 
 .Read-Only Database Access
 [IMPORTANT]
@@ -108,6 +117,7 @@ The LLM receives only the schema, never the query results. Every row returned by
 Return only the tables, columns, and relationships the LLM needs. A smaller, well-described schema produces better queries, uses fewer tokens, and reduces the chance of leaking sensitive columns.
 
 
+[[custom-controller]]
 == Building a Custom Controller
 
 The built-in controllers cover grid and chart data exploration. To expose your own capabilities to the LLM, implement [classname]`AIController` directly.
@@ -115,15 +125,15 @@ The built-in controllers cover grid and chart data exploration. To expose your o
 [classname]`AIController` defines three methods:
 
 * [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
-* [methodname]`onRequest()` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn.
-* [methodname]`onResponse(Throwable)` -- runs on the UI thread once the LLM stream has completed, either successfully (`error` is `null`) or with an error. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure.
+* [methodname]`onRequest()` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn. Since tools may execute on a background thread, this is also the place to capture anything that depends on Vaadin thread locals, such as [methodname]`UI.getCurrent()`.
+* [methodname]`onResponse(Throwable)` -- called through `ui.access()` once the LLM stream has completed, either successfully (`error` is `null`) or with an error, so it can safely update components. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure.
 
 Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
 
 * [methodname]`getName()` -- the unique name the LLM uses to invoke the tool.
 * [methodname]`getDescription()` -- a human-readable description shown to the LLM.
 * [methodname]`getParametersSchema()` -- a JSON Schema string describing the tool's parameters, or `null` for tools that take no parameters.
-* [methodname]`execute(JsonNode arguments)` -- receives the arguments passed by the LLM as a [classname]`JsonNode` (from `tools.jackson.databind`) and returns the tool's result as a string.
+* [methodname]`execute(JsonNode arguments)` -- receives the arguments passed by the LLM as a [classname]`JsonNode` (from `tools.jackson.databind`) and returns the tool's result as a string. To report a failure in terms the LLM is allowed to see, throw a [classname]`ToolException` -- see <<#tool-error-handling,Tool Error Handling>>.
 
 A minimal custom controller looks like this:
 
@@ -183,4 +193,32 @@ Hand-writing JSON schemas is fine for small tools but becomes error-prone as the
 .Controller Serialization
 [NOTE]
 Controllers are not serialized with the orchestrator. After session restore, pass the controller to [methodname]`reconnect(provider).withController(controller).apply()` -- see <<conversation-history#,Conversation History & Session Persistence>>.
+
+
+[[tool-error-handling]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Tool Error Handling
+
+When a tool call fails, the message the LLM receives determines whether it can recover. Given the actual reason, it can correct its next attempt; given a generic error, it tends to retry the same call unchanged.
+
+By default, any exception thrown from tool code is caught, logged, and replaced with a generic error message before reaching the LLM, so internal details such as SQL fragments, schema names, or file paths don't leak into the conversation. To let the LLM see why a call failed, throw a [classname]`ToolException` (from the `com.vaadin.flow.component.ai.provider` package) -- its message is forwarded to the LLM verbatim as the tool's error output:
+
+[source,java]
+----
+@Override
+public String execute(JsonNode arguments) {
+    String city = arguments.get("city").asString();
+    if (!weatherService.isKnownCity(city)) {
+        throw new ToolException("Unknown city: '" + city
+                + "'. Pass the city name in English, e.g. 'Munich'.");
+    }
+    return weatherService.lookup(city);
+}
+----
+
+[classname]`ToolException` works anywhere the framework executes tool code: a [methodname]`ToolSpec.execute()` implementation or a <<#database-provider,[classname]`DatabaseProvider`>> alike. Because the message is passed to the LLM as-is, make sure it's safe to expose: no personal data, no internal identifiers beyond what the LLM already sent, and no third-party error text you haven't vetted. A database error that points out a mistake in an LLM-written query is usually reasonable to relay, but check first what your database actually puts in its error messages. A stack trace from your infrastructure is never safe to relay.
+
+.Vendor-Annotated Tools Are Out of Scope
+[NOTE]
+This contract applies only to framework-agnostic [classname]`ToolSpec` tools -- those contributed by controllers and by [classname]`DatabaseProvider`-backed features. Tool objects registered via <<tool-calling#,[methodname]`withTools()`>> are executed by the vendor framework itself, whose own error handling decides what reaches the LLM: by default, both LangChain4j and Spring AI relay the raw message of any exception. Route error-sensitive tools through a controller to keep control over what the model sees.
 
