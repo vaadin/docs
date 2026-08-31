@@ -7,10 +7,10 @@ import {
   type ContextMenuElement,
   type ContextMenuRendererContext,
 } from '@vaadin/react-components/ContextMenu.js';
+import { ContextMenuItem } from '@vaadin/react-components/ContextMenuItem.js';
+import { ContextMenuListBox } from '@vaadin/react-components/ContextMenuListBox.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
-import { Item } from '@vaadin/react-components/Item.js';
-import { ListBox } from '@vaadin/react-components/ListBox.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -60,13 +60,15 @@ function Example() {
     };
 
     return (
-      <ListBox>
-        <Item onClick={clickHandler('Edit')}>Edit</Item>
-        <Item onClick={clickHandler('Delete')}>Delete</Item>
+      <ContextMenuListBox>
+        <ContextMenuItem onClick={clickHandler('Edit')}>Edit</ContextMenuItem>
+        <ContextMenuItem onClick={clickHandler('Delete')}>Delete</ContextMenuItem>
         <hr />
-        <Item onClick={clickHandler('Email')}>Email ({person.email})</Item>
-        <Item onClick={clickHandler('Call')}>Call ({person.address.phone})</Item>
-      </ListBox>
+        <ContextMenuItem onClick={clickHandler('Email')}>Email ({person.email})</ContextMenuItem>
+        <ContextMenuItem onClick={clickHandler('Call')}>
+          Call ({person.address.phone})
+        </ContextMenuItem>
+      </ContextMenuListBox>
     );
   };
 
