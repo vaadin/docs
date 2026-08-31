@@ -11,16 +11,18 @@ public class MarkdownLineBreaks extends Div {
     public MarkdownLineBreaks() {
         // tag::snippet[]
         String markdownText = """
-                Deploy checklist for tomorrow:
-                Run the test suite
-                Bump the version number
-                Tag the release
+                Hi Maria,
+                Your order shipped this morning.
+                It should arrive by Thursday.
+
+                Best regards,
+                Tom
                 """;
 
         Markdown markdown = new Markdown(markdownText);
         markdown.setLineBreaks(true);
-        add(markdown);
         // end::snippet[]
+        add(markdown);
     }
 
     public static class Exporter extends DemoExporter<MarkdownLineBreaks> { // hidden-source-line

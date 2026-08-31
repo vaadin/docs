@@ -5,10 +5,12 @@ import { Markdown } from '@vaadin/react-components/Markdown.js';
 function Example() {
   // tag::snippet[]
   const markdownText = `
-Deploy checklist for tomorrow:
-Run the test suite
-Bump the version number
-Tag the release
+Hi Maria,
+Your order shipped this morning.
+It should arrive by Thursday.
+
+Best regards,
+Tom
   `;
 
   return <Markdown lineBreaks>{markdownText}</Markdown>;

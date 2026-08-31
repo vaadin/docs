@@ -14,10 +14,12 @@ export class MarkdownLineBreaks extends LitElement {
   protected override render() {
     // tag::snippet[]
     const markdownText = `
-Deploy checklist for tomorrow:
-Run the test suite
-Bump the version number
-Tag the release
+Hi Maria,
+Your order shipped this morning.
+It should arrive by Thursday.
+
+Best regards,
+Tom
     `;
 
     return html`<vaadin-markdown line-breaks .content=${markdownText}></vaadin-markdown>`;
