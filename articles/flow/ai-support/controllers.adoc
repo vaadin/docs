@@ -126,7 +126,7 @@ The built-in controllers cover grid and chart data exploration. To expose your o
 
 * [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
 * [methodname]`onRequest()` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn. Since tools may execute on a background thread, this is also the place to capture anything that depends on Vaadin thread locals, such as [methodname]`UI.getCurrent()`.
-* [methodname]`onResponse(Throwable)` -- called through `ui.access()` once the LLM stream has completed, either successfully (`error` is `null`) or with an error, so it can safely update components. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure.
+* [methodname]`onResponse(ResponseListener.ResponseEvent)` -- called through `ui.access()` once the LLM stream has completed, either successfully ([methodname]`event.getError()` is empty) or with an error, so it can safely update components. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure. The event also carries the provider's [since:com.vaadin:vaadin@V25.3]#response metadata#, which tells a completed turn from one truncated at the model's output limit -- a truncated turn ends without an error, so a controller that commits staged state should check it. See <<listeners#response-metadata,Response Metadata>>.
 
 Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
 
@@ -175,8 +175,8 @@ public class WeatherController implements AIController {
     }
 
     @Override
-    public void onResponse(Throwable error) {
-        if (error != null) {
+    public void onResponse(ResponseListener.ResponseEvent event) {
+        if (event.getError().isPresent()) {
             return;
         }
         // Apply any deferred state changes here.
