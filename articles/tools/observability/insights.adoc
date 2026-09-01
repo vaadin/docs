@@ -296,6 +296,32 @@ This adds the exception message (truncated to 200 characters), the top five stac
 An exception message is free-form text and can carry a whole payload, which is exactly why it's opt-in.
 
 
+[[ai-agents]]
+== Fixing Insights with an AI Agent
+
+The payload is designed to be handed to a coding agent: every field an agent needs is machine-readable and versioned by [propertyname]`schemaVersion`.
+[propertyname]`applicationFrame` names the class, file, and line to open; [propertyname]`replay` lists the steps that reproduce the problem; and [propertyname]`suggestion` states a starting hypothesis grounded in the evidence.
+
+Fetch the payload and hand it to an agent that has the codebase checked out:
+
+[source,terminal]
+----
+curl -s http://localhost:8080/actuator/vaadin/observability | claude -p \
+  "These are insights from the running application: user interactions \
+that failed or blew the UX budget. For each insight, open the \
+applicationFrame, verify the problem against the replay steps and the \
+evidence, and propose a fix."
+----
+
+The example pipes the payload into the Claude Code CLI, but any agent that can read files and apply edits works the same way: paste the JSON into the conversation, or let the agent fetch the endpoint itself.
+
+Three practicalities:
+
+- Point the agent at the same revision that produced the insights; otherwise the line number in [propertyname]`applicationFrame` may have drifted.
+- The default payload already carries what an agent needs -- the route, component, event, exception type, and application frame -- while withholding exception messages and session IDs, so it's safe to forward to an external tool without enabling <<#detail,detail collection>> first.
+- A query insight carries no [propertyname]`suggestion` or [propertyname]`applicationFrame`, so tell the agent to find the data provider that the named component is given on the named route.
+
+
 == Configuration
 
 [cols="2,1,3"]
