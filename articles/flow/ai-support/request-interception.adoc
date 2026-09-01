@@ -122,11 +122,11 @@ AIOrchestrator orchestrator = AIOrchestrator
         .build();
 ----
 
-The event stays usable after [methodname]`postpone()` returns. Content changes and rejections made afterwards take effect when the prompt resumes; make them on the thread that completes the continuation, before completing it. Completion is safe from any thread and first-wins: once the prompt has proceeded, failed, or timed out, later completions are ignored.
+The event stays usable after [methodname]`postpone()` returns. Content changes and rejections made afterwards take effect when the prompt resumes; make them on the thread that completes the continuation, before completing it -- a change attempted after completion throws [classname]`IllegalStateException`. Completion is safe from any thread and first-wins: once the prompt has proceeded, failed, or timed out, later completions are ignored.
 
 While a prompt is postponed, the UI shows nothing and further prompts are ignored. Give the user a sign that something is happening. The example disables the input before scheduling the work and enables it again on completion. The completion arrives on whichever thread runs the work, so wrap component changes in `ui.access()` with a [classname]`UI` reference captured in the interceptor.
 
-Server push must be enabled -- with [annotationname]`@Push` on the application shell class (see <<index#server-push,Server Push>>) -- for the resumed turn to reach the browser without user interaction.
+Server push or polling must be enabled -- with [annotationname]`@Push` on the application shell class (see <<index#server-push,Server Push>>) or with [methodname]`UI.setPollInterval()` -- for the resumed turn to reach the browser without user interaction.
 
 The timeout is required. When it elapses before the continuation is completed, the prompt fails with a [classname]`TimeoutException`, reported the same way as [methodname]`fail()`. The prompt's content, including attachment data, stays referenced until the continuation completes or the timeout fires, so keep the timeout as tight as the work allows. If the UI the prompt was submitted from is detached before completion -- the user closed the tab -- the prompt is abandoned.
 
