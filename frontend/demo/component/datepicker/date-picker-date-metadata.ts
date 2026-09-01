@@ -31,7 +31,6 @@ export class Example extends LitElement {
     return undefined;
   };
 
-  // Keep a stable reference: assigning a new function clears the cache.
   private dateMetadataProvider: DatePickerDateMetadataProvider = ({ start, end }) =>
     eachDayOfInterval({ start: parseISO(start), end: parseISO(end) })
       .map(this.getMetadata)
