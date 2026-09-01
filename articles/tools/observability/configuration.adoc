@@ -1,7 +1,7 @@
 ---
 title: Configuration
 page-title: Configuring Observability Kit for Vaadin applications
-description: How to configure Observability Kit and what are its default settings.
+description: How to configure Observability Kit and what its default settings are.
 meta-description: Learn to set up and manage the Observability Kit for monitoring your Vaadin applications effectively.
 order: 20
 ---
@@ -9,196 +9,250 @@ order: 20
 
 = Configuring Observability Kit
 
-Instrumentation can be configured in the [filename]`agent.properties` file that's used with the Java agent.
+Everything that instruments ordinary request handling is enabled by default, so most applications need no configuration at all.
+Four groups of features are opt-in: the two that reach beyond ordinary request handling -- <<reference#ui-state-size,UI state size>> and <<reference#database-monitoring,database monitoring>> -- and the two that would add sensitive or high-cardinality detail to what leaves the application, `database-statement` and `insights-details`.
 
+When you need to turn features off or tune them, how you configure the kit depends on how it's set up.
 
-== Service Configuration
-
-The `service` attributes are used to differentiate traces from services or applications which might have many instances running simultaneously, such as horizontally scaled services.
-
-The service attributes are as follows:
-
-[unordered]
-`service.name`:: is an attribute that's used to distinguish a service by name. The default value is `vaadin` -- the only attribute with a default value. It's also the only one required.
-`service.namespace`:: helps to distinguish a group of services.
-`service.instance.id`:: helps to distinguish instances of the same service that exist simultaneously. It must be unique for each instance of the same `service.namespace`, `service.name` pair.
-`service.version`:: is the semantic versioning string of the service version.
-
-The `service.name` attribute is configured using the `otel.service.name` property, either in the [filename]`agent.properties` configuration file as a system property, or as an environment variable.
-
-[.example]
---
-Add the following line to the [filename]`agent.properties` file:
-
-[source,properties]
-----
-<source-info group="Configuration file"></source-info>
-otel.service.name=myapp
-----
-
-Pass the `otel.service.name` system property when starting the Java process.
-[source,terminal]
-----
-<source-info group="System property"></source-info>
-java -Dotel.service.name="myapp" ...
-----
-
-Define the `OTEL_SERVICE_NAME` environment variable before starting the Java process.
-[source,terminal]
-----
-<source-info group="Environment variable"></source-info>
-# Linux / macOS
-export OTEL_SERVICE_NAME="myapp"
-# Windows
-set OTEL_SERVICE_NAME="myapp"
-----
-
---
-
-Other service attributes are configured using the `otel.resource.attributes` property, either in the [filename]`agent.properties` configuration file as a system property, or as en environment variable. Multiple attributes are separated by commas.
-
-[.example]
---
-Add the following line to the [filename]`agent.properties` file:
-[source,properties]
-----
-<source-info group="Configuration file"></source-info>
-otel.resource.attributes=service.namespace=myservices,service.instance.id=myapp-eu
-----
-
-Pass the `otel.resource.attributes` system property when starting the Java process.
-[source,terminal]
-----
-<source-info group="System property"></source-info>
-java -Dotel.resource.attributes="service.namespace=myservices,service.instance.id=myapp-eu" ...
-----
-
-Define the `OTEL_RESOURCE_ATTRIBUTES` environment variable before starting the Java process.
-[source,terminal]
-----
-<source-info group="Environment variable"></source-info>
-# Linux / macOS
-export OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
-# Windows
-set OTEL_RESOURCE_ATTRIBUTES="service.namespace=myservices,service.instance.id=myapp-eu"
-----
-
---
-
-For more information about service configuration, see the https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#service[OpenTelemetry documentation].
-
-
-== Default OpenTelemetry Instrumentation
-
-The custom distribution disables default OpenTelemetry instrumentation for Vaadin and servlets.
-
-The default instrumentation is disabled because logging all requests for a single-page application isn't helpful -- although it does generate plenty of data. It was disabled to have control over which requests generate a trace.
-
-The `jetty`, `servlet`, and `tomcat` instrumentation modules are disabled by default. To enable any of them, add the following line to the [filename]`agent.properties` file:
-
-[source,properties]
-----
-otel.instrumentation.${instrumentationName}.enabled=true
-----
-
-== Frontend Observability Configuration
-
-:prerelease-feature: Frontend Observability
-:artifact-id: observability-kit-starter
-:version: 2.1-SNAPSHOT
-include::{articles}/flow/_prerelease-banner.adoc[opts=optional]
-
-Frontend observability is enabled by default, with all the client-side instrumentation active. The configuration can be tuned statically by editing the [filename]`agent.properties` file, or by providing environment variables or system properties.
-
-With static configuration, the same settings are applied to all UI instances. Changes to the configuration require a server restart.
-
-
-=== Frontend Observability Static Configuration
-
-Static frontend observability configuration can be provided by adding entries to the [filename]`agent.properties` file or with environment variables or system properties, as mentioned earlier.
-
-The following properties can be used to tune frontend instrumentation:
-
-[cols="4,4,1"]
+[cols="1,3"]
 |===
-|Property Name |Description |Default Value
+|Setup |How to configure
 
-|`otel.instrumentation.vaadin.frontend.enabled`
-|Enables or disables all frontend instrumentation.
-|`true`
+|Spring Boot starter
+|`vaadin.observability.*` properties in [filename]`application.properties` (or any Spring property source).
 
-|`otel.instrumentation.vaadin.frontend.document-load`
-|Enables or disables the Document Load instrumentation.
-|`true`
+|Plain Spring
+|Most of the same `vaadin.observability.*` keys, read with `@Value`.
+See <<#plain-spring,Plain Spring>> for the ones it doesn't bind.
 
-|`otel.instrumentation.vaadin.frontend.user-interaction`
-|Enables or disables the User Interaction instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.xml-http-request`
-|Enables or disables the XML HTTP Request instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.long-task`
-|Enables or disables the Long Task instrumentation.
-|`true`
-
-|`otel.instrumentation.vaadin.frontend.frontend-error`
-|Enables or disables the Frontend Error instrumentation.
-|`true`
+|Standalone
+|An [classname]`ObservabilitySettings` instance, built with its builder and passed to [methodname]`ObservabilityKit.install()`.
 |===
 
-For more information about the frontend instrumentation, consult the <<reference#frontend-traces,Observability Kit Reference>> page.
+NOTE: Configuration covers only the kit's own instrumentation.
+Service identity (service name and resource attributes) and metric *export* are part of your Micrometer and Spring Boot Actuator setup, not the kit -- see <<getting-started#export-the-metrics,Export the Metrics>>.
 
 
-== Frontend Observability Configuration (Hilla)
+== Spring Boot Properties
 
-:prerelease-feature: Frontend Observability
-:artifact-id: observability-kit-starter
-:version: 2.1.1
+With the Spring Boot starter, configure the kit through `vaadin.observability.*` properties:
 
-To enable frontend observability, you need to add the `@hilla/observability-kit-client` package to your `package.json` file. After that, you can use the `init` function provided by the package.
-
-The `init` function requires two parameters: the `export` method from the `ObservabilityEndpoint` that comes with the starter artifact; and a list of options.
-
-The options list has the following structure:
-
-[source,typescript]
+.`application.properties`
+[source,properties]
 ----
-export interface TelemetryInitializationOptions {
-  /** Specifies URLs to ignore */
-  ignoredURLs?: readonly string[];
-  /** Disables tracking of internal Vaadin/Hilla URLs */
-  ignoreVaadinURLs?: boolean;
-  /** Frontend-specific `service.instance.id` attribute */
-  instanceId?: string;
-  /** Frontend-specific `service.name` attribute */
-  serviceName?: string;
-  /** Frontend-specific `service.version` attribute */
-  serviceVersion?: string;
-  /** Enables or disables the Document Load instrumentation. */
-  traceDocumentLoad?: boolean;
-  /** Enables or disables the Frontend Error instrumentation. */
-  traceErrors?: boolean;
-  /** Enables or disables the Long Task instrumentation. */
-  traceLongTask?: boolean;
-  /** Enables or disables the User Interaction instrumentation. */
-  traceUserInteraction?: readonly EventName[] | null;
-  /** Enables or disables the XML HTTP Request instrumentation. */
-  traceXmlHTTPRequest?: boolean;
-}
+# Turn the whole kit off
+vaadin.observability.enabled=false
+
+# Or toggle individual feature groups
+vaadin.observability.client=false
+vaadin.observability.traces=false
 ----
 
-By default, the options are set as follows:
+The full set of properties:
 
-[source,typescript]
+[cols="2,1,3"]
+|===
+|Property |Default |Description
+
+|`vaadin.observability.enabled`
+|`true`
+|Master switch for the auto-configuration.
+Spring Boot only.
+
+|`vaadin.observability.sessions`
+|`true`
+|Session count, lifetime, and lock metrics.
+
+|`vaadin.observability.uis`
+|`true`
+|UI count metrics.
+
+|`vaadin.observability.ui-state`
+|`false`
+|Per-UI state size: how much component-tree state the server holds for live users.
+Opt-in, because it costs a tree walk that ordinary request handling doesn't.
+See <<reference#ui-state-size,UI State Size>>.
+
+|`vaadin.observability.navigation`
+|`true`
+|Navigation timing.
+
+|`vaadin.observability.requests`
+|`true`
+|Server-side request and RPC timing.
+
+|`vaadin.observability.data`
+|`true`
+|Data provider count and fetch query timing, plus the page sizes lazy-loading components ask for.
+
+|`vaadin.observability.errors`
+|`true`
+|Error counters.
+
+|`vaadin.observability.client`
+|`true`
+|Browser-side timing collected from the client.
+
+|`vaadin.observability.resync`
+|`true`
+|Observe UIDL message resends and client-requested resynchronizations.
+
+|`vaadin.observability.database`
+|`false`
+|Wrap [classname]`DataSource` beans to record JDBC result-set row counts per route and, when tracing is on, emit a span per query.
+Spring Boot starter only.
+
+|`vaadin.observability.database-statement`
+|`false`
+|Attach the parameterized SQL as `db.statement` on the query span.
+Off by default, since SQL is higher cardinality and can be sensitive.
+
+|`vaadin.observability.traces`
+|`true`
+|Emit tracing spans through the Observation API.
+
+|`vaadin.observability.insights`
+|`true`
+|Retain failed and over-budget user interactions for the insights endpoint.
+Failures also need `errors`, and slow interactions also need `requests`.
+See the <<insights#,Interaction Insights>> page.
+
+|`vaadin.observability.insights-details`
+|`false`
+|Allow retained interactions to carry the exception message, the top stack frames, and the raw session ID.
+Off by default, since the insights payload is meant to be forwarded.
+
+|`vaadin.observability.insights-capacity`
+|`100`
+|Maximum number of retained records, applied to each buffer rather than shared.
+Interactions and data provider queries are retained separately, so with both active the total is twice this.
+The oldest is evicted once a buffer's cap is reached.
+
+|`vaadin.observability.route-cardinality-limit`
+|`200`
+|Maximum number of distinct `route` tag values before they collapse to `_other`.
+Also caps the `component` and `exception` tag values of `vaadin.errors`, since all three derive from application classes and multiply with each other.
+
+|`vaadin.observability.client-rate-per-session`
+|`100`
+|Client-sample throttling guard: the maximum number of browser samples accepted per UI in each ten-second window.
+Samples beyond it are rejected and counted in `vaadin.client.throttled`.
+Set it to `0` to accept every sample.
+
+|`vaadin.observability.ui-state-sample-interval`
+|`10000`
+|Minimum milliseconds between two measurements of the same UI.
+One measurement walks that UI's whole component tree under its session lock, so this is the knob that bounds the cost of `ui-state`.
+
+|`vaadin.observability.ui-state-bytes-per-node`
+|`0`
+|Bytes per state-tree node, used to project `vaadin.ui.state.size`.
+`0` publishes no byte figure.
+See <<reference#nodes-not-bytes,the reference>> for how to measure a value for your own application.
+|===
+
+
+[[plain-spring]]
+== Plain Spring
+
+In a plain-Spring (non-Boot) application, [classname]`ObservabilityConfiguration` reads every `vaadin.observability.*` key from the Spring [classname]`Environment`, so you set them the same way in your property source and the defaults match the Spring Boot ones.
+The `vaadin.observability.enabled` master switch is the exception: it's specific to the Boot auto-configuration.
+To disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
+
+Three keys are read but have no consumer outside Spring Boot, because the features behind them are wired by the auto-configuration rather than by the instrumentation itself:
+
+`vaadin.observability.database` and `vaadin.observability.database-statement`:: Database monitoring wraps the [classname]`DataSource` beans through a Boot bean post-processor, so it's available only with the starter.
+Setting these in plain Spring has no effect.
+
+`vaadin.observability.resync`:: The property gates the servlet filter that the starter registers.
+In plain Spring, register [classname]`SpringResyncDetectionFilter` yourself, mapped to `/*` at the highest precedence, and leave it out to turn the feature off -- the property alone won't switch it on or off.
+
+See the <<getting-started#other-setups,Getting Started>> page for the plain-Spring setup.
+
+
+== Standalone
+
+In a standalone (non-Spring) deployment, build an [classname]`ObservabilitySettings` instance and pass it to [methodname]`ObservabilityKit.install()`.
+Each builder method matches one of the properties above, except that the database toggles have no effect here: wrapping the [classname]`DataSource` beans is Spring Boot work.
+
+[source,java]
 ----
-const options = {
-  serviceName: 'hilla',
-  traceDocumentLoad: true,
-  traceErrors: true,
-  traceLongTask: true,
-  traceUserInteraction: ['click'],
-  traceXmlHTTPRequest: true,
-};
+ObservabilitySettings settings = ObservabilitySettings.builder()
+        .client(false)
+        .traces(false)
+        .routeCardinalityLimit(500)
+        .build();
+
+ObservabilityKit.install(meterRegistry, settings);
 ----
+
+For standalone no `enabled` flag exists; to disable the kit, don't call [methodname]`install()`.
+
+This two-argument overload creates an [classname]`ObservationRegistry` internally -- but only when `traces` is left on -- and doesn't expose it.
+To use your own, which you need for exporting spans or for writing custom Observations, pass it explicitly; see <<getting-started#standalone,Standalone (Without Spring)>>.
+
+Resync detection has no auto-configuration outside Spring.
+Register the portable [classname]`ResyncDetectionFilter` yourself against `/*`, early enough that it precedes anything else reading the request body:
+
+[source,java]
+----
+FilterRegistration.Dynamic registration = servletContext.addFilter(
+        "vaadinResyncDetection", new ResyncDetectionFilter(meterRegistry));
+// isMatchAfter=false, so it precedes already-registered filters.
+registration.addMappingForUrlPatterns(null, false, "/*");
+----
+
+
+== What the Features Control
+
+The feature toggles map directly to the built-in meters and spans:
+
+[cols="1,3"]
+|===
+|Feature |What it records
+
+|`sessions`
+|Active session gauge, session-created counter, session-lifetime timer, and session-lock wait/hold timers.
+
+|`uis`
+|Active UI gauge and UI-created counter.
+
+|`ui-state`
+|Aggregate gauges of retained UI state -- state-tree nodes, components, and views, as totals and per-UI and per-session maxima.
+Off by default.
+
+|`navigation`
+|Server-side navigation timing, tagged by route and outcome.
+
+|`requests`
+|Server-side request and RPC timing.
+
+|`data`
+|Data provider count and fetch query timing, and the items each fetch asked for against what it returned.
+Also gates the data query insights.
+
+|`errors`
+|Server-side error counter, tagged by exception, route, and component.
+Also decorates the session error handler, which is what makes the failures Flow routes there countable and attributable to a component.
+
+|`client`
+|Browser-observed timing -- bootstrap, navigation, Web Vitals, and client errors.
+
+|`resync`
+|A counter of UIDL message resends and client-requested resynchronizations, tagged by type.
+
+|`database`
+|JDBC result-set row counts per route and, when tracing is on, a span per query.
+Spring Boot starter only, off by default.
+
+|`traces`
+|Tracing spans for the request lifecycle, navigation, RPC, executor tasks, data provider queries, and -- with database monitoring on -- JDBC queries, emitted through the Observation API.
+
+|`insights`
+|Retained failed and over-budget interactions and data provider queries, served by the insights endpoint.
+This one records no meters or spans; see the <<insights#,Interaction Insights>> page.
+|===
+
+For the exact meter and span names produced by each feature, see the <<reference#,Reference>> page.
+
+[discussion-id]`27B2E4EF-7AF3-41F8-9CFF-928963337D56`
