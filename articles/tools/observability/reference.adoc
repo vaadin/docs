@@ -19,8 +19,14 @@ See the <<configuration#,Configuration>> page for how to turn features on or off
 
 .Naming Conventions
 [NOTE]
+====
 Meter names follow Micrometer's dotted, lowercase convention (for example `vaadin.request.duration`).
-How a name appears in your backend depends on that its conventions -- Prometheus, for instance, renders `vaadin.request.duration` as `vaadin_request_duration_seconds` with a `_count`, `_sum`, and bucket suffixes.
+How a name appears in your backend depends on the conventions of that backend -- Prometheus, for instance, renders `vaadin.request.duration` as `vaadin_request_duration_seconds` with `_count`, `_sum`, and `_max` suffixes.
+Two renames are easy to trip over: `vaadin.sessions.created` appears in Prometheus as `vaadin_sessions_total`, and `vaadin.ui.created` as `vaadin_ui_total`, because `_created` is a reserved suffix in the OpenMetrics format and is stripped from the name.
+
+Timers export count, sum, and max only by default.
+The histogram buckets that percentile queries need are opt-in -- see <<integrations#percentiles,Percentiles and Histogram Buckets>>.
+====
 
 
 == Metrics
@@ -153,7 +159,7 @@ Controlled by `vaadin.observability.navigation`.
 |`vaadin.navigation`
 |Timer
 |Navigation duration, from `beforeEnter` to `afterNavigation`.
-Tagged by `route` and `outcome`.
+Tagged by `route`, `outcome`, and `error`.
 |===
 
 Every navigation that *starts* is recorded, including the ones that never complete -- which would otherwise leave a span dangling.
@@ -309,6 +315,17 @@ These are observed in the browser and reported back to the server, subject to a 
 |Errors reported by the browser.
 Tagged by `kind`.
 
+|`vaadin.client.connection`
+|Counter
+|Transitions of the browser's connection state, tagged by `state` with the state entered.
+The `loading` state Flow toggles around every request isn't reported, so this counts real connection events rather than one per interaction.
+
+|`vaadin.client.connection.downtime`
+|Timer
+|How long the browser stayed unable to reach the server, recorded once per unreachable state it passed through and tagged by `state`.
+Time under `reconnecting` is a connection that hiccuped; time under `connection-lost` is a server the browser had given up on.
+The report can only be sent once the connection is back, so a browser that never reconnects contributes nothing -- the timer under-reports total downtime by construction.
+
 |`vaadin.client.throttled`
 |Counter
 |Client samples rejected by the per-UI rate limit.
@@ -320,7 +337,7 @@ Untagged.
 Untagged.
 |===
 
-Every client timer is tagged by `route`, resolved from the browser location to a route template on the server and capped by the same cardinality limit as the server-side meters.
+The client timers -- except `vaadin.client.connection.downtime`, which carries `state` instead -- are tagged by `route`, resolved from the browser location to a route template on the server and capped by the same cardinality limit as the server-side meters.
 `vaadin.client.navigation.duration` additionally carries `trigger`.
 
 Server round-trip timing isn't collected in the browser.
@@ -435,7 +452,10 @@ This separates a combo box loading matches for typed text from one loading the w
 |On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call.
 
 |`kind`
-|On `vaadin.client.errors`, the source of the browser error: `uncaught` or `promise`.
+|On `vaadin.client.errors`, the source of the browser error: `uncaught` or `promise`, with `_unknown` for a report that is neither.
+
+|`state`
+|On the client connection meters, the connection state: `connected`, `reconnecting` (the first request failed, the client is retrying), or `connection-lost` (the client exhausted its retries), with `_unknown` for a reported state outside that set.
 |===
 
 .JVM, Process, and Connection-Pool Metrics
@@ -458,8 +478,9 @@ The kit produces the following spans:
 |===
 |Span |Description
 
-|`vaadin.request`
+|`vaadin.request.<type>`
 |The root span for each Vaadin request.
+A UIDL request is named by its interaction -- `vaadin.request.rpc`, `vaadin.request.poll`, or `vaadin.request.navigation` -- and other requests by their type: `vaadin.request.heartbeat`, `vaadin.request.push`, `vaadin.request.static`, or `vaadin.request.other`.
 Carries the request-level attributes below.
 
 |`vaadin.navigation <route>`
@@ -579,6 +600,7 @@ When a request or a nested operation fails, its observation is marked as error, 
 
 For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event.
 The enclosing `vaadin.request` span is marked `outcome=error` as well: Flow hands such an exception to the session's [classname]`ErrorHandler` rather than letting it escape request handling, and the kit relays that back to the request observation, so the request doesn't claim success for an interaction that failed.
+On Spring, the error is also propagated to the enclosing Spring HTTP observation, so the surrounding HTTP server span reports it too.
 The failure also increments the `vaadin.errors` counter; see <<#error-metrics,Error Metrics>>.
 
 The same failure is also retained as an interaction insight, which reports it without a tracing backend and points at the application stack frame behind it.

@@ -324,6 +324,19 @@ Actuator registers JVM and process metrics out of the box.
 
 For the complete, current list of meters, see the <<reference#,Reference>> page.
 
+.Queries Break Structurally, Not Only by Name
+[IMPORTANT]
+====
+Three export-level changes affect existing queries and alerts beyond the renames above:
+
+* The version 4 agent exported OpenTelemetry histograms with buckets.
+Version 5 timers publish count, sum, and max only, so a `histogram_quantile()` query or a latency alert finds no `_bucket` series until you enable them per meter -- and it fails silently, returning no data rather than an error.
+See <<integrations#percentiles,Percentiles and Histogram Buckets>>.
+* Prometheus strips the reserved `_created` suffix, so `vaadin.sessions.created` and `vaadin.ui.created` appear as `vaadin_sessions_total` and `vaadin_ui_total`.
+* With tracing on, each observed timer also publishes a parallel long-task timer (`_active` series in Prometheus), which roughly doubles the series count for those meters.
+Account for it when estimating metric volume.
+====
+
 .Tracing Data Is Shaped Differently
 [NOTE]
 Version 4 produced a rich span tree with many Vaadin-specific attributes, some of them per element synchronization.
@@ -344,6 +357,8 @@ Because the kit no longer exports telemetry itself, integration with backends no
 
 * *Metrics* are exported by adding the corresponding `micrometer-registry-*` dependency (Prometheus, OTLP, Graphite, and others) and exposing it through Actuator.
 * *Traces* are exported by adding a Micrometer tracing bridge -- for example OpenTelemetry (`micrometer-tracing-bridge-otel`) or Zipkin (`micrometer-tracing-bridge-brave`) -- as you would for any Micrometer-instrumented application.
+* *Logs* are no longer exported by the kit at all.
+The version 4 agent could ship them over OTLP; in version 5, route them through your logging pipeline instead -- see the vendor pages under <<integrations#,Integrations>> for the options.
 
 Vendors such as Prometheus, Grafana, Datadog, and New Relic are all reachable this way, either through a native Micrometer registry or through an OTLP bridge to an OpenTelemetry collector.
 See the <<integrations#,Integrations>> page for vendor-specific setup.

@@ -75,6 +75,31 @@ While testing an integration, set it to `1.0` so every request produces a span.
 Lower it again for production.
 
 
+[[percentiles]]
+== Percentiles and Histogram Buckets
+
+The kit's timers export their count, sum, and max only by default.
+That's enough for rates and averages, but a percentile query -- a `histogram_quantile()` expression, a Grafana p95 panel, a latency alert -- needs histogram buckets, and Micrometer publishes those only when asked.
+A percentile query over a bucket-less timer doesn't fail; it silently returns no data.
+
+Enable buckets for the timers you build percentiles on:
+
+.`application.properties`
+[source,properties]
+----
+management.metrics.distribution.percentiles-histogram.vaadin.request.duration=true
+management.metrics.distribution.percentiles-histogram.vaadin.rpc.duration=true
+management.metrics.distribution.slo.vaadin.request.duration=25ms,50ms,100ms,250ms,500ms,1s,2s
+management.metrics.distribution.slo.vaadin.rpc.duration=25ms,50ms,100ms,250ms,500ms,1s,2s
+----
+
+The [propertyname]`slo` lines are optional: they add explicit bucket boundaries at your service-level objectives, the durations you alert on.
+The `1s` boundary matches the UX budget that <<../insights#,interaction insights>> use, so dashboard percentiles and insights draw their line at the same place.
+
+The property keys match meters by dotted prefix, so `management.metrics.distribution.percentiles-histogram.vaadin=true` covers every `vaadin.*` timer at once.
+Prefer enabling buckets per meter, though: each bucketed timer publishes tens of additional series per tag combination, so a blanket switch multiplies the metric volume for timers you never query by percentile.
+
+
 == Local Development & Testing
 
 For development-time testing on your own machine, use one of these setups:

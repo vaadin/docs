@@ -33,6 +33,8 @@ If you're upgrading an existing project, see the <<migrating-to-v5#,Migrating to
 * Spring Boot 4, for the `observability-kit-starter`.
 Plain-Spring and standalone setups are also supported; see <<#other-setups,Other Setups>>.
 
+GraalVM native images are supported out of the box: the kit ships the native-image metadata its resources need.
+
 
 == Add the Dependency
 
@@ -208,6 +210,26 @@ ObservabilityKit.install(registry, observationRegistry,
 
 With this overload the kit registers no handlers of its own, so the registry needs at least [classname]`DefaultMeterObservationHandler` for the timers.
 Keep a reference to both registries -- for example in a static holder -- if you want to use them for <<customization#,custom instrumentation>>.
+
+
+== Troubleshooting
+
+No `vaadin.*` meters appear at all::
+In development mode the kit validates your commercial license at startup.
+If validation fails, the application keeps running but the kit registers no instrumentation -- it logs a warning rather than failing the build or the deployment.
+Check the application log; the <<insights#,insights endpoint>> also reports `instrumentation: inactive` in this state.
+
+`vaadin.errors` is missing::
+The counter is registered lazily, on the first error it counts.
+An application that hasn't failed yet publishes no `vaadin.errors` series -- absence means zero, not a broken setup.
+
+The names look different in the backend::
+Backends render Micrometer's dotted names in their own conventions, and Prometheus also renames the `.created` counters to `vaadin_sessions_total` and `vaadin_ui_total`.
+See the naming note on the <<reference#,Reference>> page.
+
+Percentile queries return no data::
+Timers publish no histogram buckets by default; a `histogram_quantile()` query or a p95 panel silently comes up empty until you enable them.
+See <<integrations#percentiles,Percentiles and Histogram Buckets>>.
 
 
 == Next Steps
