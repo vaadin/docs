@@ -132,7 +132,7 @@ Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has f
 
 * [methodname]`getName()` -- the unique name the LLM uses to invoke the tool.
 * [methodname]`getDescription()` -- a human-readable description shown to the LLM.
-* [methodname]`getParametersSchema()` -- a JSON Schema string describing the tool's parameters, or `null` for tools that take no parameters.
+* [methodname]`getParametersSchema()` -- a JSON Schema string describing the tool's parameters. For a tool that takes no parameters, [since:com.vaadin:vaadin@V25.3]#return [fieldname]`NO_PARAMETERS_SCHEMA`# -- see <<#parameterless-tools,Tools without Parameters>>.
 * [methodname]`execute(JsonNode arguments)` -- receives the arguments passed by the LLM as a [classname]`JsonNode` (from `tools.jackson.databind`) and returns the tool's result as a string. To report a failure in terms the LLM is allowed to see, throw a [classname]`ToolException` -- see <<#tool-error-handling,Tool Error Handling>>.
 
 A minimal custom controller looks like this:
@@ -193,6 +193,31 @@ Hand-writing JSON schemas is fine for small tools but becomes error-prone as the
 .Controller Serialization
 [NOTE]
 Controllers are not serialized with the orchestrator. After session restore, pass the controller to [methodname]`reconnect(provider).withController(controller).apply()` -- see <<conversation-history#,Conversation History & Session Persistence>>.
+
+
+[[parameterless-tools]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Tools without Parameters
+
+Some tools take no input at all: they refresh something, or return a fixed piece of information. Declaring no schema for such a tool -- returning `null` from [methodname]`getParametersSchema()` -- is unreliable in practice. With no parameters described, models disagree on what to send as arguments; some send an empty string instead of an empty object, and certain LLM APIs then reject the request. In some of those cases, the model might refuse the request that replays such a tool call, and the whole turn is lost.
+
+Return the [fieldname]`NO_PARAMETERS_SCHEMA` constant from [classname]`LLMProvider.ToolSpec` instead. It declares a single optional `reason` property -- a free-form note on why the tool is being called -- whose only purpose is to give the model a well-formed, non-empty object to send. The tool ignores it:
+
+[source,java]
+----
+@Override
+public String getParametersSchema() {
+    return NO_PARAMETERS_SCHEMA;
+}
+
+@Override
+public String execute(JsonNode arguments) {
+    // arguments may contain the optional "reason" -- ignore it
+    return inventoryService.getWarehouseStatus();
+}
+----
+
+Tools that return `null` or a blank string keep working: the built-in providers substitute [fieldname]`NO_PARAMETERS_SCHEMA` before sending the request. A schema you declare yourself is passed through unchanged, though -- including one with an empty `properties` object, which confuses models the same way. If a schema generator produces your schemas, check what it emits for a method with no parameters.
 
 
 [[tool-error-handling]]
