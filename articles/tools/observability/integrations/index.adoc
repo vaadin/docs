@@ -1,36 +1,98 @@
 ---
 title: Integrations
-page-title: How to integrate observability tools with Vaadin
-description: Observability Kit can be used with any vendor that natively supports the OpenTelemetry standard.
-meta-description: Learn how you can use Observability Kit with any vendor that natively supports the OpenTelemetry standard when using it in your Vaadin application.
+page-title: How to export Observability Kit telemetry to your backend
+description: Observability Kit records into a Micrometer registry, so it exports to any backend Micrometer and Spring Boot Actuator support.
+meta-description: Learn how to export Vaadin Observability Kit telemetry to Prometheus, Grafana, Datadog, New Relic, and other backends through Micrometer.
 order: 40
 ---
 
 
 = Observability Kit Integrations
 
-Vaadin tests and supports the following vendors:
+Observability Kit doesn't export anything itself.
+It records metrics into your application's Micrometer [classname]`MeterRegistry` and emits tracing spans through the Micrometer Observation API.
+Getting that data into a backend is standard Micrometer and Spring Boot Actuator work -- the same as for any Micrometer-instrumented application -- so the kit reaches every backend those support.
+
+This means there are two independent pipelines to wire up:
+
+Metrics:: Add a `micrometer-registry-*` dependency for your backend and expose it through Spring Boot Actuator.
+Some backends are scraped (Prometheus); others are pushed to (OTLP, Datadog, New Relic).
+
+Traces:: Add a Micrometer tracing bridge -- for example OpenTelemetry (`micrometer-tracing-bridge-otel`) or Zipkin (`micrometer-tracing-bridge-brave`) -- plus the matching exporter.
+
+Because both pipelines are backend-agnostic, a vendor that speaks OpenTelemetry Protocol (OTLP) can receive both metrics and traces through a single OTLP endpoint, either natively or through an https://opentelemetry.io/docs/collector/[OpenTelemetry collector].
+
+The following pages show vendor-specific setup:
 
 section_outline::[]
 
----
 
-For other vendors, you can use the https://opentelemetry.io/docs/collector/[OpenTelemetry collector] with a service-specific exporter to forward the telemetry data.
+[[how-export-works]]
+== How Export Works
+
+The kit is active as soon as it's on the classpath; it starts recording into whatever [classname]`MeterRegistry` your application provides.
+Nothing is exported until you add and configure a registry backend.
+
+For a Spring Boot application, the minimum for metrics is Actuator plus one registry:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+----
+
+For traces, add the OpenTelemetry starter, which bundles the tracing bridge and the OTLP exporter:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-opentelemetry</artifactId>
+</dependency>
+----
+
+The starter also brings in the OTLP metrics registry (`micrometer-registry-otlp`).
+If you export metrics through a different registry -- such as Prometheus, above -- disable the OTLP one so it doesn't also try to push metrics: set `management.otlp.metrics.export.enabled=false`.
+
+.Service Identity
+[NOTE]
+Set `spring.application.name` so every meter and span is tagged with a consistent service name.
+For OTLP backends, additional resource attributes can be set through `management.opentelemetry.resource-attributes.*`.
+This replaces the version 4 `otel.service.name` and `otel.resource.attributes` settings, which lived in the agent.
+
+.Trace Sampling
+[NOTE]
+Spring Boot samples only a fraction of traces by default (`management.tracing.sampling.probability`, `0.1`).
+While testing an integration, set it to `1.0` so every request produces a span.
+Lower it again for production.
 
 
 == Local Development & Testing
 
-For development-time testing locally, you should use Jaeger and Prometheus, or Grafana.
+For development-time testing on your own machine, use one of these setups:
 
-Jaeger and Prometheus can be downloaded, and run stand-alone without any further dependencies. Jaeger is used to process traces and Prometheus to process metrics. This setup has the downside that it doesn't support logs, and data is viewed from two different tools.
+- <<jaeger-prometheus#,Jaeger & Prometheus>> -- Jaeger for traces and Prometheus for metrics.
+Both run stand-alone with no further dependencies.
+The downside is that logs aren't included and data is viewed from two separate tools.
 
-The Grafana setup requires Docker and `docker-compose` to be installed. This setup has the benefit that it supports logs and all data is viewable from a single tool.
+- <<grafana#,Grafana>> -- a single tool for metrics, traces, and logs, backed by Prometheus, Tempo, and Loki.
+
+Both are also production observability stacks; the pages describe the app-side configuration, which is the same in development and production.
 
 
-== Other Libraries & Frameworks
+== JVM, Infrastructure, and Library Metrics
 
-Since Observability Kit is based on the OpenTelemetry Java agent, it also includes many non-Vaadin-specific instrumentation that can be helpful in monitoring an application.
+In version 4, the OpenTelemetry Java agent bundled instrumentation for JVM internals, connection pools, HTTP clients, and other libraries.
+Version 5 doesn't -- and doesn't need to.
+Spring Boot Actuator and Micrometer's standard binders already instrument the JVM, process, HTTP clients, data sources, and connection pools, and they export through the very same registry you configure here.
 
-For example, it can include database requests using the JPA API, or outgoing HTTP requests.
-
-https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/supported-libraries.md[List of libraries and frameworks] supported by the OpenTelemetry Java agent.
+So a single registry backend receives the kit's Vaadin meters, Micrometer's infrastructure meters, and any custom meters you add, all together.
+See the https://docs.micrometer.io/micrometer/reference/concepts.html[Micrometer documentation] for the available binders.

@@ -1,8 +1,8 @@
 ---
 title: Reference
 page-title: Vaadin observability reference guide
-description: Details on traces, metrics that Observability Kit provides, and their attributes.
-meta-description: Access a comprehensive reference for observability features and tools in Vaadin.
+description: The metrics and tracing spans Observability Kit records, with their types, tags, and attributes.
+meta-description: Reference for the meters and spans that Vaadin Observability Kit records into Micrometer.
 order: 50
 ---
 
@@ -10,594 +10,668 @@ order: 50
 = Observability Kit Reference
 :toclevels: 2
 
-Observability Kit is a custom Java agent based on the OpenTelemetry standard, with preconfigured instrumentation for Vaadin Flow applications.
-
-A Java agent is a special set of classes which, by using the https://docs.oracle.com/javase/1.5.0/docs/api/java/lang/instrument/package-summary.html[Java Instrumentation API], can intercept applications running on the JVM and inject code to provide more functionality.
-
-https://opentelemetry.io/[OpenTelemetry] is an emerging standard for generating, collecting and exporting telemetry data, such as traces, metrics, and logs. It's https://opentelemetry.io/vendors/[supported by various tools and vendors]. Vaadin tests and supports <</tools/observability/integrations#,integrations>> with selected vendors. Check the documentation for your preferred observability platform to learn how to use traces and spans.
-
-.New Standard
-[CAUTION]
-Observability Kit should work with any vendor that supports the OpenTelemetry standard. However, support from specific vendors may still be limited or incomplete.
-
-Observability Kit builds on the automatic instrumentation provided by OpenTelemetry by implementing instrumentation on Vaadin-specific classes. This provides plenty of framework-specific details that can be used to identify issues, track performance, or observe user behavior.
-
-
-== Traces
-
-A trace represents an operation that happened within the application. Traces consist of <<spans,spans>>, which are nested operations that happened during the trace (e.g., method, database or API calls). Spans can contain attributes, which contain information about the operation, as well as events indicating something occurring at a specific time.
-
-Observability Kit collects traces for all requests made against the application, and generates spans for internal framework calls, as well as external calls to databases and remote services. Observability Kit can also be customized to provide specific details about what happens in the application. See the <<customization#, Customization>> page for more on this.
-
-Observability Kit creates traces for all Flow-specific requests against the application, and spans for framework-specific operations. It also adds span attributes that can be used to filter traces or spans, or to inspect more details about an operation.
-
-The following sections list the most relevant traces and spans, and their attributes created by Observability Kit.
-
-
-=== UI Requests
-
-This creates a trace for every request that's related to a UI, using the current view's route template as name (e.g., `/products/:productId`).
-
-
-=== Static File Requests
-
-This creates a trace for all static files that are served, using the path as name (e.g., `/static/image.png`).
-
-
-=== Dynamic Stream Requests
-
-This creates a trace for all dynamic content streamed from a `DownloadHandler` or `StreamResource`, using the resource's name (e.g., `/dynamic/[ui]/[secret]/export.csv`).
-
-
-=== Navigation
-
-This creates a nested span whenever a navigation is triggered, either from the client or the server. The span name contains the view's route template (e.g., `Navigation: /products/:productId`).
-
-[cols="1,1"]
-|===
-|Attribute |Description
-
-|`vaadin.navigation.isForwardTo`
-|Whether the navigation was a result of a forwarding request.
-
-|`vaadin.navigation.route`
-|The target route of the navigation.
-
-|`vaadin.navigation.trigger`
-|Whether the navigation was triggered from the client or the server.
-|===
-
-
-=== Browser Events
-
-This creates a span whenever a browser event is handled by a UI, such as click events. The span name contains a descriptive label of the element that was the source of the event, as well as the event name (e.g., `Event: vaadin-button[Save] {two-colons} click`).
-
-[cols="1,1"]
-|===
-|Attribute |Description
-
-|`vaadin.element.tag`
-|The tag name of the element that was the source of the event.
-
-|`vaadin.event.type`
-|The event type.
-
-|`vaadin.view`
-|The simple Java class name of the UI's currently active view, for example `ProductView`.
-|===
-
-
-=== Element Synchronization
-
-This creates a span whenever an element property has changed and is synchronized to the server. The span name contains a descriptive label for the element, as well as the property name (e.g., `Sync: vaadin-text-field[label='Customer Name'].value`).
-
-[cols="1,1"]
-|===
-|Attribute |Description
-
-|`vaadin.element.property`
-|The property that was synchronized.
-
-|`vaadin.element.tag`
-|The tag name of the element that was the source of the event.
-
-|`vaadin.view`
-|The simple Java class name of the UI's currently active view (e.g., `ProductView`).
-|===
-
-
-=== Server Calls
-
-This creates a span whenever the client calls a server method that's annotated with [annotationname]`ClientCallable` (e.g., `Invoke server method: Grid.select`).
-
-[cols="1,1"]
-|===
-|Attribute |Description
-
-|`vaadin.callable.method`
-|The signature of the method that was called.
-
-|`vaadin.component`
-|The qualified class name of the component on which the method was called.
-|===
-
-
-=== Data Provider Fetches
-
-This creates a span whenever a component fetches data from a data provider (e.g., `Data Provider Fetch`).
-
-[cols="1,1"]
-|===
-|Attribute |Description
-
-|`vaadin.dataprovider.limit`
-|The requested amount of items to load.
-
-|`vaadin.dataprovider.offset`
-|The offset from where to start loading items.
-
-|`vaadin.dataprovider.type`
-|The qualified class name of the data provider class.
-|===
-
-
-[[common-trace-attributes]]
-=== Common Attributes
-
-In addition to the span-specific attributes, some spans have the following set of attributes:
-
-[cols="1,2,1,1"]
-|===
-|Attribute |Description |Set On |Usage
-
-|`http.host`
-|The host name that triggered the request.
-|All traces and root spans.
-|To filter traces by host name.
-
-|`http.route`
-|A view's route template, excluding any actual parameter values, or a path for file and stream requests.
-|All traces and root spans.
-|To filter traces for specific views.
-
-|`http.target`
-|A view's actual route, including parameter values, or a path for file and stream requests.
-|All traces and root spans.
-|To check which parameters were provided to a view through its route.
-
-|`vaadin.flow.version`
-|The Flow version used by the application.
-|All traces and root spans.
-|
-
-|`vaadin.request.type`
-|The type of Flow request made against the application.
-|All traces and root spans.
-|To filter traces for a specific request type.
-
-|`vaadin.session.id`
-|The Vaadin session ID for the request.
-|All spans.
-|To filter traces for a specific session.
-|===
-
-
-== Spans
-
-Each span represents a unit of work or an operation of an application. Observability Kit creates spans for Vaadin-specific operations and attaches some useful attributes and any errors that arise.
-
-
-[[span-errors]]
-=== Errors
-
-The Kit records an error when the root span and any nested spans have handled an exception. If an exception is thrown, the corresponding stack trace is in the span details.
-
-An exception may be handled and wrapped or re-thrown, which may result in several nested span levels reporting errors. In such a case, the original exception stack trace is in the details of the lowest span in the tree with an error marked against it.
-
-
-[[span-attributes]]
-=== Attributes
-
-Each span has attributes associated with it. Along with https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/[the attributes that OpenTelemetry provides], Observability Kit provides Vaadin-specific attributes that can help diagnose problems with an application.
-
-
-==== Global Attributes
-
-All Vaadin-specific spans contain the `vaadin.session.id` attribute. This uniquely identifies the Vaadin session involved.
-
-
-==== Request Attributes
-
-Request spans have the following attributes:
-
-|===
-|Attribute |Description
-
-|`http.request.file`
-|For a static file request, this contains the requested file.
-
-|`vaadin.flow.version`
-|The version of Vaadin Flow that's being used (e.g., 23.1.6).
-
-|`vaadin.request.type`
-|The type of request, such as `heartbeat`, `push` or `uidl`.
-
-|`vaadin.resolution`
-|For a successful static file request, this contains "Up to date".
-|===
-
-
-==== Navigation Attributes
-
-The attributes for navigation spans (e.g., `Navigate: /index`) are listed in the table here. They provide context for the cause of the navigation.
-
-|===
-|Attribute |Description
-
-|`vaadin.navigation.isForwardTo`
-|Whether the navigation event is the result of a `BeforeEvent.forwardTo` call.
-
-|`vaadin.navigation.route`
-|The requested navigation case (e.g., "/index").
-
-|`vaadin.navigation.trigger`
-|The type of user interaction that triggered the navigation event (e.g., `CLIENT_SIDE`).
-|===
-
-
-==== View Attributes
-
-These are attributes of spans related to a Vaadin view.
-
-|===
-|Attribute |Description
-
-|`vaadin.component`
-|When a component is being rendered, this shows the component class name.
-
-|`vaadin.element.property`
-|When an element's properties are synced from the client, this shows the property that's affected.
-
-|`vaadin.element.tag`
-|The corresponding HTML tag for the element related to the span.
-
-|`vaadin.element.target`
-|When an element is being attached, this shows the target element to which it's being attached.
-
-|`vaadin.event.type`
-|The type of event that has been fired by a Vaadin component. This is discussed further in <<event-types>>.
-
-|`vaadin.state.change`
-|For an `opened-changed` event, this shows whether the element is being opened or closed.
-
-|`vaadin.view`
-|This contains the related view's class name.
-
-|`vaadin.webcomponent.url`
-|This contains the service URL of a web component.
-|===
-
-
-==== Other Attributes
-
-The table here lists and describes other attributes.
-
-|===
-|Attribute |Description
-
-|`vaadin.callable.method`
-|When a server event is handled, this shows the method that was called.
-
-|`vaadin.dataprovider.limit`
-|When data is being fetched, this contains the result limit, the number of rows to be returned.
-
-|`vaadin.dataprovider.offset`
-|When data is being fetched, this contains the result offset, the number of rows to skip.
-
-|`vaadin.dataprovider.type`
-|When data is being fetched, this contains the data provider class name.
-|===
-
-
-
-== Event Types
-
-Components in Vaadin fire events when certain properties are changed or actions are performed. These are captured by Observability Kit instrumentation. The `vaadin.event.type` attribute can be found on the corresponding span. The attribute contains the type of event that was fired.
-
-Here are some of the more important events:
-
-|===
-|Event |Description |Note
-
-|change
-|Fired when the user commits a change.
-|
-
-|input
-|Fired when a field value is changed by the user.
-|
-
-|value-changed
-|Fired when the `value` property of a component is changed. Most form components fire this event.
-|The event doesn't contain the new value.
-
-|invalid-changed
-|Fired when the `invalid` property of a component is changed. Most form components fire this event.
-|The event doesn't contain the new value.
-
-|opened-changed
-|Fired when the `opened` property of a component is changed. For example, a select field, accordion, or dialog.
-|Check the `vaadin.state.change` attribute to see whether the component is opening or closing.
-
-|checked-changed
-|Fired when the `checked` property of a component is changed. Checkbox and radio components fire this event.
-|The event doesn't contain the new value.
-
-|selected-items-changed
-|Fired when the `selectedItems` property of a component is changed. Grid, grid pro and multi select combo box components fire this event.
-|The event doesn't contain the new value.
-|===
-
+Observability Kit instruments the Vaadin runtime and records everything into your application's Micrometer [classname]`MeterRegistry`.
+Metrics are plain Micrometer meters; tracing spans are emitted through the Micrometer Observation API.
+Both flow to whatever backend you've configured -- see the <<integrations#,Integrations>> page.
+
+Each group of meters and spans is controlled by a feature toggle (for example `vaadin.observability.sessions`).
+See the <<configuration#,Configuration>> page for how to turn features on or off.
+
+.Naming Conventions
+[NOTE]
+Meter names follow Micrometer's dotted, lowercase convention (for example `vaadin.request.duration`).
+How a name appears in your backend depends on that its conventions -- Prometheus, for instance, renders `vaadin.request.duration` as `vaadin_request_duration_seconds` with a `_count`, `_sum`, and bucket suffixes.
 
 
 == Metrics
 
-A metric is a measurement of a service, captured at runtime. Observability Kit captures a range of JVM metrics, such as memory usage and CPU usage. It also captures Vaadin-specific metrics, including the number of open sessions and session duration.
+A meter is a measurement recorded at runtime.
+Observability Kit records the meter types Micrometer provides:
 
-Application and request metrics are important indicators of availability and performance. Custom metrics can provide insights into how availability indicators impact user experience.
-
-Metrics are categorized into three types:
-
-Counter::
-A single value that only increases. An example is the number of classes loaded into the JVM.
-
-Gauge::
-A single value that's measured in intervals. The memory used by the JVM is an example of this.
-
-Histogram::
-Samples observations (e.g., individual request durations) and distributes them into buckets. Each bucket counts the number of observations that fall into a specific value range. Histograms are typically used to calculate quantiles. They also provide a total sum of all observed values and the total count of observations. This allows calculations of averages.
+Counter:: A value that only increases, such as the number of sessions created.
+Gauge:: A value sampled at a point in time, such as the number of active sessions.
+Timer:: Records both a count of events and the distribution of their durations.
+Distribution summary:: Records both a count of events and the distribution of a non-time measurement, such as the number of rows read from a query.
 
 
-=== Vaadin-Specific Metrics
+=== Session Metrics
+
+Controlled by `vaadin.observability.sessions`.
 
 [cols="2,1,3"]
 |===
-|Metric |Type |Description
+|Meter |Type |Description
 
-|`vaadin.session.count`
+|`vaadin.sessions.active`
 |Gauge
-|The number of open sessions.
+|Currently active sessions.
 
-|`vaadin.session.duration`
-|Histogram
-|The duration of individual sessions.
-
-|`vaadin.ui.count`
-|Gauge
-|The number of current UIs managed by the application.
-|===
-
-
-=== Database Connection Pool Metrics
-
-[cols="2,1,3"]
-|===
-|Metric |Type |Description
-
-|`db.client.connections.create_time`
-|Histogram
-|The time it took to create a new connection.
-
-|`db.client.connections.idle.min`
-|Gauge
-|The minimum number of idle connections allowed.
-
-|`db.client.connections.max`
-|Gauge
-|The maximum number of connections allowed.
-
-|`db.client.connections.pending_requests`
-|Gauge
-|The number of pending requests for an open connection, cumulative for the entire pool.
-
-|`db.client.connections.use_time`
-|Histogram
-|The time between borrowing a connection and returning it to the pool.
-
-|`db.client.connections.wait_time`
-|Histogram
-|The time it took to get an open connection from the pool.
-|===
-
-
-=== JVM Metrics
-
-Below is a list of JVM metrics, each one's type, and a description of each:
-
-[cols="2,1,3"]
-|===
-|Metric |Type |Description
-
-|`process.runtime.jvm.buffer.count`
-|Gauge
-|The number of buffers in the pool.
-
-|`process.runtime.jvm.buffer.limit`
-|Gauge
-|Total capacity of the buffers in this pool, in bytes.
-
-|`process.runtime.jvm.buffer.usage`
-|Gauge
-|Memory that the Java virtual machine is using for this buffer pool, in bytes.
-
-|`process.runtime.jvm.classes.current_loaded`
-|Gauge
-|Number of classes currently loaded.
-
-|`process.runtime.jvm.classes.loaded`
+|`vaadin.sessions.created`
 |Counter
-|Number of classes loaded since JVM start.
+|Sessions created since startup.
 
-|`process.runtime.jvm.classes.unloaded`
+|`vaadin.sessions.duration`
+|Timer
+|Session lifetime, recorded when a session ends.
+
+|`vaadin.session.lock.wait`
+|Timer
+|Time spent waiting to acquire the session lock.
+Tagged by `context`.
+
+|`vaadin.session.lock.hold`
+|Timer
+|Time the session lock is held.
+Tagged by `context`.
+|===
+
+The `context` tag is `request` when the lock is taken during request handling, or `access` when it's taken through [methodname]`UI.access()`.
+
+
+=== UI Metrics
+
+Controlled by `vaadin.observability.uis`.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.ui.active`
+|Gauge
+|Currently active UIs.
+
+|`vaadin.ui.created`
 |Counter
-|Number of classes unloaded since JVM start.
-
-|`process.runtime.jvm.cpu.utilization`
-|Gauge
-|Recent CPU usage for the process.
-
-|`process.runtime.jvm.system.cpu.load_1m`
-|Gauge
-|Average CPU load of the whole system for the last minute.
-
-|`process.runtime.jvm.system.cpu.utilization`
-|Gauge
-|Recent CPU usage for the whole system.
-
-|`process.runtime.jvm.memory.committed`
-|Gauge
-|Measure of memory committed, in bytes.
-
-|`process.runtime.jvm.memory.init`
-|Gauge
-|Measure of initial memory requested, in bytes.
-
-|`process.runtime.jvm.memory.limit`
-|Gauge
-|Measure of maximum obtainable memory, in bytes.
-
-|`process.runtime.jvm.memory.usage`
-|Gauge
-|Measure of memory used, in bytes.
-
-|`process.runtime.jvm.threads.count`
-|Gauge
-|Number of executing threads.
+|UIs created since startup.
 |===
 
 
-== Frontend Traces
+[[ui-state-metrics]]
+=== UI State Metrics
 
-Frontend traces provide spans with data related to operations and events initiated by the frontend application -- within the browser. Observability Kit provides several instrumentation modules for observing the frontend, which are detailed below.
+Controlled by `vaadin.observability.ui-state`, which is off by default.
+Session and UI counts tell you how many users are connected; these gauges tell you what each of them costs.
+See <<#ui-state-size,UI State Size>> for how the measurement is scheduled and how to read it.
 
-All frontend spans have the following attributes:
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.ui.state.nodes`
+|Gauge
+|State-tree nodes retained across all tracked UIs -- how much UI state the server currently holds for live users.
+
+|`vaadin.ui.state.nodes.max`
+|Gauge
+|State-tree nodes held by the largest single UI.
+
+|`vaadin.ui.state.components`
+|Gauge
+|Server-side component instances retained across all UIs.
+
+|`vaadin.ui.state.views`
+|Gauge
+|Route-target and router-layout instances retained across all UIs.
+One navigation into a nested layout legitimately retains one per level, so this is a capacity figure rather than a leak signal.
+
+|`vaadin.ui.state.views.stale`
+|Gauge
+|Retained views that are no longer part of their UI's active navigation -- views that outlived it.
+Normally zero.
+
+|`vaadin.ui.state.size`
+|Gauge
+|Retained UI state in bytes, projected from the node count.
+Registered only when [propertyname]`vaadin.observability.ui-state-bytes-per-node` is set.
+
+|`vaadin.ui.state.sample.age.max`
+|Gauge
+|Age in seconds of the stalest per-UI measurement in the aggregate.
+
+|`vaadin.session.state.nodes.max`
+|Gauge
+|State-tree nodes held by the largest single session.
+
+|`vaadin.session.uis.max`
+|Gauge
+|Most UIs (browser tabs) held open by one session.
+|===
+
+These gauges are aggregates only -- totals and maxima, never one series per session or per UI, which would grow unbounded with traffic.
+They carry no tags.
+
+
+[[navigation-metrics]]
+=== Navigation Metrics
+
+Controlled by `vaadin.observability.navigation`.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.navigation`
+|Timer
+|Navigation duration, from `beforeEnter` to `afterNavigation`.
+Tagged by `route` and `outcome`.
+|===
+
+Every navigation that *starts* is recorded, including the ones that never complete -- which would otherwise leave a span dangling.
+The `outcome` tag says how it ended:
+
+[cols="1,3"]
+|===
+|`outcome` |Recorded for
+
+|`success`
+|The navigation reached `afterNavigation`.
+
+|`rerouted`
+|A listener called [methodname]`rerouteTo()`, so this navigation was replaced by another.
+This is a routing decision -- an access guard sending the user elsewhere -- not a failure.
+
+|`forwarded`
+|A listener called [methodname]`forwardTo()` or [methodname]`forwardToUrl()`, or handed off to a client-side route.
+
+|`error`
+|The navigation failed: [methodname]`rerouteToError()`, or an exception while the view was being built.
+
+|`unknown`
+|The navigation was neither completed nor redirected.
+A re-entrant [methodname]`UI.navigate()` from a view's [methodname]`beforeEnter()` or [methodname]`onAttach()` superseded it, or its UI was detached while it was still open.
+|===
+
+.Building an Error Rate on This Timer
+[IMPORTANT]
+====
+Two consequences follow from timing the router's own chain -- an error view is a navigation in its own right, and it's one that succeeds:
+
+* An unknown URL never reaches a [methodname]`beforeEnter()` that could fail, so it's recorded as the error view rendering successfully: `route=RouteNotFoundError, outcome=success`.
+Alert on that route rather than on `outcome`.
+* A view that throws while being built produces *two* samples: the failed navigation to the view (`outcome=error`), and the navigation to the error view that replaces it (`route=InternalServerError, outcome=success`).
+====
+
+
+=== Request Metrics
+
+Controlled by `vaadin.observability.requests`.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.request.duration`
+|Timer
+|Server-side request handling time.
+Tagged by `vaadin.request.type`, `vaadin.interaction`, `http.method`, `outcome`, and `error`.
+
+|`vaadin.rpc.duration`
+|Timer
+|Server-side RPC invocation time.
+Tagged by `type`, `outcome`, and `error`.
+|===
+
+.The Tags Are the Same With Tracing On or Off
+[NOTE]
+====
+With tracing on -- the default -- `vaadin.request.duration` is produced from the request observation, so it carries that span's low-cardinality attributes as tags, plus the `error` tag Micrometer's [classname]`DefaultMeterObservationHandler` adds.
+With tracing off, the binder records the timer directly and tags it with exactly the same keys.
+This is deliberate: Prometheus rejects same-named meters whose tag-key sets differ, so the two recording paths must never publish `vaadin.request.duration` under differing keys.
+The same holds for `vaadin.rpc.duration` and `vaadin.navigation`.
+
+The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer on both paths.
+====
+
+
+=== Resync Metrics
+
+Controlled by `vaadin.observability.resync`.
+These track UIDL message-recovery events, which indicate a flaky client-server connection.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.resync`
+|Counter
+|Client-server message-recovery events.
+Tagged by `type`: `resend` when the client re-sends a request it never got a response for (the server replays its cached response), or `resync` when the client gives up on a missing server message and asks for a full UI-state rebuild.
+|===
+
+
+[[error-metrics]]
+=== Error Metrics
+
+Controlled by `vaadin.observability.errors`.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.errors`
+|Counter
+|Every server-side failure the kit observes.
+Tagged by `exception`, `route`, and `component`.
+|===
+
+The counter covers both kinds of server-side failure:
+
+Exceptions that escape request handling:: For example one thrown by a custom [classname]`RequestHandler`.
+These reach a [classname]`VaadinRequestInterceptor`.
+
+Failures Flow routes to the session's error handler:: Everything a user can trigger -- a click or value-change listener that throws, a [methodname]`UI.access()` body, a detach listener, or a [methodname]`beforeEnter()` callback.
+Flow catches these and hands them to [methodname]`VaadinSession.getErrorHandler()` rather than letting them escape, so they never reach a request interceptor.
+The kit therefore decorates that handler, which is also what lets it attribute a failure to a component.
+
+All three tags derive from application classes and multiply with each other, so all three are capped at [propertyname]`vaadin.observability.route-cardinality-limit`.
+Values beyond the limit collapse to `_other`, and a `route` or `component` that can't be resolved is `_unknown`.
+
+.How the Error Handler Is Decorated
+[IMPORTANT]
+====
+The decoration always delegates, so an application's own error handler keeps receiving every error it received before.
+It's applied at session init and re-applied at UI init and at the start of every RPC invocation, so installing your own handler after session init doesn't switch error metrics off.
+
+One consequence: a handler read back from [methodname]`VaadinSession.getErrorHandler()` is the kit's wrapper rather than the instance you set.
+Delegating to it works as expected, and the failure is still counted exactly once.
+An `instanceof` check or a cast to your own type does not.
+Set `vaadin.observability.errors=false` to opt out of the decoration entirely.
+====
+
+
+=== Client Metrics
+
+Controlled by `vaadin.observability.client`.
+These are observed in the browser and reported back to the server, subject to a rate limit of [propertyname]`vaadin.observability.client-rate-per-session` samples per UI in each ten-second window.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.client.bootstrap.duration`
+|Timer
+|Browser application bootstrap time.
+
+|`vaadin.client.navigation.duration`
+|Timer
+|Browser-observed navigation time.
+
+|`vaadin.client.web_vitals.lcp`
+|Timer
+|Largest Contentful Paint.
+
+|`vaadin.client.web_vitals.fcp`
+|Timer
+|First Contentful Paint.
+
+|`vaadin.client.errors`
+|Counter
+|Errors reported by the browser.
+Tagged by `kind`.
+
+|`vaadin.client.throttled`
+|Counter
+|Client samples rejected by the per-UI rate limit.
+Untagged.
+
+|`vaadin.client.dropped`
+|Counter
+|Client samples dropped before recording, for example a sample submitted under a name that isn't on the ingest allowlist.
+Untagged.
+|===
+
+Every client timer is tagged by `route`, resolved from the browser location to a route template on the server and capped by the same cardinality limit as the server-side meters.
+`vaadin.client.navigation.duration` additionally carries `trigger`.
+
+Server round-trip timing isn't collected in the browser.
+Use the server-side `vaadin.request.duration` and `vaadin.rpc.duration` timers for that.
+
+The browser buffers samples and flushes them every five seconds, and when the page is hidden.
+Only the meters in the table above are accepted; a sample under any other name is dropped at ingest, which caps the cardinality a buggy or malicious client can create.
+
+
+[[data-metrics]]
+=== Data Provider Metrics
+
+Controlled by `vaadin.observability.data`.
+These measure the queries that lazy-loading components -- [classname]`Grid`, [classname]`ComboBox`, [classname]`VirtualList`, and others -- issue to their data providers.
+Where the database metrics below measure the persistence layer, these measure what the component asked for, so they apply whatever the data provider is backed by.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.data.count.duration`
+|Timer
+|Duration of a count query -- how many items a level holds.
+Tagged by `outcome` and `filtered`.
+A hierarchical component issues one count per expanded parent, so many counts within few requests is the signature of an expensive hierarchy.
+
+|`vaadin.data.fetch.duration`
+|Timer
+|Duration of a fetch query -- loading one page of items.
+Tagged by `outcome` and `filtered`.
+Measured around consumption of the items, so it covers the backend round-trip of a lazily evaluated stream.
+
+|`vaadin.data.fetch.requested`
+|Distribution summary
+|Items a fetch query asked for.
+Tagged by `route`.
+
+|`vaadin.data.fetch.rows`
+|Distribution summary
+|Items a fetch query actually returned.
+Tagged by `route`.
+|===
+
+Compare `vaadin.data.fetch.rows` against `vaadin.data.fetch.requested` to spot a component asking for far more than it renders, or a data provider returning short pages.
+The two duration timers carry no `route` tag; use the `vaadin.data.component` span attribute or the <<insights#,interaction insights>> to attribute a slow query to a view.
+
+When tracing is enabled, each query also opens a span -- see <<#data-spans,Data Provider Spans>>.
+
+
+=== Database Metrics
+
+Controlled by `vaadin.observability.database` (off by default, Spring Boot starter only).
+When enabled, every [classname]`DataSource` bean is wrapped so that JDBC access -- Spring Data, [classname]`JdbcTemplate`, or raw JDBC -- is measured, attributed to the Vaadin `route` that triggered it.
+See <<#database-monitoring,Database Monitoring>> for how this works and when to use it.
+
+[cols="2,1,3"]
+|===
+|Meter |Type |Description
+
+|`vaadin.db.fetch.rows`
+|Distribution summary
+|Rows read from a JDBC result set.
+Tagged by `route`.
+
+|`vaadin.db.query`
+|Timer
+|JDBC query duration.
+Tagged by `route`.
+Produced alongside the `vaadin.db.query` span when both database monitoring and tracing are enabled.
+|===
+
+
+[[common-tags]]
+=== Common Tag Values
 
 [cols="1,2"]
 |===
-|Attribute |Description
+|Tag |Values
+
+|`outcome`
+|`success` or `error`.
+On `vaadin.navigation`, also `rerouted`, `forwarded`, and `unknown` -- see <<#navigation-metrics,Navigation Metrics>>.
+
+|`error`
+|The simple class name of the exception that ended the operation, or `none` when it raised none.
+Distinct from `exception`, which tags the `vaadin.errors` counter.
+
+|`route`
+|The target route template.
+Distinct values are capped by [propertyname]`vaadin.observability.route-cardinality-limit`; beyond the limit they collapse to `_other`, and an unresolvable route is `_unknown`.
 
 |`component`
-|The instrumentation module name. For example, `document-load`.
+|On `vaadin.errors`, the simple class name of the component the failure was thrown for.
+Capped by the same cardinality limit as `route`: `_unknown` when it can't be resolved, `_other` beyond the limit.
 
-|`vaadin.frontend.id`
-|A unique identification for the Vaadin UI associated with the span. This can be used to track spans being emitted from a particular browser tab.
+|`context`
+|`request` or `access`.
+
+|`type`
+|On RPC meters and spans, the RPC invocation type as reported by Flow -- `event` for a DOM event, `mSync` for a property sync, `publishedEventHandler` for an [annotationname]`@ClientCallable` method, `channel` for a return channel, and `navigation`.
+On `vaadin.resync`, the recovery kind: `resend` or `resync`.
+
+|`exception`
+|The simple class name of the counted exception, capped by the same cardinality limit as `route`.
+Types beyond the limit are bucketed as `_other`.
+
+|`filtered`
+|On the data provider meters, whether the query carried a filter: `true` or `false`.
+This separates a combo box loading matches for typed text from one loading the whole data set.
+
+|`trigger`
+|On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call.
+
+|`kind`
+|On `vaadin.client.errors`, the source of the browser error: `uncaught` or `promise`.
 |===
 
+.JVM, Process, and Connection-Pool Metrics
+[NOTE]
+Observability Kit doesn't record JVM, process, or database connection-pool metrics itself.
+Those come from Micrometer's standard binders -- Spring Boot Actuator registers them out of the box, and you can add others as needed.
+The kit's own database metrics above measure query behavior per route, not the connection pool.
 
-=== Document Load
 
-This creates spans when a page is first loaded (e.g., `Frontend: documentLoad`). These represent the initial document load, document fetch, and each resource fetch. Each span has the following attributes:
+== Tracing
 
-[cols="1,2"]
+When tracing is enabled (`vaadin.observability.traces`, the default) and an [classname]`ObservationRegistry` is available, the kit drives the core request lifecycle through the Observation API.
+Each observation produces a tracing span and, through Micrometer's [classname]`DefaultMeterObservationHandler`, the matching timer above -- one measurement, recorded two ways.
+
+To export spans, add a Micrometer tracing bridge (for example OpenTelemetry or Zipkin); see the <<integrations#,Integrations>> page.
+
+The kit produces the following spans:
+
+[cols="2,3"]
+|===
+|Span |Description
+
+|`vaadin.request`
+|The root span for each Vaadin request.
+Carries the request-level attributes below.
+
+|`vaadin.navigation <route>`
+|A navigation, nested under the request that triggered it.
+
+|`vaadin.rpc.<type>`
+|A server-side RPC invocation (DOM event, [annotationname]`@ClientCallable`, property sync, or return channel), nested under the request.
+
+|`vaadin.ui.access`
+|One task run on the Vaadin service executor, nested under whatever trace was active when the task was submitted.
+See <<#background-work,Background Work>>.
+
+|`vaadin.data.count`
+|A data provider count query, nested under the request or RPC span that triggered the load.
+Controlled by `vaadin.observability.data`.
+
+|`vaadin.data.fetch`
+|A data provider fetch query, nested under the request or RPC span that triggered the load.
+Controlled by `vaadin.observability.data`.
+
+|`vaadin.db.query`
+|A single JDBC query, nested under the request or RPC span that ran it.
+Emitted only when database monitoring is enabled (see <<#database-monitoring,Database Monitoring>>).
+|===
+
+With both data provider and database monitoring on, a slow interaction opens up in full: the `vaadin.rpc.<type>` span that the user triggered, the `vaadin.data.fetch` span for the page the component asked for, and the individual `vaadin.db.query` spans that fetch ran.
+
+
+[[background-work]]
+=== Background Work
+
+With tracing enabled, the kit wraps the Vaadin service [classname]`Executor` so that the trace context active when a task is *submitted* is restored when the task *runs*.
+A background task started from a request thread therefore stays in the same trace across the thread hop, under its own `vaadin.ui.access` span, instead of appearing as an unrelated root span.
+
+This covers the executor Vaadin dispatches signal effects and result notifications on, and that applications are expected to use for their own background work -- typically a task that ends by pushing its result through [methodname]`UI.access()`.
+It isn't [methodname]`UI.access()` itself: a command queued with [methodname]`UI.access()` runs on whichever thread unlocks the session, and is recorded there.
+
+Work you hand to an executor of your own isn't wrapped.
+To keep such work in the trace, submit it through the Vaadin service executor, or propagate the context yourself with Micrometer's [classname]`ContextSnapshot`.
+
+
+=== Span Attributes
+
+The root `vaadin.request` span carries these attributes:
+
+[cols="2,3"]
 |===
 |Attribute |Description
 
-|`http.url`
-|The URL of the requested document or resource.
-|===
+|`vaadin.request.type`
+|The protocol-level request type: `uidl`, `heartbeat`, `push`, `static`, or `other`.
 
-
-=== User Interaction
-
-This creates spans when a user interacts with the application (e.g., `Frontend: click`). This includes events such as `click`. Each span has the following attributes:
-
-[cols="1,2"]
-|===
-|Attribute |Description
-
-|`event_type`
-|The type of user interaction event (e.g., `click`).
-
-|`target_element`
-|The document element that is the target of the event.
-
-|`target_xpath`
-|The XPath query for the target element.
-|===
-
-
-=== XMLHttpRequest
-
-This creates spans when there is an asynchronous request from the frontend (e.g., `Frontend: HTTP POST`) -- also known as AJAX. Each span has the following attributes:
-
-[cols="1,2"]
-|===
-|Attribute |Description
+|`vaadin.interaction`
+|What the request actually did: `poll`, `navigation`, or `rpc`, and `none` for requests where no interaction applies, such as heartbeats and static resources.
 
 |`http.method`
-|The HTTP method used for the request (e.g., `POST`).
+|The HTTP method of the request.
 
-|`http.status_code`
-|The response code.
+|`outcome`
+|`success` or `error`.
 
-|`http.url`
-|The URL of the AJAX request.
+|`ui.id`
+|The ID of the UI associated with the request, or `_unknown`.
+Span-only, since UI IDs are unbounded.
+
+|`vaadin.client.location`
+|The browser location the request was sent from, or `_unknown`.
+Span-only: it's the literal path, not a route template.
+For templated, cardinality-capped view attribution, use the `route` tag on the navigation meters.
 |===
 
+The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
 
-=== Long Task
+The RPC span additionally carries two span-only, high-cardinality attributes when they can be resolved: `vaadin.rpc.event` (the invocation name, such as a DOM event name, invoked method name, or navigation location) and `vaadin.rpc.component` (the class name of the targeted [classname]`Component`).
+These are attached to the span only, never as timer tags, because of their cardinality.
+Together they let you trace a failure back to the interaction that caused it -- which component, and which event.
 
-A long task (e.g., `Frontend: longtask`) is defined as any operation that takes more than 50 milliseconds to complete. This creates spans to record when an operation is considered a long task. Each span has the following attributes:
+Flow doesn't report an invocation name for property syncs, which is how a field's value change arrives at the server.
+Those spans carry `type` and `vaadin.rpc.component`, but no `vaadin.rpc.event`.
 
-[cols="1,2"]
-|===
-|Attribute |Description
+The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
 
-|`longtask.duration`
-|The duration of the task in milliseconds.
-
-|`longtask.name`
-|The browsing context or frame that can be attributed to the long task.
-|===
+The `vaadin.ui.access` span carries no attributes of its own.
+Its value is structural: it shows where a submitted task ran, under the trace it was submitted from.
 
 
-=== Frontend Error
+[[data-spans]]
+=== Data Provider Spans
 
-Frontend error instrumentation (e.g., `Frontend: windowError`) creates spans for https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event[errors] and https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event[unhandled rejection] events fired on the browser. Each span has the following attributes, that may be present or not based on the type of the intercepted event:
+The `vaadin.data.count` and `vaadin.data.fetch` spans carry `filtered` and `outcome` as low-cardinality attributes, alongside these span-only ones:
 
-[cols="1,2"]
-|===
-|Attribute |Description
-
-|`exception.type`
-|The exception type.
-
-|`exception.message`
-|The exception message.
-
-|`code.filepath`
-|The source code file name that identifies the code unit as uniquely as possible.
-
-|`code.lineno`
-|The line number in `code.filepath` best representing the operation that raised the error.
-
-|`http.url`
-|Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`.
-|===
-
-
-Spans may also contain an `event` representing the error reason, with the following attributes:
-
-[cols="1,2"]
+[cols="2,3"]
 |===
 |Attribute |Description
 
-|`exception.type`
-|The exception type.
+|`vaadin.data.component`
+|The class name of the component whose data is being loaded.
+Span-only, because of its cardinality -- this is what attributes a slow query to a view, since the duration timers carry no `route` tag.
 
-|`exception.message`
-|The exception message.
+|`vaadin.data.offset`
+|Index of the first item a fetch query asked for.
+Fetch spans only.
 
-|`exception.stacktrace`
-|The error stack trace as a string.
+|`vaadin.data.limit`
+|Number of items a fetch query asked for.
+Fetch spans only.
+
+|`vaadin.data.rows`
+|Number of items a fetch query returned.
+Fetch spans only, and only when the query succeeded.
 |===
+
+
+=== Errors
+
+When a request or a nested operation fails, its observation is marked as error, so the span records the exception and the `outcome` tag becomes `error`.
+
+For an exception thrown inside a component listener, this happens on the `vaadin.rpc.<type>` span -- the one that also carries the component and event.
+The enclosing `vaadin.request` span is marked `outcome=error` as well: Flow hands such an exception to the session's [classname]`ErrorHandler` rather than letting it escape request handling, and the kit relays that back to the request observation, so the request doesn't claim success for an interaction that failed.
+The failure also increments the `vaadin.errors` counter; see <<#error-metrics,Error Metrics>>.
+
+The same failure is also retained as an interaction insight, which reports it without a tracing backend and points at the application stack frame behind it.
+See the <<insights#,Interaction Insights>> page.
+
+
+[[ui-state-size]]
+== UI State Size
+
+Session and UI counts tell you how many users are connected; they say nothing about what each of them costs.
+Because Flow keeps every open tab's component tree in server memory, *size* is the signal that predicts when a server-driven application has to scale: a hundred users on a dashboard with three grids cost nothing like a hundred users on a login form.
+
+Turn the measurement on with:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.ui-state=true
+----
+
+Each UI then reports its own state-tree size, and the kit publishes the aggregates listed in <<#ui-state-metrics,UI State Metrics>>.
+Charted next to `vaadin.sessions.active`, they answer a question the counts can't: state climbing while the session count is flat means capacity is going into what users have open, not into how many of them there are.
+
+Watch the maxima as much as the totals.
+`vaadin.ui.state.nodes.max` and `vaadin.session.state.nodes.max` describe the worst-case tab and the worst-case user, and it's the tail that exhausts a heap, not the mean.
+`vaadin.ui.state.views.stale` is the one leak signal in the set: anything above zero means views are outliving their navigation.
+A plain view count can't tell you that, because one navigation into a nested layout legitimately retains a view per level.
+
+=== How Measurement Is Scheduled
+
+A component tree may only be read under its own session lock, so no UI is ever measured by another user's request thread.
+Every UI measures itself: at UI init, after each navigation, and when an RPC invocation ends -- the last of these throttled to one tree walk per UI per [propertyname]`vaadin.observability.ui-state-sample-interval` milliseconds.
+
+This is why the feature is off by default: it costs a tree walk that ordinary request handling doesn't.
+It's also why an idle user contributes their state as of their last interaction, and why `vaadin.ui.state.sample.age.max` exists -- it publishes how stale the oldest measurement in the aggregate is, so a reading can be judged rather than assumed current.
+
+The cost of one walk is proportional to the size of the tree it measures, and it's paid on the request thread while the session lock is held.
+The interval is therefore what bounds the overhead: tree size times interaction rate, capped at one walk per UI per interval.
+The default of ten seconds keeps a capacity trend legible on a grid-heavy application with many concurrent users.
+Lower it for a sharper signal, and raise it if the measurement becomes visible in `vaadin.session.lock.hold`.
+
+[[nodes-not-bytes]]
+=== Nodes, Not Bytes
+
+A node count is a proxy for retained heap, not a measurement of it: one [classname]`Grid` node backed by 100,000 rows counts as a single node.
+The kit therefore publishes no byte figure by default, because a guessed per-user cost is worse than a missing one.
+
+If you measure the cost for your own application -- settle the heap, build a number of copies of a representative view, keep them reachable, and read the difference from [classname]`MemoryMXBean` -- set the result and the projection becomes available as `vaadin.ui.state.size`:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.ui-state-bytes-per-node=96
+----
+
+Divided into the heap headroom, that's an estimate of how many more tabs the instance can hold.
+
+
+[[database-monitoring]]
+== Database Monitoring
+
+With the Spring Boot starter, the kit can watch how many rows your queries return and how long they take, without touching application code.
+Enable it with:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.database=true
+----
+
+Every [classname]`DataSource` bean is then wrapped so that each JDBC [classname]`ResultSet` reports its row count into the `vaadin.db.fetch.rows` distribution summary, *tagged by the Vaadin `route`* that triggered the fetch.
+This lets you see which view issues the large reads.
+Watch the p95/p99 of that summary and alert on it in your backend -- for example a Prometheus rule on `vaadin_db_fetch_rows` -- to catch runaway result sets in production.
+
+This is off by default: it reaches outside the Vaadin runtime into the persistence layer and adds a small per-row cost.
+It covers all JDBC access -- Spring Data, [classname]`JdbcTemplate`, and raw JDBC -- that flows through a managed [classname]`DataSource`.
+Row counting is best-effort and attributes to `_unknown` when no view is active, such as for background tasks.
+
+=== Locating Slow or Large Queries in a Trace
+
+When tracing is also enabled (`vaadin.observability.traces=true`, the default), each query additionally opens a `vaadin.db.query` span.
+Because it starts on the request-handling thread inside the Vaadin request span, it nests under that request or RPC span automatically.
+In Jaeger -- or any backend fed by your Micrometer tracing bridge -- you can open a slow interaction and see the individual queries it ran, each carrying the `route` and a `db.rows` attribute.
+The same observation also yields a `vaadin.db.query` duration timer: database time per view.
+
+The span doesn't include the SQL text by default.
+Set `vaadin.observability.database-statement=true` to attach the parameterized statement as `db.statement`.
+This is useful for pinpointing the offending query, but it's opt-in because SQL is higher cardinality and can be sensitive.
+
+
+== Extending Built-In Instrumentation
+
+To record your own metrics and spans alongside these, see the <<customization#,Custom Instrumentation>> page.
+Custom meters and spans share the same registry and backend, so keep your names and tag cardinality consistent with the conventions above.
+
+[discussion-id]`4E9CED65-0EA1-4590-956A-6198F0F90482`
