@@ -1,0 +1,688 @@
+---
+title: Dev Loop CLI
+page-title: Vaadin dev loop CLI for AI agents and hot reload
+description: Own the edit-to-running-app loop with vaadin-dev, a CLI that compiles, hot-swaps, and reports whether your change is actually live.
+meta-description: Use the Vaadin vaadin-dev CLI to compile, hot-swap, and verify source changes in a running Vaadin application, with exit codes AI coding agents can trust.
+tab-title: Dev Loop CLI
+order: 5
+version: since:com.vaadin:vaadin@V25.3
+section-nav: badge-preview
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Dev Loop CLI#
+
+:preview-feature: The Dev Loop CLI
+:ticket-url: https://github.com/vaadin/flow/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+`vaadin-dev` is a command-line tool that owns your application's edit-to-running-app loop: it compiles changed sources in the background, hot-swaps or restarts, pushes changed stylesheets and themes into the open page, and then tells you what actually happened. One command answers the question every other approach leaves you guessing about: *is my last change live?*
+
+[NOTE]
+Two different things share the `vaadin-dev` name. This page is about the CLI script, installed at [filename]`.vaadin/vaadin-dev` in your project. It requires the `com.vaadin:vaadin-dev` Maven dependency, which is a separate thing -- the optional development-tools artifact described in <<{articles}/flow/configuration/development-mode#,Development Mode>>. In prose below, "the dev loop CLI" means the script.
+
+
+== Designed for AI Coding Agents
+
+The dev loop CLI exists because AI coding agents are bad at the part of development that happens after the edit. An agent changes a view, rebuilds, relaunches the application, takes a screenshot, and then reasons about a picture to decide whether its change took effect. That is slow, and it is frequently wrong.
+
+`apply` replaces all of it. An agent batches its edits, runs one command, and reads a verdict from the exit code:
+
+[source,bash]
+----
+.vaadin/vaadin-dev apply
+----
+
+----
+change-set: 2 file(s): src/main/java/com/example/TaskListView.java, src/main/frontend/themes/app/styles.css
+compiling → runtime → Stable   (1.2s)
+hot-reload: redefineClasses(1); onHotswap completed=true
+----
+
+Exit code `0` means the change is live, `1` means it failed, and `4` means a newer `apply` took over. No screenshot parsing, and no relaunch.
+
+Two design properties make that verdict worth trusting:
+
+*Exactly one gate decides.* While the daemon owns your application, Flow's own save-triggered watchers are suspended. Nothing else pushes a stylesheet or refreshes a component behind your back, so one command decides when a change goes live and one command reports on it.
+
+*It never over-claims.* A successful class redefinition is not proof that a change is visible. If Flow had no component to refresh, if an entity mapping is involved, if a proxied Spring bean changed shape, or if a frontend import moved, `apply` says so and escalates to a restart instead of reporting `Stable`. Compile errors, and errors the application logged while the change went live, are reported rather than swallowed.
+
+Developers get exactly the same commands. Nothing on this page is agent-only.
+
+
+== How It Works
+
+Three pieces cooperate:
+
+. *The CLI* -- [filename]`.vaadin/vaadin-dev`, a thin client. It starts no JVM of its own: it finds the daemon through a handshake file and talks to it over a loopback socket, so `status` costs milliseconds rather than a JVM boot.
+. *The daemon* -- a long-running, zero-dependency process that owns your application's process. It detects changed files, compiles them with the JDK's own compiler, drives the hot swap, and decides when a restart is unavoidable. It starts automatically on first use and survives between commands, so every command -- from any shell, agent, or IDE -- answers for the same running application.
+. *The in-application connector* -- ships with `com.vaadin:vaadin-dev` and holds one socket open for the application's lifetime. The daemon drives Flow's hot-swap machinery, resource pushes, and theme pushes over it, and the socket closing is how the daemon knows the application died.
+
+The connector activates only when the daemon launched the JVM, so an application you run any other way is completely untouched.
+
+[IMPORTANT]
+====
+Don't start the application through Maven (`spring-boot:run`, `jetty:run`) or an IDE run configuration while using the dev loop. The daemon owns the application process, and a second launcher fights it for the HTTP port. Use `.vaadin/vaadin-dev start` instead.
+====
+
+
+[[prerequisites]]
+== Prerequisites
+
+*Java 21 or newer.* This is a floor, not a preference. The daemon picks a JVM for your application and drops anything below 21, even if your project targets an older release. Your code is still compiled at the release your project declares.
+
+*A JetBrains Runtime, strongly recommended.* Enhanced class redefinition is a JVM feature, and only a JetBrains Runtime provides it. On a stock JDK, structural changes are rejected outright and the dev loop escalates to a restart. Nothing is broken when that happens -- the restart is the honest answer -- but you get fewer hot swaps. The daemon looks for candidates in [filename]`~/.jdks`, `JAVA_HOME`, and `JDK_HOME`, reads each one's real version and vendor, and picks the closest JetBrains Runtime above your project's requirement.
+
+*Maven.* A wrapper next to your application, any wrapper above it, or `mvn` on the path. The daemon uses it to resolve the classpath.
+
+*The `com.vaadin:vaadin-dev` dependency*, declared optional so it can never reach a production build:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-dev</artifactId>
+    <optional>true</optional>
+</dependency>
+----
+
+Generated starters already declare it. Without it, the CLI reports that the project doesn't depend on the dev-loop daemon.
+
+*A shell.* Bash on macOS and Linux; PowerShell 5.1 or later, pwsh, or Git Bash on Windows.
+
+*Network access on first use.* The dev loop uses HotswapAgent, downloaded once from a pinned release, verified against a checksum, and cached per machine in [filename]`~/.vaadin/devloop/`. A `mvn clean` doesn't discard it.
+
+Maven projects only. There's no Gradle equivalent yet.
+
+
+[[install]]
+== Installing the CLI
+
+Run the install goal on your application module:
+
+[source,bash]
+----
+mvn vaadin:install-dev-cli
+----
+
+In a multi-module reactor, run it on the module that holds the application, not the root:
+
+[source,bash]
+----
+mvn vaadin:install-dev-cli -pl :my-app
+----
+
+The goal is unbound, so it never runs as a side effect of a normal build. Run it once per project, and again after a Vaadin upgrade.
+
+
+=== What Gets Installed
+
+[cols="1,2"]
+|===
+|File |Purpose
+
+|[filename]`.vaadin/vaadin-dev`
+|The CLI, for Bash.
+
+|[filename]`.vaadin/vaadin-dev.ps1`
+|The PowerShell port. Same commands, same exit codes.
+
+|[filename]`.vaadin/vaadin-dev.cmd`
+|A shim that runs the PowerShell port, for `cmd` and PowerShell.
+
+|[filename]`.vaadin/.gitignore`
+|Ignores the daemon's handshake file, which holds a per-run authorization token.
+
+|[filename]`.agents/skills/vaadin-devloop/SKILL.md`
+|Instructions for AI coding agents: the cycle, the commands, and how to read an outcome.
+
+|[filename]`.agents/skills/vaadin-devloop/reference.md`
+|The detailed reference the skill defers to.
+
+|[filename]`.claude/skills/vaadin-devloop/SKILL.md`
+|A Claude-specific adapter pointing at the shared instructions.
+|===
+
+Three things to know about these files:
+
+*Commit them, like [filename]`mvnw`.* They're project tooling, and the point is that every developer and every agent working on the repository gets the same instructions. The one exception is [filename]`.vaadin/daemon.properties`, which is per-run state and is git-ignored for you.
+
+*Don't edit them.* The goal rewrites any of these files that differs from the shipped copy, so local edits don't survive an upgrade. Put project-specific instructions in a skill of your own alongside them.
+
+*No jars are staged.* The CLI resolves the daemon from your project's own dependencies on first use and caches the answer.
+
+
+=== Wiring Up an AI Coding Agent
+
+The installed skills are the wiring. An agent that reads [filename]`.agents/skills/vaadin-devloop/` learns the cycle, the command set, and how to interpret every `apply` outcome, which is the bulk of what it needs.
+
+Two things the skills expect but don't install:
+
+* *A browser automation tool*, such as a Playwright MCP server, so the agent can verify what it applied. See <<#browser,Verifying in the Browser>>.
+* *The <<{articles}/building-apps/mcp#,Vaadin MCP server>>*, so the agent looks up component API and theme properties instead of recalling them.
+
+
+[[cycle]]
+== The Cycle
+
+[source,bash]
+----
+# 1. Ask what is running. This costs milliseconds.
+.vaadin/vaadin-dev status
+
+# 2. If it says stopped, start the application. Blocks until it serves or fails.
+.vaadin/vaadin-dev start
+
+# 3. Edit Java, CSS, and frontend files. Batch the edits.
+
+# 4. Make them live. The exit code is the verdict.
+.vaadin/vaadin-dev apply
+
+# 5. Verify in the browser, then report the change as working.
+----
+
+A cold `start` takes roughly 30 seconds and blocks until the application is serving or has failed. Later commands are fast, because the daemon and the application both stay up.
+
+*Batch the edits.* `apply` finds the change-set itself by scanning the sources of every module in the loop, so run it once after a batch of edits, not once per file.
+
+On Windows a checkout carries no executable bit, so the Bash script may refuse to run:
+
+[.example]
+--
+[source,bash]
+----
+<source-info group="macOS/Linux"></source-info>
+.vaadin/vaadin-dev apply
+----
+
+[source,bash]
+----
+<source-info group="Windows"></source-info>
+.\.vaadin\vaadin-dev.cmd apply
+----
+
+[source,bash]
+----
+<source-info group="Git Bash"></source-info>
+bash .vaadin/vaadin-dev apply
+----
+--
+
+Every command, option, and exit code is identical whichever launcher you use.
+
+
+[[commands]]
+== Commands
+
+`status [--json]`::
+Reports whether the application is up, whether it registered with the daemon, which modules are in the loop, the state of the current or last transaction, and any errors the application has logged since the last `apply`. Starts no JVM, so it costs milliseconds. This is where a failure that only appears when somebody uses the application shows up.
+
+`start`::
+Launches the application in development mode, with the daemon owning the process. Blocks until the application is serving or has failed. A failure names the reason from the application's own log and prints the tail of it.
+
+`apply [--json] [--no-restart]`::
+Makes the edits on disk live. Blocks until the outcome is terminal. Pass `--no-restart` to stop after the compile gate, which is useful when you want compile errors without any effect on the running application.
+
+`stop`::
+Stops the application, leaving the daemon running.
+
+`restart`::
+`stop` then `start`. Required after changes the running JVM can't absorb, such as edits to [filename]`package.json`, [filename]`vite.config.ts`, or [filename]`tsconfig.json`.
+
+`shutdown`::
+Stops the daemon and the application it owns. Use this when the daemon seems wedged; the next command starts a fresh one.
+
+`ping`::
+Checks that the daemon is alive.
+
+`redefine <a.b.C,...>`::
+A diagnostic. Pushes the named classes at the running application and prints the raw reply, without the escalation policy that `apply` applies. Use it to understand why a change didn't take, not as part of the normal cycle.
+
+`--help`::
+Prints the full usage text, including every environment variable. Answers without starting a daemon, which is what makes it useful when the loop isn't working.
+
+
+=== Options
+
+`--app <dir>`::
+The application to act on. Defaults to the directory the script is in, or the one above it when the script is installed in an application's [filename]`.vaadin/`. Accepted anywhere in the command line, so `vaadin-dev --app ../admin apply` and `vaadin-dev apply --app ../admin` are the same. See <<#multi-module,Multi-Module Projects>>.
+
+`--json`::
+On `status` and `apply`, returns a single machine-readable object instead of progress lines. See <<#json,JSON Output>>.
+
+`--no-restart`::
+On `apply`, stops after the compile gate instead of escalating to a restart.
+
+
+=== Exit Codes
+
+The exit code is the contract, and it means the same thing on every platform.
+
+[cols="1,1,3"]
+|===
+|Code |Outcome |Meaning
+
+|`0`
+|`Stable`
+|The change is live and the application is consistent.
+
+|`0`
+|`compiled`
+|Compiled successfully, but nothing is running to apply it to.
+
+|`0`
+|`no changes`
+|Nothing changed on disk since the last `apply`.
+
+|`1`
+|`Failed`
+|Couldn't complete. The reason names the phase that failed.
+
+|`4`
+|`Failed(superseded)`
+|A newer `apply` took over. Read that one's result instead.
+
+|`64`
+|--
+|Usage error, such as an unknown command or a bad `--app` directory.
+
+|`70`
+|--
+|Internal error, or the daemon can't be reached.
+
+|`77`
+|--
+|Unauthorized.
+|===
+
+At most one transaction runs at a time, and a new `apply` supersedes the one in flight rather than queueing behind it, because only the latest bytes on disk matter. The superseded caller still gets a terminal answer.
+
+
+[[apply-output]]
+== Reading the Result of Apply
+
+`apply` prints a phase line, then one line per leg of the change. The phase line names where it got to:
+
+----
+compiling → runtime → Stable                    the normal successful path
+compiling → runtime → restarting → Stable       a restart was needed; reload the page
+restarting → Stable                             restarted with nothing to compile
+compiling → Failed                              the compile gate rejected the change
+frontend → Failed                               the dev server refused to compile a frontend file
+----
+
+
+=== Common Output
+
+A line beginning `hmr:` reports _hot module replacement_: the change reached the running application and the open browser session without restarting the server, so you keep your session, your navigation state, and whatever you had typed into a form. Most of these land in the page with no reload at all -- the browser swaps the stylesheet or the module in place. The exceptions say so on the line itself, and a page reload is still far cheaper than the restart it replaces.
+
+`hot-reload:` lines are the Java counterpart, where the new bytecode is swapped into the running JVM instead.
+
+*Stylesheets and themes pushed into the open page, with no reload:*
+
+----
+hmr: 1 resource(s) copied, pushed 1 stylesheet(s) in place
+hmr: 2 theme file(s) pushed in place
+----
+
+*Frontend files:*
+
+----
+hmr: 1 frontend file(s) served live, browser reloaded
+hmr: 3 frontend file(s), applied by Vite (dev server up:57231)
+----
+
+The first is [filename]`index.html` or a theme asset, which are served straight from disk and need only a reload. The second is Vite mode, where Vite applied the edit when you saved it. See <<#frontend,Frontend Modes>>.
+
+*Java hot-swapped:*
+
+----
+hot-reload: redefineClasses(1); onHotswap completed=true
+----
+
+Sometimes with a qualifier under it:
+
+----
+  → live, but no Vaadin component was redefined ...
+----
+
+That means the redefinition worked and Flow had nothing to refresh -- you edited a helper class rather than a component, and already-rendered output still shows the old values. The change is real. Interact with the view or reload the page to see it, and *don't run `apply` again*; there's nothing left to compile.
+
+*A restart, with the reason named:*
+
+----
+restart: classpath changed (removed h2-2.3.232.jar)
+restart: frontend changed (dev bundle rebuild)
+restart: theme.json changed (dev bundle rebuild)
+restart: frontend imports changed (MyView): @JsModule and friends are read at startup (dev bundle rebuild)
+----
+
+*Nothing to do:*
+
+----
+no changes   (../shared-lib/pom.xml changed; nothing to recompile or restart)
+----
+
+This is a positive answer, not a shrug. The pom edit was noticed, Maven re-resolved, and no module's classpath moved, so the running application already matches what the poms describe. A bare `no changes` with no parenthesis means nothing was examined at all.
+
+*A compile failure, with real diagnostics:*
+
+----
+compiling → Failed
+  TaskListView.java:51:53  error: cannot find method markDone() in class TaskService
+  shared-lib/DueDateFormatter.java:12:9  error: ...
+  → check the name, or add the missing member/import
+----
+
+Files outside the application module are named by their module. The running application keeps its last good bytes, so fix the source and run `apply` again.
+
+
+=== When Stable Is Not a Green Result
+
+----
+compiling → runtime → Stable   (1.4s)
+hot-reload: redefineClasses(1); onHotswap completed=true
+app log: 1 error(s) since the change; see target/devloop/app.log
+  There was an exception while trying to navigate
+----
+
+An `app log:` line means the bytes are live and the code then did something wrong. `Stable` with that line under it is a failure to investigate, not a success -- read the error before reporting the change as working. `status` shows the same thing for errors logged since the last `apply`, which is where a failure that only appears when somebody uses the application turns up.
+
+
+[[json]]
+=== JSON Output
+
+`apply --json` returns one object, with progress lines suppressed so the output is parseable:
+
+[source,bash]
+----
+.vaadin/vaadin-dev apply --json
+----
+
+The fields are `outcome`, `classification`, `reason`, `changeSet`, `classes`, `diagnostics` (each with `file`, `line`, `column`, `message`, and `hint`), `actionsTaken`, `escalation`, `resources`, `frontend`, `frontendMode`, `themePushed`, `logErrors`, `timings`, and `nextAction`. `classification` is one of `hmr`, `hot-reload`, `restart`, `compile-only`, or `none`.
+
+`status --json` returns `app` (state, pid, whether it registered, frontend mode, logged errors), `modules` (the reactor root, the modules in the loop, and those excluded), `daemon` (pid, port, uptime), and `transaction` (in flight and last).
+
+
+[[reload-matrix]]
+== Which Edits Need a Page Reload
+
+[cols="2,3"]
+|===
+|Edit |What Happens in the Browser
+
+|CSS or icons under [filename]`META-INF/resources/`
+|Updated in place. No reload.
+
+|Java in a component or view class -- method bodies, string literals, most view code
+|Updated in place. No reload.
+
+|Java in a plain class, such as a formatter or mapper, called from a renderer
+|Live immediately, but already-rendered output keeps its old values. `apply` says so and tells you to interact with the view or reload.
+
+|Structural Java -- new fields or beans, new repository methods, changed routes or annotations
+|Restart. Reload the page.
+
+|A JPA entity's mapping, or adding `@Entity` to a class
+|Never hot-reloads. Hibernate fixes its metamodel and schema at startup, so `apply` escalates to a restart.
+
+|[filename]`application.properties`, or any resource outside [filename]`META-INF/resources/`, [filename]`static/`, [filename]`public/`, and [filename]`resources/`
+|Read at startup and never re-read, so copying it changes nothing. `apply` restarts.
+
+|A deleted [filename]`src/main/resources/` file
+|The copy under [filename]`target/classes` is removed too. A public file then reloads the page; a startup file restarts.
+
+|[filename]`src/main/frontend/themes/<theme>/**.css`
+|Combined and pushed in place. No reload.
+
+|[filename]`src/main/frontend/index.html`, theme assets such as images and fonts
+|Already served from disk. `apply` reloads the page.
+
+|Any other [filename]`src/main/frontend/` file -- `.ts`, `.tsx`, `.js`, `.css`, [filename]`theme.json`
+|Depends on the mode. See <<#frontend,Frontend Modes>>.
+
+|[filename]`src/main/frontend/generated/`
+|Never in the change-set. The build owns it.
+
+|[filename]`package.json`, [filename]`vite.config.ts`, [filename]`tsconfig.json`
+|Not tracked at all. They need an `npm install` or a dev server restart, so edit them and run `restart`, not `apply`.
+
+|Adding, changing, or removing `@JsModule`, `@JavaScript`, `@CssImport`, `@NpmPackage`, or `@Theme` on a Java class
+|Restart. The class redefines cleanly, but those annotations are read by the build at startup and reach the browser through a bundle chunk. `@StyleSheet` is the exception: it's live already.
+
+|Java or CSS in a sibling library module in the same reactor
+|Same as the application's own. The change-set shows it as `../<module>/...`.
+
+|A sibling module's new route, `@JsModule`, or `@NpmPackage`
+|Read at startup. Needs `restart`, not `apply`.
+
+|A [filename]`pom.xml` anywhere in the reactor
+|The next `apply` re-resolves through Maven, then fully recompiles every module whose compile classpath moved. If the application's classpath moved, it also restarts and names what moved. A pom edit that changes neither stays `no changes`.
+|===
+
+
+[[browser]]
+== Verifying in the Browser
+
+`apply` proves the bytes are live. Only the browser proves the UI renders what you intended. The application serves on `http://localhost:8080` unless `server.port` says otherwise.
+
+*Navigate once and keep the page open across applies.* Stylesheet pushes and Java hot swaps land in an already-open page, so re-navigating hides exactly what you're testing. Reload only after a restart.
+
+*The first snapshot after navigating is usually empty*, because Vaadin renders client-side. Wait for a known element before asserting.
+
+*Assert computed style for CSS*, not screenshots:
+
+[source,javascript]
+----
+getComputedStyle(document.querySelector('.app-name')).fontSize
+----
+
+*Assert the rendered DOM for Java.* Component text is in the light DOM:
+
+[source,javascript]
+----
+[...document.querySelectorAll('vaadin-button')].map(b => b.textContent.trim())
+----
+
+Read the browser console after each change; a [filename]`/favicon.ico` 404 is normal noise. Development mode also injects Vaadin's development tools and <<{articles}/tools/copilot#,Copilot>> toolbar -- ignore those nodes and never assert on them.
+
+
+[[multi-module]]
+== Multi-Module Projects
+
+The daemon serves one application. When that application is a module of a Maven reactor, every reactor module it depends on is in the loop too: `apply` scans, compiles, and hot-reloads those modules exactly as it does the application's own code, so an edit in a sibling library reaches the running page without a rebuild.
+
+`status` names the modules in the loop. *A module it doesn't name is one the application doesn't depend on, and edits there are invisible to `apply`.*
+
+The frontend folder belongs to the application alone. A sibling library contributes frontend assets through its [filename]`src/main/resources/META-INF/frontend`, which is already handled as a resource.
+
+A reactor can hold more than one Vaadin application. Each gets its own daemon, its own handshake, and its own [filename]`target/devloop/`, so a single copy of the script drives all of them:
+
+[source,bash]
+----
+.vaadin/vaadin-dev --app ../admin apply
+----
+
+Whenever the target isn't the script's own application, every command prints the application it answered for on stderr. Check that line before trusting the answer.
+
+If the reactor root isn't an ancestor of your application, tell the daemon where it is:
+
+[source,bash]
+----
+VAADIN_DEV_DAEMON_OPTS="-Dvaadin.dev.reactorRoot=/path/to/reactor" .vaadin/vaadin-dev restart
+----
+
+
+[[frontend]]
+== Frontend Modes: Dev Bundle and Vite
+
+What happens to a frontend edit depends on which mode the application is running in. `apply` asks the application rather than guessing.
+
+*Dev-bundle mode*, the default. Theme stylesheets are pushed in place, and [filename]`index.html` and theme assets need only a page reload. Everything else lives in the bundle, and only a Vite build can fold it in -- so `apply` restarts the application, and the restart rebuilds the bundle. That takes tens of seconds. Every non-theme frontend file is treated as bundled, whether or not anything imports it, because over-restarting is a better error than reporting a change live when it isn't.
+
+*Vite mode.* Vite's root is the frontend folder, so it applied the edit when you saved the file. `apply` names the files, says Vite did it, and does nothing itself. If Vite couldn't compile the file, `apply` fails and quotes what Vite said:
+
+----
+frontend → Failed
+dev server: [vite] Internal server error: Transform failed with 1 error: | [PARSE_ERROR] Unexpected token | src/main/frontend/greeting.ts:1:26
+----
+
+This is the one failure the dev loop reports without escalating, because a restart can't compile a broken module either. Fix the file and run `apply` again. A Java edit that arrived in the same change-set is already live; the error is about the frontend half.
+
+To develop frontend files actively, turn on hot deploy:
+
+[source,bash]
+----
+VAADIN_DEV_DAEMON_OPTS="-Dvaadin.frontend.hotdeploy=true" .vaadin/vaadin-dev restart
+----
+
+Any `vaadin.*` property given to the daemon is forwarded to the application, which is how that reaches Vite. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the property itself.
+
+
+[[configuration]]
+== Configuration
+
+=== Environment Variables
+
+`VAADIN_DEV_APP`::
+The application to act on. `--app` wins over it.
+
+`VAADIN_DEV_HOME`::
+A directory holding the dev-loop daemon's jar, for an air-gapped setup or a jar built by hand. Otherwise the jar is resolved once from the project's own dependencies and the answer is cached under [filename]`target/devloop/`.
+
+`VAADIN_DEV_PROGRESS`::
+Whether to draw a moving phase line on stderr. `auto` draws it when stderr is a terminal, `never` and `always` force the choice. Defaults to `auto`. Set it to `never` when the output is read by a script.
+
+`VAADIN_DEV_DAEMON_OPTS`::
+JVM options for the daemon, including all of the system properties below. Any `vaadin.*` property is also forwarded to the application.
+
+
+=== Daemon System Properties
+
+These go in `VAADIN_DEV_DAEMON_OPTS`. Changing one takes effect the next time the daemon starts, so run `shutdown` first, or `restart`.
+
+`vaadin.dev.mainClass`::
+The application class to launch. Discovered by default; set it when discovery can't find it.
+
+`vaadin.dev.reactorRoot`::
+The reactor root, when it isn't an ancestor of the application. Discovered by default.
+
+`vaadin.dev.modules`::
+The modules in the edit loop, set by hand. Use `.` for the application alone. Determined automatically by default.
+
+`vaadin.dev.frontend`::
+The frontend folder, when it's neither what the build recorded nor [filename]`src/main/frontend` or [filename]`frontend/`. `apply` records the folder it settled on, and where it got it, in [filename]`target/devloop/daemon.log`.
+
+`vaadin.dev.maven`::
+Which Maven resolves the classpath. Defaults to the nearest wrapper, then `mvn` on the path.
+
+`vaadin.dev.mavenArgs`::
+Extra arguments for the resolve, such as `-P!some-profile` for a profile the resolve must not run.
+
+`vaadin.dev.javaHome`::
+Which JVM runs the application. Defaults to the best JetBrains Runtime for the project.
+
+`vaadin.dev.hotswapAgentJar`::
+An already-present HotswapAgent jar, instead of downloading one.
+
+`vaadin.dev.idleSeconds`::
+How long the daemon stays up while idle with no application running. Defaults to `1800`.
+
+`vaadin.dev.startSettleMillis`::
+How long a registered application has to report a listening web server. Defaults to `15000`.
+
+`vaadin.dev.errorSettleMillis`::
+How long an `apply` follows the application log after a redefinition, looking for errors. Defaults to `400`.
+
+
+[[files]]
+== Files and Logs
+
+[cols="2,3"]
+|===
+|Path |Content
+
+|[filename]`.vaadin/daemon.properties`
+|The daemon's handshake: pid, port, and a per-run authorization token. Git-ignored, and deliberately outside [filename]`target/` so a `mvn clean` can't orphan a running daemon.
+
+|[filename]`.vaadin/daemon.lock`
+|Held as an operating-system file lock while the daemon runs, so two simultaneous first commands can't start two applications on the same port.
+
+|[filename]`target/devloop/app.log`
+|The application's own output. This is the only place a message such as "Port 8080 was already in use" exists.
+
+|[filename]`target/devloop/daemon.log`
+|The daemon's output, including which JVM it chose and which frontend folder it settled on.
+
+|[filename]`target/devloop/cp.txt`
+|The resolved classpath. Each module in the loop gets its own.
+|===
+
+
+[[limitations]]
+== Limitations
+
+None of these is a bug. Each is a case where `apply` qualifies or escalates its answer instead of claiming success.
+
+[IMPORTANT]
+====
+*Annotation processors don't run.* The dev loop compiles with annotation processing disabled, so a source file recompiled here loses every member and class a processor would have generated. A project using Lombok, MapStruct, or Dagger needs `mvn compile` rather than `apply`.
+====
+
+[IMPORTANT]
+====
+*An edit that changes what a class promises its callers isn't supported.* Only the change-set is recompiled, so callers you didn't edit keep the bytecode they were compiled with. Rename or re-sign a method, move a supertype, or change a `static final` constant, and those callers are stale -- a `NoSuchMethodError` at runtime, or for an inlined constant no error at all and the old value -- while `apply` reports `Stable`. A restart doesn't fix it either, because it loads the same class files. Recompile with Maven after such an edit.
+====
+
+The rest:
+
+* *JPA entity mappings never hot-reload*, with or without HotswapAgent, because Hibernate fixes its metamodel and schema at startup. This includes giving an existing class `@Entity`.
+* *A structural change to a proxied Spring bean must restart.* A method-body change inside a bean is fine, because the proxy delegates and the new body runs. A change to the class's shape isn't, because the live proxy was generated against the old one. This includes Spring Data repositories.
+* *Hot-swap coverage differs sharply between a stock JDK and a JetBrains Runtime.* On a stock JDK, structural changes are rejected and escalate to a restart. A project needing a Java version no installed JetBrains Runtime provides runs on a stock JDK for the whole session, and the daemon log says so.
+* *A sibling module contributing routes, `@JsModule`, or `@NpmPackage` needs a restart*, because those are read at startup.
+* *Only resources under a public root can be made live.* Everything else, [filename]`application.properties` first among them, was read while the application was starting and is never re-read.
+* *Deleting a Java source escalates unconditionally.* The stale class file is removed, but a JVM can't undefine a class it has loaded, so the type stays live until the application starts again.
+* *The root frontend configuration files aren't tracked.* [filename]`package.json`, [filename]`vite.config.ts`, and [filename]`tsconfig.json` need an `npm install` or a dev server restart, so edit them and run `restart`.
+* *HotswapAgent's Vaadin, Spring, and Spring Boot plugins are disabled*, because they compete with the dev loop's own handling.
+
+
+[[troubleshooting]]
+== Troubleshooting
+
+`this project does not depend on the dev-loop daemon`::
+The application's [filename]`pom.xml` is missing `com.vaadin:vaadin-dev`. Add it as an optional dependency, as shown under <<#prerequisites,Prerequisites>>.
+
+The application fails to start::
+`start` exits `1` and names the reason from the application's own log, with the tail printed under it. `status` repeats the reason. The whole log is [filename]`target/devloop/app.log` -- a taken port or a bad configuration value shows up there.
+
+`compiling → Failed`::
+The diagnostics name the file, line, and column. Fix the source and run `apply` again. The running application keeps its last good bytes.
+
+`dev server: [vite] ...`::
+Vite refused to compile the change. Fix the file it names and run `apply` again. Don't `restart`; it can't compile a broken module either.
+
+`frontend-down`::
+The dev server stopped answering. Run `restart`.
+
+`resource notify:` or `frontend notify:`::
+The application didn't take the push. A redefinition that worked says nothing about a stylesheet the page never received, so check `status` -- the application may have died mid-apply.
+
+The daemon seems wedged::
+Run `shutdown`. Any later command starts a fresh daemon.
+
+The CLI script won't execute::
+A Windows checkout carries no executable bit. Run `bash .vaadin/vaadin-dev ...`, or use [filename]`.\.vaadin\vaadin-dev.cmd` from `cmd` or PowerShell.
+
+The progress line doesn't move on macOS::
+macOS ships an old Bash, so the phase line advances only when the daemon reports something. The command is working -- it only looks quieter.
+
+More edits restart than you expect::
+Check the daemon log for which JVM was chosen. Without a JetBrains Runtime, structural changes can't be hot-swapped at all. See <<hotswap-agent#,Live Reload with HotswapAgent>> for how to install one.
+
+
+== Related Topics
+
+* <<index#,Hot Deploy pass:[&] Live Reload>> -- the other ways to get changes into a running application
+* <<hotswap-agent#,Live Reload with HotswapAgent>> -- installing a JetBrains Runtime
+* <<{articles}/flow/configuration/development-mode#,Development Mode>> -- the `com.vaadin:vaadin-dev` dependency
+* <<{articles}/building-apps/mcp#,MCP Server for Vaadin>> -- documentation lookup for AI coding agents
