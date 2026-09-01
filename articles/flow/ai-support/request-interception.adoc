@@ -105,10 +105,10 @@ AIOrchestrator orchestrator = AIOrchestrator
         .withRequestInterceptor(event -> {
             var continuation = event.postpone(Duration.ofSeconds(10));
             var ui = UI.getCurrent();
-            messageInput.setEnabled(false);
+            progressBar.setVisible(true);
             moderationService.checkAsync(event.getUserMessage())
                     .whenComplete((allowed, error) -> {
-                        ui.access(() -> messageInput.setEnabled(true));
+                        ui.access(() -> progressBar.setVisible(false));
                         if (error != null) {
                             continuation.fail(error);
                             return;
@@ -124,7 +124,7 @@ AIOrchestrator orchestrator = AIOrchestrator
 
 The event stays usable after [methodname]`postpone()` returns. Content changes and rejections made afterwards take effect when the prompt resumes; make them on the thread that completes the continuation, before completing it -- a change attempted after completion throws [classname]`IllegalStateException`. Completion is safe from any thread and first-wins: once the prompt has proceeded, failed, or timed out, later completions are ignored.
 
-While a prompt is postponed, the UI shows nothing and further prompts are ignored. Give the user a sign that something is happening. The example disables the input before scheduling the work and enables it again on completion. The completion arrives on whichever thread runs the work, so wrap component changes in `ui.access()` with a [classname]`UI` reference captured in the interceptor.
+While a prompt is postponed, the UI shows nothing and further prompts are ignored. Give the user a sign that something is happening. The example makes an indeterminate [classname]`ProgressBar` visible before scheduling the work and hides it again on completion. The completion arrives on whichever thread runs the work, so wrap component changes in `ui.access()` with a [classname]`UI` reference captured in the interceptor.
 
 Server push or polling must be enabled -- with [annotationname]`@Push` on the application shell class (see <<index#server-push,Server Push>>) or with [methodname]`UI.setPollInterval()` -- for the resumed turn to reach the browser without user interaction.
 
