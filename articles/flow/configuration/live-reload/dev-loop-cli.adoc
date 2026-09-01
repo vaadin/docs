@@ -173,17 +173,23 @@ Two things the skills expect but don't install:
 # 2. If it says stopped, start the application. Blocks until it serves or fails.
 .vaadin/vaadin-dev start
 
-# 3. Edit Java, CSS, and frontend files. Batch the edits.
+# 3. Open the application in the browser now, and keep the page open.
 
-# 4. Make them live. The exit code is the verdict.
+# 4. Edit Java, CSS, and frontend files. Batch the edits.
+
+# 5. Make them live. The exit code is the verdict.
 .vaadin/vaadin-dev apply
 
-# 5. Verify in the browser, then report the change as working.
+# 6. Verify what changed, then report it as working.
 ----
 
 A cold `start` takes roughly 30 seconds and blocks until the application is serving or has failed. Later commands are fast, because the daemon and the application both stay up.
 
+*Open the page before the first `apply`, not after.* A stylesheet or theme push has somewhere to land only if a page is already connected. With none, `apply` reports the file copied to the classpath and says nothing about a push -- honest, but not the answer you wanted. Opening the page afterwards does show the change, because the new file is then served from disk, but that apply's verdict is gone. The exception is a change with no visual surface at all, described below.
+
 *Batch the edits.* `apply` finds the change-set itself by scanning the sources of every module in the loop, so run it once after a batch of edits, not once per file.
+
+*Verify what actually changed.* A change with a visual surface -- a view, component, layout, theme, or stylesheet -- is verified in the page you opened in step 3, because nothing else proves the UI renders what you intended. A change with none -- a service, a repository, a formatter, a configuration value -- is answered in full by `apply`'s verdict together with the project's own tests, and opening a browser to look at nothing buys no evidence.
 
 On Windows a checkout carries no executable bit, so the Bash script may refuse to run:
 
@@ -325,6 +331,14 @@ hmr: 1 resource(s) copied, pushed 1 stylesheet(s) in place
 hmr: 2 theme file(s) pushed in place
 ----
 
+*A stylesheet with no page to push it into:*
+
+----
+hmr: 1 resource(s) copied, no browser connected
+----
+
+The file reached the classpath, but no browser session was open to receive it, so nothing went live in a page. Open the application and run `apply` again rather than reporting the change as working. This is the reason to open the page before the first `apply`, as <<#cycle,The Cycle>> describes.
+
 *Frontend files:*
 
 ----
@@ -447,7 +461,7 @@ The fields are `outcome`, `classification`, `reason`, `changeSet`, `classes`, `d
 |[filename]`package.json`, [filename]`vite.config.ts`, [filename]`tsconfig.json`
 |Not tracked at all. They need an `npm install` or a dev server restart, so edit them and run `restart`, not `apply`.
 
-|Adding, changing, or removing `@JsModule`, `@JavaScript`, `@CssImport`, `@NpmPackage`, or `@Theme` on a Java class
+|Adding, changing, or removing `@JsModule`, `@JavaScript`, `@CssImport`, `@NpmPackage`, or `@Theme` on any class -- not only a component, so a service init listener counts too
 |Restart. The class redefines cleanly, but those annotations are read by the build at startup and reach the browser through a bundle chunk. `@StyleSheet` is the exception: it's live already.
 
 |Java or CSS in a sibling library module in the same reactor
@@ -466,7 +480,9 @@ The fields are `outcome`, `classification`, `reason`, `changeSet`, `classes`, `d
 
 `apply` proves the bytes are live. Only the browser proves the UI renders what you intended. The application serves on `http://localhost:8080` unless `server.port` says otherwise.
 
-*Navigate once and keep the page open across applies.* Stylesheet pushes and Java hot swaps land in an already-open page, so re-navigating hides exactly what you're testing. Reload only after a restart.
+*First decide whether to look at all.* Only a change with a visual surface earns a browser: a view, a component, a layout, a theme, a stylesheet. A service, a repository, a formatter, or a configuration value has nothing to show, and `apply`'s verdict plus the project's tests already answer for it.
+
+*Navigate before the first `apply`, then keep the page open across applies.* Stylesheet pushes and Java hot swaps land in an already-open page, so re-navigating hides exactly what you're testing. Reload only after a restart. An `apply` run with no page open reports the stylesheet copied rather than pushed -- the change is on the classpath, but nothing was told about it.
 
 *The first snapshot after navigating is usually empty*, because Vaadin renders client-side. Wait for a known element before asserting.
 
@@ -536,7 +552,7 @@ To develop frontend files actively, turn on hot deploy:
 VAADIN_DEV_DAEMON_OPTS="-Dvaadin.frontend.hotdeploy=true" .vaadin/vaadin-dev restart
 ----
 
-Any `vaadin.*` property given to the daemon is forwarded to the application, which is how that reaches Vite. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the property itself.
+Every `+vaadin.*+` property given to the daemon is passed on to the application, which is how that reaches Vite. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the property itself, and <<#app-properties,Passing Properties to the Application>> for the general mechanism.
 
 
 [[configuration]]
@@ -554,7 +570,7 @@ A directory holding the dev-loop daemon's jar, for an air-gapped setup or a jar 
 Whether to draw a moving phase line on stderr. `auto` draws it when stderr is a terminal, `never` and `always` force the choice. Defaults to `auto`. Set it to `never` when the output is read by a script.
 
 `VAADIN_DEV_DAEMON_OPTS`::
-JVM options for the daemon, including all of the system properties below. Any `vaadin.*` property is also forwarded to the application.
+JVM options for the daemon, including all of the system properties below. Every `+vaadin.*+` and `+spring.*+` property is also passed on to the application JVM. Read only when a daemon is spawned: a daemon that's already running ignores it, so run `shutdown` first when changing a value.
 
 
 === Daemon System Properties
@@ -593,6 +609,26 @@ How long a registered application has to report a listening web server. Defaults
 
 `vaadin.dev.errorSettleMillis`::
 How long an `apply` follows the application log after a redefinition, looking for errors. Defaults to `400`.
+
+
+[[app-properties]]
+=== Passing Properties to the Application
+
+The daemon launches the application with no program arguments, so `--spring.profiles.active=dev` has nowhere to go. Pass it as a daemon property instead, and shut the daemon down first so the new value is read:
+
+[source,bash]
+----
+.vaadin/vaadin-dev shutdown
+VAADIN_DEV_DAEMON_OPTS="-Dspring.profiles.active=dev" .vaadin/vaadin-dev start
+----
+
+Every `+vaadin.*+` and `+spring.*+` property works this way, not only the profile. Three are set by the dev loop itself and are never forwarded, because two things restarting the application on their own schedules is what the transaction model exists to prevent:
+
+* `spring.devtools.restart.enabled`
+* `vaadin.launch-browser`
+* `vaadin.devloop.classes`
+
+A property set this way lives as long as the daemon and appears in no file, so it's for steering one local run. If a profile is what the project normally runs under, `spring.profiles.active` in [filename]`application.properties` is the better answer and needs none of this.
 
 
 [[files]]
