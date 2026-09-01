@@ -2,7 +2,7 @@
 title: Visibility
 page-title: Component Visibility in Vaadin
 description: How component visibility works in Vaadin.
-meta-description: Learn how to manage component visibility in Vaadin applications and its effects on UI rendering and updates.
+meta-description: Learn how to show and hide Vaadin components with setVisible() or a signal binding, and how visibility affects UI rendering and updates.
 order: 21
 ---
 
@@ -10,6 +10,9 @@ order: 21
 = Component Visibility
 
 Invisible components are no longer displayed in the UI, nor do they receive updates from the client side. You make a component invisible by calling [methodname]`Component.setVisible(false)`. Transmission of server-side updates resumes when you make the component visible again.
+
+[TIP]
+When visibility follows application state -- for example, showing a *Done* button only while a row is being edited -- bind it to a signal with [methodname]`Component.bindVisible()` rather than calling [methodname]`setVisible()` from listeners. See <<binding-visibility-to-a-signal,Binding Visibility to a Signal>>.
 
 .Making a component invisible, and visible again
 [example]
@@ -62,3 +65,49 @@ System.out.println("Number of children: " + container.getChildCount());
 If you make an already rendered component invisible, the corresponding element is not removed from the DOM. Instead, it is marked with the `hidden` attribute. Furthermore, the element won't receive any updates from the server. Likewise, the server will ignore any RPCs (Remote Procedure Calls) made from the element.
 
 
+[role="since:com.vaadin:vaadin@V25.1"]
+== Binding Visibility to a Signal
+
+Calling [methodname]`setVisible()` from event listeners works, but every place that changes the underlying state has to remember to update the component. When visibility follows a piece of application state, bind the component to a signal with [methodname]`Component.bindVisible()` and let the framework keep the two synchronized.
+
+.Showing a button only while editing
+[example]
+====
+[source,java]
+----
+import com.vaadin.flow.signals.local.ValueSignal;
+
+ValueSignal<Boolean> editing = new ValueSignal<>(false);
+
+Button done = new Button("Done");
+done.bindVisible(editing);
+// The button is hidden until "editing" becomes true
+
+Button edit = new Button("Edit", evt -> editing.set(true));
+// Clicking Edit makes the Done button appear -
+// no setVisible() call needed
+----
+====
+
+The bound signal can also be a condition computed from other signals, which lets a component react to several pieces of state at once:
+
+.Deriving visibility from several signals
+[example]
+====
+[source,java]
+----
+ValueSignal<Boolean> formDirty = new ValueSignal<>(false);
+ValueSignal<Boolean> submitting = new ValueSignal<>(false);
+
+Button save = new Button("Save");
+save.bindVisible(() -> formDirty.get() && !submitting.get());
+// Visible only while there are unsaved changes
+// and no submission is in progress
+----
+====
+
+While a signal is bound to a component's visibility, calling [methodname]`setVisible()` on that component throws a [classname]`BindingActiveException`. Pass `null` to [methodname]`bindVisible()` to remove the binding if you need to control visibility manually again.
+
+Bound components hide the same way as components hidden with [methodname]`setVisible()`, so <<hiding-before-rendering,Hiding before Rendering>> and <<hiding-after-rendering,Hiding after Rendering>> apply to them as well.
+
+For the full set of binding methods -- text, enabled state, form field values, CSS class names, and more -- see <<{articles}/flow/ui-state/building-ui#binding-visibility,Binding Visibility>> in Component Bindings. For a worked progressive-disclosure form, see <<{articles}/flow/ui-state/usage-examples/conditional-visibility#,Conditional Visibility>>.
