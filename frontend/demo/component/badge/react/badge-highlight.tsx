@@ -8,7 +8,7 @@ import { getReports, type Report, ReportStatus } from 'Frontend/demo/domain/Data
 
 // tag::snippet[]
 function renderDueDate({ item: report }: { item: Report }) {
-  return <span>{format(new Date(report.due), 'PP')}</span>;
+  return <span>{format(new Date(report.due), 'MMM d, yyyy')}</span>;
 }
 
 function renderStatus({ item: report }: { item: Report }) {

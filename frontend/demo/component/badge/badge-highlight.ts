@@ -32,7 +32,7 @@ export class Example extends LitElement {
         <vaadin-grid-column path="report" header="Report"></vaadin-grid-column>
         <vaadin-grid-column
           header="Due date"
-          ${columnBodyRenderer<Report>(({ due }) => html`${format(new Date(due), 'PP')}`, [])}
+          ${columnBodyRenderer<Report>(({ due }) => html`${format(new Date(due), 'MMM d, yyyy')}`, [])}
         ></vaadin-grid-column>
         <vaadin-grid-column path="assignee" header="Assignee"></vaadin-grid-column>
         <vaadin-grid-column
