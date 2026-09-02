@@ -1,0 +1,118 @@
+---
+title: Request & Response Listeners
+description: Observe each prompt and its outcome with orchestrator-level listeners, including the finish reason and token usage of each LLM turn.
+meta-description: Learn how to observe prompts and turn outcomes in the Vaadin AIOrchestrator with request and response listeners, and how to read response metadata.
+order: 38
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#Request & Response Listeners#
+
+The orchestrator notifies the application at two moments of every prompt: just before the request goes to the LLM, and when the turn ends. Register the hooks with [methodname]`withRequestListener()` and [methodname]`withResponseListener()` on the builder:
+
+[source,java]
+----
+var orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withRequestListener(event -> logOutbound(
+                event.getMessageId(), event.getUserMessage()))
+        .withResponseListener(event -> logOutcome(
+                event.getResponse(), event.getError(), event.getMetadata()))
+        .build();
+----
+
+[methodname]`logOutbound` and [methodname]`logOutcome` are placeholders for application code.
+
+The listeners observe the turn without changing it. To validate, modify, or reject the prompt before it goes out, use a <<request-interception#,request interceptor>> instead. An <<controllers#,[classname]`AIController`>> receives the same two lifecycle moments through its [methodname]`onRequest()` and [methodname]`onResponse()` hooks -- use a controller to package such behavior reusably, together with tools.
+
+
+== Request Listener
+
+The request listener is called on every prompt, just before the LLM stream opens. By then the <<request-interception#,request interceptor>> has run -- the listener sees the prompt as it actually goes out -- and the user's message already appears in the Message List. A prompt rejected by the interceptor never reaches the listener.
+
+The event carries:
+
+* [methodname]`getUserMessage()` -- the message text sent to the LLM.
+* [methodname]`getMessageId()` -- the unique id assigned to the message. The same id appears on the resulting [classname]`ChatMessage` in the conversation history and in attachment click events, so the listener is the place to correlate them -- see <<file-attachments#,File Attachments>> for an example that persists attachments under this id.
+* [methodname]`getAttachments()` -- the attachments included with the message; an empty list when there are none.
+
+The listener runs on the UI thread under the session lock: components can be updated directly, and long-running work should be offloaded to a worker thread.
+
+
+== Response Listener
+
+The response listener is called when the turn ends -- normally when the assistant's response has completed, successfully or with an error, but also when the turn fails before a response ever starts. It fires at most once per prompt, and not at all for a prompt rejected by the interceptor or for history restored via [methodname]`withHistory()`.
+
+The event carries:
+
+* [methodname]`getResponse()` -- the assistant's response text. On success, it may be empty when the model emitted only tool calls; on failure, it's always empty -- partial text received before the error isn't passed on, and the Message List shows a generic error message in its place. Empty responses are not appended to the conversation history.
+* [methodname]`getError()` -- the failure cause, or an empty optional on success.
+* [methodname]`getMetadata()` -- the provider's metadata for the turn; see <<#response-metadata,Response Metadata>>.
+
+A typical use is persisting the conversation after each exchange -- see <<conversation-history#,Conversation History & Session Persistence>>.
+
+.UI Updates from ResponseListener
+[IMPORTANT]
+The listener is called from whichever thread ends the turn. With a streaming provider, or when <<llm-providers#background-execution,background execution>> is enabled, that's a background thread, where blocking I/O (such as database writes) is safe. With a synchronous provider in the default execution mode, the whole turn -- this listener included -- runs in the request that triggered the prompt. To update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+
+
+[[response-metadata]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Response Metadata
+
+Alongside the response text, the model reports metadata about each turn: a finish reason that tells why it stopped, and the token usage of the turn. [classname]`ResponseMetadata` exposes both, so the application can tell a completed response from one cut off at the model's output limit, and can track what each turn costs.
+
+Call [methodname]`event.getMetadata()` on the response event -- in this listener or in <<controllers#,[methodname]`AIController.onResponse()`>> alike. It returns an empty optional when the provider reported no metadata: a <<llm-providers#custom-llm-providers,custom provider>> that doesn't publish it, or a turn that failed before any was observed.
+
+[classname]`ResponseMetadata` is a record with two components:
+
+* [methodname]`finishReason()` -- why the model stopped, worded as the underlying framework reports it, or `null` when no reason was reported. See <<#finish-reason-vocabulary,Finish Reason Vocabulary>>.
+* [methodname]`tokenUsage()` -- a [classname]`TokenUsage` record with [methodname]`inputTokens()`, [methodname]`outputTokens()`, and [methodname]`totalTokens()`, each `null` when unknown. The whole record is `null` when the framework reported no usage.
+
+When a turn contains <<tool-calling#,tool-call>> round trips, the finish reason is the latest one observed, and the token usage covers the round trips so far, as far as the underlying framework reports them. On a turn that completes normally, the metadata therefore describes the whole turn.
+
+
+[[truncated-responses]]
+=== Truncated Responses
+
+A response cut off at the model's output limit is not an error: the turn ends normally, the partial text stays in the Message List and the conversation history, and [methodname]`event.getError()` is empty. The finish reason is what tells a completed turn from a truncated one: a truncated turn reports the underlying framework's value for the output limit instead of its value for a natural stop. With the built-in providers, that value is `LENGTH` for OpenAI models through Spring AI and for every model through LangChain4j, and `max_tokens` for Anthropic models through Spring AI -- see <<#finish-reason-vocabulary,Finish Reason Vocabulary>>:
+
+[source,java]
+----
+.withResponseListener(event -> {
+    boolean truncated = event.getMetadata()
+            .map(ResponseMetadata::finishReason)
+            // Output-limit reason for OpenAI models through Spring AI,
+            // and for every model through LangChain4j
+            .filter("LENGTH"::equals)
+            .isPresent();
+    if (truncated) {
+        // For example, tell the user the answer was cut short,
+        // or flag the turn for review.
+    }
+})
+----
+
+Checking for truncation matters especially for anything that commits state based on the turn. A custom <<controllers#,controller>> that applies staged changes in [methodname]`onResponse()` on success would otherwise commit work the model never finished describing.
+
+
+[[finish-reason-vocabulary]]
+=== Finish Reason Vocabulary
+
+Finish reasons pass through exactly as the underlying framework reports them; they are never mapped to a fixed set of Vaadin values. Every model vendor words the reason differently and keeps adding values, so any fixed set would go stale. The frameworks don't always pass the model's own word through either, so the value that arrives depends on both the framework and its integration for the model you call. Compare only against the values that integration reports, and treat an unrecognized value as unknown rather than as an error.
+
+The two built-in providers relay the following:
+
+* [classname]`SpringAILLMProvider` relays the finish reason from Spring AI's generation metadata, and how close that is to the model's own word depends on the Spring AI model integration. The Anthropic integration passes the model's word through, so a turn cut off at the output limit reports `max_tokens`. The OpenAI integration reports the name of the OpenAI SDK's finish reason constant instead -- the same turn reports `LENGTH` -- and drops a value it doesn't recognize, which then arrives as `null`.
+* [classname]`LangChain4JLLMProvider` reports the name of LangChain4j's own five-constant [classname]`FinishReason` enum, onto which LangChain4j collapses the vendor's word before Vaadin sees it -- the output limit arrives as `LENGTH` for OpenAI and Anthropic models alike. The collapsing is done per integration and loses what it doesn't recognize: an unrecognized value arrives as `null` through the OpenAI integration and as `OTHER` through the Anthropic one.
+
+
+=== Failed Turns
+
+The built-in providers publish metadata as the turn progresses, and each publication replaces the previous one. A turn that fails or times out midway therefore still reports what was observed before the failure: [methodname]`event.getError()` carries the cause and the metadata describes the turn as far as it got. How far that is depends on which side runs the <<tool-calling#,tool-calling>> loop. [classname]`LangChain4JLLMProvider` runs the loop itself and publishes after every round trip, so a turn that fails after a tool call still reports the token usage of the round trips that did complete. Spring AI runs the loop inside the framework and hands [classname]`SpringAILLMProvider` only the final response, so the round trips before it are never published: a turn that fails before the final response reports nothing, in synchronous and streaming mode alike. In streaming mode, the chunks of the final response that arrived before the failure are still reported.
+
+The built-in providers also log a warning when a turn ends in a state a completed turn can't end in: without a finish reason, or with tool calls still pending.
+
+A custom [classname]`LLMProvider` decides itself what metadata to publish -- see <<llm-providers#custom-llm-providers,Custom LLM Providers>>.

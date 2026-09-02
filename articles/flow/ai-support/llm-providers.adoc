@@ -100,6 +100,7 @@ The orchestrator processes one prompt at a time. In the default synchronous mode
 If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server: the response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual. Only the UI updates are skipped, along with [methodname]`AIController.onResponse()`, which needs an attached UI. The setting itself lives on the provider and is not serialized with the session -- apply it again to the recreated provider after a session restore, before passing it to [methodname]`reconnect()`. See <<conversation-history#,Conversation History & Session Persistence>>.
 
 
+[[custom-llm-providers]]
 == Custom LLM Providers
 
 Implement the [classname]`LLMProvider` interface to connect to any LLM framework:
@@ -115,6 +116,7 @@ public class MyLLMProvider implements LLMProvider {
         // request.attachments()  -- any file attachments
         // request.systemPrompt() -- the system prompt
         // request.tools()        -- registered tool objects
+        // request.metadataSink() -- consumer for response metadata
     }
 
     @Override
@@ -124,6 +126,8 @@ public class MyLLMProvider implements LLMProvider {
     }
 }
 ----
+
+The response stream carries text only. The provider can also [since:com.vaadin:vaadin@V25.3]#publish the finish reason and token usage# of the turn through the [methodname]`metadataSink()` consumer on the request. Each call carries everything observed so far and replaces the value of any earlier call, so publish whenever the provider learns more -- a turn that fails midway has then still reported what was observed. Pass `null` for any value the framework doesn't report; a provider that observes no metadata never calls the consumer. See <<listeners#response-metadata,Response Metadata>> for how applications read it.
 
 The orchestrator calls [methodname]`stream()` on the thread that triggers the prompt and subscribes to the returned stream on that same thread -- whether a turn runs in the background is decided entirely by the implementation. An implementation whose LLM call blocks should schedule that call itself; otherwise it occupies the request thread and holds the session lock for the whole turn. See <<#background-execution,Background Execution>> for how the built-in providers expose this as a setting.
 
