@@ -89,7 +89,7 @@ The user's message and an empty assistant message then appear immediately, the U
 
 The response is now produced outside any request, so it reaches the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The provider logs a warning, once per provider instance, when neither is active. Manual push mode is not enough on its own, because nothing in the framework calls `ui.push()` for the application.
 
-Everything that happens before the model is called still runs in the request thread: the request interceptor, adding the user's message and the empty assistant message to the Message List, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. The model calls, every tool execution, and the [classname]`ResponseListener` run on the background thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
+Everything that happens before the model is called still runs in the request thread: the <<request-interception#,request interceptor>>, adding the user's message and the empty assistant message to the Message List, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. The model calls, every tool execution, and the [classname]`ResponseListener` run on the background thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
 
 Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AIController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this. [methodname]`AIController.onResponse()` is the exception: the orchestrator calls it through `ui.access()`, so it can update components directly.
 
@@ -100,6 +100,7 @@ The orchestrator processes one prompt at a time. In the default synchronous mode
 If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server: the response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual. Only the UI updates are skipped, along with [methodname]`AIController.onResponse()`, which needs an attached UI. The setting itself lives on the provider and is not serialized with the session -- apply it again to the recreated provider after a session restore, before passing it to [methodname]`reconnect()`. See <<conversation-history#,Conversation History & Session Persistence>>.
 
 
+[[custom-llm-providers]]
 == Custom LLM Providers
 
 Implement the [classname]`LLMProvider` interface to connect to any LLM framework:
@@ -115,6 +116,7 @@ public class MyLLMProvider implements LLMProvider {
         // request.attachments()  -- any file attachments
         // request.systemPrompt() -- the system prompt
         // request.tools()        -- registered tool objects
+        // request.metadataSink() -- consumer for response metadata
     }
 
     @Override
@@ -124,6 +126,8 @@ public class MyLLMProvider implements LLMProvider {
     }
 }
 ----
+
+The response stream carries text only. The provider can also [since:com.vaadin:vaadin@V25.3]#publish the finish reason and token usage# of the turn through the [methodname]`metadataSink()` consumer on the request. Each call carries everything observed so far and replaces the value of any earlier call, so publish whenever the provider learns more -- a turn that fails midway has then still reported what was observed. Pass `null` for any value the framework doesn't report; a provider that observes no metadata never calls the consumer. See <<listeners#response-metadata,Response Metadata>> for how applications read it.
 
 The orchestrator calls [methodname]`stream()` on the thread that triggers the prompt and subscribes to the returned stream on that same thread -- whether a turn runs in the background is decided entirely by the implementation. An implementation whose LLM call blocks should schedule that call itself; otherwise it occupies the request thread and holds the session lock for the whole turn. See <<#background-execution,Background Execution>> for how the built-in providers expose this as a setting.
 
