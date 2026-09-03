@@ -8,7 +8,8 @@ section-nav: badge-preview badge-flow
 ---
 = [since:com.vaadin:vaadin@V25.1]#Quick Start-Guide: Add an AI Chat Bot to a Vaadin + Spring Boot Application# [badge-flow]#Flow#
 
-:preview-banner-content: This guide uses preview versions of AI integration features. This means that they are not yet ready for production usage and may have limitations or bugs. We encourage you to try them out and provide feedback to help us improve them.
+:preview-feature: AI integration features
+:feature-flag: com.vaadin.experimental.aiComponents
 include::{articles}/_preview-banner.adoc[opts=optional]
 
 This guide shows how to connect a Large Language Model (LLM) into a Vaadin application using Spring AI, Spring Boot, and the <<{articles}/flow/ai-support#,AI integration features>>. You'll build a minimal chat UI with **MessageList** and **MessageInput**, stream responses token-by-token, and keep a conversational tone in the dialog with the AI -- all without writing boilerplate wiring code.
@@ -21,6 +22,7 @@ image::images/chatbot-image.png[role=text-center]
 == Prerequisites
 
 * An OpenAI API key (`OPENAI_API_KEY`)
+* The `com.vaadin.experimental.aiComponents` feature flag enabled, as the AI integration features are still a preview. Enable it in Copilot's experimental features tab, or add `com.vaadin.experimental.aiComponents=true` to `src/main/resources/vaadin-featureflags.properties`. Without it, the first prompt fails.
 
 
 == 1. Start from a Vaadin Spring Skeleton
@@ -142,6 +144,8 @@ public class MainView extends Composite<VerticalLayout> {
         // Create UI components
         var messageList = new MessageList();
         messageList.setSizeFull();
+        // LLMs answer in Markdown; render it as rich text
+        messageList.setMarkdown(true);
         var messageInput = new MessageInput();
         messageInput.setWidthFull();
 
@@ -167,8 +171,9 @@ The orchestrator takes care of:
 * **Displaying messages:** user prompts and assistant responses appear in the Message List automatically.
 * **Streaming output:** tokens are pushed to the UI as they arrive from the LLM.
 * **Conversation memory:** the provider maintains a 30-message context window, so the assistant remembers earlier messages.
-* **Markdown rendering:** responses render as rich text (lists, code blocks, links).
 * **Sticky scroll:** the Message List keeps the latest answer in view.
+
+Markdown rendering is not one of them: the Message List renders plain text by default, and the orchestrator doesn't change that. Since LLMs answer in Markdown, call [methodname]`setMarkdown(true)` on the list -- as above -- so that lists, code blocks, and links come out as rich text instead of raw syntax.
 
 
 == 6. Run & Iterate

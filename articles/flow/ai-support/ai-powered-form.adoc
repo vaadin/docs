@@ -164,6 +164,10 @@ The callback returns domain items; the controller derives the labels through the
 [NOTE]
 Single- and multi-select fields configured with [methodname]`setItems(...)` already share their items with the LLM, so the simple fixed-options case often needs no [methodname]`fieldValueOptions()` call. Use [methodname]`fieldValueOptions()` when items come from a lazy or remote source rather than an in-memory list, or when you want the LLM to fetch options through a filter callback instead of receiving the full set up front.
 
+.At Most 200 Options per Field
+[NOTE]
+A field's option list is capped at 200 entries, whether it comes from eager items, a fixed list, or a query callback, so a longer list is truncated for the LLM. For a large option set, use a query callback and let the model narrow it down with a filter instead of relying on the full list.
+
 === Multi-Select Fields
 
 [classname]`MultiSelectComboBox`, [classname]`CheckboxGroup`, and any other field that implements [classname]`MultiSelect` are supported. Use the component's concrete multi-select type for the field reference so the [methodname]`forField(MultiSelect)` overload is selected:
@@ -221,7 +225,7 @@ The controller sends only a defined subset of the form to the LLM. Knowing where
 The model sees:
 
 * Each visible field's label, helper text, component type, and any [methodname]`describeField()` text or [classname]`Binder` property-name default.
-* The current value of every visible, non-ignored field, so it can decide which entries to overwrite. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
+* The current value of every visible, non-ignored field, so it can decide which entries to overwrite -- unless <<#hiding-field-values,field values are hidden>>. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
 * The available labels for a selection field, derived from a combo box or select's eager items, or from the items a [methodname]`fieldValueOptions()` query callback returns for the filter the model supplies.
 
 The model does not see:
@@ -233,7 +237,21 @@ The model does not see:
 
 .Visible Field Values Are Sent to the Model
 [IMPORTANT]
-Every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignoreField()`, or keep them out of the layout passed to the controller.
+By default, every visible field's current value is forwarded to the LLM provider on every turn. Hide fields that carry secrets, identifiers, or personally identifiable information with [methodname]`ignoreField()`, keep them out of the layout passed to the controller, or hide all values with <<#hiding-field-values,[methodname]`setFieldValuesHidden()`>>.
+
+[[hiding-field-values]]
+=== Hiding Field Values
+
+When the form may already hold values the AI should not read, but should still be able to fill, hide every field's value with [methodname]`setFieldValuesHidden()`:
+
+[source,java]
+----
+controller.setFieldValuesHidden(true);
+----
+
+The model then sees each field with its description, type, and option labels -- everything it needs to fill the field -- but its value always reads as empty, whether one is set or not. The built-in workflow instructions tell the model that such a field may already hold a value, so it writes one only when the user's prompt supplies it.
+
+Only the value is hidden. A field's description, type, and option or `enum` labels still go to the model, so use [methodname]`ignoreField()` for a field whose labels are themselves sensitive, or to hide a single field entirely. Values can also still reach the model through validation rejection messages, which are relayed as written: a message must not embed a field's value.
 
 
 == Field Locking During a Fill Turn
@@ -274,7 +292,11 @@ controller.setFieldMarkerI18n(new FieldMarkerI18n()
         .setMessage("Tekoäly on muuttanut tämän kentän arvoa.")
         .setRevert("Palauta arvo")
         .setBadgeLabel("Tekoälyn tuottama arvo")
-        .setBadgeTooltip("Tekoäly on muuttanut kentän arvoa.\nAvaa lisätiedot napsauttamalla"));
+        .setBadgeTooltip("Tekoäly on muuttanut kentän arvoa.\nAvaa lisätiedot napsauttamalla")
+        .setConfidence(new FieldMarkerI18n.Confidence()
+                .setHigh("Suuri varmuus")
+                .setMedium("Kohtalainen varmuus")
+                .setLow("Pieni varmuus")));
 ----
 
 Each text has a specific role:
@@ -283,6 +305,7 @@ Each text has a specific role:
 * [methodname]`setRevert()` sets the label of the revert control in the popover.
 * [methodname]`setBadgeLabel()` sets the accessible label of the badge button and the popover dialog. The badge itself renders an "AI" icon, so the label is only exposed to assistive technology.
 * [methodname]`setBadgeTooltip()` sets the tooltip text shown when the badge is hovered or focused.
+* [methodname]`setConfidence()` [since:com.vaadin:vaadin@V25.3]#sets the texts of the confidence indicator#, one per level, through a [classname]`FieldMarkerI18n.Confidence` instance with [methodname]`setHigh()`, [methodname]`setMedium()`, and [methodname]`setLow()`. The indicator is shown only when a value's source reports a confidence level -- see <<#confidence-on-the-field-marker,Confidence on the Field Marker>>.
 
 The texts are applied to every marker the controller puts on a field, so set them before the first turn to localize them all. Texts left `null` fall back to the built-in defaults.
 
@@ -400,6 +423,7 @@ controller.describeConfidenceLevel(ConfidenceLevel.MEDIUM,
 
 The description replaces the built-in wording for that level in the LLM-facing instructions. A value reported without a level carries no confidence: it means the model didn't rate the value, not that the value is uncertain.
 
+[[confidence-on-the-field-marker]]
 === Confidence on the Field Marker
 
 While the automatic <<#marking-ai-changes,field marker>> is enabled, a marked field also shows the reported confidence level as an indicator in the field's helper area, so a reviewer can see at a glance which values the model itself was unsure about. A value reported without a confidence level shows no indicator, and a later fill that writes the field without a source clears the indicator. While a fill is in progress, the indicator is hidden, since it describes a value that may be about to be replaced.
@@ -407,7 +431,7 @@ While the automatic <<#marking-ai-changes,field marker>> is enabled, a marked fi
 
 == Reconnecting after Deserialization
 
-[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, any field-marker and source-tracking configuration, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
+[classname]`FormAIController` is not serialized with the orchestrator. After session restore, create a new controller against the same form (and binder, if any), reapply the same [methodname]`describeField()`, [methodname]`fieldValueOptions()`, and [methodname]`ignoreField()` hints, any field-marker, value-hiding, and source-tracking configuration, re-register any change listeners, and pass the controller to [methodname]`reconnect()`:
 
 [source,java]
 ----
