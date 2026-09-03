@@ -87,3 +87,47 @@ Select a metric from the [guilabel]*Metric* drop-down -- for example `vaadin_ses
 
 Open the Explore view and select [guilabel]*Loki* as the data source.
 Under [guilabel]*Labels*, configure a label for `service_name` with your application's service name, then click the refresh button in the top-right to search for logs.
+
+
+== Example Dashboard Queries
+
+The following PromQL expressions cover the most useful panels for a Vaadin dashboard.
+Remember that Prometheus renders the dotted meter names in its own convention -- `vaadin.request.duration` becomes `vaadin_request_duration_seconds`, and the `.created` counters become `vaadin_sessions_total` and `vaadin_ui_total`.
+
+[cols="1,2"]
+|===
+|Panel |Query
+
+|Active sessions
+|`sum(vaadin_sessions_active)`
+
+|Active UIs (browser tabs)
+|`sum(vaadin_ui_active)`
+
+|Request rate
+|`sum(rate(vaadin_request_duration_seconds_count[$__rate_interval]))`
+
+|Server errors
+|`sum(rate(vaadin_errors_total[$__rate_interval]))`
+
+|Request latency, p95
+|`histogram_quantile(0.95, sum by (le) (rate(vaadin_request_duration_seconds_bucket[$__rate_interval])))`
+
+|RPC latency by type, p95
+|`histogram_quantile(0.95, sum by (le, type) (rate(vaadin_rpc_duration_seconds_bucket[$__rate_interval])))`
+
+|Navigation rate by route
+|`sum by (route) (rate(vaadin_navigation_seconds_count[$__rate_interval]))`
+
+|Session lock wait, p95
+|`histogram_quantile(0.95, sum by (le) (rate(vaadin_session_lock_wait_seconds_bucket[$__rate_interval])))`
+
+|Retained UI state against the heap
+|`sum(vaadin_ui_state_size_bytes)` charted next to `sum(jvm_memory_used_bytes{area="heap"})` and `sum(jvm_memory_max_bytes{area="heap"})`
+|===
+
+The percentile queries read `_bucket` series, which the kit's timers don't publish by default -- enable them per meter first; see <<index#percentiles,Percentiles and Histogram Buckets>>.
+The UI state panel needs the opt-in `vaadin.observability.ui-state` feature, and a byte figure appears only when [propertyname]`vaadin.observability.ui-state-bytes-per-node` is set; see <<../reference#ui-state-size,UI State Size>>.
+
+A complete dashboard built from these queries ships with the https://github.com/vaadin/use-cases/tree/main/observability[Vaadin observability use-case application]: a provisioned Grafana dashboard ([filename]`grafana/dashboards/vaadin.json`) together with a Docker Compose stack that runs Prometheus and Grafana against the application.
+Import the JSON into your own Grafana as a starting point, or run the stack to see the panels over live data.
