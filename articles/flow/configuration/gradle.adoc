@@ -226,6 +226,16 @@ dependencies {
 ----
 
 
+[[production-bundle-output]]
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Frontend Bundle Output Location
+
+The `vaadinBuildFrontend` task writes the production frontend bundle -- [filename]`index.html`, the compiled client resources, and the other files under [filename]`META-INF/VAADIN` -- into a directory of its own, `build/vaadin-build-frontend/`, instead of the resources directory of the source set, `build/resources/main/`. This keeps the task output separate from the output of other tasks, which is what allows the bundle to be restored correctly from the Gradle build cache.
+
+The directory is registered as an additional output directory of the source set. Gradle therefore puts it on the runtime classpath -- so that in-place runs, such as `bootRun` or running from an IDE that delegates the build to Gradle, serve the bundle -- and packages it into the application archive: at the root of a JAR, or in [filename]`WEB-INF/classes` of a WAR.
+
+No configuration is needed for this. However, if your build reads the bundle directly from the build directory -- for example a custom copy task, a Docker build, or a deployment script -- have it read `build/vaadin-build-frontend/` instead of `build/resources/main/`.
+
 [[pre-release]]
 == Using Gradle plugin Snapshot Versions
 
@@ -274,7 +284,7 @@ Whether to generate a production bundle even if an existing pre-compiled bundle 
 Enables development using the frontend development server instead of an application bundle. This applies only to development mode. This must be set in the `vaadin {}` block; the Gradle plugin does not read the corresponding `vaadin.frontend.hotdeploy` property from `application.properties`.
 
 `frontendOutputDirectory: File = null`::
-The folder where Vite should output [filename]`index.js` and other generated files. Defaults to `null`, which uses the automatically detected value of the main SourceSet, usually `build/resources/main/META-INF/VAADIN/webapp/`. A custom value must end in `META-INF/VAADIN/webapp` (e.g. `build/my-frontend/META-INF/VAADIN/webapp/`); otherwise the production build fails with an error.
+The folder where Vite should output [filename]`index.js` and other generated files. Defaults to `null`, which uses a directory owned by the `vaadinBuildFrontend` task, usually `build/vaadin-build-frontend/META-INF/VAADIN/webapp/`. See <<production-bundle-output, Frontend Bundle Output Location>> for details. A custom value must end in `META-INF/VAADIN/webapp` (e.g. `build/my-frontend/META-INF/VAADIN/webapp/`); otherwise the production build fails with an error.
 
 `npmFolder: File = project.projectDir`::
 The folder where the [filename]`package.json` file is located. Defaults to the project root directory.
