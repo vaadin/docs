@@ -26,6 +26,7 @@ Two renames are easy to trip over: `vaadin.sessions.created` appears in Promethe
 
 Timers export count, sum, and max only by default.
 The histogram buckets that percentile queries need are opt-in -- see <<integrations#percentiles,Percentiles and Histogram Buckets>>.
+With tracing on, each observed timer also publishes a parallel long-task timer -- an `_active_seconds` family in Prometheus -- that tracks operations still in flight.
 ====
 
 
@@ -450,13 +451,15 @@ Types beyond the limit are bucketed as `_other`.
 This separates a combo box loading matches for typed text from one loading the whole data set.
 
 |`trigger`
-|On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call.
+|On `vaadin.client.navigation.duration`, what moved the browser: `back` for history navigation, or `programmatic` for a `pushState`/`replaceState` call, with `_unknown` for a report that is neither.
 
 |`kind`
 |On `vaadin.client.errors`, the source of the browser error: `uncaught` or `promise`, with `_unknown` for a report that is neither.
 
 |`state`
-|On the client connection meters, the connection state: `connected`, `reconnecting` (the first request failed, the client is retrying), or `connection-lost` (the client exhausted its retries), with `_unknown` for a reported state outside that set.
+|On `vaadin.client.connection`, the state entered: `connected`, `reconnecting` (the first request failed, the client is retrying), or `connection-lost` (the client exhausted its retries).
+On `vaadin.client.connection.downtime`, only the two unreachable states appear -- a browser only spends downtime being unreachable, so `connected` would be a contradiction there.
+Either meter buckets a value outside its set as `_unknown`.
 |===
 
 .JVM, Process, and Connection-Pool Metrics
