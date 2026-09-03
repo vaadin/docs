@@ -3,6 +3,15 @@
 // This is needed for TypeScript compiler to declare and export as a TypeScript module.
 // It is recommended to commit this file to the VCS.
 // You might want to change the configurations to fit your preferences
+
+// The combo box connector imports an untyped @vaadin/combo-box module whose
+// declaration ships as a separate ambient .d.ts in jar-resources. Nothing
+// imports that file, and jar-resources is excluded from the include globs,
+// so it has to be referenced explicitly for the connector to type-check.
+// An import would turn this file into a module and break its ambient
+// declarations, hence the reference directive.
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="./frontend/generated/jar-resources/vaadin-combo-box/vaadin-combo-box-placeholder.d.ts" />
 declare module '*.css?inline' {
   import type { CSSResultGroup } from 'lit';
   const content: CSSResultGroup;
@@ -11,19 +20,12 @@ declare module '*.css?inline' {
 
 declare module '*.css';
 
-// The Flow jar-resources (connectors etc.) are excluded from type checking
-// because their global type declarations conflict across component jars when
-// compiled in a single program. Vite resolves these imports through its own
-// @vaadin/flow-frontend alias; for tsc they are untyped modules.
-declare module '@vaadin/flow-frontend/*';
-
-// The window.Vaadin.Flow namespace set up by init-flow-namespace.ts and used
-// by the Flow connectors (whose own declarations are excluded, see above).
-// Augments the global Vaadin interface declared by @vaadin/component-base.
-interface Vaadin {
-  Flow?: {
-    loadOnDemand?: (id: string) => Promise<unknown>;
-  };
+// Merges into the shared window.Vaadin.Flow interface declared by the Flow
+// connectors in jar-resources. loadOnDemand is normally defined by
+// generated-flow-imports.js, which the examples do not load, so
+// init-flow-namespace.ts provides a stand-in.
+interface VaadinFlow {
+  loadOnDemand?(id: string): Promise<unknown>;
 }
 
 // Allow any CSS Custom Properties
