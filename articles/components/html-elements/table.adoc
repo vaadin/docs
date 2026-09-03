@@ -1,0 +1,286 @@
+---
+title: Table
+page-title: Table component for HTML tables | Vaadin components
+description: Typed Flow components for building standard HTML tables with valid structure and accessible headers.
+meta-description: Build standard HTML tables in Vaadin Flow with the Table components, including row and cell factories, spans, captions, column groups, and accessible headers.
+page-links:
+  - 'API: https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/html/Table.html[Java]'
+  - 'Source: https://github.com/vaadin/flow/tree/{moduleMavenVersion:com.vaadin:vaadin}/flow-html-components[Java]'
+order: 10
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Table# [badge-flow]#Flow#
+
+// tag::description[]
+The Table components build a standard HTML `table` element from typed Flow components.
+// end::description[]
+Their types mirror what the HTML specification allows inside a table, so a structure that isn't valid markup is rejected by the compiler rather than reaching the browser. [classname]`Table` also keeps its children in the order the specification requires, whatever order you add them in.
+
+[NOTE]
+Table renders static, hand-built tabular content. For data-driven tables that need lazy loading, sorting, selection, or inline editing, prefer <<{articles}/components/grid#,Grid>>, <<{articles}/components/grid-pro#,Grid Pro>>, or <<{articles}/components/tree-grid#,Tree Grid>>.
+
+
+== Basic Usage
+
+Most tables never have to name a section. The row factories create the enclosing `thead`, `tbody`, or `tfoot` as needed, which mirrors what a browser does with a row written straight inside a table.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/table/TableBasic.java[render,tags=snippet,indent=0]
+----
+--
+
+[methodname]`addHeaderRow()` fills the row with `th scope="col"` cells, and [methodname]`addRowWithHeader()` leads the row with a `th scope="row"` cell. Both scopes are what let assistive technology announce the right label for each data cell.
+
+
+== The Component Family
+
+[cols="3,2,6",options=header]
+|===
+| Component | HTML Element | Description
+| `Table` | `table` | The table itself. Holds the caption, column groups, and sections, and provides the row factories and accessors that reach across them.
+| `TableCaption` | `caption` | The title of the table, announced by assistive technologies as the table's name.
+| `TableColumnGroup` | `colgroup` | A group of columns, used to apply attributes -- most often a class for CSS -- to several columns at once.
+| `TableColumn` | `col` | A single column, or a range of columns via [methodname]`setSpan()`, inside a column group.
+| `TableHead` | `thead` | The header rows of the table.
+| `TableBody` | `tbody` | A group of data rows. A table may have several.
+| `TableFoot` | `tfoot` | The footer rows of the table.
+| `TableRow` | `tr` | A row. Holds cells, and provides the cell factories.
+| `TableHeaderCell` | `th` | A header cell that labels a row, a column, or a group of either.
+| `TableDataCell` | `td` | A data cell.
+|===
+
+Two types express the structural rules. [interfacename]`TableRowContainer`, implemented by [classname]`TableHead`, [classname]`TableBody`, and [classname]`TableFoot`, accepts only [classname]`TableRow` children; [classname]`TableRow` accepts only [classname]`TableCell` children, of which [classname]`TableHeaderCell` and [classname]`TableDataCell` are the two kinds. Both build on <<{articles}/flow/component-internals/mixins#,`HasComponentsOfType`>>, so the usual [methodname]`add()`, [methodname]`remove()`, [methodname]`replace()`, and [methodname]`bindChildren()` operations are all available, but only for the type that belongs there.
+
+Unlike the sections and rows, cells hold flow content: [classname]`TableCell` and [classname]`TableCaption` extend [classname]`HtmlContainer`, so any component may go inside them. [classname]`Table` itself doesn't, which is why it has no generic [methodname]`add(Component)` -- reach its parts through the accessors instead.
+
+
+== Rows & Cells
+
+[classname]`Table` provides row factories for each section, and [classname]`TableRow` provides cell factories. Each factory creates the component and attaches it in one call, returning it so that further configuration is a single statement:
+
+[source,java]
+----
+// Empty rows, one per section
+TableRow headerRow = table.addHeaderRow();
+TableRow bodyRow = table.addRow();
+TableRow footerRow = table.addFooterRow();
+
+// Rows filled from text
+table.addHeaderRow("Name", "Mass");
+table.addRow("Mercury", "0.330");
+table.addRowWithHeader("Venus", "4.87");
+table.addFooterRow("Total", "5.20");
+
+// Cells added to a row one at a time
+headerRow.addColumnHeaderCell("Mass");
+bodyRow.addRowHeaderCell("Mercury");
+bodyRow.addDataCell("0.330");
+
+// Cells holding components rather than text
+bodyRow.addDataCell(new Anchor("https://example.com", "Details"));
+----
+
+A cell factory taking [classname]`Component` arguments puts the components inside the cell. [methodname]`TableRow.addCells()` is the lenient alternative: it adds a [classname]`TableCell` as-is and wraps anything else in a new [classname]`TableDataCell`, which is convenient when the content is a mix of both.
+
+Rows can be read back per section or across the whole table:
+
+[source,java]
+----
+List<TableRow> headerRows = table.getHeaderRows();
+List<TableRow> bodyRows = table.getBodyRows();
+List<TableRow> footerRows = table.getFooterRows();
+
+// Walks the sections in document order
+List<TableRow> everything = table.getAllRows();
+
+// Finds the section holding the row, so the caller doesn't have to
+table.removeRow(bodyRow);
+table.removeAllRows();
+----
+
+Within a row, [methodname]`getCells()` returns both kinds of cell, while [methodname]`getHeaderCells()` and [methodname]`getDataCells()` return one each.
+
+
+== Table Sections
+
+The section accessors are for the cases where you need to address a section as a whole -- to style it, or to hand it to [methodname]`bindChildren()`:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/table/TableSections.java[render,tags=snippet,indent=0]
+----
+--
+
+[WARNING]
+[methodname]`getCaption()`, [methodname]`getHead()`, [methodname]`getBody()`, and [methodname]`getFoot()` create the part they return if the table doesn't have it yet, so reading through them has a side effect. To inspect a table without changing it, use [methodname]`hasCaption()`, [methodname]`hasHead()`, [methodname]`hasFoot()`, [methodname]`getBodies()`, or the row accessors, all of which report an absent section as empty.
+
+A table may have several `tbody` elements, each grouping a band of rows. [methodname]`addBody()` appends one and [methodname]`getBodies()` returns them all. [methodname]`addRow()` and [methodname]`addRows()` append to the first body, the same one [methodname]`getBody()` returns; to fill another, call [methodname]`TableBody.addRow()` on the body itself.
+
+
+== Captions
+
+A caption gives the table an accessible name. [methodname]`setCaptionText()` creates the caption if the table has none, and passing `null` removes it:
+
+[source,java]
+----
+table.setCaptionText("Quarterly revenue");
+
+// Reports null when there is no caption, or when the caption holds
+// something other than text
+String text = table.getCaptionText();
+
+table.removeCaption();
+----
+
+For a caption that is more than plain text, [methodname]`addCaption()` appends components to it:
+
+[source,java]
+----
+table.addCaption(new Text("Data about the planets (source: "),
+        new Anchor("https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+                "NASA Planetary Fact Sheet"),
+        new Text(")."));
+----
+
+
+== Spanning Rows & Columns
+
+A span goes on the cell a factory hands back, so setting one is part of the same statement that creates the cell:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/table/TableSpans.java[render,tags=snippet,indent=0]
+----
+--
+
+[methodname]`setColspan()` requires a positive value: the "span the rest of the column group" meaning that `colspan="0"` once had was dropped from HTML, and browsers clamp it back to `1`, so passing `0` throws an [classname]`IllegalArgumentException`. [methodname]`setRowspan()` does accept `0`, which still means "to the end of the row group".
+
+Both spans default to 1, and [methodname]`getColspan()` and [methodname]`getRowspan()` report that default for a cell carrying no attribute. Use [methodname]`hasColspan()` and [methodname]`hasRowspan()` to tell an absent span from an explicit `1`, and [methodname]`resetColspan()` and [methodname]`resetRowspan()` to remove one.
+
+For a header cell that names a band of rows or columns, [methodname]`addRowGroupHeaderCell()` and [methodname]`addColumnGroupHeaderCell()` take the span directly, since there the span is what makes the cell a group header rather than decoration on it:
+
+[source,java]
+----
+// <th scope="rowgroup" rowspan="4">Terrestrial planets</th>
+row.addRowGroupHeaderCell("Terrestrial planets", 4);
+
+// <th scope="colgroup" colspan="3">Measurements</th>
+row.addColumnGroupHeaderCell("Measurements", 3);
+----
+
+
+== Accessible Headers
+
+The `scope` attribute answers the question "which cells does this header label?", and setting it is what lets a screen reader announce the right header when the user navigates into a data cell. The scoped factories on [classname]`TableRow` set it for you, and [methodname]`TableHeaderCell.setScope()` sets it directly:
+
+[cols="4,3,5",options=header]
+|===
+| Factory | Rendered Scope | Labels
+| [methodname]`addColumnHeaderCell()` | `scope="col"` | Every cell in the header's own column. The usual shape of a cell in a `thead`.
+| [methodname]`addRowHeaderCell()` | `scope="row"` | Every cell in the header's own row. The usual shape of a leading cell in a body row.
+| [methodname]`addColumnGroupHeaderCell()` | `scope="colgroup"` | Every cell in a group of consecutive columns.
+| [methodname]`addRowGroupHeaderCell()` | `scope="rowgroup"` | Every cell in a group of consecutive rows.
+| [methodname]`addHeaderCell()` | none | Nothing in particular -- the browser infers the scope from the table structure.
+|===
+
+Passing `null` to [methodname]`setScope()` removes the attribute, which leaves the browser to infer the scope; `Scope.AUTO` writes a literal `auto` that browsers treat the same way. [methodname]`getScope()` returns the scope as an [classname]`Optional`, empty when the attribute is unset.
+
+
+=== Associating Data Cells and Headers
+
+In a complex table, `scope` alone can't say which headers apply to a cell. The `headers` attribute names them explicitly, by referring to the header cells by `id`:
+
+[source,java]
+----
+TableHeaderCell mass = headerRow.addColumnHeaderCell("Mass");
+mass.setId("mass");
+
+TableDataCell cell = row.addDataCell("0.330");
+// Renders as headers="mass"
+cell.setHeaders(mass);
+
+// Or by id, when the cells aren't at hand
+cell.setHeaderIds("mass", "mercury");
+----
+
+[methodname]`setHeaders()` reads the `id` of each cell it's given and throws an [classname]`IllegalArgumentException` if one has no id set. An id may not be blank or contain whitespace, because the attribute is a space-separated list. [methodname]`getHeaderIds()` reads the ids back, and [methodname]`resetHeaders()` removes the attribute, as does passing an empty array.
+
+
+== Column Groups
+
+A column group applies attributes to several columns at once, which is how you style a whole column without repeating the styling on every cell:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/table/TableColumnGroups.java[render,tags=snippet,indent=0]
+----
+--
+
+Per the HTML specification, a `colgroup` is used in one of two modes: either it carries a `span` attribute and has no children, or it holds `col` children and carries no `span`. [classname]`TableColumnGroup` enforces this -- adding a column to a group that has a span throws, as does setting a span on a group that already has columns. Call [methodname]`resetSpan()` or [methodname]`removeAll()` first to switch a group from one mode to the other.
+
+[classname]`TableColumn` and [classname]`TableColumnGroup` share the [interfacename]`TableColumnSpan` interface, which provides [methodname]`setSpan()`, [methodname]`getSpan()`, [methodname]`hasSpan()`, and [methodname]`resetSpan()`. A span has to be a positive integer.
+
+[NOTE]
+Only a limited subset of CSS applies to columns and column groups: `background`, `border` (with `border-collapse: collapse`), `visibility: collapse`, and `width`. Text and font properties don't inherit into the cells -- style those on the cells instead.
+
+
+== Binding Rows to a Signal
+
+Because the sections and rows implement [interfacename]`HasComponentsOfType`, their children can be bound to a signal with [methodname]`bindChildren()`. The rows then follow the signal as entries are added, renamed, moved, and removed:
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/table/TableRowsSignal.java[render,tags=snippet,indent=0]
+----
+--
+
+Cell and caption text can follow a signal too. [classname]`TableCaption`, [classname]`TableHeaderCell`, and [classname]`TableDataCell` all have a constructor taking a [interfacename]`Signal<String>`, and the cell factories have matching overloads, so [methodname]`row.addDataCell(valueSignal)` creates a cell whose text tracks the signal for as long as the cell is attached. For more about signals, see <<{articles}/flow/ui-state/local-signals#,Local Signals>>.
+
+[NOTE]
+Bind the rows of a section rather than of the table: [classname]`Table` is not a component container, so it has no [methodname]`bindChildren()` of its own. Use [methodname]`getBody()`, [methodname]`getHead()`, or [methodname]`getFoot()` to get the section to bind.
+
+
+== Replacing NativeTable
+
+[classname]`Table` replaces [classname]`NativeTable` and its companion classes, which are deprecated and scheduled for removal in the next major version. The new components are not a drop-in rename, because they deliberately don't accept the invalid structures the old ones allowed:
+
+[cols="4,4,5",options=header]
+|===
+| Deprecated | Replacement | Notes
+| `NativeTable` | `Table` | No generic [methodname]`add(Component)`. Use the row factories, or the caption, column group, and section accessors.
+| `NativeTableCaption` | `TableCaption` | Set through [methodname]`Table.setCaptionText()` or [methodname]`Table.setCaption()`.
+| `NativeTableHeader` | `TableHead` | Accepts only rows.
+| `NativeTableBody` | `TableBody` | Accepts only rows.
+| `NativeTableFooter` | `TableFoot` | Accepts only rows.
+| `NativeTableRow` | `TableRow` | Accepts only cells. Use [methodname]`addCells()` to wrap other content in data cells automatically.
+| `NativeTableHeaderCell` | `TableHeaderCell` | Adds the [methodname]`setScope()` API and the scoped cell factories.
+| `NativeTableCell` | `TableDataCell` | Adds the `headers` attribute API.
+|===
+
+The most common rewrite is dropping the manual section handling. Where the old API needed the section created and named before a row could go in it, the row factories create it on demand:
+
+[source,java]
+----
+// Deprecated
+NativeTable oldTable = new NativeTable();
+NativeTableBody body = oldTable.getBody();
+NativeTableRow oldRow = body.addRow();
+oldRow.addCell().setText("Mercury");
+
+// Table
+Table table = new Table();
+table.addRow("Mercury");
+----
+
