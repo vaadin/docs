@@ -15,6 +15,7 @@ public class TableSpanningCells extends Div {
         setClassName("html-table-example"); // hidden-source-line
         // tag::snippet[]
         Table table = new Table();
+        table.setId("sales");
         table.setCaptionText("Units sold by category");
 
         table.addHeaderRow("Category", "Product", "Units");
