@@ -7,7 +7,7 @@ order: 4
 ---
 
 
-= [since:com.vaadin:vaadin@V25.2]#Migrating from Collaboration Kit to Signals#
+= [since:com.vaadin:vaadin@V25.3]#Migrating from Collaboration Kit to Signals#
 
 Collaboration Kit and <<{articles}/flow/ui-state/shared-signals#,shared signals>> solve the same underlying problem: keeping a piece of server-side state consistent across several users and pushing the changes to every browser that's watching. They arrive at it from different directions.
 
@@ -445,6 +445,20 @@ supervisor.bindValue(supervisorValue, form.updater((value, person) -> value
 ----
 
 Two details matter here. The identifier is nullable, because the write callback stores `null` whenever the field is cleared, so the lookup needs a guard. And a plain `form.map(value -> personService.findById(value.supervisorId()))` is derived from the whole record, which means the backend call runs again on every change to *any* property, including each keystroke in an unrelated text field. Caching the identifier first cuts the chain: the outer cached signal isn't invalidated while the identifier produces the same value, so the lookup runs only when the supervisor actually changes.
+
+A multi-select field needs its element type named, which is what [methodname]`CollaborationBinder::forField` used the two-class `forField(field, Set.class, Role.class)` form for. Pass a Jackson [classname]`TypeReference` instead:
+
+[source,java]
+----
+var roles = new SharedValueSignal<>(new TypeReference<Set<Role>>() {
+});
+
+CheckboxGroup<Role> group = new CheckboxGroup<>("Roles");
+group.setItems(Role.values());
+group.bindValue(roles, roles::set);
+----
+
+The overload exists on [classname]`SharedValueSignal`, [classname]`SharedListSignal`, and [classname]`SharedMapSignal`, and on [methodname]`SharedNodeSignal.asValue()`, [methodname]`asList()`, and [methodname]`asMap()`. Use the [classname]`Class` form for everything else -- it's shorter, and only a parameterized type needs the type reference.
 
 
 === Per-Property State
@@ -971,52 +985,6 @@ For now, reconcile against the backend when the state is created and after a fai
 Smaller gaps, but each one is a place where a direct translation compiles and then behaves differently.
 
 
-==== Parameterized Value Types
-
-Collaboration Kit has two ways to name a parameterized type. The topic API takes a Jackson [classname]`TypeReference` wherever it takes a [classname]`Class`, so [methodname]`CollaborationMap::get` can read a `Set<Role>`. [classname]`CollaborationBinder` instead takes the two classes separately -- `forField(field, Set.class, Role.class)` -- to bind a multi-select field such as a [classname]`CheckboxGroup`.
-
-Shared signals [since:com.vaadin:vaadin@V25.3]#accept a [classname]`TypeReference` too#, so a parameterized value type is named directly:
-
-[source,java]
-----
-var roles = new SharedValueSignal<>(new TypeReference<Set<Role>>() {
-});
-----
-
-The overload exists on [classname]`SharedValueSignal`, [classname]`SharedListSignal`, and [classname]`SharedMapSignal`, and on [methodname]`SharedNodeSignal.asValue()`, [methodname]`asList()`, and [methodname]`asMap()`. The [classname]`Class` constructors still work, so only the parameterized cases need the new form.
-
-
-===== Before That Overload Existed
-
-On an earlier version, the element type has nowhere to go, and the way it fails is worth knowing because the obvious test passes. `new SharedValueSignal<Set<Role>>(Set.class)` doesn't compile, since `Set.class` is a `Class<Set>`. The constructor taking an initial value does compile, and silently stores the erased runtime class:
-
-[source,java]
-----
-// Compiles with no warning. The stored type token is the erased Set class.
-var roles = new SharedValueSignal<>(Set.of(Role.ADMIN));
-----
-
-What comes back out depends on the element type. A `Set<String>` or a `Set<Long>` round-trips correctly, because those are what Jackson produces from a JSON array anyway. A `Set` of enums comes back as a set of strings, and a `Set` of records as a set of maps. Both fail with [classname]`ClassCastException` at the point of use rather than at the read, which is why this survives a review and a test of the string case.
-
-The workaround that keeps the stored JSON unchanged -- a bare array -- holds a [classname]`JsonNode` and converts where a [classname]`TypeReference` is available:
-
-[source,java]
-----
-private static final ObjectMapper MAPPER = new ObjectMapper();
-private static final TypeReference<Set<Role>> ROLES = new TypeReference<>() {
-};
-
-SharedValueSignal<JsonNode> roles = new SharedValueSignal<>(JsonNode.class);
-
-CheckboxGroup<Role> group = new CheckboxGroup<>("Roles");
-group.setItems(Role.values());
-group.bindValue(
-        roles.map(json -> json != null ? MAPPER.treeToValue(json, ROLES)
-                : Set.<Role> of()),
-        value -> roles.set(MAPPER.valueToTree(value)));
-----
-
-Wrapping the collection in a record is tidier to read, but it changes the stored JSON from an array to an object, so a topic written by the Collaboration Kit version of the same application can no longer be read. Prefer the record only when nothing else shares the data.
 ==== No Previous Value in Effects
 
 A Collaboration Kit subscriber receives an event, and the event describes the change rather than only the outcome. [classname]`MapChangeEvent` carries the old value next to the new one, and [classname]`ListChangeEvent` adds both to the surrounding keys, exposing the previous and next entry as they were before and after the change. Code that animates a delta or logs an edit history reads those fields.
@@ -1168,7 +1136,7 @@ Use this to confirm the migration covers everything before removing the Collabor
 
 | Parameterized value types
 | Direct
-| A `TypeReference` overload, since V25.3
+| A `TypeReference` overload on the signal constructors
 
 | List emptiness conditions
 | Direct
