@@ -106,8 +106,8 @@ Collaboration Kit and signals can run side by side in the same application, and 
 | See <<#conditional-operations,Conditional Operations>>.
 
 | `EntryScope.CONNECTION`
-| Explicit removal in a detach listener
-| No automatic cleanup.
+| Cleanup returned from [methodname]`whenAttached()`
+| Scoped to the component, not to the connection.
 
 | [methodname]`setExpirationTimeout()`
 | Cleanup in your registry
@@ -251,31 +251,20 @@ public void release(String documentId) {
 }
 ----
 
-Call the pair from attach and detach, the same way <<#tracking-presence,`trackPresence()`>> does, and guard against two calls in a row on the same side:
+Tie the pair to the lifetime of the view with [methodname]`whenAttached()`. The handler runs on every attach, and the [classname]`Registration` it returns runs on the matching detach:
 
 [source,java]
 ----
-public static DocumentState hold(Component owner, String documentId,
+public static Registration hold(Component owner, String documentId,
         DocumentStateRegistry registry) {
-    AtomicBoolean held = new AtomicBoolean(true);
-
-    owner.addAttachListener(event -> {
-        if (held.compareAndSet(false, true)) {
-            registry.retain(documentId);
-        }
+    return owner.whenAttached(ui -> {
+        registry.retain(documentId);
+        return () -> registry.release(documentId);
     });
-
-    owner.addDetachListener(event -> {
-        if (held.compareAndSet(true, false)) {
-            registry.release(documentId);
-        }
-    });
-
-    return registry.retain(documentId);
 }
 ----
 
-Registering only the detach listener is a mistake that's easy to make and hard to see. A view that's detached and attached again -- navigating back to a retained view, a `@PreserveOnRefresh` view surviving a reload, a component moved between layouts, a dialog reopened -- then releases more times than it retains. The count reaches zero while the view is still open, the state is dropped, and the next user to open the same document gets a fresh [classname]`DocumentState` and silently stops sharing anything with them.
+Written by hand with a detach listener alone, this is a mistake that's easy to make and hard to see. A view that's detached and attached again -- navigating back to a retained view, a component moved between layouts, a dialog reopened -- then releases more times than it retains. The count reaches zero while the view is still open, the state is dropped, and the next user to open the same document gets a fresh [classname]`DocumentState` and silently stops sharing anything with them. A `@PreserveOnRefresh` view surviving a reload gets the opposite: it is re-attached without an intervening detach, so a hand-written pair retains twice and never releases. [methodname]`whenAttached()` handles both, clearing any live cleanup before running the handler again.
 
 .Give Release a Grace Period
 [IMPORTANT]
@@ -322,19 +311,12 @@ Keep the record small and free of framework types. A [interfacename]`DownloadHan
 
 [source,java]
 ----
-public static void trackPresence(Component owner,
+public static Registration trackPresence(Component owner,
         SharedListSignal<Collaborator> collaborators, Collaborator localUser) {
-    AtomicReference<SharedValueSignal<Collaborator>> entry =
-            new AtomicReference<>();
-
-    owner.addAttachListener(event -> entry
-            .set(collaborators.insertLast(localUser).signal()));
-
-    owner.addDetachListener(event -> {
-        SharedValueSignal<Collaborator> signal = entry.getAndSet(null);
-        if (signal != null) {
-            collaborators.remove(signal);
-        }
+    return owner.whenAttached(ui -> {
+        SharedValueSignal<Collaborator> entry = collaborators
+                .insertLast(localUser).signal();
+        return () -> collaborators.remove(entry);
     });
 }
 ----
@@ -350,10 +332,10 @@ public static void trackPresence(Component owner,
 * An effect that reads with [methodname]`get()` and inserts depends on its own output, and is disposed with an infinite-loop error -- delivered to the uncaught exception handler rather than to the caller.
 * Even a well-formed effect wouldn't re-add the user, because an effect doesn't re-run on re-attach when nothing has changed.
 
-Attach and detach listeners are the correct construction.
+[methodname]`whenAttached()` is the correct construction.
 ====
 
-A detach listener covers more than it looks like it does. Flow sends an unload beacon when the page is hidden, closes the UI on the server, and detaching the UI fires detach for the whole component tree -- so closing a browser tab removes the entry within about a second, the same as Collaboration Kit.
+The cleanup covers more than it looks like it does. Flow sends an unload beacon when the page is hidden, closes the UI on the server, and detaching the UI runs the cleanup for the whole component tree -- so closing a browser tab removes the entry within about a second, the same as Collaboration Kit.
 
 .Two Cases the Beacon Doesn't Cover
 [IMPORTANT]
@@ -620,7 +602,7 @@ That's the whole mechanism. It handles several simultaneous editors on one field
 
 .Clean Up on Detach
 [IMPORTANT]
-Editor entries need the same cleanup as presence entries. A user who navigates away while a field is focused gets no `vaadin-highlight-hide`, so call [methodname]`clearEditor()` for the local user in a detach listener.
+Editor entries need the same cleanup as presence entries. A user who navigates away while a field is focused gets no `vaadin-highlight-hide`, so run [methodname]`clearEditor()` for the local user from the cleanup of a [methodname]`whenAttached()` scope.
 
 For a form with more than a couple of fields, wrap the three parts in one helper that takes the field, the property name, and the shared list, and call it per binding.
 
@@ -908,11 +890,11 @@ These migrate, and the guide shows how, but Collaboration Kit does the work for 
 
 `EntryScope.CONNECTION` removes an entry the moment the connection that wrote it deactivates, with no code in the application.
 
-The prompt-cleanup half of this is not actually missing. Flow has its own unload beacon, independent of Collaboration Kit's: the browser reports the unload, the server closes the UI, and closing the UI detaches the component tree. A detach listener therefore fires within about a second of a tab closing, which is what <<#tracking-presence,`trackPresence()`>> relies on.
+The prompt-cleanup half of this is not actually missing. Flow has its own unload beacon, independent of Collaboration Kit's: the browser reports the unload, the server closes the UI, and closing the UI detaches the component tree. The cleanup therefore runs within about a second of a tab closing, which is what <<#tracking-presence,`trackPresence()`>> relies on.
 
 What's missing is the declarative part and two edge cases:
 
-* *No scope on the write.* Nothing ties the lifetime of a shared signal entry to a UI or a session, so every application writes the attach and detach pair itself, and every application can get it wrong.
+* *No scope on the write.* [methodname]`whenAttached()` ties an entry to a component correctly, including the awkward re-attach cases, but the application still writes that scope itself for every kind of entry. Nothing on the signal API says "this entry belongs to this UI or session".
 * *`@PreserveOnRefresh` views.* Eager close on the beacon is skipped for them, so entries written from such a view outlive the tab until the heartbeat timeout. Collaboration Kit's own handler deactivates regardless of the annotation, so this one is a genuine regression.
 * *Disconnects with no beacon.* A crashed browser or a dead network leaves the entry until the inactivity check or session expiry. Collaboration Kit is no better here, for the same reason.
 
@@ -1108,7 +1090,7 @@ Use this to confirm the migration covers everything before removing the Collabor
 
 | Presence tracking
 | Build it
-| Attach and detach listeners on a list signal
+| A [methodname]`whenAttached()` scope over a list signal
 
 | Field highlighting
 | Build it
