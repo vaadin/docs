@@ -3,6 +3,7 @@ title: AI-Generated Grids
 description: Use GridAIController to let users populate a Grid from the application database using natural language.
 meta-description: Learn how to configure the Vaadin GridAIController to populate a Grid from a database via natural language prompts and persist the resulting state.
 order: 60
+section-nav: commercial
 ---
 
 
@@ -10,6 +11,9 @@ order: 60
 
 
 [classname]`GridAIController` populates a <<{articles}/components/grid#,[classname]`Grid`>> (Vaadin's component for displaying tabular data) with data from the application database based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema and run SQL queries that drive the grid.
+
+:commercial-feature: AI-Powered Grid
+include::{articles}/_commercial-banner.adoc[opts=optional]
 
 When an LLM request completes, the queued query is executed and the grid re-renders with dynamically generated columns, type-appropriate renderers, right-aligned numeric columns, lazy loading via SQL `LIMIT`/`OFFSET`, and optional column grouping.
 
@@ -47,7 +51,9 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 
 == Query Validation
 
-Before queueing an update, the controller runs a lightweight probe against the database to validate the LLM's query. If the probe fails, the error is returned to the LLM so that it can correct the query on the next turn. Invalid queries never reach the grid.
+Before queueing an update, the controller runs a lightweight probe against the database to validate the LLM's query. If the probe fails, the query is rejected and never reaches the grid.
+
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why the query failed#, but only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()` -- its message is relayed to the LLM so it can correct the query on the next turn. Any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Persisting Grid State

@@ -7,7 +7,7 @@ order: 10
 ---
 
 
-= Component Bindings
+= [since:com.vaadin:vaadin@V25.1]#Component Bindings#
 
 Signals connect directly to Vaadin components through binding methods. When a signal value changes, bound components update automatically without manual listeners or state synchronization.
 
@@ -107,7 +107,7 @@ p.bindText(signal);
 
 == Binding Visibility
 
-Use [methodname]`bindVisible()` to show or hide components based on a boolean signal:
+Use [methodname]`bindVisible()` to show or hide components based on a boolean signal. This is how you express rules such as "show the *Done* button only while a row is being edited" or "hide the *Save* button until the form has unsaved changes": declare the rule once, and the component follows the state instead of being updated from every listener that changes it.
 
 [source,java]
 ----
@@ -122,6 +122,8 @@ Button toggleButton = new Button("Show Details");
 toggleButton.addClickListener(e -> showDetails.update(v -> !v));
 // Clicking toggles panel visibility
 ----
+
+Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`; pass `null` to [methodname]`bindVisible()` to remove the binding. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
 
 
 === Conditional Visibility
@@ -139,6 +141,18 @@ noResults.bindVisible(searchText.map(text -> text.isEmpty()));
 Div results = new Div();
 results.bindVisible(searchText.map(text -> !text.isEmpty()));
 // Shows when search text is not empty
+----
+
+Use a lambda when the condition reads more than one signal:
+
+[source,java]
+----
+ValueSignal<Boolean> formDirty = new ValueSignal<>(false);
+ValueSignal<Boolean> submitting = new ValueSignal<>(false);
+
+Button saveButton = new Button("Save");
+saveButton.bindVisible(() -> formDirty.get() && !submitting.get());
+// Shows only while there are unsaved changes and no submission is in progress
 ----
 
 

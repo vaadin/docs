@@ -35,11 +35,11 @@ var orchestrator = AIOrchestrator
 
 [methodname]`saveToDatabase` is a placeholder for application code. Write the [classname]`ChatMessage` list to whichever storage the application uses, so the history can be loaded again later.
 
-The listener fires once per turn for both successful and failed exchanges -- check [methodname]`event.getError()` to tell them apart. It is not called when history is restored via [methodname]`withHistory()`, and empty responses (turns where the model emitted only tool calls or no visible content) are not appended to history.
+The listener fires once per turn for both successful and failed exchanges -- check [methodname]`event.getError()` to tell them apart. It is not called when history is restored via [methodname]`withHistory()`, and empty responses (turns where the model emitted only tool calls or no visible content) are not appended to history. The event also carries the [since:com.vaadin:vaadin@V25.3]#finish reason and token usage# of the turn -- see <<listeners#response-metadata,Response Metadata>>.
 
 .UI Updates from ResponseListener
 [IMPORTANT]
-The listener runs on a background thread. It is safe to perform blocking I/O (such as database writes) directly. However, to update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+With a streaming provider, or when <<llm-providers#background-execution,background execution>> is enabled, the listener runs on a background thread, where blocking I/O (such as database writes) is safe. With a synchronous provider in the default execution mode, the whole turn -- this listener included -- runs in the request that triggered the prompt, so blocking work extends that request. To update Vaadin UI components from this callback, wrap the update in `ui.access()`.
 
 
 == Restoring History
@@ -95,6 +95,8 @@ orchestrator.reconnect(provider)
         .withAttachments(savedAttachments)  // optional
         .apply();
 ----
+
+Provider settings such as the streaming mode and <<llm-providers#background-execution,background execution>> live on the provider and are not serialized; apply them to the new provider instance before passing it to [methodname]`reconnect()`.
 
 .Controller Reattachment
 [NOTE]

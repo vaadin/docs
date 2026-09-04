@@ -30,7 +30,7 @@ function birthdayRenderer({ item: person }: { item: Person }) {
   const birthday = parseISO(person.birthday);
   return (
     <>
-      <div>{format(birthday, 'P')}</div>
+      <div>{format(birthday, 'MM/dd/yyyy')}</div>
       <div style={{ fontSize: '.875rem', color: 'var(--vaadin-text-color-secondary)' }}>
         Age: {Math.floor((Date.now() - birthday.getTime()) / (1000 * 60 * 60 * 24 * 365.25))}
       </div>

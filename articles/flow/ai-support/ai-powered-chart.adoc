@@ -3,6 +3,7 @@ title: AI-Generated Charts
 description: Use ChartAIController to let users build and update Highcharts visualizations from the application database using natural language.
 meta-description: Learn how to configure the Vaadin ChartAIController to create and update Charts from a database via natural language prompts and persist the resulting state.
 order: 70
+section-nav: commercial
 ---
 
 
@@ -10,6 +11,9 @@ order: 70
 
 
 [classname]`ChartAIController` creates and updates a <<{articles}/components/charts#,[classname]`Chart`>> (Vaadin's interactive charting component) visualization based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
+
+:commercial-feature: AI-Powered Chart
+include::{articles}/_commercial-banner.adoc[opts=optional]
 
 Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
 
@@ -47,6 +51,13 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 .Provider Compatibility
 [NOTE]
 [classname]`ChartAIController` does not support OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in are affected.
+
+
+== Query and Configuration Validation
+
+Before queueing an update, the controller validates the LLM's work within the turn: series queries are executed against the database, and configuration JSON is parsed eagerly. Invalid updates are rejected and never reach the chart.
+
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#: configuration parse errors are relayed as-is, since the LLM authored the configuration. Query errors are relayed only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()`; any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Persisting Chart State

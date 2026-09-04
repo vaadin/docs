@@ -41,13 +41,21 @@ export class Example extends LitElement {
     };
 
     return html`
-      <vaadin-list-box>
-        <vaadin-item @click="${clickHandler('Edit')}">Edit</vaadin-item>
-        <vaadin-item @click="${clickHandler('Delete')}">Delete</vaadin-item>
+      <vaadin-context-menu-list-box>
+        <vaadin-context-menu-item @click="${clickHandler('Edit')}">
+          Edit
+        </vaadin-context-menu-item>
+        <vaadin-context-menu-item @click="${clickHandler('Delete')}">
+          Delete
+        </vaadin-context-menu-item>
         <hr />
-        <vaadin-item @click="${clickHandler('Email')}">Email (${person.email})</vaadin-item>
-        <vaadin-item @click="${clickHandler('Call')}">Call (${person.address.phone})</vaadin-item>
-      </vaadin-list-box>
+        <vaadin-context-menu-item @click="${clickHandler('Email')}">
+          Email (${person.email})
+        </vaadin-context-menu-item>
+        <vaadin-context-menu-item @click="${clickHandler('Call')}">
+          Call (${person.address.phone})
+        </vaadin-context-menu-item>
+      </vaadin-context-menu-list-box>
     `;
   };
 

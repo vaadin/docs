@@ -18,7 +18,8 @@ Register objects with vendor-specific [annotationname]`@Tool` annotations that t
 [source,java]
 ----
 public class WeatherTools {
-    @Tool("Get current weather for a city")
+    // Spring AI: org.springframework.ai.tool.annotation.Tool
+    @Tool(description = "Get current weather for a city")
     public String getWeather(String city) {
         return weatherService.getCurrentWeather(city);
     }
@@ -32,11 +33,28 @@ var orchestrator = AIOrchestrator
         .build();
 ----
 
-For Spring AI, use [annotationname]`@org.springframework.ai.tool.annotation.Tool`. For LangChain4j, use [annotationname]`@dev.langchain4j.agent.tool.Tool`.
+The annotation comes from the framework the provider wraps, and the two spell the description differently. For Spring AI, use [annotationname]`@org.springframework.ai.tool.annotation.Tool` with a `description` attribute, as above. For LangChain4j, use [annotationname]`@dev.langchain4j.agent.tool.Tool`, whose description is the annotation's value:
+
+[source,java]
+----
+// LangChain4j: dev.langchain4j.agent.tool.Tool
+@Tool("Get current weather for a city")
+public String getWeather(String city) {
+    return weatherService.getCurrentWeather(city);
+}
+----
+
+.Tool Threading
+[NOTE]
+With a streaming provider or <<llm-providers#background-execution,background execution>>, tool methods are invoked off the request thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals are not available. Wrap component access in `ui.access()`, or capture the needed state before the turn starts.
 
 .Framework-Agnostic Tools via Controllers
 [TIP]
 For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController` and [classname]`ChartAIController` are built-in examples. Controllers and tool objects can be combined on the same orchestrator.
+
+.Tool Errors
+[NOTE]
+Tool objects registered via [methodname]`withTools()` are executed by the vendor framework, whose own error handling decides what the LLM sees when a tool throws -- by default, both LangChain4j and Spring AI relay the raw message of any exception. To control what the LLM learns about failures, define the tool through a controller instead and throw a [classname]`ToolException` for messages the LLM is meant to see; see <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Programmatic Prompts
@@ -57,6 +75,8 @@ include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AIOrchestratorPr
 ----
 endif::[]
 --
+
+Programmatic prompts go through the same pipeline as chat submits: a configured <<request-interception#,request interceptor>> can change or reject them before anything is sent.
 
 .One Request at a Time
 [NOTE]
