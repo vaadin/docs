@@ -1,0 +1,92 @@
+---
+title: Secondary Windows
+page-title: Secondary Windows and Modality in SwingBridge | Vaadin Tools
+description: How SwingBridge renders secondary Swing windows, and how to control whether a JFrame is modal.
+meta-description: Understand how SwingBridge surfaces secondary JDialog, JFrame, and JWindow instances as overlays, and control JFrame modality with a client-property hint.
+order: 5
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.secondary-windows]]
+= Secondary Windows
+
+When your Swing application opens a second top-level window on top of its main frame, SwingBridge surfaces that window in the browser as a Vaadin overlay. This applies to `JDialog`, `JFrame`, and `JWindow`. Popups, menus, and tooltips are handled separately and are always non-modal.
+
+This page explains how the modality of a secondary window is decided, and how to control it for a `JFrame`.
+
+
+[[swing-bridge.secondary-windows.modality]]
+== How Modality Is Decided
+
+Whether a secondary window is rendered *modal* (it blocks interaction with everything behind it) or *modeless* (the rest of the UI stays interactive) depends on the window type:
+
+[cols="1,3", options="header"]
+|===
+|Window type |Modality
+
+|`JDialog`
+|Follows the dialog's own modality — the value of its `isModal()` method. This mirrors what the Swing application already declared, so no extra configuration is needed.
+
+|`JFrame` / `JWindow`
+|*Modeless by default.* A `JFrame` is never modal in Swing — it never blocks other windows — so SwingBridge renders it modeless to match. Opt a specific frame into modal rendering with the hint described below.
+|===
+
+
+[[swing-bridge.secondary-windows.jframe-modality]]
+== Controlling JFrame Modality
+
+Some applications implement a secondary dialog as a `JFrame` rather than a `JDialog`, and still expect it to block the main frame. Because a `JFrame` has no modality property of its own, SwingBridge cannot infer this. Declare it explicitly by attaching a client-property hint to the frame's root pane before the frame becomes visible.
+
+Add the [artifactname]`swing-bridge-annotations` dependency to the module that builds your Swing application:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>swing-bridge-annotations</artifactId>
+    <version>${swing-bridge.version}</version>
+</dependency>
+----
+
+Then set the [classname]`WindowHints.MODALITY` client property to `MODAL`:
+
+[source,java]
+----
+import com.vaadin.swingbridge.window.WindowHints;
+
+JFrame frame = new JFrame("Edit Customer");
+// ... build the frame's content ...
+
+// Render this frame as a modal overlay in SwingBridge.
+frame.getRootPane().putClientProperty(WindowHints.MODALITY,
+        WindowHints.Modality.MODAL);
+
+frame.setVisible(true);
+----
+
+The hint travels with the window itself, so it takes effect no matter which Vaadin route or `SwingBridge` instance renders the frame — you set it once, in your Swing code, at the point where the frame is shown.
+
+[NOTE]
+====
+Set the hint *before* the frame becomes visible. SwingBridge reads it when it first surfaces the window, so changing it after the frame is shown has no effect.
+====
+
+To be explicit about a frame that should stay modeless, use `WindowHints.Modality.MODELESS`. Any window without the hint is already modeless, so this is only needed for readability.
+
+[TIP]
+====
+This hint has no effect on a `JDialog`. A dialog's real modality (`isModal()`) always wins, so continue to use `setModal(...)` on the `JDialog` itself.
+====
+
+
+[[swing-bridge.secondary-windows.migration]]
+== Behavior Change
+
+Earlier versions of SwingBridge rendered every secondary `JFrame` as modal. Secondary frames are now modeless by default. If your application relied on a `JFrame` blocking the main frame, add the `WindowHints.MODALITY` hint shown above to restore that behavior.
+
+
+== Next Steps
+
+- Public API surface and lifecycle hooks: <<reference#, Reference>>.
+- Call into Swing code and listen to Swing events from Vaadin: <<interop/index#, Interoperability>>.
