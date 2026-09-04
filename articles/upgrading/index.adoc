@@ -197,6 +197,14 @@ tasks.named('processResources') {
 }
 ----
 
+=== Gradle: Production Frontend Bundle Written to a Task-Owned Directory
+
+Starting with Vaadin 25.2, the `vaadinBuildFrontend` Gradle task writes the production frontend bundle -- [filename]`index.html`, the compiled client resources, and the other files under [filename]`META-INF/VAADIN` -- to `build/vaadin-build-frontend/` instead of `build/resources/main/`. Writing into the resources directory made the task output overlap with the output of `processResources`, which could result in an application archive without the frontend bundle when the task output was restored from the Gradle build cache.
+
+The new directory is registered as an additional output directory of the source set, so the bundle is still on the runtime classpath and is still packaged into the application archive -- at the root of a JAR, or in [filename]`WEB-INF/classes` of a WAR. Applications that only run Gradle tasks such as `build`, `bootJar`, `war`, or `bootRun` need no changes.
+
+Update any build step that reads the bundle straight from the build directory -- such as a custom copy task, a Docker build, or a deployment script -- to use `build/vaadin-build-frontend/`. Setting `frontendOutputDirectory` back to a folder under `build/resources/main/` isn't a solution: it reintroduces the overlapping task outputs that prevent the frontend build from being cached correctly. See <<{articles}/flow/configuration/gradle#production-bundle-output, Frontend Bundle Output Location>> for details.
+
 === Recently Published npm Packages Not Installed by Default
 
 Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
