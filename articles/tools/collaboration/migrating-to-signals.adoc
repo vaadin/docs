@@ -42,6 +42,8 @@ Shared signals live in one JVM. Collaboration Kit doesn't, and that single diffe
 *Clustering*:: Collaboration Kit's [classname]`Backend` SPI, behind the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes. Shared signals have no such SPI: every signal created through a public constructor owns a local tree, and the constructor documentation says outright that it doesn't support clustering.
 +
 The symptom is quiet rather than loud. Nothing fails, but two users routed to different nodes each see a consistent view of their own node's state and never see each other. Sticky sessions don't help, because the point of a topic is that users on *different* sessions share it.
++
+An application that implemented a custom [classname]`Backend` has nothing to port it to, including the [interfacename]`MembershipListener` and [classname]`MembershipEvent` callbacks it used to clean up after a node that disappeared.
 
 *Session serialization*:: Collaboration Kit <<advanced/serialization#,documents>> which of its classes are safe to keep in the HTTP session, and that split is what lets <<{articles}/tools/kubernetes#,Kubernetes Kit>> replicate sessions. Serializing a shared signal instead throws [classname]`NotSerializableException`, deliberately: a signal with listeners from other sessions would drag those sessions into the serialized graph, and the deserialized copy would be stale.
 +
@@ -1000,11 +1002,6 @@ Signal.effect(grid, () -> grid.setItems(items.getValues().toList()));
 Every change to the list, including a change to a single entry, refreshes the whole data set. For the list sizes a Collaboration Kit topic typically holds that's acceptable, but it rules out lazy loading, and it costs more than the [methodname]`subscribe()` callback it replaces, which reported one change at a time. Granular item updates and lazy-loaded bindings are planned.
 
 
-==== No Cluster Membership Events
-
-[interfacename]`MembershipListener` and [classname]`MembershipEvent` report nodes joining and leaving the cluster, which a custom [classname]`Backend` uses to clean up after a node that disappeared. As shared signals have no cluster, they have no membership model either. This only matters if you implemented a custom backend.
-
-
 === What Isn't a Gap
 
 Some Collaboration Kit features look framework-specific but carry over unchanged, and it's worth not budgeting time for them:
@@ -1097,10 +1094,6 @@ Use this to confirm the migration covers everything before removing the Collabor
 | List emptiness conditions
 | Direct
 | Read the list inside the transaction
-
-| Cluster membership events
-| Missing
-| No equivalent
 
 | Shared data in a [classname]`Grid` or [classname]`ComboBox`
 | Build it
