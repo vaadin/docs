@@ -34,15 +34,24 @@ Read this section first. It describes what changes conceptually, and it lists th
 *The engine disappears.* There's no [classname]`CollaborationEngine` singleton, no service init listener, and no [classname]`ConnectionContext`. Signal writes are thread-safe and dispatch UI updates themselves, so background threads write to a signal directly instead of going through a [classname]`SystemConnectionContext`.
 
 
+[[when-not-to-migrate-yet]]
 === When Not to Migrate Yet
 
-Shared signals live in one JVM. Collaboration Kit doesn't, and that single difference is the one thing that can stop a migration:
+Shared signals live in one JVM. Collaboration Kit doesn't, and that single difference is the one thing that can stop a migration outright. It shows up as two symptoms.
 
-*Clustering and session serialization*:: Collaboration Kit has an experimental <<advanced/backend-api#,`Backend` API>> that shares topic data between nodes, and it documents which of its classes are safe to keep in the HTTP session, which is what makes session replication work. Shared signals support neither. Serializing one fails fast rather than producing broken state, precisely because the state can't leave the node it was created on.
+*Clustering*:: Collaboration Kit's [classname]`Backend` SPI, behind the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes. Shared signals have no such SPI: every signal created through a public constructor owns a local tree, and the constructor documentation says outright that it doesn't support clustering.
++
+The symptom is quiet rather than loud. Nothing fails, but two users routed to different nodes each see a consistent view of their own node's state and never see each other. Sticky sessions don't help, because the point of a topic is that users on *different* sessions share it.
 
-These are two symptoms of the same limitation and are expected to be solved together, since both come down to moving signal state out of a single JVM. Work on it is tracked in https://github.com/vaadin/platform/issues/8703[platform#8703], which covers the cluster event log and session serialization in one design. If the application needs either, add a reaction there -- the issue is prioritized partly on how many people ask for it -- and stay on Collaboration Kit until it lands.
+*Session serialization*:: Collaboration Kit <<advanced/serialization#,documents>> which of its classes are safe to keep in the HTTP session, and that split is what lets <<{articles}/tools/kubernetes#,Kubernetes Kit>> replicate sessions. Serializing a shared signal instead throws [classname]`NotSerializableException`, deliberately: a signal with listeners from other sessions would drag those sessions into the serialized graph, and the deserialized copy would be stale.
++
+This reaches further than it first appears. A signal in a view field is reachable from the session, and so is one captured by the lambda behind any `bind*()` call, because the binding is stored on the component. Either makes the session graph unserializable. Not affected: the registry bean, since an application-scoped bean isn't session state, and <<{articles}/flow/ui-state/local-signals#,local signals>>, which are per-user.
 
-<<#gaps,Gaps and Cases That Can't Be Migrated>> covers the reasoning and the observable symptoms in detail. That section also lists the features that *can* be migrated but only by rebuilding behavior Collaboration Kit provides out of the box, and the smaller API-level differences worth knowing before starting.
+Both come down to moving signal state out of a single JVM, and they're expected to be solved together. Work on it is tracked in https://github.com/vaadin/platform/issues/8703[platform#8703], which covers the cluster event log and the serialization strategy in one design. If the application needs either, add a reaction there -- the issue is prioritized partly on how many people ask for it -- and stay on Collaboration Kit until it lands.
+
+Writing every change through a shared database and polling it back is not a workaround worth recommending: it reproduces neither the latency nor the transactional guarantees, and it gives up the reason to use signals in the first place.
+
+Everything else in Collaboration Kit can be migrated. <<#gaps,What You Have to Build Yourself>> covers the parts that cost real work, and the smaller API-level differences worth knowing before starting.
 
 
 === Enable Push Explicitly
@@ -839,46 +848,12 @@ Every effect and binding that depends on the signal runs on the correct UI, and 
 
 
 [[gaps]]
-== Gaps and Cases That Can't Be Migrated
+== What You Have to Build Yourself
 
-The mapping in the previous sections covers the common cases. This section is the inventory of what doesn't map: what makes migration impossible today, what migrates only at the cost of rebuilding something, and where the two APIs differ in ways that are easy to trip over.
+The mapping in the previous sections covers the common cases. This section is the inventory of what migrates only at the cost of rebuilding something, and where the two APIs differ in ways that are easy to trip over. For the one thing that can stop a migration outright, see <<#when-not-to-migrate-yet,When Not to Migrate Yet>>.
 
 Most of these are "not yet" rather than "never". Where a Vaadin issue tracks the work, it's linked from the relevant heading, so you can check the current status rather than trusting a snapshot.
 
-
-=== The Blocker: One JVM
-
-Tracked in https://github.com/vaadin/platform/issues/8703[platform#8703]. If the application needs either of the two symptoms below, react on that issue and stay on Collaboration Kit until it lands -- there's no workaround that keeps the benefits of migrating.
-
-Both come from the same place. A shared signal owns a local tree, and its state can't leave the node it was created on. Clustering and session serialization are what that costs you, and the design in platform#8703 addresses them together: a cluster event log for the first, and a serialization strategy for the second.
-
-
-==== Clustered Deployments
-
-Collaboration Kit's [classname]`Backend` SPI, enabled through the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes; the documentation walks through a Hazelcast implementation. Shared signals have no such SPI. Every shared signal created through a public constructor owns a local tree, and the constructor documentation states outright that the signal doesn't support clustering. [methodname]`peekConfirmed()` exists for the distributed case but currently resolves against local confirmation only.
-
-The API is designed with clustering in mind -- the tree, the command log, and the confirmation model are all in place -- and platform#8703 describes the missing piece as a strongly consistent event log per signal identifier, backed by whatever clustering technology the application already runs.
-
-The symptom is quiet rather than loud: nothing fails, but two users routed to different nodes each see a consistent view of their own node's state and never see each other. Sticky sessions don't fix it either, because the point of a topic is that users on *different* sessions share it.
-
-Writing every change through a shared database and polling it back reproduces neither the latency nor the transactional guarantees, and gives up the reason to use signals in the first place.
-
-
-==== Session Serialization and Kubernetes Kit
-
-Collaboration Kit is explicit about session serialization: <<advanced/serialization#,its own documentation>> lists the classes that must not be stored in the session ([classname]`CollaborationEngine`, [classname]`TopicConnection`, [classname]`CollaborationMap`, [classname]`CollaborationList`) and the ones that are serializable and safe to keep there, including [classname]`CollaborationBinder`, [classname]`CollaborationAvatarGroup`, [classname]`CollaborationMessageList`, and all three managers. That split is what lets <<{articles}/tools/kubernetes#,Kubernetes Kit>> replicate sessions.
-
-Shared signals offer no such split. Serializing one throws [classname]`NotSerializableException` with the message _"Shared Signal is a shared object that cannot be serialized: it is tied to a specific runtime environment and would leak other sessions if included in session serialization."_ It applies to every shared signal type, because all the public constructors create the asynchronous tree that rejects serialization.
-
-The exception is a deliberate placeholder rather than a final design decision: a signal with listeners from other sessions would drag those sessions into the serialized graph, and the deserialized copy would be stale. Failing loudly was chosen over either.
-
-This reaches further than it first appears. A signal held in a view field is reachable from the session, and so is a signal captured by the lambda behind any `bind*()` call, because the binding is stored on the component. Both make the session graph unserializable.
-
-*Affected*:: Kubernetes Kit session replication, container-managed session persistence, and any serialization-based hand-off of a session between nodes.
-
-*Not affected*:: The registry bean itself. An application-scoped Spring bean isn't session state, so holding the signals there is correct regardless.
-
-*Not affected*:: <<{articles}/flow/ui-state/local-signals#,Local signals>>, which are per-user and don't carry the same restriction.
 
 === Behavior You Have to Rebuild
 
@@ -1045,7 +1020,7 @@ Some Collaboration Kit features look framework-specific but carry over unchanged
 
 == Feature Checklist
 
-Use this to confirm the migration covers everything before removing the Collaboration Kit dependency. *Direct* means the signals API does the same job; *Build it* means the behavior is reachable but you write it; *Missing* means there's no equivalent. <<#gaps,Gaps and Cases That Can't Be Migrated>> explains each of the last two.
+Use this to confirm the migration covers everything before removing the Collaboration Kit dependency. *Direct* means the signals API does the same job; *Build it* means the behavior is reachable but you write it; *Missing* means there's no equivalent. <<#gaps,What You Have to Build Yourself>> explains each of the last two, and <<#when-not-to-migrate-yet,When Not to Migrate Yet>> covers the single *Missing* row that can stop a migration.
 
 [cols="2,1,2", options="header"]
 |===
