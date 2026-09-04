@@ -36,13 +36,13 @@ Read this section first. It describes what changes conceptually, and it lists th
 
 === When Not to Migrate Yet
 
-Two Collaboration Kit capabilities have no signals equivalent at all, and both are properties of the deployment rather than of a feature. Stop here if the application depends on either:
+Shared signals live in one JVM. Collaboration Kit doesn't, and that single difference is the one thing that can stop a migration:
 
-*Clustering*:: Collaboration Kit has an experimental <<advanced/backend-api#,`Backend` API>> that shares topic data between nodes. Shared signals are single-JVM only, and clustering is not yet implemented.
+*Clustering and session serialization*:: Collaboration Kit has an experimental <<advanced/backend-api#,`Backend` API>> that shares topic data between nodes, and it documents which of its classes are safe to keep in the HTTP session, which is what makes session replication work. Shared signals support neither. Serializing one fails fast rather than producing broken state, precisely because the state can't leave the node it was created on.
 
-*Session serialization*:: Collaboration Kit documents which of its classes are safe to keep in the HTTP session, which is what makes session replication work. Serializing a shared signal isn't supported yet, and currently fails fast rather than producing broken state.
+These are two symptoms of the same limitation and are expected to be solved together, since both come down to moving signal state out of a single JVM. Work on it is tracked in https://github.com/vaadin/platform/issues/8703[platform#8703], which covers the cluster event log and session serialization in one design. If the application needs either, add a reaction there -- the issue is prioritized partly on how many people ask for it -- and stay on Collaboration Kit until it lands.
 
-Both are covered in detail, with the reasoning and the observable symptoms, in <<#gaps,Gaps and Cases That Can't Be Migrated>>. That section also lists the features that *can* be migrated but only by rebuilding behavior Collaboration Kit provides out of the box, and the smaller API-level differences worth knowing before starting.
+<<#gaps,Gaps and Cases That Can't Be Migrated>> covers the reasoning and the observable symptoms in detail. That section also lists the features that *can* be migrated but only by rebuilding behavior Collaboration Kit provides out of the box, and the smaller API-level differences worth knowing before starting.
 
 
 === Enable Push Explicitly
@@ -846,20 +846,22 @@ The mapping in the previous sections covers the common cases. This section is th
 Most of these are "not yet" rather than "never". Where a Vaadin issue tracks the work, it's linked from the relevant heading, so you can check the current status rather than trusting a snapshot.
 
 
-=== Blockers
+=== The Blocker: One JVM
 
-Neither of these has a workaround that keeps the benefits of migrating.
+Tracked in https://github.com/vaadin/platform/issues/8703[platform#8703]. If the application needs either of the two symptoms below, react on that issue and stay on Collaboration Kit until it lands -- there's no workaround that keeps the benefits of migrating.
+
+Both come from the same place. A shared signal owns a local tree, and its state can't leave the node it was created on. Clustering and session serialization are what that costs you, and the design in platform#8703 addresses them together: a cluster event log for the first, and a serialization strategy for the second.
 
 
 ==== Clustered Deployments
 
 Collaboration Kit's [classname]`Backend` SPI, enabled through the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes; the documentation walks through a Hazelcast implementation. Shared signals have no such SPI. Every shared signal created through a public constructor owns a local tree, and the constructor documentation states outright that the signal doesn't support clustering. [methodname]`peekConfirmed()` exists for the distributed case but currently resolves against local confirmation only.
 
-The signal API is designed with clustering in mind -- the tree, the command log, and the confirmation model are all in place -- but the distributed implementation is not written yet. https://github.com/vaadin/flow/issues/23413[flow#23413] records that state; it is closed because the agreed outcome was to fail clearly for now, not because clustering landed.
+The API is designed with clustering in mind -- the tree, the command log, and the confirmation model are all in place -- and platform#8703 describes the missing piece as a strongly consistent event log per signal identifier, backed by whatever clustering technology the application already runs.
 
 The symptom is quiet rather than loud: nothing fails, but two users routed to different nodes each see a consistent view of their own node's state and never see each other. Sticky sessions don't fix it either, because the point of a topic is that users on *different* sessions share it.
 
-There's no partial workaround worth recommending. Writing every change through a shared database and polling it back reproduces neither the latency nor the transactional guarantees, and it gives up the reason to use signals in the first place. Keep Collaboration Kit for clustered deployments.
+Writing every change through a shared database and polling it back reproduces neither the latency nor the transactional guarantees, and gives up the reason to use signals in the first place.
 
 
 ==== Session Serialization and Kubernetes Kit
@@ -868,7 +870,7 @@ Collaboration Kit is explicit about session serialization: <<advanced/serializat
 
 Shared signals offer no such split. Serializing one throws [classname]`NotSerializableException` with the message _"Shared Signal is a shared object that cannot be serialized: it is tied to a specific runtime environment and would leak other sessions if included in session serialization."_ It applies to every shared signal type, because all the public constructors create the asynchronous tree that rejects serialization.
 
-The exception is a placeholder rather than a final design decision. https://github.com/vaadin/flow/issues/23413[flow#23413] asks for exactly this behavior -- fail with a clear message -- on the grounds that sharing signals across a cluster is not yet implemented. Serialization is expected to arrive with the distributed implementation, since the two problems are the same problem: moving signal state out of one JVM.
+The exception is a deliberate placeholder rather than a final design decision: a signal with listeners from other sessions would drag those sessions into the serialized graph, and the deserialized copy would be stale. Failing loudly was chosen over either.
 
 This reaches further than it first appears. A signal held in a view field is reachable from the session, and so is a signal captured by the lambda behind any `bind*()` call, because the binding is stored on the component. Both make the session graph unserializable.
 
@@ -877,9 +879,6 @@ This reaches further than it first appears. A signal held in a view field is rea
 *Not affected*:: The registry bean itself. An application-scoped Spring bean isn't session state, so holding the signals there is correct regardless.
 
 *Not affected*:: <<{articles}/flow/ui-state/local-signals#,Local signals>>, which are per-user and don't carry the same restriction.
-
-If the application serializes sessions, keep Collaboration Kit for now.
-
 
 === Behavior You Have to Rebuild
 
@@ -1132,13 +1131,9 @@ Use this to confirm the migration covers everything before removing the Collabor
 | Build it
 | An effect calling `setItems()`, refreshing the whole data set
 
-| Session serialization
+| Clustering and session serialization
 | Missing
-| Not yet implemented; blocks Kubernetes Kit session replication
-
-| Clustering
-| Missing
-| Not yet implemented
+| One limitation, tracked in platform#8703
 |===
 
 
@@ -1154,5 +1149,5 @@ For the current status of the gaps described above:
 
 * https://github.com/vaadin/collaboration-kit/issues/138[collaboration-kit#138] -- bringing the remaining features into Flow and deprecating Collaboration Kit.
 * https://github.com/vaadin/flow/issues/23868[flow#23868] -- a collaborative binder in Flow, built on signals.
-* https://github.com/vaadin/flow/issues/23413[flow#23413] -- serialization and clustering of shared signals.
+* https://github.com/vaadin/platform/issues/8703[platform#8703] -- clustering and session serialization for shared signals. React there if you need it.
 * https://github.com/vaadin/flow/issues/23659[flow#23659] -- binding items of a data component to a list signal.
