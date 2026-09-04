@@ -1,0 +1,67 @@
+---
+title: Metrics in Copilot
+page-title: Inspect live Vaadin metrics in Copilot | Vaadin Observability Kit
+description: How to inspect the live Vaadin meters of a running application from the Observability panel in Vaadin Copilot, without setting up a metrics backend.
+meta-description: Use the Observability Kit panel in Vaadin Copilot to watch live Vaadin metrics during development, without a metrics backend or dashboard.
+order: 40
+---
+
+
+= Metrics in Copilot
+
+Metrics need an export path and a dashboard before they tell you anything: a registry, an Actuator endpoint, a Prometheus scrape, a Grafana panel.
+During development that's a lot of setup for a quick question such as, "How long does this view take to render?"
+
+When the application runs in development mode, Observability Kit contributes an *Observability* panel to <<{articles}/tools/copilot#,Vaadin Copilot>> that reads the meters straight out of the running [classname]`MeterRegistry`.
+No backend, no scrape configuration, no dashboard.
+
+The panel is development-mode only.
+It's loaded over the Vaadin development tools connection, which doesn't exist in a production build, so it adds nothing to what you deploy.
+
+
+== Opening the Panel
+
+Start the application in development mode and activate Copilot.
+The panel has a bar chart icon in the Copilot toolbar in Edit, Inspect, and Test modes.
+It isn't shown in Play mode, where Copilot hides its panels.
+
+// TODO Add the screenshot of the panel before merging (see the pull request discussion).
+// image::images/copilot-metrics-panel.png[The Observability panel in Vaadin Copilot, listing Vaadin meters with their current values and trend sparklines.]
+
+Meters appear as soon as the code that records them has run.
+If the panel is empty, interact with the application -- open a view, navigate, load a grid -- and it fills in.
+
+
+== What the Panel Shows
+
+The panel lists every `vaadin.*` meter in the active registry, sorted by name, with three columns:
+
+Meter:: The meter name, with its tags below it -- for example the route for a navigation timer.
+
+Value:: The current figure, formatted for the meter type.
+Timers and distribution summaries show the cumulative mean, the maximum when it's non-zero, and the number of recorded samples, such as `mean 12.4 ms · max 84.1 ms · n=37`.
+Timers are reported in milliseconds.
+Gauges show their current value, and counters their count.
+
+Trend:: A sparkline of the recent values of that meter, so you can see a figure climbing or settling while you use the application.
+
+Above the table, the panel shows how many meters it found and the time of the latest snapshot, which it refreshes every three seconds while the panel is open.
+
+Only the kit's own `vaadin.*` meters are included.
+Meters you register yourself under a different name -- see <<customization#,Custom Instrumentation>> -- aren't shown, and neither are the Spring Boot or JVM meters of the application.
+
+Metrics that are opt-in are missing until you turn them on: <<reference#ui-state-size,UI state size>> and <<reference#database-monitoring,database monitoring>> are off by default.
+See <<configuration#,Configuration>>.
+
+For what each meter means, see the <<reference#,Reference>> page.
+
+
+== What the Panel Isn't
+
+The panel is a live view of one running instance, meant for the moment you're looking at it:
+
+* It reads the in-memory registry of the application you're running, so there's no history beyond the sparkline and nothing survives a restart.
+* It shows one instance -- not a total across the nodes of a cluster.
+* It has no alerting, no percentiles, and no comparison over time.
+
+For any of that, export the metrics to a backend as described in <<getting-started#export-the-metrics,Export the Metrics>>, and see <<integrations#,Integrations>> for vendor-specific setup.
