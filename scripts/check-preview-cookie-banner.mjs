@@ -103,6 +103,13 @@ const visit = async (path) => {
 
 const bannerShown = () => execute(`return !!document.querySelector('#haas-cookie-dialog')`);
 
+// "No banner" only counts as a pass if the machinery that would have shown one
+// is actually alive: the HaaS loader ran and the preview opt-out set the cookie.
+// Without this the check would silently pass on an error page, a failed loader
+// fetch, or a renamed dialog element.
+const optOutActive = () =>
+  execute(`return !!window.haas && document.cookie.includes('privacyPolicy=-1')`);
+
 let failures = 0;
 try {
   await visit(PAGES[0]);
@@ -121,7 +128,14 @@ try {
     await sleep(1000);
     console.log(`OK   ${PAGES[0]}: banner accepted and dismissed`);
   } else {
-    console.log(`OK   ${PAGES[0]}: no cookie banner`);
+    if (!(await optOutActive())) {
+      throw new Error(
+        `No cookie banner on ${baseUrl}${PAGES[0]} and the preview opt-out is not in ` +
+          'effect either (HaaS loader missing, or no privacyPolicy=-1 cookie), so there ' +
+          'is nothing to check'
+      );
+    }
+    console.log(`OK   ${PAGES[0]}: no cookie banner, preview opt-out in effect`);
   }
 
   for (const path of PAGES.slice(1)) {
