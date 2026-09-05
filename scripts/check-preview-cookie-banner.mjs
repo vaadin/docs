@@ -1,14 +1,15 @@
 /**
- * Checks that the cookie consent banner stays dismissed on a preview deployment.
+ * Checks that a preview deployment doesn't ask for cookie consent on every page.
  *
  * The banner comes from the HaaS loader (see dspublisher/theme/init-browser.ts),
  * which stores consent in a `privacyPolicy` cookie scoped to `domain=vaadin.com`.
  * Preview deployments are served from `docs-preview-pr-<n>.fly.dev`, so the
- * browser rejects that cookie and the banner is shown again on every page load.
+ * browser rejects that cookie and, without the preview opt-out in
+ * dspublisher/theme/init-browser.ts, the banner comes back on every page load.
  *
- * Drives headless Chromium through chromedriver: loads a page, accepts the
- * banner, then loads another page and fails if the banner is back. Exits with a
- * non-zero status when the banner reappears.
+ * Drives headless Chromium through chromedriver: loads a page and accepts the
+ * banner if it's shown at all, then loads further pages and fails if the banner
+ * is back. Exits with a non-zero status when the banner reappears.
  *
  * Usage:
  *   node scripts/check-preview-cookie-banner.mjs https://docs-preview-pr-5950.fly.dev
@@ -105,29 +106,31 @@ const bannerShown = () => execute(`return !!document.querySelector('#haas-cookie
 let failures = 0;
 try {
   await visit(PAGES[0]);
-  if (!(await bannerShown())) {
-    throw new Error(`No cookie banner on ${baseUrl}${PAGES[0]}, nothing to check`);
+  // With the preview opt-out in place there is no banner to accept at all; a
+  // banner that is shown once and then stays dismissed is fine too.
+  if (await bannerShown()) {
+    const accepted = await execute(`
+      const button = document.querySelector('#haas-cookie-dialog .cookie-button.accept');
+      if (!button) return false;
+      button.click();
+      return true;
+    `);
+    if (!accepted) {
+      throw new Error('Could not find the accept button in the cookie banner');
+    }
+    await sleep(1000);
+    console.log(`OK   ${PAGES[0]}: banner accepted and dismissed`);
+  } else {
+    console.log(`OK   ${PAGES[0]}: no cookie banner`);
   }
-
-  const accepted = await execute(`
-    const button = document.querySelector('#haas-cookie-dialog .cookie-button.accept');
-    if (!button) return false;
-    button.click();
-    return true;
-  `);
-  if (!accepted) {
-    throw new Error('Could not find the accept button in the cookie banner');
-  }
-  await sleep(1000);
-  console.log(`OK   ${PAGES[0]}: banner accepted and dismissed`);
 
   for (const path of PAGES.slice(1)) {
     await visit(path);
     if (await bannerShown()) {
       failures++;
-      console.error(`FAIL ${path}: cookie banner shown again after it was accepted`);
+      console.error(`FAIL ${path}: cookie banner asks for consent again`);
     } else {
-      console.log(`OK   ${path}: banner stays dismissed`);
+      console.log(`OK   ${path}: no cookie banner`);
     }
   }
 } finally {
