@@ -247,6 +247,8 @@ Vaadin Framework reference documentation. Technical, code-centric, unopinionated
 
 Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
+The `articles/hilla/lit` sub-tree documents Hilla with Lit, which is deprecated and is removed in Vaadin 26. Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials, which both pages include, so that removing `articles/hilla/lit` does not break the React pages. Nothing outside `articles/hilla/lit` may include or link into it.
+
 ### articles/components
 
 Component documentation covering capabilities, usage, and styling for each Vaadin component.
