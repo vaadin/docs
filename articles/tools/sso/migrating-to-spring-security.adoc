@@ -1,0 +1,595 @@
+---
+title: Migrating to Spring Security
+page-title: Migrating from Vaadin SSO Kit to Spring Security
+description: How to replace SSO Kit with Spring Security's built-in OAuth2 and OpenID Connect support.
+meta-description: Map every SSO Kit feature to its Spring Security equivalent, and learn which pieces you have to build yourself before SSO Kit is gone in Vaadin 26.
+order: 4
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Migrating from SSO Kit to Spring Security#
+
+SSO Kit never implemented OpenID Connect itself. It's an auto-configuration layer: it reads a handful of `vaadin.sso.*` properties, assembles a Spring Security filter chain from them, and fills the gaps that Spring Security and Vaadin's Spring integration had when the kit was released with V23.2.
+
+Those gaps have since closed. Spring Security has built-in OpenID Connect Back-Channel Logout, and Vaadin's [classname]`VaadinSecurityConfigurer` configures OAuth2 login, RP-Initiated Logout, and UIDL-aware redirects for Vaadin applications. What's left of SSO Kit is mostly configuration that you can now write yourself in about twenty lines -- plus a few smaller features that have no direct replacement.
+
+SSO Kit is deprecated and won't be available in Vaadin 26. Every application using it has to migrate before that upgrade.
+
+This guide maps each SSO Kit feature to its replacement, gives the configuration to replace the auto-configuration, and is explicit about what you have to build yourself.
+
+
+== Before Migrating
+
+The migration is mostly subtraction. Read this section first to see what actually changes and to scope the work.
+
+
+=== What Changes -- And What Doesn't
+
+*Provider configuration doesn't change.* Everything under `spring.security.oauth2.client.provider` and `spring.security.oauth2.client.registration` is Spring Security configuration that SSO Kit only consumed. Issuer URI, client ID, client secret, and scopes stay exactly as they are, and so does the client registered at Keycloak, Okta, or Microsoft Entra ID.
+
+*Auto-configuration becomes an explicit filter chain.* [classname]`SingleSignOnConfiguration` is replaced by a [classname]`SecurityFilterChain` bean in the application. The `vaadin.sso.*` (or `hilla.sso.*`) properties disappear, and their values move into that bean as method arguments.
+
+*The Flow API you call every day is unaffected.* [classname]`AuthenticationContext`, [methodname]`getAuthenticatedUser()`, and [methodname]`logout()` are part of Vaadin's Spring integration, not of SSO Kit. Views that inject [classname]`AuthenticationContext` need no change at all. The same is true for `@PermitAll`, `@RolesAllowed`, and `@AnonymousAllowed` on views and services.
+
+*The commercial license requirement goes away.* SSO Kit is a commercial add-on with a runtime license check. Spring Security's OAuth2 client and Vaadin's Spring Security integration are both open source, so the license, the build-time key, and the license check on startup all become unnecessary.
+
+
+=== Scope the Work
+
+Three searches tell you how much of the kit an application actually uses:
+
+- `vaadin.sso.` and `hilla.sso.` in configuration files. Each property maps to a line of configuration below.
+- `com.vaadin.sso` and `com.vaadin.hilla.sso` in Java imports. Only [classname]`SingleSignOnContext`, [classname]`UserLogoutEvent`, and the two UIDL strategies are commonly imported directly; anything else is an internal detail of the auto-configuration.
+- `@vaadin/sso-kit-client-` in TypeScript imports. This is the part of the migration that costs real work, and it applies only to Hilla applications.
+
+An application that adds `sso-kit-starter`, sets an issuer URI and a login route, and uses [classname]`AuthenticationContext` in its views migrates in a single commit. One that uses back-channel logout notifications in a Hilla frontend has more to do -- see <<#gaps,What You Have to Build Yourself>>.
+
+
+[[feature-mapping]]
+== Feature Mapping
+
+|===
+|SSO Kit |Replacement
+
+|`com.vaadin:sso-kit-starter`
+|`org.springframework.boot:spring-boot-starter-oauth2-client`
+
+|[classname]`SingleSignOnConfiguration` auto-configuration
+|Your own [classname]`SecurityFilterChain` bean
+
+|`vaadin.sso.login-route`
+|First argument of [methodname]`oauth2LoginPage()`
+
+|`vaadin.sso.logout-redirect-route`
+|Second argument of [methodname]`oauth2LoginPage()`
+
+|`vaadin.sso.back-channel-logout`
+|[methodname]`http.oidcLogout()` with [methodname]`backChannel()`
+
+|`vaadin.sso.back-channel-logout-route`
+|Fixed at `/logout/connect/back-channel/{registrationId}`
+
+|`vaadin.sso.maximum-concurrent-sessions`
+|[methodname]`sessionManagement()` with [methodname]`sessionConcurrency()`
+
+|`vaadin.sso.keycloak-roles`
+|A [interfacename]`GrantedAuthoritiesMapper` you write -- see <<#gap-keycloak-roles,Keycloak Role Mapping>>
+
+|[classname]`AuthenticationContext`, [methodname]`logout()`
+|Unchanged; both are Vaadin Flow API
+
+|[classname]`com.vaadin.sso.starter.UidlRedirectStrategy`
+|[classname]`com.vaadin.flow.spring.security.UidlRedirectStrategy`, applied automatically
+
+|[classname]`UidlExpiredSessionStrategy`
+|A strategy you write -- see <<#gap-session-expiration,Vaadin-Aware Session Expiration>>
+
+|[classname]`UserLogoutEvent`
+|Vaadin's [classname]`SessionDestroyEvent`
+
+|[classname]`KeycloakUserMapper`
+|See <<#gap-keycloak-roles,Keycloak Role Mapping>>
+
+|`sso-kit-keycloak-lumo` theme
+|No replacement -- see <<#gap-keycloak-theme,Keycloak Login Theme>>
+
+|`@vaadin/sso-kit-client-react`
+|`@vaadin/hilla-react-auth`
+
+|`@vaadin/sso-kit-client-lit`
+|No replacement -- see <<#gap-lit,Hilla Lit Client>>
+
+|[classname]`SingleSignOnEndpoint`, [classname]`UserEndpoint`
+|A browser-callable service you write
+
+|[classname]`BackChannelLogoutEndpoint`, [methodname]`onBackChannelLogout()`
+|No replacement -- see <<#gap-logout-notification,Client-Side Logout Notification>>
+|===
+
+
+== Migrating a Flow Application
+
+The five steps below cover a Flow application. Steps 4 to 6 are conditional: skip them if the corresponding `vaadin.sso.*` property was never set.
+
+
+=== Step 1: Replace the Dependency
+
+Remove the SSO Kit starter and add Spring Boot's OAuth2 client starter:
+
+[.example]
+--
+.[filename]`pom.xml`
+[source,xml]
+----
+<!-- Remove:
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>sso-kit-starter</artifactId>
+</dependency>
+-->
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-client</artifactId>
+</dependency>
+----
+.[filename]`build.gradle`
+[source,groovy]
+----
+implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+----
+--
+
+If the project has a Vaadin subscription key or license file used only for SSO Kit, it's no longer needed for authentication.
+
+
+=== Step 2: Keep the Provider Configuration
+
+Leave every `spring.security.oauth2.client.*` property untouched. Remove only the `vaadin.sso.*` block:
+
+[.example]
+--
+.[filename]`application.properties`
+[source,properties]
+----
+# Keep as is:
+spring.security.oauth2.client.provider.keycloak.issuer-uri=https://my-keycloak.io/realms/my-realm
+spring.security.oauth2.client.registration.keycloak.client-id=my-client
+spring.security.oauth2.client.registration.keycloak.client-secret=very-secret-value
+spring.security.oauth2.client.registration.keycloak.scope=profile,openid,email,roles
+
+# Remove:
+# vaadin.sso.login-route=/oauth2/authorization/keycloak
+# vaadin.sso.logout-redirect-route=/logout-successful
+----
+.[filename]`application.yaml`
+[source,yaml]
+----
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: https://my-keycloak.io/realms/my-realm
+        registration:
+          keycloak:
+            client-id: my-client
+            client-secret: very-secret-value
+            scope:
+            - profile
+            - openid
+            - email
+            - roles
+----
+--
+
+The values of the removed properties are still needed. They become arguments in the next step.
+
+
+=== Step 3: Add a Security Configuration
+
+Replace the auto-configuration with an explicit [classname]`SecurityFilterChain`. The two arguments of [methodname]`oauth2LoginPage()` are the former `login-route` and `logout-redirect-route`:
+
+.[filename]`SecurityConfig.java`
+[source,java]
+----
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static com.vaadin.flow.spring.security.VaadinSecurityConfigurer.vaadin;
+
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(vaadin(), configurer -> configurer.oauth2LoginPage(
+                "/oauth2/authorization/keycloak", // <1>
+                "{baseUrl}"                       // <2>
+        ));
+        return http.build();
+    }
+}
+----
+<1> The former `vaadin.sso.login-route`. Pointing it at `/oauth2/authorization/{registrationId}` sends users straight to the provider; pointing it at a route of your own shows a login view first.
+<2> The former `vaadin.sso.logout-redirect-route`. It defaults to `{baseUrl}`, the same default the kit had, and supports the `{baseScheme}`, `{baseHost}`, `{basePort}`, `{basePath}`, and `{baseUrl}` template variables.
+
+This single call covers what took three pieces of configuration in the kit:
+
+- OAuth2 login against every client registration in the application configuration.
+- RP-Initiated Logout. [methodname]`AuthenticationContext.logout()` continues to work and still ends the provider session, because the configurer installs an [classname]`OidcClientInitiatedLogoutSuccessHandler` when a post-logout redirect URI is given.
+- UIDL-aware redirects. Vaadin's own [classname]`UidlRedirectStrategy` is attached to that handler, so logging out from inside a view redirects the browser instead of sending a redirect into a UIDL response.
+
+For the full set of options, see <<{articles}/flow/integrations/spring/oauth2#,OAuth2 Authentication>> and <<{articles}/flow/security/vaadin-security-configurer#,Vaadin Security Configurer>>.
+
+.Views Need No Changes
+[NOTE]
+Injecting [classname]`AuthenticationContext` into a view, calling [methodname]`getAuthenticatedUser(OidcUser.class)`, and annotating views with `@PermitAll` or `@RolesAllowed` all keep working unchanged. Those are Vaadin Flow APIs, not SSO Kit APIs.
+
+
+=== Step 4: Enable Back-Channel Logout
+
+Skip this step if the provider was never configured to send back-channel logout requests.
+
+Spring Security implements https://openid.net/specs/openid-connect-backchannel-1_0.html[Back-Channel Logout] natively. Enable it on the same filter chain:
+
+.[filename]`SecurityConfig.java`
+[source,java]
+----
+import org.springframework.security.config.Customizer;
+
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.with(vaadin(), configurer -> configurer.oauth2LoginPage(
+            "/oauth2/authorization/keycloak", "{baseUrl}"));
+    http.oidcLogout(oidc -> oidc.backChannel(Customizer.withDefaults()));
+    return http.build();
+}
+----
+
+No session registry bean is required: Spring Security registers an in-memory [classname]`OidcSessionRegistry` and the login strategy that populates it.
+
+*Check the URL registered at the provider.* Spring Security listens on `/logout/connect/back-channel/{registrationId}`. Applications that were already on SSO Kit 3.1 or later, with `vaadin.sso.back-channel-logout` unset, are on this URL already and need no change at the provider. Applications that enabled the kit's own implementation with `vaadin.sso.back-channel-logout=true` used `/logout/back-channel/{registrationId}` instead, and the provider's client configuration has to be updated to the new path.
+
+*Reacting to a logout.* The kit published a [classname]`UserLogoutEvent` from its own filter. Spring Security has no equivalent event, but it invalidates the HTTP session, which makes Vaadin fire a [classname]`SessionDestroyEvent`. Listen for that instead:
+
+[source,java]
+----
+@Bean
+VaadinServiceInitListener logoutListener() {
+    return serviceInitEvent -> serviceInitEvent.getSource()
+            .addSessionDestroyListener(sessionDestroyEvent -> {
+                // Clean up per-session resources here.
+            });
+}
+----
+
+.Behind a Reverse Proxy
+[NOTE]
+Spring Security completes a back-channel logout by calling its own logout endpoint over HTTP, using the URI template `{baseUrl}/logout/connect/back-channel/{registrationId}`. If the application can't resolve its own external base URL -- typically behind a TLS-terminating proxy without forwarded-header handling -- set an explicit internal address with `oidc.backChannel(backChannel -> backChannel.logoutUri("http://localhost:8080/logout/connect/back-channel/{registrationId}"))`.
+
+
+=== Step 5: Restore Concurrent Session Control
+
+Skip this step if `vaadin.sso.maximum-concurrent-sessions` was never set.
+
+Session concurrency is standard Spring Security, but the strategy that runs when a session is forced out has to be Vaadin-aware. See <<#gap-session-expiration,Vaadin-Aware Session Expiration>> for the strategy class, then wire it up:
+
+.[filename]`SecurityConfig.java`
+[source,java]
+----
+http.sessionManagement(sessionManagement -> sessionManagement
+        .sessionConcurrency(concurrency -> concurrency
+                .maximumSessions(1) // <1>
+                .expiredSessionStrategy(new UidlExpiredSessionStrategy()))); // <2>
+----
+<1> The former `vaadin.sso.maximum-concurrent-sessions`. The default, `-1`, means unlimited.
+<2> Without this, an expired session breaks the Vaadin client instead of reloading it.
+
+
+=== Step 6: Restore Keycloak Role Mapping
+
+Skip this step if `vaadin.sso.keycloak-roles` was never set to `true`. Otherwise see <<#gap-keycloak-roles,Keycloak Role Mapping>>, which has to be built.
+
+
+== Migrating a Hilla Application
+
+A Hilla application migrates its backend exactly as above, using `hilla.sso.*` as the source of the values instead of `vaadin.sso.*`, and removing `com.vaadin.hilla:sso-kit-starter` in Step 1. The `com.vaadin.hilla.sso.starter` package also has to be removed from the `<packages>` list of the Hilla Maven plugin, because its endpoints no longer exist.
+
+The frontend is where the real work is. SSO Kit shipped three generated endpoints and a React context on top of them; the replacement is Hilla's own authentication support plus a service you write.
+
+
+=== Replace the Client Dependency
+
+[source,bash]
+----
+npm uninstall @vaadin/sso-kit-client-react
+npm install @vaadin/hilla-react-auth
+----
+
+
+[[expose-the-user]]
+=== Expose the User
+
+SSO Kit's [classname]`UserEndpoint` returned a `User` object with the standard OpenID Connect claims. Replace it with a browser-callable service that returns the claims your views actually use:
+
+.[filename]`UserInfoService.java`
+[source,java]
+----
+@AnonymousAllowed
+@BrowserCallable
+public class UserInfoService {
+
+    public record UserInfo(String name, String email, List<String> roles) {
+    }
+
+    public Optional<UserInfo> getUserInfo() {
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .map(Authentication::getPrincipal)
+                .filter(OidcUser.class::isInstance)
+                .map(OidcUser.class::cast)
+                .map(user -> new UserInfo(user.getFullName(), user.getEmail(),
+                        user.getAuthorities().stream()
+                                .map(GrantedAuthority::getAuthority)
+                                .filter(authority -> authority.startsWith("ROLE_"))
+                                .map(authority -> authority.substring(5))
+                                .toList()));
+    }
+}
+----
+
+
+=== Replace the SSO Context
+
+`configureAuth()` replaces [classname]`SsoProvider` and [methodname]`useSsoContext()`:
+
+.[filename]`frontend/security/auth.ts`
+[source,typescript]
+----
+import { configureAuth } from '@vaadin/hilla-react-auth';
+import { UserInfoService } from 'Frontend/generated/endpoints';
+
+const auth = configureAuth(UserInfoService.getUserInfo, {
+  getRoles: (userInfo) => userInfo.roles // <1>
+});
+
+export const useAuth = auth.useAuth;
+export const AuthProvider = auth.AuthProvider;
+----
+<1> Replaces [methodname]`isUserInRole()`; roles reach `ViewConfig.rolesAllowed` through this function.
+
+Then swap the calls in your components:
+
+- [methodname]`useSsoContext()` becomes [methodname]`useAuth()`.
+- `authenticated` becomes `state.user !== undefined`.
+- [methodname]`logout()` is provided by [methodname]`useAuth()` and needs no `logoutUrl`.
+- [methodname]`login()` has no equivalent, because it was only a redirect. Navigate to the provider directly: `window.location.href = '/oauth2/authorization/keycloak'`.
+
+See <<{articles}/building-apps/react/security#,Security>> for the full setup, including where to wrap the application in `<AuthProvider>`.
+
+
+=== Replace Route Protection
+
+[methodname]`protectRoutes()` and the `requireAuthentication` route property are replaced by `ViewConfig`, which Hilla's file-based router reads:
+
+.[filename]`frontend/views/profile.tsx`
+[source,tsx]
+----
+export const config: ViewConfig = {
+  loginRequired: true,
+  rolesAllowed: ['ADMIN'] // Optional; replaces isUserInRole checks in the route.
+};
+----
+
+Unauthenticated users are redirected to the configured login view rather than to the kit's `/ssologin` route.
+
+
+[[gaps]]
+== What You Have to Build Yourself
+
+These are the features with no drop-in replacement. The first two are small and mechanical. The last three are genuine gaps.
+
+
+[[gap-session-expiration]]
+=== Vaadin-Aware Session Expiration
+
+*Affects:* applications that set `vaadin.sso.maximum-concurrent-sessions` or `hilla.sso.maximum-concurrent-sessions`.
+
+When session concurrency forces an older session out, Spring Security's default strategy writes a plain-text message to the response. For a UIDL request that response is meaningless to the Vaadin client, which then appears to hang. The kit installed a strategy that answers framework-internal requests with the `Vaadin-Refresh` token instead, so the client reloads. Spring Security can't know about that protocol, and Vaadin's Spring integration doesn't ship an equivalent, so the class has to live in the application:
+
+.[filename]`UidlExpiredSessionStrategy.java`
+[source,java]
+----
+public class UidlExpiredSessionStrategy implements SessionInformationExpiredStrategy {
+
+    @Override
+    public void onExpiredSessionDetected(SessionInformationExpiredEvent event)
+            throws IOException {
+        var request = event.getRequest();
+        var response = event.getResponse();
+        var redirectRoute = request.getContextPath() + "/";
+        var servletMapping = request.getHttpServletMapping().getPattern();
+        if (HandlerHelper.isFrameworkInternalRequest(servletMapping, request)) {
+            response.getWriter().write("Vaadin-Refresh: " + redirectRoute);
+        } else {
+            response.sendRedirect(redirectRoute);
+        }
+    }
+}
+----
+
+Wire it into [methodname]`sessionConcurrency()` as shown in Step 5.
+
+
+[[gap-keycloak-roles]]
+=== Keycloak Role Mapping
+
+*Affects:* applications that set `vaadin.sso.keycloak-roles=true` or `hilla.sso.keycloak-roles=true`.
+
+Keycloak puts realm roles in a `realm_access` claim and client roles in `resource_access`, neither of which is part of the OpenID Connect specification. Spring Security therefore maps neither, and `@RolesAllowed` sees no roles after the migration unless you add the mapping.
+
+The straightforward route is a [interfacename]`GrantedAuthoritiesMapper` bean that reads the claim and adds `ROLE_` authorities:
+
+.[filename]`SecurityConfig.java`
+[source,java]
+----
+@Bean
+GrantedAuthoritiesMapper keycloakAuthoritiesMapper() {
+    return authorities -> {
+        var mapped = new LinkedHashSet<GrantedAuthority>(authorities);
+        authorities.stream()
+                .filter(OidcUserAuthority.class::isInstance)
+                .map(OidcUserAuthority.class::cast)
+                .map(authority -> authority.getIdToken().getClaimAsMap("realm_access"))
+                .filter(Objects::nonNull)
+                .forEach(realmAccess -> {
+                    var roles = (Collection<?>) realmAccess.get("roles");
+                    if (roles != null) {
+                        roles.forEach(role ->
+                                mapped.add(new SimpleGrantedAuthority("ROLE_" + role)));
+                    }
+                });
+        return mapped;
+    };
+}
+----
+
+This reads the ID token, so the Keycloak client needs its *realm roles* mapper set to add roles to the ID token. By default that mapper only adds them to the access token. If changing the Keycloak client isn't an option, register an [classname]`OidcUserService` with a converter that decodes the access token with a [interfacename]`JwtDecoder` and reads `realm_access` and `resource_access` from there. That's what the kit's [classname]`KeycloakUserMapper` did, and it's why the kit needed the extra `roles` scope.
+
+Client roles need the same treatment applied to the `resource_access` claim, keyed by client ID.
+
+
+[[gap-logout-notification]]
+=== Client-Side Logout Notification
+
+*Affects:* Hilla applications that call [methodname]`onBackChannelLogout()`.
+
+SSO Kit pushed a message to the browser when the provider ended a session elsewhere, which let the application show a dialog offering to log in again. It did this with a server-side [classname]`Flux` and a generated [classname]`BackChannelLogoutEndpoint`.
+
+Spring Security's back-channel logout invalidates the HTTP session and stops there. There's no event to subscribe to and no client-side notification, so the browser finds out only on its next request, when it's redirected to the login page.
+
+If the dialog matters, both halves have to be rebuilt. On the server, wrap Spring Security's handler and notify before it invalidates anything:
+
+[source,java]
+----
+http.oidcLogout(oidc -> oidc.backChannel(backChannel ->
+        backChannel.logoutHandler((request, response, authentication) -> {
+            // Notify subscribers for this principal, then delegate.
+            new OidcBackChannelLogoutHandler(sessionRegistry)
+                    .logout(request, response, authentication);
+        })));
+----
+
+On the client, subscribe to a browser-callable service returning a [classname]`Flux` and react to it, as the kit's own React example did. Note that resolving which subscriber to notify means matching the `sub` and `sid` claims of the logout token against your own record of live sessions -- the kit maintained that mapping itself, and Spring Security's [classname]`OidcSessionRegistry` isn't a substitute for it.
+
+
+[[gap-keycloak-theme]]
+=== Keycloak Login Theme
+
+*Affects:* applications using the `sso-kit-keycloak-lumo` theme.
+
+The <<theming#,Lumo theme for the Keycloak login page>> is a Keycloak theme, not Vaadin code, and Spring Security has nothing to do with login page appearance. Nothing about the migration breaks a theme that's already installed in a Keycloak server: it keeps working, because it depends on the Keycloak version rather than on the Vaadin version.
+
+What ends is maintenance. The theme is published as part of SSO Kit, so there's no version for Vaadin 26 and no compatibility fixes follow for later Keycloak releases. An application that needs a branded login page long term should either fork the theme -- it's a Keycloak theme directory, and <<theming#,Theming>> describes the structure -- or move the branding to a login view in the application, keeping the provider's page out of the flow with a login route that points at `/oauth2/authorization/{registrationId}`.
+
+
+[[gap-lit]]
+=== Hilla Lit Client
+
+*Affects:* applications using `@vaadin/sso-kit-client-lit`.
+
+There's no Lit equivalent of `@vaadin/hilla-react-auth`; Hilla's authentication helpers are React-only. The [classname]`SingleSignOnContext` singleton, [methodname]`protectRoutes()`, and [methodname]`hasAccess()` all have to be replaced with application code calling a browser-callable service like the one in <<#expose-the-user,Expose the User>>.
+
+Vaadin already recommends moving Lit views to React: `@vaadin/router`, the library Hilla Lit views route with, is deprecated and no longer actively maintained, as noted in the <<{articles}/upgrading#,Upgrading Guide>>. If that move is planned anyway, doing it alongside this migration avoids building a Lit authentication context that then has to be replaced again.
+
+
+[[smaller-differences]]
+=== Smaller Differences
+
+These cost a few lines each rather than a design decision:
+
+*Listing configured providers*:: [methodname]`SingleSignOnContext.getRegisteredProviders()` has no replacement. Iterate the repository yourself, which works as long as it's the default in-memory implementation:
++
+[source,java]
+----
+if (clientRegistrationRepository instanceof InMemoryClientRegistrationRepository repository) {
+    StreamSupport.stream(repository.spliterator(), false)
+            .map(ClientRegistration::getRegistrationId)
+            .toList();
+}
+----
+
+*The generated logout link*:: [methodname]`SingleSignOnContext.getLogoutLink()` built an `end_session_endpoint` URL by hand. Don't rebuild it: [methodname]`AuthenticationContext.logout()` in Flow and [methodname]`useAuth().logout()` in Hilla both go through Spring Security's logout filter, which constructs the same URL correctly.
+
+*The authentication entry point*:: The kit installed a [classname]`LoginUrlAuthenticationEntryPoint` for the login route explicitly. Spring Security's OAuth2 login configurer registers one for the configured login page by itself, so nothing has to be carried over -- but it's worth clicking through an unauthenticated deep link once after the migration to confirm the redirect still happens.
+
+
+== Feature Checklist
+
+Use this to confirm nothing is left behind. *Direct* means it works after Step 3 with no extra code.
+
+|===
+|Feature |Status
+
+|OpenID Connect login (Keycloak, Okta, Microsoft Entra ID)
+|Direct
+
+|Provider and client registration properties
+|Direct -- unchanged
+
+|Login route and automatic provider redirect
+|Direct
+
+|Securing views with `@PermitAll` and `@RolesAllowed`
+|Direct
+
+|[classname]`AuthenticationContext` and the authenticated [classname]`OidcUser`
+|Direct -- unchanged
+
+|Custom user types through [classname]`OidcUserService`
+|Direct
+
+|RP-Initiated Logout and post-logout redirect
+|Direct
+
+|UIDL-aware logout redirect
+|Direct
+
+|Back-Channel Logout
+|Direct, after adding [methodname]`oidcLogout()`
+
+|Reacting to a back-channel logout on the server
+|Direct, through [classname]`SessionDestroyEvent`
+
+|Maximum concurrent sessions
+|Direct, after adding [methodname]`sessionConcurrency()`
+
+|Vaadin-aware expired-session handling
+|Build it
+
+|Keycloak realm and client role mapping
+|Build it
+
+|Hilla user information and roles on the client
+|Build it
+
+|Hilla route protection
+|Direct, through `ViewConfig`
+
+|Hilla back-channel logout notification
+|Missing
+
+|Keycloak Lumo login theme
+|Missing
+
+|Hilla Lit client
+|Missing
+|===
+
+
+[discussion-id]`b7f4c1de-2a19-4c07-9f0b-5b6c8e3f21ad`
