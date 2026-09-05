@@ -28,7 +28,7 @@ You can implement [interfacename]`AppShellConfigurator` for cases covered by the
 The Vaadin servlet uses the [filename]`frontend/index.html` file as a template to generate the bootstrap page response. The servlet processes the template and injects the following information:
 
 - `<base href='./relative/to/root'>`: Vaadin calculates the relative path from the current request path to the root path of the application. This is required for relative links in view templates to work correctly.
-- Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]`frontend/index.ts` file. It uses a pre-configured https://vitejs.dev/[Vite] instance that's included with `vaadin-maven-plugin` as a module bundler. Therefore, the [filename]`frontend/index.html` template doesn't need to include explicitly the [filename]`index.ts` script -- or the [filename]`index.js` script.
+- Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]`frontend/index.tsx` file. It uses a pre-configured https://vitejs.dev/[Vite] instance that's included with `vaadin-maven-plugin` as a module bundler. Therefore, the [filename]`frontend/index.html` template doesn't need to include explicitly the [filename]`index.tsx` script -- or the [filename]`index.ts` or [filename]`index.js` script.
 
 [TIP]
 The `frontend` directory path can be changed by providing the property `vaadin.frontend.frontend.folder` when running the Maven goals `prepare-frontend` or `build-frontend` from `vaadin-maven-plugin`.
@@ -36,56 +36,52 @@ The `frontend` directory path can be changed by providing the property `vaadin.f
 
 === Default Template & Entry Point [[default-bootstrap-template-and-entry-point]]
 
-If the [filename]`index.html` or [filename]`index.ts` files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the [filename]`target` folder. In that case, the application uses only server-side routing. You can take control of these files by moving them into the [filename]`frontend` folder. By default, these files look similar to the following:
+If the [filename]`index.html` or [filename]`index.tsx` files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the [filename]`target` folder. In that case, the application uses only server-side routing. You can take control of these files by moving them into the [filename]`frontend` folder. By default, these files look similar to the following:
 
 .Default `index.html`
 [source,html]
 ----
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
-    body, #outlet {
-      height: 100vh;
-      width: 100vw;
+    html, body, #outlet {
+      height: 100%;
+      width: 100%;
       margin: 0;
     }
   </style>
   <!-- index.ts is included here automatically (either by the dev server or during the build) -->
 </head>
 <body>
-  <!-- vaadin-router in index.ts needs an outlet for displaying the views -->
+  <!-- This outlet div is where the views are rendered -->
   <div id="outlet"></div>
 </body>
 </html>
 ----
 
-.Default `index.ts` [[default-index-ts]]
-[source,typescript]
+.Default `index.tsx` [[default-index-ts]]
+[source,tsx]
 ----
-// import Vaadin client-router to handle client-side and server-side navigation
-import { Router } from '@vaadin/router';
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router';
+import { router } from 'Frontend/generated/routes.js'; // <1>
 
-// import Flow module to enable navigation to Vaadin server-side views
-import { Flow } from '@vaadin/flow-frontend';
+function App() {
+  return <RouterProvider router={router} />;
+}
 
-const {serverSideRoutes} = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-
-const routes = [
-  // for client-side, place routes below
-
-  // for server-side, the next magic line sends all unmatched routes:
-  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
-];
-
-// The Vaadin router needs an outlet in the index.html page to display views
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes(routes);
+const outlet = document.getElementById('outlet')!; // <2>
+const root = createRoot(outlet);
+root.render(createElement(App));
 ----
+<1> The routes themselves are configured in [filename]`routes.tsx`, which registers the server-side (i.e., Flow) routes and any client-side React routes. If you add your own [filename]`frontend/routes.tsx` file, the import points to that file instead of the generated one.
+<2> The `outlet` element is the one declared in [filename]`index.html`; it's where the router renders the views.
+
+For more about configuring the routes, see the <<{articles}/hilla/reference/react-router#, React Router Reference>>.
 
 This is the best place to customize the application shell, for example to put an analytics tag in the page.
 
