@@ -1,0 +1,1121 @@
+---
+title: Migrating to Signals
+page-title: Migrating from Collaboration Kit to Signals in Vaadin
+description: How to replace Collaboration Kit topics, binders, avatars, and chat with shared signals.
+meta-description: Map every Collaboration Kit concept to its shared signals equivalent, and learn which features you need to build yourself.
+order: 4
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Migrating from Collaboration Kit to Signals#
+
+Collaboration Kit and <<{articles}/flow/ui-state/shared-signals#,shared signals>> solve the same underlying problem: keeping a piece of server-side state consistent across several users and pushing the changes to every browser that's watching. They arrive at it from different directions.
+
+Collaboration Kit is a library of ready-made, use-case-specific features -- a collaborative binder, an avatar group, a chat -- built on a topic abstraction. Shared signals are a general-purpose reactive primitive built into Vaadin Flow. They don't know anything about forms or chats, but everything built on them is reactive by default, requires no extra dependency, and composes with the rest of the signals API.
+
+This guide maps each Collaboration Kit concept to its signals equivalent, shows the code for the four high-level use cases, and is explicit about the pieces you have to build yourself.
+
+Collaboration Kit is deprecated and isn't included in Vaadin 26, so this migration is a prerequisite for that upgrade rather than an optional modernization. Vaadin tracks bringing the remaining Collaboration Kit features into Flow in https://github.com/vaadin/collaboration-kit/issues/138[collaboration-kit#138]. Most of the gaps below are open work rather than deliberate omissions, and each one links to its tracking issue where one exists.
+
+
+== Before Migrating
+
+Read this section first. It describes what changes conceptually, and it lists the cases where migrating isn't yet the right move.
+
+
+=== What Changes Conceptually
+
+*Topics become objects you own.* Collaboration Kit resolves a topic from a string identifier, and any two connections that pass the same string share data. Shared signals have no such registry: two users share state when they hold a reference to the *same signal instance*. Replacing topics therefore means introducing an application-scoped object that maps identifiers to signal instances. See <<#step-1-replace-topics-with-a-signal-registry,Replace Topics with a Signal Registry>>.
+
+*Connections become bindings.* Collaboration Kit activates a [classname]`TopicConnection` when a component is attached and deactivates it on detach. Signals do the same thing implicitly: [methodname]`Signal.effect()` and every `bind*()` method are active only while their owner component is attached. There's nothing left to open or close.
+
+*Subscribers become effects.* Instead of registering a [interfacename]`MapSubscriber` or [interfacename]`ListSubscriber` and reacting to change events, you read signal values inside an effect or a binding, and the framework re-runs it when a value changes.
+
+*The engine disappears.* There's no [classname]`CollaborationEngine` singleton, no service init listener, and no [classname]`ConnectionContext`. Signal writes are thread-safe and dispatch UI updates themselves, so background threads write to a signal directly instead of going through a [classname]`SystemConnectionContext`.
+
+
+[[when-not-to-migrate-yet]]
+=== When Not to Migrate Yet
+
+Shared signals live in one JVM. Collaboration Kit doesn't, and that single difference is the one thing that can stop a migration outright. It shows up as two symptoms.
+
+*Clustering*:: Collaboration Kit's [classname]`Backend` SPI, behind the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes. Shared signals have no such SPI: every signal created through a public constructor owns a local tree, and the constructor documentation says outright that it doesn't support clustering.
++
+The symptom is quiet rather than loud. Nothing fails, but two users routed to different nodes each see a consistent view of their own node's state and never see each other. Sticky sessions don't help, because the point of a topic is that users on *different* sessions share it.
++
+An application that implemented a custom [classname]`Backend` has nothing to port it to, including the [interfacename]`MembershipListener` and [classname]`MembershipEvent` callbacks it used to clean up after a node that disappeared.
+
+*Session serialization*:: Collaboration Kit <<advanced/serialization#,documents>> which of its classes are safe to keep in the HTTP session, and that split is what lets <<{articles}/tools/kubernetes#,Kubernetes Kit>> replicate sessions. Serializing a shared signal instead throws [classname]`NotSerializableException`, deliberately: a signal with listeners from other sessions would drag those sessions into the serialized graph, and the deserialized copy would be stale.
++
+This reaches further than it first appears. A signal in a view field is reachable from the session, and so is one captured by the lambda behind any `bind*()` call, because the binding is stored on the component. Either makes the session graph unserializable. Not affected: the registry bean, since an application-scoped bean isn't session state, and <<{articles}/flow/ui-state/local-signals#,local signals>>, which are per-user.
+
+Both come down to moving signal state out of a single JVM, and they're expected to be solved together. Work on it is tracked in https://github.com/vaadin/platform/issues/8703[platform#8703], which covers the cluster event log and the serialization strategy in one design. If the application needs either, add a reaction there -- the issue is prioritized partly on how many people ask for it -- and stay on Collaboration Kit until it lands.
+
+Writing every change through a shared database and polling it back is not a workaround worth recommending: it reproduces neither the latency nor the transactional guarantees, and it gives up the reason to use signals in the first place.
+
+Everything else in Collaboration Kit can be migrated. <<#gaps,What You Have to Build Yourself>> covers the parts that cost real work, and the smaller API-level differences worth knowing before starting.
+
+
+=== Enable Push Explicitly
+
+Cross-user updates only reach the browser immediately if <<{articles}/flow/advanced/server-push#push.configuration.annotation,server push>> is enabled. Both products need it, but only one of them arranges it: Collaboration Kit turns push on by itself. When a topic connection activates in a UI that has neither push nor polling, it sets [constantname]`PushMode.AUTOMATIC` and logs a warning. Signals never touch the push configuration.
+
+An application that relied on that default has no `@Push` annotation anywhere, and migrating removes the thing that was compensating. The result is easy to miss in testing: everything still works for the user making a change, and other users see it only the next time they interact with the page. Add `@Push` before migrating, while Collaboration Kit is still there to make the two behave the same.
+
+To confirm which case you're in, look for the Collaboration Kit warning in the server log at startup, or set [methodname]`setAutomaticallyActivatePush(false)` and check that real-time updates still arrive.
+
+
+=== Migrate Incrementally
+
+Collaboration Kit and signals can run side by side in the same application, and even in the same view: they're independent libraries with no shared state. Migrating one view, or one feature within a view, at a time is safe. A practical order is chat first (self-contained), then avatars, then forms, and the low-level topic API last.
+
+
+== Concept Mapping
+
+[cols="1,1,2", options="header"]
+|===
+| Collaboration Kit | Signals | Notes
+
+| [classname]`UserInfo`
+| Your own record
+| Signals have no user model. Define an immutable record and assign color indexes yourself.
+
+| Topic identifier
+| A signal instance from an application-scoped registry
+| Sharing is by object identity, not by string.
+
+| [methodname]`openTopicConnection()`
+| Nothing
+| Reading a shared signal is enough.
+
+| [classname]`ComponentConnectionContext`
+| [methodname]`Signal.effect()` and `bind*()` methods
+| Both are active only while the owner is attached.
+
+| [classname]`SystemConnectionContext`
+| Nothing
+| Signal writes are thread-safe from any thread.
+
+| [classname]`CollaborationMap`
+| [classname]`SharedMapSignal`
+| Both use `String` keys and give per-entry change tracking.
+
+| [classname]`CollaborationList`
+| [classname]`SharedListSignal`
+| Entries are child signals instead of values behind a key.
+
+| [classname]`ListKey`
+| The child [classname]`SharedValueSignal`
+| [methodname]`insertLast()` returns an operation whose [methodname]`signal()` is the handle.
+
+| [methodname]`subscribe()`
+| [methodname]`Signal.effect()`, [methodname]`bindChildren()`, [methodname]`bindItems()`
+| Dependencies are tracked automatically.
+
+| [classname]`ListOperation` conditions
+| [methodname]`Signal.runInTransaction()` with `verify*()`
+| See <<#conditional-operations,Conditional Operations>>.
+
+| `EntryScope.CONNECTION`
+| Cleanup returned from [methodname]`whenAttached()`
+| Scoped to the component, not to the connection.
+
+| [methodname]`setExpirationTimeout()`
+| Cleanup in your registry
+| No automatic cleanup.
+
+| [classname]`CollaborationBinder`
+| [classname]`Binder` plus a shared signal per form
+| Validation stays in [classname]`Binder`; synchronization moves to signals.
+
+| [classname]`FormManager`
+| A shared signal for values, a list signal of editors
+| The highlight component is driven directly.
+
+| [classname]`CollaborationAvatarGroup`
+| [classname]`AvatarGroup` with [methodname]`bindItems()`
+| Presence tracking is manual.
+
+| [classname]`PresenceManager`
+| [classname]`SharedListSignal` of collaborators
+| Add on attach, remove on detach.
+
+| [classname]`CollaborationMessageList`
+| [classname]`MessageList` with [methodname]`bindItems()`
+| Renders any list signal of messages.
+
+| [classname]`CollaborationMessageInput`
+| [classname]`MessageInput`
+| A submit listener that inserts into the list signal.
+
+| [classname]`MessageManager`
+| The list signal itself
+| Any code holding the signal can submit.
+
+| [interfacename]`CollaborationMessagePersister`
+| Your own repository call
+| Write to the database, then insert into the signal.
+
+| [classname]`Backend`
+| Not available
+| Shared signals are single-JVM.
+|===
+
+
+[[step-1-replace-topics-with-a-signal-registry]]
+== Step 1: Replace Topics with a Signal Registry
+
+A topic identifier in Collaboration Kit is a lookup key into a global namespace. Reproduce that with an application-scoped bean that owns the signals for each identifier.
+
+This is where the state belongs rather than a workaround for a missing feature. Which entities are live in memory, and how they relate to what is stored, is a service-layer concern -- the same layer that already knows how the entity is persisted. Collaboration Kit hid that decision behind a string identifier; signals make you make it.
+
+Group the signals that belong to one topic in a record, so that a view resolves everything it needs in a single lookup:
+
+[source,java]
+----
+public record DocumentState(
+        SharedValueSignal<PersonForm> form,
+        SharedListSignal<FieldEditor> editors,
+        SharedListSignal<Collaborator> collaborators,
+        SharedListSignal<ChatMessage> messages) {
+
+    static DocumentState create(PersonForm initialValue) {
+        return new DocumentState(new SharedValueSignal<>(initialValue),
+                new SharedListSignal<>(FieldEditor.class),
+                new SharedListSignal<>(Collaborator.class),
+                new SharedListSignal<>(ChatMessage.class));
+    }
+}
+----
+
+.A Transaction Can't Span Two of These
+[IMPORTANT]
+====
+Each shared signal created with a public constructor is an independent tree, committed independently, so a transaction that touches two of them throws. Grouping them in a record keeps them together for lookup, not for atomicity.
+
+[source,java]
+----
+// Throws: form and messages are independent shared signals
+Signal.runInTransaction(() -> {
+    state.form().update(f -> f.withStatus("approved"));
+    state.messages().insertLast(approvalMessage);
+});
+----
+
+A Collaboration Kit topic has no such restriction: its named maps and lists share one topic, so a single change could span them. Where a migration relies on that, put the values in one signal instead -- entries of one map or list, or a [classname]`SharedNodeSignal` root with a map child and a list child, which is the same shape as the topic it replaces.
+====
+
+
+The registry itself is a singleton bean holding a concurrent map. Because the state is created lazily, the first user to open a document seeds it from the backend -- the same job the bean supplier callback does in [methodname]`CollaborationBinder::setTopic`:
+
+[source,java]
+----
+@Component
+public class DocumentStateRegistry {
+    private final PersonService personService;
+    private final Map<String, DocumentState> states = new ConcurrentHashMap<>();
+
+    public DocumentStateRegistry(PersonService personService) {
+        this.personService = personService;
+    }
+
+    public DocumentState state(String documentId) {
+        return states.computeIfAbsent(documentId, id -> DocumentState
+                .create(PersonForm.of(personService.findById(id))));
+    }
+}
+----
+
+.Keep the Registry Out of the Session
+[NOTE]
+Look up the state through the bean whenever it's needed, and store the resulting signals in fields of the view only. Holding the registry in a session attribute has the same drawbacks that <<advanced/serialization#,storing `CollaborationEngine` in the session>> has.
+
+
+[[discarding-unused-state]]
+=== Discarding Unused State
+
+Collaboration Kit's expiration timeout drops topic data after a quiet period. The registry needs to do this explicitly, otherwise every document ever opened stays in memory for the lifetime of the application.
+
+Count the views currently using a state and discard it when the count reaches zero. Expose the two halves as a symmetric pair:
+
+[source,java]
+----
+private record Ref(DocumentState state, AtomicInteger users) {
+}
+
+private final Map<String, Ref> refs = new ConcurrentHashMap<>();
+
+public DocumentState retain(String documentId) {
+    return refs.compute(documentId, (id, existing) -> {
+        Ref ref = existing != null ? existing
+                : new Ref(DocumentState.create(
+                        PersonForm.of(personService.findById(id))),
+                        new AtomicInteger());
+        ref.users().incrementAndGet();
+        return ref;
+    }).state();
+}
+
+public void release(String documentId) {
+    refs.computeIfPresent(documentId,
+            (id, ref) -> ref.users().decrementAndGet() > 0 ? ref : null);
+}
+----
+
+Tie the pair to the lifetime of the view with [methodname]`whenAttached()`. The handler runs on every attach, and the [classname]`Registration` it returns runs on the matching detach:
+
+[source,java]
+----
+public static Registration hold(Component owner, String documentId,
+        DocumentStateRegistry registry) {
+    return owner.whenAttached(ui -> {
+        registry.retain(documentId);
+        return () -> registry.release(documentId);
+    });
+}
+----
+
+Written by hand with a detach listener alone, this is a mistake that's easy to make and hard to see. A view that's detached and attached again -- navigating back to a retained view, a component moved between layouts, a dialog reopened -- then releases more times than it retains. The count reaches zero while the view is still open, the state is dropped, and the next user to open the same document gets a fresh [classname]`DocumentState` and silently stops sharing anything with them. A `@PreserveOnRefresh` view surviving a reload gets the opposite: it is re-attached without an intervening detach, so a hand-written pair retains twice and never releases. [methodname]`whenAttached()` handles both, clearing any live cleanup before running the handler again.
+
+.Give Release a Grace Period
+[IMPORTANT]
+Discarding at zero immediately is the equivalent of `Duration.ZERO`, and it has the same drawback: a view that reattaches a moment later gets a different instance than the one its bindings were built against. Schedule the removal instead of performing it directly, and cancel the scheduled task if the count rises again. For a view that can stay detached for longer than that window, resolve the state inside the attach listener and rebuild the bindings from it, rather than caching the instance from the constructor.
+
+
+[[step-2-replace-userinfo]]
+== Step 2: Replace UserInfo
+
+[classname]`UserInfo` carries an identifier, a display name, an abbreviation, an image URL, and a color index. Signals have no user model, so define a record that carries exactly what the UI needs. Values stored in shared signals are converted to JSON with Jackson, and records serialize cleanly:
+
+[source,java]
+----
+public record Collaborator(String id, String name, String image,
+        int colorIndex) {
+
+    private static final int COLOR_COUNT = 7;
+
+    public static Collaborator of(User user) {
+        return new Collaborator(user.getId(), user.getName(),
+                user.getImageUrl(),
+                Math.floorMod(user.getId().hashCode(), COLOR_COUNT));
+    }
+}
+----
+
+Collaboration Kit assigns color indexes automatically, cycling through seven values. Deriving the index from a hash of the user identifier, as above, gives a stable color per user without any shared bookkeeping. Two users in the same topic can end up with the same color; if that matters, allocate indexes from the collaborator list instead when the user joins.
+
+.Store Identifiers, Not Entities
+[TIP]
+Keep the record small and free of framework types. A [interfacename]`DownloadHandler` can't be stored in a signal, for the same reason it can't be stored in [classname]`UserInfo`. Store the user identifier and resolve the handler when the avatar is created.
+
+
+[[step-3-presence-and-avatars]]
+== Step 3: Presence and Avatars
+
+[classname]`CollaborationAvatarGroup` combines two things: tracking who's present, and rendering them. With signals, these are separate.
+
+
+[[tracking-presence]]
+=== Tracking Presence
+
+[classname]`PresenceManager` writes the local user into the topic with `EntryScope.CONNECTION`, so the entry vanishes when the connection deactivates. Signals need the two halves written explicitly, on attach and on detach:
+
+[source,java]
+----
+public static Registration trackPresence(Component owner,
+        SharedListSignal<Collaborator> collaborators, Collaborator localUser) {
+    return owner.whenAttached(ui -> {
+        SharedValueSignal<Collaborator> entry = collaborators
+                .insertLast(localUser).signal();
+        return () -> collaborators.remove(entry);
+    });
+}
+----
+
+[methodname]`insertLast()` returns an [classname]`InsertOperation` whose [methodname]`signal()` is available immediately, before the insert is confirmed. That signal is the handle used to remove the entry later, in the same way a [classname]`ListKey` is in Collaboration Kit.
+
+.Don't Reach for an Effect Here
+[WARNING]
+====
+[methodname]`Signal.effect()` looks like the right tool, because it's already component-bound and already survives detach and re-attach. It can't work, in three separate ways:
+
+* An effect that reads the list with [methodname]`peek()` and inserts throws [classname]`MissingSignalUsageException` on creation, because it reads no signal.
+* An effect that reads with [methodname]`get()` and inserts depends on its own output, and is disposed with an infinite-loop error -- delivered to the uncaught exception handler rather than to the caller.
+* Even a well-formed effect wouldn't re-add the user, because an effect doesn't re-run on re-attach when nothing has changed.
+
+[methodname]`whenAttached()` is the correct construction.
+====
+
+The cleanup covers more than it looks like it does. Flow sends an unload beacon when the page is hidden, closes the UI on the server, and detaching the UI runs the cleanup for the whole component tree -- so closing a browser tab removes the entry within about a second, the same as Collaboration Kit.
+
+.Two Cases the Beacon Doesn't Cover
+[IMPORTANT]
+Eager close on the beacon is deliberately skipped for `@PreserveOnRefresh` views, so an entry written from one survives until the heartbeat timeout. And if no beacon arrives at all -- a crashed browser, a killed process, a dead network -- the UI is closed by the inactivity check at roughly three heartbeat intervals, or at session expiry. Collaboration Kit has the same weakness in that second case, because it relies on the same beacon. Clean up from a [interfacename]`SessionDestroyListener` as well, and treat presence as advisory rather than authoritative.
+
+
+=== Rendering Avatars
+
+[classname]`AvatarGroup` binds directly to a list signal. Map each collaborator entry to an [classname]`AvatarGroupItem`:
+
+[source,java]
+----
+AvatarGroup avatars = new AvatarGroup();
+avatars.bindItems(collaborators.map(entries -> entries.stream()
+        .map(entry -> entry.map(DocumentView::toAvatarItem)).toList()));
+
+private static AvatarGroupItem toAvatarItem(Collaborator collaborator) {
+    AvatarGroupItem item = new AvatarGroupItem(collaborator.name(),
+            collaborator.image());
+    item.setColorIndex(collaborator.colorIndex());
+    return item;
+}
+----
+
+The outer [methodname]`map()` turns the list of entry signals into a list of mapped signals, and [methodname]`bindItems()` reads each one. An entry changing its own value re-renders that avatar; the list changing shape re-renders the group.
+
+To exclude the local user's own avatar -- what [methodname]`setOwnAvatarVisible(false)` does -- filter the stream on the collaborator identifier and create a separate [classname]`Avatar` component for the local user.
+
+
+== Step 4: Collaborative Forms
+
+[classname]`CollaborationBinder` does three separate things: it synchronizes field values between users, it highlights fields that someone else is editing, and it validates and writes to a bean. Only the first two move to signals. Validation and bean binding stay in the regular <<{articles}/flow/binding-data/components-binder#,`Binder`>>, which has its own <<{articles}/flow/ui-state/usage-examples/binder-integration#,signals integration>>.
+
+
+=== Synchronizing Field Values
+
+Model the shared form state as an immutable record and hold it in a single [classname]`SharedValueSignal`. Each field binds to one property through [methodname]`map()` for reading and [methodname]`updater()` for writing:
+
+[source,java]
+----
+public record PersonForm(String firstName, String lastName, String email) {
+    PersonForm withFirstName(String firstName) {
+        return new PersonForm(firstName, lastName, email);
+    }
+    // Remaining "with" methods omitted
+}
+----
+
+[source,java]
+----
+SharedValueSignal<PersonForm> form = state.form();
+
+TextField firstName = new TextField("First name");
+firstName.bindValue(form.map(PersonForm::firstName),
+        form.updater(PersonForm::withFirstName));
+
+TextField lastName = new TextField("Last name");
+lastName.bindValue(form.map(PersonForm::lastName),
+        form.updater(PersonForm::withLastName));
+----
+
+This is the whole of the value-synchronization half of [classname]`CollaborationBinder`. [methodname]`updater()` performs a compare-and-set update that retries on conflict, so two users editing different properties concurrently both keep their edits.
+
+Compared with the Collaboration Kit version, several restrictions disappear:
+
+* [methodname]`readBean()` and [methodname]`setBean()` are usable again, because the shared value lives in the registry rather than in the binder. The registry seeds it once, so a new user joining doesn't reset anybody's fields.
+* Binding with getter and setter callbacks works, because nothing needs a property name as a storage key.
+* [methodname]`reset()` becomes `form.set(PersonForm.of(person))`.
+
+The type restrictions change shape rather than disappearing. Collaboration Kit needs an explicit serializer for values it can't convert to JSON; a shared signal needs the same values to be Jackson-serializable. Instead of registering a serializer, store the JSON-friendly representation in the record -- typically an entity identifier -- and resolve it when populating the field:
+
+[source,java]
+----
+// The shared record carries the supervisor identifier, not the entity
+public record PersonForm(String firstName, String lastName, Long supervisorId) {
+}
+
+ComboBox<Person> supervisor = new ComboBox<>("Supervisor");
+supervisor.setItems(personService.findSupervisors());
+// Cached so that the chain is cut off when the identifier is unchanged
+Signal<Long> supervisorId = Signal.cached(() -> form.get().supervisorId());
+Signal<Person> supervisorValue = Signal.cached(() -> {
+    Long id = supervisorId.get();
+    return id != null ? personService.findById(id) : null;
+});
+
+supervisor.bindValue(supervisorValue, form.updater((value, person) -> value
+        .withSupervisorId(person != null ? person.getId() : null)));
+----
+
+Two details matter here. The identifier is nullable, because the write callback stores `null` whenever the field is cleared, so the lookup needs a guard. And a plain `form.map(value -> personService.findById(value.supervisorId()))` is derived from the whole record, which means the backend call runs again on every change to *any* property, including each keystroke in an unrelated text field. Caching the identifier first cuts the chain: the outer cached signal isn't invalidated while the identifier produces the same value, so the lookup runs only when the supervisor actually changes.
+
+A multi-select field needs its element type named, which is what [methodname]`CollaborationBinder::forField` used the two-class `forField(field, Set.class, Role.class)` form for. Pass a Jackson [classname]`TypeReference` instead:
+
+[source,java]
+----
+var roles = new SharedValueSignal<>(new TypeReference<Set<Role>>() {
+});
+
+CheckboxGroup<Role> group = new CheckboxGroup<>("Roles");
+group.setItems(Role.values());
+group.bindValue(roles, roles::set);
+----
+
+The overload exists on [classname]`SharedValueSignal`, [classname]`SharedListSignal`, and [classname]`SharedMapSignal`, and on [methodname]`SharedNodeSignal.asValue()`, [methodname]`asList()`, and [methodname]`asMap()`. Use the [classname]`Class` form for everything else -- it's shorter, and only a parameterized type needs the type reference.
+
+
+=== Per-Property State
+
+A single record for the whole form is the simplest option and the one to reach for first. Use a [classname]`SharedMapSignal` keyed by property name -- the structure Collaboration Kit uses internally -- when properties are added dynamically, or when a form is large enough that per-property change granularity matters:
+
+[source,java]
+----
+// A per-property alternative to the single form signal in the registry
+SharedMapSignal<String> values = state.values();
+
+TextField firstName = new TextField("First name");
+firstName.bindValue(propertySignal(values, "firstName"),
+        value -> values.put("firstName", value));
+
+private static Signal<String> propertySignal(SharedMapSignal<String> values,
+        String property) {
+    return values.map(entries -> {
+        SharedValueSignal<String> entry = entries.get(property);
+        return entry != null ? entry.get() : "";
+    });
+}
+----
+
+Read the entry defensively as above: a key that no user has written yet has no entry signal.
+
+
+=== Combining with Binder Validation
+
+Keep [classname]`Binder` for validation and for writing to the entity. The fields are bound to signals for synchronization and to the binder for validation at the same time:
+
+[source,java]
+----
+Binder<Person> binder = new Binder<>(Person.class);
+binder.forField(email)
+        .withValidator(new EmailValidator("Enter a valid email address"))
+        .bind("email");
+
+Button save = new Button("Save");
+save.bindEnabled(
+        binder.validationStatusSignal().map(BinderValidationStatus::isOk));
+save.addClickListener(event -> personService.save(form.peek()));
+----
+
+
+[[step-5-field-highlighting]]
+== Step 5: Field Highlighting
+
+Collaboration Kit shows a colored outline around a field another user has focused, with that user's name on a tag. The outline is the `@vaadin/field-highlighter` web component, and Collaboration Kit drives it entirely through [methodname]`Element::executeJs`. Application code can drive it the same way and get an identical result. What [classname]`CollaborationBinder` supplies isn't the component -- it's the wiring around it, and that wiring is what you write.
+
+There are three parts: shared state describing who is editing what, reporting the local user's focus into that state, and pushing the remote editors to each field.
+
+.Highlighting Without a Binder
+[TIP]
+[classname]`FormManager` exists so that custom components can participate in highlighting without a [classname]`CollaborationBinder`. With signals, there's nothing to participate in -- any code holding the `editors` signal can read and write it.
+
+
+=== Shared Editor State
+
+Collaboration Kit stores one entry per user, property, and sub-field. Model it the same way, in a list rather than a map, so that each user only ever adds and removes their own entry and no user can clear another user's entry:
+
+[source,java]
+----
+public record FieldEditor(String property, String userId, String name,
+        int colorIndex, int fieldIndex) {
+}
+
+SharedListSignal<FieldEditor> editors = state.editors();
+----
+
+
+=== Enabling the Component
+
+The Java artifact, `vaadin-field-highlighter-flow`, is already on the classpath: `vaadin-core` depends on it. Collaboration Kit declares it as `provided`, so removing Collaboration Kit doesn't take it away.
+
+What removing Collaboration Kit does take away is the *frontend* module. The `@NpmPackage` and `@JsModule` annotations for `@vaadin/field-highlighter` sit on [classname]`FieldHighlighterInitializer`, and Flow's production build only includes frontend resources declared on classes your code actually reaches. Collaboration Kit reached that class; once it's gone, nothing does. A call to [methodname]`executeJs` referring to the custom element by name isn't a reference Flow can see, so the module is left out of the production bundle. The failure is delayed and confusing -- development mode works, because the module is in the default bundle, and `customElements.get('vaadin-field-highlighter')` is `undefined` only in production.
+
+Reach the class the same way Collaboration Kit does, by extending it:
+
+[source,java]
+----
+public class FieldHighlighting extends FieldHighlighterInitializer {
+
+    public static Registration enable(HasValue<?, ?> field) {
+        return init(((HasElement) field).getElement());
+    }
+}
+----
+
+[methodname]`init()` is `protected static`, so a subclass can call it. Using it in place of a hand-written [methodname]`executeJs` call matters for a second reason: it runs the initialization on every attach, not once. A field that's detached and re-attached -- a `@PreserveOnRefresh` view surviving a reload, a cached view, a field moved between layouts -- comes back as a fresh client-side element without the focus observer, and a one-shot call would leave that user's focus silently unreported from then on.
+
+[source,java]
+----
+FieldHighlighting.enable(firstName);
+----
+
+
+=== Reporting Local Focus
+
+Once initialized, the field fires `vaadin-highlight-show` and `vaadin-highlight-hide`. Both carry a `fieldIndex` in the event detail: `0` for a simple field, and the index of the focused sub-field for a composite such as [classname]`DateTimePicker`. Add and remove the local user's entry from those events rather than from focus and blur listeners, so that composite fields are handled correctly:
+
+[source,java]
+----
+Element element = firstName.getElement();
+
+element.addEventListener("vaadin-highlight-show", event -> {
+    int fieldIndex = event.getEventData().at("/event.detail/fieldIndex")
+            .asInt(0);
+    editors.insertLast(new FieldEditor("firstName", localUser.id(),
+            localUser.name(), localUser.colorIndex(), fieldIndex));
+}).addEventData("event.detail");
+
+element.addEventListener("vaadin-highlight-hide",
+        event -> clearEditor(editors, "firstName", localUser.id()));
+----
+
+Remove by matching the property and the user rather than by remembering the signal returned when the entry was inserted. Two `vaadin-highlight-show` events can arrive without a hide between them -- moving between the date and time parts of a [classname]`DateTimePicker` is exactly that case -- and a single remembered handle would lose the earlier entry, leaving a highlight on the field that nobody can clear. Collaboration Kit sweeps every entry matching the user and the property for the same reason:
+
+[source,java]
+----
+static void clearEditor(SharedListSignal<FieldEditor> editors, String property,
+        String userId) {
+    Signal.runInTransaction(() -> editors.get().stream().filter(entry -> {
+        FieldEditor editor = entry.get();
+        return editor.property().equals(property)
+                && editor.userId().equals(userId);
+    }).toList().forEach(editors::remove));
+}
+----
+
+
+=== Pushing Remote Editors
+
+An effect sends the current editors of the field to the component whenever the shared list changes. Filter out the local user, the same way [classname]`CollaborationBinder` does -- you highlight other people's focus, not your own:
+
+[source,java]
+----
+private static final ObjectMapper MAPPER = new ObjectMapper();
+
+record HighlightUser(String id, String name, int colorIndex, int fieldIndex) {
+}
+
+Signal.effect(firstName, () -> {
+    ArrayNode users = MAPPER.valueToTree(editors.getValues()
+            .filter(editor -> editor.property().equals("firstName"))
+            .filter(editor -> !editor.userId().equals(localUser.id()))
+            .map(editor -> new HighlightUser(editor.userId(), editor.name(),
+                    editor.colorIndex(), editor.fieldIndex()))
+            .toList());
+    element.executeJs(
+            "customElements.get('vaadin-field-highlighter').setUsers(this, $0)",
+            users);
+});
+----
+
+The [classname]`ObjectMapper` is `tools.jackson.databind.ObjectMapper`, the Jackson 3 mapper the framework uses, and [methodname]`Element::executeJs` accepts the resulting node directly. The four properties are what the component expects. `colorIndex` selects the outline color from the same `--vaadin-user-color-*` palette the avatars use, so highlights and avatars agree on who is who.
+
+That's the whole mechanism. It handles several simultaneous editors on one field and sub-field indexes, because the component does, and it looks the same as Collaboration Kit because it is the same component.
+
+.Clean Up on Detach
+[IMPORTANT]
+Editor entries need the same cleanup as presence entries. A user who navigates away while a field is focused gets no `vaadin-highlight-hide`, so run [methodname]`clearEditor()` for the local user from the cleanup of a [methodname]`whenAttached()` scope.
+
+For a form with more than a couple of fields, wrap the three parts in one helper that takes the field, the property name, and the shared list, and call it per binding.
+
+
+=== Without the Component
+
+If you'd rather not add the dependency, the same shared state drives a plain CSS outline. This loses the name tags and the sub-field precision, but needs no JavaScript:
+
+[source,java]
+----
+Signal<FieldEditor> otherEditor = Signal.cached(() -> editors.getValues()
+        .filter(editor -> editor.property().equals("firstName"))
+        .filter(editor -> !editor.userId().equals(localUser.id()))
+        .findFirst().orElse(null));
+
+firstName.bindClassName("being-edited", otherEditor.map(Objects::nonNull));
+firstName.bindHelperText(otherEditor.map(
+        editor -> editor != null ? editor.name() + " is editing" : ""));
+firstName.getStyle().bind("--editor-color", otherEditor.map(
+        editor -> editor != null
+                ? "var(--vaadin-user-color-" + editor.colorIndex() + ")"
+                : "transparent"));
+----
+
+[source,css]
+----
+vaadin-text-field.being-edited {
+  outline: 2px solid var(--editor-color);
+  outline-offset: 2px;
+}
+----
+
+
+== Step 6: Chat and Messages
+
+A chat is a list signal of message records plus two component bindings. Note that [classname]`MessageListItem` isn't stored in the signal; it's created when rendering, so the shared value stays a plain record:
+
+[source,java]
+----
+public record ChatMessage(String userId, String userName, int colorIndex,
+        String text, Instant time) {
+}
+----
+
+[source,java]
+----
+SharedListSignal<ChatMessage> messages = state.messages();
+
+MessageList list = new MessageList();
+list.bindItems(messages.map(entries -> entries.stream()
+        .map(entry -> entry.map(DocumentView::toMessageItem)).toList()));
+
+MessageInput input = new MessageInput();
+input.addSubmitListener(event -> messages.insertLast(
+        new ChatMessage(localUser.id(), localUser.name(),
+                localUser.colorIndex(), event.getValue(), Instant.now())));
+
+private static MessageListItem toMessageItem(ChatMessage message) {
+    MessageListItem item = new MessageListItem(message.text(), message.time(),
+            message.userName());
+    item.setUserColorIndex(message.colorIndex());
+    return item;
+}
+----
+
+This covers [classname]`CollaborationMessageList`, [classname]`CollaborationMessageInput`, and [classname]`MessageManager` at once. A [interfacename]`CollaborationMessageSubmitter` isn't needed either: a custom input component calls [methodname]`insertLast()` directly.
+
+[methodname]`setMessageConfigurator()` becomes ordinary code in the mapping function -- that's where a censoring rule or a per-user style is applied. [methodname]`setMarkdown()` and [methodname]`setAnnounceMessages()` are properties of [classname]`MessageList` itself and carry over unchanged.
+
+
+[[persisting-messages]]
+=== Persisting Messages
+
+[interfacename]`CollaborationMessagePersister` exists because Collaboration Kit owns the message store and needs a hook into yours. With signals, your code owns both sides, so persistence is a plain write-through: save first, then insert what the backend returned.
+
+[source,java]
+----
+input.addSubmitListener(event -> {
+    ChatMessage saved = messageService.save(documentId, localUser.id(),
+            event.getValue());
+    messages.insertLast(saved);
+});
+----
+
+Load the history where the state is created, in the registry:
+
+[source,java]
+----
+SharedListSignal<ChatMessage> messages = new SharedListSignal<>(
+        ChatMessage.class);
+messages.insertAllLast(messageService.findByDocument(documentId));
+----
+
+[methodname]`insertAllLast()` inserts the whole history in a single transaction, so other users see one atomic change instead of one per message. The timestamp-based [classname]`FetchQuery` protocol has no equivalent and isn't needed: nothing polls the backend, because the signal is the shared copy.
+
+
+== Step 7: The Low-Level Topic API
+
+Views that use [classname]`CollaborationMap` and [classname]`CollaborationList` directly map onto [classname]`SharedMapSignal` and [classname]`SharedListSignal` operation by operation.
+
+
+=== Maps
+
+[cols="1,1", options="header"]
+|===
+| [classname]`CollaborationMap` | [classname]`SharedMapSignal`
+
+| `map.put(key, value)`
+| `map.put(key, value)`
+
+| `map.get(key, Type.class)`
+| `map.peek().get(key).peek()`
+
+| `map.remove(key)`
+| `map.remove(key)`
+
+| `map.replace(key, expected, value)`
+| [methodname]`replace()` on the entry signal
+
+| `map.getKeys()`
+| `map.peek().keySet().stream()`
+
+| `map.subscribe(subscriber)`
+| An effect that reads `map.get()`
+|===
+
+A key that no user has written yet has no entry signal, so guard [methodname]`peek().get(key)` against `null`. Where Collaboration Kit uses a conditional [methodname]`replace()` to avoid overwriting another user's initialization, [classname]`SharedMapSignal` offers [methodname]`putIfAbsent()`, which [classname]`CollaborationMap` does not have.
+
+[classname]`SharedMapSignal` has its own [methodname]`verifyKey()`, but it isn't the counterpart of [methodname]`CollaborationMap::replace`: it checks that a key maps to a particular *child signal*, not that the entry holds a particular *value*. Compare values with [methodname]`replace()` or [methodname]`verifyValue()` on the entry signal itself. [methodname]`verifyHasKey()` and [methodname]`verifyKeyAbsent()` cover the presence of a key.
+
+Use [methodname]`get()` inside effects, computed signals, and transactions, where it registers a reactive dependency. Use [methodname]`peek()` everywhere else -- click listeners, initialization code, background jobs. Calling [methodname]`get()` outside a reactive context throws [classname]`IllegalStateException`.
+
+
+=== Lists
+
+[cols="1,1", options="header"]
+|===
+| [classname]`CollaborationList` | [classname]`SharedListSignal`
+
+| `list.insertFirst(item)`
+| `list.insertFirst(item)`
+
+| `list.insertLast(item)`
+| `list.insertLast(item)`
+
+| `list.insertBefore(key, item)`
+| `list.insertAt(item, ListPosition.before(signal))`
+
+| `list.insertAfter(key, item)`
+| `list.insertAt(item, ListPosition.after(signal))`
+
+| `list.moveBefore(key, keyToMove)`
+| `list.moveTo(signal, ListPosition.before(other))`
+
+| `list.set(key, value)`
+| `signal.set(value)`
+
+| `list.remove(key)`
+| `list.remove(signal)`
+
+| `list.getItems(Type.class)`
+| `list.peekValues().toList()`
+
+| `list.subscribe(subscriber)`
+| An effect, [methodname]`bindChildren()`, or [methodname]`bindItems()`
+|===
+
+The important difference is the handle. Collaboration Kit identifies an entry by [classname]`ListKey` and asks the list to operate on it; shared signals give you the child [classname]`SharedValueSignal`, which is both the handle and the way to read and write the value.
+
+Rendering a list is where the difference pays off. A subscriber that adds, removes, and reorders components by hand collapses into one binding:
+
+[source,java]
+----
+VerticalLayout container = new VerticalLayout();
+container.bindChildren(items, itemSignal -> {
+    Span itemView = new Span();
+    itemView.bindText(itemSignal.map(Item::title));
+    return itemView;
+});
+----
+
+Components aren't recreated when an item value changes, only the bindings inside them are updated.
+
+
+[[conditional-operations]]
+=== Conditional Operations
+
+[classname]`ListOperation` conditions become verifications inside a transaction. The transaction is rejected as a whole if a verification fails:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    list.verifyPosition(entry, ListPosition.first());
+    entry.set(newValue);
+});
+----
+
+* `ifFirst(key)` and `ifLast(key)` become [methodname]`verifyPosition()` with `ListPosition.first()` or `ListPosition.last()`.
+* `ifPrev(key, prev)` and `ifNext(key, next)` become [methodname]`verifyPosition()` with `ListPosition.after()` or `ListPosition.before()`.
+* A conditional map replace becomes [methodname]`replace()` on the entry signal, or [methodname]`verifyValue()` on the entry inside a transaction. It doesn't become [methodname]`verifyKey()`, which compares child signals rather than values.
+* `ifEmpty()` and `ifNotEmpty()` become a read inside the transaction. Reading a shared signal with [methodname]`get()` inside [methodname]`runInTransaction()` registers a condition on that node automatically, so the transaction is rejected if the list changed between the read and the commit:
++
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    if (checklist.get().isEmpty()) {
+        checklist.insertLast("Check licences");
+        checklist.insertLast("Sign off");
+    }
+});
+----
++
+This is more capable than the Collaboration Kit conditions, because the predicate is ordinary Java: "fewer than ten items" or "this tag isn't in the list yet" work the same way. For a single insert into an empty list there's also a positional form, `insertAt(value, ListPosition.between(null, null))`, which succeeds only while the list has no entries.
+
+A transaction is scoped to one shared signal and its children. Reaching into a second, independent shared signal from inside one throws, as described in <<#step-1-replace-topics-with-a-signal-registry,Step 1>>.
+
+Use [methodname]`verifyChild()` before updating an entry that another user might have removed in the meantime. Collaboration Kit's conditions are per-operation; a signals transaction can verify several conditions and apply several changes atomically, which is more expressive.
+
+
+== Step 8: Background Threads
+
+Collaboration Kit requires a [classname]`SystemConnectionContext` to write to a topic from outside a request, because [methodname]`CollaborationEngine.getInstance()` throws in a background thread. Signals have no such constraint. Write to the signal from any thread, with no [methodname]`ui.access()` and no context:
+
+[source,java]
+----
+@Async
+public void notifyUsers(SharedListSignal<ChatMessage> messages, String text) {
+    messages.insertLast(new ChatMessage("system", "System", 0, text,
+            Instant.now()));
+}
+----
+
+Every effect and binding that depends on the signal runs on the correct UI, and push delivers the change.
+
+
+[[gaps]]
+== What You Have to Build Yourself
+
+The mapping in the previous sections covers the common cases. This section is the inventory of what migrates only at the cost of rebuilding something, and where the two APIs differ in ways that are easy to trip over. For the one thing that can stop a migration outright, see <<#when-not-to-migrate-yet,When Not to Migrate Yet>>.
+
+Most of these are "not yet" rather than "never". Where a Vaadin issue tracks the work, it's linked from the relevant heading, so you can check the current status rather than trusting a snapshot.
+
+
+=== Behavior You Have to Rebuild
+
+These migrate, and the guide shows how, but Collaboration Kit does the work for you and signals don't. Nothing here is blocked; each one is code you write instead of code you configure. Budget for them.
+
+
+==== Cleanup When a User Disconnects
+
+`EntryScope.CONNECTION` removes an entry the moment the connection that wrote it deactivates, with no code in the application.
+
+The prompt-cleanup half of this is not actually missing. Flow has its own unload beacon, independent of Collaboration Kit's: the browser reports the unload, the server closes the UI, and closing the UI detaches the component tree. The cleanup therefore runs within about a second of a tab closing, which is what <<#tracking-presence,`trackPresence()`>> relies on.
+
+What's missing is the declarative part and two edge cases:
+
+* *No scope on the write.* [methodname]`whenAttached()` ties an entry to a component correctly, including the awkward re-attach cases, but the application still writes that scope itself for every kind of entry. Nothing on the signal API says "this entry belongs to this UI or session".
+* *`@PreserveOnRefresh` views.* Eager close on the beacon is skipped for them, so entries written from such a view outlive the tab until the heartbeat timeout. Collaboration Kit's own handler deactivates regardless of the annotation, so this one is a genuine regression.
+* *Disconnects with no beacon.* A crashed browser or a dead network leaves the entry until the inactivity check or session expiry. Collaboration Kit is no better here, for the same reason.
+
+Clear entries from a [interfacename]`SessionDestroyListener` as well as on detach. If stale entries are unacceptable in the no-beacon case, store a timestamp alongside each entry and filter out ones that haven't been refreshed recently.
+
+
+==== Topic and Entry Expiration
+
+[methodname]`setExpirationTimeout()` is available on [classname]`CollaborationBinder`, [classname]`FormManager`, [classname]`CollaborationMap`, and [classname]`CollaborationList`, and it does two jobs: it frees memory for topics nobody is using, and it repopulates a form from the backend once the last editor has left, so the next user starts from stored data rather than from unsaved edits left by the previous user.
+
+Signals have no lifecycle of their own, so both jobs move to the registry. <<#discarding-unused-state,Discarding Unused State>> covers the memory half. Reloading is a consequence of it: discarding the state means the next lookup recreates it from the backend. Getting the timing right -- long enough that a network blip doesn't wipe an in-progress edit, short enough that stale edits don't greet the next user -- is now your decision rather than a single [classname]`Duration`.
+
+
+==== Automatic User Colors
+
+Collaboration Kit assigns each user a color index on first sight, from a registry kept in [classname]`CollaborationEngine`. On the default local backend it hands out the seven available values in order of first appearance, which spreads colors better than hashing does for the first users it sees. The guarantee is weaker than it looks, though: the registry never shrinks, so the eighth distinct user to appear since startup collides with the first even if both are online, and on a non-local backend the index falls back to a hash of the user identifier.
+
+Nothing equivalent ships with signals. Hashing the identifier, as <<#step-2-replace-userinfo,Step 2>> does, matches what Collaboration Kit itself falls back to, and it needs no coordination -- but two users in the same topic can collide.
+
+Allocating from the users actually present is better than either, and the transaction machinery makes it safe. Reading the list inside the transaction makes the whole insert conditional on that list not having changed, so two simultaneous joins can't claim the same index -- the loser is rejected and retries:
+
+[source,java]
+----
+static SharedValueSignal<Collaborator> join(
+        SharedListSignal<Collaborator> collaborators, String name) {
+    return Signal.runInTransaction(() -> {
+        Set<Integer> taken = collaborators.get().stream()
+                .map(SharedValueSignal::peek).filter(Objects::nonNull)
+                .map(Collaborator::colorIndex).collect(Collectors.toSet());
+        int free = 0;
+        while (taken.contains(free)) {
+            free++;
+        }
+        return collaborators.insertLast(new Collaborator(name, free)).signal();
+    }).returnValue();
+}
+----
+
+This gives distinct colors to everyone present and reuses an index once its user leaves. Two decisions it leaves open: what to do once `free` passes the number of colors in the palette, and whether to prefer a returning user's previous index over the lowest free one, trading collision-freedom for a stable color per person.
+
+
+==== The Collaborative Binder Wiring
+
+Tracked in https://github.com/vaadin/flow/issues/23868[flow#23868].
+
+This is the largest single piece of code a migration has to write, and it's worth being precise about what's missing. The `@vaadin/field-highlighter` web component is *not* missing: it ships as a normal npm package, it has a documented static API, and Collaboration Kit drives it through [methodname]`Element::executeJs` like any other component. Application code can do exactly the same, which is what <<#step-5-field-highlighting,Step 5>> shows -- including several editors on one field and sub-field indexes, with the same appearance.
+
+What [classname]`CollaborationBinder` provides on top is the wiring: initializing the highlighter per field, translating focus events into shared state, filtering the local user out, pushing the remainder back to each field, and cleaning up on detach. Reproducing that is perhaps thirty lines shared across a form, and the guide gives them, but it's thirty lines per application rather than a constructor argument.
+
+flow#23868 proposes bringing a collaborative binder into Flow, built on signals rather than on Collaboration Kit data structures. Until it lands, collaborative form editing is a matter of writing more code, not of waiting.
+
+
+==== Keeping Shared State Consistent With a Database
+
+Tracked in https://github.com/vaadin/collaboration-kit/issues/150[collaboration-kit#150].
+
+[interfacename]`CollaborationMessagePersister` is a protocol rather than a single save hook. The first manager to connect to a topic fetches the history with a [classname]`FetchQuery`, the result is cached in the topic so later managers don't re-query, each submit is written to the backend and then re-fetched from the last known timestamp, and duplicates from the timestamp overlap are filtered out.
+
+With signals the shared list *is* the cache, so most of that disappears -- <<#persisting-messages,Persisting Messages>> is a save call followed by an insert. Three things the protocol was doing become yours:
+
+* *The save and the insert aren't atomic.* A shared signal can't take part in a database transaction, so a failure between the two leaves the row written and the list short until the state is discarded and reloaded.
+* *Writes from outside the UI don't arrive.* A batch import or an admin tool writing straight to the database is invisible to every user with the view open. Collaboration Kit's re-fetch after each submit picked those up as a side effect.
+* *Initialization has no defined ordering.* Seeding the shared state from the database is a plain read. On a single node that's fine in practice. It stops being fine with clustering, where another node can commit a change to the same entity while the seeding read is in flight, leaving the shared copy stale from birth.
+
+For now, reconcile against the backend when the state is created and after a failed write, and treat the database as the source of truth rather than the shared list. The first two points are manageable that way; the third is why this is worth watching rather than solving locally.
+
+
+=== API-Level Differences
+
+Smaller gaps, but each one is a place where a direct translation compiles and then behaves differently.
+
+
+==== No Previous Value in Effects
+
+A Collaboration Kit subscriber receives an event, and the event describes the change rather than only the outcome. [classname]`MapChangeEvent` carries the old value next to the new one, and [classname]`ListChangeEvent` adds both to the surrounding keys, exposing the previous and next entry as they were before and after the change. Code that animates a delta or logs an edit history reads those fields.
+
+An effect receives nothing. It re-runs and observes the current state, and the framework doesn't tell it what changed or what the value was before. [classname]`EffectContext` reports only whether this is the initial run and whether the change came from another session.
+
+Effects also coalesce. Several changes inside one transaction produce a single effect run, so an effect never sees the intermediate values. That rules out rebuilding an audit trail from effects, whatever the API offers for the previous value.
+
+For an audit trail, record the change where it's made rather than where it's observed, in the same transaction as the write. Both have to live in one tree for that to be allowed -- a [classname]`SharedNodeSignal` root with the form as a map child and the log as a list child:
+
+[source,java]
+----
+Signal.runInTransaction(() -> {
+    SharedValueSignal<String> cell = form.peek().get("firstName");
+    String previous = cell.peek();
+    cell.set("John");
+    log.insertLast(
+            new AuditEntry("First name", previous, "John", localUser.id()));
+});
+----
+
+This records every change rather than every observation, carries the author without a second lookup, and survives a page reload because the log is shared data. It's also closer to what the Collaboration Kit demo does than any effect-based reconstruction.
+
+Bear in mind that an audit trail usually belongs in a database rather than in UI state. Signals manage UI state; treat a shared log as a view of the audit trail rather than as the record of it.
+
+For the smaller case -- flashing a field another user has changed -- no previous value is needed. [methodname]`EffectContext.isBackgroundChange()` already reports that the change came from another session.
+
+Where a previous value genuinely is needed inside an effect, keep it yourself in a second signal, as the <<{articles}/flow/ui-state/usage-examples/realtime-dashboard#,real-time dashboard example>> does: a `Change` record holding the previous and current values, written with [methodname]`peek()` so the effect doesn't depend on its own output.
+
+Collaboration Kit doesn't help here either: [classname]`ListChangeEvent` tracks a change type internally, but neither the accessor nor the enum is public, so a subscriber can't read it. The gap is the previous value and the surrounding keys, not the classification.
+
+
+==== No Named Emptiness Condition on Lists
+
+Tracked in https://github.com/vaadin/collaboration-kit/issues/149[collaboration-kit#149].
+
+The behavior of `ifEmpty()` and `ifNotEmpty()` is available, as <<#conditional-operations,Conditional Operations>> shows: read the list inside the transaction, or insert at `ListPosition.between(null, null)`. What's missing is narrower than it first appears, and in two directions.
+
+*Nothing is named for it.* [classname]`SharedMapSignal` has [methodname]`verifyHasKey()`, [methodname]`verifyKeyAbsent()`, and [methodname]`putIfAbsent()`. [classname]`SharedListSignal` has [methodname]`verifyPosition()` and [methodname]`verifyChild()`, both of which need an existing entry to point at. The `between(null, null)` idiom isn't documented as "only if empty" anywhere, and it sits one character away from `new ListPosition(null, null)`, which means the opposite -- no position constraint at all.
+
+*The read is stricter than the predicate.* A read inside a transaction registers a condition on the node's last update, not on the predicate you wrote. An item inserted and removed again elsewhere leaves the list empty but still rejects the transaction. On a busy list that shows up as spurious rejections the application has to retry, where `ifEmpty()` would have succeeded.
+
+Neither is a blocker. Both are worth knowing before assuming that a transaction reading a list behaves like a state predicate.
+
+
+==== Rendering Shared Data in a Data Component
+
+Tracked in https://github.com/vaadin/flow/issues/23659[flow#23659].
+
+A collaborative list displayed in a layout maps cleanly onto [methodname]`bindChildren()`, which adds, removes, and moves only the affected children. A collaborative list displayed in a [classname]`Grid`, a [classname]`ComboBox`, or another component that manages its own rendering has no such binding yet. The current approach is an effect that calls [methodname]`setItems()` with a fresh list:
+
+[source,java]
+----
+Signal.effect(grid, () -> grid.setItems(items.getValues().toList()));
+----
+
+Every change to the list, including a change to a single entry, refreshes the whole data set. For the list sizes a Collaboration Kit topic typically holds that's acceptable, but it rules out lazy loading, and it costs more than the [methodname]`subscribe()` callback it replaces, which reported one change at a time. Granular item updates and lazy-loaded bindings are planned.
+
+
+=== What Isn't a Gap
+
+Some Collaboration Kit features look framework-specific but carry over unchanged, and it's worth not budgeting time for them:
+
+* *Avatar images from a backend.* [methodname]`AvatarGroupItem::setImageHandler` takes a [interfacename]`DownloadHandler` directly. Build the item in the mapping function and set the handler there; only the handler can't live *inside* the signal, exactly as it can't live inside [classname]`UserInfo`.
+* *Custom message submitters.* [interfacename]`CollaborationMessageSubmitter` exists so a custom component can reach the list's topic. Any code holding the list signal can call [methodname]`insertLast()`, so the interface has nothing left to do.
+* *Message configurators, Markdown, and announcements.* The first becomes ordinary code in the mapping function; the other two are [classname]`MessageList` properties and are unaffected by the migration.
+* *Writing from background threads.* Signals need no [classname]`SystemConnectionContext` and no [methodname]`ui.access()`.
+* *Conditional updates.* Transactions with `verify*()` are strictly more capable than per-operation conditions, since one transaction can carry several conditions and several changes.
+* *The field highlight component.* `@vaadin/field-highlighter` is a published npm package with a static JavaScript API. Collaboration Kit has no privileged access to it; only the wiring around it has to be rewritten.
+* *Read-only views of shared state.* [methodname]`asReadonly()` has no Collaboration Kit counterpart at all.
+
+
+== Feature Checklist
+
+Use this to confirm the migration covers everything before removing the Collaboration Kit dependency. *Direct* means the signals API does the same job; *Build it* means the behavior is reachable but you write it; *Missing* means there's no equivalent. <<#gaps,What You Have to Build Yourself>> explains each of the last two, and <<#when-not-to-migrate-yet,When Not to Migrate Yet>> covers the single *Missing* row that can stop a migration.
+
+[cols="2,1,2", options="header"]
+|===
+| Collaboration Kit feature | Status | Replacement
+
+| Value synchronization
+| Direct
+| [methodname]`bindValue()` with a shared signal
+
+| Chat and messaging
+| Direct
+| [classname]`SharedListSignal` with [methodname]`bindItems()`
+
+| Ordered shared data
+| Direct
+| [classname]`SharedListSignal`
+
+| Keyed shared data
+| Direct
+| [classname]`SharedMapSignal`
+
+| Conditional operations
+| Direct
+| Transactions with `verify*()`
+
+| Background updates
+| Direct
+| Write to the signal from any thread
+
+| Automatic push activation
+| Missing
+| Add `@Push` yourself
+
+| Topic lookup by identifier
+| Build it
+| An application-scoped registry
+
+| User model and colors
+| Build it
+| Your own record
+
+| Presence tracking
+| Build it
+| A [methodname]`whenAttached()` scope over a list signal
+
+| Field highlighting
+| Build it
+| The same `@vaadin/field-highlighter` component, wired up by hand
+
+| Message persistence
+| Build it
+| Write through to your repository, reconciling on failure
+
+| Topic expiration
+| Build it
+| Cleanup in the registry
+
+| Read-only shared state
+| Direct
+| [methodname]`asReadonly()`, which Collaboration Kit has no counterpart for
+
+| Disconnect cleanup
+| Build it
+| Detach listeners, which Flow's unload beacon already triggers on tab close
+
+| Previous value in change events
+| Missing
+| Track the previous value in a second signal
+
+| Parameterized value types
+| Direct
+| A `TypeReference` overload on the signal constructors
+
+| List emptiness conditions
+| Direct
+| Read the list inside the transaction
+
+| Shared data in a [classname]`Grid` or [classname]`ComboBox`
+| Build it
+| An effect calling `setItems()`, refreshing the whole data set
+
+| Clustering and session serialization
+| Missing
+| One limitation, tracked in platform#8703
+|===
+
+
+== Learn More
+
+* <<{articles}/flow/ui-state/shared-signals#,Shared Signals>> -- the full shared signal API.
+* <<{articles}/flow/ui-state/building-ui#,Component Bindings>> -- every `bind*()` method.
+* <<{articles}/flow/ui-state/transactions#,Transactions>> -- atomicity and verification.
+* <<{articles}/flow/ui-state/effects-computed#,Effects and Computed Signals>> -- reactive logic beyond bindings.
+* <<{articles}/flow/testing/browserless/multi-user#signals,Signals in Multi-User Tests>> -- testing collaborative features.
+
+For the current status of the gaps described above:
+
+* https://github.com/vaadin/collaboration-kit/issues/138[collaboration-kit#138] -- bringing the remaining features into Flow and deprecating Collaboration Kit.
+* https://github.com/vaadin/flow/issues/23868[flow#23868] -- a collaborative binder in Flow, built on signals.
+* https://github.com/vaadin/platform/issues/8703[platform#8703] -- clustering and session serialization for shared signals. React there if you need it.
+* https://github.com/vaadin/flow/issues/23659[flow#23659] -- binding items of a data component to a list signal.
