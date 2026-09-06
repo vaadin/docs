@@ -247,7 +247,7 @@ Vaadin Framework reference documentation. Technical, code-centric, unopinionated
 
 Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
-Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials that both pages include, so that neither section holds the other one's content. A partial keeps the directory depth of the page it was extracted from, so `{root}{root-fix}` includes and page-relative xrefs resolve identically from both wrappers. Nothing outside `articles/hilla/lit` may include it, and no link into it may render outside the Lit pages; the one link from a partial into the Lit tree, to the Lit-only Web Component field strategy page, is guarded with `ifdef::hilla-lit[]`.
+The `articles/hilla/lit` sub-tree documents Hilla with Lit, which is deprecated and is removed in Vaadin 26. Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials, which both pages include, so that removing `articles/hilla/lit` does not break the React pages. Nothing outside `articles/hilla/lit` may include it, and no link into it may render outside the Lit pages. The one link from a partial into the Lit tree, to the Lit-only Web Component field strategy page, is guarded with `ifdef::hilla-lit[]` so it disappears together with the tree.
 
 ### articles/components
 
