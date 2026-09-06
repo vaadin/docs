@@ -35,6 +35,17 @@ const COMMENT_PATH = 'preview-comment.md';
 // false-positive highlights and are dropped.
 const MIN_NEEDLE_LENGTH = 12;
 
+// A maintenance branch (v24, v25.1, …) has diverged from the default branch by
+// hundreds of commits, so its whole divergence is in no sense "what the base
+// branch adds on top of main" and would bury the pull request's own changes.
+// A stacked branch, in contrast, forks off a recent default branch commit.
+const VERSION_BRANCH = /^v?\d+(\.\d+)*$/;
+const MAX_BASE_BRANCH_LAG = 150;
+
+// Cap on the pages listed as changed by the base branch in the PR comment,
+// which GitHub rejects beyond 65536 characters.
+const MAX_LISTED_BASE_PAGES = 25;
+
 // Caps on the removed source kept per deletion, to bound the published
 // manifest size. Reviewers get the full context from the GitHub diff.
 const MAX_DELETION_LINES = 30;
@@ -64,6 +75,15 @@ function resolveBaseRef(ref) {
 function mergeBaseOf(a, b) {
   try {
     return git(['merge-base', a, b]).trim();
+  } catch {
+    return null;
+  }
+}
+
+/** Number of commits `to` has that `from` doesn't, or null if it can't be counted. */
+function commitsBetween(from, to) {
+  try {
+    return Number(git(['rev-list', '--count', `${from}..${to}`]).trim());
   } catch {
     return null;
   }
@@ -462,6 +482,28 @@ function buildIncluderMap() {
   return { byPath, byBasename };
 }
 
+/**
+ * True when the base branch is a long-lived line of its own (a maintenance
+ * branch) rather than another pull request's branch. Its divergence from the
+ * default branch is then not something to show as "changes from the base
+ * branch", so the base scope is skipped.
+ */
+function isLongLivedBase(label, baseFork) {
+  if (VERSION_BRANCH.test(label)) {
+    console.log(`Base branch ${label} is a maintenance branch; not marking its changes`);
+    return true;
+  }
+  const lag = commitsBetween(baseFork, FALLBACK_BASE_REF);
+  if (lag !== null && lag > MAX_BASE_BRANCH_LAG) {
+    console.log(
+      `Base branch ${label} forked ${lag} commits behind ${FALLBACK_BASE_REF}; ` +
+        'not marking its changes'
+    );
+    return true;
+  }
+  return false;
+}
+
 function main() {
   const base = resolveBaseRef(baseRef);
   const mergeBase = git(['merge-base', base, 'HEAD']).trim();
@@ -471,6 +513,7 @@ function main() {
   // between the two commits is the work of the pull requests below it.
   const baseFork =
     base === FALLBACK_BASE_REF ? mergeBase : mergeBaseOf(FALLBACK_BASE_REF, mergeBase);
+  const baseLabel = base.replace(/^origin\//, '');
 
   const includerMap = buildIncluderMap();
 
@@ -583,7 +626,7 @@ function main() {
   }
 
   collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own');
-  if (baseFork && baseFork !== mergeBase) {
+  if (baseFork && baseFork !== mergeBase && !isLongLivedBase(baseLabel, baseFork)) {
     collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base');
   }
 
@@ -619,7 +662,7 @@ function main() {
   fs.mkdirSync(path.dirname(MANIFEST_PATH), { recursive: true });
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
 
-  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, base.replace(/^origin\//, '')));
+  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, baseLabel));
 
   const basePages = pageList.filter((p) => p.status === null).length;
   console.log(
@@ -665,8 +708,12 @@ function buildComment(pageList, unmapped, baseLabel) {
     lines.push('');
     lines.push(`These come from \`${baseLabel}\`, not from this PR, and are highlighted in blue.`);
     lines.push('');
-    for (const page of basePages) {
+    for (const page of basePages.slice(0, MAX_LISTED_BASE_PAGES)) {
       lines.push(`- [${page.path || 'front page'}](${previewUrl}/${page.path})`);
+    }
+    if (basePages.length > MAX_LISTED_BASE_PAGES) {
+      const rest = basePages.length - MAX_LISTED_BASE_PAGES;
+      lines.push(`- … and ${rest} more page${rest === 1 ? '' : 's'}`);
     }
     lines.push('');
   }

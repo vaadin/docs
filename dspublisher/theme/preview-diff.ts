@@ -404,9 +404,14 @@ function highlightBlocks(page: ChangedPage, container: Element) {
   markNeedles(container, page.baseNeedles || [], true);
 
   // A list item and the paragraph inside it can both match; keep only the
-  // innermost match so the highlight is as precise as possible.
+  // innermost match so the highlight is as precise as possible. Only a match of
+  // the same scope prunes its ancestor, so a change of this pull request is
+  // never dropped in favour of a base branch change nested inside it.
   document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
-    if (el.querySelector(`.${HIGHLIGHT_CLASS}`)) {
+    const sameScope = el.classList.contains(BASE_CLASS)
+      ? `.${HIGHLIGHT_CLASS}.${BASE_CLASS}`
+      : `.${HIGHLIGHT_CLASS}:not(.${BASE_CLASS})`;
+    if (el.querySelector(sameScope)) {
       el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS);
     }
   });
