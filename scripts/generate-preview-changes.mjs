@@ -2,6 +2,12 @@
  * Generates a manifest of documentation pages changed in the current branch
  * compared to a base ref (default: origin/main).
  *
+ * Changes are recorded in two scopes: those the pull request itself introduces
+ * (relative to its base branch) and those the base branch introduces on top of
+ * the default branch. For a stacked pull request the latter are visible in the
+ * preview too, so they're kept in the manifest and highlighted in a different
+ * color rather than being hidden or passed off as this PR's work.
+ *
  * Outputs:
  * - dspublisher/changes/changes.json: consumed by dspublisher/theme/preview-diff.ts
  *   in preview deployments to highlight changed content on the live site.
@@ -51,6 +57,22 @@ function resolveBaseRef(ref) {
     console.warn(`Base ref ${ref} not found, diffing against ${FALLBACK_BASE_REF} instead`);
     return FALLBACK_BASE_REF;
   }
+}
+
+// Merge base of two refs, or null when it can't be determined (e.g. the ref is
+// missing or the histories are unrelated).
+function mergeBaseOf(a, b) {
+  try {
+    return git(['merge-base', a, b]).trim();
+  } catch {
+    return null;
+  }
+}
+
+/** Diff of the paths that can affect rendered pages, between two commits. */
+function diffBetween(from, to) {
+  // Context lines (-U3) are needed to anchor deletions to surviving blocks.
+  return git(['diff', '--no-color', '-U3', from, to, '--', 'articles', 'src', 'frontend']);
 }
 
 /**
@@ -346,12 +368,16 @@ function payloadFor(entry) {
   return { needles, deletions: buildDeletionRecords(entry.deletions, isCode) };
 }
 
+function deletionKey(deletion) {
+  return JSON.stringify([deletion.before, deletion.after, deletion.text]);
+}
+
 /** Removes duplicate deletion records (same anchors and removed text). */
 function dedupeDeletions(deletions) {
   const seen = new Set();
   const out = [];
   for (const d of deletions) {
-    const key = JSON.stringify([d.before, d.after, d.text]);
+    const key = deletionKey(d);
     if (!seen.has(key)) {
       seen.add(key);
       out.push(d);
@@ -437,20 +463,14 @@ function buildIncluderMap() {
 }
 
 function main() {
-  const mergeBase = git(['merge-base', resolveBaseRef(baseRef), 'HEAD']).trim();
-  // Context lines (-U3) are needed to anchor deletions to surviving blocks.
-  const diffText = git([
-    'diff',
-    '--no-color',
-    '-U3',
-    mergeBase,
-    'HEAD',
-    '--',
-    'articles',
-    'src',
-    'frontend',
-  ]);
-  const entries = parseDiff(diffText);
+  const base = resolveBaseRef(baseRef);
+  const mergeBase = git(['merge-base', base, 'HEAD']).trim();
+  // Where the base branch itself forked off the default branch. For a pull
+  // request targeting the default branch this is the same commit as mergeBase,
+  // so the base scope stays empty; for a stacked pull request everything
+  // between the two commits is the work of the pull requests below it.
+  const baseFork =
+    base === FALLBACK_BASE_REF ? mergeBase : mergeBaseOf(FALLBACK_BASE_REF, mergeBase);
 
   const includerMap = buildIncluderMap();
 
@@ -458,95 +478,139 @@ function main() {
   const pages = new Map();
   const unmapped = [];
 
-  function pageFor(file, status) {
-    const pagePath = fileToPagePath(file);
-    if (!pages.has(pagePath)) {
-      pages.set(pagePath, {
-        path: pagePath,
-        file,
-        status,
-        added: 0,
-        removed: 0,
-        needles: [],
-        deletions: [],
-      });
-    }
-    return pages.get(pagePath);
-  }
+  /**
+   * Collects one diff into the shared page records. `scope` is 'own' for the
+   * changes of this pull request and 'base' for those inherited from the base
+   * branch; the two are kept in separate fields so the preview can tell them
+   * apart. Only the own scope carries page status, line counts and the list of
+   * files that couldn't be mapped to a page, which is what the PR comment
+   * reports on.
+   */
+  function collect(entries, scope) {
+    const isOwn = scope === 'own';
+    const needlesKey = isOwn ? 'needles' : 'baseNeedles';
+    const deletionsKey = isOwn ? 'deletions' : 'baseDeletions';
 
-  // Resolves a changed partial or code example to the non-partial pages that
-  // (transitively) include it, and attaches its needles and deletions there.
-  function attachToIncluders(file, payload, seen = new Set()) {
-    if (seen.has(file)) {
-      return false;
+    function pageFor(file, status) {
+      const pagePath = fileToPagePath(file);
+      if (!pages.has(pagePath)) {
+        pages.set(pagePath, {
+          path: pagePath,
+          file,
+          // Stays null for a page that only the base branch changed.
+          status: null,
+          added: 0,
+          removed: 0,
+          needles: [],
+          deletions: [],
+          baseNeedles: [],
+          baseDeletions: [],
+        });
+      }
+      const page = pages.get(pagePath);
+      if (isOwn && page.status === null) {
+        page.status = status;
+      }
+      return page;
     }
-    seen.add(file);
-    // Prefer matching by full resolved path; fall back to basename for targets
-    // whose path could not be resolved when the map was built.
-    const includers =
-      includerMap.byPath.get(path.posix.normalize(file)) ||
-      includerMap.byBasename.get(path.posix.basename(file));
-    if (!includers || includers.size === 0) {
-      return false;
+
+    // Resolves a changed partial or code example to the non-partial pages that
+    // (transitively) include it, and attaches its needles and deletions there.
+    function attachToIncluders(file, payload, seen = new Set()) {
+      if (seen.has(file)) {
+        return false;
+      }
+      seen.add(file);
+      // Prefer matching by full resolved path; fall back to basename for targets
+      // whose path could not be resolved when the map was built.
+      const includers =
+        includerMap.byPath.get(path.posix.normalize(file)) ||
+        includerMap.byBasename.get(path.posix.basename(file));
+      if (!includers || includers.size === 0) {
+        return false;
+      }
+      let attached = false;
+      for (const includer of includers) {
+        if (isPartial(includer)) {
+          attached = attachToIncluders(includer, payload, seen) || attached;
+        } else {
+          const page = pageFor(includer, 'includes-changes');
+          page[needlesKey].push(...payload.needles);
+          page[deletionsKey].push(...payload.deletions);
+          attached = true;
+        }
+      }
+      return attached;
     }
-    let attached = false;
-    for (const includer of includers) {
-      if (isPartial(includer)) {
-        attached = attachToIncluders(includer, payload, seen) || attached;
+
+    const sharedEntries = [];
+    for (const entry of entries) {
+      const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
+      if (isArticle && !isPartial(entry.file)) {
+        if (entry.status === 'deleted') {
+          if (isOwn) {
+            unmapped.push({ file: entry.file, status: 'deleted' });
+          }
+          continue;
+        }
+        const page = pageFor(entry.file, entry.status);
+        if (isOwn) {
+          page.status = entry.status;
+          page.added += entry.added;
+          page.removed += entry.removed;
+        }
+        const payload = payloadFor(entry);
+        page[needlesKey].push(...payload.needles);
+        page[deletionsKey].push(...payload.deletions);
       } else {
-        const page = pages.has(fileToPagePath(includer))
-          ? pages.get(fileToPagePath(includer))
-          : pageFor(includer, 'includes-changes');
-        page.needles.push(...payload.needles);
-        page.deletions.push(...payload.deletions);
-        attached = true;
+        sharedEntries.push(entry);
       }
     }
-    return attached;
-  }
 
-  const sharedEntries = [];
-  for (const entry of entries) {
-    const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
-    if (isArticle && !isPartial(entry.file)) {
+    // Partials and code examples are resolved after direct page changes so their
+    // content merges into already-registered pages instead of duplicating them.
+    for (const entry of sharedEntries) {
       if (entry.status === 'deleted') {
-        unmapped.push({ file: entry.file, status: 'deleted' });
+        if (isOwn) {
+          unmapped.push({ file: entry.file, status: 'deleted' });
+        }
         continue;
       }
-      const page = pageFor(entry.file, entry.status);
-      page.status = entry.status;
-      page.added += entry.added;
-      page.removed += entry.removed;
-      const payload = payloadFor(entry);
-      page.needles.push(...payload.needles);
-      page.deletions.push(...payload.deletions);
-    } else {
-      sharedEntries.push(entry);
+      if (!attachToIncluders(entry.file, payloadFor(entry)) && isOwn) {
+        unmapped.push({ file: entry.file, status: entry.status });
+      }
     }
   }
 
-  // Partials and code examples are resolved after direct page changes so their
-  // content merges into already-registered pages instead of duplicating them.
-  for (const entry of sharedEntries) {
-    if (entry.status === 'deleted') {
-      unmapped.push({ file: entry.file, status: 'deleted' });
-      continue;
-    }
-    if (!attachToIncluders(entry.file, payloadFor(entry))) {
-      unmapped.push({ file: entry.file, status: entry.status });
-    }
+  collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own');
+  if (baseFork && baseFork !== mergeBase) {
+    collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base');
   }
 
   const pageList = [...pages.values()]
-    .map((p) => ({
-      ...p,
-      needles: [...new Set(p.needles)],
-      deletions: dedupeDeletions(p.deletions),
-    }))
+    .map((p) => {
+      // A change that this pull request makes as well is its own, so the same
+      // content is never marked as coming from the base branch.
+      const ownNeedles = new Set(p.needles);
+      const ownDeletions = dedupeDeletions(p.deletions);
+      const ownDeletionKeys = new Set(ownDeletions.map(deletionKey));
+      return {
+        ...p,
+        needles: [...ownNeedles],
+        deletions: ownDeletions,
+        baseNeedles: [...new Set(p.baseNeedles)].filter((n) => !ownNeedles.has(n)),
+        baseDeletions: dedupeDeletions(p.baseDeletions).filter(
+          (d) => !ownDeletionKeys.has(deletionKey(d))
+        ),
+      };
+    })
+    // Drop base-only pages left with nothing to show after deduplication.
+    .filter((p) => p.status !== null || p.baseNeedles.length > 0 || p.baseDeletions.length > 0)
     .sort((a, b) => a.path.localeCompare(b.path));
 
   const manifest = {
     base: mergeBase,
+    baseFork,
     sha: buildSha,
     pages: pageList,
     unmapped,
@@ -555,14 +619,16 @@ function main() {
   fs.mkdirSync(path.dirname(MANIFEST_PATH), { recursive: true });
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
 
-  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped));
+  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, base.replace(/^origin\//, '')));
 
+  const basePages = pageList.filter((p) => p.status === null).length;
   console.log(
-    `Wrote ${MANIFEST_PATH}: ${pageList.length} changed page(s), ${unmapped.length} unmapped file(s)`
+    `Wrote ${MANIFEST_PATH}: ${pageList.length - basePages} changed page(s), ` +
+      `${basePages} page(s) changed by the base branch, ${unmapped.length} unmapped file(s)`
   );
 }
 
-function buildComment(pageList, unmapped) {
+function buildComment(pageList, unmapped, baseLabel) {
   const lines = [];
   lines.push('### Preview Deployment');
   lines.push('');
@@ -570,12 +636,17 @@ function buildComment(pageList, unmapped) {
   lines.push('');
   lines.push(`**URL:** ${previewUrl}`);
   lines.push('');
-  if (pageList.length > 0) {
+  const ownPages = pageList.filter((page) => page.status !== null);
+  const basePages = pageList.filter((page) => page.status === null);
+  if (ownPages.length > 0) {
     lines.push('#### Changed pages');
     lines.push('');
     lines.push('Added content is highlighted in green; removed content is marked in red on each page.');
+    if (basePages.length > 0) {
+      lines.push('Changes inherited from the base branch are highlighted in blue.');
+    }
     lines.push('');
-    for (const page of pageList) {
+    for (const page of ownPages) {
       const url = `${previewUrl}/${page.path}`;
       const base =
         page.status === 'includes-changes'
@@ -587,6 +658,16 @@ function buildComment(pageList, unmapped) {
     lines.push('');
   } else {
     lines.push('_No documentation page changes detected._');
+    lines.push('');
+  }
+  if (basePages.length > 0) {
+    lines.push('#### Pages changed by the base branch');
+    lines.push('');
+    lines.push(`These come from \`${baseLabel}\`, not from this PR, and are highlighted in blue.`);
+    lines.push('');
+    for (const page of basePages) {
+      lines.push(`- [${page.path || 'front page'}](${previewUrl}/${page.path})`);
+    }
     lines.push('');
   }
   if (unmapped.length > 0) {

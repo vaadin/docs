@@ -7,6 +7,11 @@
  * shows a floating panel that lists all changed pages and lets you step through
  * changes. Disabled unless the build set the preview flag (see below).
  *
+ * Changes the pull request itself makes are green (added) and red (removed).
+ * A stacked pull request also shows the changes it inherits from its base
+ * branch; those are blue, so they can be read as context instead of as this
+ * pull request's work.
+ *
  * Navigation:
  * - n / p          jump to the next / previous change on the current page
  * - N / P          go to the next / previous changed page
@@ -29,11 +34,15 @@ interface Deletion {
 interface ChangedPage {
   path: string;
   file: string;
-  status: string;
+  // null for a page that only the base branch changed.
+  status: string | null;
   added: number;
   removed: number;
   needles: string[];
   deletions?: Deletion[];
+  // Changes inherited from the base branch, rendered in blue.
+  baseNeedles?: string[];
+  baseDeletions?: Deletion[];
 }
 
 interface ChangesManifest {
@@ -41,6 +50,9 @@ interface ChangesManifest {
 }
 
 const HIGHLIGHT_CLASS = 'preview-diff-changed';
+// Modifier on a highlight or deletion marker that came from the base branch
+// rather than from this pull request.
+const BASE_CLASS = 'preview-diff-base';
 const DELETION_CLASS = 'preview-diff-deletion';
 // Wrapper for deletions whose anchor wasn't found; deliberately NOT DELETION_CLASS
 // so the wrapper itself isn't treated as a navigation target.
@@ -154,6 +166,17 @@ function injectStyles() {
       outline-offset: 3px;
       background-color: rgba(46, 160, 67, 0.28);
     }
+    .${HIGHLIGHT_CLASS}.${BASE_CLASS} {
+      background-color: rgba(31, 111, 235, 0.16);
+      box-shadow: -0.75rem 0 0 0 rgba(31, 111, 235, 0.16), inset 3px 0 0 0 transparent;
+    }
+    .${HIGHLIGHT_CLASS}.${BASE_CLASS}::before {
+      background: rgb(31, 111, 235);
+    }
+    .${HIGHLIGHT_CLASS}.${BASE_CLASS}.${ACTIVE_CLASS} {
+      outline-color: rgb(31, 111, 235);
+      background-color: rgba(31, 111, 235, 0.28);
+    }
     body.preview-diff-hidden .${HIGHLIGHT_CLASS} {
       background-color: transparent;
       box-shadow: none;
@@ -218,8 +241,29 @@ function injectStyles() {
       text-decoration: line-through;
       text-decoration-color: rgba(207, 34, 46, 0.4);
     }
+    .${DELETION_CLASS}.${BASE_CLASS} {
+      border-left-color: rgb(31, 111, 235);
+      background-color: rgba(31, 111, 235, 0.08);
+    }
+    .${DELETION_CLASS}.${BASE_CLASS}.${ACTIVE_CLASS} {
+      outline-color: rgb(31, 111, 235);
+    }
+    .${DELETION_CLASS}.${BASE_CLASS} .preview-diff-deletion-toggle,
+    .${DELETION_CLASS}.${BASE_CLASS} .preview-diff-deletion-body {
+      color: rgb(17, 76, 168);
+    }
+    .${DELETION_CLASS}.${BASE_CLASS} .preview-diff-deletion-body {
+      text-decoration-color: rgba(31, 111, 235, 0.4);
+    }
     [theme~="dark"] .${DELETION_CLASS} {
       background-color: rgba(207, 34, 46, 0.18);
+    }
+    [theme~="dark"] .${DELETION_CLASS}.${BASE_CLASS} {
+      background-color: rgba(31, 111, 235, 0.18);
+    }
+    [theme~="dark"] .${DELETION_CLASS}.${BASE_CLASS} .preview-diff-deletion-toggle,
+    [theme~="dark"] .${DELETION_CLASS}.${BASE_CLASS} .preview-diff-deletion-body {
+      color: rgb(160, 200, 255);
     }
     [theme~="dark"] .${DELETION_CLASS} .preview-diff-deletion-toggle,
     [theme~="dark"] .${DELETION_CLASS} .preview-diff-deletion-body {
@@ -257,6 +301,10 @@ function injectStyles() {
     }
     #${PANEL_ID} li.current {
       font-weight: 600;
+    }
+    #${PANEL_ID} .preview-diff-page-note {
+      color: var(--docs-secondary-text-color, #5b7282);
+      font-size: 0.75rem;
     }
     #${PANEL_ID} .preview-diff-meta {
       color: var(--docs-secondary-text-color, #5b7282);
@@ -311,21 +359,21 @@ function getArticleContainer(): Element {
   );
 }
 
-function highlightBlocks(page: ChangedPage, container: Element) {
-  // Clear previous run (SPA navigation re-applies on the same document)
-  document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
-    el.classList.remove(HIGHLIGHT_CLASS, ACTIVE_CLASS);
-  });
-
-  if (page.needles.length === 0) {
+/** Highlights every block matching one of the needles, skipping already marked ones. */
+function markNeedles(container: Element, needles: string[], isBase: boolean) {
+  if (needles.length === 0) {
     return;
   }
-
   container.querySelectorAll(BLOCK_SELECTOR).forEach((block) => {
     // Skip the panel and any deletion marker/group (a previous run's markers may
     // still be in the DOM during the SPA retry, and their <pre> bodies would
     // otherwise be matched and highlighted as false positives).
     if (block.closest(`#${PANEL_ID}, .${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)) {
+      return;
+    }
+    // A block the PR itself changed keeps its color, even if the base branch
+    // touched it too (this pass runs second).
+    if (block.classList.contains(HIGHLIGHT_CLASS)) {
       return;
     }
     const raw = block.textContent || '';
@@ -337,16 +385,29 @@ function highlightBlocks(page: ChangedPage, container: Element) {
     if (text.length < 4) {
       return;
     }
-    if (page.needles.some((needle) => text.includes(needle))) {
+    if (needles.some((needle) => text.includes(needle))) {
       block.classList.add(HIGHLIGHT_CLASS);
+      if (isBase) {
+        block.classList.add(BASE_CLASS);
+      }
     }
   });
+}
+
+function highlightBlocks(page: ChangedPage, container: Element) {
+  // Clear previous run (SPA navigation re-applies on the same document)
+  document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
+    el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS, ACTIVE_CLASS);
+  });
+
+  markNeedles(container, page.needles, false);
+  markNeedles(container, page.baseNeedles || [], true);
 
   // A list item and the paragraph inside it can both match; keep only the
   // innermost match so the highlight is as precise as possible.
   document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
     if (el.querySelector(`.${HIGHLIGHT_CLASS}`)) {
-      el.classList.remove(HIGHLIGHT_CLASS);
+      el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS);
     }
   });
 }
@@ -388,9 +449,9 @@ function setDeletionExpanded(marker: HTMLElement, expanded: boolean) {
 }
 
 /** Builds the collapsible "removed content" marker element for one deletion. */
-function buildDeletionMarker(deletion: Deletion): HTMLElement {
+function buildDeletionMarker(deletion: Deletion, isBase: boolean): HTMLElement {
   const marker = document.createElement('div');
-  marker.className = DELETION_CLASS;
+  marker.className = isBase ? `${DELETION_CLASS} ${BASE_CLASS}` : DELETION_CLASS;
   marker.tabIndex = -1;
 
   const bodyId = `preview-diff-removed-${deletionBodySeq++}`;
@@ -447,11 +508,16 @@ function renderDeletions(page: ChangedPage, container: Element) {
     .querySelectorAll(`.${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)
     .forEach((el) => el.remove());
 
-  const deletions = page.deletions || [];
-  const orphans: Deletion[] = [];
+  // Own deletions first, so they are the ones anchored next to a block that
+  // both scopes could claim.
+  const deletions: Array<{ deletion: Deletion; isBase: boolean }> = [
+    ...(page.deletions || []).map((deletion) => ({ deletion, isBase: false })),
+    ...(page.baseDeletions || []).map((deletion) => ({ deletion, isBase: true })),
+  ];
+  const orphans: Array<{ deletion: Deletion; isBase: boolean }> = [];
 
-  for (const deletion of deletions) {
-    const marker = buildDeletionMarker(deletion);
+  for (const { deletion, isBase } of deletions) {
+    const marker = buildDeletionMarker(deletion, isBase);
     const beforeBlock = findBlockByNeedle(container, deletion.before);
     if (beforeBlock) {
       placeMarker(marker, beforeBlock, 'after');
@@ -462,7 +528,7 @@ function renderDeletions(page: ChangedPage, container: Element) {
       placeMarker(marker, afterBlock, 'before');
       continue;
     }
-    orphans.push(deletion);
+    orphans.push({ deletion, isBase });
   }
 
   if (orphans.length > 0) {
@@ -476,10 +542,10 @@ function renderDeletions(page: ChangedPage, container: Element) {
       orphans.length === 1 ? '' : 's'
     } (original location not found)`;
     group.appendChild(note);
-    for (const deletion of orphans) {
+    for (const { deletion, isBase } of orphans) {
       // Each orphan is a real marker (toggle + aria, individually navigable),
       // expanded by default since there's no surrounding context to orient from.
-      const marker = buildDeletionMarker(deletion);
+      const marker = buildDeletionMarker(deletion, isBase);
       setDeletionExpanded(marker, true);
       group.appendChild(marker);
     }
@@ -590,10 +656,12 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   panel.id = PANEL_ID;
   panel.open = currentPage !== undefined;
 
+  const ownPageCount = manifestPages.filter((page) => page.status !== null).length;
+  const basePageCount = manifestPages.length - ownPageCount;
   const summary = document.createElement('summary');
-  summary.textContent = `PR changes (${manifestPages.length} page${
-    manifestPages.length === 1 ? '' : 's'
-  })`;
+  summary.textContent =
+    `PR changes (${ownPageCount} page${ownPageCount === 1 ? '' : 's'})` +
+    (basePageCount > 0 ? ` + ${basePageCount} from base branch` : '');
   panel.appendChild(summary);
 
   // On-page change stepper
@@ -683,6 +751,12 @@ function renderPanel(currentPage: ChangedPage | undefined) {
       window.location.assign(link.href);
     });
     item.appendChild(link);
+    if (page.status === null) {
+      const note = document.createElement('span');
+      note.className = 'preview-diff-page-note';
+      note.textContent = ' — base branch';
+      item.appendChild(note);
+    }
     if (page === currentPage) {
       item.classList.add('current');
       item.appendChild(document.createTextNode(' — this page'));
@@ -694,9 +768,14 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   if (currentPage) {
     const meta = document.createElement('div');
     meta.className = 'preview-diff-meta';
+    const hasBaseChanges = manifestPages.some(
+      (page) => (page.baseNeedles?.length || 0) + (page.baseDeletions?.length || 0) > 0
+    );
     meta.textContent =
       changedBlocks.length > 0
-        ? 'Green = added, red = removed. Use n / p to step through changes, N / P to switch pages.'
+        ? `Green = added, red = removed${
+            hasBaseChanges ? ', blue = from the base branch, not this PR' : ''
+          }. Use n / p to step through changes, N / P to switch pages.`
         : 'This page changed, but the changes could not be located in the rendered output (e.g. markup-only changes).';
     panel.appendChild(meta);
   }
@@ -737,7 +816,7 @@ function apply(manifest: ChangesManifest) {
   currentIndex = -1;
   if (!currentPage) {
     document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
-      el.classList.remove(HIGHLIGHT_CLASS, ACTIVE_CLASS);
+      el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS, ACTIVE_CLASS);
     });
     document
       .querySelectorAll(`.${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)
