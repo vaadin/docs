@@ -8,7 +8,8 @@
  * - preview-comment.md: the sticky PR comment body with links to changed pages.
  *
  * Environment variables:
- * - PREVIEW_BASE_REF: base ref to diff against (default: origin/main)
+ * - PREVIEW_BASE_REF: base ref to diff against (default: origin/main; falls
+ *   back to origin/main if the given ref no longer exists)
  * - PREVIEW_URL: base URL of the preview deployment (used in the PR comment)
  * - GITHUB_SHA: commit SHA recorded in the outputs
  */
@@ -16,7 +17,8 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const baseRef = process.env.PREVIEW_BASE_REF || 'origin/main';
+const FALLBACK_BASE_REF = 'origin/main';
+const baseRef = process.env.PREVIEW_BASE_REF || FALLBACK_BASE_REF;
 const previewUrl = (process.env.PREVIEW_URL || '').replace(/\/+$/, '');
 const buildSha = process.env.GITHUB_SHA || '';
 
@@ -35,6 +37,20 @@ const MAX_DELETION_LINE_LENGTH = 200;
 // Runs git with an argv array (no shell), avoiding injection and quoting issues.
 function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+}
+
+// The base branch can vanish between the pull request event and this run: for a
+// stacked pull request it is deleted as soon as the one below it is merged, and
+// the event payload still names it. Rather than failing the whole deployment,
+// fall back to the default branch, which only makes the change list noisier.
+function resolveBaseRef(ref) {
+  try {
+    git(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
+    return ref;
+  } catch {
+    console.warn(`Base ref ${ref} not found, diffing against ${FALLBACK_BASE_REF} instead`);
+    return FALLBACK_BASE_REF;
+  }
 }
 
 /**
@@ -421,7 +437,7 @@ function buildIncluderMap() {
 }
 
 function main() {
-  const mergeBase = git(['merge-base', baseRef, 'HEAD']).trim();
+  const mergeBase = git(['merge-base', resolveBaseRef(baseRef), 'HEAD']).trim();
   // Context lines (-U3) are needed to anchor deletions to surviving blocks.
   const diffText = git([
     'diff',
