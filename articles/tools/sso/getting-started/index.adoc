@@ -1,17 +1,21 @@
 ---
 title: Getting Started
-page-title: Getting Started with Vaadin SSO Kit
-description: Step-by-step guide on how to use SSO Kit in a Vaadin application.
-meta-description: Get started with Single Sign-On (SSO) integration in your Vaadin applications, in both Flow and React views.
+page-title: Getting Started with Vaadin SSO Kit and Vaadin Flow
+layout: tabbed-page
+tab-title: Flow
+description: Step-by-step guide on how to use SSO Kit in a Vaadin Flow application.
+meta-description: Get started with Single Sign-On (SSO) integration in your Vaadin Flow applications.
 order: 10
 ---
 
 
-= Getting Started with SSO Kit
+= Getting Started with SSO Kit (Flow)
+
+.Instructions for Vaadin Flow
+[NOTE]
+This page guides you in getting started with SSO Kit and Vaadin Flow. See the guide for <<hilla#,getting stated with SSO Kit and Hilla>>.
 
 SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter module that configures the security settings needed to authenticate with an identity provider.
-
-A Vaadin application can have server-side views written in Java with Flow, client-side views written in React, or both. Adding the dependency and configuring the provider is the same in either case. Securing the views themselves differs, which is covered in <<#flow-views, Securing Flow Views>> and <<#react-views, Securing React Views>>.
 
 
 == Add SSO Kit Dependency
@@ -26,23 +30,6 @@ To get started, you need to add SSO Kit as a dependency to an application. For e
     <artifactId>sso-kit-starter</artifactId>
 </dependency>
 ----
-
-.Applications With React Views
-[NOTE]
-====
-For React views and the services behind them, use the Hilla flavor of the starter instead. It provides the same auto-configuration, plus the endpoints and the client-side context that React views use, and its configuration properties are in the `hilla.sso` namespace instead of `vaadin.sso`:
-
-.pom.xml
-[source,xml]
-----
-<dependency>
-    <groupId>com.vaadin</groupId>
-    <artifactId>sso-kit-starter-hilla</artifactId>
-</dependency>
-----
-====
-
-The version of both starters comes from the `vaadin-bom` dependency management that the project already has.
 
 Next, you need to set some configuration properties to connect SSO Kit to an OpenID Connect provider. These properties can be added to the [filename]`application.properties` file where you define the provider URL and the client registration details, such as credentials and scope.
 
@@ -85,8 +72,7 @@ spring:
 Once you have at least one client configured, you're ready to secure any views.
 
 
-[[flow-views]]
-== Securing Flow Views
+== Securing Views
 
 The default configuration redirects requests to any view, to the provider's login page. You can set which views require authentication, annotating them as described in <<{articles}/flow/security/enabling-security#annotating-the-view-classes, Securing Spring Boot Applications: Annotating the View Classes>>.
 
@@ -106,7 +92,7 @@ SSO Kit provides the [classname]`SingleSignOnConfiguration` auto-configuration c
 [NOTE]
 If you need a customized security configuration, you can disable this auto-configuration class by adding its fully-qualified name to the `spring.autoconfigure.exclude` property and define your own configuration class.
 
-The following configuration enables login for the identity providers defined in the application configuration. It instructs the application to accept requests for the login route. It can be configured by setting the `vaadin.sso.login-route` property -- `hilla.sso.login-route` when using the Hilla starter -- which defaults to `/login`. If there is no view defined for this route, Spring auto-generates a page with links to login forms for each of the configured providers.
+The following configuration enables login for the identity providers defined in the application configuration. It instructs the application to accept requests for the login route. It can be configured by setting the `vaadin.sso.login-route` property, which defaults to `/login`. If there is no view defined for this route, Spring auto-generates a page with links to login forms for each of the configured providers.
 
 To redirect users automatically to the provider login form, you can set this property to `/oauth2/authorization/{provider-key}`, where `{provider-key}` is the key used to configure the provider in `application.properties` file.
 
@@ -141,147 +127,6 @@ include::{root}/src/main/java/com/vaadin/demo/sso/ProfileView.java[tags=profile-
 ----
 
 By default, the SSO Kit authenticated user is an instance of [classname]`OidcUser`. If your application defines a custom user service to provide your own user type, you can use that type as the `userType` parameter.
-
-
-[[react-views]]
-== Securing React Views
-
-A Vaadin application can also have client-side views written in React, which get their data from browser-callable services. Both the views and the services behind them can be protected with SSO Kit.
-
-The Hilla starter registers SSO Kit's own endpoints as Spring beans, so TypeScript clients are generated for them without any endpoint generator configuration.
-
-.Older Project Layout
-[NOTE]
-The client-side steps in this section were written for a project where the routes are listed in a [filename]`frontend/routes.tsx` file and the application shell is in [filename]`frontend/App.tsx`. A project that uses file-based routing -- views under [filename]`src/main/frontend/views`, as described in <<{articles}/building-apps/react/add-view#,Add a React View>> -- has neither file, so these steps need to be adapted to it.
-
-
-=== Protect an Endpoint
-
-Fine-grained authorization is available on endpoints and endpoint methods. Use annotations like `@PermitAll` or `@RolesAllowed(...)` to declare who can access what.
-
-To try this, replace the `@AnonymousAllowed` annotation in an endpoint with `@PermitAll`. Unauthenticated users can then no longer access any of its methods. The same annotation can be applied at the method level for more fine-grained control.
-
-Start the application using the `mvnw` command, and try it in the browser. Everything works as before, except that calls to the protected endpoint no longer return anything, since the endpoint is inaccessible without authentication.
-
-
-=== Install the SSO Kit Client Dependency
-
-Once the backend is secure, extend the authentication features to the frontend so that views can show user information and let users log in and out:
-
-[source,bash]
-----
-npm install --save @vaadin/sso-kit-client-react
-----
-
-This dependency contains the `SsoProvider` provider and the `useSsoContext` hook, which are needed in the steps that follow.
-
-
-=== Add the SSO Provider
-
-The `SsoProvider` provides the single sign-on context to the application. Import the `SsoProvider` and pass the `RouterProvider` as a parameter to it in the [filename]`App.tsx` file.
-
-.frontend/App.tsx
-[source,typescript]
-----
-import { SsoProvider } from '@vaadin/sso-kit-client-react';
-
-return (
-  <SsoProvider>
-    <RouterProvider router={router}/>
-  </SsoProvider>
-);
-----
-
-
-=== Add Log-In and Log-Out Buttons
-
-As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `useSsoContext` hook to get the `authenticated` state and to add the `login` and `logout` functions to the buttons.
-
-.frontend/views/MainLayout.tsx
-[source,typescript]
-----
-import { Button } from '@vaadin/react-components/Button.js';
-import { useSsoContext } from '@vaadin/sso-kit-client-react';
-
-// Get the authenticated state, the login and logout functions in the MenuOnLeftLayout function.
-const {authenticated, login, logout} = useSsoContext();
-
-// Replace the `footer` in the returned element.
-<footer slot="drawer">
-  {authenticated
-    ? <Button onClick={logout}>Sign out</Button>
-    : <Button onClick={login}>Sign in</Button>
-  }
-</footer>
-----
-
-
-=== Add Access Control
-
-You can protect your views by verifying that each authentication has happened before loading the view.
-
-.Custom Redirect Path
-[TIP]
-You can define a custom redirect path in the `protectRoutes` function on which to redirect users that are not authenticated. The default value is the predefined `/ssologin` path, which redirects the user to the provider's login page.
-
-In the [filename]`frontend/routes.tsx` file, enrich the `ViewRouteObject` type with `AccessProps` type to be able to protect a view and add the `requireAuthentication` parameter to a view:
-
-.frontend/routes.tsx
-[source,typescript]
-----
-import { AccessProps, protectRoutes } from '@vaadin/sso-kit-client-react';
-
-// Enrich the ViewRouteObject type with AccessProps.
-export type ViewRouteObject = (IndexViewRouteObject | NonIndexViewRouteObject) & AccessProps;
-
-// Add requireAuthentication to the About View.
-{
-  path: '/about',
-  // ...
-  requireAuthentication: true,
-},
-
-// Protect the views which require authentication.
-export const routes: readonly ViewRouteObject[] = protectRoutes([
-  // ...
-]);
-----
-
-Filter the menu excluding unauthorized views by amending the view filter in [filename]`MainLayout.tsx`:
-
-.frontend/views/MainLayout.tsx
-[source,typescript]
-----
-// Gather the hasAccess function and add filter to the routes that checks for authentication.
-const { hasAccess } = useSsoContext();
-
-const menuRoutes = (routes[0]?.children || [])
-  .filter((route) => route.path && route.handle && route.handle.icon && route.handle.title)
-  .filter(hasAccess) as readonly MenuRoute[];
-----
-
-Now the `About` item in the menu appears only when authenticated.
-
-
-=== Show User Information
-
-The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by using the `useSsoContext` hook.
-
-Since the About page is now protected, it's a perfect place to show some information about the current user:
-
-.frontend/views/about/AboutView.tsx
-[source,typescript]
-----
-import { useSsoContext } from '@vaadin/sso-kit-client-react';
-
-// Gather the user from the SSO context.
-const { user } = useSsoContext();
-
-// Add some output in the return.
-<p>Username: {user?.preferredUsername}</p>
-<p>Full name: {user?.fullName}</p>
-<p>Email: {user?.email}</p>
-----
 
 
 == Single Sign-Off
@@ -330,45 +175,6 @@ Since SSO Kit 3.1, this feature is enabled by default through Spring Security's 
 
 .Built-In Implementation Deprecated
 [WARNING]
-The kit's built-in Back-Channel Logout implementation, activated with `vaadin.sso.back-channel-logout=true` (`hilla.sso.back-channel-logout=true` with the Hilla starter), is deprecated since SSO Kit 3.1. It's retained only for backwards compatibility with applications that depend on the legacy behavior. Don't enable it on new projects: Spring Security's filters are already active by default and cover the same feature.
-
-
-==== Notify React Views of a Logout
-
-As an example, show a dialog when the user is logged out from outside the application.
-
-The `useSsoContext` hook provided by the SSO Kit Client handles the back-channel logout and receives an event if logout happens. To get notified about a logout event, register a callback using the `onBackChannelLogout` function and store the logged out state:
-
-.frontend/views/MainLayout.tsx
-[source,typescript]
-----
-import { ConfirmDialog } from '@vaadin/react-components/ConfirmDialog.js';
-import { useEffect } from 'react';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { useSsoContext } from '@vaadin/sso-kit-client-react';
-
-const { onBackChannelLogout } = useSsoContext();
-
-// Store the logged out state.
-const loggedOut = useSignal(false);
-// Subscribe to the back-channel logout event and set logged out state to true on the event.
-useEffect(() => {
-  onBackChannelLogout(() => {
-    loggedOut.value = true;
-  });
-}, []);
-
-// Add the confirm dialog to the AppLayout.
-<ConfirmDialog header='Logged out' cancelButtonVisible
-             opened={loggedOut.value}
-             onConfirm={login}
-             onCancel={logout}
->
-<p>You have been logged out. Do you want to log in again?</p>
-</ConfirmDialog>
-----
-
-You can trigger a logout externally with the provider tools. For Keycloak, you can sign out a session from the administration console or visit the page `https://my-keycloak.io/realms/my-realm/protocol/openid-connect/logout`.
-
+The kit's built-in Back-Channel Logout implementation, activated with `vaadin.sso.back-channel-logout=true`, is deprecated since SSO Kit 3.1. It's retained only for backwards compatibility with applications that depend on the legacy behavior. Don't enable it on new projects: Spring Security's filters are already active by default and cover the same feature.
 
 [discussion-id]`281c3209-efe3-48c8-ada0-0ea8c420757a`
