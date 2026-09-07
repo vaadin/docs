@@ -47,6 +47,9 @@ interface ChangedPage {
 
 interface ChangesManifest {
   pages: ChangedPage[];
+  // Set when the base branch's own changes were deliberately not marked (e.g. a
+  // maintenance branch); the panel says so rather than silently omitting them.
+  baseSkipped?: string | null;
 }
 
 const HIGHLIGHT_CLASS = 'preview-diff-changed';
@@ -71,6 +74,7 @@ const AUTOSCROLL_KEY = 'preview-diff:autoscroll';
 
 // Module state for the current page, refreshed on every apply().
 let manifestPages: ChangedPage[] = [];
+let baseSkipped: string | null = null;
 let changedBlocks: HTMLElement[] = [];
 let currentIndex = -1;
 let counterEl: HTMLElement | null = null;
@@ -513,11 +517,12 @@ function renderDeletions(page: ChangedPage, container: Element) {
     .querySelectorAll(`.${DELETION_CLASS}, .${DELETION_GROUP_CLASS}`)
     .forEach((el) => el.remove());
 
-  // Own deletions first, so they are the ones anchored next to a block that
-  // both scopes could claim.
+  // Base deletions are placed first so an own deletion ends up adjacent to a
+  // block both scopes could claim: before()/after() insert directly next to the
+  // anchor, so the marker placed last is the one that sits closest to it.
   const deletions: Array<{ deletion: Deletion; isBase: boolean }> = [
-    ...(page.deletions || []).map((deletion) => ({ deletion, isBase: false })),
     ...(page.baseDeletions || []).map((deletion) => ({ deletion, isBase: true })),
+    ...(page.deletions || []).map((deletion) => ({ deletion, isBase: false })),
   ];
   const orphans: Array<{ deletion: Deletion; isBase: boolean }> = [];
 
@@ -537,6 +542,8 @@ function renderDeletions(page: ChangedPage, container: Element) {
   }
 
   if (orphans.length > 0) {
+    // Placement ran base-first; the grouped list reads better own-first.
+    orphans.sort((a, b) => Number(a.isBase) - Number(b.isBase));
     // The wrapper uses its own class (not DELETION_CLASS) so it isn't picked up
     // as a navigation target; only the real markers inside it are.
     const group = document.createElement('div');
@@ -773,16 +780,26 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   if (currentPage) {
     const meta = document.createElement('div');
     meta.className = 'preview-diff-meta';
-    const hasBaseChanges = manifestPages.some(
-      (page) => (page.baseNeedles?.length || 0) + (page.baseDeletions?.length || 0) > 0
-    );
+    // Counted from what is marked on this page, so the legend never promises a
+    // color that isn't here — and n / p steps through both scopes, so say how
+    // many of the changes being stepped through aren't this PR's.
+    const baseOnPage = changedBlocks.filter((el) => el.classList.contains(BASE_CLASS)).length;
     meta.textContent =
       changedBlocks.length > 0
         ? `Green = added, red = removed${
-            hasBaseChanges ? ', blue = from the base branch, not this PR' : ''
+            baseOnPage > 0
+              ? `, blue = from the base branch, not this PR (${baseOnPage} of ${changedBlocks.length} here)`
+              : ''
           }. Use n / p to step through changes, N / P to switch pages.`
         : 'This page changed, but the changes could not be located in the rendered output (e.g. markup-only changes).';
     panel.appendChild(meta);
+  }
+
+  if (baseSkipped) {
+    const note = document.createElement('div');
+    note.className = 'preview-diff-meta';
+    note.textContent = `Base branch changes are not marked: ${baseSkipped}.`;
+    panel.appendChild(note);
   }
 
   const toggle = document.createElement('button');
@@ -806,6 +823,7 @@ function renderPanel(currentPage: ChangedPage | undefined) {
 function apply(manifest: ChangesManifest) {
   injectStyles();
   manifestPages = manifest.pages;
+  baseSkipped = manifest.baseSkipped || null;
 
   const path = currentPagePath();
   const samePage = path === appliedPath;

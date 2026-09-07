@@ -22,6 +22,7 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const FALLBACK_BASE_REF = 'origin/main';
 const baseRef = process.env.PREVIEW_BASE_REF || FALLBACK_BASE_REF;
@@ -38,13 +39,21 @@ const MIN_NEEDLE_LENGTH = 12;
 // A maintenance branch (v24, v25.1, …) has diverged from the default branch by
 // hundreds of commits, so its whole divergence is in no sense "what the base
 // branch adds on top of main" and would bury the pull request's own changes.
-// A stacked branch, in contrast, forks off a recent default branch commit.
 const VERSION_BRANCH = /^v?\d+(\.\d+)*$/;
-const MAX_BASE_BRANCH_LAG = 150;
 
-// Cap on the pages listed as changed by the base branch in the PR comment,
-// which GitHub rejects beyond 65536 characters.
+// Any other base branch is judged by how much it actually changes rather than by
+// how far back it forked: a stacked branch can sit on a months-old commit of the
+// default branch and still carry a handful of changes worth showing, whereas a
+// long-lived line of development is recognizable from its size.
+const MAX_BASE_SCOPE_FILES = 50;
+
+// Caps on what the PR comment lists, and on the comment as a whole: GitHub
+// rejects a body longer than 65536 characters, which a large pull request (or
+// the fallback to origin/main below) can otherwise reach.
+const MAX_LISTED_OWN_PAGES = 150;
 const MAX_LISTED_BASE_PAGES = 25;
+const MAX_LISTED_UNMAPPED = 50;
+const MAX_COMMENT_LENGTH = 65000;
 
 // Caps on the removed source kept per deletion, to bound the published
 // manifest size. Reviewers get the full context from the GitHub diff.
@@ -80,13 +89,10 @@ function mergeBaseOf(a, b) {
   }
 }
 
-/** Number of commits `to` has that `from` doesn't, or null if it can't be counted. */
-function commitsBetween(from, to) {
-  try {
-    return Number(git(['rev-list', '--count', `${from}..${to}`]).trim());
-  } catch {
-    return null;
-  }
+/** Number of files that can affect rendered pages and differ between two commits. */
+function changedFileCount(from, to) {
+  const out = git(['diff', '--name-only', from, to, '--', 'articles', 'src', 'frontend']).trim();
+  return out === '' ? 0 : out.split('\n').length;
 }
 
 /** Diff of the paths that can affect rendered pages, between two commits. */
@@ -483,30 +489,56 @@ function buildIncluderMap() {
 }
 
 /**
- * True when the base branch is a long-lived line of its own (a maintenance
- * branch) rather than another pull request's branch. Its divergence from the
- * default branch is then not something to show as "changes from the base
- * branch", so the base scope is skipped.
+ * Why the base branch's own changes are not worth marking, or null when they
+ * are. A maintenance branch is recognized by name; every other base branch is
+ * judged by the size of its divergence, which is what actually makes the base
+ * scope unusable — an old fork point on its own does not.
  */
-function isLongLivedBase(label, baseFork) {
+function baseScopeSkipReason(label, fileCount) {
   if (VERSION_BRANCH.test(label)) {
-    console.log(`Base branch ${label} is a maintenance branch; not marking its changes`);
-    return true;
+    return `${label} is a maintenance branch, not a stacked pull request branch`;
   }
-  const lag = commitsBetween(baseFork, FALLBACK_BASE_REF);
-  if (lag !== null && lag > MAX_BASE_BRANCH_LAG) {
-    console.log(
-      `Base branch ${label} forked ${lag} commits behind ${FALLBACK_BASE_REF}; ` +
-        'not marking its changes'
-    );
-    return true;
+  if (fileCount > MAX_BASE_SCOPE_FILES) {
+    return `${label} changes ${fileCount} files, more than the ${MAX_BASE_SCOPE_FILES} that can be shown as context`;
   }
-  return false;
+  return null;
+}
+
+/**
+ * Merges the two scopes collected for one page: duplicates are removed within
+ * each scope, and anything this pull request also changed is dropped from the
+ * base scope, so its own work is never colored as the base branch's.
+ */
+function mergeScopes(page) {
+  const ownNeedles = new Set(page.needles);
+  const ownDeletions = dedupeDeletions(page.deletions);
+  const ownDeletionKeys = new Set(ownDeletions.map(deletionKey));
+  return {
+    ...page,
+    needles: [...ownNeedles],
+    deletions: ownDeletions,
+    baseNeedles: [...new Set(page.baseNeedles)].filter((n) => !ownNeedles.has(n)),
+    baseDeletions: dedupeDeletions(page.baseDeletions).filter(
+      (d) => !ownDeletionKeys.has(deletionKey(d))
+    ),
+  };
 }
 
 function main() {
-  const base = resolveBaseRef(baseRef);
-  const mergeBase = git(['merge-base', base, 'HEAD']).trim();
+  let base = resolveBaseRef(baseRef);
+  let mergeBase = mergeBaseOf(base, 'HEAD');
+  // A resolvable ref can still share no history with HEAD (a fork pushed with
+  // an unrelated history), which used to fail the run on the raw git error.
+  if (!mergeBase && base !== FALLBACK_BASE_REF) {
+    console.warn(
+      `No merge base between ${base} and HEAD, diffing against ${FALLBACK_BASE_REF} instead`
+    );
+    base = FALLBACK_BASE_REF;
+    mergeBase = mergeBaseOf(base, 'HEAD');
+  }
+  if (!mergeBase) {
+    throw new Error(`No merge base between ${base} and HEAD; cannot tell what changed`);
+  }
   // Where the base branch itself forked off the default branch. For a pull
   // request targeting the default branch this is the same commit as mergeBase,
   // so the base scope stays empty; for a stacked pull request everything
@@ -514,6 +546,13 @@ function main() {
   const baseFork =
     base === FALLBACK_BASE_REF ? mergeBase : mergeBaseOf(FALLBACK_BASE_REF, mergeBase);
   const baseLabel = base.replace(/^origin\//, '');
+  const hasBaseScope = Boolean(baseFork) && baseFork !== mergeBase;
+  const baseSkipReason = hasBaseScope
+    ? baseScopeSkipReason(baseLabel, changedFileCount(baseFork, mergeBase))
+    : null;
+  if (baseSkipReason) {
+    console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
+  }
 
   const includerMap = buildIncluderMap();
 
@@ -626,27 +665,12 @@ function main() {
   }
 
   collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own');
-  if (baseFork && baseFork !== mergeBase && !isLongLivedBase(baseLabel, baseFork)) {
+  if (hasBaseScope && !baseSkipReason) {
     collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base');
   }
 
   const pageList = [...pages.values()]
-    .map((p) => {
-      // A change that this pull request makes as well is its own, so the same
-      // content is never marked as coming from the base branch.
-      const ownNeedles = new Set(p.needles);
-      const ownDeletions = dedupeDeletions(p.deletions);
-      const ownDeletionKeys = new Set(ownDeletions.map(deletionKey));
-      return {
-        ...p,
-        needles: [...ownNeedles],
-        deletions: ownDeletions,
-        baseNeedles: [...new Set(p.baseNeedles)].filter((n) => !ownNeedles.has(n)),
-        baseDeletions: dedupeDeletions(p.baseDeletions).filter(
-          (d) => !ownDeletionKeys.has(deletionKey(d))
-        ),
-      };
-    })
+    .map(mergeScopes)
     // Drop base-only pages left with nothing to show after deduplication.
     .filter((p) => p.status !== null || p.baseNeedles.length > 0 || p.baseDeletions.length > 0)
     .sort((a, b) => a.path.localeCompare(b.path));
@@ -654,6 +678,9 @@ function main() {
   const manifest = {
     base: mergeBase,
     baseFork,
+    // Null unless the base branch's own changes were deliberately left unmarked;
+    // the preview panel and the PR comment say so rather than silently omitting.
+    baseSkipped: baseSkipReason,
     sha: buildSha,
     pages: pageList,
     unmapped,
@@ -662,7 +689,7 @@ function main() {
   fs.mkdirSync(path.dirname(MANIFEST_PATH), { recursive: true });
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
 
-  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, baseLabel));
+  fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, baseLabel, baseSkipReason));
 
   const basePages = pageList.filter((p) => p.status === null).length;
   console.log(
@@ -671,7 +698,36 @@ function main() {
   );
 }
 
-function buildComment(pageList, unmapped, baseLabel) {
+/**
+ * Appends a bounded bullet list, with a final "… and N more" line when the cap
+ * cut it short, so a truncated listing is never mistaken for a complete one.
+ */
+function pushCappedList(lines, items, cap, noun, render) {
+  for (const item of items.slice(0, cap)) {
+    lines.push(`- ${render(item)}`);
+  }
+  if (items.length > cap) {
+    const rest = items.length - cap;
+    lines.push(`- … and ${rest} more ${noun}${rest === 1 ? '' : 's'}`);
+  }
+}
+
+/**
+ * Trims a comment body that GitHub would reject. The per-section caps make this
+ * unreachable in practice; it's here so an unforeseen combination degrades the
+ * listing instead of failing the deployment on the comment step.
+ */
+function capCommentLength(body) {
+  if (body.length <= MAX_COMMENT_LENGTH) {
+    return body;
+  }
+  const notice = '\n_Listing truncated: the comment exceeded the maximum length._\n';
+  const budget = MAX_COMMENT_LENGTH - notice.length;
+  const cut = body.lastIndexOf('\n', budget);
+  return body.slice(0, cut > 0 ? cut : budget) + notice;
+}
+
+function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
   const lines = [];
   lines.push('### Preview Deployment');
   lines.push('');
@@ -689,15 +745,16 @@ function buildComment(pageList, unmapped, baseLabel) {
       lines.push('Changes inherited from the base branch are highlighted in blue.');
     }
     lines.push('');
-    for (const page of ownPages) {
+    pushCappedList(lines, ownPages, MAX_LISTED_OWN_PAGES, 'page', (page) => {
       const url = `${previewUrl}/${page.path}`;
       const base =
         page.status === 'includes-changes'
           ? 'shared content changed'
           : `${page.status}, +${page.added}/-${page.removed} lines`;
-      const removals = page.deletions.length > 0 ? `, ${page.deletions.length} removal marker(s)` : '';
-      lines.push(`- [${page.path || 'front page'}](${url}) — ${base}${removals}`);
-    }
+      const removals =
+        page.deletions.length > 0 ? `, ${page.deletions.length} removal marker(s)` : '';
+      return `[${page.path || 'front page'}](${url}) — ${base}${removals}`;
+    });
     lines.push('');
   } else {
     lines.push('_No documentation page changes detected._');
@@ -708,26 +765,52 @@ function buildComment(pageList, unmapped, baseLabel) {
     lines.push('');
     lines.push(`These come from \`${baseLabel}\`, not from this PR, and are highlighted in blue.`);
     lines.push('');
-    for (const page of basePages.slice(0, MAX_LISTED_BASE_PAGES)) {
-      lines.push(`- [${page.path || 'front page'}](${previewUrl}/${page.path})`);
-    }
-    if (basePages.length > MAX_LISTED_BASE_PAGES) {
-      const rest = basePages.length - MAX_LISTED_BASE_PAGES;
-      lines.push(`- … and ${rest} more page${rest === 1 ? '' : 's'}`);
-    }
+    pushCappedList(
+      lines,
+      basePages,
+      MAX_LISTED_BASE_PAGES,
+      'page',
+      (page) => `[${page.path || 'front page'}](${previewUrl}/${page.path})`
+    );
+    lines.push('');
+  } else if (baseSkipReason) {
+    lines.push('#### Base branch changes');
+    lines.push('');
+    lines.push(
+      `Not marked in the preview: ${baseSkipReason}. Everything highlighted in the ` +
+        'preview belongs to this PR.'
+    );
     lines.push('');
   }
   if (unmapped.length > 0) {
     lines.push('#### Other changed files');
     lines.push('');
-    for (const file of unmapped) {
-      lines.push(`- \`${file.file}\` (${file.status})`);
-    }
+    pushCappedList(
+      lines,
+      unmapped,
+      MAX_LISTED_UNMAPPED,
+      'file',
+      (file) => `\`${file.file}\` (${file.status})`
+    );
     lines.push('');
   }
   lines.push(`_Built from ${buildSha}_`);
   lines.push('');
-  return lines.join('\n');
+  return capCommentLength(lines.join('\n'));
 }
 
-main();
+// Exported for the unit tests; everything else is exercised through main().
+export {
+  baseScopeSkipReason,
+  buildComment,
+  capCommentLength,
+  dedupeDeletions,
+  mergeScopes,
+  resolveBaseRef,
+};
+
+// Only self-execute when run as a script, so importing this module for the
+// tests doesn't try to write a manifest.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}
