@@ -21,6 +21,7 @@ const {
   capCommentLength,
   collect,
   dedupeDeletions,
+  dropBaseScope,
   finalizePages,
   mergeScopes,
   resolveBaseRef,
@@ -366,4 +367,74 @@ test('collect ignores shared content resolving onto a page this PR deletes', () 
   );
 
   assert.deepEqual([...t.pages.keys()], ['kept']);
+});
+
+test('collect keeps a page this PR deletes and re-adds under another file', () => {
+  // git reports a move it can't rename-detect as a delete plus an add of the
+  // same page; the preview does serve that page, so it has to stay listed.
+  const t = target();
+  collect(
+    [
+      entry('articles/foo.adoc', { status: 'deleted' }),
+      entry('articles/foo/index.adoc', {
+        status: 'added',
+        addedLines: ['A paragraph carried over by the undetected move.'],
+        added: 1,
+      }),
+    ],
+    'own',
+    t
+  );
+  collect(
+    [entry('articles/foo.adoc', { addedLines: ['A paragraph the base branch adds to it.'] })],
+    'base',
+    t
+  );
+
+  const page = t.pages.get('foo');
+  assert.equal(page.status, 'added');
+  assert.ok(page.needles.length > 0);
+  // The page survived the move, so the base branch's changes to it apply too.
+  assert.ok(page.baseNeedles.length > 0);
+});
+
+test('dropBaseScope leaves only this PR changes, and base-only pages fall out', () => {
+  // What the fan-out cap does once it trips: no page keeps blue content, and a
+  // page that had nothing else disappears from the manifest entirely.
+  const t = target();
+  collect(
+    [entry('articles/kept/index.adoc', { addedLines: ['A paragraph this pull request adds.'] })],
+    'own',
+    t
+  );
+  collect(
+    [
+      entry('articles/kept/index.adoc', {
+        addedLines: ['A paragraph the base branch adds to the same page.'],
+        deletions: [
+          {
+            removed: ['A paragraph the base branch removed from the same page.'],
+            beforeLines: ['A surviving paragraph just above it.'],
+            afterLines: [],
+          },
+        ],
+      }),
+      entry('articles/base-only/index.adoc', {
+        addedLines: ['A paragraph on a page only the base branch changed.'],
+      }),
+    ],
+    'base',
+    t
+  );
+  assert.equal(finalizePages(t.pages).length, 2);
+  assert.equal(t.pages.get('kept').baseDeletions.length, 1);
+
+  dropBaseScope(t.pages);
+  const pageList = finalizePages(t.pages);
+  assert.deepEqual(
+    pageList.map((page) => page.path),
+    ['kept']
+  );
+  assert.deepEqual(pageList[0].baseNeedles, []);
+  assert.deepEqual(pageList[0].baseDeletions, []);
 });

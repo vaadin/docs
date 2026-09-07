@@ -548,9 +548,11 @@ function collect(entries, scope, { pages, unmapped, deletedPages, includerMap })
 
   function pageFor(file, status) {
     const pagePath = fileToPagePath(file);
-    // This pull request deletes the page, so the preview doesn't serve it and
-    // nothing — not even a base branch change to it — may claim it exists.
-    if (deletedPages.has(pagePath)) {
+    // A page this pull request deletes isn't served by the preview, so the base
+    // branch's changes to it must not claim it exists. A move git didn't detect
+    // as a rename arrives as a delete plus an add of the same page, though, so
+    // only the paths the own scope left behind are gone for good.
+    if (!isOwn && deletedPages.has(pagePath) && !pages.has(pagePath)) {
       return null;
     }
     if (!pages.has(pagePath)) {
@@ -726,18 +728,24 @@ function main() {
     includerMap: buildIncluderMap(),
   };
   collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own', target);
-  if (hasBaseScope && !baseSkipReason) {
+  const collectedBase = hasBaseScope && !baseSkipReason;
+  if (collectedBase) {
     collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base', target);
-    const reached = [...target.pages.values()].filter(hasBaseChanges).length;
-    baseSkipReason = baseFanOutSkipReason(baseLabel, reached);
-    if (baseSkipReason) {
-      console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
-      dropBaseScope(target.pages);
-    }
   }
 
   const { unmapped } = target;
-  const pageList = finalizePages(target.pages);
+  let pageList = finalizePages(target.pages);
+  if (collectedBase) {
+    // Counted after deduplication: base content this pull request also changed
+    // is already gone by now, so the cap measures the pages that would really
+    // show blue rather than every page the base diff happened to touch.
+    baseSkipReason = baseFanOutSkipReason(baseLabel, pageList.filter(hasBaseChanges).length);
+    if (baseSkipReason) {
+      console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
+      dropBaseScope(target.pages);
+      pageList = finalizePages(target.pages);
+    }
+  }
 
   const manifest = {
     base: mergeBase,
@@ -879,6 +887,7 @@ export {
   capCommentLength,
   collect,
   dedupeDeletions,
+  dropBaseScope,
   finalizePages,
   mergeScopes,
   resolveBaseRef,
