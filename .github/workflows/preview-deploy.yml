@@ -3,7 +3,6 @@ name: Preview Deploy
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches: [main]
 
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
@@ -25,12 +24,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # Full history is needed to diff against the merge base with main
+          # Full history (and all branches) is needed to diff against the merge
+          # base with the PR's base branch, which isn't always main
           fetch-depth: 0
 
       - name: Generate change manifest
         env:
           PREVIEW_URL: https://${{ env.FLY_APP }}.fly.dev
+          # Diff against the branch the PR targets, so a stacked PR lists only
+          # its own changes instead of the whole stack
+          PREVIEW_BASE_REF: origin/${{ github.event.pull_request.base.ref }}
           # The PR head commit (GITHUB_SHA is the synthetic merge ref on PRs)
           GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/generate-preview-changes.mjs
