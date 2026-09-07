@@ -90,6 +90,10 @@ function pages(directory) {
 
 function resolve(argument) {
   const target = path.join(litSection, argument);
+  if (!fs.existsSync(path.join(root, target))) {
+    console.error(`No such page or directory: ${target}`);
+    process.exit(1);
+  }
   return fs.statSync(path.join(root, target)).isDirectory() ? pages(target) : [target];
 }
 
