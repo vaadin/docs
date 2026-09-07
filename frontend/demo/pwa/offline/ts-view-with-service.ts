@@ -1,8 +1,8 @@
 import { EndpointError } from '@vaadin/hilla-frontend';
-// Import the remote endpoint
+// Import the remote service
 import { DataService } from 'Frontend/generated/endpoints';
 
-// Wrap endpoint calls to return fallback data when offline
+// Wrap service calls to return fallback data when offline
 export async function getViewData() {
   try {
     return await DataService.getViewData();
