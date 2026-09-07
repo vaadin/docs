@@ -520,3 +520,69 @@ test('buildComment describes a page that only moved', () => {
   );
   assert.match(comment, /components\/badge-new\]\([^)]*\) — moved here, content unchanged/);
 });
+
+test('collect stops serving a page renamed out of the page space', () => {
+  // Renaming a page into a partial (or out of articles/) removes it just as
+  // surely as renaming it to another page does.
+  const t = target();
+  collect(
+    [
+      entry('articles/components/accordion/_moved.adoc', {
+        status: 'renamed',
+        oldFile: 'articles/components/accordion/index.adoc',
+      }),
+    ],
+    'own',
+    t
+  );
+  collect(
+    [
+      entry('articles/components/accordion/index.adoc', {
+        addedLines: ['A paragraph the base branch adds to the page that moved out.'],
+      }),
+    ],
+    'base',
+    t
+  );
+
+  assert.deepEqual([...t.pages.keys()], []);
+  assert.deepEqual([...t.deletedPages], ['components/accordion']);
+});
+
+test('collect ignores a rename into the page space from elsewhere', () => {
+  const t = target();
+  collect(
+    [
+      entry('articles/bar/index.adoc', {
+        status: 'renamed',
+        oldFile: 'src/main/java/Example.adoc',
+        addedLines: ['A line in the page moved in from outside the articles tree.'],
+        added: 1,
+      }),
+    ],
+    'own',
+    t
+  );
+
+  // The source was never a page, so nothing is newly unserved.
+  assert.deepEqual([...t.deletedPages], []);
+  assert.deepEqual([...t.pages.keys()], ['bar']);
+});
+
+test('buildComment does not call a move unchanged when it picks up shared content', () => {
+  // attachToIncluders leaves the 'renamed' status in place, so the line counts
+  // alone can't tell a bare move from one that renders new content.
+  const moved = page({ path: 'new', status: 'renamed', added: 0, removed: 0 });
+  const withShared = page({
+    path: 'new',
+    status: 'renamed',
+    added: 0,
+    removed: 0,
+    needles: ['a paragraph the shared partial now contributes'],
+  });
+  assert.match(buildComment([moved], [], 'main', null), /— moved here, content unchanged/);
+  assert.match(
+    buildComment([withShared], [], 'main', null),
+    /— moved here, shared content changed/
+  );
+});

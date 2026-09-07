@@ -444,6 +444,11 @@ function isPartial(file) {
   return path.posix.basename(file).startsWith('_');
 }
 
+/** True for a file the site renders as a page of its own. */
+function isPage(file) {
+  return file.startsWith('articles/') && isAdoc(file) && !isPartial(file);
+}
+
 /**
  * Resolves an `include::` target to a repo-relative path matching the paths git
  * reports, or null when the target uses an attribute we can't resolve.
@@ -630,18 +635,19 @@ function collect(entries, scope, { pages, unmapped, deletedPages, includerMap })
   // conveys, and true for a deletion, which nothing else would mention.
   const gone = [];
   for (const entry of entries) {
-    const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
-    if (isArticle && !isPartial(entry.file)) {
+    // A rename moves the page: git reports no deletion for the source path,
+    // but the preview stops serving it all the same. Keyed on the path moved
+    // away from, not the one moved to, so renaming a page into a partial or
+    // out of the articles tree counts just the same.
+    if (isOwn && entry.oldFile && isPage(entry.oldFile)) {
+      gone.push({ file: entry.oldFile, report: false });
+    }
+    if (isPage(entry.file)) {
       if (entry.status === 'deleted') {
         if (isOwn) {
           gone.push({ file: entry.file, report: true });
         }
         continue;
-      }
-      // A rename moves the page: git reports no deletion for the source path,
-      // but the preview stops serving it all the same.
-      if (isOwn && entry.oldFile && isAdoc(entry.oldFile) && !isPartial(entry.oldFile)) {
-        gone.push({ file: entry.oldFile, report: false });
       }
       const page = pageFor(entry.file, entry.status);
       if (!page) {
@@ -816,7 +822,12 @@ function pageSummary(page) {
     return 'shared content changed';
   }
   if (page.status === 'renamed' && page.added === 0 && page.removed === 0) {
-    return 'moved here, content unchanged';
+    // A move can still pick content up through a changed partial or code
+    // example, in which case the page does show highlights and calling it
+    // unchanged would be wrong.
+    return page.needles.length === 0 && page.deletions.length === 0
+      ? 'moved here, content unchanged'
+      : 'moved here, shared content changed';
   }
   return `${page.status}, +${page.added}/-${page.removed} lines`;
 }
