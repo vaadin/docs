@@ -24,6 +24,7 @@ const {
   dropBaseScope,
   finalizePages,
   mergeScopes,
+  parseDiff,
   resolveBaseRef,
 } = await import('./generate-preview-changes.mjs');
 
@@ -60,6 +61,7 @@ function target() {
 function entry(file, overrides = {}) {
   return {
     file,
+    oldFile: null,
     status: 'modified',
     addedLines: [],
     added: 0,
@@ -394,8 +396,10 @@ test('collect keeps a page this PR deletes and re-adds under another file', () =
   const page = t.pages.get('foo');
   assert.equal(page.status, 'added');
   assert.ok(page.needles.length > 0);
-  // The page survived the move, so the base branch's changes to it apply too.
+  // The page survived the move, so the base branch's changes to it apply too,
+  // and it must not be reported as removed either.
   assert.ok(page.baseNeedles.length > 0);
+  assert.deepEqual(t.unmapped, []);
 });
 
 test('dropBaseScope leaves only this PR changes, and base-only pages fall out', () => {
@@ -437,4 +441,82 @@ test('dropBaseScope leaves only this PR changes, and base-only pages fall out', 
   );
   assert.deepEqual(pageList[0].baseNeedles, []);
   assert.deepEqual(pageList[0].baseDeletions, []);
+});
+
+test('parseDiff keeps both sides of a rename, with or without a content change', () => {
+  const moved = parseDiff(
+    [
+      'diff --git a/articles/old/index.adoc b/articles/new/index.adoc',
+      'similarity index 100%',
+      'rename from articles/old/index.adoc',
+      'rename to articles/new/index.adoc',
+      '',
+    ].join('\n')
+  );
+  // A verbatim move has no ---/+++ header at all, so the rename lines are the
+  // only record of either path.
+  assert.equal(moved.length, 1);
+  assert.equal(moved[0].file, 'articles/new/index.adoc');
+  assert.equal(moved[0].oldFile, 'articles/old/index.adoc');
+  assert.equal(moved[0].status, 'renamed');
+
+  const edited = parseDiff(
+    [
+      'diff --git a/articles/old/index.adoc b/articles/new/index.adoc',
+      'similarity index 90%',
+      'rename from articles/old/index.adoc',
+      'rename to articles/new/index.adoc',
+      '--- a/articles/old/index.adoc',
+      '+++ b/articles/new/index.adoc',
+      '@@ -1,2 +1,3 @@',
+      ' Context line that survives the move.',
+      '+A line added while moving the page.',
+      '',
+    ].join('\n')
+  );
+  assert.equal(edited[0].file, 'articles/new/index.adoc');
+  assert.equal(edited[0].oldFile, 'articles/old/index.adoc');
+  assert.deepEqual(edited[0].addedLines, ['A line added while moving the page.']);
+});
+
+test('collect stops serving the page a rename moved away from', () => {
+  // The preview serves the new path only, so a base branch change to the old
+  // one must not be published as a page that still exists.
+  const t = target();
+  collect(
+    [
+      entry('articles/components/accordion-new/index.adoc', {
+        status: 'renamed',
+        oldFile: 'articles/components/accordion/index.adoc',
+        addedLines: ['A line added while moving the accordion page.'],
+        added: 1,
+      }),
+    ],
+    'own',
+    t
+  );
+  collect(
+    [
+      entry('articles/components/accordion/index.adoc', {
+        addedLines: ['A paragraph the base branch adds to the page that moved.'],
+      }),
+    ],
+    'base',
+    t
+  );
+
+  assert.deepEqual([...t.pages.keys()], ['components/accordion-new']);
+  // The move is conveyed by the new page's status, so don't also call the old
+  // path a deleted file.
+  assert.deepEqual(t.unmapped, []);
+});
+
+test('buildComment describes a page that only moved', () => {
+  const comment = buildComment(
+    [page({ path: 'components/badge-new', status: 'renamed', added: 0, removed: 0 })],
+    [],
+    'main',
+    null
+  );
+  assert.match(comment, /components\/badge-new\]\([^)]*\) — moved here, content unchanged/);
 });

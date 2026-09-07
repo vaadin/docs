@@ -682,7 +682,9 @@ function renderPanel(currentPage: ChangedPage | undefined) {
   const summary = document.createElement('summary');
   summary.textContent =
     `PR changes (${ownPageCount} page${ownPageCount === 1 ? '' : 's'})` +
-    (basePageCount > 0 ? ` + ${basePageCount} from base branch` : '');
+    // "more" so the count reads as pages on top of the ones above, not as the
+    // total carrying base branch changes — pages this PR changed can too.
+    (basePageCount > 0 ? ` + ${basePageCount} more from base branch` : '');
   panel.appendChild(summary);
 
   // On-page change stepper

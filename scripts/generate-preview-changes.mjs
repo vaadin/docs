@@ -139,7 +139,8 @@ function extractDeletions(entry, hunkLines) {
 
 /**
  * Parses `git diff` output (with context) into
- * [{ file, status, addedLines, added, removed, deletions }].
+ * [{ file, oldFile, status, addedLines, added, removed, deletions }].
+ * `oldFile` is set only for a rename, whose source path stops being served.
  */
 function parseDiff(diffText) {
   const entries = [];
@@ -156,7 +157,15 @@ function parseDiff(diffText) {
   for (const line of diffText.split('\n')) {
     if (line.startsWith('diff --git ')) {
       flushHunk();
-      current = { file: null, status: 'modified', addedLines: [], added: 0, removed: 0, deletions: [] };
+      current = {
+        file: null,
+        oldFile: null,
+        status: 'modified',
+        addedLines: [],
+        added: 0,
+        removed: 0,
+        deletions: [],
+      };
       entries.push(current);
     } else if (!current) {
       continue;
@@ -164,8 +173,15 @@ function parseDiff(diffText) {
       current.status = 'added';
     } else if (line.startsWith('deleted file mode')) {
       current.status = 'deleted';
+    } else if (line.startsWith('rename from ')) {
+      current.status = 'renamed';
+      current.oldFile = line.slice('rename from '.length);
     } else if (line.startsWith('rename to ')) {
       current.status = 'renamed';
+      // A rename with no content change has no ---/+++ header at all, so this
+      // is the only place the new path appears; without it the whole entry is
+      // dropped and the move goes unreported.
+      current.file = line.slice('rename to '.length);
     } else if (!hunkLines && line.startsWith('+++ b/')) {
       // File headers only appear before the first @@; guarding on !hunkLines
       // avoids mistaking a hunk body line like "+++ b/..." for a header.
@@ -609,16 +625,23 @@ function collect(entries, scope, { pages, unmapped, deletedPages, includerMap })
   }
 
   const sharedEntries = [];
+  // Article paths this pull request stops serving, resolved after the loop
+  // below: `report` is false for a rename, whose move the new page already
+  // conveys, and true for a deletion, which nothing else would mention.
+  const gone = [];
   for (const entry of entries) {
     const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
     if (isArticle && !isPartial(entry.file)) {
       if (entry.status === 'deleted') {
         if (isOwn) {
-          // Recorded so the base scope can't resurrect the page below.
-          deletedPages.add(fileToPagePath(entry.file));
-          unmapped.push({ file: entry.file, status: 'deleted' });
+          gone.push({ file: entry.file, report: true });
         }
         continue;
+      }
+      // A rename moves the page: git reports no deletion for the source path,
+      // but the preview stops serving it all the same.
+      if (isOwn && entry.oldFile && isAdoc(entry.oldFile) && !isPartial(entry.oldFile)) {
+        gone.push({ file: entry.oldFile, report: false });
       }
       const page = pageFor(entry.file, entry.status);
       if (!page) {
@@ -637,6 +660,20 @@ function collect(entries, scope, { pages, unmapped, deletedPages, includerMap })
     }
   }
 
+  // A delete plus an add of the same page is a move git didn't rename-detect,
+  // so that page is still served: it neither belongs in the gone set nor should
+  // be reported as removed. Only what no direct change put back is really gone.
+  for (const { file, report } of gone) {
+    const pagePath = fileToPagePath(file);
+    if (pages.has(pagePath)) {
+      continue;
+    }
+    deletedPages.add(pagePath);
+    if (report) {
+      unmapped.push({ file, status: 'deleted' });
+    }
+  }
+
   // Partials and code examples are resolved after direct page changes so their
   // content merges into already-registered pages instead of duplicating them.
   for (const entry of sharedEntries) {
@@ -651,6 +688,7 @@ function collect(entries, scope, { pages, unmapped, deletedPages, includerMap })
     }
   }
 }
+
 /**
  * Why a base scope that was worth collecting turns out to be too big to show,
  * or null when it isn't. Checked after collecting because shared content fans
@@ -772,6 +810,17 @@ function main() {
   );
 }
 
+/** How a changed page's own change is described in the PR comment. */
+function pageSummary(page) {
+  if (page.status === 'includes-changes') {
+    return 'shared content changed';
+  }
+  if (page.status === 'renamed' && page.added === 0 && page.removed === 0) {
+    return 'moved here, content unchanged';
+  }
+  return `${page.status}, +${page.added}/-${page.removed} lines`;
+}
+
 /**
  * Appends a bounded bullet list, with a final "… and N more" line when the cap
  * cut it short, so a truncated listing is never mistaken for a complete one.
@@ -821,10 +870,7 @@ function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
     lines.push('');
     pushCappedList(lines, ownPages, MAX_LISTED_OWN_PAGES, 'page', (page) => {
       const url = `${previewUrl}/${page.path}`;
-      const base =
-        page.status === 'includes-changes'
-          ? 'shared content changed'
-          : `${page.status}, +${page.added}/-${page.removed} lines`;
+      const base = pageSummary(page);
       const removals =
         page.deletions.length > 0 ? `, ${page.deletions.length} removal marker(s)` : '';
       // Say so where the page also shows blue, so the highlighting on it is
@@ -890,6 +936,7 @@ export {
   dropBaseScope,
   finalizePages,
   mergeScopes,
+  parseDiff,
   resolveBaseRef,
 };
 
