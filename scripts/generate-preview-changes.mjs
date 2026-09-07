@@ -44,8 +44,11 @@ const VERSION_BRANCH = /^v?\d+(\.\d+)*$/;
 // Any other base branch is judged by how much it actually changes rather than by
 // how far back it forked: a stacked branch can sit on a months-old commit of the
 // default branch and still carry a handful of changes worth showing, whereas a
-// long-lived line of development is recognizable from its size.
+// long-lived line of development is recognizable from its size. The file count
+// is only a cheap pre-check — one changed partial or code example reaches every
+// page that includes it — so the pages actually reached are capped as well.
 const MAX_BASE_SCOPE_FILES = 50;
+const MAX_BASE_SCOPE_PAGES = 50;
 
 // Caps on what the PR comment lists, and on the comment as a whole: GitHub
 // rejects a body longer than 65536 characters, which a large pull request (or
@@ -538,13 +541,18 @@ function mergeScopes(page) {
  * reports on. `target` holds the accumulated pages, the unmapped files and the
  * include map, so both scopes collect into the same records.
  */
-function collect(entries, scope, { pages, unmapped, includerMap }) {
+function collect(entries, scope, { pages, unmapped, deletedPages, includerMap }) {
   const isOwn = scope === 'own';
   const needlesKey = isOwn ? 'needles' : 'baseNeedles';
   const deletionsKey = isOwn ? 'deletions' : 'baseDeletions';
 
   function pageFor(file, status) {
     const pagePath = fileToPagePath(file);
+    // This pull request deletes the page, so the preview doesn't serve it and
+    // nothing — not even a base branch change to it — may claim it exists.
+    if (deletedPages.has(pagePath)) {
+      return null;
+    }
     if (!pages.has(pagePath)) {
       pages.set(pagePath, {
         path: pagePath,
@@ -585,12 +593,15 @@ function collect(entries, scope, { pages, unmapped, includerMap }) {
     for (const includer of includers) {
       if (isPartial(includer)) {
         attached = attachToIncluders(includer, payload, seen) || attached;
-      } else {
-        const page = pageFor(includer, 'includes-changes');
-        page[needlesKey].push(...payload.needles);
-        page[deletionsKey].push(...payload.deletions);
-        attached = true;
+        continue;
       }
+      const page = pageFor(includer, 'includes-changes');
+      if (!page) {
+        continue;
+      }
+      page[needlesKey].push(...payload.needles);
+      page[deletionsKey].push(...payload.deletions);
+      attached = true;
     }
     return attached;
   }
@@ -601,11 +612,16 @@ function collect(entries, scope, { pages, unmapped, includerMap }) {
     if (isArticle && !isPartial(entry.file)) {
       if (entry.status === 'deleted') {
         if (isOwn) {
+          // Recorded so the base scope can't resurrect the page below.
+          deletedPages.add(fileToPagePath(entry.file));
           unmapped.push({ file: entry.file, status: 'deleted' });
         }
         continue;
       }
       const page = pageFor(entry.file, entry.status);
+      if (!page) {
+        continue;
+      }
       if (isOwn) {
         page.status = entry.status;
         page.added += entry.added;
@@ -633,6 +649,34 @@ function collect(entries, scope, { pages, unmapped, includerMap }) {
     }
   }
 }
+/**
+ * Why a base scope that was worth collecting turns out to be too big to show,
+ * or null when it isn't. Checked after collecting because shared content fans
+ * out: the file count can't predict how many pages a changed partial reaches.
+ */
+function baseFanOutSkipReason(label, pageCount) {
+  if (pageCount > MAX_BASE_SCOPE_PAGES) {
+    return (
+      `${label} reaches ${pageCount} pages, more than the ` +
+      `${MAX_BASE_SCOPE_PAGES} that can be shown as context`
+    );
+  }
+  return null;
+}
+
+/** True when any of a page's marked content comes from the base branch. */
+function hasBaseChanges(page) {
+  return page.baseNeedles.length > 0 || page.baseDeletions.length > 0;
+}
+
+/** Strips every base-scope record, leaving only this pull request's changes. */
+function dropBaseScope(pages) {
+  for (const page of pages.values()) {
+    page.baseNeedles = [];
+    page.baseDeletions = [];
+  }
+}
+
 /**
  * Turns the collected records into the manifest's page list: the two scopes are
  * merged, base-only pages left with nothing to show after deduplication are
@@ -668,17 +712,28 @@ function main() {
     base === FALLBACK_BASE_REF ? mergeBase : mergeBaseOf(FALLBACK_BASE_REF, mergeBase);
   const baseLabel = base.replace(/^origin\//, '');
   const hasBaseScope = Boolean(baseFork) && baseFork !== mergeBase;
-  const baseSkipReason = hasBaseScope
+  let baseSkipReason = hasBaseScope
     ? baseScopeSkipReason(baseLabel, changedFileCount(baseFork, mergeBase))
     : null;
   if (baseSkipReason) {
     console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
   }
 
-  const target = { pages: new Map(), unmapped: [], includerMap: buildIncluderMap() };
+  const target = {
+    pages: new Map(),
+    unmapped: [],
+    deletedPages: new Set(),
+    includerMap: buildIncluderMap(),
+  };
   collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own', target);
   if (hasBaseScope && !baseSkipReason) {
     collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base', target);
+    const reached = [...target.pages.values()].filter(hasBaseChanges).length;
+    baseSkipReason = baseFanOutSkipReason(baseLabel, reached);
+    if (baseSkipReason) {
+      console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
+      dropBaseScope(target.pages);
+    }
   }
 
   const { unmapped } = target;
@@ -709,11 +764,6 @@ function main() {
   );
 }
 
-/** True when any of a page's marked content comes from the base branch. */
-function hasBaseChanges(page) {
-  return page.baseNeedles.length > 0 || page.baseDeletions.length > 0;
-}
-
 /**
  * Appends a bounded bullet list, with a final "… and N more" line when the cap
  * cut it short, so a truncated listing is never mistaken for a complete one.
@@ -733,14 +783,14 @@ function pushCappedList(lines, items, cap, noun, render) {
  * unreachable in practice; it's here so an unforeseen combination degrades the
  * listing instead of failing the deployment on the comment step.
  */
-function capCommentLength(body) {
+function capCommentLength(body, footer = '') {
   if (body.length <= MAX_COMMENT_LENGTH) {
     return body;
   }
-  const notice = '\n_Listing truncated: the comment exceeded the maximum length._\n';
-  const budget = MAX_COMMENT_LENGTH - notice.length;
+  const tail = `\n_Listing truncated: the comment exceeded the maximum length._\n${footer}`;
+  const budget = MAX_COMMENT_LENGTH - tail.length;
   const cut = body.lastIndexOf('\n', budget);
-  return body.slice(0, cut > 0 ? cut : budget) + notice;
+  return body.slice(0, cut > 0 ? cut : budget) + tail;
 }
 
 function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
@@ -813,13 +863,17 @@ function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
     );
     lines.push('');
   }
-  lines.push(`_Built from ${buildSha}_`);
+  const footer = `_Built from ${buildSha}_`;
+  lines.push(footer);
   lines.push('');
-  return capCommentLength(lines.join('\n'));
+  // Keep the footer even when the listing above it has to be trimmed away.
+  return capCommentLength(lines.join('\n'), `\n${footer}\n`);
 }
 
 // Exported for the unit tests; everything else is exercised through main().
 export {
+  MAX_COMMENT_LENGTH,
+  baseFanOutSkipReason,
   baseScopeSkipReason,
   buildComment,
   capCommentLength,

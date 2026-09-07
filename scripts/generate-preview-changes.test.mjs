@@ -14,6 +14,8 @@ process.env.PREVIEW_URL = 'https://preview.example';
 process.env.GITHUB_SHA = 'deadbee';
 
 const {
+  MAX_COMMENT_LENGTH,
+  baseFanOutSkipReason,
   baseScopeSkipReason,
   buildComment,
   capCommentLength,
@@ -23,8 +25,6 @@ const {
   mergeScopes,
   resolveBaseRef,
 } = await import('./generate-preview-changes.mjs');
-
-const MAX_COMMENT_LENGTH = 65000;
 
 function page(overrides = {}) {
   return {
@@ -50,6 +50,7 @@ function target() {
   return {
     pages: new Map(),
     unmapped: [],
+    deletedPages: new Set(),
     includerMap: { byPath: new Map(), byBasename: new Map() },
   };
 }
@@ -79,6 +80,13 @@ test('baseScopeSkipReason stays quiet when the base branch changed nothing', () 
   // longer limited to main; there is nothing to explain if nothing diverged.
   assert.equal(baseScopeSkipReason('v25.1', 0), null);
   assert.equal(baseScopeSkipReason('docs/some-feature', 0), null);
+});
+
+test('baseFanOutSkipReason bounds what one changed shared file can reach', () => {
+  // _styling-section-theming-props.adoc is included by 116 pages, so a base
+  // branch changing that single file passes the file-count pre-check.
+  assert.equal(baseFanOutSkipReason('stacked-parent', 50), null);
+  assert.match(baseFanOutSkipReason('stacked-parent', 116), /reaches 116 pages/);
 });
 
 test('baseScopeSkipReason recognizes a maintenance branch by name', () => {
@@ -176,11 +184,13 @@ test('buildComment stays within what GitHub accepts', () => {
   assert.ok(comment.length <= MAX_COMMENT_LENGTH, `comment was ${comment.length} characters`);
 });
 
-test('capCommentLength truncates only when over the limit', () => {
+test('capCommentLength truncates only when over the limit, keeping the footer', () => {
   assert.equal(capCommentLength('short body'), 'short body');
-  const capped = capCommentLength('x'.repeat(MAX_COMMENT_LENGTH + 1000));
+  const capped = capCommentLength('x'.repeat(MAX_COMMENT_LENGTH + 1000), '\n_Built from abc_\n');
   assert.ok(capped.length <= MAX_COMMENT_LENGTH);
   assert.match(capped, /Listing truncated/);
+  // The build the comment refers to has to survive the trimming.
+  assert.match(capped, /_Built from abc_/);
 });
 
 test('collect keeps the base scope out of the own fields of a shared page', () => {
@@ -318,4 +328,42 @@ test('buildComment reports blue highlights on a page this PR also changed', () =
   );
   assert.match(comment, /highlighted in blue/);
   assert.match(comment, /also changed by the base branch/);
+});
+
+test('collect ignores a base branch change to a page this PR deletes', () => {
+  // The preview doesn't serve the page any more, so listing it as changed by
+  // the base branch would link to a page that 404s.
+  const t = target();
+  collect([entry('articles/components/accordion/index.adoc', { status: 'deleted' })], 'own', t);
+  collect(
+    [
+      entry('articles/components/accordion/index.adoc', {
+        addedLines: ['A paragraph the base branch adds to the doomed page.'],
+      }),
+    ],
+    'base',
+    t
+  );
+
+  assert.equal(t.pages.size, 0);
+  assert.deepEqual(
+    t.unmapped.map((u) => u.status),
+    ['deleted']
+  );
+});
+
+test('collect ignores shared content resolving onto a page this PR deletes', () => {
+  const t = target();
+  t.includerMap.byPath.set(
+    'articles/_shared.adoc',
+    new Set(['articles/kept/index.adoc', 'articles/dropped/index.adoc'])
+  );
+  collect([entry('articles/dropped/index.adoc', { status: 'deleted' })], 'own', t);
+  collect(
+    [entry('articles/_shared.adoc', { addedLines: ['A shared paragraph the base branch adds.'] })],
+    'base',
+    t
+  );
+
+  assert.deepEqual([...t.pages.keys()], ['kept']);
 });

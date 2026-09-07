@@ -772,10 +772,13 @@ function renderPanel(currentPage: ChangedPage | undefined) {
       window.location.assign(link.href);
     });
     item.appendChild(link);
-    if (page.status === null) {
+    // Say which pages will show blue, including the ones this pull request
+    // changed too — otherwise only base-only pages are recognizable as such.
+    const inherited = (page.baseNeedles?.length || 0) + (page.baseDeletions?.length || 0) > 0;
+    if (page.status === null || inherited) {
       const note = document.createElement('span');
       note.className = 'preview-diff-page-note';
-      note.textContent = ' — base branch';
+      note.textContent = page.status === null ? ' — base branch' : ' — also base branch';
       item.appendChild(note);
     }
     if (page === currentPage) {
