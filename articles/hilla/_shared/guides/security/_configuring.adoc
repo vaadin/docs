@@ -1,31 +1,31 @@
 // tag::content[]
 
-= Controlling Endpoint Access
+= Controlling Service Access
 
-When developing server-side views, endpoint access control is implemented using regular Java approaches: servlet-container-based security, third-party libraries, or session-based solutions.
+When developing server-side views, access control is implemented using regular Java approaches: servlet-container-based security, third-party libraries, or session-based solutions.
 
 This article describes all the pieces needed for securing client-centric applications.
 
-== Securing Server-Side Endpoints
+== Securing Browser-Callable Services
 
-The first step is to configure authorization of each endpoint that the application exposes.
+The first step is to configure authorization of each service that the application exposes.
 
-Consider the simple Hilla endpoint defined in the following class:
+Consider the simple browser-callable service defined in the following class:
 
-.`CounterEndpoint.java`
+.`CounterService.java`
 [source,java]
 ----
-@Endpoint
+@BrowserCallable
 @PermitAll
-public class CounterEndpoint {
+public class CounterService {
     public int addOne(int number) {
         return number + 1;
     }
 }
 ----
 
-Hilla access-control features are enabled by default for any endpoint method.
-If not specified in Java code explicitly, a [classname]`Principal` object must be present in the request before invoking an endpoint method.
+Hilla access-control features are enabled by default for any service method.
+If not specified in Java code explicitly, a [classname]`Principal` object must be present in the request before invoking a service method.
 The [methodname]`HttpServletRequest.getUserPrincipal()` Java API is used for the check.
 
 At this point, the servlet container or the application needs to be configured appropriately to handle user authentication.
@@ -37,7 +37,7 @@ endif::[]
 == Security Options
 
 By default, all anonymous and authenticated requests are denied.
-To change the default behavior, place a security Java annotation on either the endpoint class or the endpoint method.
+To change the default behavior, place a security Java annotation on either the service class or the service method.
 The following annotations are available:
 
 * [classname]`@PermitAll`
@@ -60,12 +60,12 @@ If there are multiple annotations specified on some entity, the following rules 
 
 Example:
 
-.`MyEndpoint.java`
+.`MyService.java`
 [source,java]
 ----
-@Endpoint
+@BrowserCallable
 @PermitAll
-public class MyEndpoint {
+public class MyService {
 
   @DenyAll
   public void deniedMethod() {
@@ -98,23 +98,23 @@ public class MyEndpoint {
 [[permissions]]
 == Defining User Permissions
 
-As mentioned in the previous section, every user can have roles and this may affect their ability to access some endpoint methods.
+As mentioned in the previous section, every user can have roles and this may affect their ability to access some service methods.
 This section explains how to specify these for each user.
 
-Hilla endpoints check the existence of roles by using the [methodname]`HttpServletRequest.isUserInRole(String)` Java API.
+Browser-callable services check the existence of roles by using the [methodname]`HttpServletRequest.isUserInRole(String)` Java API.
 
-After the servlet container has been configured to handle user authentication, when the server receives a request for the secured endpoint, the user and its roles are checked.
+After the servlet container has been configured to handle user authentication, when the server receives a request for the secured service, the user and its roles are checked.
 If everything is OK, the method is executed.
 
-== Accessing User Information in an Endpoint Method
+== Accessing User Information in a Service Method
 
-When access to the [classname]`UserPrincipal` is required in an endpoint, call the [methodname]`VaadinRequest.getCurrent()` method to access the `HttpServletRequest` API.
+When access to the [classname]`UserPrincipal` is required in a service, call the [methodname]`VaadinRequest.getCurrent()` method to access the `HttpServletRequest` API.
 
-.`EchoEndpoint.java`
+.`EchoService.java`
 [source,java]
 ----
-@Endpoint
-public class EchoEndpoint {
+@BrowserCallable
+public class EchoService {
     public String saySomething(String message) {
         return VaadinRequest.getCurrent().getUserPrincipal().getName() + " says: " + message;
     }
@@ -124,9 +124,9 @@ public class EchoEndpoint {
 .`frontend/index.ts`
 [source,typescript]
 ----
-import { EchoEndpoint } from 'Frontend/generated/EchoEndpoint';
+import { EchoService } from 'Frontend/generated/EchoService';
 
-EchoEndpoint
+EchoService
     .saySomething("It's snowing in Turku")
     .then(response => console.log(response));
 ----
@@ -136,9 +136,9 @@ EchoEndpoint
 If it's required to know, on the client side, whether a user is authenticated, please read <<{articles}/hilla/guides/security/authentication#, Checking Authentication>>.
 
 [[csrf]]
-== CSRF Protection of Hilla Endpoints
+== CSRF Protection of Browser-Callable Services
 
-Hilla endpoints are protected from Cross-Site Request Forgery (CSRF) attacks using the same approach as Vaadin.
+Browser-callable services are protected from Cross-Site Request Forgery (CSRF) attacks using the same approach as Vaadin.
 See https://vaadin.com/docs/latest/flow/security/vulnerabilities#cross-site-request-forgery-csrf-xsrf[Cross-Site Request Forgery] in the Vaadin Flow security guide for more details.
 
 // end::content[]

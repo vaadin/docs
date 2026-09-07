@@ -1,9 +1,9 @@
 package com.vaadin.demo.fusion.forms;
 
-import com.vaadin.hilla.Endpoint;
+import com.vaadin.hilla.BrowserCallable;
 
-@Endpoint
-public class ContactEndpoint {
+@BrowserCallable
+public class ContactService {
     // other endpoint methods: read, delete, ...
 
     public void saveContact(Contact contact) {
