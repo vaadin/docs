@@ -407,14 +407,23 @@ function highlightBlocks(page: ChangedPage, container: Element) {
   markNeedles(container, page.needles, false);
   markNeedles(container, page.baseNeedles || [], true);
 
-  // A list item and the paragraph inside it can both match; keep only the
-  // innermost match so the highlight is as precise as possible. Only a match of
-  // the same scope prunes its ancestor, so a change of this pull request is
-  // never dropped in favour of a base branch change nested inside it.
+  // The two scopes can match blocks nested in each other (the base branch
+  // changed a list item, this pull request the paragraph inside it). Wherever
+  // they overlap, this pull request's change wins: keeping both would draw a
+  // blue box around a green one and make n / p stop twice on the same content.
+  const ownSelector = `.${HIGHLIGHT_CLASS}:not(.${BASE_CLASS})`;
+  document.querySelectorAll(`.${HIGHLIGHT_CLASS}.${BASE_CLASS}`).forEach((el) => {
+    if (el.querySelector(ownSelector) || el.closest(ownSelector)) {
+      el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS);
+    }
+  });
+
+  // A list item and the paragraph inside it can both match within one scope;
+  // keep only the innermost match so the highlight is as precise as possible.
   document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
     const sameScope = el.classList.contains(BASE_CLASS)
       ? `.${HIGHLIGHT_CLASS}.${BASE_CLASS}`
-      : `.${HIGHLIGHT_CLASS}:not(.${BASE_CLASS})`;
+      : ownSelector;
     if (el.querySelector(sameScope)) {
       el.classList.remove(HIGHLIGHT_CLASS, BASE_CLASS);
     }

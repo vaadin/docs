@@ -17,7 +17,9 @@ const {
   baseScopeSkipReason,
   buildComment,
   capCommentLength,
+  collect,
   dedupeDeletions,
+  finalizePages,
   mergeScopes,
   resolveBaseRef,
 } = await import('./generate-preview-changes.mjs');
@@ -43,11 +45,40 @@ function deletion(text, before = 'anchor before', after = 'anchor after') {
   return { before, after, text: [text] };
 }
 
+/** Fresh collect() target with an empty include map (no partials resolve). */
+function target() {
+  return {
+    pages: new Map(),
+    unmapped: [],
+    includerMap: { byPath: new Map(), byBasename: new Map() },
+  };
+}
+
+/** A parseDiff entry for one changed file. */
+function entry(file, overrides = {}) {
+  return {
+    file,
+    status: 'modified',
+    addedLines: [],
+    added: 0,
+    removed: 0,
+    deletions: [],
+    ...overrides,
+  };
+}
+
 test('resolveBaseRef falls back to the default branch for a ref that is gone', () => {
   // A stacked pull request's base branch is deleted the moment the one below it
   // merges, and the event payload still names it.
   assert.equal(resolveBaseRef('origin/branch-that-does-not-exist'), 'origin/main');
   assert.equal(resolveBaseRef('HEAD'), 'HEAD');
+});
+
+test('baseScopeSkipReason stays quiet when the base branch changed nothing', () => {
+  // Every pull request against v24/v25.x reaches this now that previews are no
+  // longer limited to main; there is nothing to explain if nothing diverged.
+  assert.equal(baseScopeSkipReason('v25.1', 0), null);
+  assert.equal(baseScopeSkipReason('docs/some-feature', 0), null);
 });
 
 test('baseScopeSkipReason recognizes a maintenance branch by name', () => {
@@ -150,4 +181,141 @@ test('capCommentLength truncates only when over the limit', () => {
   const capped = capCommentLength('x'.repeat(MAX_COMMENT_LENGTH + 1000));
   assert.ok(capped.length <= MAX_COMMENT_LENGTH);
   assert.match(capped, /Listing truncated/);
+});
+
+test('collect keeps the base scope out of the own fields of a shared page', () => {
+  const t = target();
+  collect(
+    [
+      entry('articles/components/button/index.adoc', {
+        addedLines: ['A paragraph this pull request adds to the button page.'],
+        added: 1,
+      }),
+    ],
+    'own',
+    t
+  );
+  collect(
+    [
+      entry('articles/components/button/index.adoc', {
+        addedLines: ['A paragraph the base branch adds to the button page.'],
+        added: 5,
+        removed: 3,
+        deletions: [
+          {
+            removed: ['A paragraph the base branch removed from the button page.'],
+            beforeLines: ['A surviving paragraph just above it.'],
+            afterLines: [],
+          },
+        ],
+      }),
+    ],
+    'base',
+    t
+  );
+
+  const page = t.pages.get('components/button');
+  assert.equal(page.status, 'modified');
+  // Line counts and removal markers belong to the pull request alone.
+  assert.equal(page.added, 1);
+  assert.equal(page.removed, 0);
+  assert.equal(page.deletions.length, 0);
+  assert.equal(page.baseDeletions.length, 1);
+  assert.ok(page.needles.some((n) => n.includes('this pull request adds')));
+  assert.ok(!page.needles.some((n) => n.includes('the base branch adds')));
+  assert.ok(page.baseNeedles.some((n) => n.includes('the base branch adds')));
+});
+
+test('collect gives a page only the base branch changed a null status', () => {
+  const t = target();
+  collect(
+    [
+      entry('articles/flow/routing/index.adoc', {
+        addedLines: ['A paragraph only the base branch adds to the routing page.'],
+        added: 1,
+      }),
+    ],
+    'base',
+    t
+  );
+
+  const page = t.pages.get('flow/routing');
+  assert.equal(page.status, null);
+  assert.equal(page.added, 0);
+  assert.deepEqual(page.needles, []);
+  assert.ok(page.baseNeedles.length > 0);
+  assert.deepEqual(t.unmapped, []);
+});
+
+test('collect lets neither scope overwrite what the other recorded', () => {
+  const t = target();
+  collect(
+    [
+      entry('articles/components/badge/index.adoc', {
+        status: 'added',
+        addedLines: ['A brand new page introduced by this pull request.'],
+      }),
+      entry('articles/removed-page/index.adoc', { status: 'deleted' }),
+      entry('articles/_own-partial.adoc', {
+        addedLines: ['Text in a partial that nothing includes.'],
+      }),
+    ],
+    'own',
+    t
+  );
+  collect(
+    [
+      entry('articles/components/badge/index.adoc', {
+        addedLines: ['A line the base branch adds to that same new page.'],
+      }),
+      entry('articles/base-removed-page/index.adoc', { status: 'deleted' }),
+      entry('articles/_base-partial.adoc', {
+        addedLines: ['Text in another partial that nothing includes.'],
+      }),
+    ],
+    'base',
+    t
+  );
+
+  assert.equal(t.pages.get('components/badge').status, 'added');
+  // Only the own scope reports files that couldn't be mapped to a page.
+  assert.deepEqual(
+    t.unmapped.map((u) => u.file),
+    ['articles/removed-page/index.adoc', 'articles/_own-partial.adoc']
+  );
+});
+
+test('finalizePages drops a base-only page with nothing to show', () => {
+  const t = target();
+  collect(
+    [
+      entry('articles/flow/index.adoc', {
+        addedLines: ['A real paragraph added by the base branch.'],
+      }),
+      // An added AsciiDoc attribute registers the page but yields no needle, so
+      // there would be nothing to highlight on it.
+      entry('articles/attribute-only/index.adoc', { addedLines: [':toc-title: Contents'] }),
+    ],
+    'base',
+    t
+  );
+
+  assert.equal(t.pages.size, 2);
+  assert.deepEqual(
+    finalizePages(t.pages).map((page) => page.path),
+    ['flow']
+  );
+});
+
+test('buildComment reports blue highlights on a page this PR also changed', () => {
+  // The base branch's changes don't have to land on a page of their own; when
+  // they share a page with this PR's, the comment still has to explain the blue.
+  const comment = buildComment(
+    [page({ needles: ['own paragraph text'], baseNeedles: ['inherited paragraph text'] })],
+    [],
+    'stacked-parent',
+    null
+  );
+  assert.match(comment, /highlighted in blue/);
+  assert.match(comment, /also changed by the base branch/);
 });

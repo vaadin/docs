@@ -495,6 +495,11 @@ function buildIncluderMap() {
  * scope unusable — an old fork point on its own does not.
  */
 function baseScopeSkipReason(label, fileCount) {
+  if (fileCount === 0) {
+    // The base branch changed nothing that renders, so there is neither
+    // anything to mark nor anything to explain away.
+    return null;
+  }
   if (VERSION_BRANCH.test(label)) {
     return `${label} is a maintenance branch, not a stacked pull request branch`;
   }
@@ -522,6 +527,122 @@ function mergeScopes(page) {
       (d) => !ownDeletionKeys.has(deletionKey(d))
     ),
   };
+}
+
+/**
+ * Collects one diff into the shared page records. `scope` is 'own' for the
+ * changes of this pull request and 'base' for those inherited from the base
+ * branch; the two are kept in separate fields so the preview can tell them
+ * apart. Only the own scope carries page status, line counts and the list of
+ * files that couldn't be mapped to a page, which is what the PR comment
+ * reports on. `target` holds the accumulated pages, the unmapped files and the
+ * include map, so both scopes collect into the same records.
+ */
+function collect(entries, scope, { pages, unmapped, includerMap }) {
+  const isOwn = scope === 'own';
+  const needlesKey = isOwn ? 'needles' : 'baseNeedles';
+  const deletionsKey = isOwn ? 'deletions' : 'baseDeletions';
+
+  function pageFor(file, status) {
+    const pagePath = fileToPagePath(file);
+    if (!pages.has(pagePath)) {
+      pages.set(pagePath, {
+        path: pagePath,
+        file,
+        // Stays null for a page that only the base branch changed.
+        status: null,
+        added: 0,
+        removed: 0,
+        needles: [],
+        deletions: [],
+        baseNeedles: [],
+        baseDeletions: [],
+      });
+    }
+    const page = pages.get(pagePath);
+    if (isOwn && page.status === null) {
+      page.status = status;
+    }
+    return page;
+  }
+
+  // Resolves a changed partial or code example to the non-partial pages that
+  // (transitively) include it, and attaches its needles and deletions there.
+  function attachToIncluders(file, payload, seen = new Set()) {
+    if (seen.has(file)) {
+      return false;
+    }
+    seen.add(file);
+    // Prefer matching by full resolved path; fall back to basename for targets
+    // whose path could not be resolved when the map was built.
+    const includers =
+      includerMap.byPath.get(path.posix.normalize(file)) ||
+      includerMap.byBasename.get(path.posix.basename(file));
+    if (!includers || includers.size === 0) {
+      return false;
+    }
+    let attached = false;
+    for (const includer of includers) {
+      if (isPartial(includer)) {
+        attached = attachToIncluders(includer, payload, seen) || attached;
+      } else {
+        const page = pageFor(includer, 'includes-changes');
+        page[needlesKey].push(...payload.needles);
+        page[deletionsKey].push(...payload.deletions);
+        attached = true;
+      }
+    }
+    return attached;
+  }
+
+  const sharedEntries = [];
+  for (const entry of entries) {
+    const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
+    if (isArticle && !isPartial(entry.file)) {
+      if (entry.status === 'deleted') {
+        if (isOwn) {
+          unmapped.push({ file: entry.file, status: 'deleted' });
+        }
+        continue;
+      }
+      const page = pageFor(entry.file, entry.status);
+      if (isOwn) {
+        page.status = entry.status;
+        page.added += entry.added;
+        page.removed += entry.removed;
+      }
+      const payload = payloadFor(entry);
+      page[needlesKey].push(...payload.needles);
+      page[deletionsKey].push(...payload.deletions);
+    } else {
+      sharedEntries.push(entry);
+    }
+  }
+
+  // Partials and code examples are resolved after direct page changes so their
+  // content merges into already-registered pages instead of duplicating them.
+  for (const entry of sharedEntries) {
+    if (entry.status === 'deleted') {
+      if (isOwn) {
+        unmapped.push({ file: entry.file, status: 'deleted' });
+      }
+      continue;
+    }
+    if (!attachToIncluders(entry.file, payloadFor(entry)) && isOwn) {
+      unmapped.push({ file: entry.file, status: entry.status });
+    }
+  }
+}
+/**
+ * Turns the collected records into the manifest's page list: the two scopes are
+ * merged, base-only pages left with nothing to show after deduplication are
+ * dropped, and the rest are ordered by path.
+ */
+function finalizePages(pages) {
+  return [...pages.values()]
+    .map(mergeScopes)
+    .filter((p) => p.status !== null || p.baseNeedles.length > 0 || p.baseDeletions.length > 0)
+    .sort((a, b) => a.path.localeCompare(b.path));
 }
 
 function main() {
@@ -554,126 +675,14 @@ function main() {
     console.log(`Not marking the base branch's changes: ${baseSkipReason}`);
   }
 
-  const includerMap = buildIncluderMap();
-
-  // path -> page record
-  const pages = new Map();
-  const unmapped = [];
-
-  /**
-   * Collects one diff into the shared page records. `scope` is 'own' for the
-   * changes of this pull request and 'base' for those inherited from the base
-   * branch; the two are kept in separate fields so the preview can tell them
-   * apart. Only the own scope carries page status, line counts and the list of
-   * files that couldn't be mapped to a page, which is what the PR comment
-   * reports on.
-   */
-  function collect(entries, scope) {
-    const isOwn = scope === 'own';
-    const needlesKey = isOwn ? 'needles' : 'baseNeedles';
-    const deletionsKey = isOwn ? 'deletions' : 'baseDeletions';
-
-    function pageFor(file, status) {
-      const pagePath = fileToPagePath(file);
-      if (!pages.has(pagePath)) {
-        pages.set(pagePath, {
-          path: pagePath,
-          file,
-          // Stays null for a page that only the base branch changed.
-          status: null,
-          added: 0,
-          removed: 0,
-          needles: [],
-          deletions: [],
-          baseNeedles: [],
-          baseDeletions: [],
-        });
-      }
-      const page = pages.get(pagePath);
-      if (isOwn && page.status === null) {
-        page.status = status;
-      }
-      return page;
-    }
-
-    // Resolves a changed partial or code example to the non-partial pages that
-    // (transitively) include it, and attaches its needles and deletions there.
-    function attachToIncluders(file, payload, seen = new Set()) {
-      if (seen.has(file)) {
-        return false;
-      }
-      seen.add(file);
-      // Prefer matching by full resolved path; fall back to basename for targets
-      // whose path could not be resolved when the map was built.
-      const includers =
-        includerMap.byPath.get(path.posix.normalize(file)) ||
-        includerMap.byBasename.get(path.posix.basename(file));
-      if (!includers || includers.size === 0) {
-        return false;
-      }
-      let attached = false;
-      for (const includer of includers) {
-        if (isPartial(includer)) {
-          attached = attachToIncluders(includer, payload, seen) || attached;
-        } else {
-          const page = pageFor(includer, 'includes-changes');
-          page[needlesKey].push(...payload.needles);
-          page[deletionsKey].push(...payload.deletions);
-          attached = true;
-        }
-      }
-      return attached;
-    }
-
-    const sharedEntries = [];
-    for (const entry of entries) {
-      const isArticle = entry.file.startsWith('articles/') && isAdoc(entry.file);
-      if (isArticle && !isPartial(entry.file)) {
-        if (entry.status === 'deleted') {
-          if (isOwn) {
-            unmapped.push({ file: entry.file, status: 'deleted' });
-          }
-          continue;
-        }
-        const page = pageFor(entry.file, entry.status);
-        if (isOwn) {
-          page.status = entry.status;
-          page.added += entry.added;
-          page.removed += entry.removed;
-        }
-        const payload = payloadFor(entry);
-        page[needlesKey].push(...payload.needles);
-        page[deletionsKey].push(...payload.deletions);
-      } else {
-        sharedEntries.push(entry);
-      }
-    }
-
-    // Partials and code examples are resolved after direct page changes so their
-    // content merges into already-registered pages instead of duplicating them.
-    for (const entry of sharedEntries) {
-      if (entry.status === 'deleted') {
-        if (isOwn) {
-          unmapped.push({ file: entry.file, status: 'deleted' });
-        }
-        continue;
-      }
-      if (!attachToIncluders(entry.file, payloadFor(entry)) && isOwn) {
-        unmapped.push({ file: entry.file, status: entry.status });
-      }
-    }
-  }
-
-  collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own');
+  const target = { pages: new Map(), unmapped: [], includerMap: buildIncluderMap() };
+  collect(parseDiff(diffBetween(mergeBase, 'HEAD')), 'own', target);
   if (hasBaseScope && !baseSkipReason) {
-    collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base');
+    collect(parseDiff(diffBetween(baseFork, mergeBase)), 'base', target);
   }
 
-  const pageList = [...pages.values()]
-    .map(mergeScopes)
-    // Drop base-only pages left with nothing to show after deduplication.
-    .filter((p) => p.status !== null || p.baseNeedles.length > 0 || p.baseDeletions.length > 0)
-    .sort((a, b) => a.path.localeCompare(b.path));
+  const { unmapped } = target;
+  const pageList = finalizePages(target.pages);
 
   const manifest = {
     base: mergeBase,
@@ -691,11 +700,18 @@ function main() {
 
   fs.writeFileSync(COMMENT_PATH, buildComment(pageList, unmapped, baseLabel, baseSkipReason));
 
-  const basePages = pageList.filter((p) => p.status === null).length;
+  const baseOnlyPages = pageList.filter((p) => p.status === null).length;
+  const pagesWithBaseChanges = pageList.filter(hasBaseChanges).length;
   console.log(
-    `Wrote ${MANIFEST_PATH}: ${pageList.length - basePages} changed page(s), ` +
-      `${basePages} page(s) changed by the base branch, ${unmapped.length} unmapped file(s)`
+    `Wrote ${MANIFEST_PATH}: ${pageList.length - baseOnlyPages} changed page(s), ` +
+      `${pagesWithBaseChanges} page(s) with base branch changes (${baseOnlyPages} of them ` +
+      `only from the base branch), ${unmapped.length} unmapped file(s)`
   );
+}
+
+/** True when any of a page's marked content comes from the base branch. */
+function hasBaseChanges(page) {
+  return page.baseNeedles.length > 0 || page.baseDeletions.length > 0;
 }
 
 /**
@@ -741,7 +757,7 @@ function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
     lines.push('#### Changed pages');
     lines.push('');
     lines.push('Added content is highlighted in green; removed content is marked in red on each page.');
-    if (basePages.length > 0) {
+    if (pageList.some(hasBaseChanges)) {
       lines.push('Changes inherited from the base branch are highlighted in blue.');
     }
     lines.push('');
@@ -753,7 +769,10 @@ function buildComment(pageList, unmapped, baseLabel, baseSkipReason) {
           : `${page.status}, +${page.added}/-${page.removed} lines`;
       const removals =
         page.deletions.length > 0 ? `, ${page.deletions.length} removal marker(s)` : '';
-      return `[${page.path || 'front page'}](${url}) — ${base}${removals}`;
+      // Say so where the page also shows blue, so the highlighting on it is
+      // never unexplained: the base branch touched it too.
+      const inherited = hasBaseChanges(page) ? ', also changed by the base branch' : '';
+      return `[${page.path || 'front page'}](${url}) — ${base}${removals}${inherited}`;
     });
     lines.push('');
   } else {
@@ -804,7 +823,9 @@ export {
   baseScopeSkipReason,
   buildComment,
   capCommentLength,
+  collect,
   dedupeDeletions,
+  finalizePages,
   mergeScopes,
   resolveBaseRef,
 };
