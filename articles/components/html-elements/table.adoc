@@ -1,0 +1,321 @@
+---
+title: Table
+page-title: Table component for semantic HTML tables | Vaadin components
+description: Components for building semantic HTML tables in Flow, with captions, sections, column groups, spanning cells, and signal-bound rows.
+meta-description: Build semantic, accessible HTML tables in Vaadin Flow using the Table component family, with captions, sections, column groups, and cell spans.
+order: 10
+section-nav: badge-flow
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Table# [badge-flow]#Flow#
+
+// tag::description[]
+The Table component family renders a standard HTML `table` element, together with its caption, column groups, sections, rows, and cells.
+// end::description[]
+
+[NOTE]
+Table is low-level and flexible, which suits smaller data sets that are part of the page -- a specification list, a comparison of plans, a summary of figures. For lazy loading, large data sets, sorting, filtering, and inline editing, use <<{articles}/components/grid#,Grid>>, <<{articles}/components/grid-pro#,Grid Pro>>, or <<{articles}/components/tree-grid#,Tree Grid>> instead.
+
+
+== Basic Usage
+
+A table is created with [classname]`Table` and filled through its row factories. Each factory creates the row -- and the section that contains it -- and attaches it in a single call.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/htmlelements/TableBasic.java[render,tags=snippet,indent=0]
+----
+--
+
+[methodname]`setCaptionText()` adds a `caption` element, [methodname]`addHeaderRow()` adds a row of `th scope="col"` cells to the `thead`, and [methodname]`addRowWithHeader()` adds a `tbody` row that starts with a `th scope="row"` cell. The example above produces this markup:
+
+[source,html]
+----
+<table>
+  <caption>Data about the planets of our solar system</caption>
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Mass (10^24 kg)</th>
+      <th scope="col">Diameter (km)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Mercury</th>
+      <td>0.330</td>
+      <td>4,879</td>
+    </tr>
+    <!-- ... -->
+  </tbody>
+</table>
+----
+
+
+== Table Structure
+
+The family has one component per table element:
+
+[cols="3,2,6",options=header]
+|===
+| Component | HTML Element | Description
+
+| [classname]`Table` | `table` | The table itself. Holds an optional caption, any number of column groups, an optional head, one or more bodies, and an optional foot.
+| [classname]`TableCaption` | `caption` | The table's title, which gives the table an accessible description.
+| [classname]`TableColumnGroup` | `colgroup` | A group of columns, used to apply attributes -- most often a CSS class -- to several columns at once.
+| [classname]`TableColumn` | `col` | A single column, or a band of columns when it carries a span.
+| [classname]`TableHead` | `thead` | The rows that make up the head of the table.
+| [classname]`TableBody` | `tbody` | A group of rows that make up a body of the table.
+| [classname]`TableFoot` | `tfoot` | The rows that make up the foot of the table, typically summaries.
+| [classname]`TableRow` | `tr` | A row of cells.
+| [classname]`TableCell` | -- | The abstract base class of the two cell types.
+| [classname]`TableHeaderCell` | `th` | A header cell, which labels a row, a column, or a group of either.
+| [classname]`TableDataCell` | `td` | A data cell.
+|===
+
+There is no generic [methodname]`add(Component)` on [classname]`Table`, [classname]`TableHead`, [classname]`TableBody`, [classname]`TableFoot`, or [classname]`TableRow`. Children go in through the typed accessors and factories described below.
+
+The HTML specification requires the children of a `table` to appear in a fixed order: the caption first, then the column groups, then the head, bodies, and foot. [classname]`Table` inserts each child at the position that order calls for, whatever order the calls are made in, so a caption added last still renders first.
+
+
+=== Caption
+
+[methodname]`setCaptionText()` sets the caption's text, creating the `caption` element if the table doesn't have one. For a caption that contains components rather than plain text, use [methodname]`addCaption()`:
+
+[source,java]
+----
+table.addCaption(new Emphasis("Q1"), new Span(" revenue by region"));
+----
+
+[methodname]`getCaption()` returns the caption, creating one if the table has none. To inspect a table without changing it, use [methodname]`hasCaption()` or [methodname]`getCaptionText()`. [methodname]`removeCaption()` removes it.
+
+
+=== Head, Body, and Foot
+
+[methodname]`getHead()`, [methodname]`getBody()`, and [methodname]`getFoot()` return the corresponding section, creating it if the table doesn't have one. Addressing sections directly is useful when a section has to be styled, bound to a signal, or filled with rows built elsewhere.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/htmlelements/TableSections.java[render,tags=snippet,indent=0]
+----
+--
+
+Most code never has to name a section. [methodname]`addRow()`, [methodname]`addRowWithHeader()`, [methodname]`addHeaderRow()`, and [methodname]`addFooterRow()` on [classname]`Table` create the enclosing `tbody`, `thead`, or `tfoot` on demand, and [methodname]`getHeaderRows()`, [methodname]`getBodyRows()`, [methodname]`getFooterRows()`, [methodname]`getAllRows()`, and [methodname]`removeRow()` read and remove rows without naming a section either.
+
+As with the caption, [methodname]`hasHead()` and [methodname]`hasFoot()` inspect the table without creating anything, and [methodname]`removeHead()` and [methodname]`removeFoot()` remove the sections.
+
+
+=== Multiple Bodies
+
+A table may have several `tbody` elements, which is a way to group rows -- for example, one body per region -- and to bound the reach of a `rowspan`. [methodname]`addBody()` appends a new body and returns it, [methodname]`getBodies()` lists them, and [methodname]`removeBody()` removes one. The row factories on [classname]`Table` always append to the first body; to append to another, call [methodname]`addRow()` on the body itself.
+
+[source,java]
+----
+TableBody northern = table.addBody();
+northern.addRow().addDataCells("Helsinki", "612,664");
+
+TableBody southern = table.addBody();
+southern.addRow().addDataCells("Cape Town", "433,688");
+----
+
+
+== Rows and Cells
+
+[classname]`TableRow` offers a factory for each kind of cell. The single-cell factories return the new cell, so it can be configured further; the plural ones return the row, so calls can be chained.
+
+[cols="4,3,5",options=header]
+|===
+| Method | Produces | Notes
+
+| [methodname]`addDataCell()` | `td` | Overloads take a text, a [interfacename]`Signal<String>`, or components.
+| [methodname]`addDataCells()` | `td` per text | Returns the row.
+| [methodname]`addHeaderCell()` | `th` | No `scope` attribute; the browser infers one.
+| [methodname]`addRowHeaderCell()` | `th scope="row"` | Labels the rest of the row.
+| [methodname]`addColumnHeaderCell()` | `th scope="col"` | Labels the column below.
+| [methodname]`addColumnHeaderCells()` | `th scope="col"` per text | Returns the row.
+| [methodname]`addRowGroupHeaderCell()` | `th scope="rowgroup"` | An overload also takes a `rowspan`.
+| [methodname]`addColumnGroupHeaderCell()` | `th scope="colgroup"` | An overload also takes a `colspan`.
+| [methodname]`insertDataCell()`, [methodname]`insertHeaderCell()` | `td`, `th` | Insert at a given position.
+|===
+
+[methodname]`getCells()`, [methodname]`getDataCells()`, and [methodname]`getHeaderCells()` read a row's cells back.
+
+A cell holds flow content, so any component may go inside one, including a button or a field.
+
+[source,java]
+----
+TableRow row = table.addRow();
+row.addRowHeaderCell("Invoice #1042");
+row.addDataCell(new Button("Download", event -> download(1042)));
+----
+
+
+=== Header Cell Scope
+
+The `scope` attribute on a `th` states which cells the header labels, and it's what lets a screen reader read out the right header when the user moves into a data cell. The scoped factories set it, and [methodname]`setScope()` sets it explicitly with a value from the [classname]`TableHeaderCell.Scope` enum: `ROW`, `COL`, `ROWGROUP`, `COLGROUP`, or `AUTO`.
+
+Leaving the scope unset -- as [methodname]`addHeaderCell()` does -- leaves the browser to infer it from the table structure, which is adequate for a simple table with a single header row. Set it explicitly for anything more involved.
+
+
+== Spanning Cells
+
+[methodname]`setColspan()` and [methodname]`setRowspan()` on [classname]`TableCell` make a cell reach across several columns or rows. Both have [methodname]`hasColspan()` and [methodname]`resetColspan()` counterparts, so an explicit `colspan="1"` can be told apart from no attribute at all.
+
+A `colspan` has to be a positive integer. A `rowspan` may also be `0`, which carries its HTML meaning: the cell reaches to the end of the row group it belongs to.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/htmlelements/TableSpanningCells.java[render,tags=snippet,indent=0]
+----
+--
+
+
+=== Associating Cells with Headers
+
+In a table where scope alone can't say which headers apply to a cell, the `headers` attribute names them by id. [methodname]`setHeaders()` takes the header cells themselves and writes their ids, and [methodname]`setHeaderIds()` takes the ids directly. The referenced cells must have an id.
+
+[source,java]
+----
+TableHeaderCell mass = new TableHeaderCell("Mass");
+mass.setId("mass");
+TableHeaderCell metric = new TableHeaderCell("Metric");
+metric.setId("metric");
+
+TableDataCell cell = row.addDataCell("5.97");
+cell.setHeaders(mass, metric);
+----
+
+[methodname]`getHeaderIds()` reads the ids back, and [methodname]`resetHeaders()` removes the attribute.
+
+
+== Column Groups
+
+A `colgroup` applies attributes to whole columns at once, which is the least repetitive way to give a column a width or a background. Only a few CSS properties apply to columns: `background`, `border` (with `border-collapse: collapse`), `visibility: collapse`, and `width`.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/htmlelements/TableColumnGroups.java[render,tags=snippet,indent=0]
+----
+--
+
+The example uses a `col` with a span of 2 to skip past the first two columns, then a `col` carrying a CSS class for the third. The class is styled with ordinary CSS:
+
+[source,css]
+----
+col.highlight {
+  background-color: var(--vaadin-background-container-strong);
+}
+----
+
+Per the HTML specification, a `colgroup` is used in one of two modes: either it carries a `span` attribute and has no children, or it contains `col` children and has no `span`. [classname]`TableColumnGroup` enforces this -- adding a column to a group that carries a span throws [classname]`IllegalStateException`, as does setting a span on a group that already has columns. Call [methodname]`resetSpan()` or [methodname]`removeAll()` first to switch between the modes.
+
+
+== Binding Rows to a Signal
+
+[classname]`TableHead`, [classname]`TableBody`, and [classname]`TableFoot` support [methodname]`bindChildren()`, so a section's rows can track a [classname]`ListSignal` instead of being rebuilt by hand. Rows are added, removed, and reordered as the signal changes.
+
+[.example]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/htmlelements/TableSignalRows.java[render,tags=snippet,indent=0]
+----
+--
+
+Individual cells and captions can track a signal too: the [classname]`TableCaption`, [classname]`TableDataCell`, and [classname]`TableHeaderCell` constructors, and the cell factories on [classname]`TableRow`, all have an overload that takes a [interfacename]`Signal<String>`.
+
+[source,java]
+----
+row.addDataCell(unreadCount.map(String::valueOf));
+----
+
+Column groups are an exception: [methodname]`bindChildren()` on [classname]`TableColumnGroup` throws [classname]`UnsupportedOperationException`, because a binding would bypass the rule that keeps `span` and `col` children mutually exclusive. See <<{articles}/flow/ui-state/building-ui#,Component Bindings>> for more about signal bindings.
+
+
+== Styling
+
+A table renders as plain HTML, so it inherits nothing from the Vaadin theme and is styled with ordinary CSS. A class name on the table, a section, or a column group is usually the most convenient hook:
+
+[source,java]
+----
+table.setClassName("pricing-table");
+----
+
+[source,css]
+----
+.pricing-table {
+  border-collapse: collapse;
+}
+
+.pricing-table :is(th, td) {
+  border: 1px solid var(--vaadin-border-color);
+  padding: var(--vaadin-padding-xs) var(--vaadin-padding-s);
+  text-align: start;
+}
+----
+
+
+== Testing
+
+The `flow-html-components-testbench` module provides [classname]`TableElement` and a matching element class for each component in the family. See <<{articles}/flow/testing#,Testing>> for how to set up TestBench.
+
+Two methods on [classname]`TableElement` are worth knowing apart. [methodname]`getCell(row, column)` counts cells as they were written, which stops matching what's on screen as soon as spans are involved. [methodname]`getCellCovering(row, column)` counts the positions a reader sees, so a spanning cell is returned for every slot it reaches, and [methodname]`getColumnCount()` reports how wide the table is once spans are resolved. Both index rows across the whole table: the head rows first, then the rows of each body, then the foot rows.
+
+Applied to the "Units sold by category" table above, which sets the id `sales`, the "Oranges" row writes no cell of its own in the first column -- the "Fruit" header spans into it:
+
+[source,java]
+----
+TableElement table = $(TableElement.class).id("sales");
+
+Assert.assertEquals(3, table.getColumnCount());
+Assert.assertEquals("Fruit", table.getCellCovering(2, 0).getText());
+----
+
+
+== Migrating from Native Table
+
+The [classname]`NativeTable` family is deprecated as of Vaadin 25.3 and is scheduled for removal in Vaadin 26. Each class has a direct replacement:
+
+[cols="1,1",options=header]
+|===
+| Deprecated | Replacement
+
+| [classname]`NativeTable` | [classname]`Table`
+| [classname]`NativeTableCaption` | [classname]`TableCaption`
+| [classname]`NativeTableHeader` | [classname]`TableHead`
+| [classname]`NativeTableBody` | [classname]`TableBody`
+| [classname]`NativeTableFooter` | [classname]`TableFoot`
+| [classname]`NativeTableRow` | [classname]`TableRow`
+| [classname]`NativeTableHeaderCell` | [classname]`TableHeaderCell`
+| [classname]`NativeTableCell` | [classname]`TableDataCell`
+|===
+
+The TestBench element classes follow the same pattern: [classname]`NativeTableElement` becomes [classname]`TableElement`, [classname]`NativeTableCellElement` becomes [classname]`TableDataCellElement`, and so on.
+
+Migration isn't a pure rename, because the new types are stricter. The old components all extended [classname]`HtmlContainer` and accepted any child, so code that relied on the generic [methodname]`add(Component)` has to move to a typed factory or accessor -- for example, `nativeTable.add(new NativeTableRow())` becomes `table.addRow()`, and `nativeTable.add(caption)` becomes `table.setCaption(caption)`. In exchange, the new family adds `colgroup` and `col` support, cell factories that set `scope`, spans with `colspan` and `rowspan`, the `headers` attribute, and signal bindings.
+
+
+== Related Components
+
+[cols="1,2"]
+|===
+|Component |Usage Recommendation
+
+|<<{articles}/components/grid#,Grid>>
+|For displaying, sorting, filtering, and lazily loading application data.
+
+|<<{articles}/components/grid-pro#,Grid Pro>>
+|For a data grid with inline editing.
+
+|<<{articles}/components/tree-grid#,Tree Grid>>
+|For hierarchical data.
+|===

@@ -7,7 +7,7 @@ import { Binder } from '@vaadin/hilla-lit-form';
 import type { UploadBeforeEvent } from '@vaadin/upload';
 import type Contact from 'Frontend/generated/com/vaadin/demo/fusion/forms/Contact';
 import ContactModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/ContactModel';
-import { ContactEndpoint } from 'Frontend/generated/endpoints';
+import { ContactService } from 'Frontend/generated/endpoints';
 
 @customElement('contact-form')
 export class ContactForm extends LitElement {
@@ -41,6 +41,6 @@ export class ContactForm extends LitElement {
   }
 
   async save() {
-    await this.binder.submitTo(ContactEndpoint.saveContact);
+    await this.binder.submitTo(ContactService.saveContact);
   }
 }

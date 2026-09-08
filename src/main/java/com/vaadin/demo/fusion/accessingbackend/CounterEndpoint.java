@@ -5,7 +5,7 @@ import com.vaadin.hilla.Endpoint;
 
 // tag::snippet[]
 /**
- * An endpoint that counts numbers.
+ * A browser-callable service that counts numbers.
  */
 @Endpoint
 @AnonymousAllowed
