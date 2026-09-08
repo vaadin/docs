@@ -1,7 +1,7 @@
 package com.vaadin.demo.fusion.reactive;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.hilla.Endpoint;
+import com.vaadin.hilla.BrowserCallable;
 import com.vaadin.hilla.EndpointSubscription;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -11,11 +11,11 @@ import reactor.core.publisher.Flux;
 import java.time.Duration;
 import java.util.Date;
 
-@Endpoint
-public class ReactiveEndpoint {
+@BrowserCallable
+public class ReactiveService {
 
     private static final Logger LOGGER = LoggerFactory
-            .getLogger(ReactiveEndpoint.class);
+            .getLogger(ReactiveService.class);
 
     // tag::snippet[]
     @AnonymousAllowed

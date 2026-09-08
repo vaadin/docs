@@ -1,17 +1,17 @@
 package com.vaadin.demo.fusion.accessingbackend;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.hilla.Endpoint;
+import com.vaadin.hilla.BrowserCallable;
 
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * A Vaadin endpoint that shows principles of work with entities.
+ * A browser-callable service that shows principles of work with entities.
  */
-@Endpoint
+@BrowserCallable
 @AnonymousAllowed
-public class CountryEndpoint {
+public class CountryService {
     private final List<City> cities = Arrays.asList(
             new City("Turku", "Finland"), new City("Berlin", "Germany"),
             new City("London", "UK"), new City("New York", "USA"));

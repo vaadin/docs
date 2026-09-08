@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class FileDownloadEndpoint {
+public class FileDownloadController {
 
     // tag::snippet[]
     @RequestMapping(value = "/download/{id}", method = RequestMethod.GET)
