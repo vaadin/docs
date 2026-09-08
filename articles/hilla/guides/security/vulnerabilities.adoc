@@ -5,7 +5,6 @@ description: Dealing with vulnerabilities, such as SQL injection, cross-site req
 meta-description: Explore best practices to address and mitigate security vulnerabilities in Hilla applications.
 order: 150
 ---
-// tag::content[]
 
 = Common Vulnerabilities
 
@@ -16,29 +15,29 @@ Instead, the choice of backend framework (for example, Spring Data) is left to t
 Hilla doesn't provide mitigation for SQL injections.
 This is left to the backend provider and developer.
 
-// TODO what XSS section?
-However, SQL injections can be completely blocked in Hilla applications by following the data validation and escaping guidelines (see the XSS section), as well as standard secure database access practices.
+However, SQL injections can be completely blocked in Hilla applications by validating and escaping data as described in <<best-practices#, Security Best Practices>>, as well as by following standard secure database access practices.
 
-Most providers have their own ways of dealing with injections out of the box and we recommend that developers follow these guides.
-However, if the developer uses pure JDBC, they will have to deal with injection risks themselves.
+Most providers have their own ways of dealing with injections out of the box, and following those guides is recommended.
+However, if the developer uses pure JDBC, they have to deal with injection risks themselves.
 Here is an example of pure JDBC, demonstrating SQL-injection mitigation using the value from a Text Field in a prepared statement:
 
-// TODO React equivalent
 [.example]
 --
-.`ValueChangeView.ts`
-[source,typescript]
+.`name-view.tsx`
+[source,tsx]
 ----
-class ValueChangedView extends LitElement {
-  render() {
-    return html`
-      <vaadin-text-field label="Your name" @value-changed="${this.nameChanged}"></vaadin-text-field>
-    `;
-  }
+import { TextField, type TextFieldValueChangedEvent } from '@vaadin/react-components';
+import { NameService } from 'Frontend/generated/endpoints';
 
-  private nameChanged(event: CustomEvent) {
-    nameService.updateName(event.detail.value)
-  }
+export default function NameView() {
+  return (
+    <TextField
+      label="Your name"
+      onValueChanged={(event: TextFieldValueChangedEvent) =>
+        NameService.updateName(event.detail.value)
+      }
+    />
+  );
 }
 ----
 .`NameService.java`
@@ -73,19 +72,7 @@ public class NameService {
 
 All requests between the client and the server have a user-session-specific CSRF token included.
 All communication between the server and the client is handled by Vaadin, so you don't need to remember to include and verify the CSRF tokens manually.
-
-The CSRF token is passed inside the JSON message in the request body:
-
-----
-Sending xhr message to server:
-{"csrfToken":"0bd61cf8-0231-455b-b39a-434f054352c5","rpc":[{"type":"mSync","node":5,"feature":1,"property":"invalid","value":false},{"type":"publishedEventHandler","node":9,"templateEventMethodName":"confirmUpdate","templateEventMethodArgs":[0]}],"syncId":0,"clientId":0}
-----
-
-When Vaadin services requests, the CSRF token is passed in the `X-CSRF-Token` HTTP header:
-
-----
-X-CSRF-Token: 0bd61cf8-0231-455b-b39a-434f054352c5
-----
+See <<configuring#csrf, CSRF Protection of Browser-Callable Services>> for more information.
 
 The CSRF token mechanism can be overridden on the server, for example to enable repeatable load test scripts using Gatling or similar tools.
 This is strongly discouraged when running in production.
@@ -102,5 +89,3 @@ Vaadin has published a link:https://vaadin.com/security/2018-11-13[security aler
 
 The vulnerability cannot be fixed in Vaadin.
 Developers need to mitigate the risk using methods described in the alert appendices.
-
-// end::content[]
