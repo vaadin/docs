@@ -94,14 +94,14 @@ class Footer extends LitElement {
   @state()
   private topicId: number | null = null;
 
+  private embedScript: HTMLScriptElement | null = null;
+
   private static readonly FORUM_URL = window.location.hostname == 'vaadin.com' ? 'https://vaadin.com/forum/' : 'https://preview.vaadin.com/forum/';
 
   connectedCallback() {
     super.connectedCallback();
 
-    const discussionId = document
-      .querySelector('.discussion-id')
-      ?.textContent?.trim();
+    const discussionId = document.querySelector('.discussion-id')?.textContent?.trim();
 
     if (discussionId && process.env.NODE_ENV !== 'development') {
       this.resolveTopicId(discussionId);
@@ -124,31 +124,23 @@ class Footer extends LitElement {
       console.error('Discourse resolve failed:', err);
     }
   }
-  
-  protected async updated(changed: Map<string, unknown>) {
-    super.updated(changed);
-    
-    if (!changed.has('topicId') || this.topicId === null) return;
-    
-    const topicId = this.topicId;
-    await this.updateComplete;
 
-    if (document.querySelector(
-      `script[src="${Footer.FORUM_URL}javascripts/embed.js"]`
-    )) return;
+  private discourseEmbedScript() {
+    if (this.embedScript) return this.embedScript;
 
-    window.DiscourseEmbed = {
+    (window as any).DiscourseEmbed = {
       discourseUrl: Footer.FORUM_URL,
-      topicId
+      topicId: this.topicId,
     };
-    const d = document.createElement('script');
-    d.async = true;
-    d.src = Footer.FORUM_URL + 'javascripts/embed.js';
-    document.head.appendChild(d);
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `${Footer.FORUM_URL}javascripts/embed.js`;
+    this.embedScript = script;
+    return script;
   }
-    
+
   render() {
-    // Don't render discussions in development builds or if no discussion ID is set
     if (process.env.NODE_ENV === 'development' || !this.topicId) {
       return nothing;
     }
@@ -160,7 +152,6 @@ class Footer extends LitElement {
           padding: 2rem 0;
           border-top: 1px solid var(--docs-divider-color-1);
         }
-
         .discussion-wrapper p b {
           color: var(--docs-heading-text-color);
         }
@@ -171,6 +162,7 @@ class Footer extends LitElement {
         </p>
         <div id="discourse-comments"></div>
       </section>
+      ${this.discourseEmbedScript()}
     `;
   }
 }
