@@ -1,6 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
+import React from 'react'; // hidden-source-line
 // tag::snippet[]
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { TextField, type TextFieldValueChangedEvent } from '@vaadin/react-components';
 
 function Example() {
