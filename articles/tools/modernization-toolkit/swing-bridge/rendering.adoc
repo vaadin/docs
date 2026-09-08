@@ -1,0 +1,104 @@
+---
+title: Display and Rendering
+page-title: SwingBridge Display and Rendering | Vaadin Tools
+description: The virtual screen SwingBridge reports, HiDPI rendering, and the back-buffer format.
+meta-description: Configure the virtual screen SwingBridge advertises to a Swing application, HiDPI oversampling, and the back-buffer pixel format.
+order: 5
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+[[swing-bridge.rendering]]
+= Display and Rendering
+
+A hosted Swing application still asks AWT how big the screen is and what pixel format to use, and there is no physical screen to answer with. SwingBridge answers on its behalf. Three system properties control those answers; the defaults are chosen so that no deployment has to set any of them.
+
+[cols="3,2,5", options="header"]
+|===
+|Property |Default |What it decides
+
+|`swingbridge.screenSize`
+|`per-user`
+|The screen size reported to the Swing application.
+
+|`swingbridge.hidpi`
+|`off`
+|Whether the back buffer is rendered at the browser's device pixel ratio.
+
+|`swingbridge.backBufferType`
+|`adaptive`
+|The pixel format of each window's back buffer.
+|===
+
+
+[[swing-bridge.rendering.screen-size]]
+== Virtual Screen Size
+
+`swingbridge.screenSize` decides what the Swing application is told when it reads `Toolkit.getScreenSize()`, sizes a window to the screen, or centers a dialog with `setLocationRelativeTo(null)`:
+
+- *`per-user`* (the default, also used when the property is unset) — each session sees a screen derived from that user's own browser.
+- *`<width>x<height>`* — one fixed resolution for every session, for example `1920x1080`. Each edge must be between 240 and 8192. Use `2560x1440` to reproduce the behavior of releases before per-user screens existed.
+- Anything else is logged as a warning and falls back to `2560x1440`.
+
+[source,terminal]
+----
+java -Dswingbridge.screenSize=1920x1080 -jar my-app.jar
+----
+
+Two things this property does *not* do: it never resizes or moves a window — the screen size is information the Swing application may act on — and it does not change rendering resolution.
+
+
+[[swing-bridge.rendering.hidpi]]
+== HiDPI Rendering
+
+`swingbridge.hidpi` renders the back buffer at the browser's device pixel ratio, so text is crisp on Retina and 4K displays instead of being upscaled by the browser:
+
+- *`off`* (the default) — one buffer pixel per logical pixel.
+- *`auto`* — each session follows its own browser's ratio, quantized to 0.25 steps and clamped.
+- *a decimal*, for example `2` or `1.5` — that fixed scale for every session.
+
+Two further properties bound the cost, since heap per window scales with the square of the scale:
+
+[cols="3,1,5", options="header"]
+|===
+|Property |Default |Description
+
+|`swingbridge.hidpiMaxScale`
+|`2.0`
+|Upper bound on the multiplier, between `1.0` and `4.0`.
+
+|`swingbridge.hidpiMaxBufferPixels`
+|`8000000`
+|Upper bound on a single window's back buffer in device pixels. A window over the ceiling renders at a reduced scale rather than being refused.
+|===
+
+[source,terminal]
+----
+java -Dswingbridge.hidpi=auto -jar my-app.jar
+----
+
+Oversampling is invisible to the Swing application: it keeps its logical coordinate space and a 1x default transform, so layout is identical at every scale, pointer coordinates need no translation, and `Toolkit.getScreenResolution()` stays 96. Moving the browser to a display with a different pixel ratio is detected and re-rendered at the new ratio.
+
+Images the Swing application creates itself stay at 1x and are upsampled into the oversampled buffer, so an application that blits its own off-screen image may still look soft.
+
+
+[[swing-bridge.rendering.back-buffer]]
+== Back-Buffer Pixel Format
+
+Each bridged window keeps a back buffer sized to the window. It is the dominant per-window allocation and the source of every frame streamed to the browser. `swingbridge.backBufferType` selects its format:
+
+- *`adaptive`* (the default) — opaque windows use 24-bit `TYPE_INT_RGB`; only per-pixel-translucent windows keep 32-bit `TYPE_INT_ARGB`. Same memory as ARGB, smaller frames, and lossless.
+- *`argb`* — 32-bit `TYPE_INT_ARGB` for every window, the behavior of earlier releases.
+- *`565`* — 16-bit `TYPE_USHORT_565_RGB`, halving back-buffer memory at the cost of 16-bit color: banding on gradients and softer text anti-aliasing.
+
+[source,terminal]
+----
+java -Dswingbridge.backBufferType=565 -jar my-app.jar
+----
+
+
+[[swing-bridge.rendering.next-steps]]
+== Next Steps
+
+- <<configuration#swing-bridge.configuration, Configuration>> for every other system property.
+- <<troubleshooting#swing-bridge.troubleshooting, Troubleshooting>> if rendering looks wrong rather than merely soft.
