@@ -272,4 +272,176 @@ binder.setRequiredConfigurator(
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Validation Groups
+
+A JSR 303 constraint can declare one or more _validation groups_. A group is a marker interface that allows a subset of the constraints of a bean to be validated, instead of all of them at once. This is useful when the same bean is edited in situations that have different requirements -- for example, a draft that needs only a title, and a published article that also needs a summary and a body.
+
+Constraints that don't declare a group belong to the default group, which is represented by the [interfacename]`jakarta.validation.groups.Default` interface. [classname]`BeanValidationBinder` validates the constraints of the default group only, unless it's configured to use other groups.
+
+For example, the following bean declares constraints in the default group, in a `Draft` group, and in a `Publish` group:
+
+[source,java]
+----
+public interface Draft {
+}
+
+public interface Publish {
+}
+
+public class Article {
+    // Default group: always validated
+    @NotEmpty
+    private String title;
+
+    // Publish group only
+    @NotEmpty(groups = Publish.class)
+    private String summary;
+
+    // Draft and Publish groups, but not the default group
+    @Size(min = 10, groups = { Draft.class, Publish.class })
+    private String body;
+
+    // + constructors, setters and getters
+}
+----
+
+
+==== Configuring the Groups to Validate
+
+Pass the groups to the [classname]`BeanValidationBinder` constructor, or set them afterwards with the [methodname]`setValidationGroups()` method. The configured groups apply to all validation the binder triggers, including the validation of a single field when its value changes:
+
+[source,java]
+----
+BeanValidationBinder<Article> binder =
+        new BeanValidationBinder<>(Article.class, Publish.class);
+
+// Or, after the binder has been created:
+binder.setValidationGroups(Publish.class);
+----
+
+Validation groups replace, rather than extend, the default group. In the example above, the `@NotEmpty` constraint on the `title` property is no longer validated, because it belongs to the default group. To validate the default group as well, list it explicitly:
+
+[source,java]
+----
+binder.setValidationGroups(Default.class, Publish.class);
+----
+
+Calling [methodname]`setValidationGroups()` without arguments restores the default behavior of validating the default group only. The [methodname]`getValidationGroups()` method returns the groups that are in effect, where an empty array means the default group.
+
+A validation group has to be an interface, as required by the Jakarta Bean Validation specification. Passing anything else throws an [classname]`IllegalArgumentException`.
+
+[NOTE]
+Changing the groups doesn't update validation results that are already displayed. Call [methodname]`validate()` after [methodname]`setValidationGroups()` if the fields have already been validated against the previous groups.
+
+
+==== Validating Other Groups on Demand
+
+Some constraints are relevant only when the data is saved, and displaying their error messages while the user is still filling in the form is distracting. For these cases, the [methodname]`validate()` and [methodname]`isValid()` methods accept the validation groups to use for that single validation, leaving the configured groups untouched:
+
+[source,java]
+----
+publishButton.addClickListener(event -> {
+    if (binder.validate(Default.class, Publish.class).isOk()) {
+        articleService.publish(article);
+    }
+});
+----
+
+Any validation triggered later -- for example, by a field value change -- uses the configured groups again.
+
+[methodname]`validate()` displays the validation results to the user by marking the invalid fields, whereas [methodname]`isValid()` neither modifies the UI nor fires status change events, which makes it suitable for tasks such as enabling and disabling a save button. Passing an empty array of groups to either method validates against the configured groups.
+
+
+==== Required Indicators
+
+The required indicator that [classname]`BeanValidationBinder` sets automatically follows the configured validation groups. A field is marked as required only when a constraint that implies a required value -- see <<#automatically-marking-form-fields-as-required,Automatically Marking Form Fields as Required>> -- belongs to a group that's validated. A field whose only such constraint declares a group that isn't validated, for instance [annotationname]`@NotNull(groups = Save.class)` on a binder with no groups configured, doesn't get a required indicator.
+
+Reconfiguring the groups with [methodname]`setValidationGroups()` updates the indicators of the fields that are already bound. An indicator that the application has changed itself after the field was bound is left alone, so that [methodname]`setRequiredIndicatorVisible()` calls made by the application aren't overridden.
+
+The indicators follow the configured groups rather than the groups of a single [methodname]`validate()` or [methodname]`isValid()` call, so that they reflect what's validated while the user is editing.
+
+
+==== Group Inheritance & Sequences
+
+A validation group can extend another group. Validating against the sub-interface also validates the constraints of the groups it inherits from:
+
+[source,java]
+----
+public interface FinalPublish extends Publish {
+}
+
+// Validates the constraints of both FinalPublish and Publish
+binder.setValidationGroups(FinalPublish.class);
+----
+
+A group can also be declared as a [annotationname]`@GroupSequence` of other groups. The binder validates the constraints of the groups in the sequence, and takes them into account for the required indicators. The groups of a sequence are validated in the declared order, and validation stops at the first group that has violations:
+
+[source,java]
+----
+@GroupSequence({ Draft.class, Publish.class })
+public interface FullPublish {
+}
+
+// Validates the constraints of the Draft group, and,
+// if they pass, those of the Publish group
+binder.setValidationGroups(FullPublish.class);
+----
+
+A [annotationname]`@GroupSequence` on a bean type redefines the default group of that type. The groups of such a sequence are therefore validated, and taken into account for the required indicators, whenever the default group is validated:
+
+[source,java]
+----
+@GroupSequence({ Draft.class, Draftable.class })
+public class Draftable {
+    // Validated even though the binder has no groups configured
+    @NotEmpty(groups = Draft.class)
+    private String title;
+}
+----
+
+
+==== Bean-Level Validators
+
+[classname]`BeanValidationBinder` ignores JSR 303 constraints that aren't assigned directly to properties, so class-level constraints have to be implemented as bean-level validators added with [methodname]`withValidator()`. Such a validator can read the groups that are in effect from the binder, which allows it to validate the same groups as the field-level validation:
+
+[source,java]
+----
+binder.withValidator((article, context) -> {
+    BeanValidationBinder<?> source =
+            (BeanValidationBinder<?>) context.getBinder().orElseThrow();
+    Class<?>[] groups = source.getValidationGroups();
+    // Run the class-level checks that apply to these groups
+    return ValidationResult.ok();
+});
+----
+
+While a [methodname]`validate()` or [methodname]`isValid()` call that was given validation groups is running, [methodname]`getValidationGroups()` returns the groups given to that method instead of the configured ones.
+
+
+==== Validation Groups in BeanValidator
+
+[classname]`BeanValidationBinder` adds a [classname]`BeanValidator` to each binding for you. When you add one to a plain [classname]`Binder` instead, pass the validation groups to its constructor:
+
+[source,java]
+----
+binder.forField(summaryField)
+    .withValidator(new BeanValidator(
+        Article.class, "summary", Publish.class))
+    .bind(Article::getSummary, Article::setSummary);
+----
+
+A [interfacename]`SerializableSupplier` of groups can be given in place of a fixed array. The supplier is queried on every validation, which allows the groups to change after the validator has been created:
+
+[source,java]
+----
+binder.forField(summaryField)
+    .withValidator(new BeanValidator(
+        Article.class, "summary", this::getCurrentGroups))
+    .bind(Article::getSummary, Article::setSummary);
+----
+
+The [methodname]`BeanValidator.getValidationGroups()` method returns the groups the validator validates against, where an empty array means the default group.
+
+
 [discussion-id]`D8AE5573-0248-4DBC-A58E-CBEA8E8F0957`
