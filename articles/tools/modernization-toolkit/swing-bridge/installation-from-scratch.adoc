@@ -16,6 +16,7 @@ This page covers the installation steps for a SwingBridge project that is not ba
 . Install the Vaadin commercial license.
 . Configure a Maven project from scratch.
 . Apply the JVM flags SwingBridge needs at compile time and at runtime.
+. Enable server push in the application shell class.
 
 If you only want a quick try-out, the <<quick-start-guide#, Quick Start>> page uses the skeleton starter and skips most of the manual configuration below.
 
@@ -119,6 +120,9 @@ Add the following parent section, properties, and dependencies to your `pom.xml`
     <artifactId>swing-bridge-graphics</artifactId>
     <version>${swing-bridge.version}</version>
   </dependency>
+  <!-- The exclusion keeps Spring Boot's default Logback as the SLF4J
+       backend. See Logging & Identifying Logs per User for the trade-offs and
+       for standardizing on Log4j2 instead. -->
   <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>swing-bridge-flow</artifactId>
@@ -146,6 +150,8 @@ Add the following parent section, properties, and dependencies to your `pom.xml`
   </dependency>
 </dependencies>
 ----
+
+The `log4j-slf4j2-impl` exclusion keeps Spring Boot's default Logback as the logging backend. See <<logging#swing-bridge.logging.frameworks.slf4j, Logging & Identifying Logs per User>> for the trade-offs, and for standardizing on Log4j2 instead so that embedded Swing applications' direct Log4j calls end up in the same log files.
 
 SwingBridge requires certain JVM flags so that Maven can access internal Java modules during compilation. Create a `.mvn/jvm.config` file in the project root with the following content:
 
@@ -220,6 +226,7 @@ To launch the application through Maven CLI, add the following build plugin to y
           --add-opens=java.desktop/java.awt.event=ALL-UNNAMED
           --add-opens=java.desktop/sun.awt=ALL-UNNAMED
           --add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED
+          --add-opens=java.base/java.lang=ALL-UNNAMED
           -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
         </jvmArguments>
 
@@ -240,6 +247,32 @@ The trailing `-agentlib:jdwp=…` flag enables remote debugging on port 5005. Re
 ====
 The `java.awt.headless=false` system property is mandatory. SwingBridge needs a real (non‑headless) AWT toolkit to render Swing components into images on the server. Without it, the application throws `HeadlessException` on startup.
 ====
+
+
+[[swing-bridge.installation-from-scratch.push]]
+=== Enable Server Push
+
+SwingBridge renders the Swing application on the server and streams the frame updates to the browser from a background AWT thread. Those updates can only reach the client when server push is enabled, so annotate the application shell class — the class implementing [interfacename]`AppShellConfigurator` — with [annotationname]`@Push`:
+
+.`Application.java`
+[source,java]
+----
+@SpringBootApplication
+@Push
+public class Application implements AppShellConfigurator {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+----
+
+[IMPORTANT]
+====
+The [annotationname]`@Push` annotation is mandatory. Without it the Swing application launches on the server, but the browser shows only an empty component: the rendered frames are queued server-side and never delivered to the client.
+====
+
+For details on how push works, see <</flow/advanced/server-push#, Server Push>>.
 
 
 [[swing-bridge.installation-from-scratch.jvm-flags]]
@@ -296,8 +329,9 @@ The runtime `<jvmArguments>` block above bundles three categories of flags. The 
 
 |`--add-opens=java.desktop/java.awt.event=ALL-UNNAMED` +
 `--add-opens=java.desktop/sun.awt=ALL-UNNAMED` +
-`--add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED`
-|Reflective access. SwingBridge reads/writes a small number of private fields (focus state, drag flag, event queue) to plumb its multi-tenant model.
+`--add-opens=java.desktop/java.awt.dnd=ALL-UNNAMED` +
+`--add-opens=java.base/java.lang=ALL-UNNAMED`
+|Reflective access. SwingBridge reads/writes a small number of private fields (focus state, drag flag, event queue) to plumb its per-session model.
 |===
 
 The dev-time list in `.mvn/jvm.config` is the same minus `--patch-module` and `-Xbootclasspath/a` — those only apply at runtime.
