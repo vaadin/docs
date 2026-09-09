@@ -1,0 +1,144 @@
+---
+title: sov-undecided
+page-title: Migrate Swing apps to Vaadin by import-swap | Vaadin Tools
+description: Recompile an existing Swing application against a Vaadin-backed emulation of the Swing API and run it on the web.
+meta-description: Learn how sov-undecided migrates a Swing desktop application to the web by swapping imports and recompiling against a Vaadin emulation of the Swing API.
+order: 150
+---
+
+//
+// NAME PLACEHOLDER — "sov-undecided" is an internal codename, NOT a product name.
+// A public name must be chosen before this page is published; replace every
+// occurrence of "sov-undecided" (title, page-title, meta-description, and body)
+// once it is decided.
+//
+
+pass:[<!-- vale Vaadin.ProductName = NO -->]
+
+= sov-undecided
+
+sov-undecided migrates an existing Swing desktop application to the web by *import-swap*: you rewrite `javax.swing.*` imports to `vaadinx.swing.*`, recompile, and run the result as a Vaadin web application. The bulk of a codebase migrates as a find-and-replace on import lines.
+
+It's a *migration bridge*, not a permanent target. sov-undecided gets a desktop app running in the browser cheaply, so you can then iterate it toward idiomatic Vaadin view-by-view — it isn't a 1:1 reimplementation of Swing you're meant to stay on.
+
+pass:[<!-- vale Vaadin.ProductName = YES -->]
+
+[NOTE]
+sov-undecided differs from <<swing-bridge#, SwingBridge>>. SwingBridge runs your *actual Swing application on the server* and streams its UI to the browser — the Swing runtime stays in the loop. sov-undecided instead recompiles your code against a Vaadin-backed emulation of the Swing API, so there is no Swing runtime: your app becomes a real Vaadin application, which is what makes the later native rewrite possible.
+
+
+== How It Works
+
+- `vaadinx.awt.*` mirrors `java.awt.*` for the `Component`/`Container` hierarchy; `vaadinx.swing.*` mirrors `javax.swing.*` for the `JComponent` subclasses (`JFrame`, `JButton`, `JLabel`, `JTextField`, and so on).
+- Every emulated component is backed by a real Vaadin component — its _peer_ — and forwards behavior to it. You write Swing-shaped code; the browser renders Vaadin.
+- Data types that aren't components (`Color`, `Font`, `Dimension`, `ActionEvent`, `ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change.
+- A method with no Vaadin counterpart logs a warning and returns a sensible default rather than crashing the app. Genuine programming errors — a bad index, orphan-component state — still throw the same exception Swing would, so real bugs aren't hidden.
+
+This is an import-swap, not a binary drop-in: you need source access for the Swing code you depend on, because compiled Swing JARs must be recompiled against the emulation.
+
+
+== What the Swap Looks Like
+
+Below is a view from a small employee-CRUD example — pure Swing on the left, the same view after migrating onto the emulation on the right. *Only the import lines differ.* The body is character-for-character identical:
+
+[cols="1,1"]
+|===
+|Stage 1 — Swing (`javax.swing.*`) |Stage 2 — emulators (`vaadinx.swing.*`)
+
+a|
+[source,java]
+----
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+
+public final class EmployeePreviewPanel extends JPanel {
+
+    private final JLabel nameValue = new JLabel(EMPTY);
+    // … more label fields …
+
+    public EmployeePreviewPanel() {
+        super(new BorderLayout());
+        setBorder(BorderFactory.createTitledBorder("Preview"));
+
+        JPanel rows = new JPanel();
+        rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+        rows.add(row("Name", nameValue));
+        // … more rows …
+        add(rows, BorderLayout.NORTH);
+    }
+}
+----
+
+a|
+[source,java]
+----
+import vaadinx.swing.BorderFactory;
+import vaadinx.swing.BoxLayout;
+import vaadinx.swing.JLabel;
+import vaadinx.swing.JPanel;
+import vaadinx.awt.BorderLayout;
+
+public final class EmployeePreviewPanel extends JPanel {
+
+    private final JLabel nameValue = new JLabel(EMPTY);
+    // … more label fields …
+
+    public EmployeePreviewPanel() {
+        super(new BorderLayout());
+        setBorder(BorderFactory.createTitledBorder("Preview"));
+
+        JPanel rows = new JPanel();
+        rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+        rows.add(row("Name", nameValue));
+        // … more rows …
+        add(rows, BorderLayout.NORTH);
+    }
+}
+----
+|===
+
+That sameness is the point: for most of a codebase, migrating is find-and-replace on imports. A small set of files need genuine hand-edits — splitting `main()`, marking the main window, handling `System.exit` calls, and the occasional timezone-sensitive seam — but those are the exception. Most apps land 80% or more of the migration mechanically.
+
+Blocking dialogs are a notable case that works unchanged. In Swing, `JOptionPane.showConfirmDialog(...)` and `dialog.setVisible(true)` block until the user responds, and Swing code reads straight down the page relying on that. A web request/response cycle can't normally block waiting for fresh user input, which is why most web toolkits force a rewrite into callbacks. sov-undecided keeps the blocking code intact: the call blocks, the dialog renders in the browser, and it returns the user's choice exactly as under Swing.
+
+
+== The Migration Arc
+
+An app moves through up to four stages. The emulation provides an API surface for the two middle ones; the first and last are the start and end points.
+
+1. *Your Swing app.* The existing desktop application — no tooling involved yet.
+2. *Emulators.* After the mechanical import-swap, recompiled and running in the browser. The `vaadinx.*` packages reproduce the Swing API on Vaadin peers, so your code stays Swing-shaped.
+3. *Surrogates (optional).* View-by-view, you move a view onto classes that _are_ Vaadin components with Swing-flavored helpers. Code shape becomes Vaadin-shaped. This is an optional stepping stone — you can skip it and rewrite an emulator view straight to stock Vaadin.
+4. *Your Vaadin app.* Idiomatic stock Vaadin, the emulation fully removed. The destination.
+
+Stages 2 and 3 coexist _across_ views — views you haven't rewritten keep running on the emulation — but within a single view, your code is at one layer, not a mix. You can stop at stage 2, a running Swing-shaped web app, for as long as you like, or progress views toward stage 4 on your own schedule.
+
+
+== When to Use It
+
+sov-undecided fits when:
+
+- The app is large or complex, or its behavior is undocumented, and you want a running web version fast rather than after a from-scratch rebuild.
+- Your team is fluent in Swing but not yet in Vaadin, and you'd rather defer that learning curve until the idiomatic rewrite.
+- You can't freeze Swing development for the migration's duration. Because the import-swap is a mostly-mechanical, idempotent transform, you can keep shipping features on the Swing mainline and re-run the swap on the merged delta rather than reimplementing each feature twice.
+- You want to validate the web target before committing to a full rewrite.
+
+The trade-off is honest: this path reaches _running_ cheaply and preserves behavior by construction, but it leaves you with Swing-shaped code you still have to rewrite toward idiomatic Vaadin eventually. A direct, spec-driven rewrite reaches the idiomatic destination sooner, but asks you to reproduce a working app's behavior from a specification — for a large app with years of accreted edge cases, that specification is the hard part. A common pattern combines the two: use sov-undecided to get the app running and behaving correctly first, then treat that running app as the living specification you rewrite against, view-by-view.
+
+
+== Out of Scope
+
+Some Swing capabilities are permanently out of scope:
+
+- *`JApplet`* — browsers dropped applet support years ago, and the class was removed from the JDK in Java 26.
+- *Look-and-Feel dispatch* — styling is handled in a later Vaadin and CSS pass, outside the emulation.
+- *User-authored painting via `Graphics`* — `paintComponent`, custom-painted components, and similar; there is no `Graphics2D` surface to override.
+
+
+== Requirements
+
+- *JDK 24 or later at runtime.* The virtual-thread machinery that makes blocking dialogs work deadlocks on JDK 21. Your migrated app's bytecode may still target Java 21 — only the JVM it _runs_ on must be 24 or later.
+- A *Vaadin 25* host application with server push (`@Push`) enabled. The runtime relies on push to render modal dialogs.
