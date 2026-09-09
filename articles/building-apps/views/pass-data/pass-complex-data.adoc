@@ -1,0 +1,306 @@
+---
+title: Complex Data
+page-title: How to pass complex data to a view in a Vaadin application
+description: Learn how to pass complex data between the views of a Vaadin application.
+meta-description: Learn how to pass complex data between Vaadin views using a view reference returned by navigation, the Vaadin session, UI data, or a scoped bean.
+order: 40
+---
+
+
+= Pass Complex Data to a View
+:toclevels: 2
+
+In this guide, you'll learn how to pass complex data that can't easily or effectively be represented as URL parameters.
+In most cases, however, prefer passing an identifier in the URL and loading the corresponding data in the target view.
+
+First, define the complex object that you'll pass between the views.
+
+// tag::employee-data[]
+[source,java]
+----
+public record EmployeeData(
+        Integer id,
+        String name,
+        LocalDate dateOfBirth) {
+}
+----
+// end::employee-data[]
+
+Next, create the source view from which navigation is triggered.
+
+// tag::source-view[]
+[source,java]
+----
+@Route("source")
+public class SourceView extends VerticalLayout {
+
+    public SourceView() {
+        var header = new H1("Add employee");
+        var id = new IntegerField("Id");
+        var name = new TextField("Name");
+        var dateOfBirth = new DatePicker("Date of Birth");
+
+        var button = new Button("Proceed", event -> {
+            var data = new EmployeeData(
+                    id.getValue(),
+                    name.getValue(),
+                    dateOfBirth.getValue());
+
+            // Navigate and pass the data
+        });
+
+        add(header, id, name, dateOfBirth, button);
+    }
+}
+----
+// end::source-view[]
+
+The view contains input fields and a button.
+When the user clicks the button, the input values are collected into an [classname]`EmployeeData` object.
+The remaining source-view examples show only the code that replaces the `// Navigate and pass the data` comment.
+
+The target view varies slightly depending on the approach.
+The examples use the following common structure:
+
+// tag::target-view[]
+[source,java]
+----
+@Route("target")
+public class TargetView extends VerticalLayout {
+
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private final Span nameSpan = new Span();
+    private final Span dateSpan = new Span();
+
+    public TargetView() {
+        var employeeData = new HorizontalLayout(nameSpan, dateSpan);
+        var header = new H1("Added employee");
+
+        add(header, employeeData);
+
+        // Retrieve the data and call update(), if possible
+    }
+
+    public void update(EmployeeData data) {
+        nameSpan.setText(data.name());
+        dateSpan.setText(DATE_FORMATTER.format(data.dateOfBirth()));
+    }
+}
+----
+// end::target-view[]
+
+The target view contains one [classname]`Span` for the employee's name and another for the date of birth.
+The [classname]`DateTimeFormatter` formats the date before it is displayed.
+The public [methodname]`update(EmployeeData)` method updates both spans and can be called either from inside the view or from another view.
+
+The target-side examples show only the code that replaces the `// Retrieve the data and call update(), if possible` comment.
+
+[NOTE]
+These examples omit input validation to keep the focus on passing data between views.
+A production application should validate the input before creating and when receiving the [classname]`EmployeeData` object.
+
+
+== Pass Data Directly to the View Instance
+
+The recommended and usually most straightforward approach is to pass the data directly to the target view instance.
+However, it may not always be clear how to retrieve that instance.
+The following sections demonstrate two ways to do so.
+
+
+=== View That Navigates to Another View
+
+When a view navigates directly to another view, use the target instance returned by [methodname]`navigate()`.
+
+// tag::direct-navigation-source[]
+[source,java]
+----
+UI.getCurrent().navigate(TargetView.class)
+        .ifPresent(view -> view.update(data));
+----
+// end::direct-navigation-source[]
+
+The [methodname]`navigate()` method returns an optional reference to the target view.
+Use that reference to pass the [classname]`EmployeeData` object directly to the view.
+
+No changes are required in [classname]`TargetView`, because the source view calls its public [methodname]`update(EmployeeData)` method.
+
+The data doesn't persist when the page is refreshed.
+You can preserve the target view and its component state during a refresh by adding the [annotationname]`@PreserveOnRefresh` annotation.
+
+This approach also can't pass data to another browser tab because each tab has its own [classname]`UI` instance.
+
+
+=== Set Data Through the Current View on the UI
+
+After navigating, you can retrieve the active view by calling [methodname]`getCurrentView()` on the [classname]`UI` instance.
+
+This approach is useful when custom navigation logic doesn't directly return the target view instance.
+The lookup must happen after navigation has completed.
+
+// tag::current-view-source[]
+[source,java]
+----
+triggerNavigation(); // Custom navigation logic
+
+if (UI.getCurrent().getCurrentView() instanceof TargetView targetView) {
+    targetView.update(data);
+}
+----
+// end::current-view-source[]
+
+After navigation, the source view retrieves the current view and verifies that it is an instance of the expected target class.
+It then passes the data through the target view's [methodname]`update(EmployeeData)` method.
+
+No changes are required in [classname]`TargetView`.
+
+The data doesn't persist when the page is refreshed.
+You can preserve the target view and its component state during a refresh by adding the [annotationname]`@PreserveOnRefresh` annotation.
+
+This approach also can't pass data to another browser tab because each tab has its own [classname]`UI` instance.
+
+
+== Pass Data Through the Vaadin Session
+
+Another way to pass data between views is to use the Vaadin session as an intermediary.
+This is useful when the data needs to persist across page refreshes or be available in another browser tab.
+
+// tag::session-source[]
+[source,java]
+----
+VaadinSession.getCurrent().setAttribute(EmployeeData.class, data);
+
+triggerNavigation(); // Custom navigation logic
+----
+// end::session-source[]
+
+The [classname]`EmployeeData` object is stored in the current Vaadin session before navigation is triggered.
+
+Retrieve the stored data in the target view:
+
+// tag::session-target[]
+[source,java]
+----
+var data = VaadinSession.getCurrent().getAttribute(EmployeeData.class);
+update(data);
+----
+// end::session-target[]
+
+The benefits of session storage can also be drawbacks.
+The data remains in the session until you replace it, clear it, or the session expires.
+
+The data persists when the view is refreshed.
+However, because the session is shared between browser tabs, navigating through the workflow in one tab can replace the data displayed after another tab is refreshed.
+
+Consider when the session attribute should be cleared to avoid stale or unexpected data.
+
+
+== Attach Data to the UI Instance
+
+In older Vaadin versions, you could attach arbitrary data to a component using the [methodname]`setData()` method.
+Although that method is no longer available directly on components, [classname]`ComponentUtil` provides the same functionality.
+
+// tag::ui-source[]
+[source,java]
+----
+ComponentUtil.setData(UI.getCurrent(), "employee-data", data);
+
+triggerNavigation(); // Custom navigation logic
+----
+// end::ui-source[]
+
+The [classname]`EmployeeData` object is attached to the current [classname]`UI` instance before navigation is triggered.
+
+Retrieve the data from the same [classname]`UI` instance in the target view:
+
+// tag::ui-target[]
+[source,java]
+----
+var data = (EmployeeData) ComponentUtil.getData(UI.getCurrent(), "employee-data");
+update(data);
+----
+// end::ui-target[]
+
+The [classname]`TargetView` retrieves the `employee-data` value using [methodname]`ComponentUtil.getData()` and uses it to update its components.
+
+Data attached to the [classname]`UI` doesn't survive a page refresh because the refresh creates a new UI instance.
+The [annotationname]`@PreserveOnRefresh` annotation can preserve the target view and its component state, but it doesn't copy data attached to the old UI to the new one.
+
+
+== Pass Data Through a Suitably Scoped Object
+
+If your application uses a dependency injection framework such as Spring or CDI, you can store the data in a suitably scoped bean.
+
+The following example uses a Spring bean.
+A similar approach can be used with CDI or another dependency injection framework.
+
+First, create an [classname]`ActiveEmployeeBean` to hold the data:
+
+// tag::active-employee-bean[]
+[source,java]
+----
+@UIScope
+@SpringComponent
+public class ActiveEmployeeBean {
+
+    private EmployeeData data;
+
+    public EmployeeData getData() {
+        return data;
+    }
+
+    public void setData(EmployeeData data) {
+        this.data = data;
+    }
+}
+----
+// end::active-employee-bean[]
+
+The bean has two annotations.
+
+[annotationname]`@SpringComponent` is Vaadin's alternative to Spring's [annotationname]`@Component` annotation.
+The [annotationname]`@UIScope` annotation ties the bean's lifecycle to the current [classname]`UI`.
+
+As a result, one bean instance exists for each UI, which normally corresponds to one browser tab.
+Use [annotationname]`@VaadinSessionScope` instead when the data should be shared between the UIs and tabs in the same Vaadin session.
+
+Inject the bean into the source view:
+
+// tag::bean-source[]
+[source,java]
+----
+public SourceView(ActiveEmployeeBean activeEmployeeBean) {
+    // ...
+    var button = new Button("Proceed", event -> {
+        // ...
+        activeEmployeeBean.setData(data);
+        triggerNavigation(); // Custom navigation logic
+    });
+    // ...
+}
+----
+// end::bean-source[]
+
+The [classname]`EmployeeData` object is stored in the injected [classname]`ActiveEmployeeBean` before navigation is triggered.
+
+Inject the same bean into the target view:
+
+// tag::bean-target[]
+[source,java]
+----
+public TargetView(ActiveEmployeeBean activeEmployeeBean) {
+    // ...
+    var data = activeEmployeeBean.getData();
+    update(data);
+    // ...
+}
+----
+// end::bean-target[]
+
+The [classname]`TargetView` reads the data from the injected [classname]`ActiveEmployeeBean` and uses it to populate the view.
+
+A bean annotated with [annotationname]`@UIScope` doesn't survive a page refresh because the refresh creates a new [classname]`UI` and a new UI-scoped bean.
+This remains true when [annotationname]`@PreserveOnRefresh` is used: the route component can be preserved, but the UI-scoped bean isn't.
+
+Use [annotationname]`@VaadinSessionScope` when the data needs to persist across refreshes or be available in another browser tab.
