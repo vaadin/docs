@@ -81,6 +81,19 @@ Oversampling is invisible to the Swing application: it keeps its logical coordin
 
 Images the Swing application creates itself stay at 1x and are upsampled into the oversampled buffer, so an application that blits its own off-screen image may still look soft.
 
+[[swing-bridge.rendering.hidpi.cost]]
+=== What It Costs
+
+Raising the scale multiplies the pixels in every back buffer. The costs that follow do not all grow at the same rate.
+
+*Memory is where it shows.* A window's buffer grows with the square of the scale, so doubling the scale roughly quadruples it. That is the cost to plan for when many sessions share one host. Setting `swingbridge.backBufferType=565` halves it, and 16-bit color is less noticeable at a higher scale, because the dithering has more pixels to hide in.
+
+*The network sees much less.* Frames are compressed as PNG. Large areas of flat color compress nearly as well at a high scale as at a low one, so only the edges of text carry real extra detail. And only a window's first frame is sent in full — after that SwingBridge sends just the areas that changed, and a small change stays small at any scale.
+
+*Encoding costs more CPU*, roughly in proportion to the pixels. Because the steady state is small updates, this shows when a window first appears or is resized, not while the user works.
+
+HiDPI is therefore limited by memory rather than by bandwidth. On a slow connection it is the first frame of each window that grows; everything after it costs little more than before. Leave `swingbridge.hidpiMaxScale` at its default unless you have measured your own application.
+
 
 [[swing-bridge.rendering.back-buffer]]
 == Back-Buffer Pixel Format
