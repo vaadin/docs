@@ -2,7 +2,7 @@
 title: Configuration
 page-title: Configure SwingBridge | Vaadin Tools
 description: System properties and runtime knobs for tuning SwingBridge.
-meta-description: Reference for the system properties that control SwingBridge frame rate, JAR loading, and the launch-failure error view.
+meta-description: Reference for the system properties that control SwingBridge rendering, input, memory, logging, JAR loading, and the launch-failure error view.
 order: 4
 ---
 
@@ -16,6 +16,11 @@ This page lists the runtime knobs SwingBridge reads from JVM system properties, 
 
 [[swing-bridge.configuration.system-properties]]
 == System Properties Reference
+
+Every parameter below is a JVM system property. None of them is required except `java.awt.headless`; the defaults are chosen so that a deployment can leave all of them unset.
+
+[[swing-bridge.configuration.system-properties.core]]
+=== Core
 
 [cols="3,1,5", options="header"]
 |===
@@ -37,17 +42,77 @@ This page lists the runtime knobs SwingBridge reads from JVM system properties, 
 |—
 |*NetBeans RCP only.* Absolute path to a pre-built NetBeans Platform distribution directory; the highest-priority discovery source for `NetBeansRcpBridge`. See <<netbeans-rcp/configuration#swing-bridge.netbeans-rcp.configuration.discovery, NetBeans RCP → Cluster Discovery>>.
 
-|`swingbridge.frameUpdateInterval`
-|`100` (milliseconds, minimum `71`)
-|How often SwingBridge polls each Swing window for changes and pushes the dirty regions to the browser. Lower values feel more responsive at the cost of CPU; higher values save CPU at the cost of perceived latency.
-
 |`swingbridge.errorReporting.enabled`
 |`true`
 |When set to `false`, the launch-failure error view shows only the failure header — the exception type, message, and stack trace are suppressed and the report-submission form is hidden. See <<#swing-bridge.configuration.error-reporting, Launch Failure Error View>> below.
+|===
+
+[[swing-bridge.configuration.system-properties.display]]
+=== Display and Rendering
+
+These decide what the Swing application is told about the screen and how each window's back buffer is allocated. See <<rendering#swing-bridge.rendering, Display and Rendering>> for the accepted values and what they do.
+
+[cols="3,1,5", options="header"]
+|===
+|Property |Default |Description
+
+|`swingbridge.screenSize`
+|`per-user`
+|The screen size reported to the Swing application: derived from each session's own browser, or a fixed `<width>x<height>`.
+
+|`swingbridge.hidpi`
+|`off`
+|Renders the back buffer at the browser's device pixel ratio, for crisp text on Retina and 4K displays. `auto`, or a fixed decimal scale.
+
+|`swingbridge.hidpiMaxScale`
+|`2.0`
+|Upper bound on the HiDPI multiplier, between `1.0` and `4.0`.
+
+|`swingbridge.hidpiMaxBufferPixels`
+|`8000000`
+|Upper bound on a single window's back buffer, in device pixels.
+
+|`swingbridge.backBufferType`
+|`adaptive`
+|Pixel format of each window's back buffer: `adaptive`, `argb`, or `565`.
+|===
+
+[[swing-bridge.configuration.system-properties.input]]
+=== Input
+
+[cols="3,1,5", options="header"]
+|===
+|Property |Default |Description
+
+|`swingbridge.autoFocusOnAttach`
+|`true`
+|The canvas adopts browser focus when it appears, so keystrokes reach the Swing application without the user clicking it first. It only takes focus when nobody else is using it — an unfocused page, another surface of the same bridge, or the navigation control that brought the user to the view; fields and buttons keep their focus, and popup, combo-popup and tooltip canvases never adopt focus at all. Set to `false` to disable it. An unparseable value falls back to enabled.
+
+|`swingbridge.wheel.pixelsPerLine`
+|`40`
+|How many pixels of browser wheel delta count as one Swing line-scroll step, for browsers that report pixel deltas. The fractional remainder is carried per window so high-resolution wheels and trackpads scroll smoothly. A blank, non-numeric or non-positive value falls back to the default. Read once at startup.
+
+|`swingbridge.frameUpdateInterval`
+|`100` (milliseconds, minimum `71`)
+|How often SwingBridge polls each Swing window for changes and pushes the dirty regions to the browser. Lower values feel more responsive at the cost of CPU; higher values save CPU at the cost of perceived latency.
+|===
+
+[[swing-bridge.configuration.system-properties.logging]]
+=== Logging
+
+See <<logging#swing-bridge.logging, Logging & Identifying Logs per User>> for the full picture, including the pattern-layout tokens.
+
+[cols="3,1,5", options="header"]
+|===
+|Property |Default |Description
 
 |`swingbridge.consoleLogPrefix`
 |`false`
-|When set to `true`, every console line written by an embedded Swing application is prefixed with that instance's run ID (`[swing:<runId>]`), so concurrent users' output can be told apart in the server console. See <<logging#swing-bridge.logging, Logging & Identifying Logs per User>>.
+|When set to `true`, every console line written by an embedded Swing application is prefixed with that instance's run ID (`[swing:<runId>]`), so concurrent users' output can be told apart in the server console.
+
+|`swingbridge.consoleLogMirrorFile`
+|—
+|Path to a file that receives a copy of the prefixed console output, for when the server console itself is not retained.
 
 |`swingbridge.includeUserInLogs`
 |`false`
@@ -64,6 +129,35 @@ For Spring Boot, set system properties through `<systemPropertyVariables>` on th
 ----
 java -Dswingbridge.errorReporting.enabled=false -jar my-app.jar
 ----
+
+
+[[swing-bridge.configuration.jvm-tuning]]
+== JVM Tuning for Multiple Sessions
+
+SwingBridge runs every browser session's Swing application inside one JVM, so the host's garbage-collector settings decide how much memory a given number of concurrent sessions needs. The library cannot set these for you — they belong to the host application's launch configuration, alongside the flags in <<installation-from-scratch#swing-bridge.installation-from-scratch.jvm-flags, JVM Flags Reference>>.
+
+The defaults are fine for a handful of sessions. The settings below matter when packing many sessions into one host.
+
+[cols="3,5", options="header"]
+|===
+|Flag |Why
+
+|`-XX:+UseStringDeduplication`
+|Concurrent sessions of the same application load the same strings repeatedly. G1's string deduplication is close to free here and reduces the live set.
+
+|`-XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=20`
+|G1 as configured by default does not return a drained session's heap to the operating system: committed heap grows and stays pinned, and an explicit `System.gc()` does not shrink it. These two ratios make G1 uncommit aggressively, which gives the tightest resident footprint of the collectors measured. The cost is more frequent collections; pauses stayed in the single-digit milliseconds, well inside one frame interval. Use `10`/`30` for a gentler throughput trade-off.
+
+|`-XX:+UseShenandoahGC`
+|An alternative when sessions are bursty and memory should come back promptly as they end: sub-millisecond pause times and prompt uncommit. Because it collects concurrently it needs allocation headroom, so budget close to `-Xmx` for the peak rather than the idle figure.
+|===
+
+[CAUTION]
+====
+ZGC is a poor fit for this workload. It has the highest peak footprint of the collectors measured and a large fixed metadata overhead, so its idle resident size lands *above* untuned G1 despite returning the most memory in absolute terms. It is a large-heap collector, and a host running many small Swing sessions is not that regime.
+====
+
+Which of these pays off depends on the Swing application and on how many sessions a host carries, so measure against your own application before adopting one as a default.
 
 
 [[swing-bridge.configuration.error-reporting]]
