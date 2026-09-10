@@ -196,6 +196,85 @@ The same method is available on the JUnit extension as [methodname]`ext.runPendi
 As a result, a change that an observer should react to needs the same treatment as any other off-thread mutation. After triggering the change, call [methodname]`runPendingSignalsTasks()` before asserting on the observing side. A change made and observed on the same test thread -- such as mutating a shared signal and asserting a binding on the same view -- still propagates synchronously and needs no flush. For tests that drive several sessions or windows observing one shared signal, see <<multi-user#signals, Signals in Multi-User Tests>>.
 
 
+[#shared-signal-writes]
+==== Confirming a Write
+
+A write to a shared signal returns a <<{articles}/flow/ui-state/transactions#operation-results, [classname]`SignalOperation`>> that completes once the underlying signal tree has confirmed the command. The write itself is applied optimistically, so the new value is visible through [methodname]`peek()` as soon as the call returns -- while the confirmation travels through the same queue as the effects.
+
+This view inserts a ticket into a [classname]`SharedListSignal` and updates a status label when the write is confirmed. The result callback is delivered in the context that started the operation, so it can touch components directly:
+
+[source,java]
+----
+@Route("tickets")
+public class TicketView extends Div {
+    final SharedListSignal<String> tickets =
+            new SharedListSignal<>(String.class);
+    final TextField title = new TextField("Title");
+    final Span status = new Span();
+    final NativeButton submit = new NativeButton("Submit");
+
+    public TicketView() {
+        submit.addClickListener(e -> submitTicket(title.getValue()));
+        add(title, submit, status);
+    }
+
+    InsertOperation<SharedValueSignal<String>> submitTicket(String title) {
+        status.setText("Saving...");
+
+        var operation = tickets.insertLast(title);
+        operation.result().thenAccept(result -> status.setText(
+                result.successful() ? "Ticket created" : "Save failed"));
+        return operation;
+    }
+}
+----
+
+The entry is in the list right after the click, but the status label still reads [code]`Saving...` -- the callback runs only once the queued confirmation task has been executed:
+
+[source,java]
+----
+@ViewPackages(classes = TicketView.class)
+class TicketViewTest extends BrowserlessTest {
+
+    @Test
+    void submitTicket_statusUpdatesWhenWriteIsConfirmed() {
+        var view = navigate(TicketView.class);
+        test(view.title).setValue("Printer is jammed");
+
+        test(view.submit).click();
+
+        // Inserted optimistically, but not confirmed yet.
+        Assertions.assertEquals(1, view.tickets.peek().size());
+        Assertions.assertEquals("Saving...", test(view.status).getText());
+
+        runPendingSignalsTasks();
+
+        Assertions.assertEquals("Ticket created", test(view.status).getText());
+    }
+}
+----
+
+A test that gets hold of the operation itself -- because the code under test returns it, as [methodname]`submitTicket()` does -- can assert on the confirmation directly instead of going through the UI:
+
+[source,java]
+----
+@Test
+void submitTicket_operationConfirmedAfterDrainingQueue() {
+    var view = navigate(TicketView.class);
+
+    var operation = view.submitTicket("Printer is jammed");
+    Assertions.assertFalse(operation.result().isDone());
+
+    runPendingSignalsTasks();
+
+    Assertions.assertTrue(operation.result().join().successful());
+}
+----
+
+[WARNING]
+Don't block on the operation before draining the queue. A call such as [code]`operation.result().get(5, TimeUnit.SECONDS)` always times out, because the confirmation task can only run on the very thread that's blocked waiting for it. A timeout there means the queue hasn't been drained -- not that the write was lost.
+
+
 .Quick Start and Collaborative Scenarios
 [TIP]
 For a brief introduction to testing signal-based views, see <<getting-started#signals, Testing Signal-Based UIs>>. For collaborative features where several windows or users observe the same shared signal, see <<multi-user#signals, Signals in Multi-User Tests>>.
