@@ -79,6 +79,13 @@ Ensure your application is not using deprecated code fragments.
 Make sure your application runs well on Java 21 runtime.
 
 
+=== Keeping the Upgrade Scoped
+
+An upgrade goes more smoothly when it changes only what the breaking changes require: the platform and dependency versions, the security configuration, theme loading, and the component and API changes listed on this page. Everything else -- the application's architectural patterns, its business logic, its naming conventions, and any custom component hierarchies that still compile and behave correctly -- can be left as it is and revisited separately once the upgraded application has been verified.
+
+Separating the two makes it possible to tell an upgrade regression from an unrelated change when something breaks. This is worth stating explicitly when an AI coding assistant does the upgrade, as such tools tend to modernize surrounding code along the way.
+
+
 == Preparation
 
 Upgrade the Vaadin version in the [filename]`pom.xml` and [filename]`gradle.properties` files to the latest release like so:
@@ -293,6 +300,8 @@ The [annotationname]`@StyleSheet` annotation is now the recommended way to load 
 @StyleSheet("styles.css") // references src/main/resources/META-INF/resources/styles.css
 public class Application implements AppShellConfigurator {}
 ----
+
+Loading a theme is explicit in Vaadin 25: an application class that implements [interfacename]`AppShellConfigurator` without a [annotationname]`@StyleSheet` or [annotationname]`@Theme` annotation gets no theme at all. The application still starts and works, but the components render with only their minimal <<{articles}/styling/themes/base#, base styles>>, which looks unfinished rather than broken. If an upgraded application suddenly loses its styling, this is the first thing to check. Only an application with no [interfacename]`AppShellConfigurator` at all falls back to loading Aura automatically.
 
 Stylesheets referenced by [annotationname]`@StyleSheet` annotation are loaded by the servlet container. [since:com.vaadin:vaadin@V25.2]#Stylesheet URLs are automatically resolved against the servlet context root, so they work also when the application is configured to use a custom URL mapping for the [classname]`VaadinServlet` (e.g. `vaadin.url-mapping` setting in Spring applications).# Prefixing the URL with the `context://` protocol is no longer necessary, but it's still supported.
 
@@ -1022,6 +1031,8 @@ public class SecurityConfiguration {
 }
 ----
 
+Keep form login configured through the configurer's [methodname]`loginView()` method. Replacing it with a direct call to Spring Security's [methodname]`formLogin()` leaves Vaadin's internal requests subject to the authentication entry point, which sends the log-in view into an endless redirect loop -- seen in the browser as `ERR_TOO_MANY_REDIRECTS` or a "Connection lost" notification. See <<{articles}/flow/security/enabling-security#, Enabling Security>> for what the configurer sets up.
+
 
 ==== Restrict Access By Default For Url-Based Security
 URLs not explicitly specified in security configuration changed from being allowed for authenticated users to restricted by default. This requires extra security rules (path matchers) for URLs that were allowed only for authentication users.
@@ -1045,6 +1056,16 @@ public class MainLayout extends AppLayout {
 public class MainLayout extends AppLayout {
 }
 ----
+
+A layout without an annotation falls back to the default [annotationname]`@DenyAll` rule, and every view inside it becomes unreachable. Navigation is then denied with a message such as this one:
+
+----
+Denied access to view 'DashboardView' due to layout 'MainLayout' access rules.
+Consider adding one of the following annotations to make the layout accessible:
+@AnonymousAllowed, @PermitAll, or @RolesAllowed.
+----
+
+Both the layout and the view have to grant access independently, so annotate the layout at least as permissively as the views it hosts. Use [annotationname]`@AnonymousAllowed` for a layout that hosts public views, [annotationname]`@PermitAll` for one that hosts views open to any authenticated user, and [annotationname]`@RolesAllowed` when every view inside is restricted to the same roles. See <<{articles}/flow/security/enabling-security#annotating-the-view-classes, Annotating View Classes>> for details.
 
 
 == Security Defaults in Vaadin 25.2
