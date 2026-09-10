@@ -30,6 +30,8 @@ public class LoginOverlayInternationalization extends Div {
         i18nErrorMessage.setTitle("Väärä käyttäjätunnus tai salasana");
         i18nErrorMessage.setMessage(
                 "Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.");
+        i18nErrorMessage.setUsername("Käyttäjätunnus vaaditaan");
+        i18nErrorMessage.setPassword("Salasana vaaditaan");
         i18n.setErrorMessage(i18nErrorMessage);
 
         i18n.setAdditionalInformation("Jos tarvitset lisätietoja käyttäjälle.");
