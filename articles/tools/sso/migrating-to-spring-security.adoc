@@ -73,7 +73,7 @@ An application that adds `sso-kit-starter`, sets an issuer URI and a login route
 |[methodname]`sessionManagement()` with [methodname]`sessionConcurrency()`
 
 |`vaadin.sso.keycloak-roles`
-|A [interfacename]`GrantedAuthoritiesMapper` you write -- see <<#gap-keycloak-roles,Keycloak Role Mapping>>
+|[methodname]`keycloakRoleMapping()` on the configurer -- see <<#keycloak-roles,Step 6>>
 
 |[classname]`AuthenticationContext`, [methodname]`logout()`
 |Unchanged; both are Vaadin Flow API
@@ -82,13 +82,13 @@ An application that adds `sso-kit-starter`, sets an issuer URI and a login route
 |[classname]`com.vaadin.flow.spring.security.UidlRedirectStrategy`, applied automatically
 
 |[classname]`UidlExpiredSessionStrategy`
-|A strategy you write -- see <<#gap-session-expiration,Vaadin-Aware Session Expiration>>
+|[classname]`com.vaadin.flow.spring.security.UidlExpiredSessionStrategy`, applied automatically
 
 |[classname]`UserLogoutEvent`
 |Vaadin's [classname]`SessionDestroyEvent`
 
 |[classname]`KeycloakUserMapper`
-|See <<#gap-keycloak-roles,Keycloak Role Mapping>>
+|[classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper`
 
 |`sso-kit-keycloak-lumo` theme
 |No replacement -- see <<#gap-keycloak-theme,Keycloak Login Theme>>
@@ -109,7 +109,7 @@ An application that adds `sso-kit-starter`, sets an issuer URI and a login route
 
 == Migrating a Flow Application
 
-The five steps below cover a Flow application. Steps 4 to 6 are conditional: skip them if the corresponding `vaadin.sso.*` property was never set.
+The six steps below cover a Flow application. Steps 4 to 6 are conditional: skip them if the corresponding `vaadin.sso.*` property was never set.
 
 
 === Step 1: Replace the Dependency
@@ -274,27 +274,98 @@ VaadinServiceInitListener logoutListener() {
 Spring Security completes a back-channel logout by calling its own logout endpoint over HTTP, using the URI template `{baseUrl}/logout/connect/back-channel/{registrationId}`. If the application can't resolve its own external base URL -- typically behind a TLS-terminating proxy without forwarded-header handling -- set an explicit internal address with `oidc.backChannel(backChannel -> backChannel.logoutUri("http://localhost:8080/logout/connect/back-channel/{registrationId}"))`.
 
 
+[[concurrent-sessions]]
 === Step 5: Restore Concurrent Session Control
 
 Skip this step if `vaadin.sso.maximum-concurrent-sessions` was never set.
 
-Session concurrency is standard Spring Security, but the strategy that runs when a session is forced out has to be Vaadin-aware. See <<#gap-session-expiration,Vaadin-Aware Session Expiration>> for the strategy class, then wire it up:
+Session concurrency is standard Spring Security. The one Vaadin-specific part -- answering an expired UIDL request with the `Vaadin-Refresh` token, so the client reloads instead of appearing to hang -- [since:com.vaadin:vaadin@V25.4]#is handled by [classname]`VaadinSecurityConfigurer`#, which installs [classname]`UidlExpiredSessionStrategy` whenever the application has session management configured. Only the limit itself has to be carried over:
 
 .[filename]`SecurityConfig.java`
 [source,java]
 ----
 http.sessionManagement(sessionManagement -> sessionManagement
-        .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1) // <1>
-                .expiredSessionStrategy(new UidlExpiredSessionStrategy()))); // <2>
+        .sessionConcurrency(concurrency -> concurrency.maximumSessions(1))); // <1>
 ----
 <1> The former `vaadin.sso.maximum-concurrent-sessions`. The default, `-1`, means unlimited.
-<2> Without this, an expired session breaks the Vaadin client instead of reloading it.
+
+Pass a strategy of your own to [methodname]`expiredSessionStrategy()` on the configurer, or turn the whole thing off with [methodname]`enableSessionManagementConfiguration(false)`.
+
+.On Earlier Versions
+[NOTE]
+====
+In earlier versions Vaadin's Spring integration doesn't ship the strategy, and Spring Security's default writes a plain-text message that means nothing to the Vaadin client. Add the class to the application and wire it up in [methodname]`sessionConcurrency()`:
+
+[source,java]
+----
+public class UidlExpiredSessionStrategy implements SessionInformationExpiredStrategy {
+
+    @Override
+    public void onExpiredSessionDetected(SessionInformationExpiredEvent event)
+            throws IOException {
+        var request = event.getRequest();
+        var response = event.getResponse();
+        var redirectRoute = request.getContextPath() + "/";
+        var servletMapping = request.getHttpServletMapping().getPattern();
+        if (HandlerHelper.isFrameworkInternalRequest(servletMapping, request)) {
+            response.getWriter().write("Vaadin-Refresh: " + redirectRoute);
+        } else {
+            response.sendRedirect(redirectRoute);
+        }
+    }
+}
+----
+====
 
 
+[[keycloak-roles]]
 === Step 6: Restore Keycloak Role Mapping
 
-Skip this step if `vaadin.sso.keycloak-roles` was never set to `true`. Otherwise see <<#gap-keycloak-roles,Keycloak Role Mapping>>, which has to be built.
+Skip this step if `vaadin.sso.keycloak-roles` was never set to `true`.
+
+Keycloak puts realm roles in a `realm_access` claim and client roles in `resource_access`. Neither is part of the OpenID Connect specification, and by default both live in the access token rather than in the ID token, so Spring Security maps neither and `@RolesAllowed` silently matches nothing.
+
+[classname]`VaadinSecurityConfigurer` [since:com.vaadin:vaadin@V25.4]#has an opt-in that replaces the kit's property#:
+
+.[filename]`SecurityConfig.java`
+[source,java]
+----
+http.with(vaadin(), configurer -> configurer
+        .oauth2LoginPage("/oauth2/authorization/keycloak", "{baseUrl}")
+        .keycloakRoleMapping()); // <1>
+----
+<1> Decodes the access token and maps the realm roles, the roles `resource_access` grants for the current client, and the token scopes as `SCOPE_` authorities. It has no effect without an OAuth2 login page.
+
+.On Earlier Versions
+[NOTE]
+====
+In earlier versions the mapping has to be built. The straightforward route is a [interfacename]`GrantedAuthoritiesMapper` bean that reads the claim and adds `ROLE_` authorities:
+
+[source,java]
+----
+@Bean
+GrantedAuthoritiesMapper keycloakAuthoritiesMapper() {
+    return authorities -> {
+        var mapped = new LinkedHashSet<GrantedAuthority>(authorities);
+        authorities.stream()
+                .filter(OidcUserAuthority.class::isInstance)
+                .map(OidcUserAuthority.class::cast)
+                .map(authority -> authority.getIdToken().getClaimAsMap("realm_access"))
+                .filter(Objects::nonNull)
+                .forEach(realmAccess -> {
+                    var roles = (Collection<?>) realmAccess.get("roles");
+                    if (roles != null) {
+                        roles.forEach(role ->
+                                mapped.add(new SimpleGrantedAuthority("ROLE_" + role)));
+                    }
+                });
+        return mapped;
+    };
+}
+----
+
+This reads the ID token, so the Keycloak client needs its *realm roles* mapper set to add roles to the ID token; by default that mapper only adds them to the access token. If changing the Keycloak client isn't an option, register an [classname]`OidcUserService` with a converter that decodes the access token with a [interfacename]`JwtDecoder` and reads `realm_access` and `resource_access` from there. That's what the kit's [classname]`KeycloakUserMapper` did, and it's why the kit needed the extra `roles` scope. Client roles need the same treatment applied to the `resource_access` claim, keyed by client ID.
+====
 
 
 == Migrating a Hilla Application
@@ -392,76 +463,7 @@ Unauthenticated users are redirected to the configured login view rather than to
 [[gaps]]
 == What You Have to Build Yourself
 
-These are the features with no drop-in replacement. The first two are small and mechanical. The last three are genuine gaps.
-
-
-[[gap-session-expiration]]
-=== Vaadin-Aware Session Expiration
-
-*Affects:* applications that set `vaadin.sso.maximum-concurrent-sessions` or `hilla.sso.maximum-concurrent-sessions`.
-
-When session concurrency forces an older session out, Spring Security's default strategy writes a plain-text message to the response. For a UIDL request that response is meaningless to the Vaadin client, which then appears to hang. The kit installed a strategy that answers framework-internal requests with the `Vaadin-Refresh` token instead, so the client reloads. Spring Security can't know about that protocol, and Vaadin's Spring integration doesn't ship an equivalent, so the class has to live in the application:
-
-.[filename]`UidlExpiredSessionStrategy.java`
-[source,java]
-----
-public class UidlExpiredSessionStrategy implements SessionInformationExpiredStrategy {
-
-    @Override
-    public void onExpiredSessionDetected(SessionInformationExpiredEvent event)
-            throws IOException {
-        var request = event.getRequest();
-        var response = event.getResponse();
-        var redirectRoute = request.getContextPath() + "/";
-        var servletMapping = request.getHttpServletMapping().getPattern();
-        if (HandlerHelper.isFrameworkInternalRequest(servletMapping, request)) {
-            response.getWriter().write("Vaadin-Refresh: " + redirectRoute);
-        } else {
-            response.sendRedirect(redirectRoute);
-        }
-    }
-}
-----
-
-Wire it into [methodname]`sessionConcurrency()` as shown in Step 5.
-
-
-[[gap-keycloak-roles]]
-=== Keycloak Role Mapping
-
-*Affects:* applications that set `vaadin.sso.keycloak-roles=true` or `hilla.sso.keycloak-roles=true`.
-
-Keycloak puts realm roles in a `realm_access` claim and client roles in `resource_access`, neither of which is part of the OpenID Connect specification. Spring Security therefore maps neither, and `@RolesAllowed` sees no roles after the migration unless you add the mapping.
-
-The straightforward route is a [interfacename]`GrantedAuthoritiesMapper` bean that reads the claim and adds `ROLE_` authorities:
-
-.[filename]`SecurityConfig.java`
-[source,java]
-----
-@Bean
-GrantedAuthoritiesMapper keycloakAuthoritiesMapper() {
-    return authorities -> {
-        var mapped = new LinkedHashSet<GrantedAuthority>(authorities);
-        authorities.stream()
-                .filter(OidcUserAuthority.class::isInstance)
-                .map(OidcUserAuthority.class::cast)
-                .map(authority -> authority.getIdToken().getClaimAsMap("realm_access"))
-                .filter(Objects::nonNull)
-                .forEach(realmAccess -> {
-                    var roles = (Collection<?>) realmAccess.get("roles");
-                    if (roles != null) {
-                        roles.forEach(role ->
-                                mapped.add(new SimpleGrantedAuthority("ROLE_" + role)));
-                    }
-                });
-        return mapped;
-    };
-}
-----
-
-This reads the ID token, so the Keycloak client needs its *realm roles* mapper set to add roles to the ID token. By default that mapper only adds them to the access token. If changing the Keycloak client isn't an option, register an [classname]`OidcUserService` with a converter that decodes the access token with a [interfacename]`JwtDecoder` and reads `realm_access` and `resource_access` from there. That's what the kit's [classname]`KeycloakUserMapper` did, and it's why the kit needed the extra `roles` scope.
-
-Client roles need the same treatment applied to the `resource_access` claim, keyed by client ID.
+These three features have no replacement at all. Two more that the kit carried -- Vaadin-aware session expiration and Keycloak role mapping -- are now part of Vaadin's Spring Security integration; see <<#concurrent-sessions,Step 5>> and <<#keycloak-roles,Step 6>>.
 
 
 [[gap-logout-notification]]
@@ -570,10 +572,10 @@ Use this to confirm nothing is left behind. *Direct* means it works after Step 3
 |Direct, after adding [methodname]`sessionConcurrency()`
 
 |Vaadin-aware expired-session handling
-|Build it
+|Direct
 
 |Keycloak realm and client role mapping
-|Build it
+|Direct, after adding [methodname]`keycloakRoleMapping()`
 
 |Hilla user information and roles on the client
 |Build it
