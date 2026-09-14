@@ -45,7 +45,7 @@ Two design properties make that verdict worth trusting:
 
 *Exactly one gate decides.* While the daemon owns your application, Flow's own save-triggered watchers are suspended. Nothing else pushes a stylesheet or refreshes a component behind your back, so one command decides when a change goes live and one command reports on it.
 
-*It never over-claims.* A successful class redefinition is not proof that a change is visible. If Flow had no component to refresh, if an entity mapping is involved, if a proxied Spring bean changed shape, or if a frontend import moved, `apply` says so and escalates to a restart instead of reporting `Stable`.
+*It never over-claims.* A successful class redefinition is not proof that a change is visible. If Flow had no component to refresh, if an entity mapping is involved, if a proxied Spring bean changed shape, if a new class carries a Spring stereotype or `@Entity` the application never had, or if a frontend import moved, `apply` says so and escalates to a restart instead of reporting `Stable`.
 
 Developers get exactly the same commands. Nothing on this page is agent-only.
 
@@ -194,7 +194,7 @@ hot-reload: redefineClasses(1); onHotswap completed=true
 
 An `hmr:` line reports _hot module replacement_ -- the change reached the open browser session without restarting the server, so you keep your session and your navigation state. A `hot-reload:` line is the Java counterpart, where new bytecode is swapped into the running JVM.
 
-Broadly: stylesheets, themes, and most view and component code go live in place, with no reload. Structural Java changes, entity mappings, `application.properties`, bundled frontend files, and frontend annotations such as `@JsModule` need a restart, which `apply` performs itself and names the reason for. A compile failure reports file, line, and column, and leaves the running application on its last good bytes.
+Broadly: stylesheets, themes, and most view and component code go live in place, with no reload. Structural Java changes, entity mappings, a new class that only now carries a Spring stereotype or `@Entity`, `application.properties`, bundled frontend files, and frontend annotations such as `@JsModule` need a restart, which `apply` performs itself and names the reason for -- for example `new Spring bean (TaskService): component scanning ran at startup, so the running context has no definition for it`. A compile failure reports file, line, and column, and leaves the running application on its last good bytes.
 
 Two outcomes are worth recognizing, because neither is the success it resembles:
 
@@ -219,7 +219,7 @@ Most of what the dev loop can't do it reports honestly, by escalating to a resta
 *An edit that changes what a class promises its callers isn't supported.* Only the change-set is recompiled, so callers you didn't edit keep the bytecode they were compiled with. Rename or re-sign a method, or change a `static final` constant, and those callers are stale -- a `NoSuchMethodError` at runtime, or for an inlined constant no error at all and the old value -- while `apply` reports `Stable`. A restart doesn't fix it. Recompile with Maven after such an edit.
 ====
 
-Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
+Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, a class that only now carries a Spring stereotype (`@Component`, `@Service`, `@Repository`, `@Controller`, `@RestController`, `@ControllerAdvice`, `@RestControllerAdvice`, or `@Configuration`) or `@Entity` restarts too -- component scanning and the JPA metamodel are both fixed at startup, so a class the application never had gets no bean definition and no mapping -- and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
 
 
 [[configuration]]
