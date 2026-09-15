@@ -192,6 +192,23 @@ function parseArticleFlags(adoc) {
   return ids;
 }
 
+/**
+ * Compares the feature flags documented in the article with the flags found in
+ * the Vaadin release the docs are pinned to.
+ */
+export function compareFlags(articleFlags, releasedFlags) {
+  const documented = new Set(articleFlags);
+  for (const id of EXCLUDED_FLAGS) {
+    documented.delete(id);
+  }
+  const releasedFlagSet = new Set(releasedFlags);
+  return {
+    documented,
+    undocumented: [...releasedFlags].filter((id) => !documented.has(id)),
+    stale: [...documented].filter((id) => !releasedFlagSet.has(id)),
+  };
+}
+
 function readArticle() {
   return readFileSync(ARTICLE_PATH, 'utf-8');
 }
@@ -233,15 +250,10 @@ function main() {
   console.log(`Reading article from ${ARTICLE_PATH}...`);
   const adoc = readArticle();
   const articleFlags = parseArticleFlags(adoc);
-  for (const id of EXCLUDED_FLAGS) {
-    articleFlags.delete(id);
-  }
-  console.log(`  article: found ${articleFlags.size} feature flag(s)`);
 
   // Compare
-  const repoFlagSet = new Set(allRepoFlags);
-  const undocumented = allRepoFlags.filter((id) => !articleFlags.has(id));
-  const stale = [...articleFlags].filter((id) => !repoFlagSet.has(id));
+  const { documented, undocumented, stale } = compareFlags(articleFlags, allRepoFlags);
+  console.log(`  article: found ${documented.size} feature flag(s)`);
   let failed = false;
 
   if (undocumented.length > 0) {
@@ -267,4 +279,6 @@ function main() {
   console.log('\nAll feature flags are in sync.');
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}
