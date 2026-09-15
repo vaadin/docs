@@ -129,26 +129,6 @@ Within one request the events don't nest: those of one invocation are all fired 
 
 Being reported doesn't mean the invocation had an effect: an RPC targeting a node that's detached, disabled, or inert is reported and only then discarded unhandled.
 
-The following example traces each invocation and logs its duration:
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/RpcInvocationTracingInitListener.java[tags=snippet,indent=0]
-----
-
-=== Synchronized Property Updates
-
-Synchronized property updates (invocation type `mSync`) are handled in two steps: the value of every synchronized property in the request is applied to the state tree first, and only then are the corresponding property change events fired, so that application code sees a fully updated tree.
-This affects how they're reported:
-
-- The events surround the second step, the property change event, since that's the step that runs application code.
-When the update produces no change event, they therefore surround no work.
-That's the case when the value was already the one the client sent, when a model filter rejects the update, and when the property is bound to a signal through [methodname]`Element.bindProperty()`, whose write callback runs in the first step instead.
-- The first step can fail on its own, when the property isn't synchronized at all or a signal bound to it rejects the write.
-There's then no change event to surround, so the events are fired at that point instead, with an [classname]`RpcInvocationFailedEvent` carrying the failure.
-Refusing a value the client shouldn't have sent aborts the request: unlike a failure in application code, the remaining invocations of the request aren't handled and the client is sent an internal error.
-- Because the first step is completed for the whole request up front, all property updates in a request are reported before any other invocation it carries -- even those the client sent earlier in the request.
-
 
 == Data Provider Query Events
 
@@ -205,13 +185,6 @@ Fetch events only.
 Because a data provider may return a lazily evaluated [classname]`Stream`, the ended event is fired only after the returned items have been consumed, so the measured duration covers the backend round-trip rather than only the call that started it.
 The started and ended events of a query are fired on the same thread, and the ended event is fired in reverse registration order, so listeners nest around the started one.
 Queries made for a component that isn't attached to a live UI aren't reported.
-
-The following example logs fetches that take longer than a threshold:
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/DataQueryMetricsInitListener.java[tags=snippet,indent=0]
-----
 
 [NOTE]
 Data fetches triggered by push updates run on the executor given to [methodname]`DataCommunicator.enablePushUpdates()`, so these events aren't always fired on a request thread.
