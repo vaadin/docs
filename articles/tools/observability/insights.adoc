@@ -12,7 +12,7 @@ order: 35
 Metrics tell you that something is wrong; they don't tell you what a user clicked.
 Interaction insights close that gap.
 Observability Kit retains the user interactions that went wrong -- the ones that failed, and the ones that took too long -- together with the route, the component, the event, and the exception behind them.
-It does the same for the data provider queries behind a slow lazy-loading component, which no interaction can account for.
+It does the same for the data provider queries behind a slow lazy-loading component, which no interaction can account for, and for the errors browsers report -- the one kind of failure the server never handled itself.
 An endpoint then serves them grouped and ready to act on, so a report like "I clicked something on the orders page and got an error" becomes a concrete, replicable interaction.
 
 The payload is a stable, machine-readable contract.
@@ -24,7 +24,7 @@ Insight collection is on by default and works in production mode.
 
 == What Gets Captured
 
-Two collectors run, one over user interactions and one over data provider queries.
+Three collectors run: one over user interactions, one over data provider queries, and one over the errors browsers report.
 
 === User Interactions
 
@@ -46,11 +46,21 @@ A second collector therefore watches the queries themselves, retaining the ones 
 
 This one additionally requires `vaadin.observability.data` (on by default).
 
+=== Browser Errors
+
+A script that fails in a tab reaches no server log at all.
+The in-browser collector reports uncaught errors and unhandled rejections, and a third collector retains what identifies each one: the kind, the script it came from, and the first stack frame.
+None of that is a number, and each would be one time series per distinct value, which is why it's kept as an insight instead of as tags on the `vaadin.client.errors` counter.
+
+This one additionally requires `vaadin.observability.client` (on by default), since the browser collector is what supplies the reports.
+At most 20 browser-error insights appear in one payload, the most-reported first; the counter still counts every report, and [propertyname]`vaadin.observability.insights-capacity` still governs how many are retained.
+
 === What Happens to the Rest
 
 Everything else is dropped.
 Retained records live in bounded in-memory ring buffers of [propertyname]`vaadin.observability.insights-capacity` entries each, 100 by default, and the oldest is evicted once a buffer is full.
-Interactions and queries are retained separately, so with both active the total is twice the capacity.
+Interactions, queries, and browser errors are retained separately, so with all three active the total is three times the capacity.
+Keeping them apart means a burst of slow queries can't evict the failed interactions, and neither can the flood of buffered reports that arrives when a network outage ends.
 Nothing is written to disk, and the buffers don't survive a restart.
 
 Collection is best-effort: if capturing a record fails, the error is swallowed rather than interfering with data loading or the framework's own error handling.
@@ -81,7 +91,7 @@ Secure it as you would any other Actuator endpoint -- put it behind authenticati
 The endpoint is part of the Spring Boot starter and needs Actuator on the classpath.
 The payload is also available in-process: inject the [classname]`VaadinObservabilityEndpoint` bean and call [methodname]`section("observability")` -- for example to feed an admin view or an AI agent without going through HTTP.
 
-In plain-Spring and standalone deployments the collectors still run, and you can read the buffers yourself through [methodname]`ObservabilityKit.getRecentInteractions()` and [methodname]`ObservabilityKit.getRecentQueries()`, passing both to an [classname]`InsightsService` to render the same payload.
+In plain-Spring and standalone deployments the collectors still run, and you can read the buffers yourself through [methodname]`ObservabilityKit.getRecentInteractions()`, [methodname]`ObservabilityKit.getRecentQueries()`, and [methodname]`ObservabilityKit.getRecentClientErrors()`, passing all three to an [classname]`InsightsService` to render the same payload.
 
 
 == Reading the Payload
@@ -105,9 +115,10 @@ An empty array with `instrumentation: inactive` means nothing was watching.
 Records are grouped, so ten users hitting the same problem produce one insight with ten occurrences.
 Interaction errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
 Query errors group by route, component, query kind, and exception type; slow queries group by route, component, and query kind.
+Browser errors group by route, error kind, script source, and stack frame.
 The route is a *template*, so `orders/17` and `orders/18` group under one `orders/:orderId` insight instead of one per parameter value.
 
-Four insight types can appear in the array:
+Five insight types can appear in the array:
 
 [cols="1,3"]
 |===
@@ -124,6 +135,10 @@ Four insight types can appear in the array:
 
 |`slow-data-query`
 |A data provider query that succeeded but ran over the UX budget.
+
+|`client-error`
+|An uncaught error or unhandled rejection a browser reported.
+The only insight type that can describe a failure the server never saw.
 |===
 
 
@@ -281,7 +296,7 @@ The [propertyname]`offset`, [propertyname]`limit`, and [propertyname]`rows` fiel
 == Sensitive Detail
 
 The insights payload is meant to travel -- into an issue tracker, an AI agent, a chat message -- so anything that could carry personal or secret data is withheld unless you ask for it.
-By default an insight omits the exception message, the stack frames, and the raw session ID.
+By default an insight omits the exception message, the stack frames, and the raw session ID -- and, for a browser error, the error message and the function name its stack frame named.
 What remains is still actionable: the route, the component, the event, the exception type, and the first application frame.
 
 Turn the rest on when you need it:
@@ -294,6 +309,11 @@ vaadin.observability.insights-details=true
 
 This adds the exception message (truncated to 200 characters), the top five stack frames as [propertyname]`stackTop`, and the raw Vaadin session ID in place of the hash.
 An exception message is free-form text and can carry a whole payload, which is exactly why it's opt-in.
+A browser error's message and function name are gated the same way, and for the same reason: a page can name a function anything, so the name is text the page chose rather than a fact about the code.
+
+For a browser error the setting governs *collection*, not just retention.
+With it off, the browser never gathers the message or the function name, so neither is buffered in the tab or sent to the server.
+The value is read by a page when it loads, so a change reaches already-open tabs only after a reload.
 
 
 [[ai-agents]]
@@ -330,18 +350,18 @@ Three practicalities:
 
 |`vaadin.observability.insights`
 |`true`
-|Retain failed and over-budget interactions and data provider queries.
-Also requires `errors` for failures and `requests` for slow records; the query insights additionally require `data`.
+|Retain failed and over-budget interactions, data provider queries, and the errors browsers report.
+Also requires `errors` for failures and `requests` for slow records; the query insights additionally require `data`, and the browser-error insights additionally require `client`.
 
 |`vaadin.observability.insights-details`
 |`false`
-|Allow retained interactions to carry the exception message, the top stack frames, and the raw session ID.
+|Allow retained interactions to carry the exception message, the top stack frames, and the raw session ID, and retained browser errors their message and function name.
 See <<#detail,Sensitive Detail>>.
 
 |`vaadin.observability.insights-capacity`
 |`100`
 |Maximum number of retained records per buffer.
-Interactions and queries are retained separately, so with both active the total is twice this.
+Interactions, queries, and browser errors are retained separately, so with all three active the total is three times this.
 The oldest is evicted once a buffer's cap is reached.
 |===
 
