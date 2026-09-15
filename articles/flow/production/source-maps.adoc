@@ -1,0 +1,74 @@
+---
+title: Source Maps
+page-title: How to enable source maps in a Vaadin production build
+description: Generating source maps for a production build to get readable client-side stack traces.
+meta-description: Learn how to enable JavaScript source maps in a Vaadin production build, so that client-side errors and error reports show readable file names and lines.
+order: 15
+---
+
+
+= Source Maps in Production
+
+A production build bundles and minifies the application's frontend code. That's good for load times, but it makes client-side errors nearly unreadable: a stack trace points somewhere into the middle of a single very long line in a file called something like [filename]`indexhtml-CtcJtjWg.js`. This applies both to what you see in the browser's developer tools and to the stack traces that an error-reporting service collects from your users' browsers.
+
+Source maps fix this. They're separate files that map the bundled and minified output back to the original TypeScript and JavaScript sources. With them, a stack trace shows the file, line, and function name that you actually wrote.
+
+Vaadin doesn't generate source maps for production builds by default, as they add to the build time and to the size of the deployed application.
+
+
+== Enabling Source Maps
+
+Set the Vite `build.sourcemap` option in the [filename]`vite.config.ts` file in the project root:
+
+.`vite.config.ts`
+[source,typescript]
+----
+import type { UserConfigFn } from 'vite';
+import { overrideVaadinConfig } from './vite.generated';
+
+const customConfig: UserConfigFn = (env) => ({
+  build: {
+    sourcemap: true
+  }
+});
+
+export default overrideVaadinConfig(customConfig);
+----
+
+Vaadin generates [filename]`vite.config.ts` during the build if the file doesn't exist yet. Once you've customized it, commit it to source control -- see <<{articles}/flow/configuration/source-control#, Source Control>>.
+
+The [filename]`.map` files are written next to the bundle files in the frontend build output folder -- for a `JAR` packaged application, that's `target/classes/META-INF/VAADIN/webapp/VAADIN/build/` -- and are served from the `/VAADIN/build/` path of the deployed application.
+
+.Vite Runs Only for an Application-Specific Bundle
+[NOTE]
+====
+Source maps are generated only when the build actually runs Vite. A build that can use the pre-compiled production bundle skips the frontend build altogether, and [filename]`vite.config.ts` has no effect. If that's the case for your application, force an optimized bundle with `-Dvaadin.force.production.build=true`. See <<production-build#, Production Build>> for details.
+====
+
+
+== Keeping the Sources Private
+
+With `sourcemap: true`, Vite adds a `//# sourceMappingURL=` comment to each generated file and deploys the [filename]`.map` files with the application. Anyone who opens the developer tools can then read the application's original frontend sources. That's convenient for debugging a deployed application, but it's not always acceptable.
+
+To avoid it, generate the maps without the comment that points browsers to them:
+
+.`vite.config.ts`
+[source,typescript]
+----
+const customConfig: UserConfigFn = (env) => ({
+  build: {
+    sourcemap: 'hidden'
+  }
+});
+----
+
+The maps are still written to the build output, but nothing points browsers to them, so they aren't loaded when the application runs. You can still upload them to an error-reporting service as part of the build. If the maps mustn't be deployed at all, delete the [filename]`.map` files from the build output after uploading them, before the application is packaged.
+
+
+== Reporting Client-Side Errors
+
+The main reason to generate source maps for production is to make errors that happen in your users' browsers understandable. An error-reporting service, such as link:https://sentry.io[Sentry], captures uncaught client-side exceptions and sends them to a dashboard where you can see how often each error occurs and to how many users. Without source maps, the reported stack traces refer only to minified bundle files, which tells you little about what went wrong.
+
+When you upload the source maps of a build to such a service, it translates incoming stack traces back to your own sources and shows the failing line of code with the error. Sentry does this with a Vite plugin, or with the `sentry-cli sourcemaps upload` command pointed at the frontend build output folder. Other services work in a similar way. Whichever you use, tag each upload with the version or release identifier of the deployed application, so that the service matches a stack trace to the source maps of the build that produced it.
+
+A source map covers everything in the bundle, including Vaadin's own client-side code, so it also helps when the error originates in a component rather than in your own views. Errors thrown in server-side Java code never reach the browser. Use your server-side logging or monitoring for those -- see <<{articles}/tools/observability#, Observability Kit>>.
