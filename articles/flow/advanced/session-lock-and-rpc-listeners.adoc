@@ -1,124 +1,107 @@
 ---
-title: Session Lock pass:[&] RPC Invocation Listeners
-page-title: How to monitor session locks and RPC invocations in Vaadin
-description: Observing session-lock contention and per-invocation timing with SessionLockListener and RpcInvocationListener.
-meta-description: Learn how to use SessionLockListener and RpcInvocationListener in Vaadin Flow to monitor session-lock contention and client-to-server RPC invocations.
+title: Service Event Bus
+page-title: How to observe session locks, RPC invocations pass:[&] data queries in Vaadin
+description: Observing session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
+meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
 order: 850
 ---
 
 
-= [since:com.vaadin:vaadin@V25.2]#Session Lock & RPC Invocation Listeners#
+= [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
-Vaadin serializes all server-side work for a single session behind one lock.
-Two listeners let you observe this machinery without modifying application logic: [interfacename]`SessionLockListener` reports when the session lock is requested, acquired, and released; while [interfacename]`RpcInvocationListener` reports around the handling of each client-to-server RPC invocation.
-Together they're useful for performance monitoring, distributed tracing, and diagnosing lock contention.
+Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
+The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
+Listening to them is useful for performance monitoring, distributed tracing, and diagnosing lock contention -- without modifying application logic.
 
-Both listeners are registered on the [classname]`VaadinService`, typically from a <<service-init-listener#,`VaadinServiceInitListener`>>.
-Each registration method returns a [classname]`Registration` whose `remove()` method unregisters the listener.
+The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
 
-[NOTE]
-Callbacks run on the request or access thread, directly around the lock or invocation operation.
-Implementations must be fast and non-blocking.
-Exceptions thrown from a callback are logged and suppressed, so they can't disrupt session locking or RPC processing.
+[source,java]
+----
+Registration registration = service.getEventBus()
+        .addListener(SessionLockAcquiredEvent.class,
+                event -> handleLockAcquired(event));
+----
+
+The returned [classname]`Registration` removes the listener again with [methodname]`remove()`.
+
+A few properties of the bus are worth knowing:
+
+- Events are dispatched by their *exact runtime type*. A listener registered for a supertype -- for instance [classname]`AbstractDataFetchEvent` -- is never notified; register for each concrete event type you want.
+- The bus is *thread-safe*. Listeners can be added and removed while events are being fired from other request threads. Requests belonging to different sessions are handled concurrently, so a listener must expect events from several sessions on several threads at once.
+- An exception thrown by a listener is *logged, and the remaining listeners are notified regardless*, so that one misbehaving listener can neither disrupt the framework nor hide the event from other listeners.
+- Listeners run *on the request or access thread*, directly around the operation they report. Implementations must be fast and non-blocking.
 
 
-== Session Lock Listener
+== Registering Listeners
+
+Listeners are typically added from a <<service-init-listener#,`VaadinServiceInitListener`>>, which receives the service before it starts handling requests.
+How that init listener itself is discovered depends on the project type:
+
+- In *Spring and CDI* projects, annotate the class with `@Component` (Spring) or make it a managed bean (CDI); it's then registered automatically.
+- In *plain Java* projects, register it through the Java Service Provider Interface by listing its fully qualified class name in [filename]`META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`.
+
+See <<service-init-listener#,Service Init Listener>> for the full details of each approach.
+
+
+== Session Lock Events
 
 Because all of a session's server-side work is serialized behind a single lock, the time a thread spends blocked acquiring that lock (the _wait time_) and the time it then holds it (the _hold time_) are key performance signals.
-A [interfacename]`SessionLockListener` exposes both.
-
-The same lock instance protects a session whether it's acquired by the framework while handling a request, or through [methodname]`VaadinSession.lock()` -- for example from <<server-push#,`UI.access()`>>.
-
-The interface has three callbacks, all with default (empty) implementations, so you only need to override those you use:
+Three events expose both:
 
 [cols="1,3",options="header"]
 |===
-|Callback |When It's Invoked
+|Event |When It's Fired
 
-|[methodname]`lockRequested(SessionLockEvent)`
+|[classname]`SessionLockRequestedEvent`
 |Immediately before the thread attempts to acquire the lock.
 
-|[methodname]`lockAcquired(SessionLockEvent)`
+|[classname]`SessionLockAcquiredEvent`
 |Immediately after the lock has been acquired.
 
-|[methodname]`lockReleased(SessionLockEvent)`
+|[classname]`SessionLockReleasedEvent`
 |Immediately after the outermost hold has been released (the hold count reached zero).
 |===
 
-Callbacks are delivered for the _outermost_ acquisition only; reentrant re-locks aren't reported.
-For a single lock-hold, all three callbacks are delivered on the same thread in the order [methodname]`lockRequested` -> [methodname]`lockAcquired` -> [methodname]`lockReleased`.
+All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`.
+
+The same lock instance protects a session whether it's acquired by the framework while handling a request, or through [methodname]`VaadinSession.lock()` -- for example from <<server-push#,`UI.access()`>>.
+Events are fired for the _outermost_ acquisition only; reentrant re-locks aren't reported.
+For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released.
 This makes a [classname]`ThreadLocal` a natural place to record timing, as shown in the following example:
 
 [source,java]
 ----
-public class LockMetricsInitListener implements VaadinServiceInitListener {
-
-    @Override
-    public void serviceInit(ServiceInitEvent event) {
-        event.getSource().addSessionLockListener(new SessionLockListener() {
-
-            private final ThreadLocal<Long> requestedAt = new ThreadLocal<>();
-            private final ThreadLocal<Long> acquiredAt = new ThreadLocal<>();
-
-            @Override
-            public void lockRequested(SessionLockEvent event) {
-                requestedAt.set(System.nanoTime());
-            }
-
-            @Override
-            public void lockAcquired(SessionLockEvent event) {
-                long acquired = System.nanoTime();
-                acquiredAt.set(acquired);
-                long waitNanos = acquired - requestedAt.get();
-                LoggerFactory.getLogger(getClass())
-                        .debug("Session lock wait: {} ms", waitNanos / 1_000_000.0);
-            }
-
-            @Override
-            public void lockReleased(SessionLockEvent event) {
-                long holdNanos = System.nanoTime() - acquiredAt.get();
-                LoggerFactory.getLogger(getClass())
-                        .debug("Session lock hold: {} ms", holdNanos / 1_000_000.0);
-                requestedAt.remove();
-                acquiredAt.remove();
-            }
-        });
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/SessionLockMetricsInitListener.java[tags=snippet,indent=0]
 ----
 
-When several listeners are registered, [methodname]`lockRequested` and [methodname]`lockAcquired` are delivered in registration order, while [methodname]`lockReleased` is delivered in reverse registration order.
-The callbacks therefore nest like `try`/`finally` blocks: a listener registered later sees its [methodname]`lockReleased` run before that of a listener registered earlier.
+When several listeners are registered, the requested and acquired events are delivered in registration order, while the released event is delivered in reverse registration order.
+Listeners therefore nest like `try`/`finally` blocks: a listener registered later sees the release before one registered earlier does.
 
 Listeners registered after a session's lock has already been created are still honored.
 
 
-== RPC Invocation Listener
+== RPC Invocation Events
 
-A single client request typically carries several RPC invocations -- a DOM event, a `@ClientCallable` or template event handler, a server-side navigation, a return channel message, and so on.
-A [interfacename]`RpcInvocationListener` is notified once per invocation, which is useful for emitting a tracing span that shows exactly which invocation consumes the time spent holding the session lock during a request.
-
-The interface has three callbacks, all with default (empty) implementations:
+A single client request typically carries several RPC invocations -- a DOM event, a synchronized property update, a `@ClientCallable` or template event handler, a server-side navigation, a return channel message, and so on.
+One event of each type is fired per invocation, which is useful for emitting a tracing span that shows exactly which invocation consumes the time spent holding the session lock during a request.
 
 [cols="1,3",options="header"]
 |===
-|Callback |When It's Invoked
+|Event |When It's Fired
 
-|[methodname]`invocationStarted(RpcInvocationEvent)`
+|[classname]`RpcInvocationStartedEvent`
 |Immediately before an invocation is handled.
 
-|[methodname]`invocationFailed(RpcInvocationEvent, Throwable)`
-|When handling an invocation threw, before [methodname]`invocationEnded`.
-The framework still routes the throwable to the session error handler independently of this callback.
+|[classname]`RpcInvocationFailedEvent`
+|When handling an invocation threw, before the ended event.
+The throwable is available from [methodname]`getError()`.
+The framework still routes it to the session error handler independently of this event.
 
-|[methodname]`invocationEnded(RpcInvocationEvent)`
+|[classname]`RpcInvocationEndedEvent`
 |Once an invocation has been handled, whether it completed normally or threw.
 |===
 
-For one invocation, [methodname]`invocationStarted`, the optional [methodname]`invocationFailed`, and [methodname]`invocationEnded` are delivered on the same thread, in that order.
-[methodname]`invocationEnded` is always delivered after [methodname]`invocationStarted`, regardless of outcome, so timing state can again be kept in a [classname]`ThreadLocal`.
-
-The [classname]`RpcInvocationEvent` exposes details about the invocation:
+All three expose the same details about the invocation:
 
 [cols="1,3",options="header"]
 |===
@@ -129,7 +112,7 @@ The [classname]`RpcInvocationEvent` exposes details about the invocation:
 Never `null`.
 
 |[methodname]`getType()`
-|The protocol-level invocation type, such as `event`, `publishedEventHandler`, `navigation`, or `channel`.
+|The protocol-level invocation type, such as `event`, `mSync`, `publishedEventHandler`, `navigation`, or `channel`.
 Never `null`.
 
 |[methodname]`getNodeId()`
@@ -137,56 +120,176 @@ Never `null`.
 
 |[methodname]`getName()`
 |A human-readable identifier -- the DOM event name, the invoked method name, the navigation location, and so on -- or `null` if none applies.
+It never carries the data of the invocation, only its identity.
 |===
+
+For one invocation, the started event, the optional failed event, and the ended event are fired on the same thread, in that order.
+The ended event is always fired after the started one, regardless of outcome, so timing state can again be kept in a [classname]`ThreadLocal`.
+Within one request the events don't nest: those of one invocation are all fired before those of the next.
+
+Being reported doesn't mean the invocation had an effect: an RPC targeting a node that's detached, disabled, or inert is reported and only then discarded unhandled.
 
 The following example traces each invocation and logs its duration:
 
 [source,java]
 ----
-public class RpcTracingInitListener implements VaadinServiceInitListener {
-
-    @Override
-    public void serviceInit(ServiceInitEvent event) {
-        event.getSource().addRpcInvocationListener(new RpcInvocationListener() {
-
-            private final ThreadLocal<Long> startedAt = new ThreadLocal<>();
-
-            @Override
-            public void invocationStarted(RpcInvocationEvent event) {
-                startedAt.set(System.nanoTime());
-            }
-
-            @Override
-            public void invocationFailed(RpcInvocationEvent event,
-                    Throwable error) {
-                LoggerFactory.getLogger(getClass()).warn(
-                        "RPC invocation failed: type={}, name={}",
-                        event.getType(), event.getName(), error);
-            }
-
-            @Override
-            public void invocationEnded(RpcInvocationEvent event) {
-                long elapsedNanos = System.nanoTime() - startedAt.get();
-                LoggerFactory.getLogger(getClass()).debug(
-                        "RPC invocation: type={}, name={}, took {} ms",
-                        event.getType(), event.getName(),
-                        elapsedNanos / 1_000_000.0);
-                startedAt.remove();
-            }
-        });
-    }
-}
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/RpcInvocationTracingInitListener.java[tags=snippet,indent=0]
 ----
 
+=== Synchronized Property Updates
 
-== Registering the Listeners
+Synchronized property updates (invocation type `mSync`) are handled in two steps: the value of every synchronized property in the request is applied to the state tree first, and only then are the corresponding property change events fired, so that application code sees a fully updated tree.
+This affects how they're reported:
 
-Both listeners are added from a <<service-init-listener#,`VaadinServiceInitListener`>>, as shown in the examples above.
-How that init listener itself is discovered depends on the project type:
+- The events surround the second step, the property change event, since that's the step that runs application code.
+When the update produces no change event, they therefore surround no work.
+That's the case when the value was already the one the client sent, when a model filter rejects the update, and when the property is bound to a signal through [methodname]`Element.bindProperty()`, whose write callback runs in the first step instead.
+- The first step can fail on its own, when the property isn't synchronized at all or a signal bound to it rejects the write.
+There's then no change event to surround, so the events are fired at that point instead, with an [classname]`RpcInvocationFailedEvent` carrying the failure.
+Refusing a value the client shouldn't have sent aborts the request: unlike a failure in application code, the remaining invocations of the request aren't handled and the client is sent an internal error.
+- Because the first step is completed for the whole request up front, all property updates in a request are reported before any other invocation it carries -- even those the client sent earlier in the request.
 
-- In *Spring and CDI* projects, annotate the class with `@Component` (Spring) or make it a managed bean (CDI); it's then registered automatically.
-- In *plain Java* projects, register it through the Java Service Provider Interface by listing its fully qualified class name in [filename]`META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`.
 
-See <<service-init-listener#,Service Init Listener>> for the full details of each approach.
+== Data Provider Query Events
+
+Every fetch and count query a data-bound component issues is reported on the bus, so that slow backend queries can be measured where they happen instead of being inferred from overall request timings.
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`DataFetchStartedEvent`
+|Before a page of items is requested from a data provider.
+
+|[classname]`DataFetchFailedEvent`
+|When the fetch threw, before the ended event.
+The throwable is available from [methodname]`getError()`.
+
+|[classname]`DataFetchEndedEvent`
+|Once the items have been loaded and consumed, or the fetch threw.
+[methodname]`getRowsReturned()` gives the number of items the data provider actually returned -- possibly fewer than requested -- or `-1` if it threw.
+
+|[classname]`DataCountStartedEvent`
+|Before a count query is issued.
+
+|[classname]`DataCountFailedEvent`
+|When the count query threw, before the ended event.
+
+|[classname]`DataCountEndedEvent`
+|Once the count query has returned or thrown.
+[methodname]`getCount()` gives the reported number of items, or `-1` if it threw.
+|===
+
+The events describe the query and where it came from:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getUI()`
+|The [classname]`UI` the component belongs to.
+Never `null`.
+
+|[methodname]`getComponent()`
+|An [classname]`Optional` with the component whose data is being loaded, so that a query can be attributed to a view.
+Empty when the component couldn't be resolved.
+
+|[methodname]`getOffset()` and [methodname]`getLimit()`
+|The index of the first item requested, and how many were requested.
+Fetch events only.
+
+|[methodname]`isFiltered()`
+|Whether the query carried a filter, which distinguishes, for example, a Combo Box search from its initial page load.
+|===
+
+Because a data provider may return a lazily evaluated [classname]`Stream`, the ended event is fired only after the returned items have been consumed, so the measured duration covers the backend round-trip rather than only the call that started it.
+The started and ended events of a query are fired on the same thread, and the ended event is fired in reverse registration order, so listeners nest around the started one.
+Queries made for a component that isn't attached to a live UI aren't reported.
+
+The following example logs fetches that take longer than a threshold:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/DataQueryMetricsInitListener.java[tags=snippet,indent=0]
+----
+
+[NOTE]
+Data fetches triggered by push updates run on the executor given to [methodname]`DataCommunicator.enablePushUpdates()`, so these events aren't always fired on a request thread.
+
+
+== Other Framework Events
+
+The service lifecycle events are fired through the same bus, and the dedicated [methodname]`addSessionInitListener()`, [methodname]`addSessionDestroyListener()`, [methodname]`addServiceDestroyListener()`, and [methodname]`addUIInitListener()` methods on [classname]`VaadinService` are thin wrappers that register on it.
+Either style works: use the listener interface when it exists, or listen for [classname]`SessionInitEvent`, [classname]`SessionDestroyEvent`, [classname]`ServiceDestroyEvent`, and [classname]`UIInitEvent` directly on the bus.
+
+
+== Firing Your Own Events
+
+Any component of an application that needs to notify service-wide listeners can define an event type of its own and fire it on the bus, instead of maintaining its own listener collection.
+An event type only has to extend [classname]`EventObject`:
+
+[source,java]
+----
+public class MaintenanceModeEvent extends EventObject {
+    public MaintenanceModeEvent(VaadinService service) {
+        super(service);
+    }
+}
+
+// Elsewhere, to notify the listeners:
+service.getEventBus().fireEvent(new MaintenanceModeEvent(service));
+----
+
+Three firing methods are available:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`fireEvent(event)`
+|Notifies the listeners of the event type in registration order, logging an exception from a listener and continuing with the rest.
+
+|[methodname]`fireEvent(event, errorHandler)`
+|The same, but hands a listener that threw to the given error handler instead of logging it.
+
+|[methodname]`fireEventInReverseOrder(event)`
+|Notifies the listeners in reverse registration order.
+Use it for the closing half of a pair of events, so that listeners nest around the opening one.
+|===
+
+On a hot code path, [methodname]`hasListener(MaintenanceModeEvent.class)` tells whether building the event is worth it at all.
+
+
+[role="deprecated:com.vaadin:vaadin@V25.3"]
+== Deprecated Listener Interfaces
+
+[classname]`SessionLockListener` and [classname]`RpcInvocationListener`, together with the [methodname]`VaadinService.addSessionLockListener()` and [methodname]`VaadinService.addRpcInvocationListener()` methods that register them, are deprecated for removal.
+They still work and are still delivered from the bus, but new code should listen for the events directly:
+
+[cols="1,1",options="header"]
+|===
+|Deprecated Callback |Event
+
+|[methodname]`SessionLockListener.lockRequested()`
+|[classname]`SessionLockRequestedEvent`
+
+|[methodname]`SessionLockListener.lockAcquired()`
+|[classname]`SessionLockAcquiredEvent`
+
+|[methodname]`SessionLockListener.lockReleased()`
+|[classname]`SessionLockReleasedEvent`
+
+|[methodname]`RpcInvocationListener.invocationStarted()`
+|[classname]`RpcInvocationStartedEvent`
+
+|[methodname]`RpcInvocationListener.invocationFailed()`
+|[classname]`RpcInvocationFailedEvent`
+
+|[methodname]`RpcInvocationListener.invocationEnded()`
+|[classname]`RpcInvocationEndedEvent`
+|===
+
+The [classname]`SessionLockEvent` and [classname]`RpcInvocationEvent` classes the callbacks receive are deprecated with them; the new events carry the same information.
+
 
 [discussion-id]`970a4b45-bc87-4381-9ab9-7c3e34e97b26`
