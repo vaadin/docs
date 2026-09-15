@@ -131,6 +131,50 @@ EchoService
     .then(response => console.log(response));
 ----
 
+[role="since:com.vaadin:vaadin@V25.3"]
+== Auditing Denied Calls
+
+When an access check rejects a call to a browser-callable service, Vaadin publishes a Spring Security authorization denied event -- the same event that method security publishes for a rejected call to a `@PreAuthorize` bean. An application that audits denied access therefore sees rejected service calls alongside the rest of its audit trail.
+
+The events are published only when the application provides an [classname]`AuthorizationEventPublisher` bean, which is the opt-in Spring Security itself uses for these events:
+
+[source,java]
+----
+@Configuration
+public class AuditConfig {
+
+    @Bean
+    AuthorizationEventPublisher authorizationEventPublisher(
+            ApplicationEventPublisher publisher) {
+        return new SpringAuthorizationEventPublisher(publisher);
+    }
+}
+----
+
+A listener then receives an [classname]`AuthorizationDeniedEvent` whose subject is an [classname]`EndpointInvocation`. It implements [interfacename]`MethodInvocation`, so a listener written for method security accepts it unchanged, and it names the service and the method that was denied:
+
+[source,java]
+----
+@Component
+public class DeniedCallAuditor {
+
+    @EventListener
+    public void onAccessDenied(AuthorizationDeniedEvent<?> event) {
+        if (event.getObject() instanceof EndpointInvocation invocation) {
+            LoggerFactory.getLogger(getClass()).warn(
+                    "Denied call: user={} service={} method={}",
+                    event.getAuthentication().get().getName(),
+                    invocation.getEndpointName(),
+                    invocation.getMethodName());
+        }
+    }
+}
+----
+
+The service bean the call was addressed to is available from [methodname]`getThis()`, which is useful for routing an alert to whoever owns that service. [methodname]`getArguments()` is always empty and [methodname]`proceed()` throws, because the access check runs before the request payload is deserialized: the call never happened, and its payload can't leak into the audit log.
+
+The authentication the event carries is the caller as Spring Security resolves it, so an anonymous caller arrives as an [classname]`AnonymousAuthenticationToken` rather than as `null`. When there's no security context at all, reading the authentication throws [classname]`AuthenticationCredentialsNotFoundException`.
+
 == Client Side Authentication
 
 If it's required to know, on the client side, whether a user is authenticated, please read <<{articles}/hilla/guides/security/authentication#, Checking Authentication>>.
