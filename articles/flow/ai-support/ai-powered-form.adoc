@@ -10,7 +10,7 @@ section-nav: commercial
 = [since:com.vaadin:vaadin@V25.2]#AI Form Filler#
 
 
-[classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each write is validated through the [classname]`Binder`, or through the component's built-in validators if [classname]`Binder` is not used. Rejected values are reported back so the model can correct them on the next turn.
+[classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each write is validated through the [classname]`Binder`, or through the component's built-in validators if [classname]`Binder` is not used. Rejected values are reported back so the model can correct them in the same turn.
 
 The controller works with any combination of standard Vaadin field components, such as [classname]`TextField`, [classname]`ComboBox`, [classname]`DatePicker`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup`. No extra wiring is needed beyond constructing the controller around the layout and attaching it to the orchestrator.
 
@@ -51,7 +51,7 @@ Example prompts:
 
 .Built-In Workflow Instructions
 [TIP]
-The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior, such as tone, naming conventions, or which fields the user may leave blank.
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior, such as tone, naming conventions, or which fields the user may leave blank. Where the system prompt conflicts with a workflow step, the system prompt takes precedence.
 
 
 == Field Discovery
@@ -73,7 +73,7 @@ Ignored fields are hidden from the LLM and stay editable while a fill is in prog
 The controller checks each field's state on every turn:
 
 * A field hidden via [methodname]`setVisible(false)`, or one that sits inside a hidden container, is dropped from the LLM surface entirely. The model cannot read its value and cannot write to it. It reappears the moment a value-change listener or other application code makes it visible again.
-* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected, and the model receives the rejection reason so it can adjust on the next turn.
+* A field the application has disabled ([methodname]`setEnabled(false)`) or set read-only ([methodname]`setReadOnly(true)`) stays in the form state as read-only context. The model sees its current value -- useful as context for writes to other fields -- but any write is rejected, and the model receives the rejection reason so it can adjust in the same turn.
 
 A common case is a conditional field driven by a [interfacename]`ValueChangeListener` -- a "Cost center" enabled only when "Trip type" is set to "Business", or a renewal date enabled by a "Renews automatically" checkbox. The built-in workflow instructions tell the model that a disabled or read-only field is usually waiting on a controlling field, so it sets the controlling field first and writes the dependent one in the same turn.
 
@@ -156,7 +156,7 @@ controller.fieldValueOptions(
                         projectService.search(filter, limit)));
 ----
 
-The callback returns domain items; the controller derives the labels through the field's [methodname]`setItemLabelGenerator()` before showing them to the LLM. If the LLM picks a label and the matching item is no longer available (for example, because the application's data has changed since the search), the write is rejected and the model can try again on the next turn.
+The callback returns domain items; the controller derives the labels through the field's [methodname]`setItemLabelGenerator()` before showing them to the LLM. If the LLM picks a label and the matching item is no longer available (for example, because the application's data has changed since the search), the write is rejected and the model can try again in the same turn.
 
 `projectService` here is a stand-in for whatever your application uses to look up projects: a Spring repository, a REST client, an in-memory list. The controller only needs the callback to return the matching items for the given filter and limit.
 
@@ -260,6 +260,7 @@ While a fill is in progress, every field the AI can write -- visible, enabled, a
 
 
 [[marking-ai-changes]]
+[role="since:com.vaadin:vaadin@V25.3"]
 == Marking AI Changes
 
 When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller handles this automatically: when a turn ends, every field whose value changed is marked with an "AI" badge. Selecting the badge opens a popover that explains the value was filled by AI and offers a revert control, which restores the field's value from before the AI's first change to it.
