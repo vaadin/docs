@@ -13,7 +13,7 @@ function Example() {
 
   function renderFormLayout() {
     return (
-      <FormLayout style={{ '--vaadin-form-item-label-width': '92px' }}>
+      <FormLayout style={{ '--vaadin-form-layout-label-width': '92px' }}>
         {/* Wrap fields into form items, which displays labels on the side by default */}
         <FormItem>
           <label slot="label">First name</label>

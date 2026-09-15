@@ -249,7 +249,7 @@ Hilla framework documentation (discontinued). Relevant content should be migrate
 
 Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials that both pages include, so that neither section holds the other one's content. A partial keeps the directory depth of the page it was extracted from, so `{root}{root-fix}` includes and page-relative xrefs resolve identically from both wrappers. Nothing outside `articles/hilla/lit` may include it, and no link into it may render outside the Lit pages; the one link from a partial into the Lit tree, to the Lit-only Web Component field strategy page, is guarded with `ifdef::hilla-lit[]`.
 
-Pages whose content does not depend on the frontend framework exist only in the main section; the Lit section does not repeat them, and its section index pages link to them instead. A shared partial that links to such a page uses an absolute `{articles}/hilla/...` xref, so the link resolves to the main page from both wrappers.
+Pages whose content does not depend on the frontend framework exist only in the main section; the Lit section does not repeat them, and its section index pages link to them instead. A shared partial that links to such a page uses an absolute `{articles}/hilla/...` xref, so the link resolves to the main page from both wrappers. When a topic is otherwise framework-independent but has a few Lit-specific details, the main page carries them as short notes instead of a separate Lit page. The reference documentation is entirely in the main section; `articles/hilla/lit` has no reference pages.
 
 ### articles/components
 

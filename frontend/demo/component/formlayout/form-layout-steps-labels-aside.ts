@@ -37,7 +37,7 @@ export class Example extends LitElement {
   // tag::snippet[]
   private renderFormLayout() {
     return html`
-      <vaadin-form-layout style="--vaadin-form-item-label-width: 92px;">
+      <vaadin-form-layout style="--vaadin-form-layout-label-width: 92px;">
         <!-- Wrap fields into form items, which
              displays labels on the side by default -->
         <vaadin-form-item>
