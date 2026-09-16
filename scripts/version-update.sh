@@ -51,7 +51,9 @@ fi
 echo $currentMajorRelease
 echo $major
 
-if [ $prerelease = false ] && [ $major = $currentMajorRelease ]
+# Pre-releases are documented too: the docs for a pre-release describe that
+# pre-release, so the version attributes follow it.
+if [ $major = $currentMajorRelease ]
 then
   echo "updating files in the Latest branch"
   `updateLatestBranch $version`
