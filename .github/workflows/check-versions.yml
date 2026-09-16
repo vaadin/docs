@@ -7,16 +7,36 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: true
 
+env:
+  # A fork's branch can't be pushed to, so the fix is reported there instead.
+  SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+  ATTRIBUTES: articles/_vaadin-version.adoc
+
 jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout the PR branch
+        uses: actions/checkout@v6
+        with:
+          # The branch itself rather than the merge commit, so a fix can be
+          # committed back to it.
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Pushes made with GITHUB_TOKEN deliberately don't trigger workflows,
+          # which leaves the fix commit without a CI run of its own. Setting a
+          # VERSION_SYNC_TOKEN secret (a PAT or app token) avoids that; without
+          # it the fix still lands, it just doesn't re-run the checks.
+          token: ${{ secrets.VERSION_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
           node-version: '22'
+
       # Maven is needed for the Flow version: it isn't pinned in pom.xml, so it
       # has to come from the dependency tree.
       - name: Set up JDK 21
@@ -25,5 +45,27 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Check documented versions
-        run: node scripts/sync-versions.mjs
+
+      - name: Sync the documented versions
+        run: node scripts/sync-versions.mjs --fix
+
+      - name: Commit the fix
+        if: env.SAME_REPO == 'true'
+        run: |
+          if git diff --quiet -- "$ATTRIBUTES"; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: sync the documented versions with pom.xml' -- "$ATTRIBUTES"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+
+      - name: Report a fix that can't be pushed
+        if: env.SAME_REPO != 'true'
+        run: |
+          if git diff --quiet -- "$ATTRIBUTES"; then
+            exit 0
+          fi
+          git --no-pager diff -- "$ATTRIBUTES"
+          echo "::error file=$ATTRIBUTES::Out of date. Run \`npm run sync-versions -- --fix\` and commit the result."
+          exit 1
