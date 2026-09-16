@@ -1,0 +1,50 @@
+---
+title: Air-Gapped Operation
+page-title: Run the Vaadin MCP Server in an Air-Gapped Network
+description: How the image gets into a disconnected network, and what the server does and doesn't send.
+meta-description: Move the Vaadin MCP server image into an air-gapped network with standard Docker tooling, and read what outbound traffic the server does and doesn't make.
+order: 30
+---
+
+
+= Air-Gapped Operation
+
+The server needs no network to answer a question, which is what makes a disconnected deployment possible at all. Two things follow: getting the image in, and being able to say what the running container does and doesn't send.
+
+
+== Moving the Image In
+
+The image is an ordinary container image, so the standard Docker transfer path is the whole procedure -- no special tooling, and nothing Vaadin has to supply:
+
+[source,bash]
+----
+# On a machine that can reach the registry:
+docker pull vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+docker save vaadin/mcp-server:1.0.0-20260916-114956-2b7c708 | gzip > vaadin-mcp-server.tar.gz
+
+# Carry the file in by whatever route your network allows, then:
+gunzip -c vaadin-mcp-server.tar.gz | docker load
+----
+
+Name an immutable tag rather than `latest` when you do this, so the image on the inside can still be identified afterward. Refreshing the corpus means repeating the transfer with a newer image.
+
+
+== No Outbound Traffic at Runtime
+
+This section is written to be quotable in a security review.
+
+*The server makes no outbound network requests while serving.* The documentation corpus, the search indexes, and the embedding model are all baked into the image, and every tool answers from the container's own filesystem. The license check reads a local key and contacts nothing, which is why an offline key is the credential it takes.
+
+Two channels are absent by configuration rather than by construction, and a review should know which is which. Analytics reporting is the only outbound code path the image contains at all, and it sends nothing unless `AMPLITUDE_API_KEY` is set; an image can also be built without that code present -- see <<configuration#custom-image,Requesting a Custom Image>>. Audit logging writes to a local file and ships nowhere on its own.
+
+Vaadin tests the claim rather than asserting it. Before an image is published, it's started in a sealed network namespace with no route and driven through every one of its tools from inside that namespace. The run asserts that nothing in the server so much as attempted a name resolution, and it includes a deliberately failing outbound request as a control, so a green result can't come from a test that was never isolated.
+
+
+[[analytics]]
+== Analytics
+
+Reporting to Amplitude is controlled by one environment variable, `AMPLITUDE_API_KEY`, and leaving it unset -- the default everywhere -- means the server performs no outbound analytics traffic whatsoever. A self-hosted deployment needs to do nothing. The hosted server at `mcp.vaadin.com` does set one -- see <<{articles}/building-apps/agentic-development/mcp/self-hosting/#hosted-server,What the Hosted Server Runs>>.
+
+The published image does contain the reporting code, inert. If your security review requires that it be absent rather than merely disabled, it can be left out of the binary at build time.
+
+Startup prints exactly one line about analytics, which is how a working deployment is told from a half-configured one: either *analytics enabled* with the endpoint it reports to, or *compiled in but no key at runtime*. An image with the branch compiled out prints neither.

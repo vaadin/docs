@@ -1,0 +1,69 @@
+---
+title: Configuration
+page-title: Configure a Self-Hosted Vaadin MCP Server Instance
+description: Every environment variable the self-hosted MCP server reads, and how to place it behind a reverse proxy.
+meta-description: Environment-variable reference for a self-hosted Vaadin MCP server, how to mount it under a path prefix or behind a rewriting ingress, and custom images.
+order: 20
+---
+
+
+= Configuration
+
+The image ships working defaults for everything except the license key, so a deployment that serves on port 8080 at `/docs` needs nothing on this page.
+
+
+== Environment Variables
+
+[cols="1,3"]
+|===
+|Variable |What It Does
+
+|`VAADIN_OFFLINE_KEY`
+|The offline key, as its token value. Also read from the `vaadin.offlineKey` system property and from key files under the home directory, in that order. Required, unless a key file is mounted -- see <<licensing#,Licensing>>.
+
+|`SERVER_PORT`
+|Port to listen on. Defaults to `8080`.
+
+|`SERVER_SERVLET_CONTEXT_PATH`
+|Mounts the application under a prefix. Empty by default.
+
+|`VAADIN_MCP_ENDPOINT_PATH`
+|Path the MCP transport answers on, relative to the mount. Defaults to `/docs`. May not be `/`.
+
+|`VAADIN_MCP_PUBLIC_ENDPOINT_URL`
+|Absolute URL advertised on the landing page. Derived from the mount and endpoint path when unset.
+
+|`VAADIN_AUDIT_LOG_PATH`
+|File to append audit records to. Unset means no audit log. See <<monitoring-and-audit-logging#audit-logging,Audit Logging>>.
+
+|`AMPLITUDE_API_KEY`
+|Enables analytics reporting to Amplitude. Leave unset -- see <<air-gapped-operation#analytics,Analytics>>.
+
+|`VAADIN_MCP_DATA_PATH`
+|Directory the documentation indexes are read from. Set correctly in the image; override only if you mount your own index tree.
+|===
+
+
+[[reverse-proxy]]
+== Behind a Reverse Proxy
+
+Three settings cover the deployment shapes:
+
+`SERVER_SERVLET_CONTEXT_PATH`:: Mounts the whole application under a prefix. This is all a prefixed deployment needs: the server reads its own mount, so the landing page and the endpoint move together.
+
+`VAADIN_MCP_ENDPOINT_PATH`:: Moves the endpoint within the mount. It defaults to `/docs` and can't be `/` -- the landing page routes the application root, so an endpoint there would reject every request. Use a context path for a prefix and leave the endpoint a path of its own.
+
+`VAADIN_MCP_PUBLIC_ENDPOINT_URL`:: The absolute URL the landing page tells clients to configure. Set it for the one case the server can't see from inside: an ingress that *rewrites*, stripping a prefix before the request arrives. A deployment that only sets a context path needs nothing here.
+
+The server itself authenticates nobody, so whatever sits in front of it is also where access control belongs. See <<{articles}/building-apps/agentic-development/mcp/self-hosting/#network-exposure,Network Exposure>>.
+
+
+[[custom-image]]
+== Requesting a Custom Image
+
+The published image suits almost every deployment, and it's the one Vaadin gates on a full smoke test of the running container before publishing. The server's source isn't public, so a variant is something to request rather than something to build -- but two variants exist, and both are decided when the image is built rather than by configuration afterward:
+
+* *A thinner version set.* The published image indexes every Vaadin version the hosted server covers. Narrowing that to the versions your organization actually runs makes a smaller image.
+* *Analytics compiled out.* Leaving `AMPLITUDE_API_KEY` unset means the reporting code is present and inert, which satisfies most security reviews. For the ones it doesn't, the code can be left out of the binary altogether -- but only at build time.
+
+Raise either through your Vaadin support channel.

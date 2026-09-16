@@ -1,0 +1,52 @@
+---
+title: Monitoring and Audit Logging
+page-title: Monitor and Audit a Self-Hosted Vaadin MCP Server
+description: What to scrape, what to alert on, and how to record every tool call.
+meta-description: Scrape the Vaadin MCP server health endpoint, alert on license expiry, and record one JSON audit line per tool call for your own log shipper.
+order: 40
+---
+
+
+= Monitoring and Audit Logging
+
+Two separate things: what an operator watches to know the server is healthy, and what an organization keeps to know what was asked of it.
+
+
+== Monitoring and Alerting
+
+`/health` is the scrape target, at the application root rather than under `/actuator`. It's unauthenticated, like the MCP endpoint, and carries two components: `license`, with the current status and expiry date, and `versionSnapshot`, with the corpus the image was built from. The aggregate status is what a liveness or readiness probe reads.
+
+For alerting, the field to watch is the license status:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health | jq '.components.license.details.license.status'
+----
+
+It reads `valid` in the healthy case. Two other values mean the key needs attention and neither stops the server yet: `expiring_soon` inside the 30 days before expiry, and `in_grace` after it. The posture is re-probed hourly rather than frozen at boot, so this field catches an expiry whether or not anyone read the startup log a month earlier. See <<licensing#renewal,Renewal and Expiry Warnings>> for the other three channels that carry the same warning.
+
+Every log line carries a `[vaadin-mcp]` prefix between the level and the logger name, so you can filter the server's own output out of a log stream it shares with other containers.
+
+
+[[audit-logging]]
+== Audit Logging
+
+Name a file and the server appends one JSON Lines record per tool call:
+
+----
+VAADIN_AUDIT_LOG_PATH=/var/log/vaadin-mcp/audit.jsonl
+----
+
+Each line carries `ts`, `licenseKid`, `tool`, `args`, `durationMs`, and `status`. *Arguments, never results* -- the record says what was asked, not what came back. The shape is treated as a contract with your log shipper and has its own serializer, so application-wide JSON configuration can't move it.
+
+Mount the directory somewhere the records survive a redeploy, and make it writable by user ID 65532. Retention is yours: the server appends and never rotates, so point `logrotate`, `journald`, or your shipper at the file.
+
+.Audit Records Name What Developers Asked
+[NOTE]
+====
+A record carries the arguments of each tool call, which for a documentation search is the developer's own query text. That makes the log a record of what individual people were working on, so whether keeping it is lawful where your developers are, and for how long, is yours to determine rather than Vaadin's. The server writes the file you name and does nothing else with it: it ships no records anywhere, and deleting them is whatever your log tooling does with the file.
+====
+
+Startup prints which of the two states it's in, and names the path it opened, so a variable that didn't arrive shows up in the log rather than at your first audit.
+
+*A path that can't be opened stops startup.* That's deliberate: an operator who asked for an audit trail and didn't get one is worse off than one who never asked.
