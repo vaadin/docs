@@ -50,11 +50,43 @@ With a streaming provider or <<llm-providers#background-execution,background exe
 
 .Framework-Agnostic Tools via Controllers
 [TIP]
-For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController` and [classname]`ChartAIController` are built-in examples. Controllers and tool objects can be combined on the same orchestrator.
+For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController` are built-in examples. Controllers and tool objects can be combined on the same orchestrator.
 
 .Tool Errors
 [NOTE]
 Tool objects registered via [methodname]`withTools()` are executed by the vendor framework, whose own error handling decides what the LLM sees when a tool throws -- by default, both LangChain4j and Spring AI relay the raw message of any exception. To control what the LLM learns about failures, define the tool through a controller instead and throw a [classname]`ToolException` for messages the LLM is meant to see; see <<controllers#tool-error-handling,Tool Error Handling>>.
+
+
+[[tool-call-limits]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Tool Call Limits
+
+A model that keeps requesting tool calls instead of answering, for example to look for something the application doesn't have, would never end its turn, and each round costs another model call. With both built-in providers, the tool-calling loop is bounded at the same defaults: 40 calls to any one tool, and 150 tool calls in total, within a turn. Whether a limit ends the turn with an error or not depends on which side runs the loop.
+
+=== LangChain4j
+
+[classname]`LangChain4JLLMProvider` runs the tool-calling loop itself and counts the tool calls the model requests during a turn. Once a call would exceed a limit, the turn fails with a [classname]`ToolCallLimitExceededException`: none of the tool calls of that round are executed, the model is not called again, and the exception arrives as the error of the turn in [methodname]`ResponseListener.ResponseEvent.getError()` and in [methodname]`AIController.onResponse()`. The Message List shows the generic error message in place of a response. The exception's [methodname]`getToolName()` names the tool whose per-tool limit was exceeded, or is `null` when the limit on all tool calls of the turn was exceeded instead, and [methodname]`getLimit()` returns the limit in question.
+
+The refused round never enters the provider's chat memory, so the conversation stays usable, and the next prompt continues from the last completed round. Metadata observed before the failure is still published, so the turn reports the token usage of the round trips that did complete.
+
+Adjust the limits on the provider with [methodname]`setMaxCallsPerTool()` and [methodname]`setMaxTotalToolCalls()`. Passing `0` removes a limit, and a negative value throws an [classname]`IllegalArgumentException`. The values are read when a turn starts, so a change applies from the next prompt on:
+
+[source,java]
+----
+LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
+provider.setMaxCallsPerTool(10);
+provider.setMaxTotalToolCalls(30);
+----
+
+=== Spring AI
+
+[classname]`SpringAILLMProvider` adds no limits of its own and never throws [classname]`ToolCallLimitExceededException`. Spring AI runs the tool-calling loop itself and, from version 2.0.1, stops it at the same limits without failing the turn: the turn completes with Spring AI's own message about the exceeded limit as the assistant's reply, which also enters chat memory, and with the finish reason `toolCallLimitExceeded` in the <<listeners#response-metadata,response metadata>>. Check that finish reason to tell such a turn from a completed one. Spring AI 2.0.0 applies no limit, so a turn can loop on tool calls until the model stops on its own.
+
+The limits belong to the `ToolCallingAdvisor` of the [classname]`ChatClient`. A provider created from a [classname]`ChatModel` builds its own client and keeps Spring AI's defaults. To change them, build the client yourself, passing `ChatClient.builder` a `ToolCallingAdvisor.Builder` that carries a `DefaultToolCallingManager` with your limits, and create the provider from that client with `new SpringAILLMProvider(chatClient)`. Its `maxCallsPerTool` and `maxTotalToolCalls` set a limit, and `unlimitedCallsPerTool()` and `unlimitedTotalToolCalls()` remove one. In a Spring Boot application, the `spring.ai.tools.limits` properties configure the same limits on the auto-configured `ChatClient.Builder`, so passing that client to the provider needs no builder code.
+
+.Custom Providers
+[NOTE]
+A <<llm-providers#custom-llm-providers,custom LLM provider>> that runs its own tool-calling loop decides itself whether and how to bound it. The [classname]`ToolCallLimitExceededException` constructor is public, so such a provider can end a turn with the same exception, and a [classname]`ResponseListener` or [classname]`AIController` can be unit-tested against it.
 
 
 == Programmatic Prompts

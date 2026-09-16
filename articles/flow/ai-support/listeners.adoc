@@ -44,7 +44,7 @@ The listener runs on the UI thread under the session lock: components can be upd
 
 == Response Listener
 
-The response listener is called when the turn ends -- normally when the assistant's response has completed, successfully or with an error, but also when the turn fails before a response ever starts. It fires at most once per prompt, and not at all for a prompt rejected by the interceptor or for history restored via [methodname]`withHistory()`.
+The response listener is called when the turn ends -- normally when the assistant's response has completed, successfully or with an error, but also when the turn fails before a response ever starts. It fires at most once per prompt, and not at all for a prompt rejected by the interceptor, for a postponed prompt abandoned because its UI was detached, or for history restored via [methodname]`withHistory()`.
 
 The event carries:
 
@@ -78,7 +78,7 @@ When a turn contains <<tool-calling#,tool-call>> round trips, the finish reason 
 [[truncated-responses]]
 === Truncated Responses
 
-A response cut off at the model's output limit is not an error: the turn ends normally, the partial text stays in the Message List and the conversation history, and [methodname]`event.getError()` is empty. The finish reason is what tells a completed turn from a truncated one: a truncated turn reports the underlying framework's value for the output limit instead of its value for a natural stop. With the built-in providers, that value is `LENGTH` for OpenAI models through Spring AI and for every model through LangChain4j, and `max_tokens` for Anthropic models through Spring AI -- see <<#finish-reason-vocabulary,Finish Reason Vocabulary>>:
+A response cut off at the model's output limit is not an error: the turn ends normally, the partial text stays in the Message List and the conversation history, and [methodname]`event.getError()` is empty. The finish reason is what tells a completed turn from a truncated one: a truncated turn reports the underlying framework's value for the output limit instead of its value for a natural stop. With the built-in providers, that value is `LENGTH` for OpenAI models through Spring AI and for OpenAI and Anthropic models through LangChain4j, and `max_tokens` for Anthropic models through Spring AI -- see <<#finish-reason-vocabulary,Finish Reason Vocabulary>>:
 
 [source,java]
 ----
@@ -86,7 +86,7 @@ A response cut off at the model's output limit is not an error: the turn ends no
     boolean truncated = event.getMetadata()
             .map(ResponseMetadata::finishReason)
             // Output-limit reason for OpenAI models through Spring AI,
-            // and for every model through LangChain4j
+            // and for OpenAI and Anthropic models through LangChain4j
             .filter("LENGTH"::equals)
             .isPresent();
     if (truncated) {
@@ -114,6 +114,8 @@ The two built-in providers relay the following:
 
 The built-in providers publish metadata as the turn progresses, and each publication replaces the previous one. A turn that fails or times out midway therefore still reports what was observed before the failure: [methodname]`event.getError()` carries the cause and the metadata describes the turn as far as it got. How far that is depends on which side runs the <<tool-calling#,tool-calling>> loop. [classname]`LangChain4JLLMProvider` runs the loop itself and publishes after every round trip, so a turn that fails after a tool call still reports the token usage of the round trips that did complete. Spring AI runs the loop inside the framework and hands [classname]`SpringAILLMProvider` only the final response, so the round trips before it are never published: a turn that fails before the final response reports nothing, in synchronous and streaming mode alike. In streaming mode, the chunks of the final response that arrived before the failure are still reported.
 
-The built-in providers also log a warning when a turn ends in a state a completed turn can't end in: without a finish reason, or with tool calls still pending.
+Both built-in providers log a warning when a turn ends without a finish reason. [classname]`SpringAILLMProvider` also warns when a turn ends with tool calls still pending, which happens when Spring AI's tool-calling loop stops before the model answers; [classname]`LangChain4JLLMProvider` runs that loop itself, so it can't end a turn that way.
+
+A turn that [classname]`LangChain4JLLMProvider` ends because the model requested more tool calls than allowed fails with a [classname]`ToolCallLimitExceededException` as its error; see <<tool-calling#tool-call-limits,Tool Call Limits>>. Spring AI stops its loop at the same limits without failing the turn and reports the finish reason `toolCallLimitExceeded` instead.
 
 A custom [classname]`LLMProvider` decides itself what metadata to publish -- see <<llm-providers#custom-llm-providers,Custom LLM Providers>>.
