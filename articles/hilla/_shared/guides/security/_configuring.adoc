@@ -1,46 +1,31 @@
 // tag::content[]
 
-= Controlling Endpoint Access
+= Controlling Service Access
 
-When developing server-side views, endpoint access control is implemented using regular Java approaches: servlet-container-based security, third-party libraries, or session-based solutions.
-
-You can create a project with the basic security configuration added to it using the `--auth` option:
-
-ifdef::hilla-lit[]
-[source,terminal]
-----
-npx @hilla/cli init --lit --auth hilla-with-auth
-----
-endif::hilla-lit[]
-ifdef::hilla-react[]
-[source,terminal]
-----
-npx @hilla/cli init --auth hilla-with-auth
-----
-endif::hilla-react[]
+When developing server-side views, access control is implemented using regular Java approaches: servlet-container-based security, third-party libraries, or session-based solutions.
 
 This article describes all the pieces needed for securing client-centric applications.
 
-== Securing Server-Side Endpoints
+== Securing Browser-Callable Services
 
-The first step is to configure authorization of each endpoint that the application exposes.
+The first step is to configure authorization of each service that the application exposes.
 
-Consider the simple Hilla endpoint defined in the following class:
+Consider the simple browser-callable service defined in the following class:
 
-.`CounterEndpoint.java`
+.`CounterService.java`
 [source,java]
 ----
-@Endpoint
+@BrowserCallable
 @PermitAll
-public class CounterEndpoint {
+public class CounterService {
     public int addOne(int number) {
         return number + 1;
     }
 }
 ----
 
-Hilla access-control features are enabled by default for any endpoint method.
-If not specified in Java code explicitly, a [classname]`Principal` object must be present in the request before invoking an endpoint method.
+Hilla access-control features are enabled by default for any service method.
+If not specified in Java code explicitly, a [classname]`Principal` object must be present in the request before invoking a service method.
 The [methodname]`HttpServletRequest.getUserPrincipal()` Java API is used for the check.
 
 At this point, the servlet container or the application needs to be configured appropriately to handle user authentication.
@@ -52,7 +37,7 @@ endif::[]
 == Security Options
 
 By default, all anonymous and authenticated requests are denied.
-To change the default behavior, place a security Java annotation on either the endpoint class or the endpoint method.
+To change the default behavior, place a security Java annotation on either the service class or the service method.
 The following annotations are available:
 
 * [classname]`@PermitAll`
@@ -75,12 +60,12 @@ If there are multiple annotations specified on some entity, the following rules 
 
 Example:
 
-.`MyEndpoint.java`
+.`MyService.java`
 [source,java]
 ----
-@Endpoint
+@BrowserCallable
 @PermitAll
-public class MyEndpoint {
+public class MyService {
 
   @DenyAll
   public void deniedMethod() {
@@ -113,23 +98,23 @@ public class MyEndpoint {
 [[permissions]]
 == Defining User Permissions
 
-As mentioned in the previous section, every user can have roles and this may affect their ability to access some endpoint methods.
+As mentioned in the previous section, every user can have roles and this may affect their ability to access some service methods.
 This section explains how to specify these for each user.
 
-Hilla endpoints check the existence of roles by using the [methodname]`HttpServletRequest.isUserInRole(String)` Java API.
+Browser-callable services check the existence of roles by using the [methodname]`HttpServletRequest.isUserInRole(String)` Java API.
 
-After the servlet container has been configured to handle user authentication, when the server receives a request for the secured endpoint, the user and its roles are checked.
+After the servlet container has been configured to handle user authentication, when the server receives a request for the secured service, the user and its roles are checked.
 If everything is OK, the method is executed.
 
-== Accessing User Information in an Endpoint Method
+== Accessing User Information in a Service Method
 
-When access to the [classname]`UserPrincipal` is required in an endpoint, call the [methodname]`VaadinRequest.getCurrent()` method to access the `HttpServletRequest` API.
+When access to the [classname]`UserPrincipal` is required in a service, call the [methodname]`VaadinRequest.getCurrent()` method to access the `HttpServletRequest` API.
 
-.`EchoEndpoint.java`
+.`EchoService.java`
 [source,java]
 ----
-@Endpoint
-public class EchoEndpoint {
+@BrowserCallable
+public class EchoService {
     public String saySomething(String message) {
         return VaadinRequest.getCurrent().getUserPrincipal().getName() + " says: " + message;
     }
@@ -139,21 +124,65 @@ public class EchoEndpoint {
 .`frontend/index.ts`
 [source,typescript]
 ----
-import { EchoEndpoint } from 'Frontend/generated/EchoEndpoint';
+import { EchoService } from 'Frontend/generated/EchoService';
 
-EchoEndpoint
+EchoService
     .saySomething("It's snowing in Turku")
     .then(response => console.log(response));
 ----
+
+[role="since:com.vaadin:vaadin@V25.3"]
+== Auditing Denied Calls
+
+When an access check rejects a call to a browser-callable service, Vaadin publishes a Spring Security authorization denied event -- the same event that method security publishes for a rejected call to a `@PreAuthorize` bean. An application that audits denied access therefore sees rejected service calls alongside the rest of its audit trail.
+
+The events are published only when the application provides an [classname]`AuthorizationEventPublisher` bean, which is the opt-in Spring Security itself uses for these events:
+
+[source,java]
+----
+@Configuration
+public class AuditConfig {
+
+    @Bean
+    AuthorizationEventPublisher authorizationEventPublisher(
+            ApplicationEventPublisher publisher) {
+        return new SpringAuthorizationEventPublisher(publisher);
+    }
+}
+----
+
+A listener then receives an [classname]`AuthorizationDeniedEvent` whose subject is an [classname]`EndpointInvocation`. It implements [interfacename]`MethodInvocation`, so a listener written for method security accepts it unchanged, and it names the service and the method that was denied:
+
+[source,java]
+----
+@Component
+public class DeniedCallAuditor {
+
+    @EventListener
+    public void onAccessDenied(AuthorizationDeniedEvent<?> event) {
+        if (event.getObject() instanceof EndpointInvocation invocation) {
+            LoggerFactory.getLogger(getClass()).warn(
+                    "Denied call: user={} service={} method={}",
+                    event.getAuthentication().get().getName(),
+                    invocation.getEndpointName(),
+                    invocation.getMethodName());
+        }
+    }
+}
+----
+
+The service bean the call was addressed to is available from [methodname]`getThis()`, which is useful for routing an alert to whoever owns that service. [methodname]`getArguments()` is always empty and [methodname]`proceed()` throws, because the access check runs before the request payload is deserialized: the call never happened, and its payload can't leak into the audit log.
+
+The authentication the event carries is the caller as Spring Security resolves it, so an anonymous caller arrives as an [classname]`AnonymousAuthenticationToken` rather than as `null`. When there's no security context at all, reading the authentication throws [classname]`AuthenticationCredentialsNotFoundException`.
 
 == Client Side Authentication
 
 If it's required to know, on the client side, whether a user is authenticated, please read <<{articles}/hilla/guides/security/authentication#, Checking Authentication>>.
 
 [[csrf]]
-== CSRF Protection of Hilla Endpoints
+== CSRF Protection of Browser-Callable Services
 
-Hilla endpoints are protected from Cross-Site Request Forgery (CSRF) attacks using the same approach as Vaadin.
+Browser-callable services are protected from Cross-Site Request Forgery (CSRF) attacks using the same approach as Vaadin.
 See https://vaadin.com/docs/latest/flow/security/vulnerabilities#cross-site-request-forgery-csrf-xsrf[Cross-Site Request Forgery] in the Vaadin Flow security guide for more details.
 
 // end::content[]

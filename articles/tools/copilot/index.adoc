@@ -83,7 +83,7 @@ image::images/overview.png[Vaadin Copilot UI Overview]
 
 |App Log
 |Toolbar menu
-|Application debug message log with a preview of Hilla endpoints requests and responses.
+|Application debug message log with a preview of browser-callable service requests and responses.
 
 |Backend & Data
 |Toolbar Edit mode
@@ -331,6 +331,41 @@ It is possible to block all outbound Copilot requests (excluding license checkin
 === EU Data Region Restriction
 
 Vaadin accounts can be restricted so that all Copilot AI processing stays in the EU region. When the restriction is active for your account, Copilot uses EU-only AI providers, and the affected dropdowns in Settings are locked to the enforced values and show "Restricted for your account". Please https://pages.vaadin.com/contact[contact Vaadin] for details.
+
+== Running Copilot behind an HTTP(S) proxy
+
+Copilot client require a connection to the Copilot server to run AI features and to validate license information. If your development environment is behind a proxy, you need to configure the proxy settings for Copilot to work.
+
+**Configuring a proxy.** Proxy settings are resolved (via Vaadin Flow's `ProxyFactory`) from, in order:
+
+- System properties or environment variables named `HTTP_PROXY` / `HTTPS_PROXY` / `NOPROXY` (upper- or lower-case).
+The Copilot server is HTTPS, so an HTTPS target needs `HTTPS_PROXY`.
+- `proxy` / `https-proxy` / `noproxy` entries in the user `~/.npmrc` and the project `.npmrc`.
+
+The value is a URL, optionally with credentials: `http://user:password@host:port`. Note these are **not** the standard
+JVM `-Dhttps.proxyHost` / `-Dhttps.proxyPort` properties — `ProxyFactory` reads the `HTTPS_PROXY` name. (Those JVM
+properties are only honored via the default `ProxySelector` fallback when no `HTTPS_PROXY` is found.)
+
+### Authenticated proxies and the tunneling JVM flag
+
+If your proxy requires authentication, you also need to start the JVM with an empty value for the tunneled-auth
+property:
+
+```
+-Djdk.http.auth.tunneling.disabledSchemes=
+```
+
+**Why this is needed.** For an HTTPS target, `java.net.http` reaches the origin through an HTTP `CONNECT` tunnel to the
+proxy. By default the JDK **disables Basic authentication on that tunnel** (`jdk.http.auth.tunneling.disabledSchemes`
+defaults to `Basic` in `conf/net.properties`), so the proxy credentials are never sent and the proxy answers `407`. The
+JDK reads this property into a constant **the first time any `java.net.http` client is created in the JVM** and caches it
+forever after; changing it later has no effect. Copilot clears the property as early as it can (before it creates its own
+first client), but in a typical Spring Boot + Vaadin application another component often creates a `java.net.http` client
+during startup — before Copilot runs at all — and freezes the setting first. In that case Copilot cannot win the race
+from library code, and the property must already be set when the JVM starts.
+
+You can also set it via `JAVA_TOOL_OPTIONS=-Djdk.http.auth.tunneling.disabledSchemes=` or in the JVM's
+`conf/net.properties`.
 
 == Limitations
 
