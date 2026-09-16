@@ -17,7 +17,7 @@ Self-hosting is for the teams that can't point a development tool at a service o
 
 Three properties of the image are the reason to run it yourself:
 
-*It needs no network at runtime.* The documentation corpus, the search indexes, and the embedding model are all baked into the image at build time. Every tool answers from the image's own filesystem, so the container runs with no egress at all -- no route, no DNS, no phone home. Vaadin verifies that on every release by running the image in a sealed network namespace and calling every tool through it.
+*It needs no network at runtime.* Everything the server answers from is baked into the image, so the container runs with no egress at all -- no route, no DNS, no phone home. See <<#air-gap,Air-Gapped Operation>>, which is written to be quotable in a security review.
 
 *Every tool call can be recorded.* Point the server at a path and it appends one JSON record per tool call, so you have a log of what your agents asked for. See <<#audit-logging,Audit Logging>>.
 
@@ -46,6 +46,16 @@ If what rules out the hosted server for you is where the queries go rather than 
 * *A Vaadin license key entitled to the MCP server.* The container refuses to start without one. See <<#getting-a-license-key,Getting a License Key>>.
 * *About 1 vCPU and 2 GB of memory per instance.* See <<#sizing,Sizing>> for measured figures.
 * *A place to put it that your development tools can reach.* The server has no authentication of its own -- see <<#network-exposure,Network Exposure>>.
+
+
+[[deployment-modes]]
+== Deployment Modes
+
+Both modes run the same image, with the same key and the same configuration surface. Nothing is packaged differently for one or the other, so a team can evaluate one way and deploy the other.
+
+*A shared internal service* is the pattern to reach for: one deployment -- a Kubernetes pod, or a container on an internal VM -- that every developer's tooling points at. One key to install and renew, one place to collect audit records, one image to update when the documentation corpus moves. The server holds no per-client state, so a small instance serves a team and scales by adding replicas.
+
+*A per-developer container* runs the same image on each developer's own machine, reached only by that developer's tools. It suits evaluation, and it suits environments locked down tightly enough that a shared internal service is itself the obstacle. The cost is multiplied operations: every machine needs the key installed, and every machine's image ages on its own.
 
 
 [[getting-a-license-key]]
@@ -137,6 +147,36 @@ If it didn't start, <<#license-refusals,License Refusals>> below matches each me
 Opening `http://localhost:8080/` in a browser gives you a landing page carrying the configuration snippets for this deployment, with your own endpoint URL already substituted in. It's rendered at startup rather than served as a static file, so the URL it advertises is the one this instance actually answers on.
 
 
+[[air-gap]]
+== Air-Gapped Operation
+
+=== Moving the Image In
+
+The image is an ordinary container image, so the standard Docker transfer path is the whole procedure -- no special tooling, and nothing Vaadin has to supply:
+
+[source,bash]
+----
+# On a machine that can reach the registry:
+docker pull vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+docker save vaadin/mcp-server:1.0.0-20260916-114956-2b7c708 | gzip > vaadin-mcp-server.tar.gz
+
+# Carry the file in by whatever route your network allows, then:
+gunzip -c vaadin-mcp-server.tar.gz | docker load
+----
+
+Name an immutable tag rather than `latest` when you do this, so the image on the inside can still be identified afterward. Refreshing the corpus means repeating the transfer with a newer image.
+
+=== No Outbound Traffic at Runtime
+
+This section is written to be quotable in a security review.
+
+*The server makes no outbound network requests while serving.* The documentation corpus, the search indexes, and the embedding model are all baked into the image, and every tool answers from the container's own filesystem. The license check reads a local key and contacts nothing, which is why an offline key is the required credential rather than one option among several.
+
+Two channels are absent by configuration rather than by construction, and a review should know which is which. Analytics reporting is the only outbound code path the image contains at all, and it sends nothing unless `AMPLITUDE_API_KEY` is set; an image can also be built without that code present -- see <<#custom-image,Requesting a Custom Image>>. Audit logging writes to a local file and ships nowhere on its own.
+
+Vaadin tests the claim rather than asserting it. Before an image is published, it's started in a sealed network namespace with no route and driven through every one of its tools from inside that namespace. The run asserts that nothing in the server so much as attempted a name resolution, and it includes a deliberately failing outbound request as a control, so a green result can't come from a test that was never isolated.
+
+
 == Pointing Your Tools at It
 
 The MCP endpoint is `/docs`, relative to wherever the application is mounted. A default deployment on `mcp.example.com` is therefore configured as:
@@ -210,6 +250,12 @@ Each line carries `ts`, `licenseKid`, `tool`, `args`, `durationMs`, and `status`
 
 Mount the directory somewhere the records survive a redeploy, and make it writable by user ID 65532. Retention is yours: the server appends and never rotates, so point `logrotate`, `journald`, or your shipper at the file.
 
+.Audit Records Name What Developers Asked
+[NOTE]
+====
+A record carries the arguments of each tool call, which for a documentation search is the developer's own query text. That makes the log a record of what individual people were working on, so whether keeping it is lawful where your developers are, and for how long, is yours to determine rather than Vaadin's. The server writes the file you name and does nothing else with it: it ships no records anywhere, and deleting them is whatever your log tooling does with the file.
+====
+
 Startup prints which of the two states it's in, and names the path it opened, so a variable that didn't arrive shows up in the log rather than at your first audit.
 
 *A path that can't be opened refuses startup.* That's deliberate: an operator who asked for an audit trail and didn't get one is worse off than one who never asked.
@@ -262,6 +308,40 @@ To find out what an instance is actually serving, read the `vaadin-mcp://image-i
 Upgrades are otherwise unremarkable: the image holds no state, so stopping the old container and starting the new one is the whole procedure. Read the release notes before a version change rather than a refresh, since a version bump is what signals that something a client negotiates against -- a tool, a parameter, a response field -- has moved.
 
 
+[[monitoring]]
+== Monitoring and Alerting
+
+`/health` is the scrape target, at the application root rather than under `/actuator`. It's unauthenticated, like the MCP endpoint, and carries two components: `license`, with the current status and expiry date, and `versionSnapshot`, with the corpus the image was built from. The aggregate status is what a liveness or readiness probe reads.
+
+For alerting, the field to watch is the license status:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health | jq '.components.license.details.license.status'
+----
+
+It reads `valid` in the healthy case. Two other values mean the key needs attention and neither stops the server yet: `expiring_soon` inside the 30 days before expiry, and `in_grace` after it. The posture is re-probed hourly rather than frozen at boot, so this field catches an expiry whether or not anyone read the startup log a month earlier.
+
+Every log line carries a `[vaadin-mcp]` prefix between the level and the logger name, so you can filter the server's own output out of a log stream it shares with other containers.
+
+
+[[renewal]]
+== Renewal and Expiry Warnings
+
+*One key covers every instance.* The key carries no machine binding, and the server counts nothing -- no seats, no instances, no concurrent callers. The same key serves a shared deployment and twenty developer machines alike, and nothing has to be issued per deployment.
+
+*Renewal is a file copy.* Put the newer key in place by whichever route you installed the first one, then restart the container, which always takes effect. The server also re-probes its own license hourly, so a replaced key *file* is generally picked up without a restart; a key supplied as an environment variable is fixed for the life of the process and needs one.
+
+*The warning arrives 30 days ahead, on four channels.* Inside that window the license is still valid and the server serves normally. Four channels carry it so that nobody has to be watching one particular place:
+
+* *Startup*, on standard error, once per container start.
+* *`/health`*, re-probed hourly -- the channel to alert on. See <<#monitoring,Monitoring and Alerting>>.
+* *The MCP handshake*, so every client that connects reads the status in the server's `initialize` instructions.
+* *Tool responses*, which is the channel worth knowing about in advance: during the warning window and the grace period, each tool result carries an appended `[PLEASE RELAY TO THE USER]` notice, so developers see the reminder in their agent's own output. Outside those windows nothing is appended.
+
+After expiry the server keeps serving for a 30-day grace period, logging that it's in the grace period and the date it stops. Past that it refuses to start.
+
+
 [[license-refusals]]
 == License Refusals
 
@@ -287,7 +367,7 @@ Every refusal exits with status `78` and prints a line naming the cause:
 |Past expiry and past the grace period.
 |===
 
-One state isn't a refusal: past expiry but inside the 30-day grace period, the server starts and serves normally, logging that it's in the grace period and by when it needs a renewed key. The health endpoint and the `vaadin-mcp://image-info` resource both carry the same posture, refreshed on a schedule rather than frozen at boot, so a monitor can catch an expiry the startup log announced weeks earlier.
+One state isn't a refusal: inside the grace period the server starts and serves normally. See <<#renewal,Renewal and Expiry Warnings>> for that window and the channels that announce it.
 
 
 [[custom-image]]
