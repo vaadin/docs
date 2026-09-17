@@ -1,0 +1,130 @@
+---
+title: Vaadin Directory MCP Server
+page-title: Use the Vaadin Directory MCP Server with AI Coding Agents
+description: Configure an AI coding agent to search Vaadin Directory for add-ons, installation instructions, and version compatibility.
+meta-description: Connect Claude Code, Codex, or another MCP client to the Vaadin Directory MCP server to find Vaadin add-ons and check compatibility.
+order: 15
+---
+
+
+= Vaadin Directory MCP Server
+
+The Vaadin Directory MCP server gives AI coding agents access to the https://vaadin.com/directory[Vaadin Directory] add-on catalog. An agent can search for add-ons, get Maven or Gradle installation instructions, and check compatibility with a Vaadin major version.
+
+[IMPORTANT]
+====
+The *Vaadin Directory MCP server* and the <<mcp#,Vaadin MCP server>> are separate services with different purposes and endpoints:
+
+* `https://vaadin.com/directory/mcp` searches the Vaadin Directory add-on catalog.
+* `https://mcp.vaadin.com/docs` searches the Vaadin documentation.
+
+Give them distinct names in your MCP configuration, such as `vaadin-directory` and `vaadin`. You can configure and use both at the same time.
+====
+
+== Configure Your MCP Client
+
+The Directory server uses streamable HTTP transport. Use one of the following configurations, or point any client with native HTTP support to:
+
+----
+https://vaadin.com/directory/mcp
+----
+
+[.tabs]
+=== Claude Code
+
+Add the server for your user account:
+
+[source,terminal]
+----
+claude mcp add vaadin-directory --transport http https://vaadin.com/directory/mcp --scope user
+----
+
+To share the configuration with a project instead, run the command from the project directory with `--scope project`. This creates a [filename]`.mcp.json` file in the project root.
+
+Alternatively, add the following entry to the `mcpServers` object in [filename]`~/.claude.json` or a project [filename]`.mcp.json` file:
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "vaadin-directory": {
+      "type": "http",
+      "url": "https://vaadin.com/directory/mcp"
+    }
+  }
+}
+----
+
+Restart Claude Code after changing the configuration.
+
+=== Codex
+
+Add the following to [filename]`~/.codex/config.toml`:
+
+[source,toml]
+----
+[mcp_servers.vaadin-directory]
+url = "https://vaadin.com/directory/mcp"
+----
+
+Restart Codex after changing the configuration. HTTP-based MCP servers require Codex CLI 0.43 or later.
+
+=== Other HTTP Clients
+
+Add a uniquely named HTTP server to your client's MCP configuration. The exact outer structure depends on the client; a common JSON format is:
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "vaadin-directory": {
+      "type": "http",
+      "url": "https://vaadin.com/directory/mcp"
+    }
+  }
+}
+----
+
+=== stdio-Only Clients
+
+For a client that supports only stdio transport, use an HTTP adapter:
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "vaadin-directory": {
+      "command": "npx",
+      "args": ["@pyroprompts/mcp-stdio-to-streamable-http-adapter"],
+      "env": {
+        "URI": "https://vaadin.com/directory/mcp",
+        "MCP_NAME": "vaadin-directory"
+      }
+    }
+  }
+}
+----
+
+Adapt the outer JSON structure and file location to your client. The adapter requires Node.js 18 or later.
+
+== Use the Directory Tools
+
+The server provides two tools:
+
+`directory_search`:: Searches add-ons by name or keyword. You can filter by Vaadin major version and add-on type, such as component, integration, theme, or tool.
+
+`directory_getAddon`:: Gets details about a specific add-on, including its latest version, compatibility, installation instructions, documentation, and source links. Use the add-on identifier returned by `directory_search`.
+
+For example, ask your agent:
+
+* "Search Vaadin Directory for chart integrations compatible with Vaadin 24."
+* "Find theme add-ons for Vaadin 25."
+* "Get installation instructions for this add-on."
+
+When compatibility is important, include the target Vaadin major version in the request. The search result reports a confidence level: an exact version match is high confidence, a major-version match is medium confidence, and a result without a matching version is low confidence.
+
+== Verify the Connection
+
+After restarting your MCP client, ask it to search Vaadin Directory for an add-on. Confirm that the client invokes `directory_search` from `vaadin-directory`, rather than a documentation search tool from the Vaadin MCP server.
+
+For client-specific setup instructions and the current tool reference, see the https://vaadin.com/directory/mcp-configuration[Vaadin Directory MCP configuration page].
