@@ -1,37 +1,40 @@
 ---
 title: Licensing
-page-title: License a Self-Hosted Vaadin MCP Server Instance
-description: Which key the self-hosted MCP server needs, how to install it, and how renewal works.
-meta-description: Get and install a license key for a self-hosted Vaadin MCP server, renew it before expiry, and read what each startup refusal means.
+page-title: Install the License Key for a Self-Hosted Vaadin MCP Server
+description: Request, install, verify, and renew the license key the server needs to start.
+meta-description: Step-by-step setup of the license key for a self-hosted Vaadin MCP server, the file permissions it needs, and what to do when startup is refused.
 order: 10
 ---
 
 
 = Licensing
 
-The self-hosted server validates its license at startup and needs a key to serve. The key is supplied at run time rather than baked into the image, since an image carrying one would distribute it.
+The server needs a license key to start. You supply it when you run the container, rather than building it into the image.
+
+Setting it up is three steps: request the key, install it, and check that the server accepted it.
 
 
-== Getting a Key
+== 1. Request the Key
 
-The server validates an *offline key*: the signed token you download from https://vaadin.com/myaccount/licenses[your Vaadin account]. A `proKey` is the credential for the online license check and isn't a license source for this server on any platform.
+Request a *server license key for the Vaadin MCP server* at https://vaadin.com/myaccount/licenses[your Vaadin account].
 
-Two things have to be true of the key:
+Two properties matter. A key missing either one is refused at startup:
 
-*It has to be a server license key, with no machine binding.* A machine-bound key names a machine ID that has to match the machine it runs on, and inside a container that ID is a property of the image rather than of your host -- it's derived from the home directory the base image wrote, so it's identical across every run and across separately built images of the same base. A key issued against a developer laptop never validates in the container, and one issued against the container is hostage to the base image. Ask for a server key.
+* *No machine binding.* Machine-bound keys don't work inside a container. If you're asked which machine the key is for, that's the wrong kind of key -- ask for a server key.
+* *Entitlement to the MCP server.* This is a separate product. An existing Vaadin Pro or Flow key is a valid key that doesn't cover it, and gets refused.
 
-*It has to be entitled to the MCP server product.* An ordinary Vaadin Pro subscription key is a valid key that doesn't cover this product, and it's refused with a message saying so. If your key is refused that way, contact Vaadin to have the entitlement added rather than looking for a configuration problem.
+What you download is an *offline key*: one long signed token in a text file. A `proKey` is a different credential, and this server doesn't accept one.
 
-*One key covers every instance.* The key carries no machine binding, and the server counts nothing -- no seats, no instances, no concurrent callers. The same key serves a shared deployment and twenty developer machines alike, and nothing has to be issued per deployment.
+One key is enough for any number of instances. Nothing is issued per deployment, and the server counts no seats, instances, or callers -- the same key works on a shared deployment and on every developer's machine.
 
 
-== Installing the Key
+== 2. Install the Key
 
-Which route to use depends on how your platform delivers secrets.
+Pick the option that matches how your platform delivers secrets. An environment variable is quickest; a mounted file is what Docker, Compose, and Kubernetes secrets give you.
 
-=== Route 1: Environment Variable
+=== Option A: Environment Variable
 
-Works on every hosting platform. The value is the token itself, not a path to it:
+Pass the key's *contents*, not a path to it:
 
 [source,bash]
 ----
@@ -40,11 +43,12 @@ docker run --rm -p 8080:8080 \
     vaadin/mcp-server:latest
 ----
 
-The value lands in `docker inspect` and in the process environment, so use an `--env-file` locally and your platform's secret store in a deployment. Under Docker Compose that's an `env_file:` or an `environment:` entry fed from the host -- a Compose `secrets:` entry arrives as a *file*, which this route can't read.
+The value shows up in `docker inspect` and in the container's environment, so use `--env-file` locally and your platform's secret store in a deployment. In Docker Compose, use an `env_file:` or `environment:` entry. A Compose `secrets:` entry arrives as a file, which this option can't read -- use option B for that.
 
-=== Route 2: Mounted Key File
+[[key-file]]
+=== Option B: Mounted Key File
 
-This is the route for Docker and Compose secrets, and for Kubernetes secret volumes. The container runs as user ID 65532, whose home directory is `/home/nonroot`, so the directory the license checker searches is `/home/nonroot/.vaadin`:
+Mount the key into `/home/nonroot/.vaadin/`:
 
 [source,bash]
 ----
@@ -53,52 +57,79 @@ docker run --rm -p 8080:8080 \
     vaadin/mcp-server:latest
 ----
 
-Four things about that mount:
+Four requirements. If you miss any of them the server reports *no license file found* and stops, so check all four before looking elsewhere:
 
-* *Keep the filename the download gave you.* The license checker reads a fixed list of names -- `offlineKeyV2`, `offlineKeyV2.txt`, `offlineKey`, `offlineKey.txt`, `serverKey`, `serverKey.txt` -- and it cross-checks the name against the content, so a renamed key is rejected as malformed. A key under `/root/.vaadin` isn't read at all.
-* *The file has to be readable by user ID 65532.* A root-owned `0600` key on a Linux host reads back as *no license file found*, which looks exactly like having mounted nothing. Copy the key somewhere you mount for nothing else and `chown 65532:65532` it; on Kubernetes, use a secret with `defaultMode: 0400` and a matching `runAsUser: 65532`. Docker Desktop remaps bind-mount ownership, so a Mac never sees this and a Linux host does.
-* *Mount the one file, not your whole `~/.vaadin` directory.* Keys are tried in the order above and validation stops at the first one accepted, so a stray or foreign key that sorts ahead of your real one is what gets used.
-* *`:ro` is enough.* Nothing is written back.
+. *Mount into `/home/nonroot/.vaadin/`.* That is the only directory the server searches. A key under `/root/.vaadin/` is never found.
+. *Keep the filename you downloaded.* The accepted names are `offlineKeyV2`, `offlineKeyV2.txt`, `offlineKey`, `offlineKey.txt`, `serverKey`, and `serverKey.txt`. Renaming the file makes it invalid.
+. *Make the file readable by user ID 65532*, which is the account the container runs as. Run `chown 65532:65532` on your copy of the key; on Kubernetes, use a secret with `defaultMode: 0400` and `runAsUser: 65532`. A root-owned key with `0600` permissions cannot be read. Docker Desktop on macOS remaps ownership for you, so this catches out Linux hosts only.
+. *Mount the single file, not your whole `.vaadin` directory.* Another key in that directory can be read ahead of yours.
+
+Mounting read-only with `:ro` is fine. Nothing is written back.
+
+
+== 3. Verify It Worked
+
+The server prints one line to standard error as it starts:
+
+----
+ready. License valid until 2027-04-30.
+----
+
+You can also ask a running container:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health | jq '.components.license.details.license'
+----
+
+[source,json]
+----
+{ "status": "valid", "expiresAt": "2027-04-30T00:00:00Z" }
+----
+
+A `status` of `valid` means the setup is done. If the server didn't start, see <<#license-refusals,If the Server Doesn't Start>>.
 
 
 [[renewal]]
-== Renewal and Expiry Warnings
+== Renewing the Key
 
-*Renewal is a file copy.* Put the newer key in place by whichever route you installed the first one, then restart the container, which always takes effect. The server also re-probes its own license hourly, so a replaced key *file* is generally picked up without a restart; a key supplied as an environment variable is fixed for the life of the process and needs one.
+Put the new key in place the same way you installed the first one, then restart the container.
 
-*The warning arrives 30 days ahead, on four channels.* Inside that window the license is still valid and the server serves normally. Four channels carry it so that nobody has to be watching one particular place:
+A replaced key *file* is also picked up on its own within the hour, with no restart. A key passed as an environment variable always needs a restart.
 
-* *Startup*, on standard error, once per container start.
-* *`/health`*, re-probed hourly -- the channel to alert on. See <<monitoring-and-audit-logging#,Monitoring and Audit Logging>>.
-* *The MCP handshake*, so every client that connects reads the status in the server's `initialize` instructions.
-* *Tool responses*, which is the channel worth knowing about in advance: during the warning window and the grace period, each tool result carries an appended `[PLEASE RELAY TO THE USER]` notice, so developers see the reminder in their agent's own output. Outside those windows nothing is appended.
+You get 30 days' notice before a key expires. The warning appears in four places:
 
-After expiry the server keeps serving for a 30-day grace period, logging that it's in the grace period and the date it stops. Past that it stops serving.
+. *The startup log*, each time the container starts.
+. *`/health`*, where `status` becomes `expiring_soon`. This is the one to alert on -- see <<monitoring-and-audit-logging#,Monitoring and Audit Logging>>.
+. *Each client's MCP handshake*, so connecting tools report it.
+. *Every tool response*, as an appended `[PLEASE RELAY TO THE USER]` note. Your developers see the reminder in their agent's own output, so expect to hear about it from them.
+
+If a key does expire, the server keeps working for another 30 days and logs the date it stops. After that it won't start.
 
 
 [[license-refusals]]
-== License Refusals
+== If the Server Doesn't Start
 
-Every refusal exits with status `78` and prints a line naming the cause:
+A refused license stops the server with exit code `78` and prints one of these messages:
 
 [cols="2,3"]
 |===
-|Message |Cause
+|Message |What to Do
 
 |*no license file found*
-|No key was found at all: the variable is unset, or the mount is at the wrong path, unreadable by user ID 65532, or empty.
+|No key reached the server. Check that `VAADIN_OFFLINE_KEY` is set and not empty, or that your mounted file meets all four requirements in <<#key-file,Option B>>.
 
 |*the offline key does not provide access to <product>*
-|A real, valid key with no entitlement for this product. Contact Vaadin rather than changing configuration.
+|The key is valid but isn't entitled to the MCP server. Ask Vaadin to add the entitlement. There's nothing to fix in your configuration.
 
 |*invalid offline key*
-|The signature or the machine ID was rejected. The URL in the message carries the *container's* machine ID, not your host's -- which is why a machine-bound key can't work here.
+|The key was rejected, most often because it's machine-bound. Request a server key with no machine binding. Ignore the machine ID in the message: it's the container's, not your host's.
 
 |*an offline key could not be read*
-|A key the library can't parse, as against one it refuses: a corrupt file, or a foreign one picked up from a mounted key directory. The message names the resolution order, because the key to replace is the first unusable one in that order and not necessarily the one you meant to use.
+|The file is corrupt, or another key in the mounted directory is being read ahead of yours. Mount only your own key file, and confirm it's the file you downloaded.
 
 |*license expired*
-|Past expiry and past the grace period.
+|The key is past expiry and past its 30-day grace period. Install a renewed key.
 |===
 
-One state isn't a refusal: inside the grace period the server starts and serves normally. See <<#renewal,Renewal and Expiry Warnings>> for that window and the channels that announce it.
+Inside the 30-day grace period the server still starts and serves normally, logging that it's in the grace period. See <<#renewal,Renewing the Key>>.

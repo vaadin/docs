@@ -61,7 +61,7 @@ For example, `vaadin/mcp-server:1.0.0-20260916-114956-2b7c708`.
 
 `<version>` is the server's own version, the timestamp is when the build started, and `<sha7>` is the commit the image reports as its `build_commit`. `:latest` moves to the newest build once it passes its smoke test.
 
-Pin the immutable tag in anything you deploy. The version number tracks the *code*, so a documentation refresh republishes under the same version with a new timestamp -- which means `:latest` and a bare version number both name a moving target, and the immutable tag is the only one that identifies exactly what you're running.
+*Pin the immutable tag in anything you deploy.* Both `:latest` and a bare version number move: the version tracks the code, so a documentation refresh republishes the same version under a new timestamp. Only the full tag identifies one build.
 
 [source,bash]
 ----
@@ -70,7 +70,7 @@ docker pull vaadin/mcp-server:latest
 
 === 2. Install the License Key
 
-The quickest route is an environment variable holding the key's token value:
+You need a server license key entitled to the MCP server -- <<licensing#,Licensing>> covers requesting one. With the key file in hand, the quickest route is to pass its contents as an environment variable:
 
 [source,bash]
 ----
@@ -79,11 +79,11 @@ docker run --rm -p 8080:8080 \
     vaadin/mcp-server:latest
 ----
 
-That works on every hosting platform, but it puts the key in `docker inspect` and in the process environment. A real deployment -- and any use of Docker, Compose or Kubernetes secrets, which arrive as files -- wants the key mounted instead. <<licensing#,Licensing>> covers both routes, which kind of key to ask for, and what each refusal means.
+That works anywhere, but the key is then visible in `docker inspect`. For a real deployment, or for Docker, Compose and Kubernetes secrets, mount the key file instead -- see <<licensing#key-file,Option B: Mounted Key File>>, which lists the four requirements the mount has to meet.
 
 === 3. Confirm It Started
 
-The server prints one line to standard error at startup -- `ready. License valid until <date>.` -- and the same posture is on the health endpoint, which is `/health` rather than `/actuator/health`:
+The server prints one line to standard error as it starts -- `ready. License valid until <date>.` -- and reports the same status on its health endpoint, which is `/health` rather than `/actuator/health`:
 
 [source,bash]
 ----
@@ -95,9 +95,9 @@ curl -s http://localhost:8080/health | jq '.components.license.details.license'
 { "status": "valid", "expiresAt": "2027-04-30T00:00:00Z" }
 ----
 
-If it didn't start, <<licensing#license-refusals,License Refusals>> matches each message to its cause.
+If it didn't start, <<licensing#license-refusals,If the Server Doesn't Start>> lists each refusal message and what to do about it.
 
-Opening `http://localhost:8080/` in a browser gives you a landing page carrying the configuration snippets for this deployment, with your own endpoint URL already substituted in. It's rendered at startup rather than served as a static file, so the URL it advertises is the one this instance actually answers on.
+Opening `http://localhost:8080/` in a browser gives you a landing page with ready-made configuration snippets for this deployment, carrying your own endpoint URL rather than Vaadin's.
 
 
 == Pointing Your Tools at It
@@ -126,7 +126,7 @@ The corpus is part of the image, so refreshing it means pulling a newer image an
 
 Upgrades are otherwise unremarkable: the image holds no state, so stopping the old container and starting the new one is the whole procedure. Read the release notes before a version change rather than a refresh, since a version bump is what signals that something a client negotiates against -- a tool, a parameter, a response field -- has moved.
 
-To find out what an instance is actually serving, read the `vaadin-mcp://image-info` resource over MCP. It reports the build commit, the build date, the corpus each version was indexed from with its reference and commit, the license posture, and which optional artifacts the image carries. That's also the thing to quote in a support request -- it identifies the build exactly, where a tag can be ambiguous and a version number is deliberately coarse.
+To find out what an instance is actually serving, read the `vaadin-mcp://image-info` resource over MCP. It reports the build commit, the build date, the corpus each version was indexed from with its reference and commit, the license status, and which optional artifacts the image carries. That's also the thing to quote in a support request -- it identifies the build exactly, where a tag can be ambiguous and a version number is deliberately coarse.
 
 
 [[topics]]
