@@ -21,11 +21,27 @@ Point your monitoring at `/health` -- at the root, not under `/actuator`. It nee
 curl -s http://localhost:8080/health
 ----
 
-Use the top-level `status` field for liveness and readiness probes. The response also reports two components: `license`, with the current status and expiry date, and `versionSnapshot`, with the documentation versions the image was built from.
+=== Liveness and Readiness Probes
+
+Probe the endpoint and let the HTTP status code decide. The server answers *200* when it's serving, and *503* when its documentation failed to load -- which is the one fault a restart might clear:
+
+[source,yaml]
+----
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+----
+
+Kubernetes makes that request from outside the container, which matters here: the image has no shell and no HTTP client, so an `exec` probe or a Docker `healthcheck:` command cannot work. See <<deployment-examples#health-checks,Health Checks>>.
+
+*A license problem never changes the status code.* An expiring or expired key leaves `/health` at 200 until the server stops serving altogether, so a probe won't warn you. That's what the next section is for.
 
 === What to Alert On
 
-Alert on the license status, which is the one thing that stops the server if you ignore it:
+Alerting needs the response body, not the status code. The response reports two components: `versionSnapshot`, with the documentation versions the image was built from, and `license`, which is the one to watch -- an unrenewed key eventually stops the server, and nothing above tells you that's coming:
 
 [source,bash]
 ----
@@ -96,7 +112,7 @@ Requests are recorded, never responses: the log says what was asked, not what ca
 To set this up:
 
 . Mount a volume for the directory, so records survive a redeploy.
-. Make that directory writable by user ID 65532, the account the container runs as.
+. Make that directory writable by user ID 65532, the account the container runs as. A Docker named volume and a Kubernetes persistent volume are both owned by `root` when created, so this needs setting explicitly -- <<deployment-examples#file-ownership,File Ownership Comes First>> covers both.
 . Point `logrotate`, `journald`, or your own log shipper at the file. The server only appends -- it never rotates or deletes anything, so retention is up to you.
 
 Check the startup log to confirm it took effect. The server names the file it opened, or says that the variable is unset.

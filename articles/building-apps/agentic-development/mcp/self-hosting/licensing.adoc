@@ -61,7 +61,8 @@ Four requirements. If you miss any of them the server reports *no license file f
 
 . *Mount into `/home/nonroot/.vaadin/`.* That is the only directory the server searches. A key under `/root/.vaadin/` is never found.
 . *Keep the filename you downloaded.* The accepted names are `offlineKeyV2`, `offlineKeyV2.txt`, `offlineKey`, `offlineKey.txt`, `serverKey`, and `serverKey.txt`. Renaming the file makes it invalid.
-. *Make the file readable by user ID 65532*, which is the account the container runs as. Run `chown 65532:65532` on your copy of the key; on Kubernetes, use a secret with `defaultMode: 0400` and `runAsUser: 65532`. A root-owned key with `0600` permissions cannot be read. Docker Desktop on macOS remaps ownership for you, so this catches out Linux hosts only.
+. *Make the file readable by user ID 65532*, the account the container runs as. For a bind mount, run `chown 65532:65532` on your copy of the key. A root-owned key with `0600` permissions cannot be read. Docker Desktop on macOS remaps ownership for you, so this catches out Linux hosts only.
+. *On Kubernetes, set `fsGroup`.* A Secret is owned by `root`, and `runAsUser` changes only which user the process runs as -- not who owns the file. Setting `fsGroup: 65532` in the pod's security context gives the mounted Secret that group, and `defaultMode: 0440` lets the group read it. <<deployment-examples#,Deployment Examples>> has a full manifest.
 . *Mount the single file, not your whole `.vaadin` directory.* Another key in that directory can be read ahead of yours.
 
 Mounting read-only with `:ro` is fine. Nothing is written back.
@@ -95,7 +96,7 @@ A `status` of `valid` means the setup is done. If the server didn't start, see <
 
 Put the new key in place the same way you installed the first one, then restart the container.
 
-A replaced key *file* is also picked up on its own within the hour, with no restart. A key passed as an environment variable always needs a restart.
+Restarting is the reliable way, and it's worth knowing why there isn't a shortcut. The server does re-read its key every hour, but whether a replaced file reaches it depends on how you mounted it: a Kubernetes Secret mounted with `subPath` never receives updates, and replacing a bind-mounted file on the host can leave the container reading the original file. Restart the container and you don't have to work out which case you're in.
 
 You get 30 days' notice before a key expires. The warning appears in four places:
 

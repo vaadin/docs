@@ -1,0 +1,169 @@
+---
+title: Deployment Examples
+page-title: Deploy the Vaadin MCP Server with Compose or Kubernetes
+description: Complete Docker Compose and Kubernetes definitions for a shared internal server.
+meta-description: Docker Compose and Kubernetes definitions for a self-hosted Vaadin MCP server, with the license mount, audit volume, file ownership, and health probes.
+order: 15
+---
+
+
+= Deployment Examples
+
+Complete definitions for a shared internal service, with the license key mounted, audit logging enabled, and health checks wired up. Both run the same image with the same settings.
+
+Replace the image tag in each example with the build you intend to run. See <<index#find-a-tag,Finding a Tag>>.
+
+
+[[file-ownership]]
+== File Ownership Comes First
+
+The container runs as user ID 65532. Two mounts have to match, and getting either wrong stops the server rather than degrading it:
+
+* *The license key* has to be *readable* by user 65532. Otherwise the server reports `no license file found` and exits.
+* *The audit log directory* has to be *writable* by user 65532. Otherwise the server can't open the file and exits.
+
+Both defaults work against you: a Docker named volume and a Kubernetes Secret are each owned by `root` when created, so each example below sets ownership explicitly.
+
+Docker Desktop on macOS remaps ownership for bind mounts, so you won't hit this there. On a Linux host, you do.
+
+
+== Docker Compose
+
+Prepare the key and the log directory next to your `compose.yaml`:
+
+[source,bash]
+----
+mkdir -p audit
+sudo chown 65532:65532 serverKey audit
+sudo chmod 400 serverKey
+----
+
+[source,yaml]
+----
+services:
+  vaadin-mcp:
+    image: vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+    ports:
+      - "8080:8080"
+    environment:
+      VAADIN_AUDIT_LOG_PATH: /var/log/vaadin-mcp/audit.jsonl
+    volumes:
+      - ./serverKey:/home/nonroot/.vaadin/serverKey:ro
+      - ./audit:/var/log/vaadin-mcp
+    restart: unless-stopped
+----
+
+Mount the key as a single file, as above, rather than mounting a whole directory. Any other key in that directory may be read ahead of yours.
+
+Don't add a `healthcheck:` that runs a command inside the container -- see <<#health-checks,Health Checks>> below.
+
+
+== Kubernetes
+
+Create the key as a Secret:
+
+[source,bash]
+----
+kubectl create secret generic vaadin-mcp-license \
+    --from-file=serverKey=/path/to/serverKey
+----
+
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaadin-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaadin-mcp-server
+  template:
+    metadata:
+      labels:
+        app: vaadin-mcp-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532            # <1>
+      containers:
+        - name: server
+          image: vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+          ports:
+            - containerPort: 8080
+          env:
+            - name: VAADIN_AUDIT_LOG_PATH
+              value: /var/log/vaadin-mcp/audit.jsonl
+          volumeMounts:
+            - name: license
+              mountPath: /home/nonroot/.vaadin
+              readOnly: true
+            - name: audit
+              mountPath: /var/log/vaadin-mcp
+          readinessProbe:               # <3>
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              memory: 2Gi
+      volumes:
+        - name: license
+          secret:
+            secretName: vaadin-mcp-license
+            defaultMode: 0440         # <2>
+            items:
+              - key: serverKey        # <2>
+                path: serverKey
+        - name: audit
+          persistentVolumeClaim:
+            claimName: vaadin-mcp-audit
+----
+<1> `fsGroup` is what makes both mounts readable. It sets group ownership on the mounted volumes and adds the group to the container's process. `runAsUser` on its own does not change file ownership, so a Secret stays owned by `root` and the server can't read it.
+<2> `defaultMode: 0440` grants read access to that group. The `items` list restricts the mounted directory to your key alone, which is what keeps another key from being read first.
+<3> Kubernetes sends these probes as HTTP requests from outside the container, rather than running a command inside it, which is why they work against this image.
+
+Expose it with an ordinary Service, then apply your own authentication at the ingress. The server has none of its own -- see <<index#network-exposure,Network Exposure>>.
+
+
+== Podman
+
+`podman run` accepts the same arguments as `docker run`, so every command in this documentation works with the name substituted.
+
+One difference matters. Rootless Podman maps container user IDs to a range of host user IDs, so a file you `chown 65532` on the host is *not* user 65532 inside the container. Either run the key through Podman's own mapping:
+
+[source,bash]
+----
+podman run --rm -p 8080:8080 \
+    -v "$PWD/serverKey:/home/nonroot/.vaadin/serverKey:ro,U" \
+    vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+----
+
+The `U` suffix tells Podman to change the mounted file's ownership to match the user the container runs as. Or avoid file ownership entirely and pass the key as an environment variable, as in <<licensing#,Licensing>>.
+
+
+[[health-checks]]
+== Health Checks
+
+The image contains no shell and no HTTP client, so *a health check that runs a command inside the container cannot work*. This rules out a Docker or Compose `healthcheck:` using `CMD` or `CMD-SHELL`, and any `exec` probe.
+
+Check the server from outside the container instead:
+
+* *Kubernetes* `httpGet` probes, as above. Kubernetes sends the request from outside, so nothing has to exist inside the image.
+* *Compose and plain Docker*: poll `http://<host>:8080/health` from your monitoring system or from the host.
+
+See <<monitoring-and-audit-logging#,Monitoring and Audit Logging>> for what the endpoint returns and what to alert on.

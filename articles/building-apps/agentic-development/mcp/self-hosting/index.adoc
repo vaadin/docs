@@ -18,7 +18,7 @@ This page gets one instance running. The pages under <<#topics,Topics>> cover ea
 
 == What Self-Hosting Changes
 
-* *The server needs no network access.* All the documentation it searches is inside the image, so the container can run with no network route at all. See <<air-gapped-operation#,Air-Gapped Operation>>.
+* *The server makes no outbound connections.* All the documentation it searches is inside the image, so it needs no route to the internet -- only an inbound route from your developers' tools. See <<air-gapped-operation#,Air-Gapped Operation>>.
 * *You can log every tool call.* Point the server at a file and it records what each agent asked for. See <<monitoring-and-audit-logging#audit-logging,Audit Logging>>.
 * *Nothing is sent to Vaadin.* Usage reporting is off unless you turn it on, and there's no reason to. See <<air-gapped-operation#analytics,Analytics>>.
 
@@ -29,7 +29,7 @@ To compare against what the hosted server does -- where it runs, and what it rep
 
 == What You Need
 
-* *A container runtime on an x86_64 host.* Docker, Podman, or Kubernetes. The published image is `linux/amd64` only. An arm64 host such as Apple Silicon runs it through emulation, which is slower to start and slower to search -- fine for trying out, not for a deployment.
+* *A container runtime on an x86_64 host.* Docker, Podman, or Kubernetes -- <<deployment-examples#,Deployment Examples>> has definitions for Compose and Kubernetes. The published image is `linux/amd64` only. An arm64 host such as Apple Silicon runs it through emulation, which is slower to start and slower to search -- fine for trying out, not for a deployment.
 * *A Vaadin license key entitled to the MCP server.* The server won't start without one. See <<licensing#,Licensing>>.
 * *1 vCPU and 2 GB of memory per instance.* See <<sizing#,Sizing and Scaling>>.
 * *Somewhere to run it that your development tools can reach.* The server has no authentication, so you control access at the network level -- see <<#network-exposure,Network Exposure>>.
@@ -40,7 +40,7 @@ To compare against what the hosted server does -- where it runs, and what it rep
 
 Choose one. Both use the same image, the same key, and the same settings, so you can evaluate one way and deploy the other.
 
-*A shared internal service* is the usual choice: one deployment, such as a Kubernetes pod or a container on an internal VM, that every developer's tools connect to. You install and renew one key, collect audit records in one place, and update one image.
+*A shared internal service* is the usual choice: one deployment, such as a Kubernetes pod or a container on an internal VM, that every developer's tools connect to. You install and renew one key, collect audit records in one place, and update one image. <<deployment-examples#,Deployment Examples>> has a complete definition for this.
 
 *A container per developer* runs the same image on each developer's own machine. Use it to evaluate the server, or where a shared internal service isn't allowed. The downside is repetition: you install the key on every machine and update every machine's image separately.
 
@@ -56,15 +56,26 @@ Images are published to `vaadin/mcp-server` on Docker Hub:
 docker pull vaadin/mcp-server:latest
 ----
 
-Every build also gets a permanent tag that never moves:
+*Use a permanent tag in anything you deploy*, rather than `:latest`. Both `:latest` and a plain version number change over time: the version number tracks the server code, so a documentation update republishes the same version under a new timestamp. Only the full tag names a single build.
+
+[[find-a-tag]]
+==== Finding a Tag
+
+Browse https://hub.docker.com/r/vaadin/mcp-server/tags[the image's tags on Docker Hub], or list the newest from a terminal:
+
+[source,bash]
+----
+curl -s 'https://hub.docker.com/v2/repositories/vaadin/mcp-server/tags?page_size=25' \
+    | jq -r '.results[] | select(.name != "latest") | .name' | sort -r | head
+----
+
+The tags read `<version>-<YYYYMMDD-HHMMSS>-<commit>`, newest first, so the top entry is the current build:
 
 ----
-vaadin/mcp-server:<version>-<YYYYMMDD-HHMMSS>-<commit>
+vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
 ----
 
-For example, `vaadin/mcp-server:1.0.0-20260916-114956-2b7c708`.
-
-*Use a permanent tag in anything you deploy.* Both `:latest` and a plain version number change over time: the version number tracks the server code, so a documentation update republishes the same version under a new timestamp. Only the full tag identifies a single build.
+To confirm which build you ended up with, read the running server's `vaadin-mcp://image-info` resource over MCP. It reports the same commit the tag names.
 
 === 2. Install the License Key
 
