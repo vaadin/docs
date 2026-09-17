@@ -2,75 +2,73 @@
 title: Self-Hosting
 page-title: Run the Vaadin MCP Server on Your Own Infrastructure
 description: Run the Vaadin MCP server inside your own network, on your own host.
-meta-description: Run the Vaadin MCP server yourself - what self-hosting changes, what you need, and how to get an instance licensed, started, and connected to your tools.
+meta-description: Run the Vaadin MCP server yourself - what you need, how to get an instance licensed and started, and how to connect your development tools to it.
 order: 110
 ---
 
 
 = Self-Hosting the MCP Server
 
-Vaadin runs a hosted MCP server at https://mcp.vaadin.com/docs, and for most teams that's the one to use: there's nothing to operate, and the documentation corpus behind it is refreshed weekly.
+Vaadin runs a hosted MCP server at https://mcp.vaadin.com/docs, and for most teams that's the one to use: there's nothing to operate, and its documentation is updated every week.
 
-Self-hosting is for the teams that can't point a development tool at a service outside their own perimeter. The same server ships as a container image you run yourself, on your own host, inside your own network.
+Self-host when your organization can't send development queries to a service outside its own network. The same server is available as a container image you run on your own host.
 
-This page is the short path from nothing to a working instance. The pages under <<#topics,Topics>> carry the detail.
+This page gets one instance running. The pages under <<#topics,Topics>> cover each part in detail.
 
 
 == What Self-Hosting Changes
 
-*It needs no network at runtime.* Everything the server answers from is baked into the image, so the container runs with no egress at all -- no route, no DNS, no phone home. <<air-gapped-operation#,Air-Gapped Operation>> puts that in a form a security review can quote.
+* *The server needs no network access.* All the documentation it searches is inside the image, so the container can run with no network route at all. See <<air-gapped-operation#,Air-Gapped Operation>>.
+* *You can log every tool call.* Point the server at a file and it records what each agent asked for. See <<monitoring-and-audit-logging#audit-logging,Audit Logging>>.
+* *Nothing is sent to Vaadin.* Usage reporting is off unless you turn it on, and there's no reason to. See <<air-gapped-operation#analytics,Analytics>>.
 
-*Every tool call can be recorded.* Point the server at a path and it appends one JSON record per call, so you have a log of what your agents asked for. See <<monitoring-and-audit-logging#audit-logging,Audit Logging>>.
+The trade-off: your documentation is only as current as the image you last pulled, where the hosted server updates itself.
 
-*Nothing is reported to Vaadin.* Analytics reporting stays off unless you set an Amplitude key, which a self-hosted deployment has no reason to do. See <<air-gapped-operation#analytics,Analytics>>.
-
-What you give up is corpus freshness. The hosted server picks up new documentation weekly without you doing anything; a self-hosted one is as current as the image you last pulled.
-
-For what the hosted server itself does -- where it runs, and what it reports -- see <<{articles}/building-apps/agentic-development/mcp/#hosted-server,What the Hosted Server Runs>>. It runs the same image you would.
+To compare against what the hosted server does -- where it runs, and what it reports -- see <<{articles}/building-apps/agentic-development/mcp/#hosted-server,What the Hosted Server Runs>>. It runs the same image you would.
 
 
 == What You Need
 
-* *A container runtime on an x86_64 host.* Docker, Podman, or any Kubernetes cluster. The published image is `linux/amd64` only, so an arm64 host -- Apple Silicon, or Graviton and its equivalents -- runs it under emulation, at a cost in both start-up time and search latency. Fine for trying it out; not what to deploy on.
-* *A Vaadin license key entitled to the MCP server.* The container needs one to start. See <<licensing#,Licensing>>.
-* *About 1 vCPU and 2 GB of memory per instance*, which starts in about five seconds. See <<sizing#,Sizing and Scaling>>.
-* *A place to put it that your development tools can reach.* The server has no authentication of its own -- see <<#network-exposure,Network Exposure>>.
+* *A container runtime on an x86_64 host.* Docker, Podman, or Kubernetes. The published image is `linux/amd64` only. An arm64 host such as Apple Silicon runs it through emulation, which is slower to start and slower to search -- fine for trying out, not for a deployment.
+* *A Vaadin license key entitled to the MCP server.* The server won't start without one. See <<licensing#,Licensing>>.
+* *1 vCPU and 2 GB of memory per instance.* See <<sizing#,Sizing and Scaling>>.
+* *Somewhere to run it that your development tools can reach.* The server has no authentication, so you control access at the network level -- see <<#network-exposure,Network Exposure>>.
 
 
 [[deployment-modes]]
 == Deployment Modes
 
-Both modes run the same image, with the same key and the same configuration surface. Nothing is packaged differently for one or the other, so a team can evaluate one way and deploy the other.
+Choose one. Both use the same image, the same key, and the same settings, so you can evaluate one way and deploy the other.
 
-*A shared internal service* is the pattern to reach for: one deployment -- a Kubernetes pod, or a container on an internal VM -- that every developer's tooling points at. One key to install and renew, one place to collect audit records, one image to update when the documentation corpus moves. The server holds no per-client state, so a small instance serves a team and scales by adding replicas.
+*A shared internal service* is the usual choice: one deployment, such as a Kubernetes pod or a container on an internal VM, that every developer's tools connect to. You install and renew one key, collect audit records in one place, and update one image.
 
-*A per-developer container* runs the same image on each developer's own machine, reached only by that developer's tools. It suits evaluation, and it suits environments locked down tightly enough that a shared internal service is itself the obstacle. The cost is multiplied operations: every machine needs the key installed, and every machine's image ages on its own.
+*A container per developer* runs the same image on each developer's own machine. Use it to evaluate the server, or where a shared internal service isn't allowed. The downside is repetition: you install the key on every machine and update every machine's image separately.
 
 
 == Running the Server
 
 === 1. Pull the Image
 
-Images are published to `vaadin/mcp-server` on Docker Hub. Every build carries an immutable tag:
-
-----
-vaadin/mcp-server:<version>-<YYYYMMDD-HHMMSS>-<sha7>
-----
-
-For example, `vaadin/mcp-server:1.0.0-20260916-114956-2b7c708`.
-
-`<version>` is the server's own version, the timestamp is when the build started, and `<sha7>` is the commit the image reports as its `build_commit`. `:latest` moves to the newest build once it passes its smoke test.
-
-*Pin the immutable tag in anything you deploy.* Both `:latest` and a bare version number move: the version tracks the code, so a documentation refresh republishes the same version under a new timestamp. Only the full tag identifies one build.
+Images are published to `vaadin/mcp-server` on Docker Hub:
 
 [source,bash]
 ----
 docker pull vaadin/mcp-server:latest
 ----
 
+Every build also gets a permanent tag that never moves:
+
+----
+vaadin/mcp-server:<version>-<YYYYMMDD-HHMMSS>-<commit>
+----
+
+For example, `vaadin/mcp-server:1.0.0-20260916-114956-2b7c708`.
+
+*Use a permanent tag in anything you deploy.* Both `:latest` and a plain version number change over time: the version number tracks the server code, so a documentation update republishes the same version under a new timestamp. Only the full tag identifies a single build.
+
 === 2. Install the License Key
 
-You need a server license key entitled to the MCP server -- <<licensing#,Licensing>> covers requesting one. With the key file in hand, the quickest route is to pass its contents as an environment variable:
+You need a server license key entitled to the MCP server -- <<licensing#,Licensing>> explains how to request one. With the key file in hand, the quickest way to start the server is to pass the key's contents in an environment variable:
 
 [source,bash]
 ----
@@ -79,11 +77,17 @@ docker run --rm -p 8080:8080 \
     vaadin/mcp-server:latest
 ----
 
-That works anywhere, but the key is then visible in `docker inspect`. For a real deployment, or for Docker, Compose and Kubernetes secrets, mount the key file instead -- see <<licensing#key-file,Option B: Mounted Key File>>, which lists the four requirements the mount has to meet.
+This works anywhere, but the key is then visible to anyone who can run `docker inspect`. For a real deployment, or to use Docker, Compose, or Kubernetes secrets, mount the key file instead. See <<licensing#key-file,Option B: Mounted Key File>>.
 
-=== 3. Confirm It Started
+=== 3. Check That It Started
 
-The server prints one line to standard error as it starts -- `ready. License valid until <date>.` -- and reports the same status on its health endpoint, which is `/health` rather than `/actuator/health`:
+The server prints one line as it starts:
+
+----
+ready. License valid until 2027-04-30.
+----
+
+You can also ask the running container. Its health endpoint is `/health`, not `/actuator/health`:
 
 [source,bash]
 ----
@@ -95,38 +99,42 @@ curl -s http://localhost:8080/health | jq '.components.license.details.license'
 { "status": "valid", "expiresAt": "2027-04-30T00:00:00Z" }
 ----
 
-If it didn't start, <<licensing#license-refusals,If the Server Doesn't Start>> lists each refusal message and what to do about it.
+If the server didn't start, <<licensing#license-refusals,If the Server Doesn't Start>> lists each message and what to do about it.
 
-Opening `http://localhost:8080/` in a browser gives you a landing page with ready-made configuration snippets for this deployment, carrying your own endpoint URL rather than Vaadin's.
+Open `http://localhost:8080/` in a browser for a page of ready-made configuration snippets, carrying your own endpoint URL rather than Vaadin's.
 
 
 == Pointing Your Tools at It
 
-The MCP endpoint is `/docs`, relative to wherever the application is mounted. A default deployment on `mcp.example.com` is therefore configured as:
+The MCP endpoint is `/docs`. For a deployment on `mcp.example.com`, configure your tools with:
 
 ----
 https://mcp.example.com/docs
 ----
 
-Everything in the <<{articles}/building-apps/agentic-development/mcp/supported-tools/#,MCP Setup Guide>> applies unchanged -- substitute your own URL in place of `https://mcp.vaadin.com/docs` in any of the per-tool configuration snippets. The transport is streamable HTTP either way.
+Follow the <<{articles}/building-apps/agentic-development/mcp/supported-tools/#,MCP Setup Guide>> for your tool, and use your own URL wherever it shows `https://mcp.vaadin.com/docs`. Nothing else in those instructions changes.
 
-To move the endpoint, mount the application under a prefix, or sit it behind a rewriting ingress, see <<configuration#reverse-proxy,Behind a Reverse Proxy>>.
+To serve the endpoint on a different path, or to run the server behind a proxy that rewrites URLs, see <<configuration#reverse-proxy,Behind a Reverse Proxy>>.
 
 [[network-exposure]]
 === Network Exposure
 
-*The server has no authentication.* There's no security layer on the classpath, and the health endpoint and the MCP endpoint are both unauthenticated by design -- it serves public Vaadin documentation, and the reason to self-host it is usually that you don't want the *queries* leaving your network, not that the answers are secret.
+*The server has no authentication.* Both the MCP endpoint and the health endpoint answer anyone who can reach them.
 
-That makes network placement your control point. Put it behind your existing ingress, restrict it to the networks your developers and CI run on, and don't publish it to the internet.
+Control access at the network level instead:
+
+* Put the server behind your existing ingress or reverse proxy, and apply your own authentication there.
+* Restrict it to the networks your developers and build agents run on.
+* Don't publish it to the internet.
 
 
 == Keeping the Documentation Current
 
-The corpus is part of the image, so refreshing it means pulling a newer image and restarting. Vaadin rebuilds the newest release against the current documentation weekly and republishes it under the same version with a new timestamp tag, so there's a fresh image to pull roughly every week even when the server code hasn't changed.
+The documentation is part of the image, so to update it you pull a newer image and restart. Vaadin rebuilds the current release against the latest documentation every week and republishes it under the same version with a new timestamp, so expect a fresh image roughly weekly even when the server code hasn't changed.
 
-Upgrades are otherwise unremarkable: the image holds no state, so stopping the old container and starting the new one is the whole procedure. Read the release notes before a version change rather than a refresh, since a version bump is what signals that something a client negotiates against -- a tool, a parameter, a response field -- has moved.
+The server stores no data, so upgrading means stopping the old container and starting the new one. Read the release notes when the version number changes -- that signals a change your tools can see, such as a tool, parameter, or response field.
 
-To find out what an instance is actually serving, read the `vaadin-mcp://image-info` resource over MCP. It reports the build commit, the build date, the corpus each version was indexed from with its reference and commit, the license status, and which optional artifacts the image carries. That's also the thing to quote in a support request -- it identifies the build exactly, where a tag can be ambiguous and a version number is deliberately coarse.
+To check what a running instance is serving, read its `vaadin-mcp://image-info` resource over MCP. It reports the build date, the exact build it came from, which documentation version each part was built from, and the license status. Quote it in a support request: it identifies the build precisely, where a tag can be ambiguous.
 
 
 [[topics]]
@@ -137,7 +145,7 @@ section_outline::[]
 
 == Resources
 
-* <<{articles}/building-apps/agentic-development/mcp/supported-tools/#,MCP Setup Guide>> -- per-tool configuration, which applies unchanged to your own endpoint
-* <<{articles}/building-apps/agentic-development/mcp/#,MCP Server for Vaadin>> -- what the server does and which tools it exposes
+* <<{articles}/building-apps/agentic-development/mcp/supported-tools/#,MCP Setup Guide>> -- per-tool configuration, which works unchanged with your own endpoint
+* <<{articles}/building-apps/agentic-development/mcp/#,MCP Server for Vaadin>> -- what the server does and which tools it offers
 * https://vaadin.com/myaccount/licenses[Vaadin licenses] -- request a server license key
 * https://modelcontextprotocol.io/specification[MCP specification]

@@ -1,50 +1,74 @@
 ---
 title: Air-Gapped Operation
 page-title: Run the Vaadin MCP Server in an Air-Gapped Network
-description: How the image gets into a disconnected network, and what the server does and doesn't send.
-meta-description: Move the Vaadin MCP server image into an air-gapped network with standard Docker tooling, and read what outbound traffic the server does and doesn't make.
+description: How to get the image into a disconnected network, and what the server sends.
+meta-description: Copy the Vaadin MCP server image into an air-gapped network with standard Docker commands, and see exactly what outbound traffic the server does and does not make.
 order: 30
 ---
 
 
 = Air-Gapped Operation
 
-The server needs no network to answer a question, which is what makes a disconnected deployment possible at all. Two things follow: getting the image in, and being able to say what the running container does and doesn't send.
+The server answers every question from data inside its own image, so it can run with no network access. This page covers how to get the image into a disconnected network, and what to tell your security team about what the running container sends.
 
 
 == Moving the Image In
 
-The image is an ordinary container image, so the standard Docker transfer path is the whole procedure -- no special tooling, and nothing Vaadin has to supply:
+Use the standard Docker export and import commands. No special tooling is needed.
+
+On a machine that can reach Docker Hub, save the image to a file:
 
 [source,bash]
 ----
-# On a machine that can reach the registry:
 docker pull vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
 docker save vaadin/mcp-server:1.0.0-20260916-114956-2b7c708 | gzip > vaadin-mcp-server.tar.gz
+----
 
-# Carry the file in by whatever route your network allows, then:
+Transfer that file by whatever route your network allows, then load it on the inside:
+
+[source,bash]
+----
 gunzip -c vaadin-mcp-server.tar.gz | docker load
 ----
 
-Name an immutable tag rather than `latest` when you do this, so the image on the inside can still be identified afterward. Refreshing the corpus means repeating the transfer with a newer image.
+Use a permanent tag rather than `:latest`, so you can still tell afterward which build you imported. To update the documentation later, repeat these steps with a newer image.
 
 
-== No Outbound Traffic at Runtime
+== What the Server Sends
 
-This section is written to be quotable in a security review.
+Use this section when your security team asks what the server does on the network.
 
-*The server makes no outbound network requests while serving.* The documentation corpus, the search indexes, and the embedding model are all baked into the image, and every tool answers from the container's own filesystem. The license check reads a local key and contacts nothing, which is why an offline key is the credential it takes.
+*While serving requests, the server makes no outbound network connections.* The documentation, the search indexes, and the model it uses to match your questions are all inside the image, and every answer comes from the container's own filesystem. The license check reads a local key file and contacts no license server.
 
-Two channels are absent by configuration rather than by construction, and a review should know which is which. Analytics reporting is the only outbound code path the image contains at all, and it sends nothing unless `AMPLITUDE_API_KEY` is set; an image can also be built without that code present -- see <<configuration#custom-image,Requesting a Custom Image>>. Audit logging writes to a local file and ships nowhere on its own.
+Two things are switched off rather than missing, which is worth stating precisely:
 
-Vaadin tests the claim rather than asserting it. Before an image is published, it's started in a sealed network namespace with no route and driven through every one of its tools from inside that namespace. The run asserts that nothing in the server so much as attempted a name resolution, and it includes a deliberately failing outbound request as a control, so a green result can't come from a test that was never isolated.
+* *Usage reporting.* This is the only code in the image that can make an outbound connection. It sends nothing unless you set `AMPLITUDE_API_KEY`. You can also request an image built without this code at all -- see <<configuration#custom-image,Requesting a Custom Image>>.
+* *Audit logging.* This writes to a file on your own disk. The server never transmits those records.
+
+Vaadin verifies this before publishing each image. The image is started in a sealed network namespace with no network route, and every one of its tools is called from inside that namespace. The test fails if anything in the server even tries to resolve a hostname. It also includes one outbound request that is expected to fail, which confirms the test environment really is isolated.
 
 
 [[analytics]]
 == Analytics
 
-Reporting to Amplitude is controlled by one environment variable, `AMPLITUDE_API_KEY`, and leaving it unset -- the default everywhere -- means the server performs no outbound analytics traffic whatsoever. A self-hosted deployment needs to do nothing. The hosted server at `mcp.vaadin.com` does set one -- see <<{articles}/building-apps/agentic-development/mcp/#hosted-server,What the Hosted Server Runs>>.
+One environment variable controls usage reporting: `AMPLITUDE_API_KEY`. Leave it unset -- the default -- and the server reports nothing. A self-hosted deployment needs no configuration for this.
 
-The published image does contain the reporting code, inert. If your security review requires that it be absent rather than merely disabled, it can be left out of the binary at build time.
+To confirm, check the startup log. It prints one of these lines:
 
-Startup prints exactly one line about analytics, which is how a working deployment is told from a half-configured one: either *analytics enabled* with the endpoint it reports to, or *compiled in but no key at runtime*. An image with the branch compiled out prints neither.
+[cols="2,3"]
+|===
+|Log line |Meaning
+
+|`Analytics enabled` with a reporting URL
+|A key is set and the server is reporting usage.
+
+|Analytics is compiled in but the key is unset
+|The default. The server reports nothing.
+
+|Neither line
+|The image was built without the reporting code.
+|===
+
+The published image contains the reporting code but doesn't use it. If your security review needs that code absent rather than switched off, request an image built without it.
+
+The hosted server at `mcp.vaadin.com` does report usage -- see <<{articles}/building-apps/agentic-development/mcp/#hosted-server,What the Hosted Server Runs>>.
