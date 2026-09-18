@@ -72,6 +72,38 @@ The provider manages its own conversation memory using a 30-message window.
 Synchronous mode blocks the UI for the duration of each exchange; see <<#background-execution,Background Execution>>.
 
 
+[[framework-features]]
+== Framework Features
+
+An LLM provider is a thin adapter: it hands each prompt to the framework's own client and streams back what that client produces. Everything else the model needs is set up on the client, in the framework, before the provider is created. The orchestrator works with whatever the client has been configured with and adds no framework features of its own.
+
+Model Context Protocol (MCP) servers are the most common example. Neither the orchestrator nor the provider is an MCP client. Configure Spring AI's MCP client -- its transport, its credentials, and which of the server's tools the model may see -- register the resulting tool callbacks on a [classname]`ChatClient`, and wrap that client in a provider:
+
+[source,java]
+----
+ChatClient chatClient = ChatClient.builder(chatModel)
+        // Tool callbacks from Spring AI's MCP client
+        .defaultTools(mcpToolCallbacks)
+        .build();
+SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
+----
+
+The MCP tools then reach the model on every turn, next to any tools registered on the orchestrator through <<tool-calling#,[methodname]`withTools()`>> or a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated at build time for controller tools, but not for names that come from an MCP server. Give the client a chat memory advisor and a default conversation id as well, since a provider created from a [classname]`ChatClient` leaves conversation memory to the application.
+
+Retrieval-augmented generation against a vector store, guardrails and moderation, observability, model options such as temperature and token limits, and structured output with schema validation all work the same way: configure them on the framework's client, then wrap it in a provider. The framework's own reference documentation is where to look for the details:
+
+* https://docs.spring.io/spring-ai/reference/[Spring AI reference documentation]
+* https://docs.langchain4j.dev/[LangChain4j documentation]
+
+.The System Prompt Comes From the Orchestrator
+[TIP]
+The orchestrator sends its own system prompt on every turn, which replaces any [methodname]`defaultSystem()` text configured on the client. Put instructions for the model -- including when to reach for the client's tools -- in the system prompt passed to [methodname]`AIOrchestrator.builder()`, not in the client's defaults.
+
+.MCP With LangChain4j
+[NOTE]
+[classname]`LangChain4JLLMProvider` is built from a [classname]`ChatModel` or [classname]`StreamingChatModel` and runs the tool-calling loop itself, so LangChain4j's [classname]`McpToolProvider` -- which attaches to an AI service built with [classname]`AiServices` -- has nowhere to plug in. With LangChain4j, MCP tools currently require a <<#custom-llm-providers,custom LLM provider>> built around an AI service, which then gets the tool provider, memory, and tool loop from LangChain4j. With Spring AI, the [classname]`ChatClient` setup above is all that's needed.
+
+
 [[tool-call-limits]]
 [role="since:com.vaadin:vaadin@V25.3"]
 == Tool Call Limits
