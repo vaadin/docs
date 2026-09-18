@@ -114,4 +114,80 @@ class SecurityConfiguration {
 The [methodname]`oauth2LoginPage(String)` method is a shortcut that defaults the post-logout redirect URL to `{baseUrl}`.
 
 
+[[keycloak-role-mapping]]
+[role="since:com.vaadin:vaadin@V25.4"]
+== Keycloak Role Mapping
+
+Keycloak puts the roles of a user into the access token rather than into the ID token, and it does so in the `realm_access` and `resource_access` claims, which aren't part of the OpenID Connect specification. Spring Security maps neither of them, so `@RolesAllowed("admin")` and `hasRole("admin")` don't match a Keycloak role named `admin`, and every user is rejected.
+
+Mapping those roles is opt-in per security filter chain. Enable it by calling the [methodname]`keycloakRoleMapping()` method of [classname]`VaadinSecurityConfigurer`:
+
+.Enable Keycloak Role Mapping
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@Configuration
+class SecurityConfiguration {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.oauth2LoginPage("/oauth2/authorization/keycloak")
+                    .keycloakRoleMapping(); // (1)
+        });
+        return http.build();
+    }
+}
+----
+
+<1> Decodes the access token of the authenticated user and maps its roles to granted authorities.
+
+Views and services can then be guarded with the plain Keycloak role name:
+
+[source,java]
+----
+@Route("admin")
+@RolesAllowed("admin") // Matches the Keycloak realm role "admin"
+public class AdminView extends VerticalLayout {
+}
+----
+
+The mapping grants the following authorities:
+
+- The realm roles from the `realm_access` claim of the access token.
+- The roles that the `resource_access` claim grants for the client ID of the current client registration. Roles that it grants for other clients are ignored.
+- The scopes of the access token, prefixed with `SCOPE_`, as the default user service grants them.
+- The [classname]`OidcUserAuthority` of the authenticated user, built from the ID token and the userinfo claims, as the default user service grants it.
+
+Realm roles and client roles both become role authorities that use the role prefix of the application, which is `ROLE_` unless a [classname]`GrantedAuthorityDefaults` bean defines another prefix.
+
+[NOTE]
+====
+The [methodname]`keycloakRoleMapping()` method works only together with [methodname]`oauth2LoginPage()` and its overloads. Without a login page for OAuth2 authentication, it logs a warning and has no effect.
+====
+
+Verifying the access token requires the JSON Web Key Set (JWKS) of the provider, which a client registration either resolves from its `issuer-uri` or takes from an explicitly configured `jwk-set-uri`. If the registration has no JWKS URI, or if the access token isn't a JWT that the application can decode, the login still succeeds, but the user is mapped without any roles. Both cases are logged at debug level.
+
+When the mapping is enabled, the configurer builds an [classname]`OidcUserService` for the OAuth2 login and shares it with the [classname]`HttpSecurity` instance, so it can be retrieved with `http.getSharedObject(OidcUserService.class)`.
+
+
+=== Mapping Roles on a Custom User Service
+
+Enabling the mapping replaces the [classname]`OidcUserService` of the filter chain. An application that builds its own user service should therefore leave [methodname]`keycloakRoleMapping()` off and install the [classname]`KeycloakOidcUserMapper` converter on that service instead:
+
+[source,java]
+----
+var oidcUserService = new OidcUserService();
+oidcUserService.setOidcUserConverter(new KeycloakOidcUserMapper());
+----
+
+The mapper prefixes roles with `ROLE_`. To apply another prefix -- for example, to match a [classname]`GrantedAuthorityDefaults` bean -- pass it to the constructor:
+
+[source,java]
+----
+new KeycloakOidcUserMapper("AUTHORITY_");
+----
+
+Configure the resulting user service on the OAuth2 login as described in the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html[Spring Security documentation].
+
+
 [discussion-id]`EF8F6AC3-BE67-4BE2-9A78-C371C1D4B9FD`
