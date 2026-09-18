@@ -112,8 +112,14 @@ public class AssistantView extends VerticalLayout {
 
     public AssistantView(ChatClient.Builder chatClientBuilder,
             ToolCallbackProvider mcpToolCallbacks) {
+        var chatMemory = MessageWindowChatMemory.builder().build();
         var chatClient = chatClientBuilder
                 .defaultTools(mcpToolCallbacks)
+                .defaultAdvisors(advisors -> advisors
+                        .advisors(MessageChatMemoryAdvisor
+                                .builder(chatMemory).build())
+                        .param(ChatMemory.CONVERSATION_ID,
+                                UUID.randomUUID().toString()))
                 .build();
         var provider = new SpringAILLMProvider(chatClient);
 
@@ -139,7 +145,7 @@ The chat client is built per view here rather than as a singleton bean, because 
 
 .Memory Belongs to the Chat Client
 [NOTE]
-A provider created from a [classname]`ChatClient` does not manage conversation memory; the application owns it. Configure a chat memory advisor and a default conversation id on the client, or the model sees each prompt in isolation. See <<llm-providers#,LLM Providers>> for what the provider expects and what it logs when the client can't keep a conversation.
+A provider created from a [classname]`ChatClient` does not manage conversation memory; the application owns it. That's why the example configures a chat memory advisor and a conversation id of its own: without them the model sees each prompt in isolation, however long the conversation looks in the Message List. A conversation id per client keeps two views from sharing one memory. See <<llm-providers#,LLM Providers>> for what the provider expects and what it logs when the client can't keep a conversation.
 
 .Keep Guidance in the System Prompt
 [TIP]
@@ -180,15 +186,17 @@ var chatClient = chatClientBuilder
 
 This keeps a single pooled connection to the server and leaves it to the server to decide what that user may see and do. It only works if the server trusts the application to state who the user is, since the identity travels inside the protocol rather than as a credential on the transport.
 
-The second is to open a connection per session with the user's own credentials, bypassing the connection properties and building the client directly:
+The second is to open a connection per session and authenticate it as the user, bypassing the connection properties and building the client directly. In the following example, `tokens` is the application's own holder for the signed-in user's access token:
 
 [source,java]
 ----
 var transport = HttpClientStreamableHttpTransport
         .builder("https://mcp.example.com")
         .endpoint("/mcp")
-        .requestBuilder(HttpRequest.newBuilder()
-                .header("Authorization", "Bearer " + accessToken))
+        .httpRequestCustomizer(
+                (request, method, uri, body, context) -> request.header(
+                        "Authorization",
+                        "Bearer " + tokens.currentAccessToken()))
         .build();
 var mcpClient = McpClient.sync(transport).build();
 mcpClient.initialize();
@@ -202,9 +210,11 @@ var chatClient = chatClientBuilder
 
 The server then applies its own authorization to both the tool list and every call, which is usually what per-user access control needs. The cost is one MCP session per user session: register a detach or session-destroy listener that closes the client, and expect the server to hold state for as long as the user is signed in.
 
+The lambda passed to [methodname]`httpRequestCustomizer()` runs for every outgoing request, so it reads the token each time rather than baking one copy into the transport. An MCP session outlives a typical access token, and a token captured once at construction leaves every later tool call failing with an authorization error and nothing in the conversation to explain it.
+
 .Capture the Identity Before the Turn Starts
 [IMPORTANT]
-With a streaming model or <<llm-providers#background-execution,background execution>>, tool calls run outside the request thread, where [methodname]`UI.getCurrent()`, [classname]`VaadinSession`, and Spring Security's [classname]`SecurityContext` are all absent. Read the user's identity while building the session's chat client, or in [methodname]`AIController.onRequest()`, and keep it in a field -- don't look it up from inside a tool call.
+With a streaming model or <<llm-providers#background-execution,background execution>>, tool calls run outside the request thread, where [methodname]`UI.getCurrent()`, [classname]`VaadinSession`, and Spring Security's [classname]`SecurityContext` are all absent. That rules out resolving the user from a thread local inside a tool call or inside [methodname]`httpRequestCustomizer()`. Resolve the identity while building the session's chat client, or in [methodname]`AIController.onRequest()`, and keep it somewhere a background thread can read it -- a field, or a holder that refreshes itself, like the token source above.
 
 
 == Varying the Tool Set at Runtime
