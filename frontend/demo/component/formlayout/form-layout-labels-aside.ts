@@ -1,8 +1,10 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/form-layout';
 import '@vaadin/form-layout/vaadin-form-item.js';
-import '@vaadin/text-field';
+import '@vaadin/button';
+import '@vaadin/checkbox';
 import '@vaadin/email-field';
+import '@vaadin/password-field';
 import '@vaadin/split-layout';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
@@ -29,17 +31,11 @@ export class Example extends LitElement {
     // tag::snippet[]
     return html`
       <vaadin-form-layout style="width: 100%" auto-responsive labels-aside>
+        <vaadin-email-field label="Email"></vaadin-email-field>
+        <vaadin-password-field label="Password"></vaadin-password-field>
+        <vaadin-checkbox label="Subscribe"></vaadin-checkbox>
         <vaadin-form-item>
-          <label slot="label">First name</label>
-          <vaadin-text-field></vaadin-text-field>
-        </vaadin-form-item>
-        <vaadin-form-item>
-          <label slot="label">Last name</label>
-          <vaadin-text-field></vaadin-text-field>
-        </vaadin-form-item>
-        <vaadin-form-item>
-          <label slot="label">Email address</label>
-          <vaadin-email-field></vaadin-email-field>
+          <vaadin-button style="width: 100%">Register</vaadin-button>
         </vaadin-form-item>
       </vaadin-form-layout>
     `;

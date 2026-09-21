@@ -1,10 +1,13 @@
 package com.vaadin.demo.component.formlayout;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.FormItem;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
@@ -13,16 +16,17 @@ public class FormLayoutLabelsAside extends Div {
 
     public FormLayoutLabelsAside() {
         // tag::snippet[]
-        TextField firstName = new TextField();
-        TextField lastName = new TextField();
-        EmailField email = new EmailField();
+        EmailField email = new EmailField("Email");
+        PasswordField password = new PasswordField("Password");
+        Checkbox subscribe = new Checkbox("Subscribe");
+        Button register = new Button("Register");
+        register.setWidthFull();
 
         FormLayout formLayout = new FormLayout();
         formLayout.setAutoResponsive(true);
         formLayout.setLabelsAside(true);
-        formLayout.addFormItem(firstName, "First name");
-        formLayout.addFormItem(lastName, "Last name");
-        formLayout.addFormItem(email, "Email address");
+        formLayout.add(email, password, subscribe);
+        formLayout.add(new FormItem(register));
         // end::snippet[]
         formLayout.setWidthFull();
 
