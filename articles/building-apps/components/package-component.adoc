@@ -141,6 +141,36 @@ If you want the CSS to be included in the frontend bundle instead of served as a
 See <</styling/styling-components#,Styling Components>> for details on shadow DOM styling.
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+== Pinning npm Versions
+
+`@NpmPackage` declares which npm package a component needs, but the version that ends up installed can still be decided elsewhere — by another add-on, or by a transitive dependency of one. To decide it yourself, ship a versions file in the JAR. Vaadin reads every `.json` file in `META-INF/VAADIN/versions/` on the classpath, from whichever JAR ships it, and installs the packages they name at the versions they give.
+
+----
+src/main/resources/META-INF/VAADIN/versions/my-components.json
+----
+
+[source,json]
+----
+{
+  "components": {
+    "color-picker": {
+      "npmName": "@example/color-picker",
+      "npmVersion": "3.2.1"
+    }
+  }
+}
+----
+
+An object with an `npmName` is one pinned package, and its version comes from `npmVersion` — or from `jsVersion`, which the files of the platform use. The keys around it group the entries and carry no meaning, so nest them however suits the add-on. The pinned version is written into the generated `package.json`, which is what the package manager installs from.
+
+Every versions file on the classpath is merged into one set of packages:
+
+- A package named in several files is expected to have the same version in each. Where the versions differ, the newest one is installed and a warning names both files.
+- A package with neither `npmVersion` nor `jsVersion` is left unpinned, and a warning names it.
+- A file that cannot be read is skipped on its own. The other files still pin what they declare.
+
+
 == Testing the Add-On
 
 The starter includes Jetty and is configured with `<defaultGoal>jetty:run</defaultGoal>`, so you can start a local server by running:
