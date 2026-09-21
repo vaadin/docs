@@ -12,7 +12,8 @@ public class CustomFieldStyles extends Div {
         // tag::snippet[]
         MoneyField moneyField = new MoneyField("Price");
         moneyField.addThemeVariants(CustomFieldVariant.SMALL,
-                CustomFieldVariant.HELPER_ABOVE);
+                CustomFieldVariant.HELPER_ABOVE,
+                CustomFieldVariant.LABEL_ASIDE);
         // end::snippet[]
         moneyField.setHelperText("Helper text");
         add(moneyField);

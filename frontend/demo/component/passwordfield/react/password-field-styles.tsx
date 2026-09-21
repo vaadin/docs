@@ -6,7 +6,7 @@ function Example() {
   return (
     // tag::snippet[]
     <PasswordField
-      theme="align-right small helper-above-field"
+      theme="align-right small helper-above-field label-aside"
       label="Label"
       helperText="Helper text"
       value="Ex@mplePassw0rd"

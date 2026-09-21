@@ -15,7 +15,8 @@ public class TextAreaStyles extends HorizontalLayout {
         // tag::snippet[]
         TextArea field = new TextArea();
         field.addThemeVariants(TextAreaVariant.SMALL,
-                TextAreaVariant.ALIGN_RIGHT, TextAreaVariant.HELPER_ABOVE);
+                TextAreaVariant.ALIGN_RIGHT, TextAreaVariant.HELPER_ABOVE,
+                TextAreaVariant.LABEL_ASIDE);
         field.setWidthFull();
         // end::snippet[]
         field.setLabel("Label");

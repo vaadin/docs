@@ -29,7 +29,7 @@ function Example() {
   return (
     // tag::snippet[]
     <Select
-      theme="align-right small helper-above-field"
+      theme="align-right small helper-above-field label-aside"
       label="Label"
       helperText="Helper text"
       items={items}
