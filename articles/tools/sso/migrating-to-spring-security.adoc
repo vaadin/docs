@@ -33,7 +33,7 @@ The migration is mostly subtraction. Read this section first to see what actuall
 
 *The commercial license requirement goes away.* SSO Kit is a commercial add-on with a runtime license check. Spring Security's OAuth2 client and Vaadin's Spring Security integration are both open source, so the license, the build-time key, and the license check on startup all become unnecessary.
 
-*Two beans disappear with the starter.* [classname]`SingleSignOnDefaultBeans` contributes a [classname]`SessionRegistry` -- and, when `keycloak-roles` was set, a Keycloak user mapper -- unless the application declares its own. An application that injects [classname]`SessionRegistry` anywhere fails to start after Step 1, so declare a [classname]`SessionRegistryImpl` bean of your own, or configure one through [methodname]`sessionConcurrency()` as in <<#concurrent-sessions,Step 5>>.
+*The starter's own beans go with it.* [classname]`SingleSignOnDefaultBeans` contributes a [classname]`SessionRegistry` -- and, in the kit versions that have the `keycloak-roles` property, an [classname]`OidcUserService` that maps Keycloak roles -- unless the application already declares one. An application that injects [classname]`SessionRegistry` anywhere therefore fails to start after Step 1. Declare a [classname]`SessionRegistryImpl` bean of your own to replace it: [methodname]`sessionConcurrency()` in <<#concurrent-sessions,Step 5>> doesn't cover this, because Spring Security uses a [classname]`SessionRegistry` bean when the application has one, but otherwise keeps its own instance inside the filter chain, where nothing can inject it.
 
 
 === Scope the Work
@@ -430,7 +430,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 @BrowserCallable
 public class UserInfoService {
 
-    public record UserInfo(@NonNull String name, @NonNull String email,
+    public record UserInfo(String name, String email,
             @NonNull List<@NonNull String> roles) { // <1>
     }
 
@@ -448,7 +448,7 @@ public class UserInfoService {
     }
 }
 ----
-<1> The `@NonNull` annotations matter for the client: without them the generated type of `roles` is `Array<string | undefined> | undefined`, and passing it to [methodname]`getRoles()` in the next section doesn't typecheck, because that function has to return `readonly string[]`.
+<1> Annotate `roles` inside and out. Without it the generated type is `Array<string | undefined> | undefined`, and passing that to [methodname]`getRoles()` in the next section doesn't typecheck, because the function has to return `readonly string[]`. Leave `name` and `email` as they are: both claims are optional in OpenID Connect, so [methodname]`getFullName()` and [methodname]`getEmail()` can return `null`, and the client is better off seeing that in the type.
 
 
 === Replace the SSO Context
