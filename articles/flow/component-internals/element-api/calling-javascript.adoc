@@ -94,6 +94,42 @@ Always pass arguments using the `$0`, `$1`, ... notation to avoid script injecti
 
 If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrentOrThrow().getPage().executeJs()` method.
 
+The expression is sent to the browser and compiled there, which a content security policy that does not allow `unsafe-eval` does not permit. To run JavaScript that has to work under such a policy, declare it in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>).
+
+
+[[declaring-javascript]]
+== Declaring JavaScript in Java
+
+An interface annotated with [annotationname]`@JsDefinition` declares the JavaScript that its methods run, and the build collects that JavaScript into the bundle. Call the declared JavaScript through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that method declares.
+
+Each method of the interface is annotated with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run. The arguments of the call are available inside the expression as `$0`, `$1`, and so on, and the element is `this` &ndash; the same contract as [methodname]`executeJs(String, Object...)`. A method returns either `void` or [classname]`PendingJavaScriptResult`, to retrieve a return value the same way [methodname]`executeJs(String, Object...)` does.
+
+.Declaring and calling JavaScript through a `@JsDefinition` interface
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface GreeterJs extends Serializable {
+
+    @JsExpression("window.alert($0)")
+    void showGreeting(String greeting);
+}
+----
+
+[source,java]
+----
+public void greet(String message) {
+    getElement().executeJs(GreeterJs.class).showGreeting(message);
+}
+----
+====
+
+Unlike [methodname]`executeJs(String, Object...)`, the expression itself is never sent to the browser. The build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript, so nothing is compiled from a string on the client. This is what makes the call work under a content security policy without `unsafe-eval`.
+
+[NOTE]
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult`. A `default` or `static` method is refused, since it is implemented in Java rather than declaring JavaScript to run in the browser.
+
 
 == Return Values
 
