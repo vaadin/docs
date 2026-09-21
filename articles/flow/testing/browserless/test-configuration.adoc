@@ -1,0 +1,121 @@
+---
+title: Test Configuration
+page-title: How to configure the Vaadin environment of a browserless test
+description: Set Vaadin application properties, feature flags, and Lookup services for a single test class or test method.
+meta-description: Configure Vaadin application properties, feature flags, and Lookup services for a single browserless test with the BrowserlessTestConfig annotation.
+order: 46
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Test Configuration#
+
+Some tests need a Vaadin environment configured differently from the rest of the suite: a view behind a feature flag, or a setting such as `devmode.sessionSerialization.enabled`. Annotate the test class, or a single test method, with [annotationname]`@BrowserlessTestConfig`:
+
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+@BrowserlessTestConfig(
+        applicationProperties = "devmode.sessionSerialization.enabled=true",
+        featureFlags = "myExperimentalFeature")
+class CartViewTest extends BrowserlessTest {
+
+    @Test
+    void experimentalCheckoutIsShown() {
+        // The feature flag is enabled for this test
+    }
+
+    @Test
+    @BrowserlessTestConfig(featureFlags = "myExperimentalFeature=false")
+    void fallbackCheckoutIsShown() {
+        // The same class, with the flag off for this method only
+    }
+}
+----
+
+Each setting applies to the Vaadin environment created for the annotated test, so there is nothing to reset afterwards, and nothing leaks into the next test.
+
+
+== Settings
+
+[cols="1,2"]
+|===
+| Attribute | Description
+
+| [propertyname]`applicationProperties`
+| `name=value` pairs applied to the Vaadin deployment configuration, such as `"devmode.sessionSerialization.enabled=true"`. The value is everything after the first `=`, so a value can itself contain `=`. The properties are set before the servlet starts, so code that runs at startup, such as a [interfacename]`VaadinServiceInitListener`, already sees them.
+
+| [propertyname]`featureFlags`
+| Either a feature identifier, to enable the feature, or an `id=true\|false` pair. These flags override the [filename]`vaadin-featureflags.properties` file and the `vaadin.experimental.*` system properties. Toggling a flag this way needs no development mode and writes nothing into the project folder. An unknown identifier fails with an error that lists the available flags.
+
+| [propertyname]`lookupServices`
+| Implementation classes registered with the Vaadin [classname]`Lookup`, such as an [interfacename]`InstantiatorFactory` or a [interfacename]`ResourceProvider`.
+|===
+
+The `browserless` application property itself stays enforced and cannot be overridden.
+
+
+== Merging Class and Method Configuration
+
+Every annotation a test inherits contributes to the configuration, rather than being shadowed by the nearest one. The closer a declaration is to the test method, the higher it ranks: the method first, then the test class, then superclasses from the nearest up, and then, for a [annotationname]`@Nested` test, enclosing classes from the innermost out.
+
+[source,java]
+----
+@BrowserlessTestConfig(applicationProperties = "base.property=fromBase")
+abstract class AbstractViewTest extends BrowserlessTest {
+}
+
+@BrowserlessTestConfig(featureFlags = "myExperimentalFeature")
+class CartViewTest extends AbstractViewTest {
+    // Both base.property and myExperimentalFeature apply
+}
+----
+
+Lookup services are the exception: they accumulate instead of replacing each other, so a test method can add a service, but cannot remove one that its test class declares. The services that the Spring and Quarkus integrations need are always registered, and the test configuration never affects them.
+
+A method-level annotation needs an environment built for each test method. When one environment is shared by the whole class, as with [classname]`BrowserlessClassExtension`, the annotation is rejected with an error naming the methods that carry it. Move it to the test class in that case.
+
+
+== Configuring Without Annotations
+
+The same settings can be built in code. On a JUnit 6 extension:
+
+[source,java]
+----
+@RegisterExtension
+BrowserlessExtension extension = new BrowserlessExtension()
+        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
+        .withFeatureFlags("myExperimentalFeature");
+----
+
+On the application context builder of a multi-user test:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(builder -> builder
+        .withViewPackages(CartView.class)
+        .withFeatureFlags("myExperimentalFeature"))) {
+    // ...
+}
+----
+
+Or by overriding [methodname]`testConfiguration()` on a test that extends a base class:
+
+[source,java]
+----
+@Override
+protected BrowserlessConfiguration testConfiguration() {
+    return BrowserlessConfiguration.builder()
+            .withConfiguration(super.testConfiguration())
+            .withFeatureFlags("myExperimentalFeature")
+            .build();
+}
+----
+
+A configuration built on an extension or on the application context builder wins over the class-level annotation, and loses against the method-level one. A [methodname]`testConfiguration()` override ranks differently: [methodname]`super.testConfiguration()` returns the configuration already resolved from the annotations, so whatever the override adds on top of it wins over all of them, the method-level annotation included. Build on [methodname]`super.testConfiguration()` to refine the declared configuration, and leave out the values that a test method needs to override.
+
+.Spring Properties Win
+[NOTE]
+With Spring, a Vaadin property defined in the Spring environment, such as `vaadin.devmode.sessionSerialization.enabled` in [filename]`application.properties`, is applied by [classname]`SpringServlet` on top of the test configuration, and therefore wins over [annotationname]`@BrowserlessTestConfig`. Use [annotationname]`@TestPropertySource` to override such a property for a test. Properties that are not Vaadin init parameters are unaffected.
+
+
+[discussion-id]`CD70CAA5-6506-4810-BED5-0F54DCE2F0FA`
