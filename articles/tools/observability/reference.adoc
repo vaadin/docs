@@ -211,6 +211,7 @@ Controlled by `vaadin.observability.requests`.
 |Timer
 |Server-side request handling time.
 Tagged by `vaadin.request.type`, `vaadin.interaction`, `http.method`, `outcome`, and `error`.
+See <<#request-types,Request Types>> for what the type tag classifies.
 
 |`vaadin.rpc.duration`
 |Timer
@@ -228,6 +229,50 @@ The same holds for `vaadin.rpc.duration` and `vaadin.navigation`.
 
 The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer on both paths.
 ====
+
+
+[[request-types]]
+=== Request Types
+
+Every request Vaadin handles is classified before it's timed, and the class becomes the `vaadin.request.type` tag on `vaadin.request.duration` -- and, with tracing on, the `vaadin.request.<type>` span name.
+The types differ so much in what they do that a single average across all of them means nothing.
+
+[cols="1,3"]
+|===
+|`vaadin.request.type` |What It Covers
+
+|`uidl`
+|A UI interaction: the request the client sends for a click, a poll, or a navigation.
+The one type broken down further, by the `vaadin.interaction` tag.
+
+|`bootstrap`
+|A page load: the HTML document request, and the `init` request the client engine follows it with to have the UI created.
+The server's side of `vaadin.client.bootstrap.duration`.
+
+|`stream`
+|A download or an upload, served by Flow's stream request handler.
+A transfer is expected to be long-running, which is why it's kept out of the other buckets: averaged in with page loads, it both hides its own outliers and inflates theirs.
+
+|`push`
+|A push channel request, on any transport.
+
+|`heartbeat`
+|The keep-alive the browser sends for an open UI.
+
+|`static`
+|A static resource: `/VAADIN/`, `/static/`, `/themes/`, or `/sw.js`.
+
+|`other`
+|Everything left, an application's own endpoints under the Vaadin servlet among them.
+|===
+
+A page load is recognized from the browser's `Sec-Fetch-Dest` header, falling back to an `Accept` header that asks for `text/html` first for browsers old enough not to send it.
+A `fetch()` to an application endpoint that happens to sit under the Vaadin servlet is therefore not counted as one.
+The classification is deliberately conservative in that direction: a page load that can't be told apart from application traffic stays `other` rather than diluting `bootstrap`.
+
+An embedded route counts as a page load too.
+A request whose destination is an `iframe`, `frame`, `embed`, or `object` is served the same [filename]`index.html` and builds a UI of its own, and `vaadin.client.bootstrap.duration` records it from the browser's end as well.
+A view that embeds another of its own routes therefore reports a second `bootstrap`, which is the second UI it really does build.
 
 
 === Resync Metrics
@@ -303,6 +348,16 @@ These are observed in the browser and reported back to the server, subject to a 
 |Timer
 |Browser-observed navigation time.
 
+|`vaadin.client.request.duration`
+|Timer
+|One UIDL request as the browser saw it, from the moment the request was queued to the last byte of the response.
+The browser's side of `vaadin.request.duration`; see <<#client-interaction-timing,Interaction Timing From the Browser>>.
+
+|`vaadin.client.render.duration`
+|Timer
+|How long Flow's client spent applying one UIDL response to the page.
+Recorded only when Flow's `requestTiming` deployment setting is on, which is the default outside production mode.
+
 |`vaadin.client.web_vitals.lcp`
 |Timer
 |Largest Contentful Paint.
@@ -343,11 +398,46 @@ Untagged.
 The client timers -- except `vaadin.client.connection.downtime`, which carries `state` instead -- are tagged by `route`, resolved from the browser location to a route template on the server and capped by the same cardinality limit as the server-side meters.
 `vaadin.client.navigation.duration` additionally carries `trigger`.
 
-Server round-trip timing isn't collected in the browser.
-Use the server-side `vaadin.request.duration` and `vaadin.rpc.duration` timers for that.
-
 The browser buffers samples and flushes them every five seconds, and when the page is hidden.
 Only the meters in the table above are accepted; a sample under any other name is discarded at ingest without being recorded or counted, which caps the cardinality a buggy or malicious client can create.
+
+
+[[client-interaction-timing]]
+=== Interaction Timing From the Browser
+
+When a user says a click took a second and `vaadin.request.duration` says the server took forty milliseconds, the other nine hundred and sixty are somewhere the server can't see: on the wire, in the browser's request queue, or in the browser applying the response.
+Two of the client meters make that remainder readable, with no configuration beyond `vaadin.observability.client`.
+
+`vaadin.client.request.duration` is the same round trip as `vaadin.request.duration`, measured at the browser's end.
+It's read off the Resource Timing entry every UIDL `POST` leaves behind, so it needs nothing from Flow and works in production.
+Subtract the server's figure for the same route, and what's left is the network:
+
+[source,text]
+----
+  rate(vaadin_client_request_duration_seconds_sum[5m])
+/ rate(vaadin_client_request_duration_seconds_count[5m])
+-
+  rate(vaadin_request_duration_seconds_sum{vaadin_request_type="uidl"}[5m])
+/ rate(vaadin_request_duration_seconds_count{vaadin_request_type="uidl"}[5m])
+----
+
+`vaadin.client.render.duration` is the third segment, after the network and the server: how long Flow's client spent applying the response to the page.
+A response that arrives in fifty milliseconds and takes four hundred to render is a browser problem -- typically a heavy component tree or an expensive renderer -- and neither of the other two timers can show it.
+The figure is Flow's own, published through [methodname]`getProfilingData()` on each client only when Flow's `requestTiming` deployment setting is on.
+That's the default outside production mode; in production, set `vaadin.requestTiming=true` to record this meter.
+Without it the meter is absent rather than zero.
+
+Four things are worth knowing about both:
+
+Only UIDL requests are timed:: Heartbeats, push, and static resources aren't interactions and are left out.
+The collector's own request that carries the samples to the server is left out too, so the kit doesn't report itself.
+
+The request meter needs the default transport:: It's read from Resource Timing, which sees HTTP requests.
+With [annotationname]`@Push(transport = WEBSOCKET)` the UIDL rides the websocket and leaves no entry, so only the render meter is recorded.
+
+Bootstrap isn't an interaction:: The first UIDL response, which builds the page, is covered by `vaadin.client.bootstrap.duration` and excluded here.
+
+The route is the browser's:: Both meters carry the route the browser was on when the response arrived, which for a navigation request is the view navigated to, as on the server's request span.
 
 
 [[data-metrics]]
@@ -486,7 +576,8 @@ The kit produces the following spans:
 
 |`vaadin.request.<type>`
 |The root span for each Vaadin request.
-A UIDL request is named by its interaction -- `vaadin.request.rpc`, `vaadin.request.poll`, or `vaadin.request.navigation` -- and other requests by their type: `vaadin.request.heartbeat`, `vaadin.request.push`, `vaadin.request.static`, or `vaadin.request.other`.
+A UIDL request is named by its interaction -- `vaadin.request.rpc`, `vaadin.request.poll`, or `vaadin.request.navigation` -- and other requests by their type: `vaadin.request.bootstrap`, `vaadin.request.stream`, `vaadin.request.heartbeat`, `vaadin.request.push`, `vaadin.request.static`, or `vaadin.request.other`.
+See <<#request-types,Request Types>>.
 Carries the request-level attributes below.
 
 |`vaadin.navigation <route>`
@@ -495,7 +586,7 @@ Carries the request-level attributes below.
 |`vaadin.rpc.<type>`
 |A server-side RPC invocation (DOM event, [annotationname]`@ClientCallable`, property sync, or return channel), nested under the request.
 
-|`vaadin.ui.access`
+|`vaadin.executor.task`
 |One task run on the Vaadin service executor, nested under whatever trace was active when the task was submitted.
 See <<#background-work,Background Work>>.
 
@@ -519,10 +610,12 @@ With both data provider and database monitoring on, a slow interaction opens up 
 === Background Work
 
 With tracing enabled, the kit wraps the Vaadin service [classname]`Executor` so that the trace context active when a task is *submitted* is restored when the task *runs*.
-A background task started from a request thread therefore stays in the same trace across the thread hop, under its own `vaadin.ui.access` span, instead of appearing as an unrelated root span.
+A background task started from a request thread therefore stays in the same trace across the thread hop, under its own `vaadin.executor.task` span, instead of appearing as an unrelated root span.
 
-This covers the executor Vaadin dispatches signal effects and result notifications on, and that applications are expected to use for their own background work -- typically a task that ends by pushing its result through [methodname]`UI.access()`.
-It isn't [methodname]`UI.access()` itself: a command queued with [methodname]`UI.access()` runs on whichever thread unlocks the session, and is recorded there.
+This covers the tasks submitted to that executor: the signal effects Vaadin re-evaluates on it, the signal result notifications it dispatches through it, and the background work applications are expected to hand to it -- typically a task that ends by pushing its result through [methodname]`UI.access()`.
+It isn't every [methodname]`UI.access()` call: a plain call from a background thread queues a command that whichever thread unlocks the session drains, so it never passes through the executor and gets no span of its own.
+A notification task is itself a [methodname]`UI.access()` call, so its span always covers the dispatch, but covers the notification body only when the session lock happens to be free.
+Otherwise the task returns as soon as the command is enqueued, and the body runs later on the unlocking thread, outside the span.
 
 Work you hand to an executor of your own isn't wrapped.
 To keep such work in the trace, submit it through the Vaadin service executor, or propagate the context yourself with Micrometer's [classname]`ContextSnapshot`.
@@ -537,7 +630,8 @@ The root `vaadin.request` span carries these attributes:
 |Attribute |Description
 
 |`vaadin.request.type`
-|The protocol-level request type: `uidl`, `heartbeat`, `push`, `static`, or `other`.
+|The request type: `uidl`, `bootstrap`, `stream`, `push`, `heartbeat`, `static`, or `other`.
+See <<#request-types,Request Types>>.
 
 |`vaadin.interaction`
 |What the request actually did: `poll`, `navigation`, or `rpc`, and `none` for requests where no interaction applies, such as heartbeats and static resources.
@@ -569,7 +663,7 @@ Those spans carry `type` and `vaadin.rpc.component`, but no `vaadin.rpc.event`.
 
 The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
 
-The `vaadin.ui.access` span carries no attributes of its own.
+The `vaadin.executor.task` span carries no attributes of its own.
 Its value is structural: it shows where a submitted task ran, under the trace it was submitted from.
 
 

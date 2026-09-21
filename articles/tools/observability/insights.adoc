@@ -20,6 +20,7 @@ Every insight carries a [propertyname]`replay` list a person can follow to repro
 An interaction insight also carries a [propertyname]`suggestion` and an [propertyname]`applicationFrame` that an AI agent with access to the codebase can open to verify the problem and propose a fix.
 
 Insight collection is on by default and works in production mode.
+In development mode the same insights also appear in a <<#copilot,Copilot panel>>, and their replay steps <<#dev-replay,say what the user had filled in>>.
 
 
 == What Gets Captured
@@ -53,7 +54,9 @@ The in-browser collector reports uncaught errors and unhandled rejections, and a
 None of that is a number, and each would be one time series per distinct value, which is why it's kept as an insight instead of as tags on the `vaadin.client.errors` counter.
 
 This one additionally requires `vaadin.observability.client` (on by default), since the browser collector is what supplies the reports.
-At most 20 browser-error insights appear in one payload, the most-reported first; the counter still counts every report, and [propertyname]`vaadin.observability.insights-capacity` still governs how many are retained.
+A payload carries at most 20 browser-error insights, the most-reported first.
+
+Browser errors have a page of their own: see <<client-errors#,Client Error Insights>> for what a report carries, what reaches its script location, how a report that waited out an outage is reported, and why the payload is capped.
 
 === What Happens to the Rest
 
@@ -138,7 +141,7 @@ Five insight types can appear in the array:
 
 |`client-error`
 |An uncaught error or unhandled rejection a browser reported.
-The only insight type that can describe a failure the server never saw.
+The only insight type that can describe a failure the server never saw; see <<client-errors#,Client Error Insights>>.
 |===
 
 
@@ -176,6 +179,9 @@ The only insight type that can describe a failure the server never saw.
 
 [propertyname]`applicationFrame` is the first stack frame that isn't framework code -- the JDK, Vaadin, Spring, Hibernate, the servlet container, and bytecode generators are all skipped -- so it points at the application code most likely to hold the bug.
 The exception reported is the root cause, not the wrapper.
+
+The [propertyname]`replay` steps above are the production form, which names the component by its class.
+In development mode they name it by its caption and list the state the view was in; see <<#dev-replay,Replay Steps That Replay>>.
 
 
 === A Slow Interaction
@@ -309,11 +315,117 @@ vaadin.observability.insights-details=true
 
 This adds the exception message (truncated to 200 characters), the top five stack frames as [propertyname]`stackTop`, and the raw Vaadin session ID in place of the hash.
 An exception message is free-form text and can carry a whole payload, which is exactly why it's opt-in.
-A browser error's message and function name are gated the same way, and for the same reason: a page can name a function anything, so the name is text the page chose rather than a fact about the code.
 
-For a browser error the setting governs *collection*, not just retention.
-With it off, the browser never gathers the message or the function name, so neither is buffered in the tab or sent to the server.
-The value is read by a page when it loads, so a change reaches already-open tabs only after a reload.
+The same property gates a browser error's message and function name, but it behaves differently there: it governs *collection* rather than only retention, and it's read by a page when it loads.
+See <<client-errors#detail,Sensitive Detail>> on the Client Error Insights page.
+
+
+[[dev-replay]]
+== Replay Steps That Replay
+
+In production, the [propertyname]`replay` steps of an interaction identify the interaction and no more, because that's all a payload meant to be forwarded may say:
+
+[source,text]
+----
+Open route '/returns'
+Locate component Button
+Trigger a 'click' event on it
+Expect IllegalStateException: Inspection template 'defective' not found
+----
+
+Which isn't a reproduction.
+There may be four buttons on that view, and the failure may need a selection made before the click.
+In *development mode* the kit therefore reads two more things off the screen, and the steps become what a person would actually do:
+
+[source,text]
+----
+Open route '/returns'
+Set the 'Reason' Select to 'Defective'
+Click the 'Process return' Button
+Expect IllegalStateException: Inspection template 'defective' not found
+----
+
+The two additions are:
+
+The caption of the interacted component:: Its label, `aria-label`, placeholder, own text, `title`, or -- failing all of those -- its id, so that a step names the one control the reader is looking for.
+It's also in [propertyname]`evidence.componentCaption`, and the component class stays alongside it, because that's what you grep for.
+An absent [propertyname]`componentCaption` key means the caption wasn't collected, which is the case in production.
+
+The state of the view:: The values the view was holding, read at the moment the interaction was captured.
+
+=== The View State Snapshot
+
+The state is a *snapshot, not a history*.
+Reading the values once, when the failure is captured, gives each field once, as it actually stood, in the order the user last changed them.
+Accumulating what the user did as they did it isn't equivalent: picking one item out of a [classname]`Select` arrives as three RPC invocations (`opened-changed`, `value-changed`, `opened-changed`), none of them an instruction anyone can carry out, and a user who changes their mind leaves the same field in the list twice with the stale value first.
+
+What goes into the snapshot is every component in the view that holds a value, has a caption, and the user actually changed.
+The last of those is what keeps the list short: a replay starts from a freshly opened view, so a field nobody changed is already at the value the reader finds there, and telling them to set it is a line that says nothing.
+Only identity is remembered as the user works, never values; the values are read once, at capture.
+
+"Changed" is decided by comparing the field's value across the invocation, not by the event that carried it, so merely opening a dropdown doesn't report it.
+The exception is a synchronized property update: Flow applies the new value to the whole request's state before it reports any invocation, so there's nothing left to compare by then, and an `mSync` reaching something that holds a value is taken as a user edit.
+
+The value is read from the component rather than from the property the client sent, so a [classname]`Select` says `'Defective'` and not the item key `'2'`.
+A field the user emptied becomes `Leave the 'Order number' TextField empty`, which is worth a line because a blank value is frequently the whole bug.
+A value whose only text is a default [methodname]`toString()` -- `com.example.Order@6f2b958e` -- is left out, since nobody can type that into a field.
+At most ten values are reported per insight.
+
+The scope is the view, not the page: the innermost route target holding the interacted component, so an application's shell -- its navigation, its app switcher -- stays out.
+The shell is on screen throughout, has nothing to do with the failure, and would otherwise put the same lines in every insight the application produces.
+For a component the route target doesn't hold, such as a dialog or overlay the UI owns directly, the scope is that component's own top-level ancestor, which is the screen the user was actually looking at.
+
+There are two things this doesn't capture.
+A failure that needs a *sequence* rather than a state, such as clicking "Add line" twice: the state says what the view held, not how it got there.
+And a value the *application* set as a side effect of something the user did, such as picking a customer auto-filling their address, since what's reported is what the user worked.
+
+Grouping is unaffected.
+Occurrences still group by route, component, event, and exception, so the same failure hit with different values stays one insight, reporting the values of its most recent occurrence.
+
+=== Why This Is Development Mode Only
+
+Captions and values are withheld in production, where the steps fall back to the form at the top of this section, and no setting turns them on there.
+They're application text that can be data-bound -- a caption may read "Delete Jane Doe", and a field's value is user input by definition -- while the insights payload is built to be forwarded into issue trackers and AI agents.
+The reader who benefits from the detail is the developer with the application in front of them, so that's the only mode that collects it.
+
+Lengths are capped regardless: 60 characters for a caption, 40 for a value.
+
+
+[[copilot]]
+== The Copilot Panel
+
+In development mode the kit adds an *Observability* panel to Vaadin Copilot, reachable from the toolbar in edit, inspect, and test modes.
+It opens on the findings rather than on the numbers: the same insights `/actuator/vaadin/observability` publishes -- failed and over-budget interactions, failed and slow data queries, browser errors -- ranked with errors first, then by how many users hit them, then by how recently.
+Expanding one shows its evidence, its replay steps, and its suggestion, and *Copy* puts the whole finding on the clipboard as JSON, which is the shortest path from noticing a problem to handing it to an AI agent with access to the codebase.
+
+The `vaadin.*` meters sit below the findings, folded away while there's something to look at, and grouped by the route they were recorded on: the route the browser is currently on first, then the rest alphabetically (the root view as *Root*), the unresolved ones after them, and the application-wide meters that carry no route under *General*.
+Route groups are matched against the browser's location by route template, so `orders/:orderId` is the current group while you're on `/orders/17`.
+An application served under a context path matches nothing, and the groups stay alphabetical.
+
+=== Findings You Aren't Working On
+
+"3 findings need attention" is only worth reading while all three are news, so two kinds fold away behind a collapsed line under the list -- "2 hidden findings", "3 findings gone quiet", or "5 findings set aside (2 hidden, 3 gone quiet)":
+
+Hidden by hand:: Every row has a *Hide* button, for the known slow query in the feature you aren't touching today.
+It stays hidden even as the finding keeps recurring -- a dismissal that undid itself on the next occurrence would be no dismissal at all -- and is remembered in the browser's `localStorage`, so the reload that follows every code change doesn't ask you to hide everything again.
+*Unhide* puts it back.
+
+Gone quiet:: A finding nothing has re-triggered for 30 minutes is history rather than attention.
+This one is automatic and reverses itself: the moment it recurs, [propertyname]`lastSeen` moves and it's back in the count.
+
+Nothing is discarded.
+The fold always shows how many findings are behind it and which of the two reasons put them there, and one click renders them, faded, with their detail and replay intact.
+
+=== New Findings Announce Themselves
+
+The panel keeps watching with its window closed, and a finding the payload didn't have before is written to the Copilot log, deduplicated on the same grouping key the endpoint uses, so one problem notifies once however often it recurs.
+Announced are the findings the current page raised -- anything first seen since it loaded, including during the load itself, so a slow query on the landing view is reported.
+The older records in the buffers, which outlive a reload, aren't.
+A finding you hid isn't announced either.
+
+Findings need `vaadin.observability.insights` together with `errors` or `requests`, and `client` for browser errors -- all on by default.
+With any of them off, the panel says that insights aren't being collected rather than showing an empty list.
+Nothing here exists in production, where neither Copilot nor the dev-tools connection does.
 
 
 [[ai-agents]]
@@ -352,6 +464,7 @@ Three practicalities:
 |`true`
 |Retain failed and over-budget interactions, data provider queries, and the errors browsers report.
 Also requires `errors` for failures and `requests` for slow records; the query insights additionally require `data`, and the browser-error insights additionally require `client`.
+In development mode a retained interaction also carries the caption of its component and the state its view was in; see <<#dev-replay,Replay Steps That Replay>>.
 
 |`vaadin.observability.insights-details`
 |`false`
