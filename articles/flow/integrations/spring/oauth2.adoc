@@ -114,4 +114,37 @@ class SecurityConfiguration {
 The [methodname]`oauth2LoginPage(String)` method is a shortcut that defaults the post-logout redirect URL to `{baseUrl}`.
 
 
+== Mapping Keycloak Roles to Authorities
+
+Keycloak puts a user's roles into the access token instead of the ID token, so Spring Security's default `OidcUserService` never sees them: `@RolesAllowed("admin")` and `hasRole("admin")` don't match a Keycloak role named `admin`.
+
+Call [methodname]`keycloakRoleMapping` next to [methodname]`oauth2LoginPage` to decode the access token and turn its roles into granted authorities:
+
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@Configuration
+class SecurityConfiguration {
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.oauth2LoginPage("/oauth2/authorization/keycloak")
+                    .keycloakRoleMapping();
+        });
+        return http.build();
+    }
+}
+----
+
+This maps the realm roles from the `realm_access` claim, the roles that `resource_access` grants for the current client ID, and the token's scopes as `SCOPE_`-prefixed authorities. Roles that `resource_access` grants to other clients are ignored.
+
+[methodname]`keycloakRoleMapping` only takes effect together with [methodname]`oauth2LoginPage` and its overloads, and it sets the `OidcUserService` that this security filter chain uses to load the authenticated user. An application that configures its own [classname]`OidcUserService` should leave [methodname]`keycloakRoleMapping` off and install the mapper on that service directly instead:
+
+[source,java]
+----
+var oidcUserService = new OidcUserService();
+oidcUserService.setOidcUserConverter(new KeycloakOidcUserMapper());
+----
+
+
 [discussion-id]`EF8F6AC3-BE67-4BE2-9A78-C371C1D4B9FD`
