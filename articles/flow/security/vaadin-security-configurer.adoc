@@ -45,6 +45,7 @@ The `VaadinSecurityConfigurer` applies several other Spring Security configurers
 * `RequestCacheConfigurer` — To set a request cache designed for Vaadin applications (can be disabled)
 * `ExceptionHandlingConfigurer` — To configure proper exception handling for Vaadin applications (can be disabled)
 * `AuthorizeHttpRequestsConfigurer` — To permit internal framework requests and other public endpoints (can be disabled)
+* `SessionManagementConfigurer` — To handle expired sessions in a way the Vaadin client understands (can be disabled)
 
 ==== Shared Objects
 
@@ -160,6 +161,22 @@ Enables or disables automatic configuration of authorized requests (enabled by d
 
 [source,java]
 ----
+public VaadinSecurityConfigurer enableSessionManagementConfiguration(boolean enableSessionManagementConfiguration)
+----
+
+Enables or disables automatic configuration of session management (enabled by default). This configurer automatically configures a [classname]`VaadinExpiredSessionStrategy`, so that a session expired by Spring Security concurrency control is handled in a way the Vaadin client understands. The strategy is only used by Spring Security when concurrency control is active, that is, when the application sets a maximum number of sessions. It's only configured if the application has session management configured, which `@EnableWebSecurity` does by default.
+
+Note that the configured strategy replaces both a strategy and an expired URL set directly on `HttpSecurity`, since Spring Security uses the expired URL only when no strategy is set. Use [methodname]`expiredSessionStrategy()` to configure a custom strategy, or disable this configuration.
+
+[source,java]
+----
+public VaadinSecurityConfigurer expiredSessionStrategy(SessionInformationExpiredStrategy expiredSessionStrategy)
+----
+
+Sets the strategy used when Spring Security concurrency control detects an expired session. Defaults to [classname]`VaadinExpiredSessionStrategy`. Pass `null` to fall back to the default strategy.
+
+[source,java]
+----
 public VaadinSecurityConfigurer enableNavigationAccessControl(boolean enableNavigationAccessControl)
 ----
 
@@ -199,7 +216,7 @@ Relaxing the catch-all rule doesn't expose protected views: real routes are stil
 public RequestMatcher defaultPermitMatcher()
 ----
 
-Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific matchers, including those for framework internal requests, anonymous endpoints, allowed Hilla views, anonymous routes, custom web icons, and default security configurations.
+Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific matchers, including those for framework internal requests, anonymous browser-callable services, allowed Hilla views, anonymous routes, custom web icons, and default security configurations.
 
 ==== Examples
 
@@ -351,6 +368,39 @@ public class SecurityConfig {
 }
 ----
 
+===== Handling Expired Sessions
+
+When an application limits each user to one active session with Spring Security's concurrency control, logging in on a second device must invalidate the session on the first device. Configure the maximum number of sessions on `sessionManagement()`, and `VaadinSecurityConfigurer` automatically makes sure the browser with the invalidated session shows Vaadin's session-expired dialog and reloads, instead of getting a plain-text page it can't use:
+
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.with(VaadinSecurityConfigurer.vaadin(),
+                        configurer -> configurer.loginView(LoginView.class))
+                .sessionManagement(sessionManagement -> sessionManagement
+                        .sessionConcurrency(concurrency -> concurrency
+                                .maximumSessions(1)))
+                .build();
+    }
+}
+----
+
+Applications that don't configure a maximum number of sessions aren't affected, because Spring Security only checks for expired sessions when concurrency control is active.
+
+To handle the expiration differently, for example to send the user to a custom page, pass a custom strategy with [methodname]`expiredSessionStrategy()`:
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .expiredSessionStrategy(event -> event.getResponse()
+                .sendRedirect("/session-expired")));
+----
+
 ===== Disabling Features
 
 The `VaadinSecurityConfigurer` provides some security features enabled by
@@ -374,6 +424,13 @@ custom security configuration.
   Disabling this means Vaadin will no longer enforce annotation-based
   navigation security, and you will need to implement your own access control
   logic for view navigation.
+
+- **Session Management Configuration** (`enableSessionManagementConfiguration(false)`):
+  By default, the configurer installs [classname]`VaadinExpiredSessionStrategy` so
+  that a session expired by Spring Security concurrency control is handled in a
+  way the Vaadin client understands.
+  Disabling this restores Spring Security's default expired-session response,
+  which the Vaadin client can't process.
 
 ====== When To Disable
 
