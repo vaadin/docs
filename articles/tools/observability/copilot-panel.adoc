@@ -1,0 +1,165 @@
+---
+title: Copilot Panel
+page-title: Viewing Vaadin Observability Kit insights in Copilot
+description: The development-mode panel that shows what went wrong and the live Vaadin meters, without a monitoring backend.
+meta-description: Use the Observability Kit panel in Vaadin Copilot to see failed and slow interactions, browser errors, and the live vaadin.* meters as you develop.
+order: 38
+---
+
+
+= Copilot Panel
+
+Metrics and insights normally need a backend, a dashboard, or at least a `curl` against an Actuator endpoint.
+During development, Observability Kit skips all of that.
+It contributes an *Observability* panel to Vaadin Copilot that shows the same findings the <<insights#,insights endpoint>> publishes, with the live `vaadin.*` meters underneath them.
+
+The panel is development-mode only.
+In production, Copilot and the development tools connection don't exist, so the panel is never loaded and the server never answers for it.
+
+
+== Opening the Panel
+
+Start the application in development mode and open it in a browser.
+The panel is registered with Copilot under the heading *Observability*, behind a bar chart icon in the Copilot toolbar, and it's available in edit, inspect, and test modes.
+
+Nothing needs to be configured to get it.
+The kit injects the panel once per UI whenever it runs outside production mode, provided the license check passed.
+
+
+== Findings First
+
+The panel opens on the findings rather than on the numbers, because a meter is a number: `vaadin.errors 3` doesn't say which route, which component, or which line to open.
+
+The findings are the insights described on the <<insights#,Interaction Insights>> page -- failed interactions, interactions that ran over the UX budget, failed and slow data provider queries, and browser errors -- and they're the endpoint's own payload, unaltered.
+The same service, the same grouping, and the same withholding of sensitive detail apply, so a finding read here and one served to an agent can't drift apart.
+
+The panel ranks them for display: errors before warnings, then the most-reported first, then the most recent.
+An error that ten users hit outranks one that happened once.
+
+The header says how many findings need attention.
+When there are none, it reads *Insights* and the body explains which of two things that means:
+
+- *No problems detected yet*, when the collectors are bound and nothing has gone wrong.
+- *Insights are not being collected*, when nothing was watching in the first place.
+
+See <<#requirements,What the Panel Needs>> for the settings behind the second case.
+
+Before the first payload arrives the panel says it's waiting, rather than claiming that nothing is wrong.
+
+
+== Reading a Finding
+
+Each row shows the summary, a severity dot, and a line of context underneath: the route, the component or script, how many occurrences the group has, and when it was last seen.
+
+Select a row to expand it.
+The expanded row shows the finding's full evidence, the [propertyname]`replay` steps that reproduce it, and the [propertyname]`suggestion` -- exactly as the server wrote them.
+Rows stay expanded while their occurrence count climbs, and while you close the panel to look at the code and open it again.
+
+The *Copy* button on a row puts the whole finding on the clipboard as JSON.
+That's the shortest path from noticing a problem to handing it to an AI agent that has the codebase checked out; see <<insights#ai-agents,Fixing Insights with an AI Agent>> for what an agent does with it.
+Copying needs the browser's clipboard API, which is available on `localhost` and over HTTPS; the button confirms with *Copied*, or reports *Failed* where the browser denies access.
+
+
+== Findings You Aren't Working On
+
+"3 findings need attention" is only worth reading while all three are news, so two kinds fold away behind a collapsed line under the list -- "2 hidden findings", "3 findings gone quiet", or "5 findings set aside (2 hidden, 3 gone quiet)":
+
+Hidden by hand:: Every row has a *Hide* button, for the known slow query in the feature you aren't touching today.
+It stays hidden even as the finding keeps recurring -- a dismissal that undid itself on the next occurrence would be no dismissal at all -- and is remembered in the browser's `localStorage`, so the reload that follows every code change doesn't ask you to hide everything again.
+*Unhide* puts it back.
+
+Gone quiet:: A finding nothing has re-triggered for 30 minutes is history rather than attention.
+This one is automatic and reverses itself: the moment it recurs, [propertyname]`lastSeen` moves and it's back in the count.
+
+Nothing is discarded.
+The fold always shows how many findings are behind it and which of the two reasons put them there, and one click renders them, faded, with their detail and replay intact.
+
+
+== New Findings Announce Themselves
+
+The panel keeps watching while its window is closed, and writes a line to the Copilot log for each finding the payload didn't have before.
+This is the point of the panel for most of a working day: you don't have to have it open to learn that something broke.
+
+Announcements are deduplicated on the same grouping key the endpoint uses, so one problem notifies once, however often it recurs.
+Only findings that the current page raised are announced -- anything first seen since the page loaded, including during the load itself, so a slow query on the landing view is reported.
+The retained records outlive a reload, and those older findings are not announced again.
+A finding you hid isn't announced either.
+
+Errors are logged as errors and everything else as a warning, each prefixed with `Observability:`.
+The message is a summary, cut to 300 characters when longer.
+
+[NOTE]
+Announcements are best-effort.
+Copilot's plugin API has no notification of its own, so the line is written as a log event on Copilot's event bus; a Copilot that drops it costs you a notification, never the panel.
+
+
+== Live Meters by Route
+
+Below the findings is the *Metrics* section, holding every `vaadin.*` meter in the running registry.
+Its header carries the meter count and the time of the last snapshot.
+
+The section is folded away when there's something to look at above it and unfolded when there isn't.
+That's decided once, by the first payload that reaches the panel; after you fold or unfold it yourself, your choice stands.
+
+Meters are *grouped by the route they were recorded on*, and each group is headed by its route template:
+
+[cols="1,3"]
+|===
+|Heading |Contents
+
+|The route template
+|The meters recorded on that route.
+The root view, whose template is the empty string, appears as *Root*.
+
+|Other routes
+|Meters carrying the `_other` sentinel, which the kit aggregated rather than tagged per route.
+
+|Route not resolved
+|Meters carrying the `_unknown` sentinel, recorded where no route could be determined.
+
+|General
+|The application-wide meters that carry no `route` tag at all.
+|===
+
+The route the browser is on comes first, marked _current page_.
+Every other route follows alphabetically, then the two sentinel groups, and *General* last.
+
+Route groups are matched against the browser's location by route template, so `orders/:orderId` is the current group while you're on `/orders/17`.
+An application served under a context path has that path in front of every location and in none of the templates, so nothing matches and the groups stay alphabetical.
+
+Each row shows the meter name, its remaining tags, its value, and a sparkline of the last twenty polls.
+The value column is derived per meter type rather than raw:
+
+[cols="1,3"]
+|===
+|Meter type |Shown as
+
+|Timer, distribution summary
+|The cumulative mean, the maximum when it's non-zero, and the count as `n=`.
+Timers are in milliseconds.
+
+|Counter, function counter
+|The count.
+
+|Gauge
+|The current value.
+|===
+
+The panel refreshes the meters every three seconds while it's open, and asks for nothing while it's closed.
+Insights are polled either way, less often when the panel is closed, which is what makes the announcements possible.
+
+[NOTE]
+Only meters whose name starts with `vaadin.` are exposed to the panel.
+Your own meters, including the ones described on the <<customization#,Custom Instrumentation>> page, are recorded into the same registry but aren't shown here.
+
+
+[[requirements]]
+== What the Panel Needs
+
+The meter table needs nothing beyond the kit being installed and licensed.
+
+The findings need [propertyname]`vaadin.observability.insights`, which is on by default, together with the instrumentation that feeds it: `errors` for failures, `requests` for over-budget records, and `client` for browser errors.
+With any of those off, the panel says that insights aren't being collected instead of showing an empty list that reads like "nothing is wrong".
+
+The panel is loaded only outside production mode, and only when the license check passed.
+Nothing about it reaches a production deployment.
