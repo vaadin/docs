@@ -12,7 +12,8 @@ public class SliderStyles extends Div {
     public SliderStyles() {
         // tag::snippet[]
         IntegerSlider slider = new IntegerSlider("Label");
-        slider.addThemeVariants(SliderVariant.HELPER_ABOVE);
+        slider.addThemeVariants(SliderVariant.HELPER_ABOVE,
+                SliderVariant.LABEL_ASIDE);
         // end::snippet[]
         slider.setHelperText("Helper text");
         add(slider);
