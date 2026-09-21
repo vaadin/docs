@@ -1,0 +1,145 @@
+---
+title: Agent Tools
+page-title: Vaadin Agent Tools Plugin for Claude Code and Codex
+description: Give an AI coding agent Vaadin commands it can run against your project, instead of facts it has to recall.
+meta-description: Install the experimental Vaadin Agent Tools plugin for Claude Code and Codex, and let an agent scaffold projects and check for theme mixing.
+order: 25
+section-nav: badge-preview
+---
+
+
+= Vaadin Agent Tools
+
+.Experimental -- Expect Changes
+[CAUTION]
+====
+Agent Tools is *experimental*, published for testing. The set of tools, what they report, and the skills that wrap them are expected to change.
+====
+
+Agent Tools is a plugin for Claude Code and Codex that gives an agent a small set of Vaadin commands to *run*, instead of facts it has to recall. It bundles three things:
+
+* A *self-contained native CLI*, `vaadin-agent-tools`, with one command per tool.
+* *Agent skills* that tell an agent when to reach for each tool and how to read its output.
+* A *Claude Code hook* that runs the theme check automatically after a styling edit.
+
+The plugin isn't tied to an agent session. The same CLI runs from a terminal or in CI, and exits non-zero when it finds a problem.
+
+
+== Install the Plugin
+
+Agent Tools is published through the https://github.com/vaadin/agent-marketplace[Vaadin Agent Marketplace], the same marketplace that hosts the `vaadin-skills` plugin. They're separate plugins: `vaadin-skills` brings the Vaadin MCP server and the design and layout skills, while `vaadin-agent-tools` brings the CLI. Install both if you want both.
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace add vaadin/agent-marketplace
+/plugin install vaadin-agent-tools@vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace add vaadin/agent-marketplace --ref main
+codex plugin add vaadin-agent-tools@vaadin-marketplace
+----
+--
+
+If you've already added the marketplace for `vaadin-skills`, skip the first command. In Claude Code you can also run `/plugin` and pick [guilabel]*vaadin-agent-tools* from the marketplace browser.
+
+The native binaries are committed to the plugin repository, so a fresh install is ready to run. There's no build step, and nothing to put on your `PATH`.
+
+To pick up later changes:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace update vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace upgrade
+----
+--
+
+
+== Use It With Your Agent
+
+There's nothing to invoke by name. The skills trigger from their descriptions, so you describe the task and the agent picks the tool:
+
+* "Bootstrap a new Vaadin project in `./my-app`."
+* "Check this project for theme mixing."
+* "The `--lumo-*` variables in this stylesheet aren't resolving. What's wrong?"
+
+The agent runs the command, reads the machine-readable output, and reports back. Findings come with the file, the line, and the snippet that triggered them, so what you get is a specific place to look rather than a general opinion.
+
+
+== What the Tools Do
+
+Two tools ship today.
+
+`create-project`:: Bootstraps a new Vaadin application by downloading a fresh skeleton from https://start.vaadin.com[`start.vaadin.com`] -- the same starter `npm init vaadin` produces, minus the interactive prompts. The agent can choose the artifact name, whether to include the example view, and whether to use the pre-release platform version. This is the one tool that reaches the network and writes files, so the skill tells the agent to confirm the target directory when it's ambiguous.
+
+`check-theme-mixing`:: Reports whether a project mixes the Aura and Lumo base themes. It scans the project's Java and CSS sources for the theme stylesheets each one loads, for `--aura-*` and `--lumo-*` custom properties used under the wrong theme, and for `LumoUtility` class names used while Aura is active. When a project doesn't load a base theme explicitly, the tool says the result is indeterminate rather than guessing -- a skipped check, not a pass.
+
+For the full command-line reference -- flags, output shapes, exit codes, and finding codes -- see the https://github.com/vaadin/agent-tools[`vaadin/agent-tools`] repository.
+
+
+== The Theme-Mixing Hook
+
+In Claude Code, the plugin also installs a `PostToolUse` hook, so the theme check doesn't wait to be asked. After the agent edits a [filename]`.java` or [filename]`.css` file in a way that touches styling, the hook runs the check and feeds any error-level findings back. The agent then has the chance to fix the problem in the same turn, instead of at review time.
+
+The scope is narrow by design, so that the hook stays quiet. Edits to other file types are ignored, Java edits that don't touch a styling API are ignored, and clean or indeterminate results produce nothing. The hook never blocks an edit.
+
+Codex gets the skills but not the hook, as the hook implements a Claude Code event contract.
+
+
+== What It Doesn't Do
+
+* *It isn't a general-purpose linter.* Two tools is the whole set. Everything else about code quality stays with your existing build, tests, and review.
+* *The theme check reads source text, not the resolved build.* It reports what's written in the project's own Java and CSS files. A base theme pulled in by a dependency isn't visible to it.
+* *It doesn't verify that the application runs.* That's the job of the <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>>, which the <<dev-loop-tutorial#,Dev Loop Tutorial>> sets up alongside the MCP server.
+
+
+== Background
+
+=== Why It Exists
+
+An AI coding agent needs three different kinds of knowledge, and its training data covers only part of the first.
+
+The <<mcp#,Vaadin MCP server>> covers *what the API is*. The <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>> covers *whether the code runs*. Agent Tools covers the third: *whether the project itself holds together*, and giving the agent a correct starting point when there's no project yet.
+
+Both tools address a case where an agent's judgment is the wrong instrument.
+
+*Scaffolding.* Asked to start a new Vaadin application, an agent writes a [filename]`pom.xml` from memory. The result is plausible and often wrong -- a platform version that was never released, a starter layout from an older major. Downloading the real skeleton means the project starts from a file Vaadin maintains, rather than from a reconstruction.
+
+*Theme mixing.* Loading both Aura and Lumo, or using `LumoUtility` class names while Aura is the loaded theme, isn't a compile error. It produces CSS custom properties that fail to resolve, without a word from the compiler. The symptom surfaces later as "the spacing looks wrong," a long way from the annotation that caused it.
+
+=== Why Tools and Not Only Skills
+
+A skill is instructions. It shapes what the agent pays attention to, but the agent still does the work. Reading every stylesheet in a project to cross-check which theme each custom property belongs to is the kind of work a model does inconsistently. Run the same skill twice and you can get two different answers.
+
+A tool is a program. It scans the same files in the same order every time, and answers with a file, a line, and the offending snippet. Agents act on concrete evidence far more reliably than on their own suspicions, so handing one an exact location turns a vague worry into a fix.
+
+The two work together. The skill is what tells the agent that this situation calls for the tool, and how to read what comes back. The tool is what makes the answer the same every time.
+
+=== Why a Native Binary
+
+A machine with a Vaadin project on it isn't guaranteed to have Node.js. A launcher that goes hunting for a runtime -- probing `$HOME`, borrowing Vaadin's own copy of Node, or installing one on first use -- is doing something you'd rather an unattended agent didn't do.
+
+The tools are therefore compiled ahead of time into small self-contained binaries, one per platform, committed to the plugin. A short shell selector picks the right one for the current system. Nothing is downloaded at startup, nothing outside the plugin directory is executed, and neither Node.js nor a JVM is required to run the CLI.
+
+The command line is the stable part of all this: the command name, its arguments, the JSON shape, and the exit codes. The implementation behind it is Go today, reached only through that contract, so a future rewrite can drop in without changing how agents or pipelines call it.
+
+
+== Related Topics
+
+* <<mcp#,Vaadin MCP Server>> -- documentation and API lookup for the version in your [filename]`pom.xml`.
+* <<directory-mcp#,Vaadin Directory MCP Server>> -- add-on search and compatibility checks.
+* <<dev-loop-tutorial#,Dev Loop Tutorial>> -- the full agent setup, end to end.
+* https://github.com/vaadin/agent-tools[`vaadin/agent-tools`] -- the plugin source, command-line reference, and issue tracker.
