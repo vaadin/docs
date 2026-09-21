@@ -70,6 +70,37 @@ UI.getCurrentOrThrow().getPage().retrieveExtendedClientDetails(details -> {
 });
 ----
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Browser Time
+
+[methodname]`getBrowserTime()` returns the current time of the browser as an [classname]`Instant`. It isn't entirely accurate, since it's derived from the round-trip to the client, but it's close enough for most purposes.
+
+The returned instant is a point on the time line and carries no time zone. To get the date and time as shown on the end user's computer, combine it with the browser's time zone -- which [methodname]`getTimeZoneId()` returns as `null` when the browser didn't report one, so a fallback is needed:
+
+.Getting the date and time shown in the browser
+[source,java]
+----
+UI.getCurrentOrThrow().getPage().retrieveExtendedClientDetails(details -> {
+    String timeZoneId = details.getTimeZoneId();
+    ZoneId zone = timeZoneId != null ? ZoneId.of(timeZoneId)
+            : ZoneId.systemDefault();
+
+    ZonedDateTime browserDateTime = details.getBrowserTime().atZone(zone);
+    handleBrowserDateTime(browserDateTime);
+});
+----
+
+[NOTE]
+The older [methodname]`getCurrentDate()` method is deprecated for removal. It returns a [classname]`Date` in the server's default time zone, which is rarely what's wanted; use [methodname]`getBrowserTime()` instead.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Platform Detection
+
+[methodname]`getNavigatorPlatform()` returns the platform string the browser reports, or `null` if it reported none. Prefer feature detection over branching on it: the value is unreliable, and an iPad running iPadOS reports `MacIntel`, exactly like a desktop Mac.
+
+For that reason, the [methodname]`isIOS()` and [methodname]`isIPad()` methods are deprecated. Use feature detection, or inspect [methodname]`getNavigatorPlatform()` directly if you need the raw value.
+
 == Executing JavaScript in the Browser
 
 You can use server-side Java to execute JavaScript snippets in the browser.

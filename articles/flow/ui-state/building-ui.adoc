@@ -610,6 +610,30 @@ content.bindClassName("mobile-layout", windowSize.map(ws -> ws.width() < 768));
 The signal is lazily initialized. The actual window dimensions are available from the initial browser connection through extended client details, so the signal has correct values from the start. It also updates automatically on browser window resize.
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Element Size Signal
+
+Use [methodname]`Element.sizeSignal()` to get a read-only signal that tracks the size of a single element, as reported by the browser ResizeObserver API. The signal provides a [classname]`Size` record with [methodname]`width()` and [methodname]`height()` values in whole pixels:
+
+[source,java]
+----
+Div chartContainer = new Div();
+Signal<Size> size = chartContainer.getElement().sizeSignal();
+
+Span dimensions = new Span();
+dimensions.bindText(size.map(s ->
+    String.format("Container: %d x %d", s.width(), s.height())));
+
+// Switch to a compact rendering when the container itself gets narrow
+chartContainer.bindClassName("compact", size.map(s -> s.width() < 400));
+----
+
+Where the window size signal follows the browser window, this one follows the element, so it also reacts to size changes caused by the surrounding layout -- a side navigation being collapsed, for example.
+
+[NOTE]
+The signal is lazily initialized, and the same instance is returned for later calls on the same element, so one browser-side observer is shared. Its value is `Size(0, 0)` until the browser has reported the actual size, which happens shortly after the element has been attached. Sub-pixel sizes are rounded to whole pixels. While the element is detached there is nothing to observe, so the signal keeps the size last reported for it, and observation resumes when the element is attached again.
+
+
 === UI Locale Signal
 
 Use [methodname]`UI.localeSignal()` to get a read-only signal that tracks the UI's locale:
