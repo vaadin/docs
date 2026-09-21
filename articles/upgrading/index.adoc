@@ -37,8 +37,10 @@ Gradle 8 (8.14 and later) and Gradle 9 releases are supported.
 Jackson 3::
 Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
 
-Node.js 24::
-Vaadin 25 requires Node.js 24 or later for building the frontend part of the application. Node.js 24 becomes the active Long Term Support (LTS) before Vaadin 25.0.0 -- guaranteeing the longest possible support.
+Node.js 26::
+Vaadin 25.4 requires Node.js 26 or later for building the frontend part of the application. Node.js 26 becomes the active Long Term Support (LTS) on 2026-10-28.
++
+The official Node.js 26 binaries link against `libatomic.so.1`, which the Node.js 24 binaries didn't require. On minimal Linux images, such as slim Docker base images, the downloaded Node.js fails to start with an error like "error while loading shared libraries" unless the `libatomic1` package -- or the equivalent for your distribution -- is installed.
 +
 The way Vaadin installs and manages Node.js has also changed:
 +
@@ -176,6 +178,10 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 
 Before migrating, find the corresponding version of the Jakarta EE 11-compatible application server used in your project. See link:https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
 
+== Custom Servlets and Static Resources
+
+Starting with Vaadin 25.3, [classname]`VaadinServlet` serves static resources by calling [methodname]`StaticFileHandler.serveStaticResource()` directly, and the [methodname]`serveStaticOrWebJarRequest()` method is deprecated for removal -- its name referred to WebJars, which aren't handled there. Overriding it no longer affects request handling. To customize how static resources are served, override [methodname]`createStaticFileHandler()` and return your own [interfacename]`StaticFileHandler` implementation instead.
+
 == Maven & Gradle Plugins
 
 Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
@@ -250,7 +256,7 @@ More detailed instructions can be found in <<{articles}/flow/configuration/devel
 The Vaadin Router library is no longer actively maintained, as Vaadin now uses React Router as its primary client-side routing solution. If your application currently uses Vaadin Router, you should migrate to React Router, by removing the `vaadin.react.enable=false` property in your configuration.
 
 [IMPORTANT]
-Vaadin Router -- and with it the `react.enable=false` option that falls back to it -- is removed in Vaadin 26. Migrate Lit views and Vaadin Router route configurations to React and React Router before upgrading to Vaadin 26.
+Vaadin Router -- and with it the `react.enable=false` option that falls back to it -- is removed in Vaadin 26. Migrate Hilla Lit views and Vaadin Router route configurations to React and React Router before upgrading to Vaadin 26. This concerns Hilla only -- Flow's [classname]`LitTemplate` API isn't affected.
 
 
 == Hilla
@@ -270,7 +276,7 @@ Vaadin Spring Boot Starter no longer includes Hilla by default. In case you have
 </dependency>
 ----
 
-The `@vaadin/router` library, which is used for building Lit views in Hilla, is deprecated and is removed in Vaadin 26. Migrate Lit views to React. See <<vaadin-router-removal, Vaadin Router Deprecation>> for more information.
+The `@vaadin/router` library, which is used for building Lit views in Hilla, is deprecated and is removed in Vaadin 26. Migrate Hilla Lit views to React. See <<vaadin-router-removal, Vaadin Router Deprecation>> for more information.
 
 === Browser-Callable Services in Other Packages
 
@@ -598,6 +604,10 @@ Use the following CSS properties on `vaadin-form-layout` instead:
 The deprecated methods [methodname]`setClassNameGenerator` and [methodname]`getClassNameGenerator` have been removed from both the `Grid` and `Grid.Column` classes. Similarly, the `cellClassNameGenerator` property has been removed from the `vaadin-grid` and `vaadin-grid-column` elements. Instead, use the [methodname]`setPartNameGenerator` method and the [propertyname]`cellPartNameGenerator` property, respectively.
 
 The [methodname]`scrollToItem` method no longer scrolls if the item is already fully visible in the grid viewport.
+
+=== Image
+
+Starting with Vaadin 25.3, [classname]`Image` extends [classname]`HtmlComponent` instead of [classname]`HtmlContainer`, so it no longer has the child-component API of [interfacename]`HasComponents` -- [methodname]`add()`, [methodname]`remove()`, [methodname]`removeAll()` -- or the text API of [interfacename]`HasText` -- [methodname]`setText()` and [methodname]`getText()`. An `img` is a void element, so neither children nor text were ever rendered by the browser. Remove such calls, and use [methodname]`setAlt()` to give the image its alternative text.
 
 === Map
 The Map component’s `borderless` / `BORDERLESS` style variant has been renamed `no-border` / `NO_BORDER` for consistency with other components.

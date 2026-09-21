@@ -1,0 +1,376 @@
+---
+title: Client Error Insights
+page-title: Backtracking browser errors with Observability Kit
+description: How the insights endpoint reports the errors browsers raise, with the script and stack frame behind them and whether an outage delayed the report.
+meta-description: Use Vaadin Observability Kit to collect uncaught browser errors and unhandled rejections as actionable insights, naming the script and stack frame behind each one.
+order: 37
+---
+
+
+= Client Error Insights
+
+A class of failure never reaches a server log: a script fails in a tab nobody is watching, and the server sees nothing at all.
+The `vaadin.client.errors` counter says how many browser errors happened and whether each was an uncaught throw or an unhandled rejection.
+That's all a counter can say -- a message, a script URL, and a stack frame are free-form text, and putting them on meter tags would create one time series per distinct message.
+
+Observability Kit therefore retains them the same way it retains a failed server interaction, and serves them from the same endpoint.
+A client error insight names what broke and where, which is the difference between knowing that browsers are failing and being able to fix it.
+It's the one insight type that can describe a failure the server never handled -- including one that happened while the browser couldn't reach the server at all.
+
+This page covers browser errors specifically.
+For failed and slow server-side interactions, the endpoint itself, and the payload envelope they share, see the <<insights#,Interaction Insights>> page.
+
+
+== Requirements
+
+Browser error insights need three features, all on by default:
+
+[cols="2,3"]
+|===
+|Property |Why
+
+|`vaadin.observability.client`
+|The in-browser collector is what reports the errors.
+
+|`vaadin.observability.insights`
+|The buffer that retains them.
+
+|`vaadin.observability.errors`
+|The switch the insight collectors share with the kit's error instrumentation.
+|===
+
+The collector is registered only when all three are on.
+With any of them off, browser errors are still counted by `vaadin.client.errors` -- nothing describes them.
+
+The insights are served at `/actuator/vaadin/observability`, alongside the interaction and data query insights.
+Expose the endpoint as described in <<insights#exposing-the-endpoint,Exposing the Endpoint>>:
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=vaadin
+----
+
+
+== What Gets Captured
+
+Every report carries a [propertyname]`kind` naming the browser event that raised it.
+It's both the `kind` tag on the `vaadin.client.errors` counter and the `kind` field on the insight, and it holds one of three values:
+
+[cols="1,3"]
+|===
+|Value |Raised by
+
+|`uncaught`
+|A throw that reached `window.onerror`.
+
+|`promise`
+|An unhandled rejection.
+
+|`_unknown`
+|A report whose kind is neither.
+Anything a payload invents is bucketed here, so the value can never grow past these three.
+|===
+
+Two more fields are published whatever the detail settings say:
+
+[propertyname]`source`:: Where the browser said the error came from, as `script-url:line`.
+[propertyname]`frame`:: The location named by the first frame of the error's stack, as `script-url:line:col`.
+This is the browser-side equivalent of the [propertyname]`applicationFrame` an interaction insight carries.
+
+[propertyname]`source` and [propertyname]`frame` are dropped when the browser supplied nothing that is actually a location: a cross-origin script reports `Script error.` with no filename, and a rejection has no filename at all.
+
+Both [propertyname]`source` and [propertyname]`frame` are *locations only* -- see <<#locations,What Reaches Source and Frame>>.
+The function name that stood in front of the frame is not part of it and travels separately, under the same gate as the message; see <<#detail,Sensitive Detail>>.
+
+Reports are grouped by route, kind, source, and frame, so the same script failing in a hundred tabs is one insight with a hundred occurrences.
+The route is a template, so `orders/17` and `orders/18` group under one `orders/:orderId` insight rather than one per parameter value.
+
+
+== Reading a Client Error Insight
+
+A client error appears in the shared `insights` array with `type: "client-error"`:
+
+[source,json]
+----
+{
+  "type": "client-error",
+  "severity": "error",
+  "category": "reliability",
+  "summary": "A browser error (uncaught) at chart.js:44:13 on route 'orders' (12 occurrences), at least one of them reported only after the browser got the server back",
+  "evidence": {
+    "route": "orders",
+    "kind": "uncaught",
+    "source": "/VAADIN/build/chart.js:44",
+    "frame": "chart.js:44:13",
+    "detail": "message and function name were not collected; enable vaadin.observability.insights-details to collect them",
+    "occurrences": 12,
+    "maxBufferedMs": 7400,
+    "firstSeen": "2026-09-04T08:22:10.441Z",
+    "lastSeen": "2026-09-04T09:13:57.203Z",
+    "measures": "timestamps are when the server received the report; maxBufferedMs is the longest any occurrence in this group spent waiting in the browser for the server to become reachable again, measured on the browser's clock -- see examples[].bufferedMs for which ones waited"
+  },
+  "replay": [
+    "Open route 'orders'",
+    "Exercise the page until chart.js:44:13 runs",
+    "Expect an uncaught browser error"
+  ],
+  "suggestion": "Inspect chart.js:44:13. The browser raised this uncaught error, so the server handled nothing and no server-side stack trace exists. ...",
+  "examples": [
+    {
+      "at": "2026-09-04T09:13:57.203Z",
+      "bufferedMs": 0,
+      "sessionId": "5f2a91c40b7e",
+      "uiId": 3
+    }
+  ]
+}
+----
+
+The summary, the replay steps, and the suggestion all identify the error by its [propertyname]`frame`, falling back to [propertyname]`source` when the stack held no usable frame, and to the phrase "an unreported script" when the browser named no location at all.
+
+Note what [propertyname]`measures` says about the timestamps: [propertyname]`firstSeen` and [propertyname]`lastSeen` are *arrival* times, not the moments the errors happened.
+An arrival can lag the error by a whole outage -- see <<#outages,Reports That Waited Out an Outage>>.
+
+Unlike an interaction insight, a client error carries no [propertyname]`applicationFrame`: there is no server-side stack, so the location in [propertyname]`frame` is the only place to look.
+The [propertyname]`suggestion` says so explicitly, which matters when the payload is handed to an AI agent -- the code to open is a client-side view, a web component, or a bundled dependency, not a Java class.
+
+Each insight carries up to three of its most recent occurrences in [propertyname]`examples`, keyed by [propertyname]`at` rather than [propertyname]`timestamp`.
+An example reports its own [propertyname]`bufferedMs`, the [propertyname]`sessionId` (a short one-way hash by default), and the [propertyname]`uiId` of the tab that reported it.
+It also carries a [propertyname]`message` when detail collection is on and the browser supplied one.
+
+
+[[locations]]
+== What Reaches Source and Frame
+
+[propertyname]`source` and [propertyname]`frame` are published regardless of the detail setting, so the kit keeps them only when they're locations.
+Both are checked twice: in the browser, to keep the buffer and the request small, and again on the server -- which is the check that counts, because any script on the page can call the collector's endpoint directly.
+
+A location is a `file:line` or `file:line:col` whose file has an extension or a path separator, contains no whitespace of any kind, and is built only from the characters a path or URL is made of.
+The line and column are at most eight digits each: a position in a file, not a number somebody wanted published.
+The file itself isn't capped that way, because a bundle really can be called `chunk-1234567890123.js`.
+
+Several kinds of text are refused outright:
+
+A URL carrying credentials:: `http://user@host/app.js:1:2` is refused, and so is the protocol-relative `//user:pw@host/app.js:1:2`.
+Browsers don't load subresources from userinfo URLs, and a location with a password in it is the last thing that should travel in a forwarded payload.
+
+`data:` and `blob:` URLs:: A `data:` body is a few hundred bytes the page chose rather than a place, and a `blob:` URL names an object that died with the page that minted it.
+
+The page's own URL:: For an error thrown from an inline script, an inline event handler, or [methodname]`Page.executeJs()` code, browsers report the *document* URL as the error's filename and write it into the stack frame.
+That's not where the code is, and it carries the IDs that route templating exists to fold away -- one finding per order ID instead of one per bug -- so it's dropped.
+A real script served from the same origin is unaffected.
+
+An `@` is treated as part of the path when the text before it is rooted or schemed, so `/node_modules/@vaadin/router/router.js`, `https://unpkg.com/lit@3.1.0/index.js`, and a dev server's `/@fs/` paths all survive whole, version pins included.
+An `@` after anything else is a function name glued to a location, so it's read as an engine's `name@location` separator and taken apart, with the path going to [propertyname]`frame` and the name to [propertyname]`function`.
+
+A stack line is split on the separator its engine uses, and only the location half is validated and kept.
+V8's form is delimited by the engine -- an `at` prefix, or the location wrapped in parentheses -- so the split point isn't in doubt.
+The `@` form of SpiderMonkey and JavaScriptCore has no delimiter, so before its `@` counts as a separator the whole line must look like a frame line: no whitespace anywhere, and both a line and a column.
+Without that rule, any sentence containing an `@` would split into a "name" and something that passes for a location.
+
+.Example Lines and What They Yield
+[cols="3,2"]
+|===
+|Stack line |`frame`
+
+|`at renderChart (chart.js:44:13)`
+|`chart.js:44:13`
+
+|`at f (/node_modules/@vaadin/router/router.js:12:3)`
+|`/node_modules/@vaadin/router/router.js:12:3`
+
+|`at f (/@fs/home/u/app/x.js:1:2)` -- Vite
+|`/@fs/home/u/app/x.js:1:2`
+
+|`renderChart@chart.js:44:13`
+|`chart.js:44:13` -- the name goes to [propertyname]`function`
+
+|`@http://host/app.js:3:7` -- Firefox, no function
+|`http://host/app.js:3:7`
+
+|`at Object.<anonymous> (C:\app\x.js:1:2)`
+|`C:\app\x.js:1:2`
+
+|`http://user@host/app.js:1:2`
+|None -- a location with credentials in it
+
+|`data:text/javascript;base64,<payload>:1:2`
+|None -- a payload, not a place
+
+|`at <anonymous>:1:5`
+|None -- no file to open
+
+|`Error: failed to fetch https://user@api.example.com:8443`
+|None -- not a frame line
+
+|`global code@http://host/app.js:1:1` -- Safari
+|None -- the space makes it unreadable as a frame
+|===
+
+The message-line rejections are the ones worth knowing about, and not because of what they'd add.
+V8 opens a stack with the error's message, a message can span lines, and the *first* line that parses wins -- so `new Error('Upload failed for:\n' + url)` wouldn't merely contribute a host, it would take the place of the frame that actually threw.
+
+The cost of the `@`-form rule is that Safari writes frames named `global code`, `module code`, and `eval code`, and Firefox writes space-containing async markers such as `promise callback*loadData`.
+These contain spaces, so they're no longer read as frames; the search moves to the next line, and where such a line is the only one in the stack the insight falls back to [propertyname]`source`, which the browser supplies for a top-level script error.
+
+.A Location Is Bounded, Not Secret-Free
+[NOTE]
+A location is still text the page determined.
+A script URL can carry a query string, a filename can be digits, and the kit doesn't try to tell a real script URL from a crafted one.
+What *is* guaranteed is narrower: nothing reaches [propertyname]`frame` or [propertyname]`source` unless it has the shape of a location, and a function name -- the one part a page names outright -- is never part of either.
+
+
+[[outages]]
+== Reports That Waited Out an Outage
+
+A browser that has lost the server can't report anything, which is exactly when scripts tend to fail.
+The collector holds its buffer in `sessionStorage` and flushes it when the connection returns, so an error raised during an outage still arrives.
+
+[propertyname]`bufferedMs` is how long a *report* waited for its browser to reach the server again.
+It counts only time the browser spent unreachable, never the wait for the next flush, so a routine error reports zero however long it sat in the buffer.
+
+Read a non-zero value as "this couldn't be delivered when it was raised" rather than "this happened during an outage".
+A report taken while the browser was still connected accrues the outage that starts before the next flush, so the two aren't the same claim.
+
+[propertyname]`maxBufferedMs` on the insight is the largest value in the group, so it speaks for at least one occurrence and not necessarily the most recent one.
+The [propertyname]`bufferedMs` of each example says which ones waited.
+
+A report that survives a reload keeps the wait it had accrued -- it's written to `sessionStorage` alongside the report -- but the clock it would have gone on accruing against is gone with the page, so a tab that reloads mid-outage resumes counting from the load.
+
+.How Delivery Is Prioritized
+[NOTE]
+====
+The buffer holds at most 200 samples per tab, and both the buffer and the server's rate limit shed load by class rather than by age.
+Browser errors rank second, behind the connection-state samples that explain an outage and ahead of bootstrap, navigation, and Web Vitals timing.
+
+Two consequences: a full buffer drops timing samples before it drops the error behind a user's report, and a post-outage flush that exceeds [propertyname]`vaadin.observability.client-rate-per-session` loses timing samples rather than errors.
+A batch also stays in `sessionStorage` until the server has answered for it, and one nobody has answered for within 30 seconds is taken back and sent again, so a lost reply can't stall the collector for the life of the tab.
+====
+
+
+[[detail]]
+== Sensitive Detail
+
+The insights payload is meant to travel -- into an issue tracker, an AI agent, a chat message -- so a browser error's message and function name are withheld unless you ask for them.
+The message because it can quote anything the page was working with, and the name for the same reason: a page can set any function's name to any string, and the browser prints whatever it's told, so a name is text the page chose rather than a fact about the code.
+
+Turn both on when you need them:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.observability.insights-details=true
+----
+
+The message is then present as [propertyname]`message` (truncated to 200 characters) on the insight and on each example, and the function name as [propertyname]`function`.
+The kind, the source, and the frame location are kept whatever the setting says.
+
+[IMPORTANT]
+====
+For a browser error this setting governs *collection*, not just retention.
+Unless it's on -- and something is there to retain a message -- the in-browser collector never gathers the message or the name, so neither is buffered in the tab, written to `sessionStorage`, or sent.
+There is nothing to withhold on the server, because nothing arrives.
+
+The value is read by a page when it loads, so a change reaches already-open tabs only after a reload.
+
+With it on, note the converse: an error report waiting out an outage sits in the tab's `sessionStorage` with the message and the name in it until the browser can deliver them.
+====
+
+Rather than leave a missing message ambiguous, the evidence carries either a [propertyname]`message` or a [propertyname]`detail` note saying why there is none:
+
+[cols="1,2"]
+|===
+|Field present |What it means
+
+|[propertyname]`message`
+|Collection is on and the browser supplied a message.
+
+|[propertyname]`detail`, naming the property to enable
+|Collection is off, so the browser gathered neither the message nor the function name.
+
+|[propertyname]`detail`, saying collection is on but the browser reported none
+|Collection is on and there was still nothing.
+A cross-origin script reports `Script error.` with no message, and neither does a rejection with no reason.
+|===
+
+
+== Why a Payload Carries at Most 20
+
+A payload holds at most 20 client error insights, the most-reported first.
+
+These are the only insights whose grouping key is partly the browser's to choose.
+[propertyname]`source` and [propertyname]`frame` are page-determined text, where every other insight groups on server-derived, cardinality-capped values, so a script calling the collector's endpoint directly with a distinct frame per report could otherwise fill the payload with one group per report and bury the real findings.
+
+Groups are ranked by occurrences before the cut, with ties going to the most recent, which is what makes the cap useful rather than arbitrary: a flood of crafted reports is one occurrence per group, while the error real users keep hitting is many.
+
+The cap applies to the payload only.
+`vaadin.client.errors` still counts every report, and [propertyname]`vaadin.observability.insights-capacity` still governs how many are retained.
+
+Browser errors are retained in their own buffer, separate from the interactions and the data provider queries, so the flood of reports that arrives when a network outage ends can't evict the failed interactions.
+With all three collectors active, the total retained is three times the capacity.
+
+
+== Configuration
+
+[cols="2,1,3"]
+|===
+|Property |Default |Description
+
+|`vaadin.observability.client`
+|`true`
+|The in-browser collector.
+Off means no reports and no counter.
+
+|`vaadin.observability.insights`
+|`true`
+|Retention of insights, browser errors included.
+
+|`vaadin.observability.errors`
+|`true`
+|Required for the insight collectors.
+
+|`vaadin.observability.insights-details`
+|`false`
+|Collect the error message and the function name.
+See <<#detail,Sensitive Detail>>.
+
+|`vaadin.observability.insights-capacity`
+|`100`
+|Retained browser errors, capped independently of the other buffers.
+The oldest is evicted once the cap is reached.
+
+|`vaadin.observability.client-rate-per-session`
+|`100`
+|Browser samples accepted per UI in each ten-second window.
+Errors are shed last; see <<#outages,Reports That Waited Out an Outage>>.
+
+|`vaadin.observability.route-cardinality-limit`
+|`200`
+|Caps the distinct `route` values an insight can group under.
+|===
+
+In a standalone deployment, use the matching [classname]`ObservabilitySettings` builder methods, and read the buffer through [methodname]`ObservabilityKit.getRecentClientErrors()` to render the payload yourself with an [classname]`InsightsService`.
+
+
+== The Counter and the Insight
+
+The two describe the same reports and answer different questions:
+
+[cols="1,3"]
+|===
+|View |What it tells you
+
+|`vaadin.client.errors`
+|How many browser errors happened, and whether each was an uncaught throw or an unhandled rejection.
+A time series you can chart, alert on, and compare against `vaadin.client.connection` to see errors clustering around outages.
+
+|Client error insight
+|Which script failed, at which line, on which route, how many times, and whether an outage delayed the report.
+Grouped, bounded, and current -- not a time series.
+|===
+
+Nothing in a browser error reaches a tracing span: the failure happened in the browser, so there is no server-side observation to attach it to.
+For the counter and its tags, see <<reference#,Reference>>.
+
+[discussion-id]`3483974E-8425-4430-BE29-1B6A531EF4D8`
