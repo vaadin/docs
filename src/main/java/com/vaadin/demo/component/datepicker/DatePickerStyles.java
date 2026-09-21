@@ -18,7 +18,8 @@ public class DatePickerStyles extends HorizontalLayout {
         // tag::snippet[]
         DatePicker field = new DatePicker();
         field.addThemeVariants(DatePickerVariant.SMALL,
-                DatePickerVariant.ALIGN_RIGHT, DatePickerVariant.HELPER_ABOVE);
+                DatePickerVariant.ALIGN_RIGHT, DatePickerVariant.HELPER_ABOVE,
+                DatePickerVariant.LABEL_ASIDE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
