@@ -164,6 +164,25 @@ CompletableFuture<Map<String, Person>> future = getElement()
 ----
 
 
+[#undelivered-invocations]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Undelivered Invocations
+
+An invocation scheduled on the server is held in memory until it's written into a response for the browser. An application that keeps scheduling invocations which never reach the browser grows until it runs out of memory. Once 1000 invocations for one UI are waiting to be sent, Flow logs a warning naming the component they belong to, the expression of the most recent one, and why nothing is being delivered. The warning is logged once per UI.
+
+Invocations pile up whenever nothing carries them to the browser:
+
+- *The owner is detached.* An invocation for a detached element is held until that element is attached again, which never happens for a component the application has discarded.
+- *The owner is invisible.* Invocations for an invisible component are kept until it becomes visible.
+- *The UI has no open push connection.* Nothing is sent until the browser makes a request of its own, which a closed tab whose session hasn't expired yet never does.
+
+Where only the latest value matters -- a progress value, a clock, a live measurement -- avoid scheduling a new invocation for every update:
+
+- Keep the [classname]`PendingJavaScriptResult` that [methodname]`executeJs()` returns, and call [methodname]`cancelExecution()` on it before scheduling the next one.
+- Set an element property with [methodname]`Element.setProperty()` instead. Only the last value of a property is sent.
+- In a background task, compare [methodname]`UI.getLastUpdateSentTimestamp()` against the current time and stop scheduling updates while the browser isn't receiving them.
+
+
 [[js-function]]
 [role="since:com.vaadin:vaadin@V25.2"]
 == Passing JavaScript Functions
