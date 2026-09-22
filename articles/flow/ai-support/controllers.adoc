@@ -9,7 +9,7 @@ order: 45
 = [since:com.vaadin:vaadin@V25.2]#Controllers#
 
 
-Controllers expose your application's capabilities to the LLM as callable tools -- a customer database, an inventory lookup, a weather API, a form-filling routine -- and give you a lifecycle hook that fires after the LLM finishes each turn. Use a controller when you want reusable tools that don't depend on a specific AI framework's annotations, when you need to defer UI updates until after a multi-step AI response, or when you want to package an AI capability once and share it across applications.
+Controllers expose your application's capabilities to the LLM as callable tools -- a customer database, an inventory lookup, a weather API, a form-filling routine -- and give you lifecycle hooks that fire before and after each LLM turn. Use a controller when you want reusable tools that don't depend on a specific AI framework's annotations, when you need to defer UI updates until after a multi-step AI response, or when you want to package an AI capability once and share it across applications.
 
 If you've registered tool objects via [methodname]`withTools()` elsewhere, controllers are the framework-agnostic equivalent: the same tool calling, but defined through the [classname]`AIController` interface instead of LangChain4j's or Spring AI's [annotationname]`@Tool` annotations.
 
@@ -40,18 +40,18 @@ var orchestrator = AIOrchestrator
         .build();
 ----
 
-Only one controller can be attached per orchestrator. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator merges their tool lists before each request.
+Only one controller can be attached per orchestrator. If you need tools from several sources, compose them into one controller that delegates, or combine a controller with tool objects registered via [methodname]`withTools()` -- the orchestrator collects the controller's tools before each request and passes both to the provider, which offers them to the LLM as one tool list.
 
 
 [[database-provider]]
 == Database Provider
 
-[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component only -- they are never sent back to the LLM.
+[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component -- the rows themselves are never sent back to the LLM.
 
 The interface defines two methods:
 
 * [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
-* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt.
+* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt as such.
 
 The following example is a straightforward JDBC implementation:
 
@@ -110,7 +110,7 @@ The LLM writes the SQL that gets executed. Always back a [classname]`DatabasePro
 
 .Query Results Stay in the Application
 [IMPORTANT]
-The LLM receives only the schema, never the query results. Every row returned by [methodname]`executeQuery()` is rendered in the grid or chart component and discarded from the request cycle. This boundary is unconditional: sensitive row values cannot leak into a follow-up prompt, into the conversation history, or to the LLM provider.
+The LLM receives the schema, never the query results as rows. Every row returned by [methodname]`executeQuery()` is rendered in the grid or chart component and discarded from the request cycle, so row values don't enter a follow-up prompt or the conversation history. The grid's state tool returns only the current SQL query to the LLM. The chart's state tool returns the chart configuration without series data, but some of that configuration is derived from the query results: the x-axis categories come from the category column's values, the series names from the values of the `_series` grouping column, and the nodes of an organization chart carry the `_id`, `_name`, `_title`, `_description`, and `_image` values of every row. Keep sensitive values out of those columns.
 
 .Schema Scope
 [TIP]
@@ -126,7 +126,7 @@ The built-in controllers cover grid and chart data exploration. To expose your o
 
 * [methodname]`getTools()` -- returns the list of [classname]`LLMProvider.ToolSpec` instances the controller contributes to each LLM request. Tools are collected before every request, so a controller can vary its tool set based on current state.
 * [methodname]`onRequest(RequestListener.RequestEvent)` -- runs on the UI thread right before the LLM stream opens. Use it to lock UI surfaces, snapshot state the tool definitions depend on, or otherwise prepare for the turn. Since tools may execute on a background thread, this is also the place to capture anything that depends on Vaadin thread locals, such as [methodname]`UI.getCurrent()`. The [since:com.vaadin:vaadin@V25.3]#event# is the same one the <<listeners#request-listener,request listener>> receives: the user message, the id assigned to it, and its attachments. Use it, for example, to key per-turn state by message id so [methodname]`onResponse()` can find it, or to pick which tools apply based on the attachments.
-* [methodname]`onResponse(ResponseListener.ResponseEvent)` -- called through `ui.access()` once the LLM stream has completed, either successfully ([methodname]`event.getError()` is empty) or with an error, so it can safely update components. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure. The event also carries the provider's [since:com.vaadin:vaadin@V25.3]#response metadata#, which tells a completed turn from one truncated at the model's output limit -- a truncated turn ends without an error, so a controller that commits staged state should check it. See <<listeners#response-metadata,Response Metadata>>.
+* [methodname]`onResponse(ResponseListener.ResponseEvent)` -- called through `ui.access()` when the turn ends: once the LLM stream has completed, either successfully ([methodname]`event.getError()` is empty) or with an error, but also when the turn fails before the stream opens, possibly without a preceding [methodname]`onRequest()` call. It doesn't fire for a prompt the <<request-interception#,request interceptor>> rejected. Since it runs through `ui.access()`, it can safely update components. Controllers use this hook to commit deferred state changes on success and release any per-turn state captured in [methodname]`onRequest()` on failure. The event also carries the provider's [since:com.vaadin:vaadin@V25.3]#response metadata#, which tells a completed turn from one truncated at the model's output limit -- a truncated turn ends without an error, so a controller that commits staged state should check it. See <<listeners#response-metadata,Response Metadata>>.
 
 Each tool is an implementation of [classname]`LLMProvider.ToolSpec`, which has four methods:
 
@@ -184,7 +184,7 @@ public class WeatherController implements AIController {
 }
 ----
 
-Tool names must match the pattern `^[a-zA-Z0-9_-]{1,64}$`, as required by popular LLM APIs. Names are validated at build time; invalid names cause an [classname]`IllegalArgumentException`. Use a prefixed name such as `"MyController_getWeather"` to avoid collisions with tools from other controllers.
+Tool names must match the pattern `^[a-zA-Z0-9_-]{1,64}$`, as required by popular LLM APIs. Names and parameter schemas are validated when the controller is registered with [methodname]`withController()`, on the builder and on the reconnector alike. An invalid name, or a schema that isn't a JSON object, causes an [classname]`IllegalArgumentException` that names the tool. Use a prefixed name such as `"MyController_getWeather"` to avoid collisions with tools from other controllers.
 
 .Generating JSON Schemas
 [TIP]
@@ -201,7 +201,7 @@ Controllers are not serialized with the orchestrator. After session restore, pas
 
 When a tool call fails, the message the LLM receives determines whether it can recover. Given the actual reason, it can correct its next attempt; given a generic error, it tends to retry the same call unchanged.
 
-By default, any exception thrown from tool code is caught, logged, and replaced with a generic error message before reaching the LLM, so internal details such as SQL fragments, schema names, or file paths don't leak into the conversation. To let the LLM see why a call failed, throw a [classname]`ToolException` (from the `com.vaadin.flow.component.ai.provider` package) -- its message is forwarded to the LLM verbatim as the tool's error output:
+By default, any exception thrown from tool code is caught, logged, and replaced with a generic error message before reaching the LLM, so internal details such as SQL fragments, schema names, or file paths don't leak into the conversation. To let the LLM see why a call failed, throw a [classname]`ToolException` (from the `com.vaadin.flow.component.ai.provider` package) -- its message is forwarded to the LLM unchanged, behind a short error prefix, as the tool's error output:
 
 [source,java]
 ----

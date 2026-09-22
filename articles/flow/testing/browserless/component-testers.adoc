@@ -171,6 +171,21 @@ test(categorySelect).selectItem("Meals & Entertainment");
 ====
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Slot-Scoped Finders
+
+Components that place content in named slots expose finders scoped to a single slot, so that a query doesn't have to sift through everything the component holds:
+
+[source,java]
+----
+Button save = test(dialog).findInFooter(Button.class).withText("Save").single();
+Span caption = test(card).findInHeader(Span.class).single();
+Button next = test(splitLayout).findInPrimary(Button.class).single();
+----
+
+[classname]`DialogTester` and [classname]`CardTester` have [methodname]`findInHeader()` and [methodname]`findInFooter()`, [classname]`SplitLayoutTester` has [methodname]`findInPrimary()` and [methodname]`findInSecondary()`, and [classname]`LoginOverlayTester` has [methodname]`findInFooter()` and [methodname]`findInCustomFormArea()`. These are tester methods; the generated locators don't have them. For any other slot, filter a query with [methodname]`withinSlot()` -- see <<component-query#slots, Filtering by Slot>>.
+
+
 === Constraint Enforcement
 
 Testers enforce the constraints that a browser enforces, and they stop where a browser stops.
@@ -222,6 +237,22 @@ test(name).clickClearButton(); // Requires a visible clear button
 A field can legitimately end up invalid once emptied, a required field for instance, so [methodname]`clear()` never refuses.
 
 Selection components use their own wording for the same action: [methodname]`deselectItem()` on [classname]`RadioButtonGroupTester`, [methodname]`clearSelection()` on [classname]`MultiSelectListBoxTester`, and [methodname]`deselectAll()` on [classname]`GridTester`. On [classname]`ComboBoxTester`, [methodname]`selectItem(null)` clears the selection without a clear button.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Upload Constraints
+
+[classname]`UploadTester` puts files through the same gate the browser applies before it sends anything to the server: [methodname]`setMaxFiles()`, [methodname]`setMaxFileSize()`, and the accepted file types, in that order. A file that fails one of them never reaches the upload handler or receiver, and a [classname]`FileRejectedEvent` is fired, as it is in the browser.
+
+An upload is different from a value: a refused file is no more of an error in the tester than it is in the browser, so the upload doesn't throw. Check what became of each file with [methodname]`getLastUploadStatus()`, or call [methodname]`ensureUploaded()` to fail the test unless every file of the last upload went through:
+
+[source,java]
+----
+test(upload).upload(new File("report.pdf"));
+test(upload).ensureUploaded();
+----
+
+`maxFiles` is checked against an emulated file list, so files stay in it between calls, the same way the entries the browser shows do. An [classname]`Upload` with a plain [interfacename]`Receiver` implicitly allows one file, which makes a second upload fail; [methodname]`removeFile()` makes room for it the way the user does.
 
 
 === Base Methods
