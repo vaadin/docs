@@ -130,6 +130,32 @@ The parameter value is `null` for a parameter of type [classname]`Element` that 
 The script is executed asynchronously, so you can't directly pass values back to the server.
 Instead, you can use the returned [classname]`PendingJavaScriptResult` instance to add a callback that's called when the result is available.
 
+
+=== Declaring JavaScript in Java
+
+[methodname]`Page.executeJs(Class)` runs JavaScript declared in Java instead of as a string expression. Annotate an interface with [annotationname]`@JsDefinition`, and annotate each of its methods with [annotationname]`@JsExpression` giving the JavaScript that method runs, with the method's own arguments available as `$0`, `$1`, and so on. Calling [methodname]`Page.executeJs(Class)` returns an implementation of the interface, and calling one of its methods queues that method's JavaScript the same way a call to [methodname]`executeJs(String, Object...)` does.
+
+The JavaScript runs on nothing in particular, since page-level JavaScript works on globals rather than on an element. A method that declares a return value can use the returned [classname]`PendingJavaScriptResult` the same way [methodname]`executeJs(String, Object...)` does.
+
+Unlike a string expression, no JavaScript is sent to the browser or compiled there: the build collects every declaration into the client bundle, and the browser looks up the function by an identifier instead. This lets the call run in an application whose content security policy forbids `unsafe-eval`.
+
+.Copying text to the clipboard under a content security policy that forbids `unsafe-eval`
+[source,java]
+----
+@JsDefinition
+public interface ClipboardJs extends Serializable {
+
+    @JsExpression("return navigator.clipboard.writeText($0).then(() => true)")
+    PendingJavaScriptResult writeText(String text);
+}
+
+ClipboardJs clipboard = UI.getCurrentOrThrow().getPage()
+        .executeJs(ClipboardJs.class);
+
+clipboard.writeText(order.getTrackingCode())
+        .then(Boolean.class, copied -> Notification.show("Copied"));
+----
+
 == Scrolling a Component into View
 
 You can scroll any component into the visible area of the browser window using [methodname]`scrollIntoView()`. This calls the browser's native `scrollIntoView()` on the component's element.
