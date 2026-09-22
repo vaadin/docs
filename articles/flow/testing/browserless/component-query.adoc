@@ -265,4 +265,55 @@ TextField textField = findInView(VerticalLayout.class)
 ----
 
 
+== Components a Query Cannot Find
+
+A query walks the server-side component tree. A component that another component renders per item, and the content of an overlay that is closed, are not in that tree, and a query returns an empty result for them instead of an error. The failure therefore reads as though the component was never created.
+
+
+=== Components a Renderer Creates
+
+A component column creates its component while rendering a row, and no row renders on its own in a browserless test:
+
+[source,java]
+----
+grid.addComponentColumn(person -> new Checkbox(person.isSubscriber()))
+        .setKey("subscriber");
+
+// Finds nothing: no row has rendered yet
+List<Checkbox> checkboxes = find(Checkbox.class).all();
+----
+
+[classname]`GridTester` renders the cell on request:
+
+[source,java]
+----
+Checkbox checkbox = (Checkbox) test(grid).getCellComponent(0, "subscriber");
+test(checkbox).click();
+----
+
+[since:com.vaadin:vaadin@V25.3]#The tester hands out the component the grid actually rendered, which is the one a browser shows: reading the same cell twice gives the same instance, and that instance is replaced when the row renders anew, after [methodname]`refreshItem(...)` for example. A row the client has not asked for yet is scrolled into view first, the way a user reaches it, and a cell the grid does not render at all, such as one in a hidden column, throws.#
+
+[since:com.vaadin:vaadin@V25.3]#[methodname]`renderCellComponent(row, column)` renders a cell on its own instead, and attaches the copy to the grid so that it can be used. Every call renders the cell again and leaves the copy behind, so a later query reports every one of them. It is for the cells the grid does not render, and for tests written against the earlier behavior of [methodname]`getCellComponent`, which rendered a copy per call.#
+
+A [classname]`LitRenderer` column has no server-side component at all. Read it with [methodname]`getCellText(row, column)`, [methodname]`getLitRendererPropertyValue(...)`, or [methodname]`invokeLitRendererFunction(...)`.
+
+[since:com.vaadin:vaadin@V25.3]#A component set as a column header, footer, or editor is part of the tree, and a query finds it.# Such a component is reported once, even when it sits in a header cell that spans several columns.
+
+
+=== Overlay Content
+
+The content of an overlay, such as a context menu, is attached to the UI only while the overlay is open, so a top-level query does not see it. Query it through the overlay's own tester, or open the overlay first. See <<overlay-components#, Testing Overlay Components>> for both approaches.
+
+[source,java]
+----
+// Empty while the menu is closed
+find(Div.class).withText("Rename").all();
+
+test(menu).open();
+
+// One match
+find(Div.class).withText("Rename").all();
+----
+
+
 [discussion-id]`DDC7D136-1A56-44FC-B256-C15DB7645EDC`
