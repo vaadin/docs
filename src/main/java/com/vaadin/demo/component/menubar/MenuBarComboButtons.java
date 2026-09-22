@@ -23,7 +23,7 @@ public class MenuBarComboButtons extends Div {
                 .set("--vaadin-button-gap", "var(--vaadin-gap-xs)");
         menuBar.addItem("Save");
         Icon icon = new Icon(VaadinIcon.CHEVRON_DOWN);
-        icon.getStyle().set("--vaadin-icon-size", "1rem");
+        icon.getStyle().set("--vaadin-icon-size", "1lh");
         MenuItem item = menuBar.addItem(icon);
         SubMenu subItems = item.getSubMenu();
         subItems.addItem("Save as draft");
