@@ -112,28 +112,32 @@ For JavaScript that works on a particular element rather than on the page as a w
 [role="since:com.vaadin:vaadin@V25.4"]
 === Declaring JavaScript in Java
 
-[methodname]`Page.executeJs(Class)` runs JavaScript declared in Java instead of as a string expression. Annotate an interface with [annotationname]`@JsDefinition`, and annotate each of its methods with [annotationname]`@JsExpression` giving the JavaScript that method runs, with the method's own arguments available as `$0`, `$1`, and so on. Calling [methodname]`Page.executeJs(Class)` returns an implementation of the interface, and calling one of its methods queues that method's JavaScript the same way a call to [methodname]`executeJs(String, Object...)` does.
+[methodname]`Page.executeJs(Class)` runs the JavaScript that an interface annotated with [annotationname]`@JsDefinition` declares, instead of a string expression. It returns an implementation of the interface, and calling a method of that implementation queues the JavaScript the method declares with [annotationname]`@JsExpression`, with the arguments of the call available as `$0`, `$1`, and so on. What such an interface may contain is described in <</flow/component-internals/element-api/calling-javascript#declaring-javascript,Declaring JavaScript in Java>>.
 
-The JavaScript runs on nothing in particular, since page-level JavaScript works with global browser APIs rather than with an element. A method that declares a return value can use the returned [classname]`PendingJavaScriptResult` the same way [methodname]`executeJs(String, Object...)` does.
+The JavaScript runs on nothing in particular, since page-level JavaScript works with global browser APIs, where the JavaScript of [methodname]`Element.executeJs(Class)` runs on the element it was obtained from. A method that declares a return value can use the returned [classname]`PendingJavaScriptResult` the same way [methodname]`executeJs(String, Object...)` does.
 
-Unlike a string expression, no JavaScript is sent to the browser or compiled there: the build collects every declaration into the client bundle, and the browser looks up the function by an identifier instead. This lets the call run in an application whose content security policy forbids `unsafe-eval`.
-
-.Copying text to the clipboard under a content security policy that forbids `unsafe-eval`
+.Copying text to the clipboard
+[example]
+====
 [source,java]
 ----
 @JsDefinition
 public interface ClipboardJs extends Serializable {
 
-    @JsExpression("return navigator.clipboard.writeText($0).then(() => true)")
+    @JsExpression("return navigator.clipboard.writeText($0)"
+            + ".then(() => true, () => false);")
     PendingJavaScriptResult writeText(String text);
 }
-
-ClipboardJs clipboard = UI.getCurrentOrThrow().getPage()
-        .executeJs(ClipboardJs.class);
-
-clipboard.writeText(order.getTrackingCode())
-        .then(Boolean.class, copied -> Notification.show("Copied"));
 ----
+
+[source,java]
+----
+UI.getCurrentOrThrow().getPage().executeJs(ClipboardJs.class)
+        .writeText(order.getTrackingCode())
+        .then(Boolean.class, copied -> Notification.show(
+                copied ? "Copied" : "Copying failed"));
+----
+====
 
 
 === Running a JavaScript Expression
