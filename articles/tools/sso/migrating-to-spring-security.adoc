@@ -347,16 +347,18 @@ http.with(vaadin(), configurer -> configurer
         .oauth2LoginPage("/oauth2/authorization/keycloak", "{baseUrl}")
         .keycloakRoleMapping()); // <1>
 ----
-<1> Decodes the access token and maps the realm roles, the roles `resource_access` grants for the current client, and the token scopes as `SCOPE_` authorities. Roles granted to other clients are ignored, and the role prefix follows the one configured for the application instead of a hardcoded `ROLE_`, which is the one behavior difference from the kit's mapper. The switch has no effect without an OAuth2 login page.
+<1> Decodes the access token and maps the realm roles, the roles `resource_access` grants for the current client, and the token scopes as `SCOPE_` authorities. Roles granted to other clients are ignored. The switch has no effect without an OAuth2 login page.
+
+Two details differ from the kit's mapper. On this route the prefix of a mapped role follows the role prefix configured for the application, rather than a hardcoded `ROLE_`. And an access token that can't be decoded -- a client registration without a JWK set URI, or a provider that doesn't issue JWT access tokens -- no longer fails the login: the user is mapped without any role authorities, and the reason is logged at debug level. Keep an eye on the second one right after the migration, because a user with no roles looks like a mistake somewhere else entirely.
 
 The switch creates an [classname]`OidcUserService` of its own, so leave it off in an application that already declares one and set the mapper on that service instead:
 
 [source,java]
 ----
 var oidcUserService = new OidcUserService();
-oidcUserService.setOidcUserConverter(new KeycloakOidcUserMapper()); // <1>
+oidcUserService.setOidcUserConverter(new KeycloakOidcUserMapper("ROLE_")); // <1>
 ----
-<1> [classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper`, the replacement for the kit's [classname]`KeycloakUserMapper`. A constructor argument overrides the role prefix.
+<1> [classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper`, the replacement for the kit's [classname]`KeycloakUserMapper`. Constructed by hand it can't read the role prefix from the filter chain, so pass the prefix the application uses -- `ROLE_` unless a [classname]`GrantedAuthorityDefaults` bean says otherwise. The no-argument constructor also uses `ROLE_`.
 
 .On Earlier Versions
 [NOTE]
