@@ -182,6 +182,20 @@ Where only the latest value matters -- a progress value, a clock, a live measure
 - Set an element property with [methodname]`Element.setProperty()` instead. Only the last value of a property is sent.
 - In a background task, compare [methodname]`UI.getLastUpdateSentTimestamp()` against the current time and stop scheduling updates while the browser isn't receiving them.
 
+The timestamp is readable without the session lock, so a background task can decide whether to update the UI before acquiring it:
+
+[source,java]
+----
+if (Duration.between(ui.getLastUpdateSentTimestamp(), Instant.now())
+        .compareTo(STALE_THRESHOLD) < 0) {
+    ui.access(() -> statusLabel.setText(statusText));
+}
+----
+
+It tells when the pending updates were last written towards the browser, not that the browser received them, and for a UI that has had no response written yet it's the time the UI was created.
+
+To find the code that schedules the invocations, enable debug logging for `com.vaadin.flow.component.internal.PendingJavaScriptInvocationUtil`, which then also logs the call site of the invocation that triggered the warning. Turning that logger off silences the warning.
+
 
 [[js-function]]
 [role="since:com.vaadin:vaadin@V25.2"]
