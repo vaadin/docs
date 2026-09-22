@@ -102,6 +102,12 @@ Both extensions support a builder-style API for configuration, used as an altern
 
 | [methodname]`withComponentTesterPackages(String...)`
 | Adds packages to scan for custom [classname]`ComponentTester` implementations. Equivalent to [annotationname]`@ComponentTesterPackages`.
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withApplicationProperty(String, String)` / [methodname]`withApplicationProperties(String...)`#
+| Sets Vaadin deployment configuration properties for the test. See <<configuring-the-vaadin-environment, Per-Test Vaadin Configuration>>.
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withFeatureFlags(String...)` / [methodname]`withFeatureFlags(Feature...)` / [methodname]`withFeatureFlag(String, boolean)` / [methodname]`withFeatureFlag(Feature, boolean)`#
+| Enables or disables feature flags for the test.
 |===
 
 The [annotationname]`@ViewPackages` annotation still works when placed on the test class; programmatic configuration adds to what the annotation declares.
@@ -124,6 +130,103 @@ class AdminViewTest {
     }
 }
 ----
+
+
+[[configuring-the-vaadin-environment]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Per-Test Vaadin Configuration
+
+Some tests need a Vaadin environment configured differently from the rest of the suite -- a view behind a feature flag, or a setting such as `devmode.sessionSerialization.enabled`. Annotate the test class or the test method with [annotationname]`@BrowserlessTestConfig`:
+
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+@BrowserlessTestConfig(
+        applicationProperties = "devmode.sessionSerialization.enabled=true",
+        featureFlags = "myExperimentalFeature")
+class CartViewTest extends BrowserlessTest {
+
+    @Test
+    void experimentalFeatureIsAvailable() {
+        // The feature flag is enabled for this test only
+    }
+
+    @Test
+    @BrowserlessTestConfig(featureFlags = "myExperimentalFeature=false")
+    void fallbackWhenFeatureIsDisabled() {
+        // Method-level configuration wins over the class-level one
+    }
+}
+----
+
+- `applicationProperties` entries are `name=value` pairs, applied to the Vaadin deployment configuration of the mock environment. The value is everything after the first `=`.
+- `featureFlags` entries are either a feature identifier, to enable it, or an `id=true|false` pair. They override what `vaadin-featureflags.properties` or the `vaadin.experimental.*` system properties declare.
+- `lookupServices` are implementation classes registered with the Vaadin [interfacename]`Lookup` -- an [interfacename]`InstantiatorFactory`, a [interfacename]`ResourceProvider`, and so on.
+
+All of them are scoped to the Vaadin environment created for the test, so there's nothing to reset afterwards and nothing leaks into other tests.
+
+The annotation works on [classname]`BrowserlessTest` and on the [annotationname]`@RegisterExtension` extensions alike. A method-level annotation can't be honored when the Vaadin environment is shared by all the tests in a class ([classname]`BrowserlessClassExtension` or per-class lifecycle), and is rejected with an error.
+
+
+=== Inherited and Combined Configuration
+
+Every annotation a test inherits is merged in, rather than shadowed by the nearest one. The closer a declaration is to the test method, the higher it ranks: method, then test class, then superclasses from the nearest up, then -- for a [annotationname]`@Nested` test -- enclosing classes from the innermost out. A shared base test can therefore declare part of the configuration and a subclass refine it:
+
+[source,java]
+----
+@BrowserlessTestConfig(applicationProperties = "base.property=fromBase")
+abstract class AbstractViewTest extends BrowserlessTest {
+}
+
+@BrowserlessTestConfig(featureFlags = "myExperimentalFeature")
+class CartViewTest extends AbstractViewTest {
+    // Both base.property and myExperimentalFeature apply
+}
+----
+
+Lookup services are the exception: they accumulate instead of being replaced, so a test method can add a service but can't remove one declared by its class. The services the Spring and Quarkus integrations need are always registered and are never affected by the test configuration.
+
+
+=== Programmatic Configuration
+
+The same configuration can be defined programmatically on an extension:
+
+[source,java]
+----
+@RegisterExtension
+BrowserlessExtension extension = new BrowserlessExtension()
+        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
+        .withFeatureFlags(FeatureFlags.COLLABORATION_ENGINE_BACKEND);
+----
+
+on the application context builder, for multi-user tests (see <<multi-user#, Multi-User and Multi-Window Testing>>):
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(builder -> builder
+        .withViewPackages(CartView.class)
+        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
+        .withFeatureFlags("myExperimentalFeature"))) {
+    // ...
+}
+----
+
+or by overriding [methodname]`testConfiguration()` on a base-class-based test:
+
+[source,java]
+----
+@Override
+protected BrowserlessConfiguration testConfiguration() {
+    return BrowserlessConfiguration.builder()
+            .withConfiguration(super.testConfiguration())
+            .withFeatureFlags("myExperimentalFeature").build();
+}
+----
+
+A configuration defined on an extension or on the application context builder wins over the class-level annotation, and loses against the method-level one. A [methodname]`testConfiguration()` override behaves differently: [methodname]`super.testConfiguration()` returns the configuration already resolved from the annotations, so whatever the override adds on top of it wins over all of them, the method-level annotation included. Build on [methodname]`super.testConfiguration()` to refine the declared configuration, and leave out the values a test method should be able to override.
+
+[NOTE]
+With Spring, a Vaadin property defined in the Spring environment -- `vaadin.devmode.sessionSerialization.enabled` in `application.properties`, for example -- is applied by [classname]`SpringServlet` on top of the test configuration, and therefore wins over [annotationname]`@BrowserlessTestConfig`. Use [annotationname]`@TestPropertySource` to override such a property for a test. Properties that aren't Vaadin init parameters aren't affected.
 
 
 [discussion-id]`B51F9D4A-2E73-4B18-8C6F-9A3D7E2B1C04`
