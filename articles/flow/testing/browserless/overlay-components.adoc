@@ -17,14 +17,36 @@ Some Vaadin components render their content in overlays, which means their child
 [classname]`ContextMenu` renders its items in an overlay outside the main component tree. Use [classname]`ContextMenuTester` to interact with menu items and any custom components inside the menu.
 
 
+=== Opening and Closing the Menu
+
+A closed context menu isn't attached to the UI, so, exactly as in the browser, its items can't be interacted with. Open the menu before clicking an item or reading its state; [methodname]`clickItem()`, [methodname]`isItemChecked()`, [methodname]`getItemTexts()`, and [methodname]`getItemTooltipText()` throw an [classname]`IllegalStateException` on a closed menu.
+
+[source,java]
+----
+ContextMenuTester<ContextMenu> menu_ = test(view.contextMenu);
+
+// Simulates the user asking for the menu, for example with a right click
+menu_.open();
+menu_.clickItem("Edit");
+menu_.close();
+----
+
+[methodname]`open()` renders no client-side overlay; it simulates the server-side state changes that opening the menu produces in the browser. [since:com.vaadin:vaadin@V25.3]#Both [methodname]`open()` and [methodname]`close()` are reported as user actions, so the resulting [classname]`OpenedChangeEvent` has [methodname]`isFromClient()` returning `true`. Opening a menu that is already open throws.#
+
+.Behavior Changed in 25.3
+[NOTE]
+Earlier versions let a test click the items of a closed menu. See <<migration#menu-testers-require-an-open-menu, Migrating from UI Unit Testing>> for updating existing tests.
+
+
 === Clicking Menu Items
 
-Use [methodname]`clickItem()` to simulate clicking a menu item by its text or zero-based position. You don't need to open the menu first -- the tester operates directly on server-side state.
+Use [methodname]`clickItem()` to simulate clicking a menu item by its text or zero-based position.
 
 [source,java]
 ----
 ContextMenu menu = view.contextMenu;
 ContextMenuTester<ContextMenu> menu_ = test(menu);
+menu_.open();
 
 // Click a top-level item by text
 menu_.clickItem("Edit");
@@ -38,12 +60,32 @@ menu_.clickItem(1, 0);      // first item in second item's submenu
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Reading Menu Item Texts
+
+[methodname]`getItemTexts()` returns the texts of the items the browser shows, in display order and without the hidden ones, which makes it the way to assert on the contents of a menu that is built dynamically. Pass a path to read the items of a sub menu:
+
+[source,java]
+----
+menu_.open();
+
+// ["Preview", "Share"] -- a hidden item is left out
+Assertions.assertEquals(List.of("Preview", "Share"), menu_.getItemTexts());
+
+// The items of the "Share" sub menu
+Assertions.assertEquals(List.of("Copy link", "Email"),
+        menu_.getItemTexts("Share"));
+----
+
+
 === Checkable Menu Items
 
 Use [methodname]`isItemChecked()` to check whether a checkable item is checked. Clicking a checkable item toggles its checked state automatically.
 
 [source,java]
 ----
+menu_.open();
+
 menu_.clickItem("Bold");
 Assertions.assertTrue(menu_.isItemChecked("Bold"));
 
@@ -54,7 +96,7 @@ Assertions.assertFalse(menu_.isItemChecked("Bold"));
 
 === Finding Components in the Menu
 
-If you've added custom components (not just text items) to the menu, use the tester's [methodname]`find()` method on the wrapped component (e.g., [methodname]`test(menu).find(...)`) instead of the top-level [methodname]`find()` query. Call [methodname]`open()` first if you need the components to be in an attached state.
+If you've added custom components (not only text items) to the menu, use the tester's [methodname]`find()` method on the wrapped component ([methodname]`test(menu).find(...)`) instead of the top-level [methodname]`find()` query. [methodname]`find()` is the one tester method that works on a closed menu, since it queries the menu contents rather than the UI; the components it returns are detached until the menu is opened. Open the menu first to interact with them.
 
 [source,java]
 ----
@@ -68,17 +110,39 @@ Assertions.assertTrue(div.isAttached());
 ----
 
 
+[[grid-context-menu]]
+[role="since:com.vaadin:vaadin@V25.3"]
 === Grid Context Menu
 
-[classname]`GridContextMenu` extends [classname]`ContextMenu`, so the same [classname]`ContextMenuTester` API works for grid context menus.
+A [classname]`GridContextMenu` is always about a row, so it has a tester of its own, [classname]`GridContextMenuTester`, which addresses rows. Reach it through the grid's tester with [methodname]`contextMenu(row)`, which targets a row without opening the menu, and open it there:
 
 [source,java]
 ----
-GridContextMenu<Person> gridMenu = view.gridContextMenu;
-ContextMenuTester<GridContextMenu<Person>> gridMenu_ = test(gridMenu);
+var menu_ = test(grid).contextMenu(0);
 
-gridMenu_.clickItem("Delete");
+menu_.open();
+menu_.clickItem("Delete");
 ----
+
+Opening the menu fires a [classname]`GridContextMenuOpenedEvent` reporting the target row, so a handler that builds the items from the row runs as it does in the browser. [methodname]`open(row)` opens the menu on a row directly, which is shorter when a test opens it on several rows in turn:
+
+[source,java]
+----
+GridContextMenuTester<GridContextMenu<Person>, Person> menu_ =
+        test(view.gridContextMenu);
+
+menu_.open(0);
+Assertions.assertEquals(List.of("Edit", "Delete"), menu_.getItemTexts());
+menu_.close();
+
+menu_.open(1);
+----
+
+A tester obtained with [methodname]`test(gridContextMenu)` targets no row, so it has to be opened with [methodname]`open(row)`. Everything else -- [methodname]`clickItem()`, [methodname]`isItemChecked()`, [methodname]`getItemTexts()`, and [methodname]`find()` -- behaves as it does on [classname]`ContextMenuTester`.
+
+.Behavior Changed in 25.3
+[NOTE]
+[methodname]`test(gridContextMenu)` previously returned a [classname]`ContextMenuTester`. See <<migration#grid-context-menus-have-their-own-tester, Migrating from UI Unit Testing>> for updating existing tests.
 
 
 === Common Pitfalls
@@ -110,7 +174,15 @@ menuBar_.clickItem("File");
 
 // Click nested item
 menuBar_.clickItem("File", "Save As");
+
+// The visible top-level items, in display order
+List<String> topLevel = menuBar_.getItemTexts();
+
+// The items of the "File" sub menu
+List<String> fileItems = menuBar_.getItemTexts("File");
 ----
+
+A [classname]`MenuBar` is always visible, so its items need no opening. [since:com.vaadin:vaadin@V25.3]#[methodname]`getItemTexts()`# leaves out hidden items, which are also skipped when an item is looked up by text or position.
 
 
 [discussion-id]`E3F7D8A2-9B14-4C6E-A1D0-8F5E2C3B7A91`

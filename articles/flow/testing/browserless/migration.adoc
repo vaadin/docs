@@ -94,6 +94,68 @@ If you're migrating from JUnit 5 (`vaadin-testbench-unit-junit5`), no other code
 If you're migrating from JUnit 4 (`vaadin-testbench-unit`), you also need to update JUnit annotations and imports (e.g., `@Before` → `@BeforeEach`, `Assert` → `Assertions`). See the https://docs.junit.org/current/user-guide/migrating-from-junit4.html[JUnit 5 migration guide] for details.
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+== Behavior Changes in 25.3
+
+The testers model user interaction more strictly in 25.3. The changes below can make an existing test fail, and the fix is the same in each case: assert on the state the component ends up in, the way a user reads it in the browser.
+
+
+[[constraint-violating-values-are-committed]]
+=== Constraint-Violating Values Are Committed
+
+[methodname]`setValue()` on [classname]`NumberFieldTester`, [classname]`DatePickerTester`, [classname]`TimePickerTester`, and [classname]`DateTimePickerTester` no longer throws for a value outside `min` and `max` or off the `step` scale. The value is committed, as the browser commits it, and the field is left invalid.
+
+Replace an expected exception with an assertion on [methodname]`isValid()`:
+
+.Before
+[source,java]
+----
+Assertions.assertThrows(IllegalArgumentException.class,
+        () -> test(amount).setValue(-5.0));
+----
+
+.After
+[source,java]
+----
+test(amount).setValue(-5.0);
+Assertions.assertFalse(test(amount).isValid());
+----
+
+A test that used to set such a value through the component's own API to work around the tester can now go through the tester.
+
+
+[[text-values-the-user-cannot-type-are-refused]]
+=== Text Values the User Cannot Type Are Refused
+
+[classname]`TextFieldTester` and [classname]`TextAreaTester` now refuse a value the browser physically prevents -- one longer than `maxLength`, or one containing characters `allowedCharPattern` filters out -- with an [classname]`IllegalArgumentException`. A value that only breaks `minLength` or `pattern` is committed, as before. Set the value through the component's API for a test that deliberately puts impossible content in a field.
+
+
+[[getcellcomponent-returns-the-rendered-component]]
+=== getCellComponent Returns the Rendered Component
+
+[methodname]`GridTester.getCellComponent()` returns the component the grid actually rendered for the cell, which is the instance the browser shows: the same cell gives the same instance twice, and interacting with it affects the row on screen. It previously rendered a throw-away copy on every call.
+
+Tests written against the old behavior -- and cells the grid doesn't render at all, such as those of a hidden column, which now throw -- can use [methodname]`renderCellComponent()` instead, which keeps rendering a copy per call.
+
+
+[[test-returns-a-more-specific-tester]]
+=== test() Returns a More Specific Tester
+
+[methodname]`test(treeGrid)` returns a [classname]`TreeGridTester` and [methodname]`test(gridContextMenu)` returns a [classname]`GridContextMenuTester`, rather than the [classname]`GridTester` and [classname]`ContextMenuTester` they returned before. Code that assigned the result to an explicitly typed variable no longer compiles and needs the new type -- or `var`.
+
+
+[[menu-testers-require-an-open-menu]]
+=== Menu Testers Require an Open Menu
+
+[classname]`ContextMenuTester` and [classname]`GridContextMenuTester` interact with the items of an open menu only, since a closed menu isn't attached to the UI in the browser either. Add [methodname]`open()` before [methodname]`clickItem()`, [methodname]`isItemChecked()`, or [methodname]`getItemTooltipText()`. [methodname]`find()` on the tester still works while the menu is closed.
+
+
+[[grid-context-menus-have-their-own-tester]]
+=== Grid Context Menus Are Opened on a Row
+
+A [classname]`GridContextMenu` is about a row, so [classname]`GridContextMenuTester` is obtained with [methodname]`test(grid).contextMenu(row)` and opened with [methodname]`open()`, or opened directly with [methodname]`open(row)`. Clicking an item of a grid context menu without opening it on a row no longer works. See <<overlay-components#grid-context-menu, Testing Overlay Components>>.
+
+
 == TestBench End-to-End Coexistence
 
 Browserless tests and TestBench end-to-end tests can coexist in the same project. The two modules use separate package namespaces, so having both `browserless-test-junit6` and `vaadin-testbench` on the test classpath doesn't cause conflicts.
