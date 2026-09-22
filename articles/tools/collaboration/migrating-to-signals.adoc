@@ -15,7 +15,7 @@ Collaboration Kit is a library of ready-made, use-case-specific features -- a co
 
 This guide maps each Collaboration Kit concept to its signals equivalent, shows the code for the four high-level use cases, and is explicit about the pieces you have to build yourself.
 
-Collaboration Kit is superseded by signals: its entry points are deprecated for removal, and it isn't included in Vaadin 26. This migration is a prerequisite for that upgrade rather than an optional modernization. Vaadin tracks bringing the remaining Collaboration Kit features into Flow in https://github.com/vaadin/collaboration-kit/issues/138[collaboration-kit#138]. Most of the gaps below are open work rather than deliberate omissions, and each one links to its tracking issue where one exists.
+Collaboration Kit is superseded by signals: its entry points are deprecated for removal, and it isn't included in Vaadin 26. This migration is a prerequisite for that upgrade rather than an optional modernization. Most of the gaps below are open work rather than deliberate omissions, tracked as Flow issues and linked from the section that describes each one.
 
 
 == Before Migrating
@@ -37,7 +37,9 @@ Read this section first. It describes what changes conceptually, and it lists th
 [[when-not-to-migrate-yet]]
 === When Not to Migrate Yet
 
-Shared signals live in one JVM. Collaboration Kit doesn't, and that single difference is the one thing that can stop a migration outright. It shows up as two symptoms.
+Clustering and session serialization support for shared signals are being built next. Both are specified together in https://github.com/vaadin/platform/issues/8703[platform#8703], because they're the same problem: a shared signal's state currently can't leave the node it was created on. Until that lands, an application that needs either should stay on Collaboration Kit, which supports both.
+
+That limitation is the one thing that can stop a migration outright, and it shows up as two symptoms.
 
 *Clustering*:: Collaboration Kit's [classname]`Backend` SPI, behind the `collaborationEngineBackend` <<{articles}/flow/configuration/feature-flags#,feature flag>>, replicates an ordered event log between nodes. Shared signals have no such SPI: every signal created through a public constructor owns a local tree, and the constructor documentation says outright that it doesn't support clustering.
 +
@@ -49,9 +51,9 @@ An application that implemented a custom [classname]`Backend` has nothing to por
 +
 This reaches further than it first appears. A signal in a view field is reachable from the session, and so is one captured by the lambda behind any `bind*()` call, because the binding is stored on the component. Either makes the session graph unserializable. Not affected: the registry bean, since an application-scoped bean isn't session state, and <<{articles}/flow/ui-state/local-signals#,local signals>>, which are per-user.
 
-Both come down to moving signal state out of a single JVM, and they're expected to be solved together. Work on it is tracked in https://github.com/vaadin/platform/issues/8703[platform#8703], which covers the cluster event log and the serialization strategy in one design. If the application needs either, add a reaction there -- the issue is prioritized partly on how many people ask for it -- and stay on Collaboration Kit until it lands.
+platform#8703 covers the cluster event log for the first and the serialization strategy for the second. Adding a reaction there is worth doing if you need it, since the issue is prioritized partly on how many people ask.
 
-Writing every change through a shared database and polling it back is not a workaround worth recommending: it reproduces neither the latency nor the transactional guarantees, and it gives up the reason to use signals in the first place.
+Don't try to work around it by writing every change through a shared database and polling it back: that reproduces neither the latency nor the transactional guarantees, and it gives up the reason to use signals in the first place.
 
 Everything else in Collaboration Kit can be migrated. <<#gaps,What You Have to Build Yourself>> covers the parts that cost real work, and the smaller API-level differences worth knowing before starting.
 
@@ -874,6 +876,8 @@ These migrate, and the guide shows how, but Collaboration Kit does the work for 
 
 ==== Cleanup When a User Disconnects
 
+Tracked in https://github.com/vaadin/flow/issues/25867[flow#25867].
+
 `EntryScope.CONNECTION` removes an entry the moment the connection that wrote it deactivates, with no code in the application.
 
 The prompt-cleanup half of this is not actually missing. Flow has its own unload beacon, independent of Collaboration Kit's: the browser reports the unload, the server closes the UI, and closing the UI detaches the component tree. The cleanup therefore runs within about a second of a tab closing, which is what <<#tracking-presence,`trackPresence()`>> relies on.
@@ -889,12 +893,16 @@ Clear entries from a [interfacename]`SessionDestroyListener` as well as on detac
 
 ==== Topic and Entry Expiration
 
+Tracked in https://github.com/vaadin/flow/issues/25865[flow#25865].
+
 [methodname]`setExpirationTimeout()` is available on [classname]`CollaborationBinder`, [classname]`FormManager`, [classname]`CollaborationMap`, and [classname]`CollaborationList`, and it does two jobs: it frees memory for topics nobody is using, and it repopulates a form from the backend once the last editor has left, so the next user starts from stored data rather than from unsaved edits left by the previous user.
 
 Signals have no lifecycle of their own, so both jobs move to the registry. <<#discarding-unused-state,Discarding Unused State>> covers the memory half. Reloading is a consequence of it: discarding the state means the next lookup recreates it from the backend. Getting the timing right -- long enough that a network blip doesn't wipe an in-progress edit, short enough that stale edits don't greet the next user -- is now your decision rather than a single [classname]`Duration`.
 
 
 ==== Automatic User Colors
+
+Tracked in https://github.com/vaadin/collaboration-kit/issues/146[collaboration-kit#146].
 
 Collaboration Kit assigns each user a color index on first sight, from a registry kept in [classname]`CollaborationEngine`. On the default local backend it hands out the seven available values in order of first appearance, which spreads colors better than hashing does for the first users it sees. The guarantee is weaker than it looks, though: the registry never shrinks, so the eighth distinct user to appear since startup collides with the first even if both are online, and on a non-local backend the index falls back to a hash of the user identifier.
 
@@ -935,7 +943,7 @@ flow#23868 proposes bringing a collaborative binder into Flow, built on signals 
 
 ==== Keeping Shared State Consistent With a Database
 
-Tracked in https://github.com/vaadin/collaboration-kit/issues/150[collaboration-kit#150].
+Tracked in https://github.com/vaadin/flow/issues/25864[flow#25864].
 
 [interfacename]`CollaborationMessagePersister` is a protocol rather than a single save hook. The first manager to connect to a topic fetches the history with a [classname]`FetchQuery`, the result is cached in the topic so later managers don't re-query, each submit is written to the backend and then re-fetched from the last known timestamp, and duplicates from the timestamp overlap are filtered out.
 
@@ -954,6 +962,8 @@ Smaller gaps, but each one is a place where a direct translation compiles and th
 
 
 ==== No Previous Value in Effects
+
+Tracked in https://github.com/vaadin/flow/issues/25868[flow#25868].
 
 A Collaboration Kit subscriber receives an event, and the event describes the change rather than only the outcome. [classname]`MapChangeEvent` carries the old value next to the new one, and [classname]`ListChangeEvent` adds both to the surrounding keys, exposing the previous and next entry as they were before and after the change. Code that animates a delta or logs an edit history reads those fields.
 
@@ -987,7 +997,7 @@ Collaboration Kit doesn't help here either: [classname]`ListChangeEvent` tracks 
 
 ==== No Named Emptiness Condition on Lists
 
-Tracked in https://github.com/vaadin/collaboration-kit/issues/149[collaboration-kit#149].
+Tracked in https://github.com/vaadin/flow/issues/25866[flow#25866].
 
 The behavior of `ifEmpty()` and `ifNotEmpty()` is available, as <<#conditional-operations,Conditional Operations>> shows: read the list inside the transaction, or insert at `ListPosition.between(null, null)`. What's missing is narrower than it first appears, and in two directions.
 
@@ -1125,7 +1135,16 @@ Use this to confirm the migration covers everything before removing the Collabor
 
 For the current status of the gaps described above:
 
-* https://github.com/vaadin/collaboration-kit/issues/138[collaboration-kit#138] -- bringing the remaining features into Flow and deprecating Collaboration Kit.
+* https://github.com/vaadin/platform/issues/8703[platform#8703] -- clustering and session serialization for shared signals, being built next. React there if you need it.
 * https://github.com/vaadin/flow/issues/23868[flow#23868] -- a collaborative binder in Flow, built on signals.
-* https://github.com/vaadin/platform/issues/8703[platform#8703] -- clustering and session serialization for shared signals. React there if you need it.
+* https://github.com/vaadin/flow/issues/25865[flow#25865] -- resolving a shared signal by identifier, and discarding unused state.
+* https://github.com/vaadin/flow/issues/25867[flow#25867] -- tying the lifetime of a shared signal entry to a UI or session.
+* https://github.com/vaadin/flow/issues/25864[flow#25864] -- keeping shared state consistent with a database.
+* https://github.com/vaadin/flow/issues/25868[flow#25868] -- access to the previous value when a value changes.
+* https://github.com/vaadin/flow/issues/25866[flow#25866] -- an emptiness condition for list transactions.
 * https://github.com/vaadin/flow/issues/23659[flow#23659] -- binding items of a data component to a list signal.
+* https://github.com/vaadin/collaboration-kit/issues/146[collaboration-kit#146] -- presence tracking and user color allocation.
+
+.Where This Guide Falls Short
+[TIP]
+If something in your application doesn't map onto anything here, say so in whichever issue above comes closest, or open a new one against https://github.com/vaadin/flow/issues[Flow] describing the Collaboration Kit feature you're replacing and what you tried. The gaps listed in this guide were found that way, and several were closed the same way. A concrete use case is worth more than a feature request: it's what decides whether a gap gets filled and how.
