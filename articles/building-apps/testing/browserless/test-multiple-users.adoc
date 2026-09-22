@@ -1,0 +1,280 @@
+---
+title: Test Multiple Users and Windows
+page-title: Test Multiple Users and Windows | Vaadin
+description: Verify shared state, independent windows, and authentication isolation across several browserless user sessions.
+meta-description: Verify shared state, independent windows, and authentication isolation across several browserless user sessions.
+order: 80
+---
+
+
+= Test Multiple Users and Windows
+
+Use this guide when the behavior under test depends on more than one user or window.
+Complete the <<{articles}/building-apps/testing/browserless#,Spring>>, <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java>>, or <<{articles}/building-apps/testing/browserless/setup-quarkus#,Quarkus>> setup first.
+The examples are patterns to adapt: `CartView`, `CheckoutView`, `SharedCounterView`, and `ChatView` represent your application views.
+For security scenarios, reuse the access-control configuration from <<{articles}/building-apps/testing/browserless/test-view-access#,Test View Access Control>>.
+
+== Setting Up the Application Context
+
+The application context is built once per test, typically in [annotationname]`@BeforeEach`, and closed in [annotationname]`@AfterEach`. Use try-with-resources or call [methodname]`close()` explicitly: closing the application context cascades to every user and window it created.
+
+[methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
+
+.Plain Java
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(CartView.class)) {
+    var user = app.newUser();
+    var window = user.newWindow();
+    window.navigate(CartView.class);
+    // assertions...
+}
+----
+
+For Spring and Quarkus, dedicated factories pre-wire the framework-specific servlet and lookup initialization:
+
+.Spring
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = ShopTestConfig.class)
+class CartViewMultiUserTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                CartView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+}
+----
+
+.Quarkus
+[source,java]
+----
+@QuarkusTest
+class CartViewMultiUserTest {
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(CartView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+}
+----
+
+
+== Creating Users and Windows
+
+[methodname]`newUser()` returns a fresh [classname]`BrowserlessUserContext` with its own [classname]`VaadinSession`. [methodname]`newWindow()` creates a new [classname]`UI` for that user. Different users have independent sessions; different windows of the same user share a session but have independent [classname]`UI` instances.
+
+.Two Users, Independent Sessions
+[source,java]
+----
+var alice = app.newUser();
+var aliceWindow = alice.newWindow();
+
+var bob = app.newUser();
+var bobWindow = bob.newWindow();
+
+Assertions.assertNotSame(alice.getSession(), bob.getSession());
+Assertions.assertNotSame(aliceWindow.getUI(), bobWindow.getUI());
+----
+
+Use the window instance to navigate, find components, and perform actions.
+
+.Two Users Sharing Application-Level State
+[source,java]
+----
+var w1 = app.newUser().newWindow();
+w1.navigate(SharedCounterView.class);
+
+var w2 = app.newUser().newWindow();
+w2.navigate(SharedCounterView.class);
+
+// w1 mutates a shared static counter
+w1.findButton().withText("Increment").click();
+Assertions.assertEquals("Count: 1", w1.findParagraph().getText());
+
+// w2 still shows its own UI state until it refreshes
+Assertions.assertEquals("Count: 0", w2.findParagraph().getText());
+
+w2.findButton().withText("Refresh").click();
+Assertions.assertEquals("Count: 1", w2.findParagraph().getText());
+----
+
+.Same User, Two Windows, Independent UI State
+[source,java]
+----
+var user = app.newUser();
+var w1 = user.newWindow();
+var w2 = user.newWindow();
+
+w1.navigate(CartView.class);
+w2.navigate(CheckoutView.class);
+
+// Each window holds its own current view
+Assertions.assertInstanceOf(CartView.class, w1.getCurrentView());
+Assertions.assertInstanceOf(CheckoutView.class, w2.getCurrentView());
+
+// Session is the same; UIs are not
+Assertions.assertSame(user.getSession(), w1.getUI().getSession());
+Assertions.assertNotSame(w1.getUI(), w2.getUI());
+----
+
+
+[#signals]
+== Signals
+
+The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. For single-user examples, see <<test-signals#,Test Signal-Based Views>>. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
+
+.Two Users Observing a Shared Signal
+[source,java]
+----
+var w1 = app.newUser().newWindow();
+w1.navigate(ChatView.class);
+
+var w2 = app.newUser().newWindow();
+w2.navigate(ChatView.class);
+
+// w1 updates a shared signal that both views are bound to
+w1.findTextField().withLabel("Message").setValue("Hello!");
+w1.findButton().withText("Send").click();
+
+// Process the pending signal effects, then assert on the other window
+w2.runPendingSignalsTasks();
+Assertions.assertEquals("Hello!", w2.findParagraph().getText());
+----
+
+For background updates and write confirmation, see <<{articles}/building-apps/testing/browserless/test-signals#,Test Signal-Based Views>>.
+
+
+== Authenticated Users with Spring Security
+
+Create a secured application context, then interleave actions from an administrator and an anonymous user.
+Assert that the anonymous user is redirected while the administrator retains access.
+
+.Multi-User Security Isolation
+[source,java]
+----
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = SecurityTestConfig.class)
+class MultiUserSecurityTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private SecuredBrowserlessApplicationContext<Authentication> app;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.createSecured(
+                applicationContext, ProtectedView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void switchingUsers_securityContextFollowsActiveWindow() {
+        var admin = app.newUser("john", "ADMIN").newWindow();
+        var anon = app.newUser().newWindow();
+
+        admin.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                admin.getCurrentView());
+
+        // Switching to the anonymous user restores their (empty) context;
+        // the protected view redirects to login.
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> anon.navigate(ProtectedView.class));
+        Assertions.assertInstanceOf(LoginView.class, anon.getCurrentView());
+
+        // Switching back restores admin's authentication.
+        admin.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                admin.getCurrentView());
+    }
+}
+----
+
+For custom credentials, anonymous users, and logout behavior, see <<{articles}/flow/testing/browserless/multi-user#authenticated-users-with-spring-security,Spring Security Contexts>>.
+
+
+== Authenticated Users with Quarkus Security
+
+The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type:
+
+.Quarkus Multi-User Test
+[source,java]
+----
+@QuarkusTest
+@TestProfile(SecurityTestConfig.class)
+class MultiUserSecurityTest {
+
+    private SecuredBrowserlessApplicationContext<SecurityIdentity> app;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext
+                .createSecured(ProtectedView.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void authenticatedUser_byUsernameAndRoles_seesProtectedView() {
+        var window = app.newUser("john", "USER").newWindow();
+
+        window.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                window.getCurrentView());
+    }
+
+    @Test
+    void authenticatedUser_byIdentity_seesProtectedView() {
+        SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+                .setPrincipal(new QuarkusPrincipal("john"))
+                .addRoles(Set.of("USER"))
+                .setAnonymous(false)
+                .build();
+
+        var window = app.newUser(identity).newWindow();
+
+        window.navigate(ProtectedView.class);
+        Assertions.assertInstanceOf(ProtectedView.class,
+                window.getCurrentView());
+    }
+}
+----
+
+As with the Spring factory, [methodname]`newUser()` without arguments creates an anonymous user, and cross-user window switches save and restore the active [classname]`SecurityIdentity` automatically.
+
+== Keep Tests Independent
+
+Close the application context after each test and reset application-owned shared data.
+Create and use each context on the same test thread.
+See <<{articles}/flow/testing/browserless/multi-user#pitfalls-and-guarantees,context guarantees>> for thread affinity, direct API access, and security-state ownership.
+
+
+[discussion-id]`B92B85CC-5CFD-4B22-8BA6-B61CC1903D7B`

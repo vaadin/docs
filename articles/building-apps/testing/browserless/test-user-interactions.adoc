@@ -1,0 +1,117 @@
+---
+title: Test User Interactions
+page-title: Test User Interactions | Vaadin
+description: Find components, simulate navigation and keyboard shortcuts, and test menu actions in browserless tests.
+meta-description: Find components, simulate navigation and keyboard shortcuts, and test menu actions in browserless tests.
+order: 40
+---
+
+
+= Test User Interactions
+
+Start with a working test from <<{articles}/building-apps/testing/browserless#,Write Your First Browserless Test>>.
+Each example below is a pattern to adapt to your view; it belongs inside a test method unless shown otherwise.
+
+== Find the Component to Exercise
+
+Use a label or visible text when it identifies the component unambiguously.
+Scope the query when the same field appears more than once:
+
+[source,java]
+----
+TextField name = findInView(TextField.class)
+        .withLabel("First name").single();
+test(name).setValue("Ada");
+Assertions.assertEquals("Ada", name.getValue());
+----
+
+Use `find(Type.class, container)` to restrict a query to a particular container.
+See <<{articles}/flow/testing/browserless/component-query#,Component Queries>> for the full filter and result API.
+
+[#test-ids]
+== Test IDs
+
+Use [methodname]`Component.setTestId()` to assign a stable identifier to a component for use in tests. This sets the `data-testid` HTML attribute on the component's element, which can also be used by browser-based testing frameworks:
+
+[source,java]
+----
+Button submitButton = new Button("Submit");
+submitButton.setTestId("submit-button");
+
+// Later, retrieve the test ID
+String testId = submitButton.getTestId(); // "submit-button"
+----
+
+Use a test ID when a label or visible text would be ambiguous or would change with translations.
+Keep the identifier independent of styling and layout.
+
+
+Browserless tests can use the same identifier: the [since:com.vaadin:vaadin@V25.2]#`testId()` terminal operator and the `withTestId()` filter# look up components by their test ID:
+
+[source,java]
+----
+Button submit = find(Button.class).testId("submit-button");
+----
+
+See <<{articles}/flow/testing/browserless/component-query#test-ids, Querying Components>> for details.
+
+== Use Locators for Repeated Interactions
+
+In a base-class test, implement `Locators` to combine lookup and interaction.
+For a Spring Boot test, keep the `@SpringBootTest` annotation:
+
+[source,java]
+----
+@SpringBootTest
+class CartViewTest extends SpringBrowserlessTest implements Locators {
+    @Test
+    void addItem_increasesCartSize() {
+        navigate(CartView.class);
+        findButton().withText("Add to cart").click();
+        Assertions.assertEquals("1 item",
+                findSpan().withId("cart-size").getText());
+    }
+}
+----
+
+This example assumes that the cart view updates the span after adding an item.
+For locator reuse and invalidation rules, see <<{articles}/flow/testing/browserless/locators#resolution,Locator Resolution>>.
+
+== Test Navigation and Shortcuts
+
+Navigate by location when the outcome may be a redirect, and pass the expected view class:
+
+[source,java]
+----
+navigate("protected", LoginView.class);
+----
+
+For route parameters and other navigation forms, see <<{articles}/flow/testing/browserless/test-environment#navigating-to-views,Navigation>>.
+
+To exercise a save shortcut, invoke it after changing the form and then assert the same outcome as clicking Save:
+
+[source,java]
+----
+fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
+// Assert the saved state or the confirmation shown by your view.
+----
+
+== Test Menu Actions
+
+Use a menu tester to reach overlay content. For a view exposing a `contextMenu` field:
+
+[source,java]
+----
+var view = navigate(EditorView.class);
+var menu = test(view.contextMenu);
+menu.clickItem("Bold");
+Assertions.assertTrue(menu.isItemChecked("Bold"));
+----
+
+For nested actions, pass a text path such as `clickItem("Share", "Email")`.
+For a menu containing custom components, call `test(menuComponent).find(...)`.
+Open the menu first when the action requires attached components.
+See <<{articles}/flow/testing/browserless/overlay-components#,Overlay Component Testers>> for indexing and attachment semantics.
+
+
+[discussion-id]`BDC6250E-E9D6-44DD-9B67-777C0F7E98AA`

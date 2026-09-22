@@ -1,0 +1,188 @@
+---
+title: Test a Custom Component
+page-title: Test a Custom Component | Vaadin
+description: Test a component without a route, add a reusable component tester, and encapsulate interactions in a custom locator.
+meta-description: Test a component without a route, add a reusable component tester, and encapsulate interactions in a custom locator.
+order: 50
+---
+
+
+= Test a Custom Component
+
+Add the dependencies from <<{articles}/building-apps/testing/browserless/setup-without-spring#,the plain Java setup guide>> before using the standalone component API.
+The examples use illustrative application components: replace `MyForm` with your form and place the `PhoneNumberField` below inside `PersonFormView`.
+
+== Testing a Component Without a View
+
+A single component -- for example, a form or a custom field -- can be tested in isolation, without wrapping it in an [annotationname]`@Route` view. [methodname]`BrowserlessUIContext.forComponent()` builds a self-contained, route-free test environment, attaches the component to a window's [classname]`UI`, and tears everything down when the window closes, so a single try-with-resources is enough:
+
+[source,java]
+----
+try (var window = BrowserlessUIContext.forComponent(new MyForm())) {
+    window.findTextField().withLabel("Name").setValue("Ada");
+    Assertions.assertEquals("Ada",
+            window.findTextField().withLabel("Name").component().getValue());
+}
+----
+
+The returned window is a [classname]`BrowserlessUIContext`, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<{articles}/flow/testing/browserless/multi-user#, Multi-User and Multi-Window Testing>> for the context API.
+
+If the component's constructor needs [methodname]`UI.getCurrent()` or the session, pass a factory instead: [methodname]`BrowserlessUIContext.forComponent(MyForm::new)`. The factory runs after the Vaadin thread-locals are installed, so the constructor observes the live environment.
+
+For tests that need the same standalone component in several windows or for several users, use [methodname]`BrowserlessApplicationContext.forComponent(Supplier)`. It returns the application context, and every window created from it gets a fresh component instance from the factory:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
+    var w1 = app.newUser().newWindow();
+    var w2 = app.newUser().newWindow();
+
+    w1.findTextField().withLabel("Name").setValue("Ada");
+    // w2 holds its own MyForm instance
+    Assertions.assertEquals("", w2.findTextField().withLabel("Name")
+            .component().getValue());
+}
+----
+
+
+== Building Custom Testers
+
+When you create custom components, you can build testers for them too. Custom testers extend [classname]`ComponentTester` and use the [annotationname]`@Tests` annotation to declare which component they test.
+
+
+=== Defining a Custom Tester
+
+Place this tester in the same package as `PersonFormView` so it can access the child fields.
+
+[source,java]
+----
+// Tests defines the components this tester should be used for automatically
+@Tests(PersonFormView.PhoneNumberField.class)
+public class PhoneNumberFieldTester extends ComponentTester<PersonFormView.PhoneNumberField> {
+    // Other testers can be used inside the custom tester
+    final ComboBoxTester<ComboBox<String>, String> combo_;
+    final TextFieldTester<TextField, String> number_;
+
+    public PhoneNumberFieldTester(PersonFormView.PhoneNumberField component) {
+        super(component);
+        combo_ = new ComboBoxTester<>(
+                getComponent().countryCode);
+        number_ = new TextFieldTester<>(getComponent().number);
+    }
+
+    public List<String> getCountryCodes() {
+        return combo_.getSuggestionItems();
+    }
+
+    public void setCountryCode(String code) {
+        ensureComponentIsUsable();
+        if (!getCountryCodes().contains(code)) {
+            throw new IllegalArgumentException("Given code isn't available for selection");
+        }
+        combo_.selectItem(code);
+    }
+
+    public void setNumber(String number) {
+        ensureComponentIsUsable();
+        number_.setValue(number);
+    }
+
+    public String getValue() {
+        return getComponent().getValue();
+    }
+
+}
+----
+
+.`PhoneNumberField` Nested in `PersonFormView`
+[source,java]
+----
+public static class PhoneNumberField extends CustomField<String> {
+    final ComboBox<String> countryCode = new ComboBox<>();
+    final TextField number = new TextField();
+
+    public PhoneNumberField() {
+        countryCode.setItems("+1", "+358");
+        add(countryCode, number);
+        countryCode.addValueChangeListener(event -> updateValue());
+        number.addValueChangeListener(event -> updateValue());
+    }
+
+    @Override
+    protected String generateModelValue() {
+        return (countryCode.getValue() == null ? "" : countryCode.getValue())
+                + " " + number.getValue();
+    }
+
+    @Override
+    protected void setPresentationValue(String value) {
+        if (value == null || value.isBlank()) {
+            countryCode.clear();
+            number.clear();
+            return;
+        }
+        String[] parts = value.split(" ", 2);
+        countryCode.setValue(parts[0]);
+        number.setValue(parts.length > 1 ? parts[1] : "");
+    }
+}
+----
+
+Custom testers can use other testers internally, as shown above with `ComboBoxTester` and `TextFieldTester`.
+
+.Generic Components
+[TIP]
+The [annotationname]`@Tests` annotation also has an [methodname]`fqn` attribute that accepts fully qualified class names as strings. Use this when the component type uses generics that prevent it from being passed as a class literal:
+`@Tests(fqn = "com.example.MyField")`.
+
+
+=== Registering Custom Testers
+
+Keep your tester in an application-owned package and annotate the test class with [annotationname]`@ComponentTesterPackages`:
+
+[source,java]
+----
+@ComponentTesterPackages("com.example.application.views.personform")
+class PersonFormViewTest extends BrowserlessTest {
+}
+----
+
+== Custom Locators
+
+The following example assumes a `PersonForm` with fields identified by `pf-name` and `pf-email`, and a button identified by `pf-submit`.
+Use it inside a test window containing that form.
+
+For composites, page objects, or domain-specific widgets, subclass [classname]`Locator` with the recursive self-type so filter steps stay fluent, and expose the actions you want the test to see. Scope inner queries with [methodname]`inside(this)` so they only match descendants of the resolved composite:
+
+[source,java]
+----
+public class PersonFormLocator
+        extends Locator<PersonForm, PersonFormLocator> {
+
+    public PersonFormLocator() {
+        super(PersonForm.class);
+    }
+
+    public PersonFormLocator fillIn(String name, String email) {
+        new TextFieldLocator().withId("pf-name").inside(this).setValue(name);
+        new TextFieldLocator().withId("pf-email").inside(this).setValue(email);
+        return this;
+    }
+
+    public void submit() {
+        new ButtonLocator().withId("pf-submit").inside(this).click();
+    }
+}
+----
+
+Tests reach the custom locator through [methodname]`find(Supplier&lt;L&gt;)`:
+
+[source,java]
+----
+window.find(PersonFormLocator::new)
+        .fillIn("Ada", "ada@example.com")
+        .submit();
+----
+
+
+[discussion-id]`93145B04-239A-434F-A5B8-C95EAC71013B`

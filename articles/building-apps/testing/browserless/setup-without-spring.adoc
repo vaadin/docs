@@ -1,0 +1,91 @@
+---
+title: Set Up Browserless Tests Without Spring
+page-title: Set Up Browserless Tests Without Spring | Vaadin
+description: Configure browserless tests in a plain Java project using a base class or a JUnit extension.
+meta-description: Configure browserless tests in a plain Java project using a base class or a JUnit extension.
+order: 20
+---
+
+
+= Set Up Browserless Tests Without Spring
+
+If your project doesn't use Spring or Spring Boot, you can write browserless tests by extending the [classname]`BrowserlessTest` base class directly. This base class instantiates a UI along with all the necessary Vaadin environment, which is available to your test methods.
+
+
+== Dependencies
+
+Add the `browserless-test-junit6` dependency with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need is:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+No other test framework dependencies are required.
+
+
+== Writing Tests
+
+Use the `HelloWorldView` from <<./#,Write Your First Browserless Test>> and place its test in the same Java package under `src/test/java`.
+Create a test class that extends [classname]`BrowserlessTest`:
+
+[source,java]
+----
+class HelloWorldViewTest extends BrowserlessTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+
+}
+----
+
+The interaction techniques in <<{articles}/building-apps/testing/browserless#,Write Your First Browserless Test>> work the same way with [classname]`BrowserlessTest`. Replace [classname]`SpringBrowserlessTest` with [classname]`BrowserlessTest` and remove the [annotationname]`@SpringBootTest` annotation.
+
+
+== Use an Extension Instead of a Base Class
+
+If your test already extends another class, register an instance of `BrowserlessExtension`.
+Use the same dependency as above.
+
+[source,java]
+----
+@ViewPackages(classes = CartView.class)
+class CartViewTest {
+
+    @RegisterExtension
+    BrowserlessExtension ext = new BrowserlessExtension();
+
+    @Test
+    void addItemToCart() {
+        ext.navigate(CartView.class);
+        ext.findButton().withText("Add to cart").click();
+
+        Assertions.assertEquals("1 item",
+                ext.findSpan().withId("cart-size").getText());
+    }
+}
+----
+
+Use methods on the extension instance to navigate and interact with components.
+The example assumes a `CartView` with an “Add to cart” button and a span with ID `cart-size`.
+For lifecycle and configuration options, see <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>>.
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+Continue with <<{articles}/building-apps/testing/browserless/test-user-interactions#,Test User Interactions>>.
+
+
+[discussion-id]`D68CAC9E-6131-45C9-84E6-6D1CA1E44E81`

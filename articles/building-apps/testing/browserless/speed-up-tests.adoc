@@ -1,0 +1,148 @@
+---
+title: Speed Up Browserless Tests
+page-title: Speed Up Browserless Tests | Vaadin
+description: Reduce scanning and Spring context startup costs, and evaluate shared test environments without losing test isolation.
+meta-description: Reduce scanning and Spring context startup costs, and evaluate shared test environments without losing test isolation.
+order: 100
+---
+
+
+= Speed Up Browserless Tests
+
+By default, browserless tests scan the entire classpath for routes and error views and, in Spring Boot projects, load the full application context. For large projects this can slow down test startup. The following techniques help reduce bootstrap time.
+
+
+== Restrict Package Scanning
+
+Use a class from each view package to keep the scan focused and safe to refactor:
+
+[source,java]
+----
+@SpringBootTest
+@ViewPackages(classes = MyView.class)
+class MyViewTest extends SpringBrowserlessTest {
+}
+----
+
+See <<{articles}/flow/testing/browserless/test-environment#route-scanning,Route Scanning>> for all annotation forms.
+
+
+== Using a Reduced Application Context
+
+Instead of [annotationname]`@SpringBootTest`, which loads the full application context, you can annotate the test with [annotationname]`@ContextConfiguration` to provide only the beans needed for the test. This is useful when you want to replace real services with test doubles.
+
+For a view that injects a service, register a test implementation with the same interface.
+This example uses a service-backed variant of the greeting view:
+
+[source,java]
+----
+public interface GreetingService {
+    String greet(String name);
+}
+
+@Route("service-greeting")
+public class ServiceGreetingView extends HorizontalLayout {
+    final TextField name = new TextField("Your name");
+    final Button sayHello = new Button("Say hello");
+
+    public ServiceGreetingView(GreetingService greetings) {
+        sayHello.addClickListener(event ->
+                Notification.show(greetings.greet(name.getValue())));
+        add(name, sayHello);
+    }
+}
+----
+
+Place each public type in its own file. Put the test in the view's package:
+
+[source,java]
+----
+@ViewPackages(classes = ServiceGreetingView.class)
+@ContextConfiguration(classes = ViewTestConfig.class)
+class ViewTest extends SpringBrowserlessTest {
+    @Test
+    void greeting_usesTestService() {
+        var view = navigate(ServiceGreetingView.class);
+        test(view.name).setValue("Test");
+        test(view.sayHello).click();
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+
+@Configuration
+class ViewTestConfig {
+    @Bean
+    GreetingService greetingService() {
+        return name -> "Hello " + name;
+    }
+}
+----
+
+
+[NOTE]
+====
+Prefer replacing services this way -- a test [annotationname]`@Configuration` selected with [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
+
+Bean overrides create separate cached Spring contexts and can affect authentication in browserless test suites.
+See <<{articles}/flow/testing/browserless/spring-security#application-context-isolation,Application Context Isolation>> for the integration behavior.
+
+For service-level tests that don't need the Vaadin context, an even simpler option is to construct the service directly with stub collaborators (for example `new ResourceService(repo, id -> 0L)`) instead of overriding a bean. These approaches avoid creating additional contexts through bean overrides.
+====
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Sharing the Vaadin Environment Across Tests
+
+By default, the Vaadin environment -- the session, the UI, and all routes -- is created before every test method and torn down after. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
+
+To reuse a single Vaadin environment across all test methods in a class, register a static [classname]`BrowserlessClassExtension` with [annotationname]`@RegisterExtension`. The extension initializes the environment once before all tests and tears it down after all tests, sharing the same [classname]`UI` instance across every method. Use the extension instance for navigation and queries.
+This option applies to plain Java tests; keep the framework-specific base class for Spring and Quarkus tests.
+
+.Shared Environment Example
+[source,java]
+----
+@ViewPackages(classes = HelloWorldView.class)
+class HelloWorldViewTest {
+
+    @RegisterExtension
+    static BrowserlessClassExtension extension = new BrowserlessClassExtension();
+
+    @BeforeAll
+    static void setup() {
+        extension.navigate(HelloWorldView.class);
+    }
+
+    @Test
+    void name_isInitiallyEmpty() {
+        Assertions.assertEquals("", extension.find(TextField.class)
+                .withLabel("Your name").single().getValue());
+    }
+
+    @Test
+    void greetingButton_isEnabled() {
+        Assertions.assertTrue(extension.find(Button.class)
+                .withText("Say hello").single().isEnabled());
+    }
+}
+----
+
+These read-only tests use the `HelloWorldView` from <<./#,the first-test guide>>.
+They can run in either order because neither changes the shared UI.
+
+[WARNING]
+With a shared environment, state leaks between tests. Tests that mutate state must reset it explicitly.
+Re-navigating can reset view-local state, but does not reset session or application-owned data. Prefer a shared environment for read-only or independent interactions; stick with the default per-method lifecycle when tests mutate shared state in conflicting ways.
+
+[NOTE]
+The base test classes -- [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- always reinitialize the Vaadin environment before each test method. Annotating them with [annotationname]`@TestInstance(PER_CLASS)` therefore does not share the Vaadin environment, although it can still be useful for sharing other per-class state. Use a static [classname]`BrowserlessClassExtension` as shown above to share the Vaadin environment.
+
+== Compare Execution Time
+
+Run the same suite before and after each change.
+Keep the default per-method environment unless sharing it provides a useful improvement and the tests reset their state reliably.
+JUnit extensions are for plain Java tests; they do not replace the Spring or Quarkus base classes.
+See <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>> for lifecycle contracts.
+
+
+[discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`

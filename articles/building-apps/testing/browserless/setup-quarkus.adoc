@@ -1,0 +1,92 @@
+---
+title: Set Up Browserless Tests with Quarkus
+page-title: Set Up Browserless Tests with Quarkus | Vaadin
+description: Configure Quarkus browserless tests, create a test class, and substitute services using test profiles.
+meta-description: Configure Quarkus browserless tests, create a test class, and substitute services using test profiles.
+order: 30
+---
+
+
+= Set Up Browserless Tests with Quarkus
+
+Use this guide for an existing Quarkus Flow application.
+The test below uses the `HelloWorldView` from <<{articles}/building-apps/testing/browserless#,the first-test guide>>.
+
+== Add Dependencies
+
+With the Vaadin BOM imported, add these test dependencies to your [filename]`pom.xml` file:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-quarkus</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+== Create and Configure the Test
+
+.Quarkus Test Example
+[source,java]
+----
+@QuarkusTest
+class ViewTest extends QuarkusBrowserlessTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+----
+
+[NOTE]
+With [annotationname]`@QuarkusTest` annotation, the testing framework starts the application and the HTTP server -- although it won't be required for browserless testing. However, [classname]`QuarkusBrowserlessTest` tests are still executed in a mocked environment.
+
+A test can be annotated with [annotationname]`@TestProfile` to reference a specific test configuration. With a test profile you can, for example, override application configuration, provide bean alternatives and custom test resources. Refer to the https://quarkus.io/guides/getting-started-testing#testing_different_profiles[Quarkus Testing Profiles documentation] for additional information.
+
+.Quarkus Testing Profile Example
+[source,java]
+----
+public class MockServiceProfile implements QuarkusTestProfile {
+
+    @Override
+    public Map<String, String> getConfigOverrides() {
+        return Collections.singletonMap("app.some.config","value");
+    }
+
+    @Override
+    public Set<Class<?>> getEnabledAlternatives() {
+        return Collections.singleton(MockService.class);
+    }
+}
+
+@QuarkusTest
+@TestProfile(MockServiceProfile.class)
+class ViewTest extends QuarkusBrowserlessTest {
+}
+----
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+To test protected views, continue with <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control with Quarkus>>.
+
+
+[discussion-id]`09A26994-97AB-4877-AEB1-717BE02E348D`

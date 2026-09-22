@@ -1,8 +1,8 @@
 ---
 title: JUnit 6 Extensions
-page-title: Composition-based browserless testing with JUnit 6 extensions
-description: Use BrowserlessExtension and BrowserlessClassExtension as an alternative to extending BrowserlessTest.
-meta-description: Set up Vaadin browserless tests with JUnit 6 @RegisterExtension when extending a base class is not an option.
+page-title: JUnit 6 Extensions | Vaadin
+description: Composition-based browserless test setup, per-method and per-class lifecycles, and extension configuration.
+meta-description: Composition-based browserless test setup, per-method and per-class lifecycles, and extension configuration.
 order: 45
 ---
 
@@ -29,21 +29,8 @@ Use an extension when any of the following applies:
 
 [source,java]
 ----
-@ViewPackages(classes = CartView.class)
-class CartViewTest {
-
-    @RegisterExtension
-    BrowserlessExtension ext = new BrowserlessExtension();
-
-    @Test
-    void addItemToCart() {
-        ext.navigate(CartView.class);
-        ext.findButton().withText("Add to cart").click();
-
-        Assertions.assertEquals("1 item",
-                ext.findSpan().withId("cart-size").getText());
-    }
-}
+@RegisterExtension
+BrowserlessExtension ext = new BrowserlessExtension();
 ----
 
 Navigation, queries, and tester interactions are available as methods on the extension instance -- [methodname]`ext.navigate()`, [methodname]`ext.find()`, [methodname]`ext.findInView()`, [methodname]`ext.test()`, [methodname]`ext.getCurrentView()`, [methodname]`ext.fireShortcut()`, [methodname]`ext.roundTrip()`, and [methodname]`ext.runPendingSignalsTasks()`. The extension also exposes typed locator entry points such as [methodname]`ext.findButton()` and [methodname]`ext.findTextField()`; see <<locators#, Component Locators>>.
@@ -55,31 +42,14 @@ Navigation, queries, and tester interactions are available as methods on the ext
 
 [source,java]
 ----
-@ViewPackages(classes = CartView.class)
-class CartViewSharedTest {
-
-    @RegisterExtension
-    static BrowserlessClassExtension ext = new BrowserlessClassExtension();
-
-    @BeforeAll
-    static void setup() {
-        ext.navigate(CartView.class);
-    }
-
-    @Test
-    void addItem() {
-        // same UI instance as removeItem
-        ext.findButton().withText("Add").click();
-    }
-
-    @Test
-    void removeItem() {
-        // state from addItem is preserved
-    }
-}
+@RegisterExtension
+static BrowserlessClassExtension ext = new BrowserlessClassExtension();
 ----
 
-The same trade-offs as <<optimizing-tests#sharing-the-vaadin-environment-across-tests, per-class lifecycle with `BrowserlessTest`>> apply: state leaks between tests, so write tests that tolerate leftover state or reset it explicitly.
+The session and UI are shared by all test methods in the class.
+State changes persist between methods; the extension does not reset application state.
+Base-class tests always recreate the environment per method.
+For a practical comparison, see <<{articles}/building-apps/testing/browserless/speed-up-tests#sharing-the-vaadin-environment-across-tests,Sharing the Vaadin Environment Across Tests>>.
 
 
 == Configuring the Extension
@@ -124,6 +94,8 @@ class AdminViewTest {
     }
 }
 ----
+
+For a worked example, see <<{articles}/building-apps/testing/browserless/setup-without-spring#,Set Up Browserless Tests Without Spring>>.
 
 
 [discussion-id]`B51F9D4A-2E73-4B18-8C6F-9A3D7E2B1C04`
