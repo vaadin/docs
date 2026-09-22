@@ -217,30 +217,6 @@ Slot names are the ones the component uses in the browser, and they're component
 For the slots of a component that has a tester, the tester's own finders are usually shorter; see <<component-testers#slot-scoped-finders, Slot-Scoped Finders>>.
 
 
-[[what-find-sees]]
-=== What Queries Can and Cannot See
-
-[methodname]`find()`, [methodname]`findInView()`, and the typed locators all walk the same thing: the server-side component tree. Two kinds of components aren't in it, and a query returns an empty result for them rather than an error -- so the failure reads as if the component was never created.
-
-*Components rendered per item.* A component that another component renders for one of its items is rendered into that component, not into the tree. A [classname]`Grid` component column is the common case: [methodname]`find(Checkbox.class)` finds none of the checkboxes the grid shows. Ask the grid's tester for the one it rendered instead:
-
-[source,java]
-----
-grid.addComponentColumn(person -> new Checkbox(person.isSubscriber()))
-        .setKey("subscriber");
-
-// In the test
-Checkbox subscriber = (Checkbox) test(grid).getCellComponent(0, "subscriber");
-test(subscriber).click();
-----
-
-[since:com.vaadin:vaadin@V25.3]#[methodname]`getCellComponent()` returns the component the grid actually rendered, which is the one the browser shows: reading the same cell twice gives the same instance, and the instance is replaced when the row is rendered anew, for example after [methodname]`refreshItem()`. A row the client hasn't asked for yet is scrolled into view first, the way the user reaches it, and a cell the grid doesn't render at all, such as one in a hidden column, throws. Use [methodname]`renderCellComponent()` to render a cell on its own for those cases; every call renders the cell again and leaves the copy attached to the grid, where a later [methodname]`find()` reports it.#
-
-Components set as a column header, footer, or editor are part of the tree, so [since:com.vaadin:vaadin@V25.3]#a plain [methodname]`find()` does reach them#.
-
-*Overlay content.* The content of an overlay is attached only while the overlay is open, so a top-level query doesn't see a closed context menu's items. Open the menu first, or use the tester-scoped [methodname]`test(menu).find()`, which reads the menu contents rather than the UI and finds the items whether the menu is open or not. See <<overlay-components#, Testing Overlay Components>>.
-
-
 === Checking Existence
 
 Use [methodname]`exists()` to check whether a query has results without throwing an exception when none are found:
