@@ -11,21 +11,21 @@
 import '@vaadin/flow-frontend/dndConnector.js';
 import '@vaadin/flow-frontend/flow-component-renderer.js';
 // Flow component specific modules
-import '@vaadin/flow-frontend/comboBoxConnector.js';
-import '@vaadin/flow-frontend/contextMenuConnector.js';
-import '@vaadin/flow-frontend/contextMenuTargetConnector.js';
-import '@vaadin/flow-frontend/datepickerConnector.js';
+import '@vaadin/flow-frontend/vaadin-combo-box/comboBoxConnector.js';
+import '@vaadin/flow-frontend/vaadin-context-menu/contextMenuConnector.js';
+import '@vaadin/flow-frontend/vaadin-context-menu/contextMenuTargetConnector.js';
+import '@vaadin/flow-frontend/vaadin-date-picker/datepickerConnector.js';
 import '@vaadin/flow-frontend/disableOnClickFunctions.js';
-import '@vaadin/flow-frontend/gridConnector.js';
-import '@vaadin/flow-frontend/treeGridConnector.js';
-import '@vaadin/flow-frontend/vaadin-grid-flow-selection-column.js';
+import '@vaadin/flow-frontend/vaadin-grid/gridConnector.js';
+import '@vaadin/flow-frontend/vaadin-grid/treeGridConnector.js';
+import '@vaadin/flow-frontend/vaadin-grid/vaadin-grid-flow-selection-column.js';
 import '@vaadin/flow-frontend/gridProConnector.js';
 import '@vaadin/flow-frontend/vaadin-map/mapConnector.js';
-import '@vaadin/flow-frontend/menubarConnector.js';
+import '@vaadin/flow-frontend/vaadin-menu-bar/menubarConnector.js';
 import '@vaadin/flow-frontend/messageListConnector.js';
-import '@vaadin/flow-frontend/vaadin-upload-manager-connector.js';
+import '@vaadin/flow-frontend/vaadin-upload/uploadManagerConnector.js';
 import '@vaadin/flow-frontend/vaadin-time-picker/timepickerConnector.js';
-import '@vaadin/flow-frontend/virtualListConnector.js';
+import '@vaadin/flow-frontend/vaadin-virtual-list/virtualListConnector.js';
 import '@vaadin/flow-frontend/tooltip.js';
 // Lit renderer
 import '@vaadin/flow-frontend/lit-renderer.js';

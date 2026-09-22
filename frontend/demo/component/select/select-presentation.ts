@@ -25,10 +25,7 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select
-        label="Choose doctor"
-        style="width: 15em;"
-      >
+      <vaadin-select label="Choose doctor" style="width: 15em;">
         <vaadin-select-list-box slot="overlay">
           ${this.people.map(
             (person) => html`

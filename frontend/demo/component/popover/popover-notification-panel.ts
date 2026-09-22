@@ -97,9 +97,11 @@ export class Example extends LitElement {
           <vaadin-tab id="all-tab">All</vaadin-tab>
         </vaadin-tabs>
         <div tab="unread-tab">
-          ${unread.length
-            ? html`<vaadin-message-list .items="${unread}"></vaadin-message-list>`
-            : html`<div class="no-notifications-msg">No unread notifications</div>`}
+          ${
+            unread.length
+              ? html`<vaadin-message-list .items="${unread}"></vaadin-message-list>`
+              : html`<div class="no-notifications-msg">No unread notifications</div>`
+          }
         </div>
         <div tab="all-tab">
           <vaadin-message-list .items="${all}"></vaadin-message-list>

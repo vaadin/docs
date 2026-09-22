@@ -14,6 +14,7 @@ public class AIOrchestratorBasic extends Div {
     public AIOrchestratorBasic() {
         // tag::snippet[]
         MessageList messageList = new MessageList();
+        messageList.setMarkdown(true);
         MessageInput messageInput = new MessageInput();
 
         LLMProvider provider = new MockLLMProvider();

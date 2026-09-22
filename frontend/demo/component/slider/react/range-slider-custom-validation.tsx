@@ -29,7 +29,7 @@ function Example() {
           invalid.value = true;
         } else {
           errorMessage.value = '';
-          invalid.value = false
+          invalid.value = false;
         }
       }}
     />

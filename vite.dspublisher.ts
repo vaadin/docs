@@ -31,8 +31,10 @@ const target = ['safari15', 'es2022'];
 const config: UserConfig = {
   define: {
     // True only for preview deployments, which set DOCS_PREVIEW_DIFF=true when
-    // building. Lets the preview diff overlay (dspublisher/theme/preview-diff.ts)
-    // detect a preview without relying on the hostname.
+    // building. Lets preview-only behaviour — the diff overlay in
+    // dspublisher/theme/preview-diff.ts, and suppressing the cookie dialog in
+    // dspublisher/theme/init-browser.ts — detect a preview without relying on
+    // the hostname.
     __DOCS_PREVIEW_DIFF__: JSON.stringify(process.env.DOCS_PREVIEW_DIFF === 'true'),
   },
   resolve: {

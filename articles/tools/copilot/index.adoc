@@ -83,7 +83,7 @@ image::images/overview.png[Vaadin Copilot UI Overview]
 
 |App Log
 |Toolbar menu
-|Application debug message log with a preview of Hilla endpoints requests and responses.
+|Application debug message log with a preview of browser-callable service requests and responses.
 
 |Backend & Data
 |Toolbar Edit mode
@@ -279,6 +279,62 @@ public class User {
 }
 ----
 
+=== All Components View (Experimental feature)
+
+==== What it is
+
+The All Components view is a generated gallery that renders every component Copilot can find and
+instantiate in your running application — Vaadin components, plain HTML element wrappers, and the
+components you have written yourself — on a single page, styled by your own theme.
+
+Unlike a static documentation site, the gallery is *your* application code. Copilot scans the
+classpath (Vaadin Flow packages plus your application's base package) and writes a real Flow view,
+`CopilotAllComponentsView.java`, into your project's views folder under the route
+`__copilot/all-components`. Classes that cannot be shown are skipped automatically: routes, abstract
+classes and interfaces, deprecated components, anything without a no-argument constructor, and an
+explicit exclusion list (layouts, `UI`, experimental components, and similar).
+
+The generated view organizes components into three tabs — **Project**, **Vaadin** and **HTML** — with
+a quick-link sidebar for jumping to a component and an eye icon for hiding the ones you do not care
+about. Each component card can be shown in three display modes, toggled per component:
+
+- **Default** — the plain component example.
+- **Variants** — its theme variants (for example the `Button` and `Badge` variants).
+- **States** — interactive state controls (for example the read-only, disabled and invalid states of
+input fields).
+
+==== How to use it
+
+1. Enable **All Components** in Copilot's *Experimental features* panel and reload the page.
+2. Open the Copilot menu and click **Generate all components**.
+3. Copilot writes the view and opens it. If you are not running with Hotswap Agent, it tells you to
+restart the server first; use the menu item again afterwards — it now reads **Open all components
+view**.
+4. In the view, use **Regenerate components** to choose which groups (Project, Vaadin, HTML) are
+included, then press **Generate**. The view file is rewritten and reloaded.
+5. Use the **back** control in the header to return to your application's main route.
+
+Keep any customizations outside the generated file: regenerating replaces `CopilotAllComponentsView.java`
+entirely. The view is a development aid and is not registered in production mode.
+
+==== Use case 1: adding custom components to the palette
+
+The **Project** tab lists the components discovered in your own source tree, rendered as live
+instances. That gives you one place to see what your team has already built before writing a new
+component, and to check that each one renders correctly on its own.
+
+Because the gallery is an ordinary Vaadin view, Copilot's selection tools work in it: click a
+rendered instance of your custom component and add it to the UI library so it becomes available from
+the palette in every other view — turning ad-hoc project classes into reusable building blocks.
+
+==== Use case 2: testing your global theme
+
+A theme change is easy to verify on one screen and easy to break on all the others. With every
+component on a single page — plus their variants and states — you can apply a change in the theme
+editor or in your CSS and immediately see its effect across the whole component set, including
+rarely visited components such as `Dashboard`, `MessageList` or `RichTextEditor`. Hide the
+components that are irrelevant to the change and keep the rest as a visual regression checklist.
+
 == Code Formatting
 
 Copilot does not format code it outputs, it relies on your project having a formatter set up. The following sections describe common ways to ensure consistent formatting in your project.
@@ -331,6 +387,41 @@ It is possible to block all outbound Copilot requests (excluding license checkin
 === EU Data Region Restriction
 
 Vaadin accounts can be restricted so that all Copilot AI processing stays in the EU region. When the restriction is active for your account, Copilot uses EU-only AI providers, and the affected dropdowns in Settings are locked to the enforced values and show "Restricted for your account". Please https://pages.vaadin.com/contact[contact Vaadin] for details.
+
+== Running Copilot behind an HTTP(S) proxy
+
+Copilot client require a connection to the Copilot server to run AI features and to validate license information. If your development environment is behind a proxy, you need to configure the proxy settings for Copilot to work.
+
+**Configuring a proxy.** Proxy settings are resolved (via Vaadin Flow's `ProxyFactory`) from, in order:
+
+- System properties or environment variables named `HTTP_PROXY` / `HTTPS_PROXY` / `NOPROXY` (upper- or lower-case).
+The Copilot server is HTTPS, so an HTTPS target needs `HTTPS_PROXY`.
+- `proxy` / `https-proxy` / `noproxy` entries in the user `~/.npmrc` and the project `.npmrc`.
+
+The value is a URL, optionally with credentials: `http://user:password@host:port`. Note these are **not** the standard
+JVM `-Dhttps.proxyHost` / `-Dhttps.proxyPort` properties — `ProxyFactory` reads the `HTTPS_PROXY` name. (Those JVM
+properties are only honored via the default `ProxySelector` fallback when no `HTTPS_PROXY` is found.)
+
+### Authenticated proxies and the tunneling JVM flag
+
+If your proxy requires authentication, you also need to start the JVM with an empty value for the tunneled-auth
+property:
+
+```
+-Djdk.http.auth.tunneling.disabledSchemes=
+```
+
+**Why this is needed.** For an HTTPS target, `java.net.http` reaches the origin through an HTTP `CONNECT` tunnel to the
+proxy. By default the JDK **disables Basic authentication on that tunnel** (`jdk.http.auth.tunneling.disabledSchemes`
+defaults to `Basic` in `conf/net.properties`), so the proxy credentials are never sent and the proxy answers `407`. The
+JDK reads this property into a constant **the first time any `java.net.http` client is created in the JVM** and caches it
+forever after; changing it later has no effect. Copilot clears the property as early as it can (before it creates its own
+first client), but in a typical Spring Boot + Vaadin application another component often creates a `java.net.http` client
+during startup — before Copilot runs at all — and freezes the setting first. In that case Copilot cannot win the race
+from library code, and the property must already be set when the JVM starts.
+
+You can also set it via `JAVA_TOOL_OPTIONS=-Djdk.http.auth.tunneling.disabledSchemes=` or in the JVM's
+`conf/net.properties`.
 
 == Limitations
 

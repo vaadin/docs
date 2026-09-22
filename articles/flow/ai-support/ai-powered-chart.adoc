@@ -17,6 +17,8 @@ include::{articles}/_commercial-banner.adoc[opts=optional]
 
 Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
 
+The LLM can read the chart's current configuration and queries through a state tool. The configuration is returned without series data, but its x-axis categories, series names, and the nodes of an organization chart are derived from the query results, so those values are visible to the LLM. See <<controllers#database-provider,Database Provider>>.
+
 == Basic Usage
 
 Create a [classname]`Chart`, construct a controller, and wire it to the orchestrator:
@@ -46,11 +48,18 @@ Example prompts:
 
 .Built-In Workflow Instructions
 [TIP]
-The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior.
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior. Where the system prompt conflicts with a workflow step, the system prompt takes precedence.
 
 .Provider Compatibility
 [NOTE]
 [classname]`ChartAIController` does not support OpenAI's strict tool-calling mode. Strict mode is off by default in both LangChain4j and Spring AI; only users who explicitly opt in are affected.
+
+
+== Query and Configuration Validation
+
+Before queueing an update, the controller validates the LLM's work within the turn: series queries are executed against the database, and configuration JSON is parsed eagerly. Invalid updates are rejected and never reach the chart.
+
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#: configuration parse errors are relayed as-is, since the LLM authored the configuration. Query errors are relayed only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()`; any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Persisting Chart State

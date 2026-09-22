@@ -7,7 +7,7 @@ order: 10
 ---
 
 
-= Component Bindings
+= [since:com.vaadin:vaadin@V25.1]#Component Bindings#
 
 Signals connect directly to Vaadin components through binding methods. When a signal value changes, bound components update automatically without manual listeners or state synchronization.
 
@@ -107,7 +107,7 @@ p.bindText(signal);
 
 == Binding Visibility
 
-Use [methodname]`bindVisible()` to show or hide components based on a boolean signal:
+Use [methodname]`bindVisible()` to show or hide components based on a boolean signal. This is how you express rules such as "show the *Done* button only while a row is being edited" or "hide the *Save* button until the form has unsaved changes": declare the rule once, and the component follows the state instead of being updated from every listener that changes it.
 
 [source,java]
 ----
@@ -122,6 +122,8 @@ Button toggleButton = new Button("Show Details");
 toggleButton.addClickListener(e -> showDetails.update(v -> !v));
 // Clicking toggles panel visibility
 ----
+
+Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`; pass `null` to [methodname]`bindVisible()` to remove the binding. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
 
 
 === Conditional Visibility
@@ -139,6 +141,18 @@ noResults.bindVisible(searchText.map(text -> text.isEmpty()));
 Div results = new Div();
 results.bindVisible(searchText.map(text -> !text.isEmpty()));
 // Shows when search text is not empty
+----
+
+Use a lambda when the condition reads more than one signal:
+
+[source,java]
+----
+ValueSignal<Boolean> formDirty = new ValueSignal<>(false);
+ValueSignal<Boolean> submitting = new ValueSignal<>(false);
+
+Button saveButton = new Button("Save");
+saveButton.bindVisible(() -> formDirty.get() && !submitting.get());
+// Shows only while there are unsaved changes and no submission is in progress
 ----
 
 
@@ -267,38 +281,6 @@ field.bindRequiredIndicatorVisible(required);
 For more details, see <<element-bindings#required-indicator-binding,Required Indicator Binding>> in Element Bindings.
 
 
-== Binding Theme Variants
-
-Use [methodname]`getThemeList().bind()` to toggle theme variants based on a signal:
-
-[source,java]
-----
-ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
-
-VerticalLayout layout = new VerticalLayout();
-layout.getThemeList().bind("dark", darkMode);
-// Dark theme applied when darkMode is true
-
-Button toggleTheme = new Button("Toggle Dark Mode");
-toggleTheme.addClickListener(e -> darkMode.update(v -> !v));
-----
-
-
-=== Multiple Theme Variants
-
-Bind multiple independent theme variants:
-
-[source,java]
-----
-ValueSignal<Boolean> compact = new ValueSignal<>(false);
-ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
-
-Grid<Person> grid = new Grid<>();
-grid.getThemeList().bind("compact", compact);
-grid.getThemeList().bind("row-stripes", rowStripes);
-----
-
-
 == Binding Inline Styles
 
 Use [methodname]`getStyle().bind()` to bind CSS properties to signals:
@@ -413,16 +395,18 @@ These are convenience shortcuts for [methodname]`getElement().getClassList().bin
 
 == Binding Theme Names
 
+Theme names apply the style variants a component supports, such as `small` on a button or `row-stripes` on a grid.
+
 Use [methodname]`bindThemeName()` and [methodname]`bindThemeNames()` to bind theme names to signals. These are component-level convenience methods available on components that implement [interfacename]`HasTheme`:
 
 [source,java]
 ----
-ValueSignal<Boolean> compact = new ValueSignal<>(false);
+ValueSignal<Boolean> smallVariant = new ValueSignal<>(false);
 
-Grid<Person> grid = new Grid<>();
+Button button = new Button("Save");
 
 // Toggle a single theme name based on a boolean signal
-grid.bindThemeName("compact", compact);
+button.bindThemeName("small", smallVariant);
 ----
 
 To bind a dynamic list of theme names, use [methodname]`bindThemeNames()`:
@@ -438,8 +422,20 @@ grid.bindThemeNames(themes);
 themes.set(List.of("row-stripes", "compact", "no-border"));
 ----
 
+These methods are convenience shortcuts for [methodname]`getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
+
+[source,java]
+----
+ValueSignal<Boolean> compact = new ValueSignal<>(false);
+ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
+
+Grid<Person> grid = new Grid<>();
+grid.getThemeList().bind("compact", compact);
+grid.getThemeList().bind("row-stripes", rowStripes);
+----
+
 [NOTE]
-These are convenience shortcuts for [methodname]`getThemeList().bind()`. For Element-level theme bindings, see <<element-bindings#themelist-binding,ThemeList Binding>>.
+Theme names are per-component style variants. They are not how an application switches between light and dark: use the [annotationname]`ColorScheme` annotation or [methodname]`Page.setColorScheme()` for that, as described in <<{articles}/styling/themes#color-schemes,Light & Dark Color Schemes>>.
 
 
 == Rendering Lists of Components
@@ -612,6 +608,30 @@ content.bindClassName("mobile-layout", windowSize.map(ws -> ws.width() < 768));
 
 [NOTE]
 The signal is lazily initialized. The actual window dimensions are available from the initial browser connection through extended client details, so the signal has correct values from the start. It also updates automatically on browser window resize.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Element Size Signal
+
+Use [methodname]`Element.sizeSignal()` to get a read-only signal that tracks the size of a single element, as reported by the browser ResizeObserver API. The signal provides a [classname]`Size` record with [methodname]`width()` and [methodname]`height()` values in whole pixels:
+
+[source,java]
+----
+Div chartContainer = new Div();
+Signal<Size> size = chartContainer.getElement().sizeSignal();
+
+Span dimensions = new Span();
+dimensions.bindText(size.map(s ->
+    String.format("Container: %d x %d", s.width(), s.height())));
+
+// Switch to a compact rendering when the container itself gets narrow
+chartContainer.bindClassName("compact", size.map(s -> s.width() < 400));
+----
+
+Where the window size signal follows the browser window, this one follows the element, so it also reacts to size changes caused by the surrounding layout -- a side navigation being collapsed, for example.
+
+[NOTE]
+The signal is lazily initialized, and the same instance is returned for later calls on the same element, so one browser-side observer is shared. Its value is `Size(0, 0)` until the browser has reported the actual size, which happens shortly after the element has been attached. Sub-pixel sizes are rounded to whole pixels. While the element is detached there is nothing to observe, so the signal keeps the size last reported for it, and observation resumes when the element is attached again.
 
 
 === UI Locale Signal

@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect, useRef } from 'react';
-import { format as dateFnsFormat } from 'date-fns/format';
-import { parse as dateFnsParse } from 'date-fns/parse';
+import { format, parse } from 'date-fns';
 import type { DatePickerDate } from '@vaadin/date-picker';
 import {
   DateTimePicker,
@@ -15,11 +14,11 @@ function DateTimePickerInputFormat() {
     const formatDate = (dateParts: DatePickerDate) => {
       const { year, month, day } = dateParts;
       const date = new Date(year, month, day);
-      return dateFnsFormat(date, 'dd/MM/yyyy');
+      return format(date, 'dd/MM/yyyy');
     };
 
     const parseDate = (inputValue: string) => {
-      const date = dateFnsParse(inputValue, 'dd/MM/yyyy', new Date());
+      const date = parse(inputValue, 'dd/MM/yyyy', new Date());
       return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
     };
 

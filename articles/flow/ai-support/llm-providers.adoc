@@ -14,7 +14,7 @@ An AI framework -- such as Spring AI or LangChain4j -- is a Java library that ha
 
 .Memory Window Limit
 [IMPORTANT]
-Both built-in providers maintain a 30-message memory window. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
+Both built-in providers maintain a 30-message memory window of their own, except a [classname]`SpringAILLMProvider` created from a [classname]`ChatClient`, where the application owns the memory. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
 
 
 == Spring AI
@@ -43,9 +43,11 @@ Streaming is enabled by default. To disable it, call [methodname]`setStreaming(f
 provider.setStreaming(false);
 ----
 
+In synchronous mode, the whole exchange runs in the request that triggered it and blocks the UI until the response is complete. See <<#background-execution,Background Execution>> for keeping the UI responsive during long prompts.
+
 .History Restoration with ChatClient
 [NOTE]
-History restoration via [methodname]`withHistory()` is only supported when creating the provider from a [classname]`ChatModel`. Providers created from a [classname]`ChatClient` do not provide access to internal memory, so calling [methodname]`setHistory()` throws an [classname]`UnsupportedOperationException`. Use `new SpringAILLMProvider(chatModel)` if you need to restore conversation history across sessions.
+A provider created from a [classname]`ChatModel` restores the conversation into its own memory, so [methodname]`withHistory()` and [methodname]`reconnect()` need no extra work. A provider created from a [classname]`ChatClient` cannot do that -- the application owns that client's memory -- so its [methodname]`setHistory()` does nothing beyond logging what it observed: a warning when the client carries no chat memory advisor or no default conversation id, since a restored conversation then never reaches the LLM. Load the conversation into the client's own [classname]`ChatMemory` before passing the client to the provider, or use `new SpringAILLMProvider(chatModel)` and let the provider handle it. The orchestrator's own conversation history and the Message List are restored either way.
 
 
 == LangChain4j
@@ -67,7 +69,77 @@ LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
 
 The provider manages its own conversation memory using a 30-message window.
 
+Synchronous mode blocks the UI for the duration of each exchange; see <<#background-execution,Background Execution>>.
 
+The provider runs the tool-calling loop itself and bounds the number of tool calls per turn; see <<tool-calling#tool-call-limits,Tool Call Limits>>.
+
+
+[[framework-features]]
+== Framework Features
+
+An LLM provider is a thin adapter: it hands each prompt to the framework's own client and streams back what that client produces. Everything else the model needs is set up on the client, in the framework, before the provider is created. The orchestrator works with whatever the client has been configured with and adds no framework features of its own.
+
+Model Context Protocol (MCP) servers are the most common example. Neither the orchestrator nor the provider is an MCP client. Configure Spring AI's MCP client -- its transport, its credentials, and which of the server's tools the model may see -- register the resulting tool callbacks on a [classname]`ChatClient`, and wrap that client in a provider:
+
+[source,java]
+----
+ChatClient chatClient = ChatClient.builder(chatModel)
+        // Tool callbacks from Spring AI's MCP client
+        .defaultTools(mcpToolCallbacks)
+        .build();
+SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
+----
+
+The MCP tools then reach the model on every turn, next to any tools registered on the orchestrator through <<tool-calling#,[methodname]`withTools()`>> or a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server. Give the client a chat memory advisor and a default conversation id as well, since a provider created from a [classname]`ChatClient` leaves conversation memory to the application.
+
+Retrieval-augmented generation against a vector store, guardrails and moderation, observability, model options such as temperature and token limits, and structured output with schema validation all work the same way: configure them on the framework's client, then wrap it in a provider. The framework's own reference documentation is where to look for the details:
+
+* https://docs.spring.io/spring-ai/reference/[Spring AI reference documentation]
+* https://docs.langchain4j.dev/[LangChain4j documentation]
+
+.The System Prompt Comes From the Orchestrator
+[TIP]
+The orchestrator sends its own system prompt on every turn, which replaces any [methodname]`defaultSystem()` text configured on the client. Put instructions for the model -- including when to reach for the client's tools -- in the system prompt passed to [methodname]`AIOrchestrator.builder()`, not in the client's defaults.
+
+.MCP With LangChain4j
+[NOTE]
+[classname]`LangChain4JLLMProvider` is built from a [classname]`ChatModel` or [classname]`StreamingChatModel` and runs the tool-calling loop itself, so LangChain4j's [classname]`McpToolProvider` -- which attaches to an AI service built with [classname]`AiServices` -- has nowhere to plug in. With LangChain4j, MCP tools currently require a <<#custom-llm-providers,custom LLM provider>> built around an AI service, which then gets the tool provider, memory, and tool loop from LangChain4j. With Spring AI, the [classname]`ChatClient` setup above is all that's needed.
+
+
+.Tool Call Limits
+[NOTE]
+Both built-in providers bound the tool-calling loop of a turn: by default, at most 40 calls per tool and 150 in total. [classname]`LangChain4JLLMProvider` enforces the limits itself and has setters for them, while [classname]`SpringAILLMProvider` leaves them to the [classname]`ChatClient`. See <<tool-calling#tool-call-limits,Tool Call Limits>>.
+
+
+[[background-execution]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Background Execution
+
+A synchronous provider produces the response on the thread that asks for it. For a prompt sent from the browser, that is the request thread: the request does not return until the model has produced the complete response, including any tool calls along the way. The interface freezes for the whole wait, and since the request holds the session lock, other views in the same session wait too.
+
+Background execution moves the exchange to a background thread instead. Enable it on either built-in provider:
+
+[source,java]
+----
+provider.setBackgroundExecution(true);
+----
+
+The user's message then appears immediately and the Message List shows a typing indicator while the model works, the UI stays responsive, and the response replaces the indicator when the model finishes. The setting is off by default. It's read for each prompt, so it can be changed at any time; the next prompt uses the new mode. It has no effect with a streaming model, whose response already arrives on the LLM client's own threads.
+
+The response is now produced outside any request, so it reaches the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The provider logs a warning, once per provider instance, when neither is active; the same warning applies in streaming mode, whose response also arrives outside a request. Manual push mode is not enough on its own, because nothing in the framework calls `ui.push()` for the application.
+
+Everything that happens before the model is called still runs in the request thread: the <<request-interception#,request interceptor>>, adding the user's message to the Message List and showing the typing indicator, [methodname]`AIController.onRequest()`, the request listener, and the session context supplier. The model calls, every tool execution, and the [classname]`ResponseListener` run on the background thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
+
+Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AIController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this. [methodname]`AIController.onResponse()` is the exception: the orchestrator calls it through `ui.access()`, so it can update components directly.
+
+.One Prompt at a Time
+[NOTE]
+The orchestrator processes one prompt at a time. In the default synchronous mode, a message submitted while a turn is running waits for the session lock and is processed when the turn ends. With background execution the lock is free, so the same message is rejected and dropped with a server-side warning -- and the Message Input has already cleared its text.
+
+If the user closes or reloads the browser tab while a turn is running, the turn still completes on the server: the response is recorded in the conversation history and the [classname]`ResponseListener` fires as usual. Only the UI updates are skipped, along with [methodname]`AIController.onResponse()`, which needs an attached UI. The setting itself lives on the provider and is not serialized with the session -- apply it again to the recreated provider after a session restore, before passing it to [methodname]`reconnect()`. See <<conversation-history#,Conversation History & Session Persistence>>.
+
+
+[[custom-llm-providers]]
 == Custom LLM Providers
 
 Implement the [classname]`LLMProvider` interface to connect to any LLM framework:
@@ -79,10 +151,13 @@ public class MyLLMProvider implements LLMProvider {
     @Override
     public Flux<String> stream(LLMRequest request) {
         // Return a reactive stream of response tokens
-        // request.userMessage()  -- the user's prompt
-        // request.attachments()  -- any file attachments
-        // request.systemPrompt() -- the system prompt
-        // request.tools()        -- registered tool objects
+        // request.userMessage()    -- the user's prompt
+        // request.attachments()    -- any file attachments
+        // request.systemPrompt()   -- the system prompt
+        // request.tools()          -- tool objects registered via withTools()
+        // request.explicitTools()  -- ToolSpec tools contributed by the controller
+        // request.sessionContext() -- per-turn session context, or null
+        // request.metadataSink()   -- consumer for response metadata
     }
 
     @Override
@@ -92,5 +167,11 @@ public class MyLLMProvider implements LLMProvider {
     }
 }
 ----
+
+A provider is responsible for its own conversation memory, for the tool-calling loop over both the vendor-annotated tool objects and the framework-agnostic [classname]`ToolSpec` tools (see <<controllers#,Controllers>>), and for appending the <<session-context#,session context>> to the user message when one is given.
+
+The response stream carries text only. The provider can also [since:com.vaadin:vaadin@V25.3]#publish the finish reason and token usage# of the turn through the [methodname]`metadataSink()` consumer on the request. Each call carries everything observed so far and replaces the value of any earlier call, so publish whenever the provider learns more -- a turn that fails midway has then still reported what was observed. Pass `null` for any value the framework doesn't report; a provider that observes no metadata never calls the consumer. See <<listeners#response-metadata,Response Metadata>> for how applications read it.
+
+The orchestrator calls [methodname]`stream()` on the thread that triggers the prompt and subscribes to the returned stream on that same thread -- whether a turn runs in the background is decided entirely by the implementation. An implementation whose LLM call blocks should schedule that call itself; otherwise it occupies the request thread and holds the session lock for the whole turn. See <<#background-execution,Background Execution>> for how the built-in providers expose this as a setting.
 
 endif::flow[]

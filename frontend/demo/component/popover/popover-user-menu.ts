@@ -23,7 +23,6 @@ export class Example extends LitElement {
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 1 });
-    // eslint-disable-next-line
     this.person = people[0];
   }
 

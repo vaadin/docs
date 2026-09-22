@@ -27,20 +27,20 @@ var orchestrator = AIOrchestrator
 
 .Upload Handler Conflict
 [NOTE]
-When using [classname]`UploadManager` or [classname]`Upload`, the component must not already have an upload handler or receiver set. The orchestrator installs its own in-memory handler. If one is already set, an [classname]`IllegalArgumentException` is thrown at build time. This restriction does not apply to custom [classname]`AIFileReceiver` implementations.
+When using [classname]`UploadManager` or [classname]`Upload`, the component must not already have an upload handler set, and an [classname]`Upload` must not have a receiver either. The orchestrator installs its own in-memory handler. If one is already set, [methodname]`withFileReceiver()` throws an [classname]`IllegalArgumentException`. This restriction does not apply to custom [classname]`AIFileReceiver` implementations.
 
 .Supported Attachment Types
 [NOTE]
-The following MIME type categories are supported: images (`image/*`), text (`text/*`), PDF (`application/pdf`), audio (`audio/*`), and video (`video/*`). Attachments with other MIME types are silently dropped and not sent to the LLM.
+The following MIME type categories are supported: images (`image/*`), text (`text/*`), PDF (`application/pdf` or `application/x-pdf`), audio (`audio/*`), and video (`video/*`). An attachment with any other MIME type still appears in the Message List, but the built-in providers leave its content out of the request, so the LLM never sees it. To send such a file anyway, convert it to a supported format with a <<request-interception#,request interceptor>>.
 
 .Duplicate File Names
 [NOTE]
-Uploading multiple files with the same name in a single batch throws an [classname]`IllegalArgumentException`. Ensure each file has a unique name.
+Uploading a file whose name matches one that is still pending, that is, uploaded but not yet sent with a prompt, throws an [classname]`IllegalArgumentException`. Removing the earlier file from the upload list frees the name, and once a prompt has consumed the pending files, the name can be used again.
 
 
 == Persisting Attachments
 
-The orchestrator passes attachments to the LLM with each request but does not store them afterward. To save attachments to your own storage and look them up later -- for example when the user clicks one in the message list -- use [methodname]`withRequestListener()` and [methodname]`withAttachmentClickListener()`:
+The orchestrator passes attachments to the LLM with each request but does not store them afterward. To save attachments to your own storage and look them up later -- for example when the user clicks one in the message list -- use [methodname]`withRequestListener()` (see <<listeners#,Request & Response Listeners>>) and [methodname]`withAttachmentClickListener()`:
 
 [source,java]
 ----
@@ -65,6 +65,7 @@ var orchestrator = AIOrchestrator
 [methodname]`saveAttachments` and [methodname]`showAttachment` are placeholders for application code. The former persists the [classname]`AIAttachment` data, while the latter loads it back and displays it.
 
 
+[role="since:com.vaadin:vaadin@V25.2"]
 == Programmatic Attachments
 
 Use [methodname]`prompt(message, attachments)` to send a prompt and attachments from application code -- a file the user dropped on the form, a PDF the application generated, or content fetched from a service. No chat UI is needed.

@@ -6,8 +6,11 @@ import com.vaadin.flow.component.datepicker.DatePicker.DatePickerI18n;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Route;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
+import java.util.List;
 
 @Route("date-picker-validation")
 public class DatePickerValidation extends Div {
@@ -20,13 +23,19 @@ public class DatePickerValidation extends Div {
         datePicker.setRequiredIndicatorVisible(true);
         datePicker.setMin(now);
         datePicker.setMax(now.plusDays(60));
-        datePicker.setHelperText("Must be within 60 days from today");
+        datePicker.setDisabledWeekdays(
+                EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY));
+        datePicker.setDisabledDates(List.of(now.plusDays(3), now.plusDays(4)));
+        datePicker.setHelperText(
+                "Must be a business day within 60 days from today");
 
         datePicker.setI18n(new DatePickerI18n()
                 .setBadInputErrorMessage("Invalid date format")
                 .setRequiredErrorMessage("Field is required")
                 .setMinErrorMessage("Too early, choose another date")
-                .setMaxErrorMessage("Too late, choose another date"));
+                .setMaxErrorMessage("Too late, choose another date")
+                .setDisabledDateErrorMessage(
+                        "The office is closed, choose another date"));
         // end::snippet[]
 
         add(datePicker);

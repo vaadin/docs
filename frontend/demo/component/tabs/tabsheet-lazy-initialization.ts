@@ -31,15 +31,21 @@ export class Example extends LitElement {
           <vaadin-tab id="shipping-tab">Shipping</vaadin-tab>
         </vaadin-tabs>
 
-        ${this.visitedTabs.has(0)
-          ? html`<div tab="dashboard-tab">This is the Dashboard tab content</div>`
-          : ''}
-        ${this.visitedTabs.has(1)
-          ? html`<div tab="payment-tab">This is the Payment tab content</div>`
-          : ''}
-        ${this.visitedTabs.has(2)
-          ? html`<div tab="shipping-tab">This is the Shipping tab content</div>`
-          : ''}
+        ${
+          this.visitedTabs.has(0)
+            ? html`<div tab="dashboard-tab">This is the Dashboard tab content</div>`
+            : ''
+        }
+        ${
+          this.visitedTabs.has(1)
+            ? html`<div tab="payment-tab">This is the Payment tab content</div>`
+            : ''
+        }
+        ${
+          this.visitedTabs.has(2)
+            ? html`<div tab="shipping-tab">This is the Shipping tab content</div>`
+            : ''
+        }
       </vaadin-tabsheet>
     `;
   }

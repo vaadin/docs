@@ -198,6 +198,19 @@ public class MainLayout extends AppLayout {
 }
 ----
 
+The same component also covers programmatic access checks elsewhere in the application, such as deciding whether to render a navigation item or to enable an action. Roles are given without the role prefix, which [classname]`AuthenticationContext` adds when comparing against the granted authorities (see <<role-prefix, Roles & the Role Prefix>>). An application migrating from a custom security mechanism therefore doesn't need a security utility class of its own:
+
+[source,java]
+----
+SideNav nav = new SideNav();
+nav.addItem(new SideNavItem("Dashboard", DashboardView.class));
+if (authContext.hasRole("ADMIN")) { // Not "ROLE_ADMIN".
+    nav.addItem(new SideNavItem("Administration", AdminView.class));
+}
+----
+
+Hiding a navigation item is a usability measure, not a security measure. The view it points to still needs its own access annotation, since a user can navigate there by entering the URL directly.
+
 
 == Security Configuration Class
 
@@ -264,6 +277,14 @@ The [classname]`VaadinSecurityConfigurer` handles all of the Vaadin-related conf
 
 The log-in view can be configured via the provided [methodname]`loginView()` method on the configurer.
 
+.Configure Form Login Through the Configurer
+[WARNING]
+====
+Configure form login with [methodname]`loginView()` rather than by calling Spring Security's [methodname]`formLogin()` directly. The configurer applies [classname]`FormLoginConfigurer` internally, and at the same time permits Vaadin's internal requests, ignores them in the CSRF check, installs a Vaadin-aware request cache and success handler, and registers the log-in view with navigation access control.
+
+A hand-written [methodname]`formLogin()` configuration does none of that. The internal request that the log-in view itself makes to the server is then treated as an unauthenticated request and redirected back to the log-in view, which produces an endless redirect loop -- typically visible as an `ERR_TOO_MANY_REDIRECTS` page or a "Connection lost" notification instead of a working log-in form.
+====
+
 .Never Use Hard-Coded Credentials in Production
 [WARNING]
 The implementation of the [methodname]`userDetailsService()` method is just an in-memory implementation for the sake of brevity in this documentation. In a normal application, you can change the Spring Security configuration to use an authentication provider for Lightweight Directory Access Protocol (LDAP), JAAS, and other real-world sources. See  https://dzone.com/articles/flow/spring-security-authentication[Spring Security authentication providers] to read more about them.
@@ -328,6 +349,37 @@ This example is using [annotationname]`@RolesAllowed` to enable only the users w
 @RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
     // ...
+}
+----
+
+
+[[role-prefix]]
+=== Roles & the Role Prefix
+
+Spring Security distinguishes between _authorities_, which are arbitrary strings, and _roles_, which are authorities carrying a prefix. The default prefix is `ROLE_`. Role names in [annotationname]`@RolesAllowed` are given without the prefix, and the prefix is added when the granted authorities are checked. So [annotationname]`@RolesAllowed("ADMIN")` matches the granted authority `ROLE_ADMIN`.
+
+This matters when writing a custom [interfacename]`UserDetailsService` or authentication provider, since the authorities have to be created with the prefix included:
+
+[source,java]
+----
+List<GrantedAuthority> authorities = user.getRoles().stream()
+        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        .collect(Collectors.toList());
+----
+
+The [methodname]`roles()` builder method of Spring's [classname]`User` class adds the prefix for you, whereas [methodname]`authorities()` doesn't. That's why the examples on this page use `User.withUsername("admin").roles("ADMIN")` to grant the `ROLE_ADMIN` authority.
+
+.Missing Prefixes Fail Silently
+[WARNING]
+If the authority is stored as `ADMIN` instead of `ROLE_ADMIN`, no error is reported. The role check never matches: views annotated with [annotationname]`@RolesAllowed("ADMIN")` become inaccessible, and any menu item shown conditionally on that role disappears. If a role check doesn't behave as expected, log [methodname]`AuthenticationContext.getGrantedAuthorities()` and confirm that the authorities carry the prefix.
+
+To use a prefix other than `ROLE_`, or none at all, define a [classname]`GrantedAuthorityDefaults` bean. Vaadin picks up the configured prefix and applies it to the access annotations and to the role-checking methods of [classname]`AuthenticationContext`:
+
+[source,java]
+----
+@Bean
+static GrantedAuthorityDefaults grantedAuthorityDefaults() {
+    return new GrantedAuthorityDefaults(""); // No prefix.
 }
 ----
 

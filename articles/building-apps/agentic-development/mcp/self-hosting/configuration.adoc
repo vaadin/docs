@@ -1,0 +1,69 @@
+---
+title: Configuration
+page-title: Configure a Self-Hosted Vaadin MCP Server Instance
+description: Every environment variable the self-hosted MCP server reads, and how to place it behind a reverse proxy.
+meta-description: Environment-variable reference for a self-hosted Vaadin MCP server, how to mount it under a path prefix or behind a rewriting ingress, and custom images.
+order: 20
+---
+
+
+= Configuration
+
+The image has working defaults for everything except the license key. If serving on port 8080 at `/docs` suits you, you need nothing from this page.
+
+
+== Environment Variables
+
+[cols="1,3"]
+|===
+|Variable |What It Does
+
+|`VAADIN_OFFLINE_KEY`
+|The license key's contents. Required, unless you mount the key as a file instead -- see <<licensing#,Licensing>>.
+
+|`SERVER_PORT`
+|Port to listen on. Defaults to `8080`.
+
+|`SERVER_SERVLET_CONTEXT_PATH`
+|Mounts the application under a prefix. Empty by default.
+
+|`VAADIN_MCP_ENDPOINT_PATH`
+|Path the MCP endpoint answers on, below the context path. Defaults to `/docs`. Cannot be `/`.
+
+|`VAADIN_MCP_PUBLIC_ENDPOINT_URL`
+|The URL shown in the landing page's configuration snippets. Worked out automatically unless a proxy rewrites your URLs.
+
+|`VAADIN_AUDIT_LOG_PATH`
+|File to append audit records to. Unset means no audit log. See <<monitoring-and-audit-logging#audit-logging,Audit Logging>>.
+
+|`AMPLITUDE_API_KEY`
+|Enables analytics reporting to Amplitude. Leave unset -- see <<air-gapped-operation#analytics,Analytics>>.
+
+|`VAADIN_MCP_DATA_PATH`
+|Where the server reads its documentation from. Already set correctly in the image -- leave it alone.
+|===
+
+
+[[reverse-proxy]]
+== Behind a Reverse Proxy
+
+Match your situation to one of these three:
+
+*To serve the whole application under a path prefix*, such as `https://tools.example.com/vaadin-mcp/docs`, set `SERVER_SERVLET_CONTEXT_PATH=/vaadin-mcp`. That's all you need: the endpoint and the landing page both move with it.
+
+*To change the endpoint's own path*, set `VAADIN_MCP_ENDPOINT_PATH`. It defaults to `/docs` and cannot be `/`, because the landing page answers there -- use a context path for a prefix and leave the endpoint its own path.
+
+*If your proxy strips a prefix before the request reaches the server*, set `VAADIN_MCP_PUBLIC_ENDPOINT_URL` to the full URL your developers should configure. The server can't detect a rewrite, so this is the one case where it needs telling. If you only set a context path, skip this.
+
+Remember that the server authenticates nobody, so whatever sits in front of it is where you apply access control. See <<{articles}/building-apps/agentic-development/mcp/self-hosting/#network-exposure,Network Exposure>>.
+
+
+[[custom-image]]
+== Requesting a Custom Image
+
+The published image suits almost every deployment, and it's the one Vaadin tests before release. Two variants are possible, and both have to be decided when the image is built -- no setting changes them afterward:
+
+* *A smaller image, covering fewer Vaadin versions.* The published image includes documentation for every Vaadin version the hosted server covers. Narrowing it to the versions you actually run makes a smaller image.
+* *An image with no usage-reporting code.* Leaving `AMPLITUDE_API_KEY` unset already means nothing is reported, which satisfies most security reviews. If yours requires the code to be absent entirely, it can be left out.
+
+The server's source isn't public, so ask for either through your Vaadin support channel rather than building it yourself.
