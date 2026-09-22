@@ -1,0 +1,66 @@
+---
+title: Environment Differences
+page-title: How the Vaadin browserless test environment differs
+description: What the browserless environment creates, in which order, and which application behavior therefore needs a different approach in a test.
+meta-description: Learn the browserless test lifecycle in Vaadin, and how it affects session-scoped beans and authentication applied during a test.
+order: 80
+---
+
+
+= How the Browserless Environment Differs
+
+The standard browserless setup creates a mocked Vaadin environment around each test method.
+Framework integration determines when dependency injection and authentication become available.
+The scope and security behavior below applies to Spring tests. The <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle and explicit route setup.
+
+[#test-lifecycle]
+== Spring Test Lifecycle
+
+For `SpringBrowserlessTest`, the default sequence is:
+
+. JUnit creates the test instance and Spring injects its `@Autowired` fields, before the Vaadin environment exists.
+. JUnit extension callbacks run. With their default timing, Spring Security test annotations populate `SecurityContextHolder`.
+. The base class's `@BeforeEach` method creates the Vaadin service, session, and UI and navigates to the root route.
+. Subclass `@BeforeEach` methods and the test method can use that environment.
+. The inherited cleanup closes the Vaadin environment after the test.
+
+The environment is therefore available after its setup hook, not during initial test-instance injection.
+Plain Java and Quarkus tests use their own framework setup; the Spring injection and security steps do not apply to them.
+See <<test-environment#,Test Environment and Lifecycle>> for the common APIs.
+
+[#session-scoped-beans]
+== Spring Session-Scoped Beans
+
+Resolving a `@VaadinSessionScope` or Spring `@SessionScope` bean during test-instance injection fails because no session exists yet.
+This failure affects every test in the class, including methods that do not use the field.
+An `ObjectProvider` defers resolution until `getObject()` is called after environment setup.
+A lazy proxy with `@Lazy`, or an `ApplicationContext.getBean()` call made after setup, can also defer lookup.
+
+Views created during initial or explicit navigation already have the Vaadin environment available, so their session-scoped dependencies can resolve then.
+In <<multi-user#pitfalls-and-guarantees,multi-user Spring tests>>, request- and session-scoped beans resolve for the active user; activate the intended window before resolving a bean directly.
+This Spring behavior does not establish CDI session-context isolation.
+
+For a complete test, see <<{articles}/building-apps/testing/browserless/setup-spring-boot#session-scoped-beans,Access Session-Scoped Beans>>.
+
+[#authentication-applied-during-a-test]
+== Authentication Applied During a Test
+
+With their default timing, Spring Security's `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` establish authentication before the environment's initial navigation.
+View access control therefore observes the simulated user during that navigation.
+
+Authentication established in the test body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+Subsequent requests use that authentication, but `getCurrentView()` still returns the previously rendered view until another navigation takes place.
+
+`Page.reload()` recreates the UI at the currently active location.
+If initial navigation redirected to the login view, reloading renders the login location again; it does not navigate to the original protected destination.
+
+For a worked Spring test, see <<{articles}/building-apps/testing/browserless/test-view-access#authentication-applied-during-a-test,Navigate After Changing Authentication>>.
+See <<spring-security#,Spring Security Integration>> for setup requirements and session ID rotation.
+
+== Components That Don't Exist Yet
+
+Queries traverse the server-side component tree.
+Per-item renderer components may not exist until rendering is requested, and closed overlay content is detached.
+See <<component-query#components-a-query-cannot-find,Components a Query Cannot Find>> for renderer and overlay semantics.
+
+[discussion-id]`4B6C9E13-7A85-42D0-9F3B-1C8E5D4A2B76`

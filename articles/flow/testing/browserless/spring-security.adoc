@@ -10,7 +10,7 @@ order: 28
 = Spring Security Integration
 
 `SpringBrowserlessTest` integrates the simulated Vaadin environment with Spring Security test authentication.
-Authentication is available before UI creation and initial navigation, so route access checks observe the test user.
+By default, authentication from Spring Security test annotations is available before UI creation and initial navigation, so route access checks observe the test user.
 
 == Navigation Access Control
 
@@ -24,6 +24,10 @@ Spring Security test annotations such as `@WithMockUser`, `@WithAnonymousUser`, 
 They require `spring-security-test` on the test classpath.
 `@WithUserDetails` uses a `UserDetailsService` from the selected application context.
 
+Authentication established in the test method, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+The rendered view is not replaced automatically; another navigation applies access control to the new authentication.
+See <<environment-differences#authentication-applied-during-a-test,Authentication Applied During a Test>> for the lifecycle contract and the linked test example.
+
 == Application Context Isolation
 
 Bean overrides such as `@MockitoBean` and `@MockBean` change Spring's test context cache key.
@@ -36,5 +40,23 @@ For a worked example, see <<{articles}/building-apps/testing/browserless/test-vi
 
 
 For the procedures previously covered here, [[set-up-view-access-control]][[testing-with-spring-security-annotations]]see <<{articles}/building-apps/testing/browserless/test-view-access#,the Building Apps guide>>.
+
+[role="since:com.vaadin:vaadin@V25.3"]
+== Session Fixation Protection
+
+Spring Security gives the session a new ID when a user authenticates, and an application without Spring Security does the same by calling [methodname]`HttpServletRequest.changeSessionId()` after a successful login. The mocked request performs that rotation instead of refusing it, so a test can drive a login flow that protects against session fixation.
+
+The session itself survives the rotation: the attributes stay, and so does the [classname]`VaadinSession` bound to it. Only the ID changes.
+
+[source,java]
+----
+String idBeforeLogin = VaadinSession.getCurrent().getSession().getId();
+
+// Log in through the application's own flow
+
+Assertions.assertNotEquals(idBeforeLogin,
+        VaadinSession.getCurrent().getSession().getId());
+----
+
 
 [discussion-id]`2A8B3F1E-9C47-4D5A-B621-8E3F2A7C9D10`

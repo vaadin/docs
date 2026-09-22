@@ -1,0 +1,93 @@
+---
+title: Configure a Browserless Test
+page-title: Configure a Browserless Test | Vaadin
+description: Set Vaadin properties and feature flags for individual browserless tests while retaining the correct framework setup.
+meta-description: Set Vaadin properties and feature flags for individual browserless tests while retaining the correct framework setup.
+order: 35
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Configure a Browserless Test#
+
+Use this guide after setting up a <<./#choose-your-framework,plain Java, Spring Boot, or Quarkus test>> with its standard environment initialization.
+The Java EE/CDI guide replaces that initialization and does not automatically apply this configuration; retain its custom setup rather than copying these annotations into it.
+
+== Configure One Test Class
+
+Add `@BrowserlessTestConfig` to the existing test class to enable a feature and set a Vaadin deployment property.
+For the plain Java setup:
+
+[source,java]
+----
+@BrowserlessTestConfig(
+        applicationProperties = "devmode.sessionSerialization.enabled=true",
+        featureFlags = "defaultAutoResponsiveFormLayout")
+class CartViewTest extends BrowserlessTest {
+    // Existing tests for CartView.
+}
+----
+
+Keep `SpringBrowserlessTest` and `@SpringBootTest` for Spring Boot, or `QuarkusBrowserlessTest` and `@QuarkusTest` for Quarkus.
+Choose an identifier from <<{articles}/flow/configuration/feature-flags#,Feature Flags>>; an unknown identifier fails instead of silently enabling a new feature.
+Run the affected tests with `mvn test` and assert the application behavior under the selected setting.
+The settings are local to the test environment, so the test does not need to edit a feature-flags file or reset system properties afterwards.
+
+== Override a Setting for One Method
+
+To exercise the same view with the feature disabled, add this annotation to the test method that verifies the fallback behavior:
+
+[source,java]
+----
+@BrowserlessTestConfig(featureFlags = "defaultAutoResponsiveFormLayout=false")
+----
+
+The method-level flag replaces the class-level flag while retaining its application property.
+Use a per-method environment for this pattern. `BrowserlessClassExtension` shares one environment and rejects method-level configuration.
+See <<{articles}/flow/testing/browserless/test-configuration#merging-class-and-method-configuration,Configuration Merging>> for inheritance and precedence rules.
+
+== Override a Spring-Defined Property
+
+In a Spring Boot test, a Vaadin property already defined in the Spring environment takes precedence over `@BrowserlessTestConfig`.
+Use Spring's `@TestPropertySource` on that test class to change it:
+
+[source,java]
+----
+@SpringBootTest
+@TestPropertySource(properties =
+        "vaadin.devmode.sessionSerialization.enabled=true")
+class CartViewTest extends SpringBrowserlessTest {
+    // Existing tests for CartView.
+}
+----
+
+This section is Spring-specific; it does not configure the Weld archive in the Java EE/CDI guide.
+
+== Configure an Extension or Multiple Users
+
+For a plain Java JUnit extension, configure the instance that creates the environment:
+
+[source,java]
+----
+@RegisterExtension
+BrowserlessExtension extension = new BrowserlessExtension()
+        .withFeatureFlags("defaultAutoResponsiveFormLayout");
+----
+
+For an application context created in a multi-user test, configure its builder:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(builder -> builder
+        .withViewPackages(CartView.class)
+        .withFeatureFlags("defaultAutoResponsiveFormLayout"))) {
+    var window = app.newUser().newWindow();
+    window.navigate(CartView.class);
+    // Exercise the view and assert the behavior enabled by the flag.
+}
+----
+
+An application context created this way does not read annotations on the test class.
+See <<{articles}/flow/testing/browserless/test-configuration#configuring-without-annotations,Programmatic Configuration>> for explicitly importing a configuration, registering Lookup services, and combining programmatic settings with annotations.
+
+
+[discussion-id]`C941CDE1-ACC5-47F3-82D9-90A3D1D0C1FC`

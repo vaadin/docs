@@ -137,4 +137,39 @@ For the environment lifecycle and navigation API, see <<{articles}/flow/testing/
 
 
 
+[#session-scoped-beans]
+== Access Session-Scoped Beans
+
+A Spring test field is injected before the browserless Vaadin session exists.
+If a test needs an application bean with `@VaadinSessionScope` or Spring's `@SessionScope`, inject an `ObjectProvider` and resolve the bean after environment setup:
+
+[source,java]
+----
+@SpringBootTest
+class CartViewTest extends SpringBrowserlessTest {
+
+    @Autowired
+    private ObjectProvider<Cart> cartProvider;
+
+    @Test
+    void addItem_cartContainsItem() {
+        CartView view = navigate(CartView.class);
+        Cart cart = cartProvider.getObject();
+
+        test(view.addButton).click();
+
+        Assertions.assertEquals(1, cart.getItems().size());
+    }
+}
+----
+
+
+This example assumes a session-scoped `Cart` service and a `CartView` whose `addButton` adds an item.
+Import `org.springframework.beans.factory.ObjectProvider` and `org.springframework.beans.factory.annotation.Autowired` for the test fields.
+Resolve the bean in the test method, or in a subclass `@BeforeEach` method after the inherited environment setup.
+See <<{articles}/flow/testing/browserless/environment-differences#session-scoped-beans,Spring Session-Scoped Beans>> for scope guarantees and other deferred-lookup options.
+
+This is Spring configuration. For CDI session beans, retain the scope activation and bean archive in <<setup-cdi#,the Java EE/CDI guide>>.
+
+
 [discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`

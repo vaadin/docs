@@ -182,6 +182,12 @@ Before migrating, find the corresponding version of the Jakarta EE 11-compatible
 
 Starting with Vaadin 25.3, [classname]`VaadinServlet` serves static resources by calling [methodname]`StaticFileHandler.serveStaticResource()` directly, and the [methodname]`serveStaticOrWebJarRequest()` method is deprecated for removal -- its name referred to WebJars, which aren't handled there. Overriding it no longer affects request handling. To customize how static resources are served, override [methodname]`createStaticFileHandler()` and return your own [interfacename]`StaticFileHandler` implementation instead.
 
+== Client-Side Engine Ported to TypeScript
+
+Starting with Vaadin 25.3, the client-side engine -- the framework code that runs in the browser and talks to the server -- is written in TypeScript and is bundled with the rest of the frontend by Vite. The engine that Google Web Toolkit (GWT) compiled from Java has been removed: the `com.vaadin.client.*` API is gone from the `flow-client` artifact, and the bootstrap page no longer loads `VAADIN/static/client/client.nocache.js`. The `ApplicationConstants.CLIENT_ENGINE_PATH` constant is deprecated for removal, since nothing writes to or serves that path any more.
+
+Applications need no changes; the engine has always been an implementation detail that application code doesn't compile against. Only an add-on that compiled its own widget set against `com.vaadin.client.*`, or a build step that referenced the client engine path, is affected -- such an add-on has to be rewritten on top of the TypeScript client.
+
 == Maven & Gradle Plugins
 
 Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
@@ -218,9 +224,21 @@ The new directory is registered as an additional output directory of the source 
 
 Update any build step that reads the bundle straight from the build directory -- such as a custom copy task, a Docker build, or a deployment script -- to use `build/vaadin-build-frontend/`. Setting `frontendOutputDirectory` back to a folder under `build/resources/main/` isn't a solution: it reintroduces the overlapping task outputs that prevent the frontend build from being cached correctly. See <<{articles}/flow/configuration/gradle#production-bundle-output, Frontend Bundle Output Location>> for details.
 
+=== npm Version Pinning Moved to `META-INF/VAADIN/versions`
+
+Starting with Vaadin 25.3, the files that pin npm package versions are read from the `META-INF/VAADIN/versions/` folder of every JAR on the classpath, instead of from the `vaadin-core-versions.json` and `vaadin-versions.json` files at the classpath root. The `Constants.VAADIN_CORE_VERSIONS_JSON` and `Constants.VAADIN_VERSIONS_JSON` constants that named those files have been removed.
+
+Applications need no changes. An add-on that shipped a versions file of its own has to move it into `META-INF/VAADIN/versions/`, where it can now ship more than one file.
+
 === Recently Published npm Packages Not Installed by Default
 
 Starting with Vaadin 25.2, npm package versions published less than one day ago are ignored when frontend dependencies are installed, as a protection against supply-chain attacks. If your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough. The minimum age is configured with the `vaadin.npm.minimumFrontendPackageAgeDays` system property; setting it to `0` disables the check. See <<{articles}/flow/configuration/development-mode/npm-pnpm-bun#delayed-package-installation, Delayed Installation of Recently Published Packages>> for details.
+
+=== Default `index.html` Generated Into `frontend/generated/`
+
+Starting with Vaadin 25.3, the build writes the default [filename]`index.html` to [filename]`frontend/generated/` rather than to the [filename]`frontend` folder, and generates it only when the project has no [filename]`frontend/index.html` of its own.
+
+A project upgraded from an earlier version usually has an [filename]`index.html` in [filename]`frontend`, auto-generated there by the older build and committed to source control. That file still takes precedence, so an uncustomized copy keeps shadowing the default and the application doesn't pick up later improvements to it. Compare the file against the default; if it hasn't been customized, delete it and let the build generate it. Keep it only for customizations of the application shell. See <<{articles}/flow/advanced/modifying-the-bootstrap-page#default-bootstrap-template-and-entry-point, Default Template & Entry Point>> for details.
 
 == Development Tools
 
@@ -1107,6 +1125,17 @@ Starting with Vaadin 25.2, the application page is served with the `X-Frame-Opti
 Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
 
 
+== Security Changes in Vaadin 25.3
+
+=== Sub-Resource Requests Answered With 401
+
+Starting with Vaadin 25.3, when a log-in view is configured with [methodname]`VaadinSecurityConfigurer.loginView()`, an unauthorized request that the browser makes for a sub-resource -- a stylesheet, script, image, font, or web app manifest, recognized from the `Sec-Fetch-Dest` request header -- is answered with `401 Unauthorized` instead of being redirected to the log-in view.
+
+Such a request can't render a log-in view, so redirecting it was pointless: the redirected request wasn't an HTML request either, so it was denied and redirected again, ending in a redirect loop that hid the resource that was actually blocked. The browser now reports the failing resource instead. The status is `401` rather than `404` because the request is denied before any resource lookup, so a denied path answers the same whether the resource exists or not.
+
+A test or a client that expects a redirect for such a request has to expect `401`. To serve the resource instead of denying it, permit its path in the security configuration, as described in <<spring-security-and-stylesheet, Spring Security and StyleSheet>>.
+
+
 == TestBench and Browserless Testing
 
 === JUnit 6 and Vintage Engine for JUnit 4 Tests
@@ -1137,6 +1166,57 @@ Non-Spring projects aren't affected. See <<{articles}/building-apps/testing/brow
 Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.ClickHandler` class has been removed. The interface, meant to be used with [classname]`ComponentTester` subclasses, should not be needed anymore. In this case, [classname]`com.vaadin.testbench.unit.Clickable` is a valid substitute.
 
 The [methodname]`getPropertyString`, [methodname]`getPropertyBoolean`, [methodname]`getPropertyDouble` and [methodname]`getPropertyInteger` methods of the [classname]`TestBenchElement` class have been changed to not convert property values to the respective result types anymore. For example, calling [methodname]`getPropertyString` on a property that contains a number value will now throw an exception instead of returning the string representation of the number.
+
+=== Browserless Testing: Value Testers Commit Invalid Values
+
+Starting with Vaadin 25.3, [classname]`NumberFieldTester`, [classname]`DatePickerTester`, [classname]`TimePickerTester` and [classname]`DateTimePickerTester` no longer throw an [classname]`IllegalArgumentException` for a value outside `min` or `max`, off the `step` scale, or for an empty value on a required field. A browser commits such a value and marks the field invalid, and these testers now do the same.
+
+A test that expects the exception fails and has to assert the validity instead:
+
+[source,java]
+----
+// Before
+Assertions.assertThrows(IllegalArgumentException.class,
+        () -> test(amount).setValue(-5.0));
+
+// After
+test(amount).setValue(-5.0);
+Assertions.assertFalse(test(amount).isValid());
+----
+
+[methodname]`setValue` still throws an [classname]`IllegalStateException` when the component is not usable, and a value that a browser prevents the user from entering, such as one longer than the `maxLength` of a text field, is still refused. See <<{articles}/flow/testing/browserless/component-testers#constraint-enforcement,Component Testers>>.
+
+=== Browserless Testing: Read-Only Components Are Not Usable
+
+[methodname]`ComponentTester.isUsable()` returns `false` for a read-only value component, and an interaction with such a component throws. This affects the date, time, date-time, combo box, select and list box testers, which previously ignored the read-only state. A test that sets a value on a read-only field has to make the field editable first, or set the value through the component's Java API.
+
+=== Browserless Testing: Grid Column Components Are Found
+
+A component set as a Grid column header, footer or editor is part of the component tree, so [methodname]`find(...)` returns it where the lookup previously failed with a "no such component" error. A test that asserted that failure, or that counts every component in a view containing a Grid, needs updating. Such a component is reported once, even when its header cell spans several columns.
+
+=== Browserless Testing: Removed Internal Tester Method
+
+[methodname]`CheckboxGroupTester.updateSelection` was public and appeared on the generated [classname]`CheckboxGroupLocator`, although it models nothing a user does. It is private now. Use [methodname]`selectItem(...)`, [methodname]`selectItems(...)`, [methodname]`deselectItem(...)`, [methodname]`deselectItems(...)`, [methodname]`selectAll()` or [methodname]`deselectAll()` instead.
+
+=== Browserless Testing: Grid Cell Components Are Those the Grid Rendered
+
+[methodname]`GridTester.getCellComponent(...)` returns the component the grid rendered for the cell, which is the instance a browser shows: reading the same cell twice gives the same instance, and interacting with it affects the row on screen. It previously rendered a throw-away copy on every call. A cell the grid does not render at all, such as one in a hidden column, now throws.
+
+A test written against the old behavior, and one that reaches for a cell the grid does not render, can use [methodname]`renderCellComponent(...)` instead, which keeps rendering a copy per call.
+
+=== Browserless Testing: Testers Returned by test()
+
+[methodname]`test(treeGrid)` returns a [classname]`TreeGridTester` and [methodname]`test(gridContextMenu)` returns a [classname]`GridContextMenuTester`, rather than the [classname]`GridTester` and [classname]`ContextMenuTester` they returned before. Code that assigns the result to an explicitly typed variable no longer compiles and needs the new type, or `var`.
+
+=== Browserless Testing: Context Menus Have to Be Opened
+
+[classname]`ContextMenuTester` and [classname]`GridContextMenuTester` interact with the items of an open menu only, as in a browser, where the content of a closed menu is not on the page. [methodname]`clickItem(...)`, [methodname]`isItemChecked(...)` and [methodname]`getItemTooltipText(...)` throw an [classname]`IllegalStateException` until [methodname]`open()` is called, so a test that clicked the items of a closed menu needs that call added. [methodname]`find(...)` on the tester still works while the menu is closed.
+
+A [classname]`GridContextMenu` is always about a row, so its tester is obtained with [methodname]`test(grid).contextMenu(row)` and opened with [methodname]`open()`, or opened on a row directly with [methodname]`open(row)`.
+
+=== Browserless Testing: Lookup Services of the Spring and Quarkus Integrations
+
+Starting with Vaadin 25.3, the services that the Spring and Quarkus integrations need have moved from [methodname]`lookupServices()` to the new [methodname]`frameworkLookupServices()` method -- both declared by [classname]`BaseBrowserlessTest`, the base class of [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- and are registered in every case. An override of [methodname]`lookupServices()` therefore adds to them instead of replacing them, which is what keeps those integrations working, and the resulting [classname]`Lookup` holds more services than before. Override [methodname]`frameworkLookupServices()` instead to replace one of the framework services, such as the Spring [classname]`SpringSecurityRequestCustomizer`. [methodname]`lookupServices()` itself is deprecated in favor of the test configuration, which declares the same services on a test class or a test method; existing overrides are still honored. See <<{articles}/flow/testing/browserless/test-configuration#,Test Configuration>>.
 
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).

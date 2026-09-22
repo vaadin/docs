@@ -128,6 +128,11 @@ The following table lists all available filter methods, grouped by category:
 | [methodname]`withoutAttribute(String)`
 | Excludes components that have the given attribute.
 
+2+h| Slots
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withinSlot(String)`#
+| Matches components that sit in the given named slot of the component that hosts them. See <<slots, Filtering by Slot>>.
+
 2+h| Value & Properties
 
 | [methodname]`withValue(V)`
@@ -192,6 +197,26 @@ Button submitButton = find(Button.class).testId("submit-button");
 To combine a test ID with other filter conditions, use the [methodname]`withTestId()` filter method instead and finish the chain with a regular terminal operator. Since test IDs are expected to be unique, both forms fail if more than one component matches. See <<{articles}/building-apps/testing/browserless/test-user-interactions#test-ids, Getting Started>> for more on test IDs.
 
 
+[[slots]]
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Filtering by Slot
+
+Components such as [classname]`Card`, [classname]`Dialog`, and [classname]`SplitLayout` place content in named slots. An unfiltered query returns matches from all of them, and [methodname]`withinSlot()` narrows the result to one slot:
+
+[source,java]
+----
+// Only the buttons the card put in its footer
+List<Button> footerButtons = test(card).find(Button.class)
+        .withinSlot("footer").all();
+----
+
+A component is in slot `name` when it carries `slot="name"` itself, or when an element that carries it is one of its ancestors. Everything below a slot belongs to that slot, however deeply nested, and when slots nest, the outermost one -- the one closest to the search context -- decides. This makes [methodname]`withinSlot()` different from [methodname]`withAttribute("slot", name)`, which matches only a component that is itself the slot root.
+
+Slot names are the ones the component uses in the browser, and they're component specific: [classname]`Card` and [classname]`ConfirmDialog` name their header slot `header`, while [classname]`Dialog` names it `header-content`. A name that no component is slotted under produces no results. Printing the component tree with [methodname]`toPrettyTree()` shows the slots as `@slot='...'`.
+
+For the slots of a component that has a tester, the tester's own finders are usually shorter; see <<component-testers#slot-scoped-finders, Slot-Scoped Finders>>.
+
+
 === Checking Existence
 
 Use [methodname]`exists()` to check whether a query has results without throwing an exception when none are found:
@@ -239,6 +264,56 @@ TextField textField = findInView(VerticalLayout.class)
         .last();
 ----
 
+
+== Components a Query Cannot Find
+
+A query walks the server-side component tree. A component that another component renders per item, and the content of an overlay that is closed, are not in that tree, and a query returns an empty result for them instead of an error. The failure therefore reads as though the component was never created.
+
+
+=== Components a Renderer Creates
+
+A component column creates its component while rendering a row, and no row renders on its own in a browserless test:
+
+[source,java]
+----
+grid.addComponentColumn(person -> new Checkbox(person.isSubscriber()))
+        .setKey("subscriber");
+
+// Finds nothing: no row has rendered yet
+List<Checkbox> checkboxes = find(Checkbox.class).all();
+----
+
+[classname]`GridTester` renders the cell on request:
+
+[source,java]
+----
+Checkbox checkbox = (Checkbox) test(grid).getCellComponent(0, "subscriber");
+test(checkbox).click();
+----
+
+[since:com.vaadin:vaadin@V25.3]#The tester hands out the component the grid actually rendered, which is the one a browser shows: reading the same cell twice gives the same instance, and that instance is replaced when the row renders anew, after [methodname]`refreshItem(...)` for example. A row the client has not asked for yet is scrolled into view first, the way a user reaches it, and a cell the grid does not render at all, such as one in a hidden column, throws.#
+
+[since:com.vaadin:vaadin@V25.3]#[methodname]`renderCellComponent(row, column)` renders a cell on its own instead, and attaches the copy to the grid so that it can be used. Every call renders the cell again and leaves the copy behind, so a later query reports every one of them. It is for the cells the grid does not render, and for tests written against the earlier behavior of [methodname]`getCellComponent`, which rendered a copy per call.#
+
+A [classname]`LitRenderer` column has no server-side component at all. Read it with [methodname]`getCellText(row, column)`, [methodname]`getLitRendererPropertyValue(...)`, or [methodname]`invokeLitRendererFunction(...)`.
+
+[since:com.vaadin:vaadin@V25.3]#A component set as a column header, footer, or editor is part of the tree, and a query finds it.# Such a component is reported once, even when it sits in a header cell that spans several columns.
+
+
+=== Overlay Content
+
+The content of an overlay, such as a context menu, is attached to the UI only while the overlay is open, so a top-level query does not see it. Query it through the overlay's own tester, or open the overlay first. See <<overlay-components#, Testing Overlay Components>> for both approaches.
+
+[source,java]
+----
+// Empty while the menu is closed
+find(Div.class).withText("Rename").all();
+
+test(menu).open();
+
+// One match
+find(Div.class).withText("Rename").all();
+----
 
 For a worked example, see <<{articles}/building-apps/testing/browserless/test-user-interactions#,Test User Interactions>>.
 

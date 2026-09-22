@@ -57,6 +57,8 @@ The following beans are shared by this configurer (if not already shared):
 * `VaadinRolePrefixHolder` — Holds role prefix accessible outside an active request
 * `VaadinDefaultRequestCache` — A request cache implementation which ignores requests that are not for routes
 * `VaadinSavedRequestAwareAuthenticationSuccessHandler` — A strategy that uses an available VaadinSession for retrieving the security context
+* `ClientRegistrationRepository` — The repository of the OAuth2 client registrations of the application
+* `OidcUserService` — The service that loads the authenticated user, shared only when Keycloak role mapping is enabled with `keycloakRoleMapping()`
 
 ==== Configuration Methods
 
@@ -90,6 +92,9 @@ public VaadinSecurityConfigurer loginView(String loginView, String logoutSuccess
 
 Configures the login view for use in a Hilla application and the logout success URL.
 
+[since:com.vaadin:vaadin@V25.3]#An unauthenticated request for a sub-resource of a protected path -- a stylesheet, a script, an image, or a font -- is answered with `401 Unauthorized` instead of being redirected to the login view.# A redirect can't be rendered as the resource the browser asked for, and it ends in a redirect loop that reports the login view rather than the resource that was denied. Requests for a page keep the redirect. The two are told apart by the `Sec-Fetch-Dest` header the browser sends, and a request without that header counts as a page request.
+
+
 ===== OAuth2 Configuration
 
 [source,java]
@@ -105,6 +110,13 @@ public VaadinSecurityConfigurer oauth2LoginPage(String oauth2LoginPage, String p
 ----
 
 Configures the login page for OAuth2 authentication and the post-logout redirect URI.
+
+[source,java]
+----
+public VaadinSecurityConfigurer keycloakRoleMapping()
+----
+
+[since:com.vaadin:vaadin@V25.4]#Enables mapping of Keycloak realm and client roles to Spring Security granted authorities (disabled by default).# Keycloak puts the roles of a user into the access token, so they aren't part of the authenticated user by default. Enabling the mapping decodes the access token and maps its roles, which makes `@RolesAllowed("admin")` and `hasRole("admin")` match a Keycloak role named `admin`. Works only together with `oauth2LoginPage(String)` and its overloads. See <<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> for details.
 
 ===== Logout Configuration
 

@@ -180,6 +180,34 @@ class SecurityTestConfig {
 }
 ----
 
+[#authentication-applied-during-a-test]
+=== Navigate After Changing Authentication
+
+The default Spring Security test annotations establish authentication before initial navigation.
+When a test changes authentication later, navigate again to apply access control to the new user.
+For a root route that redirects anonymous users to `LoginView`, use this Spring test method:
+
+[source,java]
+----
+@Test
+@WithMockUser(username = "admin", roles = "ADMIN",
+        setupBefore = TestExecutionEvent.TEST_EXECUTION)
+void adminSignsInDuringTest_adminViewShown() {
+    // Setup navigated to the root route while the user was still anonymous,
+    // and access control redirected that navigation to the login view.
+    Assertions.assertInstanceOf(LoginView.class, getCurrentView());
+
+    // Navigating again applies access control to the current authentication.
+    navigate(AdminView.class);
+
+    Assertions.assertTrue(find(Avatar.class).single().isVisible());
+}
+----
+
+The example uses Spring Security's `TestExecutionEvent` from `org.springframework.security.test.context.support`.
+For a login-form test, perform the application's login action and then navigate to the protected view before asserting its contents.
+See <<{articles}/flow/testing/browserless/environment-differences#authentication-applied-during-a-test,Authentication Timing>> for why reloading the current location does not replace this step.
+
 [#quarkus]
 == Quarkus Security
 

@@ -136,7 +136,18 @@ For advanced setups, [classname]`BrowserlessApplicationContext.Builder` exposes 
 
 | [methodname]`withCloseHook(Runnable)`
 | Registers a callback to run after the context tears down -- intended for releasing framework-specific state.
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withApplicationProperty(String, String)` / [methodname]`withApplicationProperties(Map)`#
+| Sets Vaadin application properties for the environment the context creates.
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withFeatureFlags(String...)` / [methodname]`withFeatureFlag(String, boolean)`#
+| Enables or disables feature flags for the environment the context creates. Both methods also have a [classname]`Feature` overload.
+
+| [since:com.vaadin:vaadin@V25.3]#[methodname]`withConfiguration(BrowserlessConfiguration)`#
+| Applies a configuration built elsewhere as the baseline that the other methods add to, such as [methodname]`BrowserlessConfiguration.from(getClass())` to reuse what the test class declares with [annotationname]`@BrowserlessTestConfig`.
 |===
+
+The property, feature flag, and configuration methods are the programmatic form of [annotationname]`@BrowserlessTestConfig`, which the context itself does not read; see <<test-configuration#configuring-without-annotations, Configuring Without Annotations>>. [classname]`SecuredBrowserlessApplicationContext.Builder` exposes the same methods.
 
 For one-off tweaks without holding on to a builder reference, [methodname]`BrowserlessApplicationContext.create(UnaryOperator<Builder>)` and the corresponding [methodname]`createSecured(Function<Builder, SecuredBuilder<C>>)` accept a configurer:
 
@@ -160,6 +171,7 @@ Common gotchas worth keeping in mind:
 - *No parallel access.* Every context is thread-affine. Driving the same [classname]`BrowserlessApplicationContext` from multiple threads in the same test is unsupported.
 - *Security snapshot is per user, not per window.* Two windows of the same user share one snapshot; a security mutation made while one window is active -- including a logout -- is visible to the user's other windows, both already open and opened afterwards. The snapshot is re-captured only on cross-user switches.
 - *Calling Vaadin APIs directly.* DSL methods on [classname]`BrowserlessUIContext` activate the window automatically. If the test reaches for [methodname]`UI.getCurrent()`, [methodname]`VaadinSession.getCurrent()`, or [classname]`SecurityContextHolder` between DSL calls, call [methodname]`window.activate()` first to make sure the thread-locals reflect the intended window.
+- [since:com.vaadin:vaadin@V25.2]#*Spring request and session scopes follow the user.*# A [annotationname]`@SessionScope` or [annotationname]`@RequestScope` bean is resolved against the active user's own request, so two users never share one instance. [annotationname]`@VaadinSessionScope` has always behaved this way, because it resolves against [methodname]`VaadinSession.getCurrent()`. See <<environment-differences#session-scoped-beans, Session-Scoped Beans>> for why such a bean can't be autowired into a test class field. Resolving it from the test method instead gives the active user's instance, so activate the intended user's window first.
 - *Anonymous users still go through the handler.* On a secured context, [methodname]`newUser()` with no arguments delegates to the handler, which installs its anonymous-equivalent state (for example, Spring's [classname]`AnonymousAuthenticationToken`).
 
 For a worked example, see <<{articles}/building-apps/testing/browserless/test-multiple-users#,Test Multiple Users and Windows>>.
