@@ -1,0 +1,140 @@
+---
+title: Set Up Browserless Tests with Spring Boot
+page-title: Set Up Browserless Tests with Spring Boot | Vaadin
+description: Set up a Spring Boot project, write a browserless test for a Flow view, and run it from your IDE or Maven.
+meta-description: Set up a Spring Boot project, write a browserless test for a Flow view, and run it from your IDE or Maven.
+order: 10
+---
+
+
+= Set Up Browserless Tests with Spring Boot
+
+To start creating browserless tests in an existing Spring Boot project, add the `browserless-test-spring` dependency with a `test` scope. Spring Boot's test starter must also be present -- it's typically already on the classpath in Spring Boot projects.
+
+This guide uses Spring Boot, `SpringBrowserlessTest`, and the Spring application context.
+For another application framework, choose its guide in <<./#choose-your-framework,Browserless Testing>>.
+
+Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+
+[#first-browserless-test]
+== Create a Test
+
+In Spring Boot projects, views typically use dependency injection for services and other components. To handle this correctly, browserless testing provides a specialized base class: [classname]`SpringBrowserlessTest`. Annotate your test class with [annotationname]`@SpringBootTest` so that the full application context is available.
+
+Given a simple view like this:
+
+include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
+
+A browserless test for it looks like this:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+@SpringBootTest
+class HelloWorldViewTest extends SpringBrowserlessTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+
+}
+----
+
+Place the test in `src/test/java`, in the same Java package as the view.
+The following sections break down what this test does.
+
+
+=== Navigating to a View
+
+The [methodname]`navigate()` method opens a view, just as a user would navigate to it in the browser. It returns the view instance so you can interact with it directly.
+
+[source,java]
+----
+final HelloWorldView helloView = navigate(HelloWorldView.class);
+----
+
+
+=== Using the Java API Directly
+
+Since you're running on the server side, you have direct access to the Java component API. In the example above, the [classname]`TextField` and [classname]`Button` fields are package-protected. This means the test class can access them directly, as long as it's in the same Java package -- for example, if the view is in `src/main/java/com/example/app/`, put the test in `src/test/java/com/example/app/`.
+
+[source,java]
+----
+// Read a component's value directly
+String currentValue = helloView.name.getValue();
+
+// Check component state
+boolean isEnabled = helloView.sayHello.isEnabled();
+boolean isVisible = helloView.name.isVisible();
+----
+
+
+=== Simulating User Actions with Testers
+
+To simulate how a user interacts with a component, wrap it with [methodname]`test()`. This returns a component-specific tester that provides methods like [methodname]`setValue()`, [methodname]`click()`, and [methodname]`getText()`. Unlike calling the Java API directly, tester methods also verify that the component is in a usable state -- visible, enabled, and attached to the UI.
+
+[source,java]
+----
+// Simulate typing into a text field
+test(helloView.name).setValue("Test");
+
+// Simulate clicking a button
+test(helloView.sayHello).click();
+
+// Read the text a user would see
+String text = test(notification).getText();
+----
+
+Each Vaadin component has a tester tailored to its behavior. For example, a [classname]`CheckboxTester` uses [methodname]`click()` to toggle checked state, a [classname]`ComboBoxTester` has [methodname]`selectItem()`, and a [classname]`GridTester` has [methodname]`getRow()`. See <<{articles}/flow/testing/browserless/component-testers#,Component Testers>> for supported operations and <<test-custom-components#,Test a Custom Component>> to build your own tester.
+
+
+=== Finding Components
+
+Not every component is stored in a view field. For example, the [classname]`Notification` in the test above is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`find()` query method to find components in the UI by their type:
+
+[source,java]
+----
+// Find the single Notification currently open
+Notification notification = find(Notification.class).single();
+----
+
+The query API supports filtering by properties, predicates, and scoping to specific parts of the component tree. See <<{articles}/flow/testing/browserless/component-query#, Querying Components>> for details.
+
+== Running Tests
+
+Testing with [classname]`SpringBrowserlessTest` doesn't require any particular setup beyond the dependencies above. Run the test directly from your IDE or use Maven, for example by typing `mvn test` in the terminal.
+
+The test passes when entering a name and clicking the button produces the expected notification.
+
+== Next Steps
+
+Use <<{articles}/building-apps/testing/browserless/test-user-interactions#,Test User Interactions>> to cover more complex views.
+If the test fails, see <<{articles}/building-apps/testing/browserless/debug-tests#,Debug a Failing Browserless Test>>.
+For the environment lifecycle and navigation API, see <<{articles}/flow/testing/browserless/test-environment#,Test Environment and Lifecycle>>.
+
+
+
+
+[discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`

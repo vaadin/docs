@@ -1,0 +1,74 @@
+---
+title: CDI Test Integration
+page-title: CDI Test Integration | Vaadin
+description: Lifecycle ordering, CDI bean discovery, scopes, servlet integration, and route registration in Weld-based browserless tests.
+meta-description: Lifecycle ordering, CDI bean discovery, scopes, servlet integration, and route registration in Weld-based browserless tests.
+order: 42
+---
+
+
+= CDI Test Integration
+
+A Java EE / Jakarta EE application using Vaadin CDI can run browserless tests with Weld in the test JVM.
+This integration uses an application-owned subclass of `BrowserlessTest` and a `CdiVaadinServlet`.
+It does not deploy an application server or create a Spring application context.
+
+For dependencies, complete test classes, and CDI alternatives, see <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>>.
+
+== Environment Lifecycle
+
+`BrowserlessTest` initializes and cleans up Vaadin through JUnit `@BeforeEach` and `@AfterEach` methods.
+JUnit executes extension setup callbacks before `@BeforeEach` methods, so Weld can supply its bean manager before Vaadin initialization.
+An overridden `initVaadinEnvironment()` retains `@BeforeEach` to remain a lifecycle method.
+
+The CDI setup replaces default initialization with tester registration, `MockVaadin.setup()` using the CDI servlet, signal-environment initialization, and route registration.
+It does not call `super.initVaadinEnvironment()`, which would create the default environment first.
+The inherited cleanup tears down Vaadin and signal support before extension cleanup stops Weld.
+
+The documented recipe uses JUnit's default per-method test-instance lifecycle.
+Weld owns its CDI contexts; Browserless Test owns the simulated Vaadin environment.
+Changing the JUnit test-instance lifecycle or sharing contexts requires reassessing both lifecycles.
+The `MockVaadin` integration uses an internal API, so custom setup code should be checked when upgrading Browserless Test.
+
+== CDI Discovery and Scope Activation
+
+Weld JUnit's automatic setup builds a synthetic bean archive from the test package and its sub-packages, including matching application classes on the runtime classpath.
+`@AddBeanClasses` and `@AddPackages` extend that archive.
+`BeanDiscoveryMode.ALL` allows discovery without a bean-defining annotation inside the archive; it does not discover every dependency on the classpath.
+The deployed WAR's `beans.xml` does not configure this test archive.
+
+The bean graph includes views, layouts, concrete injected implementations, producers, and observers.
+Weld cannot instantiate an interface listed in `@AddBeanClasses`; it needs a concrete managed bean.
+Test replacements use CDI alternatives and qualifiers; merely adding another ordinary implementation can make injection ambiguous.
+
+`@ActivateScopes(SessionScoped.class)` activates a CDI session context for beans that require it.
+This is separate from creating a mocked `VaadinSession`.
+The single-user Weld recipe does not establish a mapping between multiple browserless user contexts and separate CDI session contexts.
+
+== CDI Servlet and Extensions
+
+`@AddPackages(CdiInstantiator.class)` includes the Vaadin CDI infrastructure in the archive.
+`VaadinExtension` and `BeanManagerProvider` connect that infrastructure to Weld's bean manager.
+A CDI producer supplies the `CdiVaadinServlet` instance also passed to `MockVaadin.setup()`.
+That servlet makes Vaadin resolve managed objects through `CdiInstantiator`.
+
+== Route Registration
+
+CDI bean discovery and Vaadin route registration are separate operations.
+The custom setup registers navigation targets with `RouteConfiguration` after creating the CDI-aware service.
+It does not invoke the base class's default `discoverRoutes()` path.
+
+An empty `@ViewPackages` annotation means the test package and its sub-packages in the default setup; it is not an instruction to disable route scanning.
+The CDI recipe's explicit registration works because it replaces the default initialization method.
+
+== Boundaries
+
+The test supplies CDI injection and a simulated Vaadin environment, not all Jakarta EE services supplied by an application server.
+Application-server authentication, persistence, transactions, and other deployment services need their own test configuration or integration tests.
+Spring test annotations, Spring bean replacement, and Quarkus test profiles do not configure this Weld archive.
+
+The common component query and tester APIs remain available after CDI initialization.
+The browserless JUnit extensions and plain `forComponent()` factories do not apply this custom CDI setup automatically.
+
+
+[discussion-id]`52411CF1-7324-44CE-813B-8F76BBA923DC`
