@@ -224,7 +224,7 @@ public class MyView extends Main {
 [classname]`AuthenticationContext` has multiple methods for checking the roles and authorities of the current user. Refer to the Javadoc for more information.
 
 
-=== Leaving Out, Hiding, and Disabling Components
+=== Leaving Out, Hiding, and Restricting Components
 
 Once you know the roles of the current user, you build the view to match them. The safest option is to *not create the component at all*. A component that's never added to the view can't be interacted with, and nothing about it ever reaches the browser:
 
@@ -240,33 +240,51 @@ public CustomerView(AuthenticationContext authenticationContext) {
 ----
 <1> Only administrators get a *Delete* button.
 
-When the component has to exist -- because other code refers to it, or because you change its state while the view is open -- hide it with [methodname]`setVisible(false)`, or disable it with [methodname]`setEnabled(false)`:
+When the component has to exist -- because other code refers to it, or because you change its state while the view is open -- restrict it instead. Use [methodname]`setVisible(false)` to take it out of the UI altogether:
 
 [source,java]
 ----
 var deleteButton = new Button("Delete", event -> deleteSelected(grid));
 deleteButton.setVisible(authenticationContext.hasRole("ADMIN")); // <1>
-
-var salaryField = new TextField("Salary");
-salaryField.setEnabled(authenticationContext.hasRole("ADMIN")); // <2>
 ----
 <1> Users without the `ADMIN` role don't see the button at all.
-<2> Users without the `ADMIN` role see the salary, but can't change it.
 
-*Both methods are enforced on the server*, not only in the browser. Flow stops sending updates to an invisible component, and ignores events and property changes that arrive from a component that's invisible or disabled. A user who makes the element visible or enabled again with the browser's developer tools therefore still can't trigger its listeners.
+Use [methodname]`setEnabled(false)` when users should still see that an action exists, even though they can't perform it:
+
+[source,java]
+----
+var approveButton = new Button("Approve", event -> approveSelected(grid));
+approveButton.setEnabled(authenticationContext.hasRole("APPROVER")); // <1>
+----
+<1> Everyone sees the button, but only users with the `APPROVER` role can click it.
+
+For *input fields*, prefer [methodname]`setReadOnly(true)` to disabling. A read-only field keeps its value legible and selectable, whereas a disabled field is dimmed and awkward to read:
+
+[source,java]
+----
+var salaryField = new TextField("Salary");
+salaryField.setReadOnly(!authenticationContext.hasRole("ADMIN")); // <1>
+----
+<1> Users without the `ADMIN` role see the salary, but can't change it.
+
+When the fields belong to a [classname]`Binder`, [methodname]`Binder.setReadOnly(true)` applies the same to every bound field at once. To make a single field permanently read-only, bind it with [methodname]`Binder.bindReadOnly()`.
+
+*All three methods are enforced on the server*, not only in the browser. Flow stops sending updates to an invisible component, and ignores events and property changes that arrive from a component that's invisible or disabled. A read-only field rejects a value that arrives from the client and restores the one it had. A user who makes the element visible, enabled, or writable again with the browser's developer tools therefore still can't get past the check.
+
+They differ in scope, though. [methodname]`setVisible(false)` and [methodname]`setEnabled(false)` block everything the component could send to the server, whereas [methodname]`setReadOnly(true)` guards only the field's value. Hide or disable a component when nothing about it should be reachable.
 
 One exception is worth knowing about: a component can reopen the client-to-server channel for its disabled state with `DisabledUpdateMode.ALWAYS`. If you do that in a component of your own, [methodname]`setEnabled(false)` no longer blocks everything. See <<{articles}/flow/component-internals/enabled-state#overriding-default-disabled-behavior,Overriding Default Disabled Behavior>> for details.
 
-Setting either state on a container applies it to the children as well, so you can hide or disable a whole section of a view with a single call. For the full semantics of both states, see <<{articles}/flow/component-internals/visibility#,Component Visibility>> and <<{articles}/flow/component-internals/enabled-state#,Component Enabled State>>.
+Setting visibility or the enabled state on a container applies it to the children as well. A single call therefore hides or disables a whole section of a view. For the full semantics of both states, see <<{articles}/flow/component-internals/visibility#,Component Visibility>> and <<{articles}/flow/component-internals/enabled-state#,Component Enabled State>>.
 
 .Don't Use CSS to Restrict Access
 [WARNING]
-Never restrict access with CSS -- such as `display: none`, `visibility: hidden`, or `pointer-events: none` -- or by setting the `hidden` or `disabled` attribute directly on the element. These only change how the component looks and behaves in the browser. On the server, the component is still visible and enabled, and it keeps accepting events, so anyone can restore it from the browser's developer tools and use it. Use CSS for styling. Use [methodname]`setVisible()` and [methodname]`setEnabled()` for access.
+Never restrict access with CSS -- such as `display: none`, `visibility: hidden`, or `pointer-events: none` -- or by setting the `hidden`, `disabled`, or `readonly` attribute directly on the element. These only change how the component looks and behaves in the browser. On the server, the component is still visible, enabled, and writable, and it keeps accepting events, so anyone can restore it from the browser's developer tools and use it. Use CSS for styling. Use [methodname]`setVisible()`, [methodname]`setEnabled()`, and [methodname]`setReadOnly()` for access.
 
 
 === Hiding Isn't a Security Boundary
 
-Leaving out, hiding, and disabling components decides *what users can reach through the UI*. It doesn't decide what they can do to your data. A bug in the view, a component you forget to hide, or a later refactoring can all expose an action you meant to restrict.
+Leaving out, hiding, disabling, and write-protecting components decides *what users can reach through the UI*. It doesn't decide what they can do to your data. A bug in the view, a component you forget to hide, or a later refactoring can all expose an action you meant to restrict.
 
 Always enforce the same rules in the *services* the view calls, as described in the <<protect-services#,Protect Services>> guide. Treat the checks inside the view as a way to give users a relevant UI, and the checks in the services as the actual security boundary.
 
