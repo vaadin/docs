@@ -18,13 +18,16 @@ The other methods described on this page -- [methodname]`executeJs(String, Objec
 
 
 [[declaring-javascript]]
+[role="since:com.vaadin:vaadin@V25.4"]
 == Declaring JavaScript in Java
 
 An interface annotated with [annotationname]`@JsDefinition` declares the JavaScript that its methods run, and the build collects that JavaScript into the bundle. Call the declared JavaScript through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that the method declares.
 
 Each method of the interface is annotated with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run. The arguments of the call are available inside the expression as `$0`, `$1`, and so on, and the element the implementation was obtained from is `this`.
 
-The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, and `Component`.
+The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction`.
+
+Passing a [classname]`JsFunction` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead of passing a function into it.
 
 .Declaring and calling JavaScript through a `@JsDefinition` interface
 [example]
@@ -80,13 +83,11 @@ The interface is checked when [methodname]`executeJs(Class)` hands out the imple
 
 [classname]`Page` has no declaration-based method. When the JavaScript isn't about a particular element, run it on the UI's element, which is the `<body>` element on the client: [methodname]`UI.getCurrentOrThrow().getElement().executeJs(MyJs.class)`.
 
-Passing a [classname]`JsFunction` as an argument brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead of passing a function into it.
-
 
 [[return-values]]
 == Return Values
 
-Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an [methodname]`executeJs()` expression, and a function called through [methodname]`callJsFunction()`. A declared method has to declare [classname]`PendingJavaScriptResult` as its return type to give access to the result.
+Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult` as its return type to give access to the result.
 
 .Checking for support of Constructable Stylesheets in the browser
 [example]
@@ -137,6 +138,9 @@ public interface ItemsJs extends Serializable {
 
     @JsExpression("return this.getItems()")
     PendingJavaScriptResult getItems();
+
+    @JsExpression("return this.getPersonMap()")
+    PendingJavaScriptResult getPersonMap();
 }
 ----
 
@@ -167,12 +171,13 @@ You can also use [methodname]`toCompletableFuture(TypeReference)` to get the res
 [source,java]
 ----
 CompletableFuture<Map<String, Person>> future = getElement()
-        .executeJs(PersonMapJs.class).getPersonMap()
+        .executeJs(ItemsJs.class).getPersonMap()
         .toCompletableFuture(
                 new TypeReference<Map<String, Person>>() {});
 ----
 
 
+[[execute-js]]
 == `executeJs` Method
 
 The [methodname]`Element.executeJs()` method runs a JavaScript expression given as a string. The browser compiles the expression, which a content security policy that doesn't allow `unsafe-eval` blocks. Declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>). Use this method only for JavaScript that can't be declared -- an expression that isn't known until runtime, for example.
@@ -210,6 +215,7 @@ Always pass arguments using the `$0`, `$1`, ... notation to avoid script injecti
 If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrentOrThrow().getPage().executeJs()` method.
 
 
+[[call-js-function]]
 == `callJsFunction` Method
 
 The [methodname]`Element.callJsFunction()` method allows you to run a client-side component function from the server side. The method accepts two parameters: the name of the function to call; and the arguments to pass to the function.
