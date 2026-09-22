@@ -98,6 +98,19 @@ try (var app = BrowserlessApplicationContext.create(builder -> builder
 }
 ----
 
+A [classname]`BrowserlessApplicationContext` is created in plain code rather than by a JUnit extension, so it never looks at [annotationname]`@BrowserlessTestConfig`: only what its own builder declares applies. To reuse the configuration declared by a test class, pass it explicitly with [methodname]`BrowserlessConfiguration.from(...)`:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(builder -> builder
+        .withViewPackages(CartView.class)
+        .withConfiguration(BrowserlessConfiguration.from(getClass())))) {
+    // ...
+}
+----
+
+[methodname]`from(...)` reads a single annotation -- the one declared on the given class, or the one inherited from its nearest annotated superclass -- rather than merging the whole hierarchy the way an extension does.
+
 Or by overriding [methodname]`testConfiguration()` on a test that extends a base class:
 
 [source,java]
@@ -111,7 +124,7 @@ protected BrowserlessConfiguration testConfiguration() {
 }
 ----
 
-A configuration built on an extension or on the application context builder wins over the class-level annotation, and loses against the method-level one. A [methodname]`testConfiguration()` override ranks differently: [methodname]`super.testConfiguration()` returns the configuration already resolved from the annotations, so whatever the override adds on top of it wins over all of them, the method-level annotation included. Build on [methodname]`super.testConfiguration()` to refine the declared configuration, and leave out the values that a test method needs to override.
+On an extension, a configuration built in code wins over the class-level annotation, and loses against the method-level one. A [methodname]`testConfiguration()` override ranks differently: [methodname]`super.testConfiguration()` returns the configuration already resolved from the annotations, so whatever the override adds on top of it wins over all of them, the method-level annotation included. Build on [methodname]`super.testConfiguration()` to refine the declared configuration, and leave out the values that a test method needs to override.
 
 .Spring Properties Win
 [NOTE]
