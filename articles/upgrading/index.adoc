@@ -182,6 +182,12 @@ Before migrating, find the corresponding version of the Jakarta EE 11-compatible
 
 Starting with Vaadin 25.3, [classname]`VaadinServlet` serves static resources by calling [methodname]`StaticFileHandler.serveStaticResource()` directly, and the [methodname]`serveStaticOrWebJarRequest()` method is deprecated for removal -- its name referred to WebJars, which aren't handled there. Overriding it no longer affects request handling. To customize how static resources are served, override [methodname]`createStaticFileHandler()` and return your own [interfacename]`StaticFileHandler` implementation instead.
 
+== Client-Side Engine Ported to TypeScript
+
+Starting with Vaadin 25.3, the client-side engine -- the framework code that runs in the browser and talks to the server -- is written in TypeScript and is bundled with the rest of the frontend by Vite. The engine that Google Web Toolkit (GWT) compiled from Java has been removed: the `com.vaadin.client.*` API is gone from the `flow-client` artifact, and the bootstrap page no longer loads `VAADIN/static/client/client.nocache.js`. The `ApplicationConstants.CLIENT_ENGINE_PATH` constant is deprecated for removal, since nothing writes to or serves that path any more.
+
+Applications need no changes; the engine has always been an implementation detail that application code doesn't compile against. Only an add-on that compiled its own widget set against `com.vaadin.client.*`, or a build step that referenced the client engine path, is affected -- such an add-on has to be rewritten on top of the TypeScript client.
+
 == Maven & Gradle Plugins
 
 Ensure that the Maven plugins which are explicitly defined in your project, are compatible with Java 21.
@@ -217,6 +223,12 @@ Starting with Vaadin 25.2, the `vaadinBuildFrontend` Gradle task writes the prod
 The new directory is registered as an additional output directory of the source set, so the bundle is still on the runtime classpath and is still packaged into the application archive -- at the root of a JAR, or in [filename]`WEB-INF/classes` of a WAR. Applications that only run Gradle tasks such as `build`, `bootJar`, `war`, or `bootRun` need no changes.
 
 Update any build step that reads the bundle straight from the build directory -- such as a custom copy task, a Docker build, or a deployment script -- to use `build/vaadin-build-frontend/`. Setting `frontendOutputDirectory` back to a folder under `build/resources/main/` isn't a solution: it reintroduces the overlapping task outputs that prevent the frontend build from being cached correctly. See <<{articles}/flow/configuration/gradle#production-bundle-output, Frontend Bundle Output Location>> for details.
+
+=== npm Version Pinning Moved to `META-INF/VAADIN/versions`
+
+Starting with Vaadin 25.3, the files that pin npm package versions are read from the `META-INF/VAADIN/versions/` folder of every JAR on the classpath, instead of from the `vaadin-core-versions.json` and `vaadin-versions.json` files at the classpath root. The `Constants.VAADIN_CORE_VERSIONS_JSON` and `Constants.VAADIN_VERSIONS_JSON` constants that named those files have been removed.
+
+Applications need no changes. An add-on that shipped a versions file of its own has to move it into `META-INF/VAADIN/versions/`, where it can now ship more than one file; see <<{articles}/building-apps/components/package-component#pinning-npm-package-versions, Pinning npm Package Versions>> for the file format.
 
 === Recently Published npm Packages Not Installed by Default
 
@@ -1105,6 +1117,17 @@ If your application needs to set such URLs, either configure the accepted scheme
 Starting with Vaadin 25.2, the application page is served with the `X-Frame-Options: SAMEORIGIN` HTTP response header to protect against clickjacking. As a result, browsers refuse to show the application inside a frame on a different origin. Applications that are meant to be embedded in an iframe on another origin must set the `frameOptions` configuration parameter to an empty value to disable the header. The parameter can also be set to another header value, such as `DENY`. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
 
 Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
+
+
+== Security Changes in Vaadin 25.3
+
+=== Sub-Resource Requests Answered With 401
+
+Starting with Vaadin 25.3, when a log-in view is configured with [methodname]`VaadinSecurityConfigurer.loginView()`, an unauthorized request that the browser makes for a sub-resource -- a stylesheet, script, image, font, or web app manifest, recognized from the `Sec-Fetch-Dest` request header -- is answered with `401 Unauthorized` instead of being redirected to the log-in view.
+
+Such a request can't render a log-in view, so redirecting it was pointless: the redirected request wasn't an HTML request either, so it was denied and redirected again, ending in a redirect loop that hid the resource that was actually blocked. The browser now reports the failing resource instead. The status is `401` rather than `404` because the request is denied before any resource lookup, so a denied path answers the same whether the resource exists or not.
+
+A test or a client that expects a redirect for such a request has to expect `401`. To serve the resource instead of denying it, permit its path in the security configuration, as described in <<spring-security-and-stylesheet, Spring Security and StyleSheet>>.
 
 
 == TestBench and Browserless Testing
