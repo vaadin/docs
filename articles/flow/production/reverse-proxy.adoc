@@ -92,6 +92,10 @@ In the Apache HTTPD configuration examples, the value of the secret is supposed 
 
 For different setups, consult the documentation of the Servlet container.
 
+AJP can't carry WebSocket traffic, so the examples in this guide proxy the push endpoint over HTTP with a separate set of directives whenever WebSockets are in use. With the <<server-sent-events,Server-Sent Events>> transport, that second channel isn't needed: the push request travels over the AJP connection together with every other request, and the HTTP port of the backend server doesn't have to be reachable from the proxy at all. The AJP worker has to be configured with `flushpackets=on`, because `mod_proxy_ajp` otherwise buffers the response body and holds back the stream.
+
+Note that a `ws://` worker serves WebSocket traffic only, and rejects the plain `GET` request that Server-Sent Events uses. Where the examples route the push path to such a worker, the two transports are mutually exclusive: remove those rules to serve push over AJP. Where the upgrade is instead selected by a `RewriteCond` on the `Upgrade` request header, both transports are served by the same configuration, since requests without that header continue to the AJP worker.
+
 
 == `nginx`
 
@@ -139,11 +143,109 @@ WebSockets work by performing a protocol upgrade from HTTP to the WebSocket prot
 
 In Apache HTTPD WebSocket proxying is usually achieved by adding the `upgrade=websocket` option to the `ProxyPass` directive.
 However, AJP does not support WebSockets because it is designed for traditional request-response communication and does not handle persistent bidirectional connections.
+The examples in this guide work around this limitation by proxying the upgrade requests over HTTP with a dedicated set of directives, which requires the HTTP port of the backend server to be reachable from the proxy.
+The <<server-sent-events,Server-Sent Events>> transport is not affected, since it travels over an AJP connection like any other request.
 
 To support WebSockets behind a reverse proxy, Apache must route WebSocket traffic ensuring proper handling of the upgrade process and maintaining the connection between the client and the backend Vaadin server, meaning that a specific configuration is required.
 
 Similarly, `nginx` also needs to be configured to handle the protocol upgrade. In the proposed example, the WebSockets configuration blocks are marked with `Websockets only (begin)` and `Websockets only (end)` comments.
 If WebSockets support is not required by the application, the related configuration can be skipped. For Apache HTTPD `ProxyPass` directive remove the `upgrade` option.
+
+[WARNING]
+In Apache HTTPD, a `ProxyPass` rule for the push endpoint is ignored when a catch-all rule using the same URL scheme is declared before it. `mod_proxy` shares workers whose URLs overlap and keeps the one defined first, so the `upgrade=websocket` option on the push rule is silently discarded and the upgrade never happens. The https://httpd.apache.org/docs/2.4/mod/mod_proxy.html[`mod_proxy` documentation] recommends sorting worker definitions by URL length, starting with the longest. For this reason, the examples in this guide declare the push locations before the catch-all. The `ProxyPassReverse` directive doesn't create a worker and isn't affected.
+
+
+[[server-sent-events]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Server-Sent Events in a Vaadin Application
+
+Server-Sent Events (SSE) is an alternative transport for `PUSH` communication, available behind the `ssePushTransport` <<{articles}/flow/configuration/feature-flags#,feature flag>>. Rather than upgrading the connection, the browser sends a long-lived HTTP `GET` request to the push endpoint, and the server streams updates over the response until the connection is closed. Messages from the client to the server travel over regular XHR requests, as they do with the default `WEBSOCKET_XHR` transport.
+
+Since SSE is plain HTTP, none of the WebSocket-specific configuration applies to it. Apache HTTPD needs neither `mod_proxy_wstunnel` nor the `upgrade` option on `ProxyPass`, and `nginx` needs neither the `map $http_upgrade` directive nor the `Upgrade` and `Connection` request headers. The push endpoint is the same `/VAADIN/push` path, so the location patterns already used for WebSockets match SSE traffic without changes.
+
+What SSE requires instead is that the proxy forwards the response as it arrives. Proxy defaults tend to work against this, because a streaming response gets buffered, possibly compressed, and closed once it has been idle for long enough:
+
+- *Response buffering* is the main obstacle. A buffering proxy waits for the buffer to fill, or for the response to end, before forwarding anything, and an SSE response never ends. In `nginx`, `proxy_buffering` is enabled by default and has to be turned off. In Apache HTTPD, `mod_proxy_http` forwards the backend flushes as they happen, but `mod_proxy_ajp` buffers the response body unless `flushpackets=on` is set on the worker.
+- *Compression* doesn't hold the stream back on its own, since `mod_deflate` and the `nginx` gzip filter both flush per event, but it should still be kept off the push response. See <<compression-and-push,Compression and Push>>.
+- *The HTTP version to the backend* matters for `nginx`, which uses HTTP/1.0 upstream unless `proxy_http_version 1.1` is set.
+- *Idle timeouts* close a stream that has been silent, as described in <<push-connection-timeout,Push Connection Timeout>>.
+
+[WARNING]
+A proxy that buffers the push response breaks server push silently. The connection is established, the server writes updates, and the browser receives them much later or not at all, with nothing in the logs to indicate a problem. Atmosphere pads the beginning of the stream with 2000 bytes to flush proxy buffers, but that's less than the 4 KB default `proxy_buffer_size` of `nginx`, so it doesn't compensate for a missing `proxy_buffering off`.
+
+In the configuration examples, the SSE-specific configuration is marked with `Server-sent events only` comments: a `(begin)` and `(end)` pair where it consists of several directives, as in the `nginx` examples, and a single comment line where it's one option added to an existing directive, as with `flushpackets=on` on the AJP workers. Apache HTTPD over HTTP carries no such marker, since its defaults already suit a streaming response, apart from the timeout.
+
+When the proxy terminates TLS, `X-Forwarded-Proto` matters as much as it does for WebSockets, for a different reason. Vaadin builds the push URL from the advertised scheme, and a page served over `https` isn't allowed to open an `http://` event stream, as the browser blocks it as mixed content. Configure the backend server to honor the forwarded headers, for example with `SERVER_FORWARD_HEADERS_STRATEGY=NATIVE` in a Spring Boot application.
+
+Sticky sessions are required exactly as they are for the other transports. The SSE stream and the client-to-server XHR requests are separate connections that have to reach the same backend node. See <<load-balancing-sticky-session,Load Balancing with Sticky Session>>.
+
+
+=== Browser Connection Limits
+
+Browsers allow a limited number of concurrent HTTP/1.1 connections to the same origin, typically six, and an open SSE stream occupies one of them for as long as the tab stays open. WebSocket connections aren't counted against this pool, so the limit affects SSE and long polling only. With several tabs of the same application open, regular requests can end up queued behind the streams, and the application appears to freeze. Serving the application over HTTP/2 between the browser and the proxy removes the limit. The connection between the proxy and the backend server can stay on HTTP/1.1.
+
+
+=== Hilla Reactive Endpoints
+
+Browser-callable Hilla methods that return a `Flux` use a separate push connection on the `/HILLA/push` path. That connection isn't controlled by the Flow push configuration and always uses WebSockets. A proxy that can't carry WebSocket traffic therefore supports Flow server push over SSE, but not Hilla reactive endpoints. Regular browser-callable methods aren't affected, as they're plain HTTP requests.
+
+
+=== Verifying the Push Transport
+
+The push endpoint can be tested without a browser, by requesting it the way the client does:
+
+[source,bash]
+----
+curl -N -i "http://proxy/VAADIN/push?v-r=push&X-Atmosphere-Transport=sse&X-Atmosphere-tracking-id=0"
+----
+
+A correctly configured proxy responds with `200` and a `Content-Type: text/event-stream` header, and the response stays open. Compare the output with the same request sent directly to the backend server: if the proxy delivers in bursts what the backend server delivers gradually, the response is being buffered.
+
+In the browser development tools, the push request must show the `text/event-stream` content type and remain pending while data arrives. Verifying that the application behaves correctly isn't sufficient, because Atmosphere falls back to another transport when the selected one fails, and the application keeps working. To make such a failure visible while testing a proxy configuration, set the fallback transport to the same value as the transport.
+
+Selecting a WebSocket transport against a proxy that's configured for SSE only fails with `Error during WebSocket handshake: Unexpected response code: 501`. The `Upgrade` and `Connection` headers are hop-by-hop headers that the proxy doesn't forward, so the backend server receives a request that claims the WebSocket transport without an actual upgrade, and rejects it. This is the expected behavior rather than a misconfiguration.
+
+
+[[compression-and-push]]
+== Compression and Push
+
+Compression can be left enabled, as long as it doesn't apply to a streamed response. Vaadin `PUSH` answers with the `text/event-stream` content type over Server-Sent Events, and with `text/plain` over streaming and long polling. Keeping both out of the list of compressed content types is what matters, and it's more dependable than excluding a path, since it holds wherever the push endpoint is mapped.
+
+[.example]
+--
+.Apache HTTPD
+[source]
+----
+<IfModule deflate_module>
+    AddOutputFilterByType DEFLATE text/html text/css text/xml \
+                                  application/javascript application/json \
+                                  application/xml image/svg+xml
+
+    # For paths whose response type isn't known in advance: an EventSource
+    # always asks for text/event-stream, and the push endpoints stream
+    # whatever they answer with.
+    SetEnvIfNoCase Accept      text/event-stream      no-gzip=1
+    SetEnvIfNoCase Request_URI "/(VAADIN|HILLA)/push" no-gzip=1
+</IfModule>
+----
+
+.`nginx`
+[source]
+----
+gzip              on;
+gzip_proxied      any;
+gzip_types        text/css application/javascript application/json
+                  application/xml image/svg+xml;
+----
+--
+
+Avoid a wildcard such as `AddOutputFilterByType DEFLATE text/*`, which matches both of the content types used by push. In `nginx`, `text/html` is always compressed when `gzip` is enabled and can't be removed from `gzip_types`, which is harmless here because a push response is never `text/html`.
+
+Compressing the stream doesn't stall it, because both compressors flush after each event, so the updates still arrive one at a time as long as `proxy_buffering off` or `flushpackets=on` is in place. It's worth avoiding for two other reasons:
+
+- A compression context stays allocated for the whole life of every push connection, which is the whole life of every open browser tab.
+- The 2000 bytes of padding that Atmosphere writes when a stream opens exist to force a buffering intermediary to flush. Compressed, those 2000 identical characters shrink to a few dozen bytes and stop serving that purpose, so the deployment breaks as soon as another buffering hop appears in front of the proxy.
+
 
 
 == Deployment Scenarios
@@ -176,7 +278,7 @@ The next sections provide configuration examples covering the following deployme
 
 |===
 
-All the scenarios assume the Vaadin application is built for production and `PUSH` communication over WebSocket is enabled. It's usually better to deploy the application on the backend server at the same path as the proxy rather than to take this approach, to avoid potential issues with URLs sent back to the client as HTTP headers or in the response body.
+All the scenarios assume the Vaadin application is built for production and `PUSH` communication is enabled. Configuration that applies only to a specific push transport is marked with `Websockets only` and `Server-sent events only` comments. It's usually better to deploy the application on the backend server at the same path as the proxy rather than to take this approach, to avoid potential issues with URLs sent back to the client as HTTP headers or in the response body.
 
 
 === Web Server & Vaadin on Root Context
@@ -204,7 +306,8 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/?(.*) "ws://vaadin-app:8080/$1" [P,L]
 # -- Websockets only (end)
 
-ProxyPass   "/"  ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+# -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+ProxyPass   "/"  ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
 ----
 
 .`nginx`
@@ -233,6 +336,12 @@ server {
         proxy_set_header        Connection $connection_upgrade;
         # -- Websockets only (end)
 
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
+
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
 
@@ -241,36 +350,33 @@ server {
 ----
 --
 
-As an alternative, WebSocket upgrade can be limited to specific paths. This setup requires dedicated configuration for both Flow and Hilla WebSocket endpoints.
+As an alternative, the push endpoint can be given its own configuration, instead of applying the same settings to the whole application. This setup requires dedicated rules for both the Flow and the Hilla push endpoints. With WebSockets, it limits the protocol upgrade to those paths. With Server-Sent Events, it limits the cost of disabled response buffering to the streaming response.
 
 [.example]
 --
 .Apache HTTPD
 [source]
 ----
+# -- Websockets only (begin)
+# Must be declared before the catch-all rule, see the warning on mod_proxy worker sharing.
+<Location /VAADIN/push>
+    ProxyPass               http://vaadin-app:8080/VAADIN/push upgrade=websocket
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass               http://vaadin-app:8080/HILLA/push upgrade=websocket
+</Location>
+# -- Websockets only (end)
+
 <Location />
     ProxyPass               http://vaadin-app:8080/
     ProxyPassReverse        http://vaadin-app:8080/
 </Location>
-
-# -- Websockets only (begin)
-<Location /VAADIN/push>
-    ProxyPass               ws://vaadin-app:8080/VAADIN/push
-</Location>
-
-<Location /HILLA/push>
-    ProxyPass               ws://vaadin-app:8080/HILLA/push
-</Location>
-# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
 [source]
 ----
-<Location />
-    ProxyPass               ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
-</Location>
-
 # -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/VAADIN/push
@@ -280,6 +386,11 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPass               ws://vaadin-app:8080/HILLA/push
 </Location>
 # -- Websockets only (end)
+
+<Location />
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    ProxyPass               ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
+</Location>
 ----
 
 .`nginx`
@@ -307,18 +418,24 @@ server {
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
     }
 
-    # -- Websockets only (begin)
     location ~* "(/VAADIN|HILLA)/push" {
         proxy_set_header        Host $host;
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
 
         proxy_pass http://vaadin-app:8080;
     }
-    # -- Websockets only (end)
 }
 ----
 --
@@ -349,7 +466,8 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/app/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
 # -- Websockets only (end)
 
-ProxyPass   "/app/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+# -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+ProxyPass   "/app/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
 ----
 
 .`nginx`
@@ -378,6 +496,12 @@ server {
         proxy_set_header        Connection $connection_upgrade;
         # -- Websockets only (end)
 
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
+
         proxy_pass http://vaadin-app:8080/app/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
 
@@ -386,36 +510,33 @@ server {
 ----
 --
 
-As an alternative, WebSocket upgrade can be limited to specific paths. This setup requires dedicated configuration for both Flow and Hilla WebSocket endpoints.
+As an alternative, the push endpoint can be given its own configuration, instead of applying the same settings to the whole application. This setup requires dedicated rules for both the Flow and the Hilla push endpoints. With WebSockets, it limits the protocol upgrade to those paths. With Server-Sent Events, it limits the cost of disabled response buffering to the streaming response.
 
 [.example]
 --
 .Apache HTTPD
 [source]
 ----
+# -- Websockets only (begin)
+# Must be declared before the catch-all rule, see the warning on mod_proxy worker sharing.
+<Location /app/VAADIN/push>
+    ProxyPass               http://vaadin-app:8080/app/VAADIN/push upgrade=websocket
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass               http://vaadin-app:8080/app/HILLA/push upgrade=websocket
+</Location>
+# -- Websockets only (end)
+
 <Location /app/>
     ProxyPass               http://vaadin-app:8080/app/
     ProxyPassReverse        http://vaadin-app:8080/app/
 </Location>
-
-# -- Websockets only (begin)
-<Location /app/VAADIN/push>
-    ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
-</Location>
-
-<Location /app/HILLA/push>
-    ProxyPass               ws://vaadin-app:8080/app/HILLA/push
-</Location>
-# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
 [source]
 ----
-<Location /app/>
-    ProxyPass               ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
-</Location>
-
 # -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
@@ -425,6 +546,11 @@ As an alternative, WebSocket upgrade can be limited to specific paths. This setu
     ProxyPass               ws://vaadin-app:8080/app/HILLA/push
 </Location>
 # -- Websockets only (end)
+
+<Location /app/>
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    ProxyPass               ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
+</Location>
 ----
 
 .`nginx`
@@ -452,7 +578,6 @@ server {
         proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
     }
 
-    # -- Websockets only (begin)
     location ~* ^/(VAADIN|HILLA)/push$ {
 
         rewrite ^/(.*) /app/$1 break;
@@ -461,12 +586,19 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
 
         proxy_pass http://vaadin-app:8080;
     }
-    # -- Websockets only (end)
 }
 ----
 --
@@ -499,7 +631,8 @@ RewriteCond %{HTTP:Connection} upgrade [NC]
 RewriteRule ^/(.*) "ws://vaadin-app:8080/app/$1" [P,L]
 # -- Websockets only (end)
 
-ProxyPass         "/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
+# -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+ProxyPass         "/"      ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
 ProxyPassReverse  "/"      "/app/"
 ProxyPassReverseCookiePath "/app" "/"
 ----
@@ -530,6 +663,12 @@ server {
         proxy_set_header        Connection $connection_upgrade;
         # -- Websockets only (end)
 
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
+
         proxy_pass http://vaadin-app:8080/app/;
         proxy_redirect $scheme://$host/app/ $scheme://$http_host/;
         proxy_cookie_path /app /;
@@ -539,39 +678,34 @@ server {
 ----
 --
 
-Following, there's the same configuration for specific WebSocket upgrade paths.
+As an alternative, the push endpoint can be given its own configuration, instead of applying the same settings to the whole application. This setup requires dedicated rules for both the Flow and the Hilla push endpoints. With WebSockets, it limits the protocol upgrade to those paths. With Server-Sent Events, it limits the cost of disabled response buffering to the streaming response.
 
 [.example]
 --
 .Apache HTTPD
 [source]
 ----
+# -- Websockets only (begin)
+# Must be declared before the catch-all rule, see the warning on mod_proxy worker sharing.
+<Location /VAADIN/push>
+    ProxyPass "http://vaadin-app:8080/app/VAADIN/push" upgrade=websocket
+</Location>
+
+<Location /HILLA/push>
+    ProxyPass "http://vaadin-app:8080/app/HILLA/push" upgrade=websocket
+</Location>
+# -- Websockets only (end)
+
 <Location />
     ProxyPass                  "http://vaadin-app:8080/app/"
     ProxyPassReverse           "http://vaadin-app:8080/app/"
     ProxyPassReverseCookiePath "/app" "/"
 </Location>
-
-# -- Websockets only (begin)
-<Location /VAADIN/push>
-    ProxyPass "ws://vaadin-app:8080/app/VAADIN/push"
-</Location>
-
-<Location /HILLA/push>
-    ProxyPass "ws://vaadin-app:8080/app/HILLA/push"
-</Location>
-# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
 [source]
 ----
-<location / >
-    ProxyPass         ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET}
-    ProxyPassReverse  "/app/"
-    ProxyPassReverseCookiePath "/app" "/"
-</Location>
-
 # -- Websockets only (begin)
 <Location /VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/app/VAADIN/push
@@ -581,6 +715,13 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPass               ws://vaadin-app:8080/app/HILLA/push
 </Location>
 # -- Websockets only (end)
+
+<Location / >
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    ProxyPass         ajp://vaadin-app:8009/app/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
+    ProxyPassReverse  "/app/"
+    ProxyPassReverseCookiePath "/app" "/"
+</Location>
 ----
 
 .`nginx`
@@ -609,7 +750,6 @@ server {
         proxy_cookie_path /app /;
     }
 
-    # -- Websockets only (begin)
     location ~* ^/(VAADIN|HILLA)/push$ {
 
         rewrite ^/(.*) /app/$1 break;
@@ -618,12 +758,19 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
 
         proxy_pass http://vaadin-app:8080;
     }
-    # -- Websockets only (end)
 }
 ----
 --
@@ -656,7 +803,8 @@ RewriteRule ^/app/(.*) "ws://vaadin-app:8080/$1" [P,L]
 # -- Websockets only (end)
 
 <Location /app/ >
-    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
     ProxyPassReverse  "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
@@ -688,6 +836,12 @@ server {
         proxy_set_header        Connection $connection_upgrade;
         # -- Websockets only (end)
 
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
+
         proxy_pass http://vaadin-app:8080/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/app/;
         proxy_cookie_path / /app;
@@ -696,39 +850,34 @@ server {
 ----
 --
 
-Following, there's the same configuration for specific WebSocket upgrade paths.
+As an alternative, the push endpoint can be given its own configuration, instead of applying the same settings to the whole application. This setup requires dedicated rules for both the Flow and the Hilla push endpoints. With WebSockets, it limits the protocol upgrade to those paths. With Server-Sent Events, it limits the cost of disabled response buffering to the streaming response.
 
 [.example]
 --
 .Apache HTTPD
 [source]
 ----
+# -- Websockets only (begin)
+# Must be declared before the catch-all rule, see the warning on mod_proxy worker sharing.
+<Location /app/VAADIN/push>
+    ProxyPass "http://vaadin-app:8080/VAADIN/push" upgrade=websocket
+</Location>
+
+<Location /app/HILLA/push>
+    ProxyPass "http://vaadin-app:8080/HILLA/push" upgrade=websocket
+</Location>
+# -- Websockets only (end)
+
 <Location /app/>
     ProxyPass                  "http://vaadin-app:8080/"
     ProxyPassReverse           "/"
     ProxyPassReverseCookiePath "/" "/app"
 </Location>
-
-# -- Websockets only (begin)
-<Location /app/VAADIN/push>
-    ProxyPass "ws://vaadin-app:8080/VAADIN/push"
-</Location>
-
-<Location /app/HILLA/push>
-    ProxyPass "ws://vaadin-app:8080/HILLA/push"
-</Location>
-# -- Websockets only (end)
 ----
 
 .Apache HTTPD - AJP
 [source]
 ----
-<Location /app/ >
-    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET}
-    ProxyPassReverse  "/"
-    ProxyPassReverseCookiePath "/" "/app"
-</Location>
-
 # -- Websockets only (begin)
 <Location /app/VAADIN/push>
     ProxyPass               ws://vaadin-app:8080/VAADIN/push
@@ -738,6 +887,13 @@ Following, there's the same configuration for specific WebSocket upgrade paths.
     ProxyPass               ws://vaadin-app:8080/HILLA/push
 </Location>
 # -- Websockets only (end)
+
+<Location /app/ >
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    ProxyPass         ajp://vaadin-app:8009/ secret=${VAADIN_APP_AJP_SECRET} flushpackets=on
+    ProxyPassReverse  "/"
+    ProxyPassReverseCookiePath "/" "/app"
+</Location>
 ----
 
 .`nginx`
@@ -766,7 +922,6 @@ server {
         proxy_cookie_path /app /;
     }
 
-    # -- Websockets only (begin)
     location ~* ^/app/(VAADIN|HILLA)/push$ {
 
         rewrite ^/app/(.*)      /$1 break;
@@ -775,17 +930,25 @@ server {
         proxy_set_header        X-Real-IP $remote_addr;
         proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header        X-Forwarded-Proto $scheme;
+        # -- Websockets only (begin)
         proxy_set_header        Upgrade $http_upgrade;
         proxy_set_header        Connection $connection_upgrade;
+        # -- Websockets only (end)
+
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
 
         proxy_pass http://vaadin-app:8080;
     }
-    # -- Websockets only (end)
 }
 ----
 --
 
 
+[[load-balancing-sticky-session]]
 === Load Balancing with Sticky Session
 
 Load balancing is a critical mechanism for ensuring high availability, scalability, and fault tolerance in web applications. By distributing incoming client requests across multiple backend servers, load balancing improves application responsiveness and prevents any single server from becoming a bottleneck.
@@ -838,8 +1001,9 @@ If you're running an nginx version older than 1.29.6, you can use the https://ng
 [source]
 ----
 <Proxy "balancer://application-balancer/">
-    BalancerMember "ajp://vaadin-app-1:8009" route=1
-    BalancerMember "ajp://vaadin-app-2:8009" route=2
+    # -- Server-sent events only: flushpackets=on prevents mod_proxy_ajp from buffering the push stream
+    BalancerMember "ajp://vaadin-app-1:8009" route=1 flushpackets=on
+    BalancerMember "ajp://vaadin-app-2:8009" route=2 flushpackets=on
     ProxySet stickysession=ROUTEID
     ProxySet lbmethod=byrequests
 </Proxy>
@@ -902,6 +1066,12 @@ server {
         proxy_set_header        Connection $connection_upgrade;
         # -- Websockets only (end)
 
+        # -- Server-sent events only (begin)
+        proxy_http_version      1.1;
+        proxy_buffering         off;
+        proxy_read_timeout      300s;
+        # -- Server-sent events only (end)
+
         proxy_pass http://application_balancer/;
         proxy_redirect $scheme://$host/ $scheme://$http_host/;
     }
@@ -917,26 +1087,33 @@ All proposed configurations can be applied when the reverse proxy exposes multip
 In a Spring Boot application, the cookie name can be set with the `server.servlet.session.cookie.name` property. Another possibility is to set programmatically the name in a Servlet listener by getting the `SessionCookieConfig` instance from the `ServletContext` and use the `setName(String)` method to change cookie name.
 
 
-== WebSocket Connection Timeout
+[[push-connection-timeout]]
+== Push Connection Timeout
 
-By default, the WebSocket connection is closed if the proxied server doesn't transmit any data within sixty seconds. Vaadin `PUSH` is configured to send a heartbeat message over WebSocket every sixty seconds, so the connection should not be closed. If the default is not working correctly, the timeout can be increased in both Apache HTTPD and `nginx` by applying the appropriate configuration.
+By default, the push connection is closed if the proxied server doesn't transmit any data within sixty seconds. Vaadin `PUSH` is configured to send a heartbeat message every sixty seconds, so the connection should not be closed. If the default is not working correctly, the timeout can be increased in both Apache HTTPD and `nginx` by applying the appropriate configuration.
+
+The default of sixty seconds is exactly the heartbeat interval, which leaves no margin at all. For this reason, the examples raise it to three hundred seconds.
+
+The timeout applies to every push transport, but the consequences differ. A WebSocket or long polling connection that the proxy closes is re-established by Atmosphere. A Server-Sent Events stream is reopened by the browser instead, which issues a new server request each time and can lose messages in between, making the problem easy to overlook.
 
 [.example]
 --
 .Apache HTTPD
 [source]
 ----
-ProxyPass / http://vaadin-app:8080/ upgrade=websocket timeout=90
+ProxyPass / http://vaadin-app:8080/ upgrade=websocket timeout=300
 
 # In alternative, use ProxyTimeout directive
-# ProxyTimeout 90
+# ProxyTimeout 300
 ----
 
 .`nginx`
 [source]
 ----
-proxy_read_timeout 90;
+proxy_read_timeout 300s;
 ----
 --
+
+In `nginx`, a directive set in an enclosing block applies only when the same directive isn't set at a more specific level. When the push endpoint has a `location` block of its own, set `proxy_read_timeout` inside that block.
 
 [discussion-id]`0C8F77AE-16A8-463B-8F43-1C9F3A7DF1E2`
