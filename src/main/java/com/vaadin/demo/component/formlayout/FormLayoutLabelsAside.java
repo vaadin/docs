@@ -1,9 +1,7 @@
 package com.vaadin.demo.component.formlayout;
 
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.formlayout.FormLayout.FormItem;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -19,14 +17,11 @@ public class FormLayoutLabelsAside extends Div {
         EmailField email = new EmailField("Email");
         PasswordField password = new PasswordField("Password");
         Checkbox subscribe = new Checkbox("Subscribe");
-        Button register = new Button("Register");
-        register.setWidthFull();
 
         FormLayout formLayout = new FormLayout();
         formLayout.setAutoResponsive(true);
         formLayout.setLabelsAside(true);
         formLayout.add(email, password, subscribe);
-        formLayout.add(new FormItem(register));
         // end::snippet[]
         formLayout.setWidthFull();
 

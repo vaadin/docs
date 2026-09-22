@@ -1,10 +1,8 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import {
-  Button,
   Checkbox,
   EmailField,
-  FormItem,
   FormLayout,
   PasswordField,
   SplitLayout,
@@ -18,9 +16,6 @@ function Example() {
         <EmailField label="Email" />
         <PasswordField label="Password" />
         <Checkbox label="Subscribe" />
-        <FormItem>
-          <Button style={{ width: '100%' }}>Register</Button>
-        </FormItem>
       </FormLayout>
     );
     // end::snippet[]

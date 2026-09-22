@@ -1,7 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/form-layout';
-import '@vaadin/form-layout/vaadin-form-item.js';
-import '@vaadin/button';
 import '@vaadin/checkbox';
 import '@vaadin/email-field';
 import '@vaadin/password-field';
@@ -34,9 +32,6 @@ export class Example extends LitElement {
         <vaadin-email-field label="Email"></vaadin-email-field>
         <vaadin-password-field label="Password"></vaadin-password-field>
         <vaadin-checkbox label="Subscribe"></vaadin-checkbox>
-        <vaadin-form-item>
-          <vaadin-button style="width: 100%">Register</vaadin-button>
-        </vaadin-form-item>
       </vaadin-form-layout>
     `;
     // end::snippet[]
