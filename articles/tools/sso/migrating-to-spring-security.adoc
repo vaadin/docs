@@ -95,7 +95,7 @@ An application that adds `sso-kit-starter`, sets an issuer URI and a login route
 |Vaadin's [classname]`SessionDestroyEvent`, which is broader -- see <<#session-destroy-event,Smaller Differences>>
 
 |[classname]`KeycloakUserMapper`
-|[classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper`
+|[classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper` -- see <<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>>
 
 |`sso-kit-keycloak-lumo` theme
 |No replacement -- see <<#gap-keycloak-theme,Keycloak Login Theme>>
@@ -345,20 +345,12 @@ Keycloak puts realm roles in a `realm_access` claim and client roles in `resourc
 ----
 http.with(vaadin(), configurer -> configurer
         .oauth2LoginPage("/oauth2/authorization/keycloak", "{baseUrl}")
-        .keycloakRoleMapping()); // <1>
+        .keycloakRoleMapping());
 ----
-<1> Decodes the access token and maps the realm roles, the roles `resource_access` grants for the current client, and the token scopes as `SCOPE_` authorities. Roles granted to other clients are ignored. The switch has no effect without an OAuth2 login page.
 
-Two details differ from the kit's mapper. On this route the prefix of a mapped role follows the role prefix configured for the application, rather than a hardcoded `ROLE_`. And an access token that can't be decoded -- a client registration without a JWK set URI, or a provider that doesn't issue JWT access tokens -- no longer fails the login: the user is mapped without any role authorities, and the reason is logged at debug level. Keep an eye on the second one right after the migration, because a user with no roles looks like a mistake somewhere else entirely.
+<<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> covers what the switch grants, why it works only together with an OAuth2 login page, and how to install [classname]`KeycloakOidcUserMapper` -- the replacement for the kit's [classname]`KeycloakUserMapper` -- on a user service that the application builds itself.
 
-The switch creates an [classname]`OidcUserService` of its own, so leave it off in an application that already declares one and set the mapper on that service instead:
-
-[source,java]
-----
-var oidcUserService = new OidcUserService();
-oidcUserService.setOidcUserConverter(new KeycloakOidcUserMapper("ROLE_")); // <1>
-----
-<1> [classname]`com.vaadin.flow.spring.security.KeycloakOidcUserMapper`, the replacement for the kit's [classname]`KeycloakUserMapper`. Constructed by hand it can't read the role prefix from the filter chain, so pass the prefix the application uses -- `ROLE_` unless a [classname]`GrantedAuthorityDefaults` bean says otherwise. The no-argument constructor also uses `ROLE_`.
+Two details differ from the kit's mapper. The prefix of a mapped role follows the role prefix configured for the application, rather than a hardcoded `ROLE_`. And an access token that can't be decoded -- a client registration without a JSON Web Key Set (JWKS) URI, or a provider that doesn't issue JWT access tokens -- no longer fails the login: the user is mapped without any role authorities, and the reason is logged at debug level. Watch for that one right after the migration, because a user with no roles looks like a mistake somewhere else entirely.
 
 .On Earlier Versions
 [NOTE]
@@ -459,7 +451,7 @@ public class UserInfoService {
     }
 }
 ----
-<1> Annotate `roles` inside and out. Without it the generated type is `Array<string | undefined> | undefined`, and passing that to [methodname]`getRoles()` in the next section doesn't typecheck, because the function has to return `readonly string[]`. Leave `name` and `email` as they are: both claims are optional in OpenID Connect, so [methodname]`getFullName()` and [methodname]`getEmail()` can return `null`, and the client is better off seeing that in the type.
+<1> Annotate `roles` inside and out. Without it the generated type is `Array<string | undefined> | undefined`, and passing that to [methodname]`getRoles()` in the next section doesn't type-check, because the function has to return `readonly string[]`. Leave `name` and `email` as they are: both claims are optional in OpenID Connect, so [methodname]`getFullName()` and [methodname]`getEmail()` can return `null`, and the client is better off seeing that in the type.
 
 
 === Replace the SSO Context
