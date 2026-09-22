@@ -1159,6 +1159,53 @@ Because of the change, the [classname]`com.vaadin.flow.component.html.testbench.
 
 The [methodname]`getPropertyString`, [methodname]`getPropertyBoolean`, [methodname]`getPropertyDouble` and [methodname]`getPropertyInteger` methods of the [classname]`TestBenchElement` class have been changed to not convert property values to the respective result types anymore. For example, calling [methodname]`getPropertyString` on a property that contains a number value will now throw an exception instead of returning the string representation of the number.
 
+=== Browserless Testing: Value Testers Commit Invalid Values
+
+Starting with Vaadin 25.3, [classname]`NumberFieldTester`, [classname]`DatePickerTester`, [classname]`TimePickerTester` and [classname]`DateTimePickerTester` no longer throw an [classname]`IllegalArgumentException` for a value outside `min` or `max`, off the `step` scale, or for an empty value on a required field. A browser commits such a value and marks the field invalid, and these testers now do the same.
+
+A test that expects the exception fails and has to assert the validity instead:
+
+[source,java]
+----
+// Before
+Assertions.assertThrows(IllegalArgumentException.class,
+        () -> test(amount).setValue(-5.0));
+
+// After
+test(amount).setValue(-5.0);
+Assertions.assertFalse(test(amount).isValid());
+----
+
+[methodname]`setValue` still throws an [classname]`IllegalStateException` when the component is not usable, and a value that a browser prevents the user from entering, such as one longer than the `maxLength` of a text field, is still refused. See <<{articles}/flow/testing/browserless/component-testers#constraint-enforcement,Component Testers>>.
+
+=== Browserless Testing: Read-Only Components Are Not Usable
+
+[methodname]`ComponentTester.isUsable()` returns `false` for a read-only value component, and an interaction with such a component throws. This affects the date, time, date-time, combo box, select and list box testers, which previously ignored the read-only state. A test that sets a value on a read-only field has to make the field editable first, or set the value through the component's Java API.
+
+=== Browserless Testing: Grid Column Components Are Found
+
+A component set as a Grid column header, footer or editor is part of the component tree, so [methodname]`find(...)` returns it where the lookup previously failed with a "no such component" error. A test that asserted that failure, or that counts every component in a view containing a Grid, needs updating. Such a component is reported once, even when its header cell spans several columns.
+
+=== Browserless Testing: Removed Internal Tester Method
+
+[methodname]`CheckboxGroupTester.updateSelection` was public and appeared on the generated [classname]`CheckboxGroupLocator`, although it models nothing a user does. It is private now. Use [methodname]`selectItem(...)`, [methodname]`selectItems(...)`, [methodname]`deselectItem(...)`, [methodname]`deselectItems(...)`, [methodname]`selectAll()` or [methodname]`deselectAll()` instead.
+
+=== Browserless Testing: Grid Cell Components Are Those the Grid Rendered
+
+[methodname]`GridTester.getCellComponent(...)` returns the component the grid rendered for the cell, which is the instance a browser shows: reading the same cell twice gives the same instance, and interacting with it affects the row on screen. It previously rendered a throw-away copy on every call. A cell the grid does not render at all, such as one in a hidden column, now throws.
+
+A test written against the old behavior, and one that reaches for a cell the grid does not render, can use [methodname]`renderCellComponent(...)` instead, which keeps rendering a copy per call.
+
+=== Browserless Testing: Testers Returned by test()
+
+[methodname]`test(treeGrid)` returns a [classname]`TreeGridTester` and [methodname]`test(gridContextMenu)` returns a [classname]`GridContextMenuTester`, rather than the [classname]`GridTester` and [classname]`ContextMenuTester` they returned before. Code that assigns the result to an explicitly typed variable no longer compiles and needs the new type, or `var`.
+
+=== Browserless Testing: Context Menus Have to Be Opened
+
+[classname]`ContextMenuTester` and [classname]`GridContextMenuTester` interact with the items of an open menu only, as in a browser, where the content of a closed menu is not on the page. [methodname]`clickItem(...)`, [methodname]`isItemChecked(...)` and [methodname]`getItemTooltipText(...)` throw an [classname]`IllegalStateException` until [methodname]`open()` is called, so a test that clicked the items of a closed menu needs that call added. [methodname]`find(...)` on the tester still works while the menu is closed.
+
+A [classname]`GridContextMenu` is always about a row, so its tester is obtained with [methodname]`test(grid).contextMenu(row)` and opened with [methodname]`open()`, or opened on a row directly with [methodname]`open(row)`.
+
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
 
