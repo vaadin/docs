@@ -181,4 +181,22 @@ class SecurityTestConfig {
 This setup drives a single user with a single window. For tests that need several concurrent users or multiple windows of the same user, see <<multi-user#, Multi-User and Multi-Window Testing>>.
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+== Session Fixation Protection
+
+Spring Security gives the session a new ID when a user authenticates, and an application without Spring Security does the same by calling [methodname]`HttpServletRequest.changeSessionId()` after a successful login. The mocked request performs that rotation instead of refusing it, so a test can drive a login flow that protects against session fixation.
+
+The session itself survives the rotation: the attributes stay, and so does the [classname]`VaadinSession` bound to it. Only the ID changes.
+
+[source,java]
+----
+String idBeforeLogin = VaadinSession.getCurrent().getSession().getId();
+
+// Log in through the application's own flow
+
+Assertions.assertNotEquals(idBeforeLogin,
+        VaadinSession.getCurrent().getSession().getId());
+----
+
+
 [discussion-id]`2A8B3F1E-9C47-4D5A-B621-8E3F2A7C9D10`
