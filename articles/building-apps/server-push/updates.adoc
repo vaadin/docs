@@ -276,30 +276,6 @@ When you know events are coming no faster than two to four events per second, yo
 The buffering duration depends on the size of the UI update, and the network latency. In some applications, you may need to use a longer buffer duration. In others, a shorter one might work. You should try various durations to see what's best for your application.
 
 
-[role="since:com.vaadin:vaadin@V25.3"]
-== Updates the Client Doesn't Receive
-
-Changes and JavaScript invocations that are scheduled for a UI are kept in memory until a response is written for its client, which needs either a request from the client or an open push connection. A UI whose client has stopped receiving responses -- a laptop that went to sleep, a closed push connection, a discarded browser tab -- therefore accumulates everything a background job keeps scheduling for it, until the session expires. Invocations scheduled for a component that is detached or invisible are held in the same way, until it's attached or visible again.
-
-Flow logs a warning, once per UI, when 1,000 JavaScript invocations are waiting to be sent. The warning names the component and the expression of the most recent invocation and explains why the invocations are being held. To also log the call site of the invocation that triggered it, enable debug logging for `com.vaadin.flow.component.internal.PendingJavaScriptInvocationUtil`; turning that logger off silences the warning.
-
-Keep invocations from piling up in one of three ways:
-
-- If only the latest value is relevant for the client -- a progress value or the current time, for example -- set an element property instead of calling [methodname]`executeJs()`. Only the last value of a property is sent.
-- Keep the [classname]`PendingJavaScriptResult` that [methodname]`executeJs()` returns and call [methodname]`cancelExecution()` on it before scheduling the next invocation.
-- Stop scheduling updates while the client isn't receiving them. [methodname]`UI.getLastUpdateSentTimestamp()` tells when the updates pending for the UI were last written towards the client, and can be called from a background thread without holding the session lock, so the job can decide whether to update the UI before acquiring it:
-
-[source,java]
-----
-if (Duration.between(ui.getLastUpdateSentTimestamp(), Instant.now())
-        .compareTo(STALE_THRESHOLD) < 0) {
-    ui.access(() -> statusLabel.setText(statusText));
-}
-----
-
-The timestamp says when the updates were written towards the client, not that the client received them. For a UI that hasn't written a response yet, it's the time the UI was created.
-
-
 == Avoiding Unnecessary Pushes
 
 The `UI.access()` method updates the user interface, asynchronously. The update operation is not executed immediately, but added to a queue and executed at some time later. If this is combined with regular event-driven updates in the HTTP request thread, you may have a situation in which the user interface is updated out-of-order.
