@@ -182,33 +182,33 @@ The full usage text, including every option and environment variable. Answers wi
 The exit code is the contract, and means the same thing on every platform: `0` the change is live (or there was nothing to do), `1` it failed, `4` a newer `apply` superseded this one. Usage and internal errors use `64`, `70`, and `77`.
 
 
-[[war-projects]]
-== WAR Projects
+[[runtimes]]
+== Launch With Various Containers
 
-A WAR-packaged application has no entry point of its own, so the daemon starts it by running the project's own server plugin -- in the build's own JVM -- instead of launching a class directly. Everything else about the loop is unchanged: the same commands, the same exit codes, the same change-set rules. Once the application is up, `status` names the runtime it chose:
+The daemon can start the application in more than one way. It either launches a class with a `main` method directly, or runs the application through a supported server plugin declared in the project's own pom, in the build's own JVM. Which one it uses is detected automatically. Everything else about the loop is unchanged: the same commands, the same exit codes, the same change-set rules. Once the application is up, `status` names the runtime it chose:
 
 [cols="1,3"]
 |===
-| Runtime | Container
+| Runtime | How the Application Starts
 
 | `main`
-| A class with a `main` method, launched directly. Chosen when the project names one, or declares no known server plugin.
+| A class with a `main` method, launched directly with `java`. Chosen when the project names one, or declares no supported server plugin.
 
 | `jetty-ee10`
-| A WAR built for Jetty's `jetty-ee10` container, started through its own Maven plugin.
+| Through the `jetty-ee10` Maven plugin.
 
 | `jetty-ee11`
-| A WAR built for Jetty's `jetty-ee11` container, started through its own Maven plugin.
+| Through the `jetty-ee11` Maven plugin.
 |===
 
-`-Dvaadin.dev.runtime=<main|jetty-ee10|jetty-ee11>` overrides the choice.
+WAR-packaged projects are supported. More runtimes are planned.
 
-A servlet container brings a few differences worth knowing:
+`-Dvaadin.dev.runtime=<main|jetty-ee10|jetty-ee11>` overrides the detected choice.
 
-* *Nothing in the pom needs to change.* The server plugin's own rescanner and a forked deploy mode would both fight the loop -- a rescanner redeploys the webapp underneath an `apply` that already succeeded, and a forked deploy mode makes the application a grandchild of the daemon rather than a direct child, which loses its exit code. The daemon overrides both for its own run without touching the pom, and logs the override it made.
+Running through a server plugin brings a few differences worth knowing:
+
+* *The plugin needs no extra configuration.* If it is set to rescan or to run in a forked JVM, the daemon turns that off for its own run, without changing the pom.
 * *A restart costs more,* because it is a Maven invocation rather than a bare JVM launch. Edits that hot-swap are unaffected.
-* *[filename]`src/main/webapp` isn't tracked.* The servlet container serves it straight off disk, so an edit there is already live, but `apply` doesn't mention it or reload the page for you. Static files under [filename]`src/main/resources/META-INF/resources` are tracked the same as in any other Vaadin application.
-* *There's no Spring*, so a structural edit is limited only by what the JVM itself accepts -- on a JetBrains Runtime, that's most of them.
 
 
 == What Apply Reports
@@ -250,6 +250,8 @@ Most of what the dev loop can't do it reports honestly, by escalating to a resta
 
 Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, a class that only now carries a Spring stereotype (`@Component`, `@Service`, `@Repository`, `@Controller`, `@RestController`, `@ControllerAdvice`, `@RestControllerAdvice`, or `@Configuration`) or `@Entity` restarts too -- component scanning and the JPA metamodel are both fixed at startup, so a class the application never had gets no bean definition and no mapping -- and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
 
+When the application runs through a server plugin, [filename]`src/main/webapp` isn't tracked. The servlet container serves it straight off disk, so an edit there is already live, but `apply` doesn't mention it or reload the page for you. Static files under [filename]`src/main/resources/META-INF/resources` are tracked the same as with any other runtime.
+
 
 [[configuration]]
 == Configuration
@@ -277,7 +279,7 @@ The application's own output is in [filename]`target/devloop/app.log`, and the d
 Add `com.vaadin:vaadin-dev` as an optional dependency, as shown under <<#prerequisites,Prerequisites>>.
 
 `cannot tell how to start this application`::
-The daemon found neither a `main` method nor a known server plugin in the pom. Build the module once, name the class with `-Dvaadin.dev.mainClass`, or name the runtime with `-Dvaadin.dev.runtime`; see <<#war-projects,WAR Projects>>.
+The daemon found neither a `main` method nor a supported server plugin in the pom. Build the module once, name the class with `-Dvaadin.dev.mainClass`, or name the runtime with `-Dvaadin.dev.runtime`; see <<#runtimes,Launch With Various Containers>>.
 
 The application fails to start::
 `start` exits `1` and names the reason, with the tail of [filename]`app.log` under it. A taken port or a bad configuration value shows up there.
