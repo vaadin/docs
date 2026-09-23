@@ -15,8 +15,9 @@ public class FormLayoutLabelStyling extends Div {
         FormLayout formLayout = new FormLayout();
         formLayout.setAutoResponsive(true);
         formLayout.setLabelsAside(true);
-        formLayout.add(new TextField("First name"), new TextField("Last name"),
-                new EmailField("Email address"));
+        formLayout.addFormItem(new TextField(), "First name");
+        formLayout.addFormItem(new TextField(), "Last name");
+        formLayout.addFormItem(new EmailField(), "Email address");
 
         formLayout.setLabelWidth("10em");
         formLayout.setLabelSpacing("2em");
