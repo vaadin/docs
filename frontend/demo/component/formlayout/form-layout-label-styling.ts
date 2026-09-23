@@ -1,6 +1,5 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/form-layout';
-import '@vaadin/form-layout/vaadin-form-item.js';
 import '@vaadin/text-field';
 import '@vaadin/email-field';
 import { html, LitElement } from 'lit';
@@ -27,18 +26,9 @@ export class Example extends LitElement {
           --vaadin-form-layout-label-text-align: end;
         "
       >
-        <vaadin-form-item>
-          <label slot="label">First name</label>
-          <vaadin-text-field></vaadin-text-field>
-        </vaadin-form-item>
-        <vaadin-form-item>
-          <label slot="label">Last name</label>
-          <vaadin-text-field></vaadin-text-field>
-        </vaadin-form-item>
-        <vaadin-form-item>
-          <label slot="label">Email address</label>
-          <vaadin-email-field></vaadin-email-field>
-        </vaadin-form-item>
+        <vaadin-text-field label="First name"></vaadin-text-field>
+        <vaadin-text-field label="Last name"></vaadin-text-field>
+        <vaadin-email-field label="Email address"></vaadin-email-field>
       </vaadin-form-layout>
     `;
     // end::snippet[]
