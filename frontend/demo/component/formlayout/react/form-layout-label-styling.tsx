@@ -11,6 +11,7 @@ function Example() {
       style={{
         '--vaadin-form-layout-label-width': '10em',
         '--vaadin-form-layout-label-spacing': '2em',
+        '--vaadin-form-layout-label-text-align': 'end',
       }}
     >
       <FormItem>

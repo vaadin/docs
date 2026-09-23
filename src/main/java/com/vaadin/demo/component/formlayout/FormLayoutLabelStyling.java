@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.formlayout;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.LabelTextAlign;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -21,6 +22,7 @@ public class FormLayoutLabelStyling extends Div {
 
         formLayout.setLabelWidth("10em");
         formLayout.setLabelSpacing("2em");
+        formLayout.setLabelTextAlign(LabelTextAlign.END);
         // end::snippet[]
 
         add(formLayout);
