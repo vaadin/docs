@@ -18,7 +18,12 @@ For security scenarios, reuse the access-control configuration from <<{articles}
 
 == Set Up the Application Context
 
-The application context is built once per test, typically in [annotationname]`@BeforeEach`, and closed in [annotationname]`@AfterEach`. Use try-with-resources or call [methodname]`close()` explicitly: closing the application context cascades to every user and window it created.
+Each test gets its own application context, created in one of two ways:
+
+* In the test method, with try-with-resources, when only that test uses the context. The plain Java example below does this.
+* In a [annotationname]`@BeforeEach` method, and closed with [methodname]`close()` in an [annotationname]`@AfterEach` method, when every test in the class uses a context. The Spring and Quarkus examples do this.
+
+Closing the application context cascades to every user and window it created.
 
 [methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
 
@@ -186,8 +191,9 @@ For background updates and write confirmation, see <<{articles}/building-apps/te
 
 Create a secured application context, then interleave actions from an administrator and an anonymous user.
 Assert that the anonymous user is redirected while the administrator retains access.
+The example assumes a `ProtectedView` that requires a logged-in user, and an `AdminRoleView` that requires the `ADMIN` role.
 The context uses the `TestViewSecurityConfig` from <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>>, which registers view access control with a login view.
-Keep `LoginView` in a package that the secured context scans, such as the package of `ProtectedView`.
+Keep `LoginView` and the protected views in a package that the secured context scans, such as the package of `ProtectedView`.
 
 .Multi-User Security Isolation
 [source,java]
@@ -240,9 +246,10 @@ class MultiUserSecurityTest {
                 () -> anon.navigate(ProtectedView.class));
         Assertions.assertInstanceOf(LoginView.class, anon.getCurrentView());
 
-        // Switching back restores admin's authentication.
-        admin.navigate(ProtectedView.class);
-        Assertions.assertInstanceOf(ProtectedView.class,
+        // Switching back restores admin's authentication, including the
+        // ADMIN role that AdminRoleView requires.
+        admin.navigate(AdminRoleView.class);
+        Assertions.assertInstanceOf(AdminRoleView.class,
                 admin.getCurrentView());
     }
 }
