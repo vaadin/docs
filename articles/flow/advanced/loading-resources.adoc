@@ -146,6 +146,8 @@ Lit templates should be imported using `@JsModule` (see <</flow/component-intern
 
 `@JavaScript`::
 Defines a JavaScript file dependency. The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
++
+By default, this renders a classic `<script>` element. Set the `type` attribute to `JavaScript.Type.MODULE` to render a `<script type="module">` element instead. A `type = JavaScript.Type.MODULE` file is always loaded at runtime and never bundled, even for a bare relative path, which is then resolved against the servlet context root. Use it for hand-authored or CDN-hosted ES modules that shouldn't go through Vite; for build-time bundled ES modules, use `@JsModule` instead. `LoadMode.INLINE` isn't supported in combination with `JavaScript.Type.MODULE`.
 
 `@CssImport`::
 Imports a style sheet from an npm package, which it can be included in the frontend bundle.
@@ -162,16 +164,17 @@ All of the resource annotations are repeatable. Include one annotation for each 
 
 === Loading JavaScript with the Page Object
 
-You can use the [methodname]`addJavaScript(String url)` method in [classname]`Page` to load JavaScript. The [classname]`Page` object also has an [methodname]`addJsModule(String url)` method, which you can use to load an external JavaScript module.
+You can use the [methodname]`addJavaScript(String url)` method in [classname]`Page` to load JavaScript. To load an external JavaScript module instead of a classic script, use the [methodname]`addJavaScript(String url, LoadMode loadMode, JavaScript.Type type)` overload with `type` set to `JavaScript.Type.MODULE`. This is the recommended replacement for the deprecated [methodname]`addJsModule(String url)` method, which serves the same purpose but doesn't accept a load mode.
 
-The following example uses [methodname]`addJavaScript(String url)` to import JavaScript files:
+The following example uses [methodname]`addJavaScript(String url)` to import a classic script, and the `type`-taking overload to import an external module:
 
 [source,java]
 ----
 UI.getCurrentOrThrow().getPage().addJavaScript("/js/script.js");
 // external JavaScript module
-UI.getCurrentOrThrow().getPage()
-        .addJsModule("https://unpkg.com/lodash@4.17.15");
+UI.getCurrentOrThrow().getPage().addJavaScript(
+        "https://unpkg.com/lodash@4.17.15", LoadMode.EAGER,
+        JavaScript.Type.MODULE);
 ----
 
 
