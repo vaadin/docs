@@ -1,0 +1,187 @@
+---
+title: Upgrading from Vaadin 25.2
+page-title: How to Upgrade from Vaadin 25.2 to Vaadin 25.3 | Vaadin
+description: Changes needed to upgrade an application from Vaadin 25.2 to Vaadin 25.3.
+meta-description: Upgrade a Vaadin application from 25.2 to 25.3. Covers the version bump, behavior changes, changed APIs, and the deprecations to fix before Vaadin 26.
+order: 100
+---
+
+
+= Upgrading from Vaadin 25.2 to 25.3
+
+Vaadin 25.3 is a minor release, and for most applications the upgrade is a version bump. The system requirements are the same as for Vaadin 25.2: Java 21 or later, Spring Boot 4.1 or later, and Node.js 24 or later. This page lists the changes that can still need attention, followed by the deprecations to act on before Vaadin 26.
+
+For what's new in Vaadin 25.3, see the link:https://github.com/vaadin/platform/releases/tag/25.3.0[release notes]. If you're upgrading from Vaadin 24, follow <<index#,Upgrading from Vaadin 24>> instead -- it includes the Vaadin 25.3 changes.
+
+
+== Update the Version
+
+Set the Vaadin version in the [filename]`pom.xml` or [filename]`gradle.properties` file:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="pom.xml"></source-info>
+<vaadin.version>25.3.0</vaadin.version>
+----
+[source,properties]
+----
+<source-info group="gradle.properties"></source-info>
+vaadinVersion=25.3.0
+----
+--
+
+Use the latest 25.3 maintenance release, if one is available. See the link:https://github.com/vaadin/platform/releases[list of releases on GitHub].
+
+
+== Build and Frontend
+
+Default `index.html`::
+The build now generates the default [filename]`index.html` into [filename]`frontend/generated/`, and only when the project has no [filename]`frontend/index.html` of its own. An [filename]`index.html` that an older build generated into [filename]`frontend` -- and that was committed to source control -- takes precedence and hides later improvements to the default. If you haven't customized it, delete it. See <<{articles}/flow/advanced/modifying-the-bootstrap-page#default-bootstrap-template-and-entry-point, Default Template & Entry Point>>.
+
+TypeScript 7 and React Router 8::
+The frontend toolchain moves from TypeScript 6 to 7 and from React Router 7 to 8. The [filename]`tsconfig.json` that Vaadin generates is unchanged. If you have customized it, remove any compiler options that TypeScript 6 deprecated, as TypeScript 7 no longer accepts them. If your React views use React Router APIs directly, see the link:https://reactrouter.com/upgrading/v7[React Router upgrade guide].
+
+Client-side engine::
+The engine that runs in the browser is now written in TypeScript and bundled by Vite. It replaces the engine that Google Web Toolkit (GWT) compiled from Java. Applications need no changes. Only an add-on that compiled against `com.vaadin.client.*`, or a build step that referenced `VAADIN/static/client/`, is affected. See <<{articles}/upgrading#client-side-engine-ported-to-typescript, Client-Side Engine Ported to TypeScript>>.
+
+
+== Java API Changes
+
+[classname]`Image`::
+[classname]`Image` extends [classname]`HtmlComponent` instead of [classname]`HtmlContainer`, so it no longer has the [methodname]`add()`, [methodname]`remove()`, [methodname]`removeAll()`, [methodname]`setText()`, and [methodname]`getText()` methods. An `img` element never rendered children or text. Remove those calls, and use [methodname]`setAlt()` for the alternative text.
+
+Navigating to a location with a query string::
+[methodname]`UI.navigate(String)` parses a query string and fragment in the location, as in `ui.navigate("user/123?tab=orders")`. Passing a [classname]`QueryParameters` object together with such a location throws an [classname]`IllegalArgumentException`, since it would discard the parameters in the string. See <<{articles}/flow/routing/navigation#, Navigating Between Routes>>.
+
+Custom servlets::
+[classname]`VaadinServlet` no longer calls [methodname]`serveStaticOrWebJarRequest()`, so overriding it has no effect. To customize how static resources are served, override [methodname]`createStaticFileHandler()` instead.
+
+Spring configuration classes::
+The `vaadin-spring` configuration classes are now Spring Boot auto-configurations, with `proxyBeanMethods=false`. This only affects code that extends or imports these classes, and relies on a call from one bean method to another returning the shared bean instance.
+
+
+== Security
+
+When a log-in view is configured with [methodname]`VaadinSecurityConfigurer.loginView()`, an unauthorized request for a sub-resource -- a stylesheet, script, image, font, or web app manifest -- is answered with `401 Unauthorized` instead of a redirect to the log-in view. A test or client that expects the redirect has to expect `401`. See <<{articles}/upgrading#security-changes-in-vaadin-25-3, Security Changes in Vaadin 25.3>>.
+
+
+== Components
+
+Grid: hidden columns::
+Value providers, tooltip generators, and part name generators no longer run for hidden columns, and Grid sends no data to the browser for them. Showing a column generates its data again. Don't rely on side effects of these callbacks, or on client-side access to the data of hidden columns.
+
+Grid: selection and item details::
+Selection and item details react only to the user's clicks. Selecting an item on the server no longer opens its details, and the selected row is no longer mirrored to the `activeItem` property of the web component. Update any client-side code that reads or sets `activeItem` to select a row or open its details.
+
+Dialog focus::
+Non-modal dialogs still receive focus when opened, but no longer trap it: kbd:[Tab] moves on to the rest of the page. [methodname]`setFocusTrap()` is deprecated -- use [methodname]`setAutofocus()` instead. See <<{articles}/components/dialog#, Dialog>>.
+
+Multi-Select Combo Box::
+The value is synchronized to the server on the web component's `change` event. Client-side code that sets the `selectedItems` property directly has to dispatch a `change` event for the server to receive the new value. Server-side [methodname]`setValue()` and user interaction aren't affected.
+
+
+== AI Integration (Preview)
+
+The AI integration is still a preview feature, behind the `com.vaadin.experimental.aiComponents` feature flag, and Vaadin 25.3 changes its API:
+
+* The `vaadin-ai-components-flow` artifact is replaced by two modules. The free `vaadin-ai-core-flow` module contains the orchestrator, the LLM providers, the component interfaces, and the [interfacename]`AIController` interface. The commercial `vaadin-ai-extensions-flow` module contains the built-in Grid, Chart, and Form controllers, which now require a commercial Vaadin subscription. The `vaadin-core` dependency includes only the free module, while `vaadin` includes both. Replace any explicit `vaadin-ai-components-flow` dependency. The Java package names are unchanged.
+* [interfacename]`AIController.onRequest()` now takes a [classname]`RequestListener.RequestEvent`, and [methodname]`onResponse(Throwable)` is now [methodname]`onResponse(ResponseListener.ResponseEvent)`, where the error is available from [methodname]`getError()`. Update custom controllers to the new signatures.
+* [classname]`FormAIController` fires [methodname]`addFieldValueChangeListener()` listeners once per changed field, replacing [methodname]`addFieldValueChangedListener()`, which fired once per turn. [methodname]`showFieldHighlight()` and [methodname]`hideFieldHighlight()` are removed: fields that the AI changes are marked automatically with a marker that lets the user revert the change. Turn this off with [methodname]`setFieldMarkerEnabled(false)`. Fields are also no longer set to read-only on the server while a turn runs.
+
+See <<{articles}/flow/ai-support#, AI Support>> for details.
+
+
+== Observability Kit
+
+Vaadin 25.3 comes with Observability Kit 5, a rewrite built on Micrometer. It isn't a drop-in replacement for version 4: there's no Java agent any more, and meter names, configuration, tracing data, and the custom instrumentation API have changed. If your application uses Observability Kit, follow <<{articles}/tools/observability/migrating-to-v5#, Migrating to Version 5>>.
+
+
+== Browserless Testing and TestBench
+
+Some component testers now behave more like a browser, which can make existing tests fail:
+
+* [classname]`NumberFieldTester`, [classname]`DatePickerTester`, [classname]`TimePickerTester`, and [classname]`DateTimePickerTester` accept a value that violates `min`, `max`, `step`, or a required constraint, and mark the field invalid, instead of throwing an [classname]`IllegalArgumentException`. Assert the validity instead of the exception.
+* A read-only value component isn't usable, so setting its value through a tester throws.
+* Queries find the components set as a Grid column header, footer, or editor.
+* [methodname]`GridTester.getCellComponent()` returns the component that the grid rendered, and throws for a cell that the grid doesn't render. Use [methodname]`renderCellComponent()` for the old behavior.
+* [methodname]`test(treeGrid)` returns a [classname]`TreeGridTester`, and [methodname]`test(gridContextMenu)` returns a [classname]`GridContextMenuTester`.
+* A context menu has to be opened with [methodname]`open()` before its items can be clicked or inspected.
+* [methodname]`CheckboxGroupTester.updateSelection()` is no longer public.
+* Override [methodname]`frameworkLookupServices()` instead of [methodname]`lookupServices()` to replace a service that the Spring or Quarkus integration registers. [methodname]`lookupServices()` is deprecated in favor of the <<{articles}/flow/testing/browserless/test-configuration#, test configuration>>.
+* In TestBench, [methodname]`SelectElement.getSelectedText()` returns an empty string when no item is selected.
+
+See <<{articles}/upgrading#testbench-and-browserless-testing, TestBench and Browserless Testing>> for examples and details.
+
+
+== Deprecations to Address Before Vaadin 26
+
+Deprecated APIs still work in Vaadin 25.3, but most of them are removed in Vaadin 26. Replacing them now makes the next upgrade easier.
+
+[cols="1,1",options=header]
+|===
+| Deprecated | Replacement
+
+| [classname]`NativeTable` and the related `NativeTable*` components and TestBench elements
+| The [classname]`Table` component family. See <<{articles}/components/html-elements/table#migrating-from-native-table, Migrating from Native Table>>.
+
+| [interfacename]`SessionLockListener`, [interfacename]`RpcInvocationListener`, and the [classname]`VaadinService` methods that add them
+| Events of the service event bus. See <<{articles}/flow/advanced/session-lock-and-rpc-listeners#deprecated-listener-interfaces, Deprecated Listener Interfaces>>.
+
+| [methodname]`setItems(rootItems, childItemProvider)` and [methodname]`setTreeData()` of Tree Grid, and the [classname]`TreeDataProvider(TreeData)` constructor
+| A [classname]`TreeDataProvider` with an explicit hierarchy format, as the default changes from `NESTED` to `FLATTENED` in Vaadin 26. See the example below.
+
+| `ValueChangeMode.ON_BLUR`
+| `ValueChangeMode.ON_CHANGE`, which fires on focus loss only when the value has changed.
+
+| [methodname]`Dialog.setFocusTrap()`
+| [methodname]`Dialog.setAutofocus()`
+
+| [methodname]`setRole()` of Dialog, Popover, and Badge
+| [methodname]`setAriaRole()`
+
+| [methodname]`Tabs.indexOf()`
+| [methodname]`Tabs.getIndexOf()`
+
+| [methodname]`SplitLayout.setPrimaryStyle()` and [methodname]`setSecondaryStyle()`
+| Styling [methodname]`getPrimaryComponent()` and [methodname]`getSecondaryComponent()` directly.
+
+| [methodname]`LoginI18n.createDefault()` and [methodname]`CrudI18n.createDefault()`
+| A new instance with only the customized texts set. Unset texts fall back to the component defaults.
+
+| [methodname]`ExtendedClientDetails.getCurrentDate()`
+| [methodname]`ExtendedClientDetails.getBrowserTime()`
+
+| [methodname]`WebBrowser.isIPhone()`, [methodname]`ExtendedClientDetails.isIPad()`, and [methodname]`ExtendedClientDetails.isIOS()`
+| Feature detection, or [methodname]`ExtendedClientDetails.getNavigatorPlatform()`.
+
+| [methodname]`VaadinServlet.serveStaticOrWebJarRequest()`
+| Overriding [methodname]`createStaticFileHandler()`.
+
+| About 150 [classname]`VaadinIcon` constants, such as the `_O` outline variants and brand icons
+| The replacement named in the Javadoc of each constant. For brand icons, use an icon set such as link:https://simpleicons.org[Simple Icons].
+|===
+
+To keep the current Tree Grid behavior, build the [classname]`TreeDataProvider` yourself instead of calling [methodname]`setItems()`:
+
+[source,java]
+----
+// Before
+treeGrid.setItems(rootFolders, Folder::children);
+
+// After
+TreeData<Folder> treeData = new TreeData<>();
+treeData.addItems(rootFolders, Folder::children);
+treeGrid.setDataProvider(new TreeDataProvider<>(treeData,
+        HierarchicalDataProvider.HierarchyFormat.NESTED));
+----
+
+Use `HierarchyFormat.FLATTENED` instead to adopt the Vaadin 26 default now. It keeps the scroll position more reliably when the hierarchy changes, but it changes how some methods, such as [methodname]`scrollToIndex()`, interpret their arguments. See <<{articles}/components/tree-grid/data-binding#hierarchy-formats, Hierarchy Formats>>.
+
+These products and features are deprecated as well, and aren't available in Vaadin 26:
+
+* *Collaboration Kit* -- migrate to signals. See <<{articles}/tools/collaboration/migrating-to-signals#, Migrating from Collaboration Kit to Signals>>.
+* *SSO Kit* -- migrate to Spring Security. See <<{articles}/tools/sso/migrating-to-spring-security#, Migrating from SSO Kit to Spring Security>>.
+* *AppSec Kit* -- a replacement service for Vaadin Enterprise is planned. See <<{articles}/tools/appsec#, AppSec Kit>>.
+* *Hilla Lit views and Vaadin Router* -- migrate to React and React Router. See <<{articles}/upgrading#vaadin-router-removal, Vaadin Router Deprecation>>.
