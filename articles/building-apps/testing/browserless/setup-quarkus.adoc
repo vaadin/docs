@@ -9,9 +9,9 @@ order: 30
 
 = Set Up Browserless Tests with Quarkus
 
-Use this guide for an existing Quarkus Flow application.
-Use `QuarkusBrowserlessTest` and Quarkus test profiles throughout this setup.
-For a Java EE application using Vaadin CDI and Weld, use <<setup-cdi#,the separate CDI setup>>.
+Use this guide for a Quarkus Flow application.
+Tests extend `QuarkusBrowserlessTest` and run with `@QuarkusTest`.
+For a Java EE application that uses Vaadin CDI and Weld, use <<setup-cdi#,the separate CDI setup>>.
 
 == Add Dependencies
 
@@ -37,17 +37,26 @@ With the Vaadin BOM imported, add these test dependencies to your [filename]`pom
 </dependency>
 ----
 
-== Create and Configure the Test
 
-Create this view and put its test in the same Java package under `src/test/java`:
+== Create a Test
+
+Create this view:
 
 include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
 
-.Quarkus Test Example
+Create a test class that extends [classname]`QuarkusBrowserlessTest`, in the same Java package as the view under `src/test/java`:
+
+.`HelloWorldViewTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import com.vaadin.flow.component.notification.Notification;
+import io.quarkus.test.junit.QuarkusTest;
+
 @QuarkusTest
-class ViewTest extends QuarkusBrowserlessTest {
+class HelloWorldViewTest extends QuarkusBrowserlessTest {
     @Test
     public void setText_clickButton_notificationIsShown() {
         final HelloWorldView helloView = navigate(HelloWorldView.class);
@@ -61,16 +70,55 @@ class ViewTest extends QuarkusBrowserlessTest {
 }
 ----
 
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
+
 [NOTE]
-With [annotationname]`@QuarkusTest` annotation, the testing framework starts the application and the HTTP server -- although it won't be required for browserless testing. However, [classname]`QuarkusBrowserlessTest` tests are still executed in a mocked environment.
+[annotationname]`@QuarkusTest` starts the application and its HTTP server, which browserless tests don't use.
+The [classname]`QuarkusBrowserlessTest` tests still run in a mocked Vaadin environment.
 
-A test can be annotated with [annotationname]`@TestProfile` to reference a specific test configuration. With a test profile you can, for example, override application configuration, provide bean alternatives and custom test resources. Refer to the https://quarkus.io/guides/getting-started-testing#testing_different_profiles[Quarkus Testing Profiles documentation] for additional information.
 
-In the following example, `MockService` is a CDI bean annotated with [annotationname]`@Alternative` that implements the same interface as the application's service.
+== Run the Test
 
-.Quarkus Testing Profile Example
+Run the test from your IDE or with `mvn test`.
+The test passes when entering a name and clicking the button shows the expected notification.
+
+
+== Replace a Service with a Test Profile
+
+Annotate a test with [annotationname]`@TestProfile` to run it with a specific test configuration.
+A test profile can, for example, override application configuration, enable bean alternatives, and provide custom test resources.
+See the https://quarkus.io/guides/getting-started-testing#testing_different_profiles[Quarkus Testing Profiles documentation] for all options.
+
+This example replaces a `GreetingService` with a test implementation.
+It assumes a `WelcomeView` that shows the result of `greetingService.greet("Quarkus")` in a span stored in its `greeting` field.
+The test implementation is a CDI bean annotated with [annotationname]`@Alternative`:
+
+.`MockService.java`
 [source,java]
 ----
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
+
+@Alternative
+@ApplicationScoped
+public class MockService implements GreetingService {
+    @Override
+    public String greet(String name) {
+        return "Hello " + name + " from the mock service";
+    }
+}
+----
+
+The profile enables the alternative and also overrides the `app.some.config` property:
+
+.`MockServiceProfile.java`
+[source,java]
+----
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import io.quarkus.test.junit.QuarkusTestProfile;
+
 public class MockServiceProfile implements QuarkusTestProfile {
 
     @Override
@@ -83,17 +131,37 @@ public class MockServiceProfile implements QuarkusTestProfile {
         return Collections.singleton(MockService.class);
     }
 }
+----
+
+A test that uses the profile gets the alternative injected into the view:
+
+.`MockServiceViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
 @TestProfile(MockServiceProfile.class)
 class MockServiceViewTest extends QuarkusBrowserlessTest {
+    @Test
+    void view_usesMockService() {
+        WelcomeView view = navigate(WelcomeView.class);
+        Assertions.assertEquals("Hello Quarkus from the mock service",
+                view.greeting.getText());
+    }
 }
 ----
 
-== Run the Test
 
-Run the test from your IDE or with `mvn test`.
-To test protected views, continue with <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control with Quarkus>>.
+== Next Steps
+
+* <<test-user-interactions#,Test User Interactions>> explains how the test works and how to cover more complex views.
+* <<test-view-access#quarkus,Test View Access Control>> covers protected views with Quarkus Security.
+* <<debug-tests#,Debug a Failing Browserless Test>> helps when a test fails.
 
 
 [discussion-id]`09A26994-97AB-4877-AEB1-717BE02E348D`

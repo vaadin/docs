@@ -1,23 +1,102 @@
 ---
 title: Test User Interactions
 page-title: Test User Interactions | Vaadin
-description: Find components, simulate navigation and keyboard shortcuts, and test menu actions in browserless tests.
-meta-description: Find components, simulate navigation and keyboard shortcuts, and test menu actions in browserless tests.
-order: 40
+description: Learn how a browserless test works, then fill in forms, select Grid rows, confirm dialogs, and test navigation, shortcuts, and menus.
+meta-description: Learn how a browserless test works, then fill in forms, select Grid rows, confirm dialogs, and test navigation, shortcuts, and menus in Vaadin Flow tests.
+order: 50
 ---
 
 
 = Test User Interactions
 
-Start with the <<./#choose-your-framework,setup for your application framework>>.
-The interaction methods in this guide are shared, but retain your framework-specific test base class and initialization.
-For Java EE/CDI, extend `AbstractCdiViewTest` and register each tested view and its dependencies as described in <<setup-cdi#,the CDI guide>>.
-Each example below is a pattern to adapt to your view; it belongs inside a test method unless shown otherwise.
+The examples in this guide use the plain Java setup.
+For another framework, change the base class as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
+Each example belongs inside a test method unless shown otherwise.
+
+
+[#how-a-browserless-test-works]
+== How a Browserless Test Works
+
+Each setup guide ends with a test for the same `HelloWorldView`.
+The test navigates to the view, enters a name, clicks a button, and checks the notification that appears:
+
+[source,java]
+----
+final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+test(helloView.name).setValue("Test");
+test(helloView.sayHello).click();
+
+Notification notification = find(Notification.class).single();
+Assertions.assertEquals("Hello Test", test(notification).getText());
+----
+
+The following sections explain each step.
+They work the same way with every setup; only the test base class differs.
+
+
+=== Navigate to a View
+
+The [methodname]`navigate()` method opens a view, as a user would navigate to it in the browser. It returns the view instance so you can interact with it directly.
+
+[source,java]
+----
+final HelloWorldView helloView = navigate(HelloWorldView.class);
+----
+
+
+=== Use the Java API Directly
+
+Since the test runs on the server side, it has direct access to the Java component API.
+The [classname]`TextField` and [classname]`Button` fields of `HelloWorldView` are package-private, so a test in the same Java package can read them -- for example, if the view is in `src/main/java/com/example/app/`, put the test in `src/test/java/com/example/app/`.
+
+[source,java]
+----
+// Read a component's value directly
+String currentValue = helloView.name.getValue();
+
+// Check component state
+boolean isEnabled = helloView.sayHello.isEnabled();
+boolean isVisible = helloView.name.isVisible();
+----
+
+
+=== Simulate User Actions with Testers
+
+To simulate how a user interacts with a component, wrap it with [methodname]`test()`. This returns a component-specific tester that provides methods like [methodname]`setValue()`, [methodname]`click()`, and [methodname]`getText()`. Unlike calling the Java API directly, tester methods also verify that the component is in a usable state -- visible, enabled, and attached to the UI.
+
+[source,java]
+----
+// Simulate typing into a text field
+test(helloView.name).setValue("Test");
+
+// Simulate clicking a button
+test(helloView.sayHello).click();
+
+// Read the text a user would see
+String text = test(notification).getText();
+----
+
+Each Vaadin component has a tester tailored to its behavior. For example, a [classname]`CheckboxTester` uses [methodname]`click()` to toggle checked state, a [classname]`ComboBoxTester` has [methodname]`selectItem()`, and a [classname]`GridTester` has [methodname]`getRow()`. See <<{articles}/flow/testing/browserless/component-testers#,Component Testers>> for supported operations and <<test-custom-components#,Test a Custom Component>> to build your own tester.
+
+
+=== Find Components
+
+Not every component is stored in a view field. For example, the [classname]`Notification` in the test is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`find()` query method to find components in the UI by their type:
+
+[source,java]
+----
+// Find the single Notification currently open
+Notification notification = find(Notification.class).single();
+----
+
+The query API supports filtering by properties, predicates, and scoping to specific parts of the component tree. See <<{articles}/flow/testing/browserless/component-query#, Querying Components>> for details.
+
 
 == Find the Component to Exercise
 
 Use a label or visible text when it identifies the component unambiguously.
-Scope the query when the same field appears more than once:
+When the same field appears more than once, for example in the view and in an open dialog, scope the query to the view:
 
 [source,java]
 ----
@@ -29,11 +108,80 @@ Assertions.assertEquals("Ada", name.getValue());
 
 Use `find(Type.class, container)` to restrict a query to a particular container.
 A component inside a Grid renderer may need to be obtained through `test(grid).getCellComponent(...)` before it can be exercised.
-An empty top-level query does not necessarily mean that the application failed to create the component.
+If a top-level query finds nothing, the component may be inside a renderer or a closed overlay, which queries don't reach.
 See <<{articles}/flow/testing/browserless/component-query#components-a-query-cannot-find,Query Boundaries>> and <<{articles}/flow/testing/browserless/component-query#,Component Queries>> for the full behavior.
 
+
+== Fill In and Submit a Form
+
+Set each field through its tester, then click the submit button.
+For a `SignUpView` with a [guilabel]*Name* text field, an [guilabel]*Email* email field, and a [guibutton]*Sign up* button that shows a welcome notification:
+
+[source,java]
+----
+navigate(SignUpView.class);
+test(find(TextField.class).withLabel("Name").single()).setValue("Ada");
+test(find(EmailField.class).withLabel("Email").single())
+        .setValue("ada@example.com");
+test(find(Button.class).withText("Sign up").single()).click();
+
+Assertions.assertEquals("Welcome, Ada",
+        test(find(Notification.class).single()).getText());
+----
+
+A tester sets the value the way a user does, so the field's validation runs as it would in the browser:
+
+[source,java]
+----
+EmailField email = find(EmailField.class).withLabel("Email").single();
+test(email).setValue("not an email");
+Assertions.assertTrue(email.isInvalid());
+----
+
+
+== Select a Grid Row
+
+Use the Grid tester to read rows and select items.
+For a `PersonListView` with a `people` grid of `Person` items and a `details` span that shows the selected person:
+
+[source,java]
+----
+var view = navigate(PersonListView.class);
+var grid = test(view.people);
+Assertions.assertEquals(3, grid.size());
+Assertions.assertEquals("Ada", grid.getCellText(0, 0));
+
+grid.select(0);
+Assertions.assertEquals("Selected: Ada", view.details.getText());
+----
+
+The tester also has `clickRow()` for views that react to item clicks, and `getRow()` for reading the item on a row.
+See <<{articles}/flow/testing/browserless/component-testers#,Component Testers>> for the other Grid operations.
+
+
+== Confirm a Dialog
+
+An open dialog is attached to the UI, so a top-level query finds it.
+For an `AccountView` whose [guibutton]*Delete account* button opens a `ConfirmDialog`, and whose `status` span reports the result:
+
+[source,java]
+----
+var view = navigate(AccountView.class);
+test(find(Button.class).withText("Delete account").single()).click();
+
+var dialog = test(find(ConfirmDialog.class).single());
+Assertions.assertEquals("Delete account?", dialog.getHeader());
+dialog.confirm();
+
+Assertions.assertEquals("Account deleted", view.status.getText());
+----
+
+Call `cancel()` or `reject()` on the tester to click the dialog's other buttons.
+For a `Dialog`, find its buttons with `find()` while the dialog is open.
+
+
 [#test-ids]
-== Test IDs
+== Use Test IDs
 
 Use [methodname]`Component.setTestId()` to assign a stable identifier to a component for use in tests. This sets the `data-testid` HTML attribute on the component's element, which can also be used by browser-based testing frameworks:
 
@@ -49,7 +197,6 @@ String testId = submitButton.getTestId(); // "submit-button"
 Use a test ID when a label or visible text would be ambiguous or would change with translations.
 Keep the identifier independent of styling and layout.
 
-
 Browserless tests can use the same identifier: the [since:com.vaadin:vaadin@V25.2]#`testId()` terminal operator and the `withTestId()` filter# look up components by their test ID:
 
 [source,java]
@@ -59,15 +206,20 @@ Button submit = find(Button.class).testId("submit-button");
 
 See <<{articles}/flow/testing/browserless/component-query#test-ids, Querying Components>> for details.
 
+
 == Use Locators for Repeated Interactions
 
-In a base-class test, implement `Locators` to combine lookup and interaction.
-The class below uses the plain Java setup.
-In a CDI test, add `implements Locators` to your `AbstractCdiViewTest` subclass instead; retain its CDI configuration.
+If your test extends a base class, implement `Locators` to combine lookup and interaction in one call:
 
+.`CartViewLocatorsTest.java`
 [source,java]
 ----
-class CartViewTest extends BrowserlessTest implements Locators {
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.locator.Locators;
+
+class CartViewLocatorsTest extends BrowserlessTest implements Locators {
     @Test
     void addItem_increasesCartSize() {
         navigate(CartView.class);
@@ -78,12 +230,15 @@ class CartViewTest extends BrowserlessTest implements Locators {
 }
 ----
 
-This example assumes that the cart view updates the span after adding an item.
+This example assumes a `CartView` with an [guibutton]*Add to cart* button and a span with the ID `cart-size` that shows the number of items.
+With Java EE/CDI, add `implements Locators` to your `AbstractCdiViewTest` subclass.
 For locator reuse and invalidation rules, see <<{articles}/flow/testing/browserless/locators#resolution,Locator Resolution>>.
 
-== Test Navigation and Shortcuts
 
-Navigate by location when the outcome may be a redirect, and pass the expected view class:
+== Test Navigation
+
+Navigate by location when the outcome may be a redirect, and pass the view class you expect to end up in.
+The call fails if navigation ends in another view:
 
 [source,java]
 ----
@@ -95,7 +250,11 @@ Assert the state selected by those parameters after navigation.
 
 For route parameters and other navigation forms, see <<{articles}/flow/testing/browserless/test-environment#navigating-to-views,Navigation>>.
 
-To exercise a save shortcut, invoke it after changing the form and then assert the same outcome as clicking Save:
+
+== Test Keyboard Shortcuts
+
+Fire a shortcut with `fireShortcut()`, then assert the same outcome as the matching button click.
+For a form with a kbd:[Ctrl+S] save shortcut:
 
 [source,java]
 ----
@@ -103,9 +262,11 @@ fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
 // Assert the saved state or the confirmation shown by your view.
 ----
 
+
 == Test Menu Actions
 
-Use a menu tester to reach overlay content. For a view exposing a `contextMenu` field:
+Use a menu tester to reach overlay content.
+For a view exposing a `contextMenu` field with a checkable [guilabel]*Bold* item:
 
 [source,java]
 ----
@@ -116,10 +277,10 @@ menu.clickItem("Bold");
 Assertions.assertTrue(menu.isItemChecked("Bold"));
 ----
 
+Open the menu before clicking items or reading their state; the tester throws an exception for a closed menu.
 For nested actions, pass a text path such as `clickItem("Share", "Email")`.
 For a menu containing custom components, call `test(menuComponent).find(...)`.
-Open the menu before clicking items or reading their state.
-Only the menu tester's `find()` query works while it is closed; returned components remain detached until it opens.
+This query also works while the menu is closed, but the components it returns stay detached until the menu opens.
 See <<{articles}/flow/testing/browserless/overlay-components#,Overlay Component Testers>> for indexing and attachment semantics.
 
 

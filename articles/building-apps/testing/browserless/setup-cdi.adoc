@@ -3,7 +3,7 @@ title: Set Up Browserless Tests with Java EE/CDI
 page-title: Set Up Browserless Tests with Java EE/CDI | Vaadin
 description: Use Weld and Vaadin CDI to inject dependencies into browserless view tests, select test alternatives, and manage the test lifecycle.
 meta-description: Use Weld and Vaadin CDI to inject dependencies into browserless view tests, select test alternatives, and manage the test lifecycle.
-order: 25
+order: 40
 ---
 
 
@@ -14,10 +14,10 @@ The examples use `jakarta.*` APIs and JUnit Jupiter.
 They run Weld in the test JVM and use `CdiVaadinServlet` to create views through CDI.
 
 The test base class in this guide, `AbstractCdiViewTest`, is application code that you add under `src/test/java`.
-It extends `BrowserlessTest`; there is no Spring application context in this setup.
-Keep this base class when adapting examples from the other testing guides.
+It extends `BrowserlessTest`.
+To use an example from the other guides, extend this base class instead, as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
 
-== Add Test Dependencies
+== Add Dependencies
 
 Your application must already have <<{articles}/flow/integrations/cdi#add-dependencies,Vaadin CDI and the provided Jakarta EE APIs>> configured.
 Keep those dependencies and the Vaadin BOM.
@@ -62,9 +62,6 @@ If your parent POM does not already manage JUnit, add this import to its existin
 ----
 The example uses JUnit 6, matching `browserless-test-junit6`; Weld's integration artifact is still named `weld-junit5`.
 A project that manages Browserless Test separately can import `com.vaadin:browserless-test-bom` in dependency management to align its modules.
-
-A deployed WAR uses its `WEB-INF/beans.xml` and application-server discovery.
-These tests do not deploy that WAR. The annotations on the test base class configure a separate Weld test archive.
 
 == Create a View with a CDI Dependency
 
@@ -129,6 +126,7 @@ public class CdiGreetingView extends Div {
 
 Put this class under `src/test/java/com/example/app/testing`.
 Use the default JUnit per-method test-instance lifecycle.
+The annotations on the base class configure a Weld test archive, separate from the `WEB-INF/beans.xml` and application-server discovery of the deployed WAR.
 Weld's automatic setup doesn't scan packages.
 Its test archive contains the test class, the types the test class injects, and the classes, packages, and extensions listed in the annotations, so list the application beans explicitly.
 
@@ -197,7 +195,7 @@ Include layouts, producers, observers, and transitive dependencies needed by tha
 Add other scopes only if the tested bean graph needs them.
 See <<{articles}/flow/testing/browserless/cdi#,CDI Test Integration>> for discovery rules and lifecycle details.
 
-== Write and Run the View Test
+== Create a Test
 
 Put this class in the same test package as `AbstractCdiViewTest`:
 
@@ -226,10 +224,13 @@ class CdiGreetingViewTest extends AbstractCdiViewTest {
 }
 ----
 
+The assertion checks that navigation created the view through CDI and that the injected service handled the interaction.
+
+== Run the Test
+
 Run `mvn test` in the module containing the tests.
 For a multi-module project, run `mvn -pl your-ui-module -am test` from the project root.
-The assertion checks that navigation created the view through CDI and that the injected service handled the interaction.
-No application server or browser is needed for this test.
+The test needs no application server or browser.
 
 [#test-alternatives]
 == Replace a Service with a CDI Alternative
@@ -290,7 +291,6 @@ class AlternativeGreetingViewTest extends AbstractCdiViewTest {
 Register the concrete implementation, rather than `GreetingService.class` alone.
 Adding two ordinary implementations with identical types and qualifiers creates an ambiguous injection point.
 The selected CDI alternative replaces the ordinary bean for this test archive.
-Spring's `@Bean`, `@MockBean`, and `@MockitoBean` are not part of this configuration.
 
 == Troubleshoot the Setup
 
@@ -305,15 +305,17 @@ Spring's `@Bean`, `@MockBean`, and `@MockitoBean` are not part of this configura
 | View created without CDI injection | Use `CdiVaadinServlet`, both CDI extensions, and the annotated setup override. Do not initialize the default environment first.
 |===
 
-== Continue with Interaction Tests
+== Next Steps
 
-Use <<test-user-interactions#,Test User Interactions>> and <<debug-tests#,Debug a Failing Browserless Test>> with `AbstractCdiViewTest` as the base class.
-For signal-based views, this setup also initializes the support used by <<test-signals#,Test Signal-Based Views>>.
-The examples in those guides read package-private view fields, so put such test classes in the view's package; `AbstractCdiViewTest` is public, so they can extend it from there.
+* <<test-user-interactions#,Test User Interactions>> and <<debug-tests#,Debug a Failing Browserless Test>> work with `AbstractCdiViewTest` as the base class.
+* For signal-based views, this setup also initializes the support used by <<test-signals#,Test Signal-Based Views>>.
 
-For authentication scenarios, register your application's login view, access-control beans, and route listeners in this CDI setup, then exercise its login behavior with component testers.
-Spring Security's `@WithMockUser` and Quarkus's `@TestSecurity` do not configure authentication for this Weld test archive.
-These tests cover server-side application behavior; use deployment or browser tests to verify application-server security and browser-only behavior.
+The examples in the other guides read package-private view fields.
+Put such test classes in the view's package; `AbstractCdiViewTest` is public, so they can extend it from there.
+
+To test authentication, register your application's login view, access-control beans, and route listeners in this CDI setup, then exercise its login behavior with component testers.
+Authentication annotations such as Spring Security's `@WithMockUser` and Quarkus's `@TestSecurity` belong to those frameworks' test integrations.
+Browserless tests cover server-side application behavior; use deployment or browser tests to verify application-server security and browser-only behavior.
 
 The CDI setup is adapted from the https://github.com/TatuLund/bookstore-flow-ee/wiki/How-to-Use-Vaadin-BrowserlessTest-in-a-Java-EE-CDI-Project[Bookstore CDI testing guide].
 The https://github.com/TatuLund/bookstore-flow-ee/blob/v25/bookstore-starter-flow-ui/src/test/java/com/vaadin/samples/AbstractViewTest.java[Bookstore test base class] provides a larger example with application-specific authentication and routes.

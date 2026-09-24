@@ -1,20 +1,20 @@
 ---
-title: Environment Differences
-page-title: How the Vaadin browserless test environment differs
-description: What the browserless environment creates, in which order, and which application behavior therefore needs a different approach in a test.
-meta-description: Learn the browserless test lifecycle in Vaadin, and how it affects session-scoped beans and authentication applied during a test.
-order: 80
+title: Spring Test Lifecycle
+page-title: Spring Test Lifecycle in Browserless Tests | Vaadin
+description: The order in which Spring and the browserless environment set up a test, and how it affects session-scoped beans and authentication.
+meta-description: Learn the order in which Spring and the Vaadin browserless environment set up a test, and how that order affects session-scoped beans and authentication.
+order: 62
 ---
 
 
-= How the Browserless Environment Differs
+= Spring Test Lifecycle
 
-The standard browserless setup creates a mocked Vaadin environment around each test method.
-Framework integration determines when dependency injection and authentication become available.
-The scope and security behavior below applies to Spring tests. The <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle and explicit route setup.
+`SpringBrowserlessTest` creates the mocked Vaadin environment after Spring has prepared the test instance.
+The order of these steps determines when dependency injection and authentication become available, which affects session-scoped beans and authentication that a test changes later.
+Plain Java and Quarkus tests use their own framework setup, and the <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle.
 
 [#test-lifecycle]
-== Spring Test Lifecycle
+== Order of Test Setup
 
 For `SpringBrowserlessTest`, the default sequence is:
 
@@ -25,11 +25,10 @@ For `SpringBrowserlessTest`, the default sequence is:
 . The inherited cleanup closes the Vaadin environment after the test.
 
 The environment is therefore available after its setup hook, not during initial test-instance injection.
-Plain Java and Quarkus tests use their own framework setup; the Spring injection and security steps do not apply to them.
 See <<test-environment#,Test Environment and Lifecycle>> for the common APIs.
 
 [#session-scoped-beans]
-== Spring Session-Scoped Beans
+== Session-Scoped Beans
 
 Resolving a `@VaadinSessionScope` bean during test-instance injection fails because no Vaadin session exists yet.
 This failure affects every test in the class, including methods that do not use the field.
@@ -42,7 +41,6 @@ The deferred lookups work for these beans too.
 
 Views created during initial or explicit navigation already have the Vaadin environment available, so their session-scoped dependencies can resolve then.
 In <<multi-user#pitfalls-and-guarantees,multi-user Spring tests>>, request- and session-scoped beans resolve for the active user; activate the intended window before resolving a bean directly.
-This Spring behavior does not establish CDI session-context isolation.
 
 For a complete test, see <<{articles}/building-apps/testing/browserless/setup-spring-boot#session-scoped-beans,Access Session-Scoped Beans>>.
 
@@ -60,11 +58,5 @@ If initial navigation redirected to the login view, reloading renders the login 
 
 For a worked Spring test, see <<{articles}/building-apps/testing/browserless/test-view-access#authentication-applied-during-a-test,Navigate after Changing Authentication>>.
 See <<spring-security#,Spring Security Integration>> for setup requirements and session ID rotation.
-
-== Components That Don't Exist Yet
-
-Queries traverse the server-side component tree.
-Per-item renderer components may not exist until rendering is requested, and closed overlay content is detached.
-See <<component-query#components-a-query-cannot-find,Components a Query Cannot Find>> for renderer and overlay semantics.
 
 [discussion-id]`4B6C9E13-7A85-42D0-9F3B-1C8E5D4A2B76`

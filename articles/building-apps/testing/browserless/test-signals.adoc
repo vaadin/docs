@@ -3,21 +3,20 @@ title: Test Signal-Based Views
 page-title: Test Signal-Based Views | Vaadin
 description: Assert changes to signal bindings, process background updates, and verify shared-signal write confirmation.
 meta-description: Assert changes to signal bindings, process background updates, and verify shared-signal write confirmation.
-order: 70
+order: 90
 ---
 
 
 = Test Signal-Based Views
 
+The examples use the plain Java setup; for another framework, change the base class as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
+Put each test class in the view's package, because the examples read package-private view fields.
+The Java EE/CDI setup installs the signal test environment with its `initSignalsSupport()` call, so keep that call when you change the setup.
+
 [#synchronous]
 == Assert Changes After a User Action
 
 Start with synchronous interactions: trigger an action, then assert the resulting component state.
-The following examples use `BrowserlessTest` with <<{articles}/building-apps/testing/browserless/setup-without-spring#,the plain Java setup>>.
-For Java EE/CDI, extend <<setup-cdi#,`AbstractCdiViewTest`>> instead, add the view and concrete CDI dependencies to its test archive, and register the route in its setup hook.
-Put the test class in the view's package, because the examples read package-private view fields.
-The CDI setup calls `initSignalsSupport()` explicitly; a custom override that omits it does not install the signal environment described here.
-For Spring Boot or Quarkus, retain the framework-specific base class and annotations.
 
 
 === Test a Computed Label
@@ -26,6 +25,13 @@ This view holds a count in a [classname]`ValueSignal`, derives a label string wi
 
 [source,java]
 ----
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeButton;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.local.ValueSignal;
+
 @Route("counter-signal")
 public class CounterSignalView extends Div {
     final ValueSignal<Integer> count = new ValueSignal<>(0);
@@ -44,6 +50,11 @@ The test clicks the button and asserts the label right away:
 
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.ViewPackages;
+
 @ViewPackages(classes = CounterSignalView.class)
 class CounterSignalTest extends BrowserlessTest {
 
@@ -68,6 +79,13 @@ Structural changes propagate the same way. This view binds a layout's children t
 
 [source,java]
 ----
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeButton;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.local.ListSignal;
+
 @Route("tags-signal")
 public class TagListView extends Div {
     final ListSignal<String> tags = new ListSignal<>();
@@ -86,6 +104,11 @@ The inserted child is present as soon as the click returns:
 
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.ViewPackages;
+
 @ViewPackages(classes = TagListView.class)
 class TagListTest extends BrowserlessTest {
 
@@ -105,7 +128,7 @@ class TagListTest extends BrowserlessTest {
 Both tests pass without flushing anything because the mutation happens on the test thread — which is the UI thread — while the components are attached. The effect runs inline, as part of the [methodname]`set()`, [methodname]`update()`, or [methodname]`insertLast()` call.
 
 
-== What You Can Bind
+== Assert Other Bindings
 
 Most signal-driven UI is wired up with the [methodname]`bind*` family rather than explicit effects. From a test's perspective, each binding is a different property to assert on after a signal changes:
 
@@ -117,7 +140,7 @@ Most signal-driven UI is wired up with the [methodname]`bind*` family rather tha
 This page focuses on testing. For the full binding API, see <<{articles}/flow/ui-state/building-ui#, Component Bindings>> and <<{articles}/flow/ui-state/element-bindings#, Element Bindings>>.
 
 
-== Custom Effects
+== Test a Custom Effect
 
 A side effect created with [methodname]`Signal.effect()` runs under the same test environment as the bindings, so it also executes synchronously when a dependency changes on the test thread. Use this to assert behavior that isn't a simple property binding — for example, showing a notification.
 
@@ -125,6 +148,13 @@ This view writes the field value into a [classname]`ValueSignal` and registers a
 
 [source,java]
 ----
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.local.ValueSignal;
+
 @Route("threshold")
 public class ThresholdView extends Div {
     final ValueSignal<Integer> amountSignal = new ValueSignal<>(0);
@@ -151,6 +181,12 @@ The test changes the field and asserts the notification right away:
 
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.ViewPackages;
+import com.vaadin.flow.component.notification.Notification;
+
 @ViewPackages(classes = ThresholdView.class)
 class ThresholdTest extends BrowserlessTest {
 
@@ -168,7 +204,7 @@ class ThresholdTest extends BrowserlessTest {
 
 
 [#background-threads]
-== Updates from Background Threads
+== Process Updates from Background Threads
 
 A signal mutated *off* the UI thread — from a service callback, a [classname]`CompletableFuture`, or another session — doesn't propagate synchronously. The test [classname]`SignalEnvironment` queues the effect instead of running it inline. Call [methodname]`runPendingSignalsTasks()` to drain the queue before asserting:
 
@@ -185,7 +221,7 @@ Assertions.assertEquals("Done", test(view.status).getText());
 See <<{articles}/flow/testing/browserless/testing-signals#background-threads,signal task processing>> for timeout and return-value semantics.
 
 
-=== Shared Signals
+=== Test Shared Signals
 
 <<{articles}/flow/ui-state/shared-signals#, Shared signals>> -- [classname]`SharedValueSignal`, [classname]`SharedNumberSignal`, [classname]`SharedListSignal`, and the other shared types -- are the most common source of background updates in a test. A change made in one session is propagated to every other session that observes the signal, and that propagation is inherently asynchronous: the observing side sees it through a queued effect rather than inline.
 
@@ -193,14 +229,23 @@ As a result, a change that an observer should react to needs the same treatment 
 
 
 [#shared-signal-writes]
-=== Confirming a Write
+=== Confirm a Shared-Signal Write
 
-A write to a shared signal returns a <<{articles}/flow/ui-state/transactions#operation-results, [classname]`SignalOperation`>> that completes once the underlying signal tree has confirmed the command. The write itself is applied optimistically, so the new value is visible through [methodname]`peek()` as soon as the call returns -- while the confirmation travels through the same queue as the effects.
+A write to a shared signal returns a <<{articles}/flow/ui-state/transactions#operation-results, [classname]`SignalOperation`>> that completes when the write is confirmed. The write itself is applied optimistically, so the new value is visible through [methodname]`peek()` as soon as the call returns -- while the confirmation travels through the same queue as the effects.
 
 This view inserts a ticket into a [classname]`SharedListSignal` and updates a status label when the write is confirmed. The result callback is delivered in the context that started the operation, so it can touch components directly:
 
 [source,java]
 ----
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeButton;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.operations.InsertOperation;
+import com.vaadin.flow.signals.shared.SharedListSignal;
+import com.vaadin.flow.signals.shared.SharedValueSignal;
+
 @Route("tickets")
 public class TicketView extends Div {
     final SharedListSignal<String> tickets =
@@ -229,6 +274,11 @@ The entry is in the list right after the click, but the status label still reads
 
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.ViewPackages;
+
 @ViewPackages(classes = TicketView.class)
 class TicketViewTest extends BrowserlessTest {
 

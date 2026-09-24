@@ -3,21 +3,20 @@ title: Test Multiple Users and Windows
 page-title: Test Multiple Users and Windows | Vaadin
 description: Verify shared state, independent windows, and authentication isolation across several browserless user sessions.
 meta-description: Verify shared state, independent windows, and authentication isolation across several browserless user sessions.
-order: 80
+order: 100
 ---
 
 
 = Test Multiple Users and Windows
 
 Use this guide when the behavior under test depends on more than one user or window.
-The examples cover plain Java, Spring, and Quarkus application-context factories.
-They do not provide the Weld/CDI wiring from <<setup-cdi#,the Java EE/CDI setup>>.
-That single-user recipe does not establish separate CDI session contexts for multiple browserless users; the factories below are not a drop-in replacement for its base class.
-Complete the <<{articles}/building-apps/testing/browserless/setup-spring-boot#,Spring>>, <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java>>, or <<{articles}/building-apps/testing/browserless/setup-quarkus#,Quarkus>> setup first.
+The examples cover the plain Java, Spring, and Quarkus setups; complete the <<{articles}/building-apps/testing/browserless/setup-spring-boot#,Spring>>, <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java>>, or <<{articles}/building-apps/testing/browserless/setup-quarkus#,Quarkus>> setup first.
+The <<setup-cdi#,Java EE/CDI setup>> supports one user per test, so these examples don't apply to it.
+
 The examples are patterns to adapt: `CartView`, `CheckoutView`, `SharedCounterView`, and `ChatView` represent your application views.
 For security scenarios, reuse the access-control configuration from <<{articles}/building-apps/testing/browserless/test-view-access#,Test View Access Control>>.
 
-== Setting Up the Application Context
+== Set Up the Application Context
 
 The application context is built once per test, typically in [annotationname]`@BeforeEach`, and closed in [annotationname]`@AfterEach`. Use try-with-resources or call [methodname]`close()` explicitly: closing the application context cascades to every user and window it created.
 
@@ -39,6 +38,16 @@ For Spring and Quarkus, dedicated factories pre-wire the framework-specific serv
 .Spring
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ShopTestConfig.class)
 class CartViewMultiUserTest {
@@ -64,6 +73,12 @@ class CartViewMultiUserTest {
 .Quarkus
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
+import io.quarkus.test.junit.QuarkusTest;
+
 @QuarkusTest
 class CartViewMultiUserTest {
 
@@ -82,7 +97,7 @@ class CartViewMultiUserTest {
 ----
 
 
-== Creating Users and Windows
+== Create Users and Windows
 
 [methodname]`newUser()` returns a fresh [classname]`BrowserlessUserContext` with its own [classname]`VaadinSession`. [methodname]`newWindow()` creates a new [classname]`UI` for that user. Different users have independent sessions; different windows of the same user share a session but have independent [classname]`UI` instances.
 
@@ -142,7 +157,7 @@ Assertions.assertNotSame(w1.getUI(), w2.getUI());
 
 
 [#signals]
-== Signals
+== Share Signals Between Users
 
 The application context registers the test [classname]`SignalEnvironment`, so signal effects run deterministically instead of on a background thread pool. For single-user examples, see <<test-signals#,Test Signal-Based Views>>. When one window mutates a signal that other windows observe -- the typical pattern for collaborative features built on shared signals -- call [methodname]`runPendingSignalsTasks()` to process the pending effects before asserting on the observing window:
 
@@ -167,7 +182,7 @@ Assertions.assertEquals("Hello!", w2.findParagraph().getText());
 For background updates and write confirmation, see <<{articles}/building-apps/testing/browserless/test-signals#,Test Signal-Based Views>>.
 
 
-== Authenticated Users with Spring Security
+== Test Authenticated Users with Spring Security
 
 Create a secured application context, then interleave actions from an administrator and an anonymous user.
 Assert that the anonymous user is redirected while the administrator retains access.
@@ -177,6 +192,19 @@ Keep `LoginView` in a package that the secured context scans, such as the packag
 .Multi-User Security Isolation
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import com.vaadin.browserless.SecuredBrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = TestViewSecurityConfig.class)
 class MultiUserSecurityTest {
@@ -220,19 +248,32 @@ class MultiUserSecurityTest {
 }
 ----
 
-For custom credentials, anonymous users, and logout behavior, see <<{articles}/flow/testing/browserless/multi-user#authenticated-users-with-spring-security,Spring Security Contexts>>.
+For custom credentials, anonymous users, and logout behavior, see <<{articles}/flow/testing/browserless/multi-user#authenticated-users-with-spring-security,Authenticated Users with Spring Security>>.
 
 
-== Authenticated Users with Quarkus Security
+== Test Authenticated Users with Quarkus Security
 
 The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type.
-The test uses the `TestViewSecurityConfig` test profile from <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control>>, which registers view access control:
+The test uses the `ViewSecurityTestProfile` test profile from <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control>>, which registers view access control:
 
 .Quarkus Multi-User Test
 [source,java]
 ----
+import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.SecuredBrowserlessApplicationContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.security.runtime.QuarkusPrincipal;
+import io.quarkus.security.runtime.QuarkusSecurityIdentity;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+
 @QuarkusTest
-@TestProfile(TestViewSecurityConfig.class)
+@TestProfile(ViewSecurityTestProfile.class)
 class MultiUserSecurityTest {
 
     private SecuredBrowserlessApplicationContext<SecurityIdentity> app;

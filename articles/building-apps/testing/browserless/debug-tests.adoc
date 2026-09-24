@@ -1,66 +1,40 @@
 ---
 title: Debug a Failing Browserless Test
 page-title: Debug a Failing Browserless Test | Vaadin
-description: Enable failure snapshots, inspect component state, and fix a failing browserless interaction test.
-meta-description: Enable failure snapshots, inspect component state, and fix a failing browserless interaction test.
-order: 90
+description: Read the component tree of a failing browserless test, enable failure snapshots, and fix the test.
+meta-description: Read the component tree of a failing Vaadin browserless test, enable failure snapshots with TreeOnFailureExtension, and fix the test in your Flow app.
+order: 60
 ---
 
 
 = Debug a Failing Browserless Test
 
-Start with a configured test class from <<./#choose-your-framework,the guide for your application framework>>.
-Keep its base class and setup when adding the snapshot annotation.
-The example below uses a directly constructed view and the plain Java setup.
-
-When a browserless test fails, it can be hard to tell why. An assertion message might say that a component had an unexpected value, but it doesn't show you what the UI _actually_ looked like. UI snapshots solve this with a text representation of the entire component tree at the moment of failure, so you can see exactly what was on screen.
+When a browserless test fails, the error message may not show what the UI looked like at that moment.
+The component tree -- a text representation of every component in the UI -- shows exactly what was on screen.
+The examples use the plain Java setup; for another framework, change the base class as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
 
 
-== Enabling Snapshots
+== Read the Tree of a Failed Query
 
-Snapshots aren't enabled by default. Add the [annotationname]`@ExtendWith(TreeOnFailureExtension.class)` annotation to your test class:
-
-[source,java]
-----
-@ExtendWith(TreeOnFailureExtension.class)
-class HelloWorldViewTest extends BrowserlessTest {
-    ...
-}
-----
-
-For Java EE/CDI, add the same annotation to the existing CDI-aware test class:
-
-[source,java]
-----
-@ExtendWith(TreeOnFailureExtension.class)
-class CdiGreetingViewTest extends AbstractCdiViewTest {
-    // Keep the test methods from the CDI guide.
-}
-----
-
-When a test in the class fails, the extension publishes the UI tree as a JUnit report entry.
-Tools that display report entries, such as the JUnit console launcher, show it with the failure.
-Maven Surefire doesn't display report entries.
-
-A failed component query, such as `find(Notification.class).single()` finding no match, includes the same tree in its error message, with or without the extension.
-
-
-See <<{articles}/flow/testing/browserless/snapshots#reading-a-snapshot,Snapshot Format>> for the properties represented in the output.
-
-
-== Using Snapshots to Debug Failures
-
+A component query that finds no match, or more matches than expected, includes the component tree in its error message.
 Suppose you have a view like this:
 
+.`GreetingView.java`
 [source,java]
 ----
-@Route("")
-public class HelloWorldView extends HorizontalLayout {
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("greeting")
+public class GreetingView extends HorizontalLayout {
 
     TextField name;
     Button sayHello;
 
-    public HelloWorldView() {
+    public GreetingView() {
         name = new TextField("Your name");
         sayHello = new Button("Say hello");
         sayHello.addClickListener(e -> {
@@ -79,10 +53,10 @@ And a test for it:
 ----
 @Test
 public void clickSayHello_showsGreeting() {
-    HelloWorldView view = navigate(HelloWorldView.class);
+    GreetingView view = navigate(GreetingView.class);
     test(view.sayHello).click();
     Notification notification = find(Notification.class).single();
-    assertEquals("Hello World", test(notification).getText());
+    Assertions.assertEquals("Hello World", test(notification).getText());
 }
 ----
 
@@ -90,7 +64,7 @@ The test fails because no [classname]`Notification` was found. The error message
 
 ----
 └── MockedUI[]
-    └── HelloWorldView[@theme='spacing']
+    └── GreetingView[@theme='spacing']
         ├── TextField[label='Your name', value='', manualValidation='true']
         └── Button[caption='Say hello']
             └── Text[text='Say hello']
@@ -112,13 +86,44 @@ Notification notification = find(Notification.class).single();
 Assertions.assertEquals("Hello World", test(notification).getText());
 ----
 
+See <<{articles}/flow/testing/browserless/snapshots#reading-a-snapshot,Snapshot Format>> for the properties represented in the tree.
 
-== Tips
 
-- **Look for what's missing.** If a query like `find(Notification.class).single()` fails, the snapshot shows you that the component isn't there. Check the tree for clues about why it wasn't created.
+== Show the Tree for Other Failures
+
+An assertion that fails after a successful query, such as a comparison of a component's text, doesn't include the tree.
+To get the tree for every failed test in a class, add the [annotationname]`@ExtendWith(TreeOnFailureExtension.class)` annotation to the test class:
+
+[source,java]
+----
+@ExtendWith(TreeOnFailureExtension.class)
+class GreetingViewTest extends BrowserlessTest {
+    ...
+}
+----
+
+With Java EE/CDI, add the same annotation to your `AbstractCdiViewTest` subclass:
+
+[source,java]
+----
+@ExtendWith(TreeOnFailureExtension.class)
+class CdiGreetingViewTest extends AbstractCdiViewTest {
+    // Keep the test methods from the CDI guide.
+}
+----
+
+When a test in the class fails, the extension publishes the UI tree as a JUnit report entry.
+Tools that display report entries, such as the JUnit console launcher, show it with the failure.
+Maven Surefire doesn't display report entries.
+The extension is in the `com.vaadin.browserless` package, and `@ExtendWith` is in `org.junit.jupiter.api.extension`.
+
+
+== Tips for Reading the Tree
+
+- **Look for what's missing.** If a query like `find(Notification.class).single()` fails, the tree shows that the component isn't there. Check the tree for clues about why it wasn't created.
 - **Check property values.** When an assertion on a component's text or value fails, find that component in the tree and compare its actual properties to what you expected.
-- **Watch for unexpected components.** If `find(Button.class).single()` fails because multiple buttons were found, the snapshot shows you all of them so you can narrow your query.
-- **Inspect the layout hierarchy.** If a component appears in the tree but a scoped query like `findInView(TextField.class)` can't find it, the snapshot helps you see whether the component is nested inside the expected parent.
+- **Watch for unexpected components.** If `find(Button.class).single()` fails because multiple buttons were found, the tree shows all of them so you can narrow your query.
+- **Inspect the layout hierarchy.** If a component appears in the tree but a scoped query like `findInView(TextField.class)` can't find it, the tree helps you see whether the component is nested inside the expected parent.
 
 
 [discussion-id]`7B14417A-0C9B-4B46-8945-AC2564AD5F82`

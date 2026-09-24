@@ -10,13 +10,13 @@ order: 20
 = Set Up Browserless Tests in Plain Java
 
 Use this setup when the view and its collaborators can be constructed without a dependency injection container.
+Tests extend `BrowserlessTest`, which creates the Vaadin environment but no dependency injection container.
 For Java EE/CDI injection, use <<setup-cdi#,the CDI setup>>; for Quarkus, use <<setup-quarkus#,the Quarkus setup>>.
-`BrowserlessTest` alone creates the Vaadin environment, not an application dependency injection container.
 
 
-== Dependencies
+== Add Dependencies
 
-Add the `browserless-test-junit6` dependency with a `test` scope. Assuming you have imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, all you need is:
+Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the `browserless-test-junit6` dependency with a `test` scope:
 
 [source,xml]
 ----
@@ -30,16 +30,22 @@ Add the `browserless-test-junit6` dependency with a `test` scope. Assuming you h
 No other test framework dependencies are required.
 
 
-== Writing Tests
+== Create a Test
 
-Create this view, then place its test in the same Java package under `src/test/java`:
+Create this view:
 
 include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
 
-Create a test class that extends [classname]`BrowserlessTest`:
+Create a test class that extends [classname]`BrowserlessTest`, in the same Java package as the view under `src/test/java`:
 
+.`HelloWorldViewTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.flow.component.notification.Notification;
+
 class HelloWorldViewTest extends BrowserlessTest {
 
     @Test
@@ -56,18 +62,31 @@ class HelloWorldViewTest extends BrowserlessTest {
 }
 ----
 
-Use `navigate()`, `find()`, and `test()` for interactions as shown above.
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
+
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+The test passes when entering a name and clicking the button shows the expected notification.
 
 
 == Use an Extension Instead of a Base Class
 
-If your test already extends another class, register an instance of `BrowserlessExtension`.
-Use the same dependency as above.
+If your test class already extends another class, register an instance of `BrowserlessExtension` instead.
+It's included in the same dependency.
 
+.`CartViewExtensionTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import com.vaadin.browserless.BrowserlessExtension;
+import com.vaadin.browserless.ViewPackages;
+
 @ViewPackages(classes = CartView.class)
-class CartViewTest {
+class CartViewExtensionTest {
 
     @RegisterExtension
     BrowserlessExtension ext = new BrowserlessExtension();
@@ -83,14 +102,15 @@ class CartViewTest {
 }
 ----
 
-Use methods on the extension instance to navigate and interact with components.
-The example assumes a `CartView` with an “Add to cart” button and a span with ID `cart-size`.
+Call the methods on the extension instance to navigate and interact with components.
+The example assumes a `CartView` with an [guibutton]*Add to cart* button and a span with the ID `cart-size` that shows the number of items.
 For lifecycle and configuration options, see <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>>.
 
-== Run the Test
 
-Run the test from your IDE or with `mvn test`.
-Continue with <<{articles}/building-apps/testing/browserless/test-user-interactions#,Test User Interactions>>.
+== Next Steps
+
+* <<test-user-interactions#,Test User Interactions>> explains how the test works and how to cover more complex views.
+* <<debug-tests#,Debug a Failing Browserless Test>> helps when a test fails.
 
 
 [discussion-id]`D68CAC9E-6131-45C9-84E6-6D1CA1E44E81`
