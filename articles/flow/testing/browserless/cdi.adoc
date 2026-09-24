@@ -21,7 +21,7 @@ For dependencies, complete test classes, and CDI alternatives, see <<{articles}/
 JUnit executes extension setup callbacks before `@BeforeEach` methods, so Weld can supply its bean manager before Vaadin initialization.
 An overridden `initVaadinEnvironment()` retains `@BeforeEach` to remain a lifecycle method.
 
-The CDI setup replaces default initialization with tester registration, `MockVaadin.setup()` using the CDI servlet, signal-environment initialization, and route registration.
+The CDI setup replaces default initialization with tester registration, `MockVaadin.setup()` using the CDI servlet and the test configuration, signal-environment initialization, and route registration.
 It does not call `super.initVaadinEnvironment()`, which would create the default environment first.
 The inherited cleanup tears down Vaadin and signal support before extension cleanup stops Weld.
 
@@ -32,14 +32,15 @@ The `MockVaadin` integration uses an internal API, so custom setup code should b
 
 == CDI Discovery and Scope Activation
 
-Weld JUnit's automatic setup builds a synthetic bean archive from the test package and its sub-packages, including matching application classes on the runtime classpath.
-`@AddBeanClasses` and `@AddPackages` extend that archive.
+Weld JUnit's automatic setup, `@EnableAutoWeld`, builds a synthetic bean archive from the test class, the types reachable from its injection points and producers, and the classes and packages listed in `@AddBeanClasses` and `@AddPackages`.
+It does not scan the test package or the classpath.
 `BeanDiscoveryMode.ALL` allows discovery without a bean-defining annotation inside the archive; it does not discover every dependency on the classpath.
 The `beans.xml` file in the deployed WAR does not configure this test archive.
 
 The bean graph includes views, layouts, concrete injected implementations, producers, and observers.
 Weld cannot instantiate an interface listed in `@AddBeanClasses`; it needs a concrete managed bean.
 Test replacements use CDI alternatives and qualifiers; merely adding another ordinary implementation can make injection ambiguous.
+An alternative enabled with `@EnableAlternatives` must also be in the archive; if it isn't, Weld silently uses the ordinary bean.
 
 `@ActivateScopes(SessionScoped.class)` activates a CDI session context for beans that require it.
 This is separate from creating a mocked `VaadinSession`.
@@ -49,8 +50,8 @@ The single-user Weld recipe does not establish a mapping between multiple browse
 
 `@AddPackages(CdiInstantiator.class)` includes the Vaadin CDI infrastructure in the archive.
 `VaadinExtension` and `BeanManagerProvider` connect that infrastructure to Weld's bean manager.
-A CDI producer supplies the `CdiVaadinServlet` instance also passed to `MockVaadin.setup()`.
-That servlet makes Vaadin resolve managed objects through `CdiInstantiator`.
+The test creates the `CdiVaadinServlet` instance passed to `MockVaadin.setup()`; the instance does not need to be a CDI bean.
+Its Vaadin service resolves managed objects through `CdiInstantiator`, using the bean manager that `BeanManagerProvider` exposes.
 
 == Route Registration
 
@@ -73,10 +74,9 @@ The browserless JUnit extensions and plain `forComponent()` factories do not app
 
 == Custom Setup and Test Configuration
 
-The <<{articles}/building-apps/testing/browserless/setup-cdi#,CDI recipe>> passes its servlet and `lookupServices()` directly to `MockVaadin.setup()`.
-It does not pass the configuration used by the standard setup, so <<test-configuration#,`@BrowserlessTestConfig`>> settings are not automatically applied by that override.
-The standard Spring and Quarkus integrations' `frameworkLookupServices()` guarantees do not configure this custom CDI servlet.
-When extending the custom setup, keep servlet initialization, route registration, signal support, and configuration handling together.
+The <<{articles}/building-apps/testing/browserless/setup-cdi#,CDI recipe>> resolves `testConfiguration()` once and passes it to `MockVaadin.setup()` together with its servlet and `allLookupServices(configuration)`.
+Passing the configuration applies <<test-configuration#,`@BrowserlessTestConfig`>> settings from the test class and the test method; an override that omits it silently ignores the annotation.
+When extending the custom setup, keep servlet initialization, configuration handling, signal support, and route registration together.
 
 
 [discussion-id]`52411CF1-7324-44CE-813B-8F76BBA923DC`

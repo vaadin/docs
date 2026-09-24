@@ -61,7 +61,6 @@ If your parent POM does not already manage JUnit, add this import to its existin
 </dependencyManagement>
 ----
 The example uses JUnit 6, matching `browserless-test-junit6`; Weld's integration artifact is still named `weld-junit5`.
-Use a Browserless Test release with the lifecycle hooks shown below; the source project uses `browserless-test-junit6` 1.1.2 and JUnit 6.0.3.
 A project that manages Browserless Test separately can import `com.vaadin:browserless-test-bom` in dependency management to align its modules.
 
 A deployed WAR uses its `WEB-INF/beans.xml` and application-server discovery.
@@ -130,16 +129,15 @@ public class CdiGreetingView extends Div {
 
 Put this class under `src/test/java/com/example/app/testing`.
 Use the default JUnit per-method test-instance lifecycle.
-The dedicated test package keeps Weld's automatic package scan separate from the application package; list application beans explicitly.
+Weld's automatic setup doesn't scan packages.
+Its test archive contains the test class, the types the test class injects, and the classes, packages, and extensions listed in the annotations, so list the application beans explicitly.
 
 .`AbstractCdiViewTest.java`
 [source,java]
 ----
 package com.example.app.testing;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.SessionScoped;
-import jakarta.enterprise.inject.Produces;
 import org.jboss.weld.bootstrap.spi.BeanDiscoveryMode;
 import org.jboss.weld.junit5.auto.ActivateScopes;
 import org.jboss.weld.junit5.auto.AddBeanClasses;
@@ -150,6 +148,7 @@ import org.jboss.weld.junit5.auto.SetBeanDiscoveryMode;
 import org.junit.jupiter.api.BeforeEach;
 import com.example.app.CdiGreetingView;
 import com.example.app.DefaultGreetingService;
+import com.vaadin.browserless.BrowserlessConfiguration;
 import com.vaadin.browserless.BrowserlessTest;
 import com.vaadin.browserless.internal.MockVaadin;
 import com.vaadin.browserless.mocks.MockedUI;
@@ -166,15 +165,15 @@ import com.vaadin.flow.router.RouteConfiguration;
 @AddBeanClasses({ CdiGreetingView.class, DefaultGreetingService.class })
 @AddExtensions({ BeanManagerProvider.class, VaadinExtension.class })
 public abstract class AbstractCdiViewTest extends BrowserlessTest {
-    @Produces
-    @ApplicationScoped
     private final CdiVaadinServlet vaadinServlet = new CdiVaadinServlet();
 
     @BeforeEach
     @Override
     protected void initVaadinEnvironment() {
         scanTesters();
-        MockVaadin.setup(MockedUI::new, vaadinServlet, lookupServices());
+        BrowserlessConfiguration configuration = testConfiguration();
+        MockVaadin.setup(MockedUI::new, vaadinServlet,
+                allLookupServices(configuration), configuration);
         initSignalsSupport();
         RouteConfiguration.forApplicationScope()
                 .setAnnotatedRoute(CdiGreetingView.class);
@@ -183,13 +182,11 @@ public abstract class AbstractCdiViewTest extends BrowserlessTest {
 ----
 
 Keep `@BeforeEach` on the override: Weld starts before this JUnit lifecycle method creates the Vaadin environment.
-The produced servlet connects the mocked Vaadin service to CDI.
+Passing a `CdiVaadinServlet` to `MockVaadin.setup()` connects the mocked Vaadin service to CDI.
+Passing the test configuration and its Lookup services keeps <<{articles}/flow/testing/browserless/test-configuration#,`@BrowserlessTestConfig`>> working on the test classes and methods.
 Call `initSignalsSupport()` to retain the default signal-testing behavior when replacing the base setup.
 The inherited `@AfterEach` cleanup releases the Vaadin environment and signal support before Weld shuts down.
-
-This custom setup does not automatically apply <<{articles}/flow/testing/browserless/test-configuration#,`@BrowserlessTestConfig`>> settings.
-Its direct `lookupServices()` call follows the source example; that hook is deprecated in newer releases in favor of configuration for the standard setup.
-See <<{articles}/flow/testing/browserless/cdi#custom-setup-and-test-configuration,Custom Setup and Test Configuration>> before adding per-test properties or flags.
+See <<{articles}/flow/testing/browserless/cdi#custom-setup-and-test-configuration,Custom Setup and Test Configuration>> for what an extended setup needs to retain.
 
 This override registers routes explicitly after creating the CDI-aware environment.
 It does not call the default route-discovery setup.
@@ -303,6 +300,7 @@ Spring's `@Bean`, `@MockBean`, and `@MockitoBean` are not part of this configura
 | Missing route | Register the route after `MockVaadin.setup()`. Register CDI beans and routes separately.
 | Unsatisfied CDI dependency | Add the concrete bean, producer, or required package to the Weld archive; follow the full injection graph.
 | Ambiguous CDI dependency | Enable one test alternative for the bean type, or use the application's qualifiers.
+| Test alternative not used | Add the alternative's class to `@AddBeanClasses`. `@EnableAlternatives` doesn't add the class to the archive, and Weld doesn't report the missing class.
 | Inactive session context | Activate `SessionScoped` for the test.
 | View created without CDI injection | Use `CdiVaadinServlet`, both CDI extensions, and the annotated setup override. Do not initialize the default environment first.
 |===
@@ -311,6 +309,7 @@ Spring's `@Bean`, `@MockBean`, and `@MockitoBean` are not part of this configura
 
 Use <<test-user-interactions#,Test User Interactions>> and <<debug-tests#,Debug a Failing Browserless Test>> with `AbstractCdiViewTest` as the base class.
 For signal-based views, this setup also initializes the support used by <<test-signals#,Test Signal-Based Views>>.
+The examples in those guides read package-private view fields, so put such test classes in the view's package; `AbstractCdiViewTest` is public, so they can extend it from there.
 
 For authentication scenarios, register your application's login view, access-control beans, and route listeners in this CDI setup, then exercise its login behavior with component testers.
 Spring Security's `@WithMockUser` and Quarkus's `@TestSecurity` do not configure authentication for this Weld test archive.

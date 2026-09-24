@@ -13,7 +13,7 @@ Start with a configured test class from <<./#choose-your-framework,the guide for
 Keep its base class and setup when adding the snapshot annotation.
 The example below uses a directly constructed view and the plain Java setup.
 
-When a browserless test fails, it can be hard to tell why. The assertion message might say a component wasn't found or had an unexpected value, but it doesn't show you what the UI _actually_ looked like. UI snapshots solve this by printing a text representation of the entire component tree at the moment of failure, so you can see exactly what was on screen.
+When a browserless test fails, it can be hard to tell why. An assertion message might say that a component had an unexpected value, but it doesn't show you what the UI _actually_ looked like. UI snapshots solve this with a text representation of the entire component tree at the moment of failure, so you can see exactly what was on screen.
 
 
 == Enabling Snapshots
@@ -38,7 +38,11 @@ class CdiGreetingViewTest extends AbstractCdiViewTest {
 }
 ----
 
-When any test in the class fails, the extension automatically prints the UI tree to the test output alongside the failure message.
+When a test in the class fails, the extension publishes the UI tree as a JUnit report entry.
+Tools that display report entries, such as the JUnit console launcher, show it with the failure.
+Maven Surefire doesn't display report entries.
+
+A failed component query, such as `find(Notification.class).single()` finding no match, includes the same tree in its error message, with or without the extension.
 
 
 See <<{articles}/flow/testing/browserless/snapshots#reading-a-snapshot,Snapshot Format>> for the properties represented in the output.
@@ -82,13 +86,14 @@ public void clickSayHello_showsGreeting() {
 }
 ----
 
-The test fails because no [classname]`Notification` was found. The assertion error alone doesn't explain why. With snapshots enabled, the test output includes the UI tree:
+The test fails because no [classname]`Notification` was found. The error message of the failed query includes the UI tree:
 
 ----
-└── UI[]
-    └── HelloWorldView[@theme='margin spacing']
-        ├── TextField[label='Your name', value='']
+└── MockedUI[]
+    └── HelloWorldView[@theme='spacing']
+        ├── TextField[label='Your name', value='', manualValidation='true']
         └── Button[caption='Say hello']
+            └── Text[text='Say hello']
 ----
 
 Now you can see:

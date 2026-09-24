@@ -171,12 +171,14 @@ For background updates and write confirmation, see <<{articles}/building-apps/te
 
 Create a secured application context, then interleave actions from an administrator and an anonymous user.
 Assert that the anonymous user is redirected while the administrator retains access.
+The context uses the `TestViewSecurityConfig` from <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>>, which registers view access control with a login view.
+Keep `LoginView` in a package that the secured context scans, such as the package of `ProtectedView`.
 
 .Multi-User Security Isolation
 [source,java]
 ----
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = SecurityTestConfig.class)
+@ContextConfiguration(classes = TestViewSecurityConfig.class)
 class MultiUserSecurityTest {
 
     @Autowired
@@ -223,13 +225,14 @@ For custom credentials, anonymous users, and logout behavior, see <<{articles}/f
 
 == Authenticated Users with Quarkus Security
 
-The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type:
+The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type.
+The test uses the `TestViewSecurityConfig` test profile from <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control>>, which registers view access control:
 
 .Quarkus Multi-User Test
 [source,java]
 ----
 @QuarkusTest
-@TestProfile(SecurityTestConfig.class)
+@TestProfile(TestViewSecurityConfig.class)
 class MultiUserSecurityTest {
 
     private SecuredBrowserlessApplicationContext<SecurityIdentity> app;
@@ -266,6 +269,16 @@ class MultiUserSecurityTest {
 
         window.navigate(ProtectedView.class);
         Assertions.assertInstanceOf(ProtectedView.class,
+                window.getCurrentView());
+    }
+
+    @Test
+    void anonymousUser_protectedView_redirectToLogin() {
+        var window = app.newUser().newWindow();
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> window.navigate(ProtectedView.class));
+        Assertions.assertInstanceOf(LoginView.class,
                 window.getCurrentView());
     }
 }
