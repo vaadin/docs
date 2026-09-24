@@ -1,0 +1,143 @@
+---
+title: Agent Skills
+page-title: Vaadin Agent Skills Plugin for Claude Code and Codex
+description: Install the Vaadin MCP server together with skills for theming, visual design, and form layout in Vaadin Flow applications.
+meta-description: Install the Vaadin Skills plugin for Claude Code and Codex to get the Vaadin MCP server plus skills for Aura theming, UI design, and form layouts.
+order: 22
+---
+
+
+= Vaadin Agent Skills
+
+Vaadin Skills is a plugin for Claude Code and Codex that sets up an AI coding agent for Vaadin Flow development in one step. It bundles two things:
+
+* The *<<mcp#,Vaadin MCP server>>*, so the agent looks up the documentation and Java API for your Vaadin version instead of recalling them from its training data.
+* *Agent skills* -- instruction files that teach the agent how to do specific Vaadin tasks well: generating an Aura theme, giving a view a polished visual design, and laying out a form.
+
+The MCP server tells the agent what the API is. The skills tell it how Vaadin applications are usually put together, and which of the many valid ways to do something produces a good result. The skills target Java and Flow, and they call the MCP server whenever they need an exact API detail.
+
+
+== Install the Plugin
+
+The plugin is published through the https://github.com/vaadin/agent-marketplace[Vaadin Agent Marketplace], which also hosts the experimental <<agent-tools#,Agent Tools>> plugin.
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace add vaadin/agent-marketplace
+/plugin install vaadin-skills@vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace add vaadin/agent-marketplace --ref main
+codex plugin add vaadin-skills@vaadin-marketplace
+----
+--
+
+In Claude Code, you can also run `/plugin` and pick [guilabel]*vaadin-skills* from the marketplace browser. Installing the plugin configures the Vaadin MCP server automatically, so skip the manual configuration steps in the <<mcp/supported-tools#,setup guides>>. Run `/mcp` in a new session to check that the `vaadin` server is connected.
+
+To pick up later changes:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace update vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace upgrade
+----
+--
+
+
+=== Install Only the Skills
+
+For an agent that doesn't support Claude Code or Codex plugins, or to pick individual skills, install the skill files with the https://github.com/vercel-labs/skills[`skills` CLI]:
+
+[source,terminal]
+----
+npx skills add vaadin/agent-skills
+----
+
+Add `--skill` followed by a skill name, once per skill, to install only those:
+
+[source,terminal]
+----
+npx skills add vaadin/agent-skills --skill aura-theme --skill vaadin-form-layout
+----
+
+This installs the skills but not the MCP server, which the skills rely on to look up the API. Add the server yourself, as described in <<mcp/supported-tools#,Supported Tools>>.
+
+
+== Use It With Your Agent
+
+There's nothing to invoke by name. Each skill has a description that says which requests it's meant for, and the agent loads the skill when your request matches. Describe the task the way you'd describe it to a colleague:
+
+* "Create a dark theme with emerald accents and a compact layout."
+* "Make the dashboard view look more polished."
+* "Build an editor form for the `Customer` entity, with the address in its own section."
+
+The skill also works when you don't use the words it's named after. Asking for a view to "collect a customer's shipping details" triggers the form layout skill, even though it doesn't mention a form.
+
+If the agent doesn't pick up a skill you expected, name the task more directly, or ask it to use the skill by name.
+
+
+== The Skills
+
+Three skills ship today.
+
+
+=== Aura Theme
+
+`aura-theme` turns a free-form description of a look -- "warm and earthy", "high contrast", "very rounded", "edge-to-edge layout" -- into a CSS file of <<{articles}/styling/themes/aura#,Aura>> custom properties.
+
+The skill maps the description to Aura's customizable properties: color scheme, accent and background colors, contrast, surface level and opacity, border radius, density, font size and family, and the application layout inset. It then creates the theme file next to your application's [filename]`styles.css` and imports it from there. Component-specific properties, for example for Grid or input fields, are only set when you ask for them.
+
+The property values and defaults the skill works from are generated from the published `@vaadin/aura` package and the Aura documentation, rather than maintained by hand. That keeps the skill from assigning values to read-only properties that Aura computes from others, which would break the other color scheme.
+
+The skill only covers Aura. For a project that uses Lumo, use the visual design skill instead.
+
+
+=== Visual Design
+
+`vaadin-frontend-design` guides the agent when a view should look designed rather than default. Before it writes code, the agent settles on an aesthetic direction that fits the application and its users, and then applies it consistently to typography, color, spacing, elevation, and motion.
+
+The skill works top-down through the theme system: theme properties first, then component theme variants, and custom CSS only for what those don't cover. It covers both Aura and Lumo, including Lumo's <<{articles}/styling/utility-classes#,utility classes>>, and includes recipes for animations, color palettes, and commonly styled component parts. It also lists anti-patterns to avoid, such as hard-coded colors that break dark mode, or heavy animations on every server-side update.
+
+Reach for it for requests like "make it look good", "add polish", or "design the landing view".
+
+
+=== Form Layout
+
+`vaadin-form-layout` builds the structure of a form, entity editor, or data-entry view from any specification: a Figma URL, a screenshot, a list of fields, or a short prompt.
+
+The agent works in three steps:
+
+. *Plan.* When the specification is explicit, the agent implements exactly the fields and labels it contains. When it's vague, the agent asks which fields you need, what types they have, and how they group, rather than inventing them. It then decides on the sections: a single one, several stacked vertically, or several side by side.
+. *Gather references.* The agent checks which theme the application loads, as some component variants depend on it. It reads the closest of the skill's example forms, and fetches the Java API of every component it's going to use from the MCP server, since the <<{articles}/components/form-layout#,Form Layout>> API differs between Vaadin versions.
+. *Write the code.* The agent builds the form with one `FormLayout` per section, using auto-responsive columns or explicit responsive steps, column spans, and constrained widths to keep it readable at every viewport size.
+
+The skill only covers the layout and the components. Binding the fields to a Java bean, with converters and validation, is left to the agent working from the <<{articles}/building-apps/forms-data/add-form#,Forms guides>>, which it finds through the MCP server.
+
+
+== What It Doesn't Do
+
+* *It isn't for React.* The skills target Java and Flow. The MCP server included in the plugin also covers React, so a React project still benefits from the documentation lookup.
+* *It doesn't check the result.* A skill shapes what the agent writes, but it doesn't verify it. To catch theme mixing and misused Aura properties, add <<agent-tools#,Agent Tools>>. To make sure edits take effect in the running application, use the <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>>.
+* *It isn't committed to your project.* The plugin is installed per user, in the agent's own configuration. The Dev Loop skills, by contrast, are installed into the repository. If everyone on a team should use the same skills, have each developer install the plugin, or use the `skills` CLI to install the skill files into the repository and commit them.
+
+
+== Related Topics
+
+* <<mcp#,Vaadin MCP Server>> -- the documentation and API lookup included in the plugin.
+* <<agent-tools#,Agent Tools>> -- commands that scaffold a project and check its theme usage.
+* <<dev-loop-tutorial#,Dev Loop Tutorial>> -- the full agent setup, end to end.
+* https://github.com/vaadin/agent-skills[`vaadin/agent-skills`] -- the plugin source and issue tracker.

@@ -2,7 +2,7 @@
 title: Agent Tools
 page-title: Vaadin Agent Tools Plugin for Claude Code and Codex
 description: Give an AI coding agent Vaadin commands it can run against your project, instead of facts it has to recall.
-meta-description: Install the experimental Vaadin Agent Tools plugin for Claude Code and Codex, and let an agent scaffold projects and check for theme mixing.
+meta-description: Install the experimental Vaadin Agent Tools plugin for Claude Code and Codex, so an agent can scaffold projects, detect theme mixing, and validate Aura usage.
 order: 25
 section-nav: badge-preview
 ---
@@ -20,14 +20,14 @@ Agent Tools is a plugin for Claude Code and Codex that gives an agent a small se
 
 * A *self-contained native CLI*, `vaadin-agent-tools`, with one command per tool.
 * *Agent skills* that tell an agent when to reach for each tool and how to read its output.
-* A *Claude Code hook* that runs the theme check automatically after a styling edit.
+* A *Claude Code hook* that runs the styling checks automatically after a styling edit.
 
 The plugin isn't tied to an agent session. The same CLI runs from a terminal or in CI, and exits non-zero when it finds a problem.
 
 
 == Install the Plugin
 
-Agent Tools is published through the https://github.com/vaadin/agent-marketplace[Vaadin Agent Marketplace], the same marketplace that hosts the `vaadin-skills` plugin. They're separate plugins: `vaadin-skills` brings the Vaadin MCP server and the design and layout skills, while `vaadin-agent-tools` brings the CLI. Install both if you want both.
+Agent Tools is published through the https://github.com/vaadin/agent-marketplace[Vaadin Agent Marketplace], the same marketplace that hosts the `vaadin-skills` plugin. They're separate plugins: <<agent-skills#,`vaadin-skills`>> brings the Vaadin MCP server and the design and layout skills, while `vaadin-agent-tools` brings the CLI. Install both if you want both.
 
 [.example]
 --
@@ -74,6 +74,7 @@ There's nothing to invoke by name. The skills trigger from their descriptions, s
 
 * "Bootstrap a new Vaadin project in `./my-app`."
 * "Check this project for theme mixing."
+* "I changed the Aura accent color, but dark mode stopped working."
 * "The `--lumo-*` variables in this stylesheet aren't resolving. What's wrong?"
 
 The agent runs the command, reads the machine-readable output, and reports back. Findings come with the file, the line, and the snippet that triggered them, so what you get is a specific place to look rather than a general opinion.
@@ -81,28 +82,30 @@ The agent runs the command, reads the machine-readable output, and reports back.
 
 == What the Tools Do
 
-Two tools ship today.
+Three tools ship today.
 
 `create-project`:: Bootstraps a new Vaadin application by downloading a fresh skeleton from https://start.vaadin.com[`start.vaadin.com`] -- the same starter `npm init vaadin` produces, minus the interactive prompts. The agent can choose the artifact name, whether to include the example view, and whether to use the pre-release platform version. This is the one tool that reaches the network and writes files, so the skill tells the agent to confirm the target directory when it's ambiguous.
 
 `check-theme-mixing`:: Reports whether a project mixes the Aura and Lumo base themes. It scans the project's Java and CSS sources for the theme stylesheets each one loads, for `--aura-*` and `--lumo-*` custom properties used under the wrong theme, and for `LumoUtility` class names used while Aura is active. When a project doesn't load a base theme explicitly, the tool says the result is indeterminate rather than guessing -- a skipped check, not a pass.
 
+`check-aura-usage`:: Validates how a project uses the Aura theme's custom properties, in its CSS and in the inline styles its Java sources set through `getStyle().set()`. It catches assignments that have no effect or that break dark mode: a read-only property Aura computes from others, a length given as a bare number where Aura needs a unit, surface and accent properties set on an element without the class name that makes them take effect, and `var()` reads of `--aura-*` properties that don't exist. Findings about read-only properties name the customizable property to set instead. The selector-based checks are heuristics, so they're reported as warnings for you to judge. The tool doesn't scan [filename]`.ts` or [filename]`.tsx` files, so inline styles in React views aren't covered. See <<{articles}/styling/themes/aura#,Aura>> for which properties are customizable.
+
 For the full command-line reference -- flags, output shapes, exit codes, and finding codes -- see the https://github.com/vaadin/agent-tools[`vaadin/agent-tools`] repository.
 
 
-== The Theme-Mixing Hook
+== The Styling Hook
 
-In Claude Code, the plugin also installs a `PostToolUse` hook, so the theme check doesn't wait to be asked. After the agent edits a [filename]`.java` or [filename]`.css` file in a way that touches styling, the hook runs the check and feeds any error-level findings back. The agent then has the chance to fix the problem in the same turn, instead of at review time.
+In Claude Code, the plugin also installs a `PostToolUse` hook, so the styling checks don't wait to be asked. After the agent edits a [filename]`.java` or [filename]`.css` file in a way that touches styling, the hook runs both `check-theme-mixing` and `check-aura-usage`, and feeds any error-level findings back. The agent then has the chance to fix the problem in the same turn, instead of at review time.
 
-The scope is narrow by design, so that the hook stays quiet. Edits to other file types are ignored, Java edits that don't touch a styling API are ignored, and clean or indeterminate results produce nothing. The hook never blocks an edit.
+The scope is narrow by design, so that the hook stays quiet. Edits to other file types are ignored, Java edits that don't touch a styling API are ignored, and clean projects, warnings, and indeterminate results produce nothing. The hook never blocks an edit.
 
 Codex gets the skills but not the hook, as the hook implements a Claude Code event contract.
 
 
 == What It Doesn't Do
 
-* *It isn't a general-purpose linter.* Two tools is the whole set. Everything else about code quality stays with your existing build, tests, and review.
-* *The theme check reads source text, not the resolved build.* It reports what's written in the project's own Java and CSS files. A base theme pulled in by a dependency isn't visible to it.
+* *It isn't a general-purpose linter.* Three tools is the whole set. Everything else about code quality stays with your existing build, tests, and review.
+* *The styling checks read source text, not the resolved build.* They report what's written in the project's own Java and CSS files. A base theme pulled in by a dependency isn't visible to them, and neither is a style string passed to `setAttribute("style", ...)`.
 * *It doesn't verify that the application runs.* That's the job of the <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>>, which the <<dev-loop-tutorial#,Dev Loop Tutorial>> sets up alongside the MCP server.
 
 
@@ -114,11 +117,13 @@ An AI coding agent needs three different kinds of knowledge, and its training da
 
 The <<mcp#,Vaadin MCP server>> covers *what the API is*. The <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>> covers *whether the code runs*. Agent Tools covers the third: *whether the project itself holds together*, and giving the agent a correct starting point when there's no project yet.
 
-Both tools address a case where an agent's judgment is the wrong instrument.
+Each tool addresses a case where an agent's judgment is the wrong instrument.
 
 *Scaffolding.* Asked to start a new Vaadin application, an agent writes a [filename]`pom.xml` from memory. The result is plausible and often wrong -- a platform version that was never released, a starter layout from an older major. Downloading the real skeleton means the project starts from a file Vaadin maintains, rather than from a reconstruction.
 
 *Theme mixing.* Loading both Aura and Lumo, or using `LumoUtility` class names while Aura is the loaded theme, isn't a compile error. It produces CSS custom properties that fail to resolve, without a word from the compiler. The symptom surfaces later as "the spacing looks wrong," a long way from the annotation that caused it.
+
+*Aura usage.* Many Aura properties are computed from others, and most of those are defined with `light-dark()` to hold a value for each color scheme. Assigning such a property a single value is valid CSS, and it looks right in the color scheme the agent happens to check. The other scheme loses its value. Documentation search can tell an agent the rule, but not whether the stylesheet it has written breaks it.
 
 === Why Tools and Not Only Skills
 
@@ -140,6 +145,7 @@ The command line is the stable part of all this: the command name, its arguments
 == Related Topics
 
 * <<mcp#,Vaadin MCP Server>> -- documentation and API lookup for the version in your [filename]`pom.xml`.
+* <<agent-skills#,Agent Skills>> -- the MCP server plus skills for theming, design, and form layout.
 * <<directory-mcp#,Vaadin Directory MCP Server>> -- add-on search and compatibility checks.
 * <<dev-loop-tutorial#,Dev Loop Tutorial>> -- the full agent setup, end to end.
 * https://github.com/vaadin/agent-tools[`vaadin/agent-tools`] -- the plugin source, command-line reference, and issue tracker.
