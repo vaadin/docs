@@ -1,8 +1,8 @@
 ---
 title: Component Locators
-page-title: Using locators in Vaadin browserless tests
-description: Drive components with a fluent locator that combines a query filter chain and tester actions.
-meta-description: Use the Vaadin browserless locator API to assert and act on components in a single fluent expression -- replacing find().single() plus test() boilerplate.
+page-title: Component Locators | Vaadin
+description: Typed component locator entry points, filters, resolution caching, custom locators, and opt-in interfaces.
+meta-description: Typed component locator entry points, filters, resolution caching, custom locators, and opt-in interfaces.
 order: 22
 ---
 
@@ -17,12 +17,13 @@ Locator entry points are built in to [classname]`BrowserlessUIContext` (the mult
 
 == Generated Entry Points
 
-For every built-in Vaadin component tester, a typed [methodname]`find&lt;Component&gt;()` method is available on the window. The method name mirrors the component type, and the returned locator exposes both the filter chain and the tester's action methods:
+For every built-in Vaadin component tester, a typed [methodname]`find<Component>()` method is available on the window. The method name mirrors the component type, and the returned locator exposes both the filter chain and the tester's action methods.
+For an `EchoView` with a [guilabel]*Name* field, a [guibutton]*Save* button, and a span with the ID `echo`:
 
 [source,java]
 ----
 var window = app.newUser().newWindow();
-window.navigate(CartView.class);
+window.navigate(EchoView.class);
 
 window.findTextField().withLabel("Name").setValue("World");
 window.findButton().withText("Save").click();
@@ -42,56 +43,16 @@ int rows = window.findGrid(Person.class).size();
 
 == Filter Chain
 
-Locators share their filter vocabulary with [classname]`ComponentQuery`:
+Locators share their filter vocabulary with <<component-query#filtering-methods,ComponentQuery>>.
+This includes [since:com.vaadin:vaadin@V25.3]#`withinSlot(String)`#; see <<component-query#slots,Filtering by Slot>> for slot ownership and nesting.
+Locator-specific operations are:
 
 [cols="1,2"]
 |===
 | Method | Description
-
-| [methodname]`withId(String)`
-| Matches the component with the given `id`.
-
-| [methodname]`withTestId(String)`
-| Matches the component with the given test ID (the `data-testid` attribute set with [methodname]`Component.setTestId()`). Test IDs are treated as unique: at most one match is expected.
-
-| [methodname]`withLabel(String)` / [methodname]`withLabelContaining(String)`
-| Matches by exact `label` or by label substring. Use this for form fields where the end user identifies a field by its label.
-
-| [methodname]`withText(String)` / [methodname]`withTextContaining(String)`
-| Matches by exact text content or by substring.
-
-| [methodname]`withAriaLabel(String)` / [methodname]`withAriaLabelContaining(String)`
-| Matches by exact `aria-label` or by aria-label substring -- useful for components like [classname]`Button` that have no label property but identify themselves to assistive technology.
-
-| [since:com.vaadin:vaadin@V25.2]#[methodname]`withPlaceholder(String)` / [methodname]`withPlaceholderContaining(String)`#
-| Matches by exact `placeholder` or by placeholder substring -- useful for toolbar or search fields that omit a stacked label and identify themselves to the user through placeholder text instead. Only appears on locators whose component implements [interfacename]`HasPlaceholder`.
-
-| [methodname]`withClassName(String...)` / [methodname]`withoutClassName(String...)`
-| Matches components carrying all (or none) of the given CSS class names.
-
-| [methodname]`withTheme(ThemeVariant)` / [methodname]`withoutTheme(ThemeVariant)`
-| Matches components with (or without) the given theme variant -- for example, [methodname]`withTheme(ButtonVariant.LUMO_PRIMARY)`. Deprecated [code]`String` overloads remain for theme names not surfaced through a [classname]`ThemeVariant` enum, such as custom themes.
-
-| [methodname]`withAttribute(String)` / [methodname]`withAttribute(String, String)` / [methodname]`withoutAttribute(...)`
-| Matches by attribute presence and value.
-
-| [since:com.vaadin:vaadin@V25.3]#[methodname]`withinSlot(String)`#
-| Matches components sitting in the given named slot of the component that hosts them -- for example `footer` on a [classname]`Card`. Everything below a slot belongs to it. See <<component-query#slots, Filtering by Slot>>.
-
-| [methodname]`withValue(V)`
-| Matches [interfacename]`HasValue` components whose value equals the given value.
-
-| [methodname]`withCondition(Predicate<C>)`
-| Matches components satisfying a custom predicate.
-
-| [methodname]`inside(Component)` / [methodname]`inside(Locator)`
-| Scopes the search to descendants of the given component (or of the component matched by the given locator -- resolved lazily on first action).
-
-| [methodname]`atIndex(int)`
-| Picks the n-th match (1-based) when the filter chain yields more than one.
-
-| [methodname]`with(UnaryOperator<ComponentQuery<C>>)`
-| Escape hatch for filters not exposed on the locator (for example, [methodname]`withPropertyValue` or [methodname]`withResultsSize`).
+| `inside(Component)` / `inside(Locator)` | Scopes the search to descendants. A locator scope resolves lazily on the first action.
+| `atIndex(int)` | Selects the n-th match, using a one-based index.
+| `with(UnaryOperator<ComponentQuery<C>>)` | Applies query operations not directly exposed by the locator, such as `withPropertyValue` and `withResultsSize`.
 |===
 
 [NOTE]
@@ -157,47 +118,21 @@ window.use(form.submit).click();
 
 == Custom Locators
 
-For composites, page objects, or domain-specific widgets, subclass [classname]`Locator` with the recursive self-type so filter steps stay chainable, and expose the actions you want the test to see. Scope inner queries with [methodname]`inside(this)` so they only match descendants of the resolved composite:
+A custom locator extends `Locator<C, L>` with its own type as `L` to preserve fluent return types.
+Inner locators use `inside(this)` to scope queries to the resolved composite.
+`find(Supplier<L>)` creates a custom locator through its factory.
 
-[source,java]
-----
-public class PersonFormLocator
-        extends Locator<PersonForm, PersonFormLocator> {
-
-    public PersonFormLocator() {
-        super(PersonForm.class);
-    }
-
-    public PersonFormLocator fillIn(String name, String email) {
-        new TextFieldLocator().withId("pf-name").inside(this).setValue(name);
-        new TextFieldLocator().withId("pf-email").inside(this).setValue(email);
-        return this;
-    }
-
-    public void submit() {
-        new ButtonLocator().withId("pf-submit").inside(this).click();
-    }
-}
-----
-
-Tests reach the custom locator through [methodname]`find(Supplier&lt;L&gt;)`:
-
-[source,java]
-----
-window.find(PersonFormLocator::new)
-        .fillIn("Ada", "ada@example.com")
-        .submit();
-----
-
+For a worked example, see <<{articles}/building-apps/testing/browserless/test-custom-components#,Test a Custom Component>>.
 
 [#opting-in]
-== Opting In for `BrowserlessTest`
+== Opting in for `BrowserlessTest`
 
 To use locator entry points in a test class that extends [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, or [classname]`QuarkusBrowserlessTest`, declare that the class implements [interfacename]`Locators`:
 
 [source,java]
 ----
-class CartViewTest extends SpringBrowserlessTest implements Locators {
+@SpringBootTest
+class CartViewLocatorsTest extends SpringBrowserlessTest implements Locators {
 
     @Test
     void addItem_increasesCartSize() {
@@ -220,6 +155,7 @@ This may become the default in a future release, at which point the explicit `im
 
 [source,java]
 ----
+@SpringBootTest
 class ChartViewTest extends SpringBrowserlessTest
         implements CommercialLocators {
 

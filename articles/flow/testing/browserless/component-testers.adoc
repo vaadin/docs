@@ -1,9 +1,9 @@
 ---
 title: Component Testers
-page-title: How to use and build component testers for browserless testing
-description: Using built-in testers and building custom ones for your own components.
-meta-description: Learn how to use Vaadin's built-in component testers and build custom testers for your own components in browserless tests.
-order: 18
+page-title: Component Testers | Vaadin
+description: Tester selection, supported actions, usability checks, constraints, and custom tester discovery.
+meta-description: Tester selection, supported actions, usability checks, constraints, and custom tester discovery.
+order: 20
 ---
 
 
@@ -11,7 +11,9 @@ order: 18
 
 Component testers simulate user interactions in browserless tests. Each tester wraps a specific component type and provides methods that mirror what a real user can do -- clicking, typing, and selecting items.
 
-Testers focus on actions that simulate user behavior, such as [methodname]`setValue()`, [methodname]`click()`, and [methodname]`selectItem()`. To read component state -- like getting a value or checking visibility -- use the component's Java API directly. This separation keeps tester methods focused on simulating real user interactions that also perform usability checks.
+Testers provide actions such as [methodname]`setValue()`, [methodname]`click()`, and [methodname]`selectItem()` with usability checks.
+Some testers also expose component-specific inspection methods, such as grid row access and notification text.
+The component's Java API remains available for reading values, visibility, and other state.
 
 
 == Using Component Testers
@@ -153,10 +155,10 @@ The following table shows frequently used testers and their key methods:
 |===
 
 
-.selectItem Takes String Labels
+.Selection Uses String Labels
 [TIP]
 ====
-The [methodname]`selectItem()` method on [classname]`SelectTester` and [classname]`ComboBoxTester` takes the *display label as a String*, not the typed item value. When using enums or other objects, pass the label that the user would see in the dropdown:
+The [methodname]`selectItem()` method on [classname]`SelectTester` and [classname]`ComboBoxTester` takes the *display label as a String*, not the typed item value. When using enums or other objects, pass the label that the user would see in the drop-down:
 
 [source,java]
 ----
@@ -281,116 +283,26 @@ All testers inherit from [classname]`ComponentTester`, which provides methods us
 
 
 [role="since:com.vaadin:vaadin@V25.2"]
-== Testing a Component Without a View
+== Standalone Component Environments
 
-A single component -- for example, a form or a custom field -- can be tested in isolation, without wrapping it in an [annotationname]`@Route` view. [methodname]`BrowserlessUIContext.forComponent()` builds a self-contained, route-free test environment, attaches the component to a window's [classname]`UI`, and tears everything down when the window closes, so a single try-with-resources is enough:
+`BrowserlessUIContext.forComponent(component)` creates a route-free environment and attaches the component to its UI.
+Closing the returned context tears down the environment.
+The supplier overload creates the component after installing the Vaadin thread-locals, allowing its constructor to access the current UI and session.
+`BrowserlessApplicationContext.forComponent(Supplier)` creates a fresh component for each new window.
 
-[source,java]
-----
-try (var window = BrowserlessUIContext.forComponent(new MyForm())) {
-    window.findTextField().withLabel("Name").setValue("Ada");
-    window.findButton().withText("Save").click();
-}
-----
+== Custom Tester Contracts
 
-The returned window is a [classname]`BrowserlessUIContext`, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<multi-user#, Multi-User and Multi-Window Testing>> for the context API.
+Custom testers extend `ComponentTester<C>` and declare the component type with `@Tests`.
+The `fqn` attribute accepts a fully qualified class name when a class literal is unsuitable.
+Custom action methods call `ensureComponentIsUsable()` before performing the interaction.
+They can delegate to other component testers.
 
-If the component's constructor needs [methodname]`UI.getCurrent()` or the session, pass a factory instead: [methodname]`BrowserlessUIContext.forComponent(MyForm::new)`. The factory runs after the Vaadin thread-locals are installed, so the constructor observes the live environment.
+Tester discovery scans `com.vaadin.flow.component` by default.
+`@ComponentTesterPackages` adds application packages to scan for testers.
+Extensions and application-context builders also support tester-package configuration.
 
-For tests that need the same standalone component in several windows or for several users, use [methodname]`BrowserlessApplicationContext.forComponent(Supplier)`. It returns the application context, and every window created from it gets a fresh component instance from the factory:
+[[building-custom-testers]][[defining-a-custom-tester]][[registering-custom-testers]][[testing-a-component-without-a-view]]For a worked example, see <<{articles}/building-apps/testing/browserless/test-custom-components#,Test a Custom Component>>.
 
-[source,java]
-----
-try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
-    var w1 = app.newUser().newWindow();
-    var w2 = app.newUser().newWindow();
-
-    w1.findTextField().withLabel("Name").setValue("Ada");
-    // w2 holds its own MyForm instance
-    Assertions.assertEquals("", w2.findTextField().withLabel("Name")
-            .component().getValue());
-}
-----
-
-
-== Building Custom Testers
-
-When you create custom components, you can build testers for them too. Custom testers extend [classname]`ComponentTester` and use the [annotationname]`@Tests` annotation to declare which component they test.
-
-
-=== Defining a Custom Tester
-
-[source,java]
-----
-// Tests defines the components this tester should be used for automatically
-@Tests(PersonFormView.PhoneNumberField.class)
-public class PhoneNumberFieldTester extends ComponentTester<PersonFormView.PhoneNumberField> {
-    // Other testers can be used inside the custom tester
-    final ComboBoxTester<ComboBox<String>, String> combo_;
-    final TextFieldTester<TextField, String> number_;
-
-    public PhoneNumberFieldWrap(PersonFormView.PhoneNumberField component) {
-        super(component);
-        combo_ = new ComboBoxTester<>(
-                getComponent().countryCode);
-        number_ = new TextFieldTester<>(getComponent().number);
-    }
-
-    public List<String> getCountryCodes() {
-        return combo_.getSuggestionItems();
-    }
-
-    public void setCountryCode(String code) {
-        ensureComponentIsUsable();
-        if(!getCountryCodes().contains(code)) {
-            throw new IllegalArgumentException("Given code isn't available for selection");
-        }
-        combo_.selectItem(code);
-    }
-
-    public void setNumber(String number) {
-        ensureComponentIsUsable();
-        number_.setValue(number);
-    }
-
-    public String getValue() {
-        return getComponent().generateModelValue();
-    }
-
-}
-----
-
-.`PhoneNumberField.java`
-[source,java]
-----
-static class PhoneNumberField extends CustomField<String> {
-    ComboBox<String> countryCode = new ComboBox<>();
-    TextField number = new TextField();
-
-    // ...
-}
-----
-
-Custom testers can use other testers internally, as shown above with `ComboBoxTester` and `TextFieldTester`.
-
-.Generic Components
-[TIP]
-The [annotationname]`@Tests` annotation also has an [methodname]`fqn` attribute that accepts fully qualified class names as strings. Use this when the component type uses generics that prevent it from being passed as a class literal:
-`@Tests(fqn = "com.example.MyField")`.
-
-
-=== Registering Custom Testers
-
-By default, tester implementations are scanned from the `com.vaadin.flow.component` package, so adding a custom tester to that package makes it immediately available.
-
-To place custom testers in another package, annotate the test class with [annotationname]`@ComponentTesterPackages`:
-
-[source,java]
-----
-@ComponentTesterPackages("com.example.application.views.personform")
-class PersonFormViewTest extends BrowserlessTest {
-}
-----
 
 
 [discussion-id]`A1B2C3D4-E5F6-7890-ABCD-EF1234567890`
