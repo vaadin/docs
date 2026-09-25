@@ -12,13 +12,13 @@ section-nav: badge-flow
 
 Tree Grid supports several ways to bind hierarchical data, depending on where the data lives and how much control you need:
 
-- The <<#setting-items,setItems>> method for quick setup from a collection of root items and their children.
+- <<#setting-items,Setting items>> from a collection of root items and a callback that returns their children, for quick setup.
 - <<#tree-data-provider,TreeData and TreeDataProvider>> APIs for creating and binding in-memory hierarchies.
 - <<#custom-data-providers,Custom hierarchical data providers>> for advanced cases, like connecting to a database.
 
 == Setting Items
 
-The simplest way to populate Tree Grid is to use the [methodname]`setItems(rootItems, childItemProvider)` method. It takes a collection of root items and a callback that returns the children of each item:
+The quickest way to populate Tree Grid from existing objects is to add them to a [classname]`TreeData` structure with the [methodname]`TreeData#addItems(rootItems, childItemProvider)` method, and then bind the structure to Tree Grid through a [classname]`TreeDataProvider`. The [methodname]`addItems` method takes a collection of root items and a callback that returns the children of each item:
 
 [.example]
 --
@@ -30,9 +30,16 @@ Folder documents = new Folder("Documents", List.of(invoices));
 Folder work = new Folder("Work", List.of(documents));
 Folder family = new Folder("Family", List.of());
 
+TreeData<Folder> treeData = new TreeData<>();
+
 // First argument: root-level folders shown at the top level of the tree.
 // Second argument: a callback that returns the children of each folder.
-treeGrid.setItems(List.of(work, family), Folder::children);
+treeData.addItems(List.of(work, family), Folder::children);
+
+TreeDataProvider<Folder> treeDataProvider = new TreeDataProvider<>(
+        treeData,
+        HierarchicalDataProvider.HierarchyFormat.FLATTENED);
+treeGrid.setDataProvider(treeDataProvider);
 
 // Result:
 //
@@ -49,17 +56,17 @@ public record Folder(String name, List<Folder> children) {}
 ----
 --
 
-Behind the scenes, the [methodname]`setItems` method creates a [classname]`TreeData` structure by eagerly traversing the root items and their descendants: it calls the child item provider on each root item, then on each returned child, and continues until no more children are returned.
+The [methodname]`addItems` method traverses the root items and their descendants eagerly: it calls the child item provider on each root item, then on each returned child, and continues until no more children are returned.
 
-The [classname]`TreeData` structure and its [classname]`TreeDataProvider` are then available via the `TreeGrid#getTreeData` and `TreeGrid#getDataProvider` methods:
+The example passes [enumname]`HierarchyFormat.FLATTENED` to the [classname]`TreeDataProvider` constructor. This is the recommended format for [classname]`TreeData`, as explained in the next section.
 
-[source,java]
-----
-TreeData<Folder> treeData = treeGrid.getTreeData();
-TreeDataProvider<Folder> treeDataProvider = (TreeDataProvider<Folder>) treeGrid.getDataProvider();
-----
+.Deprecated Shorthand Methods
+[NOTE]
+====
+[deprecated:com.vaadin:vaadin@V25.3]#The [methodname]`setItems(rootItems, childItemProvider)` and [methodname]`setTreeData(treeData)` shorthand methods, and the single-argument [classname]`TreeDataProvider` constructor, are deprecated.# They create a data provider with [enumname]`HierarchyFormat.NESTED`, but use [enumname]`HierarchyFormat.FLATTENED` starting from the next major version. This changes the behavior of Tree Grid methods that depend on the hierarchy format, such as [methodname]`scrollToIndex()`. Create the [classname]`TreeDataProvider` with an explicit hierarchy format instead, as shown above. To keep the current behavior, pass [enumname]`HierarchyFormat.NESTED`. See <<{articles}/upgrading/25-2-to-25-3#deprecations-to-address-before-vaadin-26,Deprecations to Address>> in the upgrade guide for a before-and-after example.
+====
 
-The next section explains the [classname]`TreeData` and [classname]`TreeDataProvider` concepts in more detail, and how to use them to modify, sort, and filter hierarchical data.
+The next section explains the [classname]`TreeData` and [classname]`TreeDataProvider` concepts in more detail, and how to use them to modify, sort, and filter hierarchical data. Keep references to both instances if the application needs to change the data later.
 
 
 == Tree Data Provider

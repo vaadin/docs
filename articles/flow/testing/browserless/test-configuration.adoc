@@ -9,30 +9,13 @@ order: 46
 
 = [since:com.vaadin:vaadin@V25.3]#Test Configuration#
 
-Some tests need a Vaadin environment configured differently from the rest of the suite: a view behind a feature flag, or a setting such as `devmode.sessionSerialization.enabled`. Annotate the test class, or a single test method, with [annotationname]`@BrowserlessTestConfig`:
+`@BrowserlessTestConfig` declares Vaadin application properties, feature flags, and Lookup services for the standard browserless environment.
+Each configuration belongs to the environment created for its test and is discarded with that environment.
+This is Vaadin test configuration, not a replacement for Spring, Quarkus, or CDI bean configuration.
 
-[source,java]
-----
-@ViewPackages(classes = CartView.class)
-@BrowserlessTestConfig(
-        applicationProperties = "devmode.sessionSerialization.enabled=true",
-        featureFlags = "myExperimentalFeature")
-class CartViewTest extends BrowserlessTest {
+A custom environment initialization, such as the <<cdi#,CDI initialization>> in this documentation, applies these settings only if it passes `testConfiguration()` to `MockVaadin.setup()`.
 
-    @Test
-    void experimentalCheckoutIsShown() {
-        // The feature flag is enabled for this test
-    }
-
-    @Test
-    @BrowserlessTestConfig(featureFlags = "myExperimentalFeature=false")
-    void fallbackCheckoutIsShown() {
-        // The same class, with the flag off for this method only
-    }
-}
-----
-
-Each setting applies to the Vaadin environment created for the annotated test, so there is nothing to reset afterwards, and nothing leaks into the next test.
+For a step-by-step example, see <<{articles}/building-apps/testing/browserless/configure-tests#,Configure a Browserless Test>>.
 
 
 == Settings
@@ -56,7 +39,7 @@ The `browserless` application property itself stays enforced and cannot be overr
 
 == Merging Class and Method Configuration
 
-Every annotation a test inherits contributes to the configuration, rather than being shadowed by the nearest one. The merge works entry by entry: a property name or feature identifier declared in more than one place takes the value of the highest-ranking declaration, while the names declared only once all apply. The closer a declaration is to the test method, the higher it ranks: the method first, then the test class, then superclasses from the nearest up, and then, for a [annotationname]`@Nested` test, enclosing classes from the innermost out. In the example at the top of this page, the method-level `myExperimentalFeature=false` therefore replaces the value the test class declares for that flag, and leaves `devmode.sessionSerialization.enabled` untouched.
+Every annotation a test inherits contributes to the configuration, rather than being shadowed by the nearest one. The merge works entry by entry: a property name or feature identifier declared in more than one place takes the value of the highest-ranking declaration, while the names declared only once all apply. The closer a declaration is to the test method, the higher it ranks: the method first, then the test class, then superclasses from the nearest up, and then, for a [annotationname]`@Nested` test, enclosing classes from the innermost out. A method-level feature setting replaces the class-level value for that identifier without removing unrelated application properties.
 
 [source,java]
 ----
@@ -64,9 +47,9 @@ Every annotation a test inherits contributes to the configuration, rather than b
 abstract class AbstractViewTest extends BrowserlessTest {
 }
 
-@BrowserlessTestConfig(featureFlags = "myExperimentalFeature")
-class CartViewTest extends AbstractViewTest {
-    // Both base.property and myExperimentalFeature apply
+@BrowserlessTestConfig(featureFlags = "defaultAutoResponsiveFormLayout")
+class ResponsiveFormLayoutTest extends AbstractViewTest {
+    // Both base.property and defaultAutoResponsiveFormLayout apply
 }
 ----
 
@@ -75,7 +58,7 @@ Lookup services are the exception to the ranking: they have no name to resolve, 
 A method-level annotation needs an environment built for each test method. When one environment is shared by the whole class, as with [classname]`BrowserlessClassExtension`, the annotation is rejected with an error naming the methods that carry it. Move it to the test class in that case.
 
 
-== Configuring Without Annotations
+== Configuring without Annotations
 
 The same settings can be built in code. On a JUnit 6 extension:
 
@@ -84,7 +67,7 @@ The same settings can be built in code. On a JUnit 6 extension:
 @RegisterExtension
 BrowserlessExtension extension = new BrowserlessExtension()
         .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
-        .withFeatureFlags("myExperimentalFeature");
+        .withFeatureFlags("defaultAutoResponsiveFormLayout");
 ----
 
 On the application context builder of a multi-user test:
@@ -93,7 +76,7 @@ On the application context builder of a multi-user test:
 ----
 try (var app = BrowserlessApplicationContext.create(builder -> builder
         .withViewPackages(CartView.class)
-        .withFeatureFlags("myExperimentalFeature"))) {
+        .withFeatureFlags("defaultAutoResponsiveFormLayout"))) {
     // ...
 }
 ----
@@ -119,7 +102,7 @@ Or by overriding [methodname]`testConfiguration()` on a test that extends a base
 protected BrowserlessConfiguration testConfiguration() {
     return BrowserlessConfiguration.builder()
             .withConfiguration(super.testConfiguration())
-            .withFeatureFlags("myExperimentalFeature")
+            .withFeatureFlags("defaultAutoResponsiveFormLayout")
             .build();
 }
 ----
