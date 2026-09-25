@@ -8,7 +8,11 @@ import { TextField } from '@vaadin/react-components/TextField.js';
 function Example() {
   return (
     // tag::snippet[]
-    <CustomField label="Price" helperText="Helper text" theme="small helper-above-field">
+    <CustomField
+      label="Price"
+      helperText="Helper text"
+      theme="small helper-above-field label-aside"
+    >
       <HorizontalLayout style={{ gap: 'var(--vaadin-gap-s)' }}>
         <TextField accessibleName="Amount" theme="small" />
         <Select

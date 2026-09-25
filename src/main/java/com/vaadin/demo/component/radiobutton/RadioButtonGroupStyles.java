@@ -14,7 +14,8 @@ public class RadioButtonGroupStyles extends HorizontalLayout {
 
         // tag::snippet[]
         RadioButtonGroup<String> field = new RadioButtonGroup<>();
-        field.addThemeVariants(RadioGroupVariant.HELPER_ABOVE);
+        field.addThemeVariants(RadioGroupVariant.HELPER_ABOVE,
+                RadioGroupVariant.LABEL_ASIDE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");
