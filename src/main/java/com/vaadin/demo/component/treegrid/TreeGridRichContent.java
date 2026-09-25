@@ -11,6 +11,9 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider.HierarchyFormat;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -22,7 +25,10 @@ public class TreeGridRichContent extends Div {
 
     public TreeGridRichContent() {
         TreeGrid<Person> treeGrid = new TreeGrid<>();
-        treeGrid.setItems(managers, this::getStaff);
+        TreeData<Person> treeData = new TreeData<>();
+        treeData.addItems(managers, this::getStaff);
+        treeGrid.setDataProvider(
+                new TreeDataProvider<>(treeData, HierarchyFormat.FLATTENED));
 
         // tag::snippet[]
         treeGrid.addComponentHierarchyColumn(person -> {
