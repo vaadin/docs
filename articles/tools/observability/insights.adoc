@@ -20,7 +20,7 @@ Every insight carries a [propertyname]`replay` list a person can follow to repro
 An interaction insight also carries a [propertyname]`suggestion` and an [propertyname]`applicationFrame` that an AI agent with access to the codebase can open to verify the problem and propose a fix.
 
 Insight collection is on by default and works in production mode.
-In development mode the same insights also appear in a <<#copilot,Copilot panel>>, and their replay steps <<#dev-replay,say what the user had filled in>>.
+In development mode the same insights also appear in the <<copilot-panel#,Copilot panel>>, which announces new ones as they appear, and their replay steps <<#dev-replay,say what the user had filled in>>.
 
 
 == What Gets Captured
@@ -395,37 +395,11 @@ Lengths are capped regardless: 60 characters for a caption, 40 for a value.
 == The Copilot Panel
 
 In development mode the kit adds an *Observability* panel to Vaadin Copilot, reachable from the toolbar in edit, inspect, and test modes.
-It opens on the findings rather than on the numbers: the same insights `/actuator/vaadin/observability` publishes -- failed and over-budget interactions, failed and slow data queries, browser errors -- ranked with errors first, then by how many users hit them, then by how recently.
-Expanding one shows its evidence, its replay steps, and its suggestion, and *Copy* puts the whole finding on the clipboard as JSON, which is the shortest path from noticing a problem to handing it to an AI agent with access to the codebase.
+It opens on these findings rather than on the numbers -- the endpoint's own payload, ranked with errors first -- and keeps the live `vaadin.*` meters below them.
+It also announces a finding it hasn't seen before in the Copilot log, so you learn that something broke without having the panel open.
 
-The `vaadin.*` meters sit below the findings, folded away while there's something to look at, and grouped by the route they were recorded on: the route the browser is currently on first, then the rest alphabetically (the root view as *Root*), the unresolved ones after them, and the application-wide meters that carry no route under *General*.
-Route groups are matched against the browser's location by route template, so `orders/:orderId` is the current group while you're on `/orders/17`.
-An application served under a context path matches nothing, and the groups stay alphabetical.
-
-=== Findings You Aren't Working On
-
-"3 findings need attention" is only worth reading while all three are news, so two kinds fold away behind a collapsed line under the list -- "2 hidden findings", "3 findings gone quiet", or "5 findings set aside (2 hidden, 3 gone quiet)":
-
-Hidden by hand:: Every row has a *Hide* button, for the known slow query in the feature you aren't touching today.
-It stays hidden even as the finding keeps recurring -- a dismissal that undid itself on the next occurrence would be no dismissal at all -- and is remembered in the browser's `localStorage`, so the reload that follows every code change doesn't ask you to hide everything again.
-*Unhide* puts it back.
-
-Gone quiet:: A finding nothing has re-triggered for 30 minutes is history rather than attention.
-This one is automatic and reverses itself: the moment it recurs, [propertyname]`lastSeen` moves and it's back in the count.
-
-Nothing is discarded.
-The fold always shows how many findings are behind it and which of the two reasons put them there, and one click renders them, faded, with their detail and replay intact.
-
-=== New Findings Announce Themselves
-
-The panel keeps watching with its window closed, and a finding the payload didn't have before is written to the Copilot log, deduplicated on the same grouping key the endpoint uses, so one problem notifies once however often it recurs.
-Announced are the findings the current page raised -- anything first seen since it loaded, including during the load itself, so a slow query on the landing view is reported.
-The older records in the buffers, which outlive a reload, aren't.
-A finding you hid isn't announced either.
-
-Findings need `vaadin.observability.insights` together with `errors` or `requests`, and `client` for browser errors -- all on by default.
-With any of them off, the panel says that insights aren't being collected rather than showing an empty list.
-Nothing here exists in production, where neither Copilot nor the dev-tools connection does.
+See the <<copilot-panel#,Copilot Panel>> page for the whole panel: how findings are ranked and read, how to set one aside, what the meter table shows, and what the panel needs to be there.
+Nothing about it exists in production, where neither Copilot nor the dev-tools connection does.
 
 
 [[ai-agents]]
