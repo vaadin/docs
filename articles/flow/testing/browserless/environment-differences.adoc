@@ -1,128 +1,62 @@
 ---
-title: Environment Differences
-page-title: How the Vaadin browserless test environment differs
-description: What the browserless environment creates, in which order, and which application behavior therefore needs a different approach in a test.
-meta-description: Learn the browserless test lifecycle in Vaadin, and how it affects session-scoped beans and authentication applied during a test.
-order: 80
+title: Spring Test Lifecycle
+page-title: Spring Test Lifecycle in Browserless Tests | Vaadin
+description: The order in which Spring and the browserless environment set up a test, and how it affects session-scoped beans and authentication.
+meta-description: Learn the order in which Spring and the Vaadin browserless environment set up a test, and how that order affects session-scoped beans and authentication.
+order: 62
 ---
 
 
-= How the Browserless Environment Differs
+= Spring Test Lifecycle
 
-A browserless test runs your application's server-side code against a mocked Vaadin environment created inside the JUnit test. Views, components, and services behave as they do in a running application, but the environment is built and torn down around each test method rather than by a servlet container at startup.
-
-That ordering is observable. Two application patterns depend on it, and in both the test fails in a way that looks like an application defect: a bean that can't be resolved, and a view that doesn't match the authenticated user.
-
+`SpringBrowserlessTest` creates the mocked Vaadin environment after Spring has prepared the test instance.
+The order of these steps determines when dependency injection and authentication become available, which affects session-scoped beans and authentication that a test changes later.
+Plain Java and Quarkus tests use their own framework setup, and the <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle.
 
 [#test-lifecycle]
-== Test Lifecycle
+== Order of Test Setup
 
-For a [classname]`SpringBrowserlessTest`, each test method runs through these steps:
+For `SpringBrowserlessTest`, the default sequence is:
 
-. JUnit creates the test instance, and Spring injects its [annotationname]`@Autowired` fields. No Vaadin environment exists yet -- there's no [classname]`VaadinService`, no [classname]`VaadinSession`, and no [classname]`UI`.
-. JUnit extension callbacks run. [classname]`SpringExtension` populates the Spring [classname]`SecurityContextHolder` from [annotationname]`@WithMockUser`, [annotationname]`@WithAnonymousUser`, or [annotationname]`@WithUserDetails`.
-. The browserless environment is created: [classname]`VaadinService`, [classname]`VaadinSession`, and [classname]`UI`, followed by navigation to the root route. The authentication from the previous step is already in place, so view access control sees the simulated user.
-. The test method body runs.
-. The environment is torn down, and the session is closed.
+. JUnit creates the test instance and Spring injects its `@Autowired` fields, before the Vaadin environment exists.
+. JUnit extension callbacks run. With their default timing, Spring Security test annotations populate `SecurityContextHolder`.
+. The base class's `@BeforeEach` method creates the Vaadin service, session, and UI and navigates to the root route.
+. Subclass `@BeforeEach` methods and the test method can use that environment.
+. The inherited cleanup closes the Vaadin environment after the test.
 
-[classname]`BrowserlessTest` and [classname]`QuarkusBrowserlessTest` follow the same sequence without the Spring injection step.
-
-The consequence is that the Vaadin session exists only inside the test method. Anything that needs a session -- including anything Vaadin resolves per session -- has to be reached from there, not from a field of the test class.
-
+The environment is therefore available after its setup hook, not during initial test-instance injection.
+See <<test-environment#,Test Environment and Lifecycle>> for the common APIs.
 
 [#session-scoped-beans]
 == Session-Scoped Beans
 
-A [annotationname]`@VaadinSessionScope` or [annotationname]`@SessionScope` bean can't be injected into a test class field. The field is injected in step 1, when no session exists, so the bean can't be resolved:
+Resolving a `@VaadinSessionScope` bean during test-instance injection fails because no Vaadin session exists yet.
+This failure affects every test in the class, including methods that do not use the field.
+An `ObjectProvider` defers resolution until `getObject()` is called after environment setup.
+A lazy proxy with `@Lazy`, or an `ApplicationContext.getBean()` call made after setup, can also defer lookup.
 
-.Doesn't Work
-[source,java]
-----
-@SpringBootTest
-class CartViewTest extends SpringBrowserlessTest {
+Spring's `@SessionScope` beans don't fail during test-instance injection.
+Spring's test support binds a mock request and session before injecting the test instance, and the default scoped proxy resolves the bean when it's used.
+Deferred lookup works for these beans too.
 
-    @Autowired
-    private Cart cart; // No session exists when this field is injected.
-}
-----
+Views created during initial or explicit navigation already have the Vaadin environment available, so their session-scoped dependencies can resolve then.
+In <<multi-user#pitfalls-and-guarantees,multi-user Spring tests>>, request- and session-scoped beans resolve for the active user; activate the intended window before resolving a bean directly.
 
-Because this is an instance creation failure, it fails every test in the class, not only the ones that use the bean.
-
-Inject an [classname]`ObjectProvider` instead, and ask it for the bean inside the test method, where the session is available:
-
-.Works
-[source,java]
-----
-@SpringBootTest
-class CartViewTest extends SpringBrowserlessTest {
-
-    @Autowired
-    private ObjectProvider<Cart> cartProvider;
-
-    @Test
-    void addItem_cartContainsItem() {
-        CartView view = navigate(CartView.class);
-        Cart cart = cartProvider.getObject();
-
-        test(view.addButton).click();
-
-        Assertions.assertEquals(1, cart.getItems().size());
-    }
-}
-----
-
-Annotating the [classname]`Cart` field with [annotationname]`@Lazy` works as well, and so does injecting [classname]`ApplicationContext` and calling [methodname]`getBean(Cart.class)` from the test method. All three defer the lookup to the moment the bean is first used.
-
-Views and other components aren't affected: they're instantiated during navigation, inside the test method, so their own session-scoped dependencies resolve normally.
-
+For a complete test, see <<{articles}/building-apps/testing/browserless/setup-spring-boot#session-scoped-beans,Access Session-Scoped Beans>>.
 
 [#authentication-applied-during-a-test]
 == Authentication Applied During a Test
 
-Apply the authentication before the test method starts, with a plain [annotationname]`@WithMockUser`, [annotationname]`@WithAnonymousUser`, or [annotationname]`@WithUserDetails` on the test class or method. It's then in place in step 2, before the environment is created, so the initial navigation already reflects the authenticated user and nothing further is needed:
+With their default timing, Spring Security's `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` establish authentication before the environment's initial navigation.
+View access control therefore observes the simulated user during that navigation.
 
-[source,java]
-----
-@Test
-@WithMockUser(username = "admin", roles = "ADMIN")
-void adminOpensAdminView_avatarShown() {
-    AdminView view = navigate(AdminView.class);
+Authentication established in the test body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+Subsequent requests use that authentication, but `getCurrentView()` still returns the previously rendered view until another navigation takes place.
 
-    Assertions.assertTrue(find(Avatar.class).single().isVisible());
-}
-----
+`Page.reload()` recreates the UI at the currently active location.
+If initial navigation redirected to the login view, reloading renders the login location again; it does not navigate to the original protected destination.
 
-See <<spring-security#, Spring Security Testing>> for the full setup.
-
-Some scenarios need the sign-in to happen during the test itself, such as a login form, or a view that has to be asserted both before and after the user signs in. Authentication established then -- from the test method body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION` -- arrives after the environment has navigated in step 3. Subsequent requests use the new authentication, but the view rendered during setup stays in place, so [methodname]`getCurrentView()` still returns the result of that earlier, anonymous navigation.
-
-Navigate again after signing in:
-
-[source,java]
-----
-@Test
-@WithMockUser(username = "admin", roles = "ADMIN",
-        setupBefore = TestExecutionEvent.TEST_EXECUTION)
-void adminSignsInDuringTest_adminViewShown() {
-    // Setup navigated to the root route while the user was still anonymous,
-    // and access control redirected that navigation to the login view.
-    Assertions.assertInstanceOf(LoginView.class, getCurrentView());
-
-    // Navigating again applies access control to the current authentication.
-    navigate(AdminView.class);
-
-    Assertions.assertTrue(find(Avatar.class).single().isVisible());
-}
-----
-
-.Reloading Isn't Enough
-[NOTE]
-Reloading with [methodname]`Page.reload()` isn't a substitute for navigating again. It recreates the [classname]`UI` and renders the location that is currently active, the same as pressing reload in a browser; when access control has redirected to the login view, that location is the login view.
-
-
-== Components That Don't Exist Yet
-
-Component queries walk the server-side component tree, which holds only what has been created. A component rendered per item exists once something renders it, and the contents of an overlay are attached only while the overlay is open. Until then, a query returns an empty result rather than an error. See <<overlay-components#, Testing Overlay Components>> for how to reach them.
-
+For a worked Spring test, see <<{articles}/building-apps/testing/browserless/test-view-access#authentication-applied-during-a-test,Navigate after Changing Authentication>>.
+See <<spring-security#,Spring Security Integration>> for setup requirements and session ID rotation.
 
 [discussion-id]`4B6C9E13-7A85-42D0-9F3B-1C8E5D4A2B76`

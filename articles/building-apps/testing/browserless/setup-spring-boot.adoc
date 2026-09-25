@@ -1,0 +1,131 @@
+---
+title: Set Up Browserless Tests with Spring Boot
+page-title: Set Up Browserless Tests with Spring Boot | Vaadin
+description: Set up a Spring Boot project, write a browserless test for a Flow view, and run it from your IDE or Maven.
+meta-description: Set up a Spring Boot project, write a browserless test for a Flow view, and run it from your IDE or Maven.
+order: 10
+---
+
+
+= Set Up Browserless Tests with Spring Boot
+
+Use this guide for a Spring Boot application.
+Tests extend `SpringBrowserlessTest` and run with the Spring application context.
+For another application framework, choose its guide in <<./#choose-your-framework,Browserless Testing>>.
+
+== Add Dependencies
+
+Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the `browserless-test-spring` dependency with a `test` scope.
+Spring Boot's test starter is also required; Spring Boot projects typically have it already:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+
+[#first-browserless-test]
+== Create a Test
+
+Views in Spring Boot applications typically get their services through dependency injection.
+[classname]`SpringBrowserlessTest` creates views through the Spring application context, and [annotationname]`@SpringBootTest` makes the full application context available to the test.
+
+Given a simple view like this:
+
+include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
+
+A browserless test for it looks like this:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.flow.component.notification.Notification;
+
+@SpringBootTest
+class HelloWorldViewTest extends SpringBrowserlessTest {
+
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+
+}
+----
+
+Place the test in `src/test/java`, in the same Java package as the view, so that the test can read the view's package-private fields.
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
+
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+The test passes when entering a name and clicking the button shows the expected notification.
+
+
+[#session-scoped-beans]
+== Access Session-Scoped Beans
+
+A Spring test field is injected before the browserless Vaadin session exists.
+If a test needs an application bean with `@VaadinSessionScope`, inject an `ObjectProvider` and resolve the bean after environment setup:
+
+.`CartViewSessionTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.SpringBrowserlessTest;
+
+@SpringBootTest
+class CartViewSessionTest extends SpringBrowserlessTest {
+
+    @Autowired
+    private ObjectProvider<Cart> cartProvider;
+
+    @Test
+    void addItem_cartContainsItem() {
+        CartView view = navigate(CartView.class);
+        Cart cart = cartProvider.getObject();
+
+        test(view.addButton).click();
+
+        Assertions.assertEquals(1, cart.getItems().size());
+    }
+}
+----
+
+This example assumes a session-scoped `Cart` service and a `CartView` whose [guibutton]*Add to cart* button, in the `addButton` field, adds an item to the cart.
+Resolve the bean in the test method, or in a subclass `@BeforeEach` method after the inherited environment setup.
+The same approach works for a bean with Spring's `@SessionScope`, which can also be injected directly.
+See <<{articles}/flow/testing/browserless/environment-differences#session-scoped-beans,Spring Session-Scoped Beans>> for scope guarantees and other deferred-lookup options.
+
+
+== Next Steps
+
+* <<test-user-interactions#,Test User Interactions>> explains how the test works and how to cover more complex views.
+* <<debug-tests#,Debug a Failing Browserless Test>> helps when a test fails.
+* <<{articles}/flow/testing/browserless/test-environment#,Test Environment and Lifecycle>> describes the environment lifecycle and the navigation API.
+
+
+[discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`
