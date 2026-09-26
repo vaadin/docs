@@ -257,3 +257,78 @@ binder.setStatusLabel(beanValidationErrors);
 ----
 
 This ensures that validation messages are displayed appropriately, whenever they originate from `Binding`-level validation or `Binder`-level validation.
+
+
+== Validating Forms Split Across Tabs
+
+Long forms are sometimes split across the tabs of a <</components/tabs#,Tab Sheet>>. The fields in a hidden tab are still bound and validated, but the user doesn't see their error messages. To guide the user to them, mark the tabs that contain invalid fields, and select the first such tab when saving fails.
+
+You can do this with a custom validation status handler that calls the default handler and then updates the tabs:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<TabSheet> {
+
+    private final Binder<Proposal> binder;
+    private final Map<Tab, List<HasValidation>> tabFields = new LinkedHashMap<>();
+    private final Map<Tab, Icon> tabErrorIcons = new HashMap<>();
+    private @Nullable Proposal formDataObject;
+
+    public ProposalForm() {
+        var titleField = new TextField("Title");
+        var descriptionField = new TextArea("Description");
+        var startDateField = new DatePicker("Start Date");
+        var endDateField = new DatePicker("End Date");
+
+        addTab("General", titleField, descriptionField);
+        addTab("Schedule", startDateField, endDateField);
+
+        binder = new Binder<>(Proposal.class);
+        binder.forField(titleField).asRequired().bind("title");
+        binder.forField(descriptionField).bind("description");
+        binder.forField(startDateField).asRequired().bind("startDate");
+        binder.forField(endDateField).asRequired().bind("endDate");
+
+        var defaultHandler = binder.getValidationStatusHandler();
+        binder.setValidationStatusHandler(status -> {
+            defaultHandler.statusChange(status); // <1>
+            tabFields.keySet().forEach(tab ->
+                    tabErrorIcons.get(tab).setVisible(hasErrors(tab)));
+        });
+    }
+
+    private void addTab(String label, Component... fields) {
+        var errorIcon = VaadinIcon.EXCLAMATION_CIRCLE_O.create();
+        errorIcon.addClassName(LumoUtility.TextColor.ERROR);
+        errorIcon.setVisible(false);
+
+        var tab = getContent().add(new Tab(new Span(label), errorIcon),
+                new FormLayout(fields));
+        tabErrorIcons.put(tab, errorIcon);
+        tabFields.put(tab, Stream.of(fields)
+                .map(HasValidation.class::cast).toList());
+    }
+
+    private boolean hasErrors(Tab tab) {
+        return tabFields.get(tab).stream().anyMatch(HasValidation::isInvalid);
+    }
+
+    public Optional<Proposal> getFormDataObject() {
+        if (formDataObject == null) {
+            formDataObject = new Proposal();
+        }
+        if (binder.writeBeanIfValid(formDataObject)) {
+            return Optional.of(formDataObject);
+        }
+        tabFields.keySet().stream().filter(this::hasErrors).findFirst()
+                .ifPresent(getContent()::setSelectedTab); // <2>
+        return Optional.empty();
+    }
+}
+----
+<1> The default handler shows the error messages next to the fields and marks them as invalid.
+<2> Selects the first tab with errors so that the user sees what needs fixing.
+
+[NOTE]
+You can't use a status label and a custom validation status handler at the same time. If you also need to show `Binder`-level errors, display them from the handler using `status.getBeanValidationErrors()`.

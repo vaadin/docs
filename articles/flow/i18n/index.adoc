@@ -172,6 +172,53 @@ The field shows the current locale, user selections call `setLocale()`, and any 
 The signal is read-only, so always change the locale through `setLocale()` -- this keeps locale propagation and `LocaleChangeObserver` notifications working.
 
 
+=== Remembering the Selected Language
+
+A locale set with `setLocale()` lasts only as long as the session. To remember the user's choice across sessions, store it in a cookie and apply it when a new session starts.
+
+Write the cookie when the user changes the language, for example in the value change listener of the language switcher:
+
+[source,java]
+----
+addValueChangeListener(event -> {
+    Locale locale = event.getValue();
+    UI.getCurrent().setLocale(locale);
+
+    Cookie cookie = new Cookie("app-locale", locale.toLanguageTag());
+    cookie.setMaxAge((int) Duration.ofDays(365).toSeconds());
+    cookie.setPath(VaadinService.getCurrentRequest().getContextPath() + "/");
+    VaadinService.getCurrentResponse().addCookie(cookie);
+});
+----
+
+Read the cookie in a session init listener, registered through a `VaadinServiceInitListener`. Session init listeners run after Vaadin has picked the initial locale from the browser, so the locale from the cookie takes precedence:
+
+[source,java]
+----
+@Bean
+public VaadinServiceInitListener localeFromCookie() {
+    return serviceInit -> serviceInit.getSource()
+            .addSessionInitListener(sessionInit -> {
+        Cookie[] cookies = sessionInit.getRequest().getCookies();
+        if (cookies == null) {
+            return;
+        }
+        List<Locale> providedLocales = sessionInit.getService()
+                .getInstantiator().getI18NProvider().getProvidedLocales();
+        Stream.of(cookies)
+                .filter(cookie -> "app-locale".equals(cookie.getName()))
+                .map(cookie -> Locale.forLanguageTag(cookie.getValue()))
+                .filter(providedLocales::contains) // <1>
+                .findFirst()
+                .ifPresent(sessionInit.getSession()::setLocale);
+    });
+}
+----
+<1> The cookie is client-controlled, so only locales supported by the application are accepted.
+
+This example uses a Spring `@Bean`. Without Spring, register the listener as described in <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
+
+
 == Translating Vaadin Component Strings
 
 Many Vaadin components have built-in strings for labels, error messages, and accessibility text (e.g., Upload, Login, Date Picker). These are localized using a component-specific i18n object passed to `setI18n()`.
