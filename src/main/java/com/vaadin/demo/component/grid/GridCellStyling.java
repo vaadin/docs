@@ -32,8 +32,8 @@ public class GridCellStyling extends Div {
         // Style only part of the cell content
         grid.addColumn(LitRenderer.<PersonWithRating> of("""
                 <span class="rating-badge ${item.level}">${item.level}</span>
-                """).withProperty("level", person -> person.getRating() >= 8
-                        ? "high"
+                """).withProperty("level",
+                person -> person.getRating() >= 8 ? "high"
                         : person.getRating() <= 4 ? "low" : "medium"))
                 .setHeader("Level");
         // end::snippet[]
