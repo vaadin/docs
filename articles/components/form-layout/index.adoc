@@ -34,14 +34,18 @@ include::{root}/frontend/demo/component/formlayout/form-layout-basic.ts[render,t
 ----
 --
 
-Form Layout automatically adjusts how fields are laid out in columns and rows to utilize the available space and avoid overflow. There are two discrete layouting modes that determine how this works:
+Form Layout automatically adjusts how fields are laid out in columns and rows to utilize the available space and avoid overflow. There are two discrete layouting modes that determine how this works and what APIs are available:
 
 - <<#auto-responsive-mode,Auto-responsive mode>>, based on column width
 - <<#responsive-steps-mode,Responsive steps mode>>, based on defined breakpoints
 
-.Default mode depends on feature flag
+.Auto-Responsive Mode Is Recommended
 [NOTE]
-The default mode depends on the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout`. When enabled, auto-responsive mode is the default; otherwise, responsive steps mode is the default.
+====
+Auto-responsive mode is recommended for new projects, as it provides a simpler configuration API and features not available in responsive steps mode.
+
+In Vaadin 26, auto-responsive mode will be enabled by default, and responsive steps mode will be a deprecated legacy feature. You can prepare for this change already today by enabling the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout`.
+====
 
 == Auto-Responsive Mode
 
@@ -68,15 +72,15 @@ formLayout.setAutoResponsive(true);
 ----
 --
 
-.Feature Flag Controls Default Mode
-[NOTE]
-Auto-responsive mode can be set as default by setting the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout` to true.
-
-The sections below describe features available in auto-responsive mode.
+The sections below describe features and APIs available exclusively in auto-responsive mode.
 
 === Form Rows
 
 In auto-responsive mode, all fields are laid out in a single column by default. To render multiple fields side-by-side, i.e. in multiple columns, they can be grouped into Form Rows.
+
+image:form-rows.png["A form where the first name and last name fields share one Form Row, the email address field stands alone, and the password and confirm password fields share another Form Row", width=440]
+
+In the image above, Form Rows are highlighted in blue. Single-field rows do not need Form Row wrappers.
 
 [.example,themes="lumo,aura"]
 --
@@ -104,7 +108,7 @@ Forms are easier to understand if fields are grouped into rows based on how clos
 
 === Label Position
 
-By default, labels are rendered above the field. Labels can be rendered next to the field by wrapping fields into Form Items and switching to labels-aside mode.
+By default, labels are rendered above the field. Labels can be rendered next to the field by switching the layout to labels-aside mode.
 
 [.example,themes="lumo,aura"]
 --
@@ -124,15 +128,77 @@ include::{root}/frontend/demo/component/formlayout/form-layout-labels-aside.ts[r
 ----
 --
 
-The field label must be applied on the Form Item rather than the field itself.
-
-When the Form Layout's width isn't sufficient to render labels next to fields, it automatically reverts back to rendering them above fields.
+If the Form Layout isn't wide enough to render labels next to fields, it falls back to rendering them above.
 
 .UX Tip: Labels Aside Work Best In Single Column Forms
 [NOTE]
 Forms with labels next to the fields can be confusing if fields are rendered in multiple columns. Although Form Layout supports combining side-labels with multiple columns, this combination is not recommended.
 
-The width of side labels can be configured with the `--vaadin-form-layout-label-width` CSS property. The Flow API also has a dedicated `setLabelWidth` API for this.
+The width of side labels can be configured with the `--vaadin-form-layout-label-width` CSS property. The Flow API also has a dedicated `setLabelWidth` method for this.
+
+In labels-aside mode, elements other than Vaadin input field components start in the label column by default. To align them with the fields instead, wrap them in Form Items (with or without labels):
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+var nameInput = new Input();
+formLayout.addFormItem(nameInput, "Name");
+
+var saveButton = new Button("Save");
+formLayout.addFormItem(saveButton);
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormItem>
+  <label slot="label">Name</label>
+  <input type="text" />
+</FormItem>
+
+<FormItem>
+  <Button>Save</Button>
+</FormItem>
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-item>
+  <label slot="label">Name</label>
+  <input type="text" />
+</vaadin-form-item>
+
+<vaadin-form-item>
+  <vaadin-button>Save</vaadin-button>
+</vaadin-form-item>
+----
+--
+
+Alternatively, you can write custom CSS. When labels are rendered on the side, Form Layout sets the `has-labels-aside` attribute on its host element and the `data-form-layout-has-labels-aside` attribute on children. You can target these attributes to adapt your elements to labels-aside mode, for example:
+
+[source,css]
+----
+/* To define a two-column layout with labels aside: */
+
+custom-element[data-form-layout-has-labels-aside] {
+  display: grid;
+  grid-template-columns: var(--vaadin-form-layout-label-width) 1fr;
+  column-gap: var(--vaadin-form-layout-label-spacing);
+}
+
+/* or, instead, to push the whole element to the input column: */
+
+custom-element[data-form-layout-has-labels-aside] {
+  margin-inline-start: calc(
+    var(--vaadin-form-layout-label-width) +
+    var(--vaadin-form-layout-label-spacing)
+  );
+}
+----
+
 
 === Column Width
 
@@ -234,15 +300,43 @@ formLayout.setMaxColumns(3);
 ----
 --
 
+=== Column Span
+
+Fields can span multiple columns by providing a column span number larger than 1.
+
+[.example,themes="lumo,aura"]
+--
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/formlayout/FormLayoutColspan.java[render,tags=snippet,indent=0,group=Flow]
+----
+
+[source,tsx]
+----
+include::{root}/frontend/demo/component/formlayout/react/form-layout-colspan.tsx[render,tags=snippet,indent=0,group=React]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/component/formlayout/form-layout-colspan.ts[render,tags=snippet,indent=0,group=Lit]
+----
+--
+
+Column span is capped to the number of columns currently in the layout to prevent overflow.
+
 == Responsive Steps Mode
 
 In responsive steps mode, columns are defined explicitly for a number of breakpoints, or _steps_, based on the layout's width, and fields are automatically laid out in the available columns, wrapping to the next row as needed.
 
-The default breakpoint configuration is one column below a layout width of `40em`, and two columns above that.
-
-.Feature Flag Controls Default Mode
+.Responsive Steps Mode Not Recommended
 [NOTE]
-The <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout` makes auto-responsive mode the default. With the flag enabled, individual Form Layouts can be switched to responsive steps mode by defining the responsive steps manually.
+====
+Auto-responsive mode is recommended for new projects, as it provides a simpler configuration API and features not available in responsive steps mode.
+
+In Vaadin 26, auto-responsive mode will be enabled by default, and responsive steps mode will be a deprecated legacy feature. You can prepare for this change already today by enabling the <<{articles}/flow/configuration/feature-flags#,feature flag>> `defaultAutoResponsiveFormLayout`.
+====
+
+The default breakpoint configuration is one column below a layout width of `40em`, and two columns above that.
 
 === Setting the Breakpoints
 
@@ -380,7 +474,7 @@ include::{root}/frontend/demo/component/formlayout/form-layout-colspan.ts[render
 
 Column span is capped to the number of columns currently in the layout to prevent overflow.
 
-== AI Form Filler
+== AI-Powered Form Filler
 
 Use the commercial [classname]`FormAIController` to let users fill a Form Layout from natural-language input or attached files. See <<ai-powered#, AI Form Filler [badge-flow]#Flow#>>.
 
@@ -389,9 +483,67 @@ Use the commercial [classname]`FormAIController` to let users fill a Form Layout
 
 === Form Item Usage
 
-Form Item is only intended for wrapping individual input field components or native html `<input>` elements. It automatically applies an https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-labelledby[`aria-labelledby`] attribute to the element for screen reader support, which only works correctly with input fields and Web Components with an `ariaTarget` property that returns an appropriate element to which the `aria-labelledby` attribute can be applied.
+Form Item is a wrapper that gives an element a field-like layout with a label. Use it to provide a label for native HTML `<input>` elements or custom web components that have no label of their own:
 
-To combine multiple inputs in the same form field, or to provide a label to other elements that lack labels, use <<../custom-field#,Custom Field>> instead. A Custom Field can be further wrapped into a Form Item for side-label support.
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+var nameInput = new Input();
+formLayout.addFormItem(nameInput, "Name");
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormItem>
+  <label slot="label">Name</label>
+  <input type="text" />
+</FormItem>
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-item>
+  <label slot="label">Name</label>
+  <input type="text" />
+</vaadin-form-item>
+----
+--
+
+Form Item connects the label to the wrapped element with the https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-labelledby[`aria-labelledby`] attribute to make it available to screen readers. HTML input elements support this attribute out of the box. Custom web components, on the other hand, need to define an `ariaTarget` property that returns an appropriate element inside the component that should receive the `aria-labelledby` attribute.
+
+Form Item only adds a label and wraps a single element. For a full-featured field with error messages and helper text, or to combine multiple inputs in one form field, use <<../custom-field#,Custom Field>> instead.
+
+In <<#label-position,labels-aside mode>>, Form Item can also be used without a label to align non-field content, such as buttons, with the input column:
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Flow"></source-info>
+var saveButton = new Button("Save");
+formLayout.addFormItem(saveButton);
+----
+
+[source,tsx]
+----
+<source-info group="React"></source-info>
+<FormItem>
+  <Button>Save</Button>
+</FormItem>
+----
+
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-form-item>
+  <vaadin-button>Save</vaadin-button>
+</vaadin-form-item>
+----
+--
 
 === Scrolling
 
