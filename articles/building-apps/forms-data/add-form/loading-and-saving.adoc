@@ -403,3 +403,52 @@ private void saveProposal() {
 ----
 <1> Assumes there is a `withData()` method that returns a new wrapper record with the same ID as the original one, but with the specified wrapped FDO.
 
+
+
+== Warning About Unsaved Changes
+
+If the user navigates to another view while the form has unsaved changes, those changes are lost. To prevent this, ask the user for confirmation before leaving the view.
+
+In *buffered mode*, `Binder.hasChanges()` returns `true` when the user has edited a field since the form was last loaded with `readBean()` or saved with `writeBean()` or `writeBeanIfValid()`. Expose it from the form:
+
+.ProposalForm.java
+[source,java]
+----
+public boolean hasChanges() {
+    return binder.hasChanges();
+}
+----
+
+Then implement `BeforeLeaveObserver` in the view, and postpone the navigation while the user decides:
+
+.ProposalView.java
+[source,java]
+----
+@Route("proposals")
+public class ProposalView extends Main implements BeforeLeaveObserver {
+    private final ProposalForm form;
+
+    // (Constructor omitted for brevity.)
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        if (form.hasChanges()) {
+            var action = event.postpone(); // <1>
+            var dialog = new ConfirmDialog();
+            dialog.setHeader("Unsaved Changes");
+            dialog.setText("You have unsaved changes. Do you want to discard them?");
+            dialog.setConfirmText("Discard");
+            dialog.setConfirmButtonTheme("error primary");
+            dialog.addConfirmListener(e -> action.proceed()); // <2>
+            dialog.setCancelable(true);
+            dialog.addCancelListener(e -> action.cancel()); // <3>
+            dialog.open();
+        }
+    }
+}
+----
+<1> Stops the navigation until the user makes a choice.
+<2> Continues to the target view, discarding the changes.
+<3> Cancels the navigation, keeping the user in the form.
+
+This works for navigation within the application, such as clicking a link or a menu item. It doesn't cover closing the browser tab, reloading the page, or navigating to another site. See <<{articles}/flow/routing/lifecycle#postpone,Navigation Lifecycle>> for more details on postponing navigation.
