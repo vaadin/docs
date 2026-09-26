@@ -129,6 +129,18 @@ grid.addColumn(new NumberRenderer<>(Item::getPrice,
 ).setHeader("Price");
 ----
 
+A [classname]`NumberFormat` created without a locale uses the default locale of the server. To format numbers according to the user's locale, create the format with the locale of the UI:
+
+[source,java]
+----
+Locale locale = UI.getCurrentOrThrow().getLocale();
+grid.addColumn(new NumberRenderer<>(Item::getPrice,
+        NumberFormat.getCurrencyInstance(locale))
+).setHeader("Price");
+----
+
+See <<{articles}/flow/i18n#locale-selection,Language Selection>> for how the UI locale is determined.
+
 It's possible to configure the [classname]`NumberRenderer` with a [classname]`String` format, and an optional null representation. For example, to use a [classname]`String` format to render a price do something like this:
 
 [source,java]
@@ -277,6 +289,19 @@ grid.addColumn(new ComponentRenderer<>(person -> {
 })).setHeader("Actions");
 ----
 
+To show an image that's stored as a byte array -- for example, a profile picture loaded from a database -- use an [classname]`Image` component. The image data is served to the browser through a download handler instead of being embedded in the grid data:
+
+[source,java]
+----
+grid.addComponentColumn(person -> {
+    Image image = new Image(person.getPicture(), "Profile picture");
+    image.setHeight("48px");
+    return image;
+}).setHeader("Picture");
+----
+
+When the image data of an item changes, call [methodname]`refreshItem()` on the grid's data provider to render the new image. If the image is available through a URL, a Lit renderer is a more lightweight alternative. See <<rendering-links-and-images-in-lit-renderers,Rendering Links & Images in Lit Renderers>> for an example.
+
 Incidentally, [methodname]`addComponentColumn()` is a shorthand for [methodname]`addColumn()` with a [classname]`ComponentRenderer`.
 
 Editing grid items requires refreshing the grid's [classname]`DataProvider`. See <<{articles}/flow/binding-data/data-provider#,Data Providers>> for more details.
@@ -419,6 +444,40 @@ grid.addColumn(LitRenderer.<Person> of(
 ----
 
 The functions defined by the [methodname]`withFunction()` method can be called with any number of additional parameters. The additional argument of type [classname]`String` (the updated profession) is obtained from the second handler parameter with [methodname]`args.getString(0)`, where the number is the index of the argument in the [classname]`JsonArray`.
+
+
+[[rendering-links-and-images-in-lit-renderers]]
+==== Rendering Links & Images in Lit Renderers
+
+Lit renderers are well suited for rendering links and images, since they don't create a server-side component for each cell. To link to another view in the application, generate the URL of the route on the server side, and bind it to the `href` attribute of an `<a>` element. The router handles clicks on links to application routes without a full page reload.
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person> of(
+    """
+        <a href="${item.url}">${item.name}</a>
+        """)
+    .withProperty("name", Person::getName)
+    .withProperty("url", person -> RouteConfiguration.forSessionScope()
+            .getUrl(PersonView.class, person.getId())))
+    .setHeader("Name");
+----
+
+If clicking the link should run server-side code instead of navigating to a URL, render a button instead -- for example, `<vaadin-button theme="tertiary">` -- and handle the click with a function as described in <<handling-events-in-lit-renderers,Handling Events in Lit Renderers>>.
+
+Images are rendered similarly, by binding the image URL to the `src` attribute of an `<img>` element. Remember to provide alternative text for the image:
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person> of(
+    """
+        <img src="${item.pictureUrl}" alt="${item.name}"
+             style="height: 48px; width: 48px;">
+        """)
+    .withProperty("pictureUrl", Person::getPictureUrl)
+    .withProperty("name", Person::getName))
+    .setHeader("Picture");
+----
 
 
 ==== Accessing Model Properties
