@@ -20,9 +20,10 @@ public class GridSelectOnFocus extends Div {
         grid.setItems(DataService.getPeople());
 
         Span selectedPerson = new Span("Selected: none");
-        grid.asSingleSelect().addValueChangeListener(event -> selectedPerson
-                .setText("Selected: " + (event.getValue() == null ? "none"
-                        : event.getValue().getFullName())));
+        grid.asSingleSelect()
+                .addValueChangeListener(event -> selectedPerson.setText(
+                        "Selected: " + (event.getValue() == null ? "none"
+                                : event.getValue().getFullName())));
 
         // tag::snippet[]
         GridSingleSelectionModel<Person> selectionModel = //
@@ -32,8 +33,8 @@ public class GridSelectOnFocus extends Div {
         selectionModel.setDeselectAllowed(false);
 
         // Select the row that contains the focused body cell
-        grid.addCellFocusListener(event -> event.getItem()
-                .ifPresent(selectionModel::select));
+        grid.addCellFocusListener(
+                event -> event.getItem().ifPresent(selectionModel::select));
         // end::snippet[]
 
         add(grid, selectedPerson);

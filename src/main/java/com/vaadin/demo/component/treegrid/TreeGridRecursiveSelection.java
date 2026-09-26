@@ -51,8 +51,8 @@ public class TreeGridRecursiveSelection extends Div {
         Set<Person> result = new HashSet<>();
         for (Person item : items) {
             result.add(item);
-            result.addAll(withDescendants(
-                    new HashSet<>(treeData.getChildren(item))));
+            result.addAll(
+                    withDescendants(new HashSet<>(treeData.getChildren(item))));
         }
         return result;
     }
