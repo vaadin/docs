@@ -269,7 +269,7 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
-To reveal all matching items, expand the items that remain after filtering. The data provider returns only the matching items and their ancestors, so the following example traverses what it returns, collects every item that still has children, and expands them in one call:
+To reveal all matching items, expand the filtered tree after setting the filter. The [methodname]`expandRecursively` method takes the filter into account, but the root items passed to it must also come from the data provider, so that filtered-out root items are excluded:
 
 [source,java]
 ----
@@ -280,22 +280,11 @@ searchInput.addValueChangeListener(event -> {
             folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
 
     if (!searchTerm.isEmpty()) {
-        List<Folder> itemsToExpand = new ArrayList<>();
-        collectFilteredItemsWithChildren(null, itemsToExpand);
-        treeGrid.expand(itemsToExpand);
+        List<Folder> rootItems = treeDataProvider
+                .fetchChildren(new HierarchicalQuery<>(null, null)).toList();
+        treeGrid.expandRecursively(rootItems, Integer.MAX_VALUE);
     }
 });
-
-// Passing null as the parent starts from the root items
-private void collectFilteredItemsWithChildren(Folder parent,
-        List<Folder> result) {
-    List<Folder> children = treeDataProvider
-            .fetchChildren(new HierarchicalQuery<>(null, parent)).toList();
-    if (parent != null && !children.isEmpty()) {
-        result.add(parent);
-    }
-    children.forEach(child -> collectFilteredItemsWithChildren(child, result));
-}
 ----
 
 Items expanded this way stay expanded when the filter changes or is cleared. To show only the paths to the current matches, collapse the previously expanded items before expanding the new ones.
