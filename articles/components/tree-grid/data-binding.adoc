@@ -269,7 +269,7 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
-To reveal all matching items, expand the ancestors of each match after setting the filter. Calling [methodname]`expandRecursively` on the root items isn't suitable for this, because it expands every item in the tree, not only the paths leading to the matches. Instead, walk the [classname]`TreeData` to collect the ancestors of the matching items and expand only those:
+To reveal all matching items, expand the ancestors of each match after setting the filter. Calling [methodname]`expandRecursively` on the root items also expands items that aren't on a path to a match. For example, it expands root items that have children but no matching descendants, and matching items that have children of their own, and these items stay expanded after the filter is cleared. To expand only the paths leading to the matches, walk the [classname]`TreeData` and collect the ancestors of the matching items:
 
 [source,java]
 ----
@@ -287,19 +287,21 @@ searchInput.addValueChangeListener(event -> {
     }
 });
 
-private static void collectAncestorsOfMatches(TreeData<Folder> treeData,
+// Returns whether the subtree below the given parent contains a match.
+// Passing null as the parent starts from the root items.
+private static boolean collectAncestorsOfMatches(TreeData<Folder> treeData,
         Folder parent, SerializablePredicate<Folder> filter,
         Set<Folder> ancestors) {
-    // getChildren(null) returns the root items
+    boolean found = false;
     for (Folder child : treeData.getChildren(parent)) {
-        if (filter.test(child)) {
-            for (Folder ancestor = treeData.getParent(child); ancestor != null;
-                    ancestor = treeData.getParent(ancestor)) {
-                ancestors.add(ancestor);
-            }
-        }
-        collectAncestorsOfMatches(treeData, child, filter, ancestors);
+        boolean childSubtreeMatches = collectAncestorsOfMatches(treeData,
+                child, filter, ancestors);
+        found |= childSubtreeMatches || filter.test(child);
     }
+    if (found && parent != null) {
+        ancestors.add(parent);
+    }
+    return found;
 }
 ----
 
