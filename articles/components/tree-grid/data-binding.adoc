@@ -269,39 +269,29 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
-To reveal all matching items, expand their ancestors after setting the filter. The following example walks the [classname]`TreeData`, collects the ancestors of the matching items, and expands them:
+To reveal all matching items, expand the items that remain after filtering. The data provider returns only the matching items and their ancestors, so the following example traverses what it returns and expands every item that still has children:
 
 [source,java]
 ----
 searchInput.addValueChangeListener(event -> {
-    String searchTerm = event.getValue().toLowerCase();
-    SerializablePredicate<Folder> filter = folder -> folder.name()
-            .toLowerCase().contains(searchTerm);
+    String searchTerm = event.getValue();
 
-    treeDataProvider.setFilter(filter);
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
 
     if (!searchTerm.isEmpty()) {
-        Set<Folder> ancestors = new HashSet<>();
-        collectAncestorsOfMatches(treeData, null, filter, ancestors);
-        treeGrid.expand(ancestors);
+        expandFilteredItems(null);
     }
 });
 
-// Returns whether the subtree below the given parent contains a match.
-// Passing null as the parent starts from the root items.
-private static boolean collectAncestorsOfMatches(TreeData<Folder> treeData,
-        Folder parent, SerializablePredicate<Folder> filter,
-        Set<Folder> ancestors) {
-    boolean found = false;
-    for (Folder child : treeData.getChildren(parent)) {
-        boolean childSubtreeMatches = collectAncestorsOfMatches(treeData,
-                child, filter, ancestors);
-        found |= childSubtreeMatches || filter.test(child);
+// Passing null as the parent starts from the root items
+private void expandFilteredItems(Folder parent) {
+    List<Folder> children = treeDataProvider
+            .fetchChildren(new HierarchicalQuery<>(null, parent)).toList();
+    if (parent != null && !children.isEmpty()) {
+        treeGrid.expand(parent);
     }
-    if (found && parent != null) {
-        ancestors.add(parent);
-    }
-    return found;
+    children.forEach(this::expandFilteredItems);
 }
 ----
 
