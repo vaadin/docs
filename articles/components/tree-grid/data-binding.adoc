@@ -269,7 +269,7 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
-To reveal all matching items, expand the items that remain after filtering. The data provider returns only the matching items and their ancestors, so the following example traverses what it returns and expands every item that still has children:
+To reveal all matching items, expand the items that remain after filtering. The data provider returns only the matching items and their ancestors, so the following example traverses what it returns, collects every item that still has children, and expands them in one call:
 
 [source,java]
 ----
@@ -280,18 +280,21 @@ searchInput.addValueChangeListener(event -> {
             folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
 
     if (!searchTerm.isEmpty()) {
-        expandFilteredItems(null);
+        List<Folder> itemsToExpand = new ArrayList<>();
+        collectFilteredItemsWithChildren(null, itemsToExpand);
+        treeGrid.expand(itemsToExpand);
     }
 });
 
 // Passing null as the parent starts from the root items
-private void expandFilteredItems(Folder parent) {
+private void collectFilteredItemsWithChildren(Folder parent,
+        List<Folder> result) {
     List<Folder> children = treeDataProvider
             .fetchChildren(new HierarchicalQuery<>(null, parent)).toList();
     if (parent != null && !children.isEmpty()) {
-        treeGrid.expand(parent);
+        result.add(parent);
     }
-    children.forEach(this::expandFilteredItems);
+    children.forEach(child -> collectFilteredItemsWithChildren(child, result));
 }
 ----
 
