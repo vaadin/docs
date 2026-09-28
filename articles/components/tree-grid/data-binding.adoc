@@ -269,6 +269,29 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
+To reveal all matching items, expand the filtered tree after setting the filter. You can use the [methodname]`expandRecursively` method for this: it already takes the filter into account, so you only need to pass it the filtered root items from the data provider:
+
+[source,java]
+----
+searchInput.addValueChangeListener(event -> {
+    String searchTerm = event.getValue();
+
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+
+    if (!searchTerm.isEmpty()) {
+        // HierarchicalQuery takes a filter and a parent. The filter is null
+        // because the one set with setFilter is applied automatically, and
+        // the parent is null to fetch the root items.
+        List<Folder> rootItems = treeDataProvider
+                .fetchChildren(new HierarchicalQuery<>(null, null)).toList();
+        treeGrid.expandRecursively(rootItems, Integer.MAX_VALUE);
+    }
+});
+----
+
+Items expanded this way stay expanded when the filter changes or is cleared. To show only the paths to the current matches, collapse the previously expanded items before expanding the new ones.
+
 == Custom Data Providers
 
 Conceptually, any hierarchical data provider, including [classname]`TreeDataProvider`, is a class that implements the [classname]`HierarchicalDataProvider` interface. It encapsulates the logic needed to fetch hierarchical data from a specific data source, with support for pagination, sorting, and filtering.
