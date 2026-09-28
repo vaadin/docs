@@ -269,23 +269,41 @@ The `setFilter` method re-renders the Tree Grid automatically, so calling `refre
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
 
-To reveal all matching items, expand the filtered tree after setting the filter. The [methodname]`expandRecursively` method fetches the items through the data provider, so it only visits the matching items and their ancestors, and expands the paths leading to the matches:
+To reveal all matching items, expand the ancestors of each match after setting the filter. Calling [methodname]`expandRecursively` on the root items isn't suitable for this, because it expands every item in the tree, not only the paths leading to the matches. Instead, walk the [classname]`TreeData` to collect the ancestors of the matching items and expand only those:
 
 [source,java]
 ----
 searchInput.addValueChangeListener(event -> {
-    String searchTerm = event.getValue();
+    String searchTerm = event.getValue().toLowerCase();
+    SerializablePredicate<Folder> filter = folder -> folder.name()
+            .toLowerCase().contains(searchTerm);
 
-    treeDataProvider.setFilter((folder) ->
-            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+    treeDataProvider.setFilter(filter);
 
     if (!searchTerm.isEmpty()) {
-        treeGrid.expandRecursively(treeData.getRootItems(), Integer.MAX_VALUE);
+        Set<Folder> ancestors = new HashSet<>();
+        collectAncestorsOfMatches(treeData, null, filter, ancestors);
+        treeGrid.expand(ancestors);
     }
 });
+
+private static void collectAncestorsOfMatches(TreeData<Folder> treeData,
+        Folder parent, SerializablePredicate<Folder> filter,
+        Set<Folder> ancestors) {
+    // getChildren(null) returns the root items
+    for (Folder child : treeData.getChildren(parent)) {
+        if (filter.test(child)) {
+            for (Folder ancestor = treeData.getParent(child); ancestor != null;
+                    ancestor = treeData.getParent(ancestor)) {
+                ancestors.add(ancestor);
+            }
+        }
+        collectAncestorsOfMatches(treeData, child, filter, ancestors);
+    }
+}
 ----
 
-Expanding recursively traverses the whole filtered tree, so consider limiting the depth for large hierarchies.
+Items expanded this way stay expanded when the filter changes or is cleared. To show only the paths to the current matches, collapse the previously expanded items before expanding the new ones.
 
 == Custom Data Providers
 
