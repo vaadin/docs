@@ -2,63 +2,59 @@ package com.vaadin.demo.component.grid;
 
 import java.util.List;
 
+import com.vaadin.demo.DemoExporter;
 import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.DetachEvent;
+import com.vaadin.flow.component.Size;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.page.Page;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.data.renderer.LitRenderer;
-import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.signals.Signal;
 
 public class GridResponsiveColumns extends Div {
 
     // tag::snippet[]
-    private static final int BREAKPOINT_PX = 800;
-
-    private final Grid<Person> grid = new Grid<>(Person.class, false);
-    private final Grid.Column<Person> combinedColumn;
-    private final List<Grid.Column<Person>> wideColumns;
-    private Registration resizeListener;
+    private static final int BREAKPOINT_PX = 500;
 
     public GridResponsiveColumns() {
-        // A single column that combines the content for narrow screens
+        Grid<Person> grid = new Grid<>(DataService.getPeople());
+
+        // A single column that combines the content when the grid is narrow
         String template = "<b>${item.name}</b><br><small>${item.email}</small>";
-        combinedColumn = grid
+        Grid.Column<Person> combinedColumn = grid
                 .addColumn(LitRenderer.<Person> of(template)
                         .withProperty("name", Person::getFullName)
                         .withProperty("email", Person::getEmail))
                 .setHeader("Employee");
-        // Separate columns for wide screens
-        wideColumns = List.of(
+
+        // Separate columns for when the grid is wide
+        List<Grid.Column<Person>> wideColumns = List.of(
                 grid.addColumn(Person::getFullName).setHeader("Name"),
                 grid.addColumn(Person::getProfession).setHeader("Profession"),
                 grid.addColumn(Person::getEmail).setHeader("Email"));
-        grid.setItems(DataService.getPeople()); // hidden-source-line
-        add(grid);
-    }
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
-        Page page = attachEvent.getUI().getPage();
-        updateColumns(page.getExtendedClientDetails().getWindowInnerWidth());
-        resizeListener = page.addBrowserWindowResizeListener(
-                event -> updateColumns(event.getWidth()));
-    }
+        // The effect runs when the grid is attached and again whenever the
+        // grid is resized
+        Signal<Size> size = grid.getElement().sizeSignal();
+        Signal.effect(grid, () -> {
+            int width = size.get().width();
+            // The width is 0 until the browser has reported the size. Treat
+            // it as wide so that the grid first renders with all columns.
+            boolean wide = width == 0 || width >= BREAKPOINT_PX;
+            combinedColumn.setVisible(!wide);
+            wideColumns.forEach(column -> column.setVisible(wide));
+        });
+        // end::snippet[]
 
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        // Remove the listener to avoid a memory leak
-        resizeListener.remove();
-        super.onDetach(detachEvent);
-    }
-
-    private void updateColumns(int windowWidth) {
-        boolean wide = windowWidth >= BREAKPOINT_PX;
-        combinedColumn.setVisible(!wide);
-        wideColumns.forEach(column -> column.setVisible(wide));
+        grid.setWidthFull();
+        SplitLayout splitLayout = new SplitLayout(grid, new Div());
+        add(splitLayout);
+        // tag::snippet[]
     }
     // end::snippet[]
+
+    public static class Exporter // hidden-source-line
+            extends DemoExporter<GridResponsiveColumns> { // hidden-source-line
+    } // hidden-source-line
 }
