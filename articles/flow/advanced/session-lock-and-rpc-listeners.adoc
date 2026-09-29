@@ -1,8 +1,8 @@
 ---
 title: Service Event Bus
 page-title: How to observe session locks, RPC invocations pass:[&] data queries in Vaadin
-description: Observing session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
-meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
+description: Observing session locks, client-to-server RPC invocations, data provider queries, and navigations through the VaadinService event bus.
+meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, data provider queries, and navigations, and to fire your own service-wide events.
 order: 850
 ---
 
@@ -10,7 +10,7 @@ order: 850
 = [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
 Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
-The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
+The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, the data provider queries those invocations trigger, and the server-side navigations that a router link click, a `UI.navigate()` call, or a page load can start.
 Listening to them is useful for performance monitoring, distributed tracing, and diagnosing lock contention -- without modifying application logic.
 
 The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
@@ -188,6 +188,83 @@ Queries made for a component that isn't attached to a live UI aren't reported.
 
 [NOTE]
 Data fetches triggered by push updates run on the executor given to [methodname]`DataCommunicator.enablePushUpdates()`, so these events aren't always fired on a request thread.
+
+
+== Navigation Events
+
+Each server-side navigation the router handles fires a matching pair of events, useful for timing navigations and tagging them with their outcome -- something that pairing <<../routing/lifecycle#BeforeEnterEvent,`BeforeEnterEvent`>> and <<../routing/lifecycle#AfterNavigationEvent,`AfterNavigationEvent`>> listeners gets wrong for forwards, reroutes, redirects, postponed navigations, and error views.
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`NavigationStartedEvent`
+|Before the router starts handling a navigation, before any `BeforeLeaveEvent` or `BeforeEnterEvent` listener runs.
+
+|[classname]`NavigationEndedEvent`
+|Once the navigation has finished, whatever the outcome.
+|===
+
+Only the *outermost* navigation is reported.
+A <<../routing/lifecycle#Rerouting,reroute>>, a <<../routing/lifecycle#Forwarding,forward>>, the redirect that adds or removes a trailing slash, and the rendering of an error view are part of the navigation that caused them and fire no events of their own; their effect shows up in the ended event's outcome instead.
+Two cases fire no events at all, since they continue a navigation that has already been reported: resuming a <<../routing/lifecycle#postpone,postponed>> navigation, and showing a `PreserveOnRefresh` view once the browser has sent its window name.
+
+Both events carry the details of the navigation that was requested:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getUI()`
+|The [classname]`UI` that navigates.
+Never `null`.
+
+|[methodname]`getLocation()`
+|The requested location, before any forward or reroute.
+Never `null`.
+
+|[methodname]`getTrigger()`
+|The action that triggered the navigation, such as a page load, a router link click, or a call to [methodname]`UI.navigate()`.
+Never `null`.
+|===
+
+[classname]`NavigationEndedEvent` additionally exposes how the navigation ended:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getOutcome()`
+|One of the records of the sealed `NavigationEndedEvent.Outcome` interface: `Completed` (the view that's shown after all forwards and reroutes), `Postponed` (a leave listener postponed the navigation), `Failed` (an error view was shown, or the navigation threw), or `NotShown` (no server view was shown, for example for a client-side route the browser renders or an external forward).
+
+|[methodname]`getStatusCode()`
+|The HTTP status code of the navigation, such as 200 or 404, or `-1` if the navigation threw.
+|===
+
+For one navigation, the started event and the ended event are fired on the same thread, in that order, even when the navigation throws, so timing state can again be kept in a [classname]`ThreadLocal`.
+The ended event is fired in reverse registration order, so listeners nest around the started one.
+
+*Example*: Timing navigations and tagging each with the view it showed.
+
+[source,java]
+----
+ThreadLocal<Long> start = new ThreadLocal<>();
+VaadinServiceEventBus bus = service.getEventBus();
+bus.addListener(NavigationStartedEvent.class,
+        event -> start.set(System.nanoTime()));
+bus.addListener(NavigationEndedEvent.class, event -> {
+    long durationMs = (System.nanoTime() - start.get()) / 1_000_000;
+    start.remove();
+    String result = switch (event.getOutcome()) {
+        case NavigationEndedEvent.Completed completed ->
+                completed.navigationTarget().getSimpleName();
+        case NavigationEndedEvent.Postponed postponed -> "postponed";
+        case NavigationEndedEvent.Failed failed -> "failed";
+        case NavigationEndedEvent.NotShown notShown -> "not shown";
+    };
+    // Record durationMs and result.
+});
+----
 
 
 == Other Framework Events
