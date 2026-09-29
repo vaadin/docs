@@ -17,7 +17,7 @@ include::{articles}/_commercial-banner.adoc[opts=optional]
 
 Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
 
-The LLM can read the chart's current configuration and queries through a state tool. The configuration is returned without series data, but its x-axis categories, series names, and the nodes of an organization chart are derived from the query results, so those values are visible to the LLM. See <<controllers#database-provider,Database Provider>>.
+The LLM can read the chart's current state through a state tool: the SQL queries and the configuration it has set itself. Nothing in the state comes from the query results: the series, x-axis categories, and other values the chart builds from the rows stay in the application. See <<controllers#database-provider,Database Provider>>.
 
 == Basic Usage
 
@@ -64,7 +64,13 @@ The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#:
 
 == Persisting Chart State
 
-[classname]`ChartState` captures both the SQL queries and the Highcharts configuration. Register a state change listener to persist the state automatically after each successful AI request:
+[classname]`ChartState` captures what's needed to show the same chart again, for example in a new session. It holds the following:
+
+* [methodname]`queries()` -- the SQL queries that populate the chart's series.
+* [methodname]`configuration()` -- the Highcharts configuration the chart was rendered with. It can hold values from the query results, such as the x-axis categories and series names.
+* [methodname]`llmConfiguration()` -- the part of the configuration the LLM has set. After a restore, it's the configuration the LLM sees.
+
+Capture the state with [methodname]`getState()`, which returns `null` while the chart has no queries, and apply it with [methodname]`restoreState()`. Register a state change listener to persist the state automatically after each successful AI request:
 
 [source,java]
 ----
@@ -80,7 +86,15 @@ if (saved != null) {
 
 `sessionStore` here is a placeholder for your own storage -- a database table, a file, a [classname]`VaadinSession` attribute, or whatever fits your application.
 
-Listeners do not fire when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
+[methodname]`restoreState()` applies the configuration and runs the queries again, so the restored chart shows the current data rather than the data from when the state was saved. Listeners do not fire when [methodname]`restoreState()` is called. The current state is also automatically included in session serialization, so no extra save/restore code is needed for in-session persistence.
+
+=== Storing the State
+
+[classname]`ChartState` is serializable, so you can store it as a whole with Java serialization. If you store its parts instead, store every part and create the state from them again with the three-argument constructor, `new ChartState(queries, configuration, llmConfiguration)`.
+
+After a restore, the state tool returns the LLM configuration to the LLM as is, so it must not hold values from the query results. Pass the one [methodname]`llmConfiguration()` returned, not a copy of the chart configuration.
+
+If you have only the queries and the configuration, for example from storage set up before [classname]`ChartState` had the LLM configuration, create the state with the two-argument constructor, `new ChartState(queries, configuration)`. The LLM configuration is then derived from the configuration without its series and x-axis categories. The LLM sees the rest of the configuration, including anything the application set on the chart itself. A [classname]`ChartState` stored with Java serialization before the LLM configuration was added gets its LLM configuration derived the same way when it's deserialized.
 
 
 == Reconnecting after Deserialization
