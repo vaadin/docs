@@ -1,8 +1,8 @@
 ---
 title: Service Event Bus
 page-title: How to observe session locks, RPC invocations pass:[&] data queries in Vaadin
-description: Observing session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
-meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
+description: Observing session locks, RPC invocations, message synchronization, and data queries through the VaadinService event bus.
+meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, message synchronization, and data queries, and to fire your own events.
 order: 850
 ---
 
@@ -10,7 +10,7 @@ order: 850
 = [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
 Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
-The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
+The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, the client-server message synchronization those invocations depend on, and the data provider queries the invocations trigger.
 Listening to them is useful for performance monitoring, distributed tracing, and diagnosing lock contention -- without modifying application logic.
 
 The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
@@ -128,6 +128,30 @@ The ended event is always fired after the started one, regardless of outcome, so
 Within one request the events don't nest: those of one invocation are all fired before those of the next.
 
 Being reported doesn't mean the invocation had an effect: an RPC targeting a node that's detached, disabled, or inert is reported and only then discarded unhandled.
+
+
+== Message Synchronization Events
+
+Every client-to-server message carries an incrementing id, which the server uses to detect a message the client already sent once before, and a request to resynchronize a [classname]`UI` whose client-side state has fallen behind. Three events report these cases from [classname]`ServerRpcHandler`, on the request thread while the session lock is held:
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`ClientMessageResentEvent`
+|When the client resends the message it didn't get a response to, before the server responds with the response it sent the first time instead of processing the message again.
+
+|[classname]`MessageIdSyncErrorEvent`
+|When the client sends a message with an id the server didn't expect, before the message is discarded and the client is shown the session synchronization error.
+This typically happens when the server that handled the [classname]`UI` stopped before its state was stored, and the client continues on another server with an older state.
+
+|[classname]`UIResynchronizationEvent`
+|When the client asks the server to resynchronize a [classname]`UI`, before its full state is sent to the client.
+This typically happens because of a bad network connection with packet loss, or because some part of the network infrastructure closed a push connection.
+|===
+
+All three expose the [classname]`UI` involved through [methodname]`getUI()`.
+[classname]`MessageIdSyncErrorEvent` additionally exposes [methodname]`getExpectedId()` and [methodname]`getReceivedId()`, the message id the server expected and the one the client actually sent.
 
 
 == Data Provider Query Events
