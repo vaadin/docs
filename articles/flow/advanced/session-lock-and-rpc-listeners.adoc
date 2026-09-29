@@ -99,6 +99,8 @@ The framework still routes it to the session error handler independently of this
 
 |[classname]`RpcInvocationEndedEvent`
 |Once an invocation has been handled, whether it completed normally or threw.
+[methodname]`getDuration()` gives how long it took, measured from just before the started event was fired.
+[methodname]`getError()` gives the throwable it raised -- the same one the failed event carried -- or an empty optional if it completed normally.
 |===
 
 All three expose the same details about the invocation:
@@ -121,10 +123,16 @@ Never `null`.
 |[methodname]`getName()`
 |A human-readable identifier -- the DOM event name, the invoked method name, the navigation location, and so on -- or `null` if none applies.
 It never carries the data of the invocation, only its identity.
+
+|[methodname]`getComponent()`
+|An [classname]`Optional` with the component the invocation targets, looked up in the state tree each time the method is called.
+Empty if the invocation doesn't target a node, the node is no longer in the UI, or the node isn't the element of a component.
+Call it while the invocation is being handled -- if the invocation detaches the component it targets, the component is found for the started event but no longer for the ended one.
 |===
 
 For one invocation, the started event, the optional failed event, and the ended event are fired on the same thread, in that order.
-The ended event is always fired after the started one, regardless of outcome, so timing state can again be kept in a [classname]`ThreadLocal`.
+The ended event is always fired after the started one, regardless of outcome, so a listener may keep state in a [classname]`ThreadLocal`.
+The ended event carries what such state is most often kept for -- the duration and the error of the invocation -- so a listener that only needs those can listen for the ended event alone.
 Within one request the events don't nest: those of one invocation are all fired before those of the next.
 
 Being reported doesn't mean the invocation had an effect: an RPC targeting a node that's detached, disabled, or inert is reported and only then discarded unhandled.
@@ -148,6 +156,7 @@ The throwable is available from [methodname]`getError()`.
 |[classname]`DataFetchEndedEvent`
 |Once the items have been loaded and consumed, or the fetch threw.
 [methodname]`getRowsReturned()` gives the number of items the data provider actually returned -- possibly fewer than requested -- or `-1` if it threw.
+[methodname]`getDuration()` gives how long the fetch took, measured from just before the started event was fired.
 
 |[classname]`DataCountStartedEvent`
 |Before a count query is issued.
@@ -158,6 +167,7 @@ The throwable is available from [methodname]`getError()`.
 |[classname]`DataCountEndedEvent`
 |Once the count query has returned or thrown.
 [methodname]`getCount()` gives the reported number of items, or `-1` if it threw.
+[methodname]`getDuration()` gives how long the query took, measured from just before the started event was fired.
 |===
 
 The events describe the query and where it came from:
