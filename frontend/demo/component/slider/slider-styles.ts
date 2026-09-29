@@ -16,7 +16,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-slider
-        theme="helper-above-field"
+        theme="helper-above-field label-aside"
         label="Label"
         helper-text="Helper text"
       ></vaadin-slider>
