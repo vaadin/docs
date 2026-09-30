@@ -1,0 +1,324 @@
+---
+title: Set Up Browserless Tests with Java EE/CDI
+page-title: Set Up Browserless Tests with Java EE/CDI | Vaadin
+description: Use Weld and Vaadin CDI to inject dependencies into browserless view tests, select test alternatives, and manage the test lifecycle.
+meta-description: Use Weld and Vaadin CDI to inject dependencies into browserless view tests, select test alternatives, and manage the test lifecycle.
+order: 40
+---
+
+
+= Set Up Browserless Tests with Java EE/CDI
+
+Use this guide for a Java EE / Jakarta EE application that uses the Vaadin CDI add-on.
+The examples use `jakarta.*` APIs and JUnit Jupiter.
+They run Weld in the test JVM and use `CdiVaadinServlet` to create views through CDI.
+
+The test base class in this guide, `AbstractCdiViewTest`, is application code that you add under `src/test/java`.
+It extends `BrowserlessTest`.
+To use an example from the other guides, extend this base class instead, as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
+
+== Add Dependencies
+
+Your application must already have <<{articles}/flow/integrations/cdi#add-dependencies,Vaadin CDI and the provided Jakarta EE APIs>> configured.
+Keep those dependencies and the Vaadin BOM.
+Add the following test dependencies to the module containing your views:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.jboss.weld</groupId>
+    <artifactId>weld-junit5</artifactId>
+    <version>5.0.3.Final</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+If your parent POM does not already manage JUnit, add this import to its existing dependency-management section:
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <!-- Keep the existing Vaadin BOM import here. -->
+        <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>junit-bom</artifactId>
+            <version>6.0.3</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+The example uses JUnit 6, matching `browserless-test-junit6`; Weld's integration artifact is still named `weld-junit5`.
+A project that manages Browserless Test separately can import `com.vaadin:browserless-test-bom` in dependency management to align its modules.
+
+== Create a View with a CDI Dependency
+
+This example injects a greeting service into a view.
+Put each public type in its own file under `src/main/java/com/example/app`.
+The session-scoped service makes scope activation part of the test setup.
+
+.`GreetingService.java`
+[source,java]
+----
+package com.example.app;
+
+public interface GreetingService {
+    String greet(String name);
+}
+----
+
+.`DefaultGreetingService.java`
+[source,java]
+----
+package com.example.app;
+
+import java.io.Serializable;
+import jakarta.enterprise.context.SessionScoped;
+
+@SessionScoped
+public class DefaultGreetingService implements GreetingService, Serializable {
+    @Override
+    public String greet(String name) {
+        return "Hello " + name;
+    }
+}
+----
+
+.`CdiGreetingView.java`
+[source,java]
+----
+package com.example.app;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("cdi-greeting")
+@Dependent
+public class CdiGreetingView extends Div {
+    @Inject
+    public CdiGreetingView(GreetingService greetings) {
+        TextField name = new TextField("Your name");
+        Button greet = new Button("Say hello", event ->
+                Notification.show(greetings.greet(name.getValue())));
+        add(name, greet);
+    }
+}
+----
+
+== Create the CDI-Aware Test Base Class
+
+Put this class under `src/test/java/com/example/app/testing`.
+Use the default JUnit per-method test-instance lifecycle.
+The annotations on the base class configure a Weld test archive, separate from the `WEB-INF/beans.xml` and application-server discovery of the deployed WAR.
+Weld's automatic setup doesn't scan packages.
+Its test archive contains the test class, the types the test class injects, and the classes, packages, and extensions listed in the annotations, so list the application beans explicitly.
+
+.`AbstractCdiViewTest.java`
+[source,java]
+----
+package com.example.app.testing;
+
+import jakarta.enterprise.context.SessionScoped;
+import org.jboss.weld.bootstrap.spi.BeanDiscoveryMode;
+import org.jboss.weld.junit5.auto.ActivateScopes;
+import org.jboss.weld.junit5.auto.AddBeanClasses;
+import org.jboss.weld.junit5.auto.AddExtensions;
+import org.jboss.weld.junit5.auto.AddPackages;
+import org.jboss.weld.junit5.auto.EnableAutoWeld;
+import org.jboss.weld.junit5.auto.SetBeanDiscoveryMode;
+import org.junit.jupiter.api.BeforeEach;
+import com.example.app.CdiGreetingView;
+import com.example.app.DefaultGreetingService;
+import com.vaadin.browserless.BrowserlessConfiguration;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.internal.MockVaadin;
+import com.vaadin.browserless.mocks.MockedUI;
+import com.vaadin.cdi.CdiInstantiator;
+import com.vaadin.cdi.CdiVaadinServlet;
+import com.vaadin.cdi.VaadinExtension;
+import com.vaadin.cdi.util.BeanManagerProvider;
+import com.vaadin.flow.router.RouteConfiguration;
+
+@EnableAutoWeld
+@SetBeanDiscoveryMode(BeanDiscoveryMode.ALL)
+@AddPackages(CdiInstantiator.class)
+@ActivateScopes(SessionScoped.class)
+@AddBeanClasses({ CdiGreetingView.class, DefaultGreetingService.class })
+@AddExtensions({ BeanManagerProvider.class, VaadinExtension.class })
+public abstract class AbstractCdiViewTest extends BrowserlessTest {
+    private final CdiVaadinServlet vaadinServlet = new CdiVaadinServlet();
+
+    @BeforeEach
+    @Override
+    protected void initVaadinEnvironment() {
+        scanTesters();
+        BrowserlessConfiguration configuration = testConfiguration();
+        MockVaadin.setup(MockedUI::new, vaadinServlet,
+                allLookupServices(configuration), configuration);
+        initSignalsSupport();
+        RouteConfiguration.forApplicationScope()
+                .setAnnotatedRoute(CdiGreetingView.class);
+    }
+}
+----
+
+Keep `@BeforeEach` on the override: Weld starts before this JUnit lifecycle method creates the Vaadin environment.
+Passing a `CdiVaadinServlet` to `MockVaadin.setup()` connects the mocked Vaadin service to CDI.
+Passing the test configuration and its Lookup services keeps <<{articles}/flow/testing/browserless/test-configuration#,`@BrowserlessTestConfig`>> working on the test classes and methods.
+Call `initSignalsSupport()` to retain the default signal-testing behavior when replacing the base setup.
+The inherited `@AfterEach` cleanup releases the Vaadin environment and signal support before Weld shuts down.
+See <<{articles}/flow/testing/browserless/cdi#custom-setup-and-test-configuration,Custom Setup and Test Configuration>> for what an extended setup needs to retain.
+
+This override registers routes explicitly after creating the CDI-aware environment.
+It does not call the default route-discovery setup.
+For another view, add its concrete CDI dependencies to `@AddBeanClasses` and register the route here.
+Include layouts, producers, observers, and transitive dependencies needed by that view.
+
+`@ActivateScopes(SessionScoped.class)` activates the context required by the greeting service.
+Add other scopes only if the tested bean graph needs them.
+See <<{articles}/flow/testing/browserless/cdi#,CDI Test Integration>> for discovery rules and lifecycle details.
+
+== Create a Test
+
+Put this class in the same test package as `AbstractCdiViewTest`:
+
+.`CdiGreetingViewTest.java`
+[source,java]
+----
+package com.example.app.testing;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.example.app.CdiGreetingView;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.TextField;
+
+class CdiGreetingViewTest extends AbstractCdiViewTest {
+    @Test
+    void greeting_usesInjectedService() {
+        navigate(CdiGreetingView.class);
+        test(find(TextField.class).withLabel("Your name").single())
+                .setValue("Ada");
+        test(find(Button.class).withText("Say hello").single()).click();
+        assertEquals("Hello Ada",
+                test(find(Notification.class).single()).getText());
+    }
+}
+----
+
+The assertion checks that navigation created the view through CDI and that the injected service handled the interaction.
+
+== Run the Test
+
+Run `mvn test` in the module containing the tests.
+For a multi-module project, run `mvn -pl your-ui-module -am test` from the project root.
+The test needs no application server or browser.
+
+[#test-alternatives]
+== Replace a Service with a CDI Alternative
+
+To make a collaborator deterministic, add a concrete test implementation under `src/test/java/com/example/app/testing`:
+
+.`TestGreetingService.java`
+[source,java]
+----
+package com.example.app.testing;
+
+import java.io.Serializable;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.inject.Alternative;
+import com.example.app.GreetingService;
+
+@Alternative
+@SessionScoped
+public class TestGreetingService implements GreetingService, Serializable {
+    @Override
+    public String greet(String name) {
+        return "Test greeting for " + name;
+    }
+}
+----
+
+Register and enable it for the test that needs the replacement:
+
+.`AlternativeGreetingViewTest.java`
+[source,java]
+----
+package com.example.app.testing;
+
+import org.jboss.weld.junit5.auto.AddBeanClasses;
+import org.jboss.weld.junit5.auto.EnableAlternatives;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.example.app.CdiGreetingView;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.TextField;
+
+@AddBeanClasses(TestGreetingService.class)
+@EnableAlternatives(TestGreetingService.class)
+class AlternativeGreetingViewTest extends AbstractCdiViewTest {
+    @Test
+    void greeting_usesTestAlternative() {
+        navigate(CdiGreetingView.class);
+        test(find(TextField.class).withLabel("Your name").single())
+                .setValue("Ada");
+        test(find(Button.class).withText("Say hello").single()).click();
+        assertEquals("Test greeting for Ada",
+                test(find(Notification.class).single()).getText());
+    }
+}
+----
+
+Register the concrete implementation, rather than `GreetingService.class` alone.
+Adding two ordinary implementations with identical types and qualifiers creates an ambiguous injection point.
+The selected CDI alternative replaces the ordinary bean for this test archive.
+
+== Troubleshoot the Setup
+
+[cols="1,2"]
+|===
+| Symptom | Check
+| Missing route | Register the route after `MockVaadin.setup()`. Register CDI beans and routes separately.
+| Unsatisfied CDI dependency | Add the concrete bean, producer, or required package to the Weld archive; follow the full injection graph.
+| Ambiguous CDI dependency | Enable one test alternative for the bean type, or use the application's qualifiers.
+| Test alternative not used | Add the alternative's class to `@AddBeanClasses`. `@EnableAlternatives` doesn't add the class to the archive, and Weld doesn't report the missing class.
+| Inactive session context | Activate `SessionScoped` for the test.
+| View created without CDI injection | Use `CdiVaadinServlet`, both CDI extensions, and the annotated setup override. Do not initialize the default environment first.
+|===
+
+== Next Steps
+
+* <<test-user-interactions#,Test User Interactions>> and <<debug-tests#,Debug a Failing Browserless Test>> work with `AbstractCdiViewTest` as the base class.
+* For signal-based views, this setup also initializes the support used by <<test-signals#,Test Signal-Based Views>>.
+
+The examples in the other guides read package-private view fields.
+Put such test classes in the view's package; `AbstractCdiViewTest` is public, so they can extend it from there.
+
+To test authentication, register your application's login view, access-control beans, and route listeners in this CDI setup, then exercise its login behavior with component testers.
+Authentication annotations such as Spring Security's `@WithMockUser` and Quarkus's `@TestSecurity` belong to those frameworks' test integrations.
+Browserless tests cover server-side application behavior; use deployment or browser tests to verify application-server security and browser-only behavior.
+
+The CDI setup is adapted from the https://github.com/TatuLund/bookstore-flow-ee/wiki/How-to-Use-Vaadin-BrowserlessTest-in-a-Java-EE-CDI-Project[Bookstore CDI testing guide].
+The https://github.com/TatuLund/bookstore-flow-ee/blob/v25/bookstore-starter-flow-ui/src/test/java/com/vaadin/samples/AbstractViewTest.java[Bookstore test base class] provides a larger example with application-specific authentication and routes.
+
+
+[discussion-id]`520A0F7B-E7A9-4D77-97B1-ED3AA78B4CBF`

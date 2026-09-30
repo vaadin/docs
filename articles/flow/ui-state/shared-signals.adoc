@@ -198,6 +198,35 @@ mapChildren.peek().get("name"); // Alternative way of accessing 'John Doe'
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Parameterized Value Types
+
+The [classname]`Class` object the examples above pass can't express type arguments, so `new SharedValueSignal<>(Set.class)` loses the element type and the value can't be read back as a `Set<Role>`. For a parameterized type, pass a Jackson [classname]`TypeReference` instead of a [classname]`Class`:
+
+[source,java]
+----
+SharedValueSignal<Set<Role>> roles = new SharedValueSignal<>(
+        new TypeReference<Set<Role>>() {});
+
+SharedValueSignal<Map<String, List<UUID>>> index = new SharedValueSignal<>(
+        Map.of(), new TypeReference<Map<String, List<UUID>>>() {});
+----
+
+The same overload is available for the element type of [classname]`SharedListSignal` and [classname]`SharedMapSignal`, and for the [methodname]`asValue()`, [methodname]`asList()`, and [methodname]`asMap()` methods of [classname]`SharedNodeSignal` as well as the [methodname]`value()` method of its snapshot:
+
+[source,java]
+----
+SharedListSignal<List<String>> rows = new SharedListSignal<>(
+        new TypeReference<List<String>>() {});
+
+SharedMapSignal<Set<UUID>> groups = new SharedMapSignal<>(
+        new TypeReference<Set<UUID>>() {});
+
+Set<UUID> members = user.peek().mapChildren().get("members").peek()
+        .value(new TypeReference<Set<UUID>>() {});
+----
+
+
 == Reading Values
 
 
@@ -268,6 +297,9 @@ signal.update(current -> current.toUpperCase());
 // Replace only if current value matches expected
 signal.replace("expected", "newValue");
 ----
+
+
+[since:com.vaadin:vaadin@V25.3]#Writing a value the signal can't hold throws an [classname]`InvalidSignalValueTypeException`. The compiler normally prevents this, but not when the value type has been erased from the generic signature of the writing code -- a shared signal handed around as a raw [classname]`SharedValueSignal`, for instance. Where a value comes from outside the application, such as a client-side write to a bound element property, the framework catches this and reverts the value instead of propagating the exception; see <<element-bindings#property-binding, Property Binding>>.#
 
 
 == Thread Safety

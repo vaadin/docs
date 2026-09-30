@@ -45,7 +45,7 @@ Two design properties make that verdict worth trusting:
 
 *Exactly one gate decides.* While the daemon owns your application, Flow's own save-triggered watchers are suspended. Nothing else pushes a stylesheet or refreshes a component behind your back, so one command decides when a change goes live and one command reports on it.
 
-*It never over-claims.* A successful class redefinition is not proof that a change is visible. If Flow had no component to refresh, if an entity mapping is involved, if a proxied Spring bean changed shape, or if a frontend import moved, `apply` says so and escalates to a restart instead of reporting `Stable`.
+*It never over-claims.* A successful class redefinition is not proof that a change is visible. If Flow had no component to refresh, if an entity mapping is involved, if a proxied Spring bean changed shape, if a new class carries a Spring stereotype or `@Entity` the application never had, or if a frontend import moved, `apply` says so and escalates to a restart instead of reporting `Stable`.
 
 Developers get exactly the same commands. Nothing on this page is agent-only.
 
@@ -101,7 +101,7 @@ mvn vaadin:install-dev-cli -Dvaadin.devcli.skipHotswapAgent=true
 
 That gives up the guarantee the provisioning exists for: the first `start` then downloads the agent itself and needs the network to do it. Dropping the release asset into [filename]`~/.vaadin/devloop/` by hand works too -- whatever is there is checksum-verified either way.
 
-An agent that reads the installed skills learns the cycle, the commands, and how to interpret every outcome. Two things the skills expect but don't install: a browser automation tool such as a Playwright MCP server, and the <<{articles}/building-apps/mcp#,Vaadin MCP server>>.
+An agent that reads the installed skills learns the cycle, the commands, and how to interpret every outcome. Two things the skills expect but don't install: a browser automation tool such as a Playwright MCP server, and the <<{articles}/building-apps/agentic-development/mcp#,Vaadin MCP server>>.
 
 
 [[cycle]]
@@ -165,7 +165,7 @@ Every command, option, and exit code is identical whichever launcher you use.
 == Commands
 
 `status [--json]`::
-Reports whether the application is up, which modules are in the loop, the state of the last transaction, and any errors the application has logged since the last `apply`. Starts no JVM, so it costs milliseconds.
+Reports whether the application is up, which modules are in the loop, which runtime started it, the state of the last transaction, and any errors the application has logged since the last `apply`. Starts no JVM, so it costs milliseconds.
 
 `start`::
 Launches the application in development mode. Blocks until it's serving or has failed; a failure names the reason from the application's own log.
@@ -182,6 +182,35 @@ The full usage text, including every option and environment variable. Answers wi
 The exit code is the contract, and means the same thing on every platform: `0` the change is live (or there was nothing to do), `1` it failed, `4` a newer `apply` superseded this one. Usage and internal errors use `64`, `70`, and `77`.
 
 
+[[runtimes]]
+== Launch With Various Containers
+
+The daemon can start the application in more than one way. It either launches a class with a `main` method directly, or runs the application through a supported server plugin declared in the project's own pom, in the build's own JVM. Which one it uses is detected automatically. Everything else about the loop is unchanged: the same commands, the same exit codes, the same change-set rules. Once the application is up, `status` names the runtime it chose:
+
+[cols="1,3"]
+|===
+| Runtime | How the Application Starts
+
+| `main`
+| A class with a `main` method, launched directly with `java`. Chosen when the project names one, or declares no supported server plugin.
+
+| `jetty-ee10`
+| Through the `jetty-ee10` Maven plugin.
+
+| `jetty-ee11`
+| Through the `jetty-ee11` Maven plugin.
+|===
+
+WAR-packaged projects are supported. More runtimes are planned.
+
+`-Dvaadin.dev.runtime=<main|jetty-ee10|jetty-ee11>` overrides the detected choice.
+
+Running through a server plugin brings a few differences worth knowing:
+
+* *The plugin needs no extra configuration.* If it is set to rescan or to run in a forked JVM, the daemon turns that off for its own run, without changing the pom.
+* *A restart costs more,* because it is a Maven invocation rather than a bare JVM launch. Edits that hot-swap are unaffected.
+
+
 == What Apply Reports
 
 `apply` prints a phase line and then one line per part of the change. `Stable` means the change is live and the application is consistent:
@@ -194,7 +223,7 @@ hot-reload: redefineClasses(1); onHotswap completed=true
 
 An `hmr:` line reports _hot module replacement_ -- the change reached the open browser session without restarting the server, so you keep your session and your navigation state. A `hot-reload:` line is the Java counterpart, where new bytecode is swapped into the running JVM.
 
-Broadly: stylesheets, themes, and most view and component code go live in place, with no reload. Structural Java changes, entity mappings, `application.properties`, bundled frontend files, and frontend annotations such as `@JsModule` need a restart, which `apply` performs itself and names the reason for. A compile failure reports file, line, and column, and leaves the running application on its last good bytes.
+Broadly: stylesheets, themes, and most view and component code go live in place, with no reload. Structural Java changes, entity mappings, a new class that only now carries a Spring stereotype or `@Entity`, `application.properties`, bundled frontend files, and frontend annotations such as `@JsModule` need a restart, which `apply` performs itself and names the reason for. A compile failure reports file, line, and column, and leaves the running application on its last good bytes.
 
 Two outcomes are worth recognizing, because neither is the success it resembles:
 
@@ -219,7 +248,9 @@ Most of what the dev loop can't do it reports honestly, by escalating to a resta
 *An edit that changes what a class promises its callers isn't supported.* Only the change-set is recompiled, so callers you didn't edit keep the bytecode they were compiled with. Rename or re-sign a method, or change a `static final` constant, and those callers are stale -- a `NoSuchMethodError` at runtime, or for an inlined constant no error at all and the old value -- while `apply` reports `Stable`. A restart doesn't fix it. Recompile with Maven after such an edit.
 ====
 
-Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
+Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, a class that only now carries a Spring stereotype (`@Component`, `@Service`, `@Repository`, `@Controller`, `@RestController`, `@ControllerAdvice`, `@RestControllerAdvice`, or `@Configuration`) or `@Entity` restarts too -- component scanning and the JPA metamodel are both fixed at startup, so a class the application never had gets no bean definition and no mapping -- and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
+
+When the application runs through a server plugin, [filename]`src/main/webapp` isn't tracked. The servlet container serves it straight off disk, so an edit there is already live, but `apply` doesn't mention it or reload the page for you. Static files under [filename]`src/main/resources/META-INF/resources` are tracked the same as with any other runtime.
 
 
 [[configuration]]
@@ -246,6 +277,9 @@ The application's own output is in [filename]`target/devloop/app.log`, and the d
 
 `this project does not depend on the dev-loop daemon`::
 Add `com.vaadin:vaadin-dev` as an optional dependency, as shown under <<#prerequisites,Prerequisites>>.
+
+`cannot tell how to start this application`::
+The daemon found neither a `main` method nor a supported server plugin in the pom. Build the module once, name the class with `-Dvaadin.dev.mainClass`, or name the runtime with `-Dvaadin.dev.runtime`; see <<#runtimes,Launch With Various Containers>>.
 
 The application fails to start::
 `start` exits `1` and names the reason, with the tail of [filename]`app.log` under it. A taken port or a bad configuration value shows up there.
@@ -274,4 +308,5 @@ The full reference ships with the CLI, because it's written for the agents that 
 * <<index#,Hot Deploy pass:[&] Live Reload>> -- the other ways to get changes into a running application
 * <<hotswap-agent#,Live Reload with HotswapAgent>> -- installing a JetBrains Runtime
 * <<{articles}/flow/configuration/development-mode#,Development Mode>> -- the `com.vaadin:vaadin-dev` dependency
-* <<{articles}/building-apps/mcp#,MCP Server for Vaadin>> -- documentation lookup for AI coding agents
+* <<{articles}/building-apps/agentic-development/dev-loop-tutorial#,Dev Loop Tutorial>> -- the same commands, driven end to end by an AI coding agent
+* <<{articles}/building-apps/agentic-development/mcp#,MCP Server for Vaadin>> -- documentation lookup for AI coding agents

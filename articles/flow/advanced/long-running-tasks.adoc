@@ -91,28 +91,28 @@ The following example shows how the [methodname]`BackendService.longRunningTask(
 public class BackendService {
 
     @Async // <1>
-    public ListenableFuture<String> longRunningTask() { // <2>
+    public CompletableFuture<String> longRunningTask() { // <2>
         try {
             // Simulate a long running task
             Thread.sleep(6000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return AsyncResult.forValue("Some result"); // <3>
+        return CompletableFuture.completedFuture("Some result"); // <3>
     }
 
 }
 ----
 <1> [annotationname]`@Async` annotation to mark the method for asynchronous execution.
-<2> The method now returns a [classname]`ListenableFuture` object.
-<3> The method's return value is a [classname]`ListenableFuture` object that contains the result of the asynchronous task.
+<2> The method now returns a [classname]`CompletableFuture` object.
+<3> The method's return value is a [classname]`CompletableFuture` object that contains the result of the asynchronous task.
 
 Now the [methodname]`BackendService.longRunningTask()` method is annotated with the [annotationname]`@Async` annotation, and the long-running task is executed in a separate thread.
-The [methodname]`BackendService.longRunningTask()` method now returns a [interfacename]`ListenableFuture<String>` instead of a `String` (returning a [interfacename]`ListenableFuture` or a [interfacename]`CompletableFuture` is a requirement for any asynchronous service).
-The [interfacename]`ListenableFuture` is a special type of [interfacename]`Future` that allows the caller to register a callback to be notified when the task is completed.
+The [methodname]`BackendService.longRunningTask()` method now returns a [interfacename]`CompletableFuture<String>` instead of a `String` (returning a [interfacename]`CompletableFuture` is a requirement for any asynchronous service).
+The [interfacename]`CompletableFuture` is a special type of [interfacename]`Future` that allows the caller to register a callback to be notified when the task is completed.
 
 With these changes in place, you can change the UI to allow the user to start the long-running task and still be able to interact with the application.
-Vaadin can then use the [interfacename]`ListenableFuture` and the [methodname]`UI.access()` method of <<{articles}/flow/advanced/server-push#, Server Push>> to notify the user when the task is completed.
+Vaadin can then use the [interfacename]`CompletableFuture` and the [methodname]`UI.access()` method of <<{articles}/flow/advanced/server-push#, Server Push>> to notify the user when the task is completed.
 This is how [filename]`MainView.java` could look now:
 
 .`MainView.java`
@@ -122,18 +122,21 @@ This is how [filename]`MainView.java` could look now:
 public class MainView extends VerticalLayout {
 
     public MainView(BackendService backendService) {
-        Button startButton = new Button("Start long-running task", clickEvent -> {
-            UI ui = clickEvent.getSource().getUI().orElseThrow(); // <1>
-            ListenableFuture<String> future = backendService.longRunningTask();
-            future.addCallback(
-                    successResult -> updateUi(ui, "Task finished: " + successResult), // <2>
-                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage()) // <3>
-            );
+        var startButton = new Button("Start long-running task", clickEvent -> {
+            var ui = clickEvent.getSource().getUI().orElseThrow();
+            CompletableFuture<String> future = backendService.longRunningTask();
+            future.whenComplete((successResult, exception) -> {
+                if (exception == null) {
+                    updateUi(ui, "Task finished: " + successResult); // <2>
+                } else {
+                    updateUi(ui, "Task failed: " + exception.getMessage()); // <3>
+                }
+            });
         });
 
-        Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
-            Notification.show("UI isn't blocked!");
-        });
+        var isBlockedButton = new Button("Is UI blocked?", clickEvent ->
+            Notification.show("UI isn't blocked!")
+        );
 
         add(startButton, isBlockedButton);
     }
@@ -143,7 +146,6 @@ public class MainView extends VerticalLayout {
             Notification.show(result);
         });
     }
-
 }
 ----
 <1> Save the current UI in a local variable, so that you can use it later to update the UI through the [methodname]`UI.access()` method.
@@ -155,7 +157,7 @@ public class MainView extends VerticalLayout {
 For the above example to work as intended, you need two extra annotations for the [annotationname]`@Async` annotation and the [methodname]`UI.access()` method to work.
 
 * For the [annotationname]`@Async` annotation, you need to add the [annotationname]`@EnableAsync` annotation to the application.
-* For the [methodname]`UI.access()` method, you need to add the [annotationname]`@Push` annotation to the class implementing the [interfacename]`AppShellConfigurator` interface.
+* For the [methodname]`UI.access()` method to work, you need to add the [annotationname]`@Push` annotation to the class implementing the [interfacename]`AppShellConfigurator` interface.
 
 You can make both changes in the same class as illustrated in the following [classname]`Application` class (which both extends [classname]`SpringBootServletInitializer` and implements [interfacename]`AppShellConfigurator`):
 
@@ -192,19 +194,22 @@ public class MainView extends VerticalLayout {
         progressBar.setIndeterminate(true);
         progressBar.setVisible(false); // <2>
 
-        Button startButton = new Button("Start long-running task", clickEvent -> {
-            UI ui = clickEvent.getSource().getUI().orElseThrow();
-            ListenableFuture<String> future = backendService.longRunningTask();
+        var startButton = new Button("Start long-running task", clickEvent -> {
+            var ui = clickEvent.getSource().getUI().orElseThrow();
+            CompletableFuture<String> future = backendService.longRunningTask();
 
             progressBar.setVisible(true); // <3>
 
-            future.addCallback(
-                    successResult -> updateUi(ui, "Task finished: " + successResult),
-                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
-            );
+            future.whenComplete((successResult, exception) -> {
+                if (exception == null) {
+                    updateUi(ui, "Task finished: " + successResult); // <2>
+                } else {
+                    updateUi(ui, "Task failed: " + exception.getMessage()); // <3>
+                }
+            });
         });
 
-        Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
+        var isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
             Notification.show("UI isn't blocked!");
         });
 
@@ -217,7 +222,6 @@ public class MainView extends VerticalLayout {
             progressBar.setVisible(false); // <4>
         });
     }
-
 }
 ----
 <1> First, create a [classname]`ProgressBar` object.
@@ -234,7 +238,7 @@ image::images/vaadin-progress-bar-no-cancel.gif[Long-Running Task with ProgressB
 For your task to be cancellable, the following conditions must be met:
 
 . Your [annotationname]`@Async` method must return a [interfacename]`Future`.
-. The running task must be https://docs.oracle.com/en/java/javase/18/docs/api/java.base/java/util/concurrent/Future.html#cancel(boolean)[cancellable].
+. The running task must be https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Future.html#cancel(boolean)[cancellable].
 
 The modified [classname]`MainView` class below shows how to add a [classname]`Button` to cancel the long-running task.
 
@@ -245,50 +249,54 @@ The modified [classname]`MainView` class below shows how to add a [classname]`Bu
 public class MainView extends VerticalLayout {
 
     private ProgressBar progressBar = new ProgressBar();
-    private Button cancelButton = new Button("Cancel task execution");
+    private Div cancelWrapper = new Div();  // <1>
 
     public MainView(BackendService backendService) {
         progressBar.setWidth("15em");
         progressBar.setIndeterminate(true);
-
         progressBar.setVisible(false);
-        cancelButton.setVisible(false); // <1>
+        cancelWrapper.setVisible(false);
 
-        Button startButton = new Button("Start long-running task", clickEvent -> {
-            UI ui = clickEvent.getSource().getUI().orElseThrow();
-            ListenableFuture<String> future = backendService.longRunningTask();
-
+        var startButton = new Button("Start long-running task", clickEvent -> {
+            var ui = clickEvent.getSource().getUI().orElseThrow();
+            CompletableFuture<String> future = backendService.longRunningTask();
             progressBar.setVisible(true);
-            cancelButton.setVisible(true); // <2>
-            cancelButton.addClickListener(e -> future.cancel(true)); // <3>
 
-            future.addCallback(
-                    successResult -> updateUi(ui, "Task finished: " + successResult),
-                    failureException -> updateUi(ui, "Task failed: " + failureException.getMessage())
-            );
+            var cancelButton = new Button("Cancel task execution",  // <2>
+                    e -> future.cancel(true));  // <3>
+            cancelWrapper.setVisible(true);
+            cancelWrapper.add(cancelButton);
+
+            future.whenComplete((successResult, exception) -> {
+                if (exception == null) {
+                    updateUi(ui, "Task finished: " + successResult);
+                } else {
+                    updateUi(ui, "Task failed: " + exception.getMessage());
+                }
+            });
         });
 
-        Button isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
+        var isBlockedButton = new Button("Is UI blocked?", clickEvent -> {
             Notification.show("UI isn't blocked!");
         });
 
-        add(startButton, new HorizontalLayout(progressBar, cancelButton), isBlockedButton);
+        add(startButton, new HorizontalLayout(progressBar, cancelWrapper), isBlockedButton);
     }
 
     private void updateUi(UI ui, String result) {
         ui.access(() -> {
             Notification.show(result);
             progressBar.setVisible(false);
-            cancelButton.setVisible(false); // <4>
+            cancelWrapper.setVisible(false); // <4>
+            cancelWrapper.removeAll();
         });
     }
-
 }
 ----
-<1> Like the [classname]`ProgressBar`, hide the *Cancel* [classname]`Button` by default.
-<2> Show the *Cancel* [classname]`Button` when the task is started.
-<3> The [classname]`Future` representing the long-running task is canceled when the *Cancel* [classname]`Button` is clicked.
-<4> When the task is completed or canceled, hide the cancel [classname]`Button`.
+<1> Create wrapper [classname]`Div`, where the cancel button would be placed.
+<2> Create [classname]`Button` for task cancellation, and it to the wrapper.
+<3> On [classname]`Button` click event, cancel the task.
+<4> When completed, hide the Cancel [classname]`Button` wrapper, and remove all of its children.
 
 Here is the animation of the [classname]`MainView` with a *Cancel* [classname]`Button`.
 

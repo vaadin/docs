@@ -12,10 +12,238 @@ order: 3
 
 The Element API contains methods for executing JavaScript in the browser from the server side.
 
+Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`.
 
+The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [methodname]`callJsFunction()`, [classname]`JsFunction`, and [methodname]`addJsInitializer()` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express.
+
+
+[[declaring-javascript]]
+[role="since:com.vaadin:vaadin@V25.4"]
+== Declaring JavaScript in Java
+
+An interface annotated with [annotationname]`@JsDefinition` declares the JavaScript that its methods run, and the build collects that JavaScript into the bundle. Call the declared JavaScript through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that the method declares.
+
+Each method of the interface is annotated with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run. The arguments of the call are available inside the expression as `$0`, `$1`, and so on, and the element the implementation was obtained from is `this`.
+
+The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction`.
+
+Passing a [classname]`JsFunction` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead of passing a function into it.
+
+The last parameter of a method can be declared variadic, such as `String...`, to accept a variable number of trailing arguments instead of a fixed one. The build turns it into a JavaScript rest parameter, so reference it the same way as any other parameter and spread it where the expression needs the individual values.
+
+.Declaring and calling a variadic method
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface ClassNamesJs extends Serializable {
+
+    @JsExpression("this.classList.add(...$0)")
+    void add(String... classNames);
+}
+----
+
+[source,java]
+----
+public void highlight() {
+    getElement().executeJs(ClassNamesJs.class)
+            .add("selected", "highlighted");
+}
+----
+====
+
+.Declaring and calling JavaScript through a `@JsDefinition` interface
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface GreeterJs extends Serializable {
+
+    @JsExpression("window.alert($0)")
+    void showGreeting(String greeting);
+}
+----
+
+[source,java]
+----
+public void greet(String message) {
+    getElement().executeJs(GreeterJs.class).showGreeting(message);
+}
+----
+====
+
+A method returns either `void` or [classname]`PendingJavaScriptResult`, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>).
+
+.Declaring JavaScript that returns a value
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface OverflowJs extends Serializable {
+
+    @JsExpression("return this.scrollWidth > this.clientWidth")
+    PendingJavaScriptResult isContentClipped();
+}
+----
+
+[source,java]
+----
+public void updateTooltip() {
+    getElement().executeJs(OverflowJs.class)
+            .isContentClipped()
+            .then(Boolean.class, this::setTooltipEnabled);
+}
+----
+====
+
+Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
+
+[NOTE]
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult`. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+
+When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
+
+
+[[return-values]]
+== Return Values
+
+Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult` as its return type to give access to the result.
+
+.Checking for support of Constructable Stylesheets in the browser
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface FeatureDetectionJs extends Serializable {
+
+    @JsExpression("return 'adoptedStyleSheets' in document")
+    PendingJavaScriptResult supportsConstructableStylesheets();
+}
+----
+
+[source,java]
+----
+public void checkConstructableStylesheets() {
+    getElement().executeJs(FeatureDetectionJs.class)
+            .supportsConstructableStylesheets()
+            .then(Boolean.class, supported -> {
+                if (supported) {
+                    System.out.println(
+                            "Feature is supported");
+                } else {
+                    System.out.println(
+                            "Feature isn't supported");
+                }
+            });
+}
+----
+====
+
+If the return value is a JavaScript `Promise`, the client only sends the return value to the server when the `Promise` is resolved.
+// TODO What happens if the Promise is rejected?
+
+
+=== Deserializing Generic Types with TypeReference
+
+The [methodname]`then()` method accepts a [classname]`Class` parameter for simple types, but this doesn't work for generic types like `List<Person>` due to Java type erasure. For these cases, use the Jackson [classname]`TypeReference` overloads.
+
+.Deserializing a JavaScript array into a `List<Person>`
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface ItemsJs extends Serializable {
+
+    @JsExpression("return this.getItems()")
+    PendingJavaScriptResult getItems();
+
+    @JsExpression("return this.getPersonMap()")
+    PendingJavaScriptResult getPersonMap();
+}
+----
+
+[source,java]
+----
+getElement().executeJs(ItemsJs.class).getItems()
+        .then(new TypeReference<List<Person>>() {},
+                items -> {
+                    // items is List<Person>
+                    items.forEach(person ->
+                            System.out.println(person.getName()));
+                });
+----
+====
+
+An error handler can be provided as a second callback. The handler receives the error message from the failed JavaScript execution as a `String`:
+
+[source,java]
+----
+getElement().executeJs(ItemsJs.class).getItems()
+        .then(new TypeReference<List<Person>>() {},
+                items -> processItems(items),
+                errorMessage -> handleError(errorMessage));
+----
+
+You can also use [methodname]`toCompletableFuture(TypeReference)` to get the result as a [classname]`CompletableFuture`:
+
+[source,java]
+----
+CompletableFuture<Map<String, Person>> future = getElement()
+        .executeJs(ItemsJs.class).getPersonMap()
+        .toCompletableFuture(
+                new TypeReference<Map<String, Person>>() {});
+----
+
+
+[[execute-js]]
+== `executeJs` Method
+
+The [methodname]`Element.executeJs()` method runs a JavaScript expression given as a string. The browser compiles the expression, which a content security policy that doesn't allow `unsafe-eval` blocks. Declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>). Use this method only for JavaScript that can't be declared -- an expression that isn't known until runtime, for example.
+
+The [methodname]`executeJs()` method accepts two parameters: the JavaScript expression to invoke; and the parameters to pass to the expression. The given parameters are available as variables named `$0`, `$1`, and so on.
+
+The arguments passed to the expression must be a type supported by the communication mechanism. The supported types are `String`, `Integer`, `Double`, `Boolean`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>).
+
+.Calling `MyModule.complete(true)` on the client side
+[example]
+====
+[source,java]
+----
+public void complete() {
+    getElement().executeJs("MyModule.complete($0)", true);
+}
+----
+====
+
+.Passing a JSON array to a JavaScript expression
+[example]
+====
+[source,java]
+----
+public void setItems(List<String> items) {
+    getElement().executeJs("this.items = $0", items);
+}
+----
+====
+
+.Avoid Script Injection Vulnerabilities
+[WARNING]
+Always pass arguments using the `$0`, `$1`, ... notation to avoid script injection vulnerabilities. Never concatenate or interpolate strings to build JavaScript code to be executed.
+
+If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrentOrThrow().getPage().executeJs()` method.
+
+
+[[call-js-function]]
 == `callJsFunction` Method
 
 The [methodname]`Element.callJsFunction()` method allows you to run a client-side component function from the server side. The method accepts two parameters: the name of the function to call; and the arguments to pass to the function.
+
+The call is sent to the browser as an expression and compiled there, the same way [methodname]`executeJs()` is, so it also needs a content security policy that allows `unsafe-eval`. A definition method that declares an expression such as `return this.clearSelection()` calls the same client-side function without one (see <<#declaring-javascript,Declaring JavaScript in Java>>).
 
 The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>).
 
@@ -58,117 +286,13 @@ public void configure(String label, int count) {
 ====
 
 
-== `executeJs` Method
-
-You can also use the generic [methodname]`Element.executeJs()` method to run JavaScript asynchronously from the server side. This method can be used in addition to the [methodname]`Element.callJsFunction()` method when calling any JavaScript.
-
-The [methodname]`executeJs()` method accepts two parameters: the JavaScript expression to invoke; and the parameters to pass to the expression. The given parameters are available as variables named `$0`, `$1`, and so on.
-
-The arguments passed to the expression must be a type supported by the communication mechanism. The supported types are `String`, `Integer`, `Double`, `Boolean`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>).
-
-.Calling `MyModule.complete(true)` on the client side
-[example]
-====
-[source,java]
-----
-public void complete() {
-    getElement().executeJs("MyModule.complete($0)", true);
-}
-----
-====
-
-.Passing a JSON array to a JavaScript expression
-[example]
-====
-[source,java]
-----
-public void setItems(List<String> items) {
-    getElement().executeJs("this.items = $0", items);
-}
-----
-====
-
-.Avoid Script Injection Vulnerabilities
-[WARNING]
-Always pass arguments using the `$0`, `$1`, ... notation to avoid script injection vulnerabilities. Never concatenate or interpolate strings to build JavaScript code to be executed.
-
-If you need to run JavaScript without having access to an element, use the [methodname]`UI.getCurrentOrThrow().getPage().executeJs()` method.
-
-
-== Return Values
-
-The return value from the JavaScript function called using [methodname]`callJsFunction()`, or the value from a `return` statement in an `executeJs()` expression can be accessed by adding a listener to the [classname]`PendingJavaScriptResult` instance returned from either method.
-
-.Checking for support of Constructable Stylesheets in the browser
-[example]
-====
-[source,java]
-----
-public void checkConstructableStylesheets() {
-    getElement().executeJs(
-            "return 'adoptedStyleSheets' in document")
-            .then(Boolean.class, supported -> {
-                if (supported) {
-                    System.out.println(
-                            "Feature is supported");
-                } else {
-                    System.out.println(
-                            "Feature isn't supported");
-                }
-            });
-}
-----
-====
-
-If the return value is a JavaScript `Promise`, the client only sends the return value to the server when the `Promise` is resolved.
-// TODO What happens if the Promise is rejected?
-
-
-=== Deserializing Generic Types with TypeReference
-
-The [methodname]`then()` method accepts a [classname]`Class` parameter for simple types, but this doesn't work for generic types like `List<Person>` due to Java type erasure. For these cases, use the Jackson [classname]`TypeReference` overloads.
-
-.Deserializing a JavaScript array into a `List<Person>`
-[example]
-====
-[source,java]
-----
-getElement().executeJs("return this.getItems()")
-        .then(new TypeReference<List<Person>>() {},
-                items -> {
-                    // items is List<Person>
-                    items.forEach(person ->
-                            System.out.println(person.getName()));
-                });
-----
-====
-
-An error handler can be provided as a second callback. The handler receives the error message from the failed JavaScript execution as a `String`:
-
-[source,java]
-----
-getElement().executeJs("return this.getItems()")
-        .then(new TypeReference<List<Person>>() {},
-                items -> processItems(items),
-                errorMessage -> handleError(errorMessage));
-----
-
-You can also use [methodname]`toCompletableFuture(TypeReference)` to get the result as a [classname]`CompletableFuture`:
-
-[source,java]
-----
-CompletableFuture<Map<String, Person>> future = getElement()
-        .executeJs("return this.getPersonMap()")
-        .toCompletableFuture(
-                new TypeReference<Map<String, Person>>() {});
-----
-
-
 [[js-function]]
 [role="since:com.vaadin:vaadin@V25.2"]
 == Passing JavaScript Functions
 
 A [classname]`JsFunction` lets you build a reusable JavaScript function on the server and pass it as a parameter to [methodname]`executeJs()` or [methodname]`callJsFunction()`. The function arrives on the client as a real callable function with its captured values pre-bound, so you don't need to concatenate JavaScript fragments to embed server-side values.
+
+The function body is compiled on the client, so it needs a content security policy that allows `unsafe-eval` -- also when the function is passed to a method of a JavaScript definition. Where the body is known in advance, declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>).
 
 The first argument to [methodname]`JsFunction.of()` is a JavaScript function body. The remaining arguments are captured values, referenced inside the body as `$0`, `$1`, &hellip; using the same naming convention as [methodname]`executeJs()` parameters.
 
@@ -250,6 +374,8 @@ The [methodname]`Element.addJsInitializer()` method registers a JavaScript expre
 
 Use this when you need to install something on the client-side DOM &ndash; an event listener, a third-party widget, an observer &ndash; and reliably tear it down. A one-shot [methodname]`executeJs()` call doesn't cover two cases: a real re-attach gives the element a brand-new DOM node that no longer has your listener, and cleanup from a server-side detach listener cannot be delivered because the element is leaving the tree.
 
+The expression is compiled in the browser, so [methodname]`addJsInitializer()` needs a content security policy that allows `unsafe-eval`. No declaration-based counterpart exists; under a stricter policy, install and tear down from a client-side module of your own instead.
+
 The expression syntax is the same as [methodname]`executeJs()`: `this` is the host element on the client, and parameters are referenced as `$0`, `$1`, &hellip;. If the expression returns a function, that function is invoked at teardown.
 
 .Installing a listener with cleanup
@@ -272,7 +398,7 @@ Remove the registration on the server when the listener is no longer needed; the
 
 === Re-Attach Semantics
 
-The initializer is re-run after a real re-attach &ndash; when the element is removed from the DOM in one round trip and re-added in a later one, and so the browser receives a fresh DOM node. It is *not* re-run when the element is detached and re-attached on the server inside a single round trip, because the client never discarded its DOM in that case.
+The initializer is re-run after a real re-attach &ndash; when the element is removed from the DOM in one round trip and re-added in a later one, and so the browser receives a fresh DOM node. It is *not* re-run when the element is detached and re-attached on the server inside a single round trip, because the client never discarded its DOM.
 
 
 === Cleanup Constraints

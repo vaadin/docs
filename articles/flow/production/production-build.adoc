@@ -187,11 +187,23 @@ This results in less code and fewer dependency libraries being bundled in the pr
 
 == Transpilation & Bundling
 
-Transpilation in Vaadin means converting all TypeScript files to JavaScript (ES2021), which is supported by modern browsers.
+Transpilation in Vaadin means converting all TypeScript files to JavaScript. The JavaScript and CSS are compiled for the browsers that Vaadin supports -- see <<{articles}/compatibility#browser-compatibility, Browser Compatibility>>.
 
-During the build, minimization is done to make the files smaller. When minifying code, it's often obfuscated, which makes it more difficult to read. Hence, this isn't done for development builds.
+During the build, minimization is done to make the files smaller. When minifying code, it's often obfuscated, which makes it more difficult to read. Hence, this isn't done for development builds. To keep client-side stack traces readable in a production build, generate source maps for the bundle -- see <<source-maps#, Source Maps in Production>>.
 
 Bundling is an optimization in which multiple files are merged into a single collection. It's done to reduce the number of files the browser has to request from the server. The result is that the application loads faster.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+== Pre-Compressed Static Resources
+
+Vaadin has always served a pre-compressed `.br` or `.gz` sibling of a static resource when one exists, and Vite writes those siblings for the assets that go into the frontend bundle. Static resources served straight from [filename]`META-INF/resources`, however -- a stylesheet referenced with `@StyleSheet`, a JavaScript file, an SVG -- never enter that bundle, and so had no compressed variant to serve. A production build now compresses them too, writing a https://github.com/google/brotli[Brotli] (`.br`) and a gzip (`.gz`) sibling next to each compressible file. The server then sends whichever variant the browser accepts, and the uncompressed file to a browser that accepts neither.
+
+Files with these extensions are compressed, provided they're at least 1 KB -- below that, the compressed variant tends to be no smaller than the original: `.css`, `.js`, `.mjs`, `.cjs`, `.json`, `.map`, `.svg`, `.html`, `.htm`, `.xml`, and `.txt`.
+
+Brotli compression needs Node, which the JDK can't provide. Node is used only when it's already available, so it's never downloaded merely to compress resources; without it, the build writes the gzip variants only. Compression is a best-effort optimization: a failure is logged as a warning and never fails the build, since the uncompressed resource is always there to serve.
+
+Serving the Brotli variants is controlled by the `brotli` <<{articles}/flow/configuration/properties#,configuration property>>. Set it to `false` to stop serving them; the gzip variants are used regardless.
 
 
 == Plugin Goals & Goal Parameters

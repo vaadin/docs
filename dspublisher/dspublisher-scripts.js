@@ -394,9 +394,11 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
 
       if (phase && !phase.done) {
         // A phase was found and it wasn't marked as done yet
+        phase.done = true;
 
-        if (phase.lastPhase) {
-          // This is the last phase of the script
+        // The ready signals may arrive out of order (e.g. concurrently started
+        // processes), so only finish once every phase of the last command is done
+        if (phases[phases.length - 1].lastPhase && phases.every((p) => p.done)) {
           finish();
         } else {
           // Update the progress
@@ -404,16 +406,14 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
           // Make sure progress doesn't exceed total weight
           progressState.progress = Math.min(progressState.progress, totalWeight);
 
-          const nextPhase = phases[phases.indexOf(phase) + 1];
+          const nextPhase = phases.find((p) => !p.done);
           if (nextPhase) {
-            // If the next phase exists, render its text
+            // If there's a phase still waiting, render its text
             progressState.phase = nextPhase.text;
           }
 
           logProgress(progressState);
         }
-
-        phase.done = true;
       }
     });
 
