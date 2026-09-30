@@ -39,11 +39,12 @@ public class GridResponsiveColumns extends Div {
         Signal<Size> size = grid.getElement().sizeSignal();
         Signal.effect(grid, () -> {
             int width = size.get().width();
-            // The width is 0 until the browser has reported the size. Treat
-            // it as wide so that the grid first renders with all columns.
-            boolean wide = width == 0 || width >= BREAKPOINT_PX;
-            combinedColumn.setVisible(!wide);
-            wideColumns.forEach(column -> column.setVisible(wide));
+            // The width is 0 until the browser has reported the size. Keep
+            // all columns hidden until then.
+            boolean sizeKnown = width > 0;
+            boolean wide = width >= BREAKPOINT_PX;
+            combinedColumn.setVisible(sizeKnown && !wide);
+            wideColumns.forEach(column -> column.setVisible(sizeKnown && wide));
         });
         // end::snippet[]
 
