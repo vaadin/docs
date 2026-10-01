@@ -27,11 +27,9 @@ On this page, all of the trigger examples are delegating to a separate <<jobs#,j
 
 == User Triggered Jobs
 
-For user triggered jobs, an <<../add-service#,application service>> acts as the trigger. You can create a dedicated service class for this, or add a method to a suitable, existing application service. Like all other application service methods, it should be protected using method-level security to ensure only authorized users can trigger the job.
+For user triggered jobs, an <<../add-service#,application service>> acts as the trigger. You can create a dedicated service class for this, or add a method to a suitable, existing application service. Like all other application service methods, it should be protected using <<../../security/protect-services#,method-level security>> to ensure only authorized users can trigger the job.
 
-// TODO Add link to security page once it has been written
-
-The following example demonstrates how to trigger a background job from an application service using `@Async` and security annotations:
+The security check has to run in the thread of the user who starts the job. Because of this, the application service hands the job to the <<../background-jobs#task-execution,`TaskExecutor`>> itself, instead of using the `@Async` annotation:
 
 [source,java]
 ----
@@ -39,26 +37,31 @@ The following example demonstrates how to trigger a background job from an appli
 public class MyApplicationService {
     private static final Logger log = LoggerFactory.getLogger(MyApplicationService.class);
     private final MyBackgroundJob job;
+    private final TaskExecutor taskExecutor;
 
-    MyApplicationService(MyBackgroundJob job) {
+    MyApplicationService(MyBackgroundJob job, TaskExecutor taskExecutor) {
         this.job = job;
+        this.taskExecutor = taskExecutor;
     }
 
     @PreAuthorize("hasAuthority('permission:startjob')") // <1>
-    @Async // <2>
     public void startJob(MyJobParameters params) {
-        try {
-            job.executeJob(params);
-        } catch (Exception ex) {
-            log.error("Error executing background job", ex);
-        }
+        taskExecutor.execute(() -> { // <2>
+            try {
+                job.executeJob(params);
+            } catch (Exception ex) {
+                log.error("Error executing background job", ex);
+            }
+        });
     }
 }
 ----
-<1> Spring ensures the current user has permission to start the job.
-<2> Spring executes the method using its task executor thread pool.
+<1> Spring ensures the current user has permission to start the job, before the method runs.
+<2> The job runs in a background thread from the task executor thread pool.
 
-The example above uses the `@Async` annotation, but you can also execute the job, <<../background-jobs#task-execution,programmatically>>.
+.Don't Combine `@PreAuthorize` and `@Async`
+[CAUTION]
+If you annotate the same method with both `@PreAuthorize` and `@Async`, Spring switches to the background thread before it checks the security annotation, as described in the https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/annotation/AsyncAnnotationBeanPostProcessor.html[`AsyncAnnotationBeanPostProcessor` API documentation]. With the default task executor, the <<jobs#security,security context>> isn't available in that thread, so Spring denies access and the job never runs. The user gets no feedback, as the error only shows up in the log. For more information about the security context and threads, see https://docs.spring.io/spring-security/reference/servlet/integrations/concurrency.html[Concurrency Support] in the Spring Security Reference Manual.
 
 If the job needs to provide real-time updates to the user interface (e.g., showing a progress bar or error messages), you have to use server push. For more details, see the <<interaction#,User Interface Interaction>> documentation page.
 
