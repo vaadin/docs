@@ -23,7 +23,7 @@ You can design application services according to your preferred architectural st
 
 * The application services should have *high cohesion*. This means that all the methods in your service should relate to the same thing.
 * The application services should be *stateless*.
-* Application services should *initiate and complete <<../forms-data/consistency/transactions#,database transactions>>* before returning results.
+* Application services should *define the boundaries of <<../forms-data/consistency/transactions#,database transactions>>*, so that views never have to manage transactions themselves.
 * The application services should be *<<../security/protect-services#,secure>>*.
 * Views should invoke application services, but application services *should not have dependencies on views*.
 
@@ -51,7 +51,7 @@ public class OrderCreationService {
         this.eventPublisher = eventPublisher;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // <3>
+    @Transactional // <3>
     public OrderId createOrder(OrderForm orderForm) {
         var validationErrors = validator.validate(orderForm);
         if (!validationErrors.isEmpty()) {
@@ -72,6 +72,37 @@ public class OrderCreationService {
 <1> Makes the service into a Spring bean.
 <2> Protects the service from unauthorized access.
 <3> Runs the method inside a database transaction.
+
+
+=== Transactions
+
+Use Spring's default transaction propagation, `REQUIRED`, for application services. When a view calls a service, there is typically no active transaction, so Spring starts one and commits it when the method returns. When a service is called by another service that already has an active transaction, it joins that transaction. The work of both services is then committed or rolled back together.
+
+Mark methods that only read data as read-only. This allows Spring and your persistence technology to optimize the transaction. A convenient way of doing this is to make all methods read-only at the class level, and to override this for the methods that write data:
+
+[source,java]
+----
+@Service
+@Transactional(readOnly = true) // <1>
+@PreAuthorize("isAuthenticated()")
+public class CustomerService {
+
+    public Optional<Customer> findById(long customerId) {
+        // ...
+    }
+
+    @Transactional // <2>
+    public Customer save(Customer customer) {
+        // ...
+    }
+}
+----
+<1> All methods run inside read-only transactions by default.
+<2> Overrides the class-level annotation, since this method writes data.
+
+Background jobs are an exception, as they should run independently of whatever triggered them. See <<background-jobs/jobs#transactions,Implementing Jobs>> for details.
+
+For more information about transaction management, see the <<../forms-data/consistency/transactions/declarative#,Declarative Transactions>> documentation page.
 
 
 == Service Naming
@@ -117,9 +148,9 @@ public class CustomerCrudService {
 
 Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
 
-Your entities should be _anemic_, which means that they only contain data and little to no business logic.
-
 In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
+
+When you pass entities to the UI layer like this, they should be _anemic_, which means that they only contain data and little to no business logic. If your entities contain business logic, use DTO:s instead.
 
 
 === Data Transfer Objects

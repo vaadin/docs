@@ -11,15 +11,14 @@ order: 10
 
 The easiest way to manage transactions in a Spring application is by using the `@Transactional` annotation. You can place it directly on your class, or on individual methods. Don't use the annotation on interfaces, except for <</building-apps/forms-data/persistence/spring-data#,Spring Data repositories>>.
 
-The following example instructs Spring to run all methods of the application service inside a new transaction:
+The following example instructs Spring to run all methods of the application service inside a transaction:
 
 [source,java]
 ----
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional
 public class MyApplicationService {
     ...
 }
@@ -90,7 +89,30 @@ public class MyApplicationService {
 }
 ----
 
-// TODO Write something about read-only transactions?
+== Read-Only Transactions
+
+If a method only reads data, you can mark its transaction as read-only by using the `readOnly` annotation attribute. Spring passes this on to your persistence technology and database driver, which can use it to optimize the transaction. Don't rely on it to prevent writes, though. Whether it does depends on the persistence technology and the database.
+
+The following example makes all methods of the application service read-only by default, and overrides this for `save()`, which writes data:
+
+[source,java]
+----
+@Service
+@Transactional(readOnly = true)
+public class MyApplicationService {
+
+    public Optional<MyData> findById(long id) {
+        ...
+    }
+
+    @Transactional
+    public void save(MyData data) {
+        ...
+    }
+}
+----
+
+Spring ignores the read-only setting when the method joins a transaction that has already been started, for example by another service.
 
 
 == Isolation Level
