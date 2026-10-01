@@ -8,12 +8,53 @@ order: 25
 
 
 = User Interface Interaction
+:toclevels: 2
 
 Some background jobs execute business processes in the background. The end user may see the result of the job, but doesn't have to interact directly with it. Scheduled and event triggered jobs are typically in this category.
 
 Then there are jobs that need to interact with the user interface. For instance, a job may want to update a progress indicator while running, and notify the user when it's finished or an error has occurred. Furthermore, the user may want to cancel a running job before it has completed. This page explains different options for allowing a user to interact with a background job, and vice versa.
 
 
+== Why Use a Background Job?
+
+In a Flow application, Vaadin holds the lock of the user's session while it handles a request from the browser. If a listener calls a slow operation directly, Vaadin can't send the response until the operation has finished. Until then, the user interface doesn't respond to the user -- in any browser tab that belongs to the same session.
+
+To keep the user interface responsive, run the slow operation as a background job, and let the job report back to the user interface.
+
+
+== Complete Example
+
+The following Flow example shows all the parts together. An application service runs a job in a background thread. A view starts the job, shows its progress, and lets the user cancel it. The service uses <<callbacks#,callbacks>> to report back to the view, and the view stores the state of the job in <</building-apps/server-push/updates#pushing-state-with-signals,signals>>.
+
+The example only works with server push enabled. See <</building-apps/server-push#enabling-push,Enabling Push>> for how to enable it.
+
+.ReportService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/backgroundjobs/ReportService.java[tags=full,indent=0]
+----
+<1> Protects the service with method security, as you should with all <<../../add-service#,application services>>.
+<2> Runs the job in a background thread. The service uses the `TaskExecutor` instead of the `@Async` annotation, so that the security check runs in the thread of the user. See <<../triggers#user-triggered-jobs,User Triggered Jobs>> for details.
+<3> Stops at the next suitable moment if the job has been cancelled.
+<4> Returns a handle that the view can use to cancel the job.
+
+.ReportView.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/backgroundjobs/ReportView.java[tags=full,indent=0]
+----
+<1> Allows any authenticated user to open the view, which matches the access rule of the service. See <<../../../security/protect-views#,Protect Views>> for details.
+<2> Signals hold the state of the job. The job updates them from its background thread, and the bound components update automatically.
+<3> Derives a signal that disables the start button while the job is running.
+<4> Cancels the job if the user leaves the view.
+<5> Passes callbacks that update the signals, and stores the handle for cancelling the job.
+<6> Runs in the background thread. This is safe, because signals are thread-safe.
+
+If the job can't report its progress, call `progressBar.setIndeterminate(true)` instead of binding the value of the progress bar. The progress bar then shows that the job is running, without showing how far it has come.
+
+
 == Options
+
+The example above is one way of letting the user interface and a background job interact. The following pages cover the different options in more detail:
 
 section_outline::[]
