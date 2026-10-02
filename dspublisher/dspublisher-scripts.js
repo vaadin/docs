@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '3.0.0-alpha.13';
+const DSP_VERSION = '3.0.0-alpha.15';
 
 const projectRootPath = path.resolve(__dirname, '..');
 const dspConfig = JSON.parse(
