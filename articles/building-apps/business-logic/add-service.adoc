@@ -23,7 +23,7 @@ You can design application services according to your preferred architectural st
 
 * The application services should have *high cohesion*. This means that all the methods in your service should relate to the same thing.
 * The application services should be *stateless*.
-* Application services should *initiate and complete <<../forms-data/consistency/transactions#,database transactions>>* before returning results.
+* Application services should *define the boundaries of <<../forms-data/consistency/transactions#,database transactions>>*, so that views never have to manage transactions themselves.
 * The application services should be *<<../security/protect-services#,secure>>*.
 * Views should invoke application services, but application services *should not have dependencies on views*.
 
@@ -51,7 +51,7 @@ public class OrderCreationService {
         this.eventPublisher = eventPublisher;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // <3>
+    @Transactional // <3>
     public OrderId createOrder(OrderForm orderForm) {
         var validationErrors = validator.validate(orderForm);
         if (!validationErrors.isEmpty()) {
@@ -74,6 +74,37 @@ public class OrderCreationService {
 <3> Runs the method inside a database transaction.
 
 
+=== Transactions
+
+Use Spring's default transaction propagation, `REQUIRED`, for application services. When a view calls a service, there is typically no active transaction, so Spring starts one and commits it when the method returns. When a service is called by another service that already has an active transaction, it joins that transaction. The work of both services is then committed or rolled back together.
+
+Mark methods that only read data as read-only. This allows Spring and your persistence technology to optimize the transaction. A convenient way of doing this is to make all methods read-only at the class level, and to override this for the methods that write data:
+
+[source,java]
+----
+@Service
+@Transactional(readOnly = true) // <1>
+@PreAuthorize("isAuthenticated()")
+public class CustomerService {
+
+    public Optional<Customer> findById(long customerId) {
+        // ...
+    }
+
+    @Transactional // <2>
+    public Customer save(Customer customer) {
+        // ...
+    }
+}
+----
+<1> All methods run inside read-only transactions by default.
+<2> Overrides the class-level annotation, since this method writes data.
+
+Background jobs are an exception, as they should run independently of whatever triggered them. See <<background-jobs/jobs#transactions,Implementing Jobs>> for details.
+
+For more information about transaction management, see the <<../forms-data/consistency/transactions/declarative#,Declarative Transactions>> documentation page.
+
+
 == Service Naming
 
 Since services form the API of your application, choosing clear and meaningful names is essential. A good service name should be easy to understand and locate in the code.
@@ -87,7 +118,7 @@ Vaadin does not enforce a specific naming convention for application services. W
 
 == Input & Output
 
-Application services often need to communicate with <<../forms-data/persistence#,repositories or data access objects>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
+Application services often need to communicate with <<../forms-data/persistence#,repositories or data access objects>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTOs). Both have advantages and disadvantages.
 
 
 === Entities
@@ -117,9 +148,9 @@ public class CustomerCrudService {
 
 Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
 
-Your entities should be _anemic_, which means that they only contain data and little to no business logic.
-
 In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
+
+When you pass entities to the UI layer like this, they should be _anemic_, which means that they only contain data and little to no business logic. If your entities contain business logic, use DTOs instead.
 
 
 === Data Transfer Objects
@@ -130,11 +161,11 @@ In other cases, the user interface may need only a subset of the data stored ins
 
 You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains about the same.
 
-In this case, the application services should accept DTO:s as input, and return DTO:s as output. The entities should no longer be part of the application layer API.
+In this case, the application services should accept DTOs as input, and return DTOs as output. The entities should no longer be part of the application layer API.
 
-This adds another responsibility to the application service: mapping between entities and DTO:s.
+This adds another responsibility to the application service: mapping between entities and DTOs.
 
-When using query classes, you can do the mapping in them by returning their DTO:s, directly. The query DTO:s become part of the application layer API.
+When using query classes, you can do the mapping in them by returning their DTOs, directly. The query DTOs become part of the application layer API.
 
 For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
 
@@ -167,12 +198,12 @@ public class CustomerCrudService {
 }
 ----
 
-When using DTO:s, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
+When using DTOs, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
 
 
 === Domain Payload Objects
 
-When using <<../forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
+When using <<../forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTOs, as well. In this case, the DTOs are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTOs.
 
 
 === Validation
@@ -184,13 +215,15 @@ You can validate the input in different ways. For more information, see the <<..
 
 == Package Naming
 
-For Java packages containing services, the recommended naming convention is `[feature].service`, where `[feature]` represents the full-stack feature the service belongs to. If the feature package is very small, you can simplify the structure and put the service directly in `[feature]`.
+Put an application service directly in the package of the full-stack feature it belongs to, rather than in a separate `service` sub-package. A `service` sub-package would force the repositories and entities that the service uses to be public, too.
 
-For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm.service`
+For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm`
 
-This structure keeps services well-organized, easy to find, and clearly associated with their purpose.
+In a small feature, the views can be in the same package as the service. As the feature grows, move the views to a `ui` sub-package, such as [packagename]`com.example.application.crm.ui`. The service then has to be public, as it forms the API that the views call. The views themselves can remain package private.
 
-See the <<../architecture/packages#,Package Structure>> documentation page for more information.
+This structure keeps services easy to find, and next to the rest of their feature. It also lets the Java compiler ensure that other packages only call the public API of the feature.
+
+See the <<../architecture/packages#,Package Structure>> documentation page for more information, including when to package by layer instead.
 
 
 == Injecting a Service into a View

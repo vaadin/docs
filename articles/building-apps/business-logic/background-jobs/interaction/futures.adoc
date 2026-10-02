@@ -17,15 +17,16 @@ Compared to <<callbacks#,callbacks>>, this approach is easier to implement in th
 
 == Returning a Result
 
-Spring has built-in support for `CompletableFuture` when using the `@Async` annotation.
+As on the <<callbacks#,Callbacks>> page, the examples on this page are methods of a protected application service. They run the job with an injected `TaskExecutor` instead of using the `@Async` annotation. See <<../triggers#user-triggered-jobs,User Triggered Jobs>> for why.
 
-The following example shows a background job that completes with either a string or an exception. If the method throws an exception, Spring returns a `CompletableFuture` with the exception in question:
+`CompletableFuture` can run a job on the `TaskExecutor` through its `supplyAsync()` method. The following example shows a background job that completes with either a string or an exception. If the job throws an exception, the `CompletableFuture` completes exceptionally:
 
 [source,java]
 ----
-@Async
+@PreAuthorize("hasAuthority('permission:startjob')")
 public CompletableFuture<String> startBackgroundJob() {
-    return CompletableFuture.completedFuture(doSomethingThatTakesALongTime());
+    return CompletableFuture.supplyAsync(this::doSomethingThatTakesALongTime,
+        taskExecutor);
 }
 ----
 
@@ -38,12 +39,13 @@ You can cancel a Java `Future` by calling its `cancel()` method. The method has 
 
 When you cancel a `CompletableFuture`, it completes with a `CompletionException` caused by a `CancellationException`. However, the job continues to run silently in the background until it's finished. If you want to notify the job itself that it has been cancelled, and it should stop running at the next suitable moment, you'll have to make some changes.
 
-`CompletableFuture` has an `isCancelled()` method that you can use to query whether the job has been cancelled or not. Therefore, you can no longer use the `@Async` annotation. Instead, you have to execute manually the job with the `TaskExecutor`, and manage the state of the returned `CompletableFuture`. The principle is the same as when using callbacks or handles.
+`CompletableFuture` has an `isCancelled()` method that you can use to query whether the job has been cancelled or not. However, the job can't reach the future that `supplyAsync()` returns. Instead, you have to create the `CompletableFuture` yourself, execute the job with the `TaskExecutor`, and manage the state of the future. The principle is the same as when using callbacks or handles.
 
 The earlier example would look like this when implemented using a `CompletableFuture`:
 
 [source,java]
 ----
+@PreAuthorize("hasAuthority('permission:startjob')")
 public CompletableFuture<String> startBackgroundJob() {
     var future = new CompletableFuture<String>();
     taskExecutor.execute(() -> {
