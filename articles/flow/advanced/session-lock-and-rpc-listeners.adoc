@@ -1,8 +1,8 @@
 ---
 title: Service Event Bus
 page-title: How to observe session locks, RPC invocations pass:[&] data queries in Vaadin
-description: Observing session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
-meta-description: Learn how to use the Vaadin service event bus to observe session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
+description: Observing requests, session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
+meta-description: Learn how to use the Vaadin service event bus to observe requests, session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
 order: 850
 ---
 
@@ -10,8 +10,8 @@ order: 850
 = [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
 Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
-The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
-Listening to them is useful for performance monitoring, distributed tracing, and diagnosing lock contention -- without modifying application logic.
+The events the framework fires cover the machinery that a request passes through: the request itself from start to finish, the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
+Listening to them is useful for performance monitoring, distributed tracing, diagnosing lock contention, and reporting slow or failing requests -- without modifying application logic.
 
 The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
 
@@ -41,6 +41,57 @@ How that init listener itself is discovered depends on the project type:
 - In *plain Java* projects, register it through the Java Service Provider Interface by listing its fully qualified class name in [filename]`META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`.
 
 See <<service-init-listener#,Service Init Listener>> for the full details of each approach.
+
+
+== Request Events
+
+The framework reports the outermost span of a request: from just after the request interceptors' `requestStart` callback runs to just before their `requestEnd` callback runs.
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`RequestStartedEvent`
+|After the request interceptors' `requestStart` callback has run.
+
+|[classname]`RequestEndedEvent`
+|Once the response has been written, before the request interceptors' `requestEnd` callback runs.
+|===
+
+Every started event is followed by a matching ended event for the same request, on the same thread.
+Requests are handled concurrently, so a listener must expect several requests to be in flight on several threads at once.
+
+Both events carry the [classname]`VaadinService` handling the request and the request itself, through [methodname]`getService()` and [methodname]`getRequest()`.
+[methodname]`getResponse()` gives an [classname]`Optional` with the response -- empty for a push message, which is reported as a request of its own, without a response.
+
+[classname]`RequestEndedEvent` reports more, including how long handling the request took:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getSession()`
+|An [classname]`Optional` with the session used during the request, empty if the request didn't use one.
+
+|[methodname]`getHandler()`
+|An [classname]`Optional` with the [classname]`RequestHandler` that handled the request.
+Its type identifies what kind of request it was -- for example [classname]`UidlRequestHandler` for a client-to-server message.
+Empty if no handler accepted the request.
+
+|[methodname]`getFailure()`
+|An [classname]`Optional` with the exception that made handling the request fail.
+The exception has already been passed to the session [classname]`ErrorHandler` by this point.
+
+|[methodname]`getDuration()`
+|How long handling the request took, measured from just before [classname]`RequestStartedEvent` was fired.
+|===
+
+The following example logs slow or failed requests, along with the handler that handled them:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/RequestMetricsInitListener.java[tags=snippet,indent=0]
+----
 
 
 == Session Lock Events
