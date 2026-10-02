@@ -75,20 +75,19 @@ UI.getCurrentOrThrow().getPage().retrieveExtendedClientDetails(details -> {
 
 [methodname]`getBrowserTime()` returns the current time of the browser as an [classname]`Instant`. It isn't entirely accurate, since it's derived from the round-trip to the client, but it's close enough for most purposes.
 
-The returned instant is a point on the time line and carries no time zone. To get the date and time as shown on the end user's computer, combine it with the browser's time zone -- which [methodname]`getTimeZoneId()` returns as `null` when the browser didn't report one, so a fallback is needed:
+The returned instant is a point on the time line and carries no time zone. To get the date and time as shown on the end user's computer, combine it with the browser's time zone, which [methodname]`getZoneId()` returns:
 
 .Getting the date and time shown in the browser
 [source,java]
 ----
 UI.getCurrentOrThrow().getPage().retrieveExtendedClientDetails(details -> {
-    String timeZoneId = details.getTimeZoneId();
-    ZoneId zone = timeZoneId != null ? ZoneId.of(timeZoneId)
-            : ZoneId.systemDefault();
-
-    ZonedDateTime browserDateTime = details.getBrowserTime().atZone(zone);
+    ZonedDateTime browserDateTime = details.getBrowserTime()
+            .atZone(details.getZoneId());
     handleBrowserDateTime(browserDateTime);
 });
 ----
+
+[methodname]`getZoneId()` never returns `null`. It resolves the time zone ID the browser reported through [methodname]`getTimeZoneId()`, and falls back to a fixed offset built from the browser's reported time zone offset when the browser reported no ID, or one the JVM doesn't recognize.
 
 [NOTE]
 The older [methodname]`getCurrentDate()` method is deprecated for removal. It returns a [classname]`Date` in the server's default time zone, which is rarely what's wanted; use [methodname]`getBrowserTime()` instead.
