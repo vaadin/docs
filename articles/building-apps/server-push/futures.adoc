@@ -86,3 +86,46 @@ button.addClickListener(clickEvent -> {
         .exceptionally(consumerToFunction(ui.accessLater(this::onJobFailed, null)))
 });
 ----
+
+
+== Loading Content After the View Is Shown
+
+When part of a view depends on data that's slow to load, you don't have to make the user wait for all of it before the view is shown. Instead, show a placeholder, load the data in a background job, and replace the placeholder when the data is ready. Each part of the view can load independently, so the fastest parts appear first.
+
+Start loading when the component is attached, and cancel the job when the component is detached, for example when the user navigates away before the data has loaded:
+
+[source,java]
+----
+public class SalesSummaryCard extends Div {
+    private final SalesService salesService;
+
+    public SalesSummaryCard(SalesService salesService) {
+        this.salesService = salesService;
+        var placeholder = new ProgressBar();
+        placeholder.setIndeterminate(true);
+        add(placeholder); // <1>
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        var ui = attachEvent.getUI();
+        var loading = salesService.loadSalesSummary(); // <2>
+        loading.thenAccept(ui.accessLater(this::showSummary, null));
+        addDetachListener(detachEvent -> {
+            detachEvent.unregisterListener();
+            loading.cancel(true); // <3>
+        });
+    }
+
+    private void showSummary(SalesSummary summary) {
+        removeAll();
+        add(new H3("Sales this month"), new Span(summary.total().toString())); // <4>
+    }
+}
+----
+<1> The placeholder is shown as soon as the view is rendered.
+<2> `loadSalesSummary()` returns a `CompletableFuture` and runs in a background thread. The view doesn't wait for it.
+<3> Cancelling the future prevents `showSummary()` from running after the component has been detached. The job itself keeps running unless it checks for cancellation; see <</building-apps/business-logic/background-jobs/interaction/futures#cancelling,Cancelling>>.
+<4> The placeholder is replaced with the real content through a server push.
+
+To show an error message instead of the content when loading fails, add an `exceptionally()` callback as described in <<#exceptional-completion,Exceptional Completion>>. Because the data is loaded on attach, it's loaded again if the component is detached and attached again. If that's not what you want, keep track of whether the data has already been loaded.
