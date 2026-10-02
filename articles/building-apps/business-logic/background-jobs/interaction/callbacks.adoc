@@ -33,6 +33,8 @@ When using a Flow user interface, the simplest way of allowing background jobs t
 
 |===
 
+The examples on this page are methods of an <<../../add-service#,application service>> that acts as the <<../triggers#user-triggered-jobs,trigger>> of the job. Like all application service methods, they are protected with method security. Because of this, they hand the job to an injected `TaskExecutor` instead of using the `@Async` annotation. See <<../triggers#user-triggered-jobs,User Triggered Jobs>> for why, and for how to inject the `TaskExecutor`.
+
 
 == Returning a Result
 
@@ -40,15 +42,17 @@ A background job that returns a string or an exception could be implemented like
 
 [source,java]
 ----
-@Async
+@PreAuthorize("hasAuthority('permission:startjob')")
 public void startBackgroundJob(Consumer<String> onComplete,
                                Consumer<Exception> onError) {
-    try {
-        var result = doSomethingThatTakesALongTime();
-        onComplete.accept(result);
-    } catch (Exception ex) {
-        onError.accept(result);
-    }
+    taskExecutor.execute(() -> {
+        try {
+            var result = doSomethingThatTakesALongTime();
+            onComplete.accept(result);
+        } catch (Exception ex) {
+            onError.accept(ex);
+        }
+    });
 }
 ----
 
@@ -59,29 +63,31 @@ When the background job is also reporting its progress, for instance as a percen
 
 [source,java]
 ----
-@Async
+@PreAuthorize("hasAuthority('permission:startjob')")
 public void startBackgroundJob(Consumer<String> onComplete,
                                Consumer<Double> onProgress,
                                Consumer<Exception> onError) {
-    try {
-        onProgress.apply(0.0);
+    taskExecutor.execute(() -> {
+        try {
+            onProgress.accept(0.0);
 
-        var step1Result = performStep1();
-        onProgress.apply(0.25);
+            var step1Result = performStep1();
+            onProgress.accept(0.25);
 
-        var step2Result = performStep2(step1Result);
-        onProgress.apply(0.50);
+            var step2Result = performStep2(step1Result);
+            onProgress.accept(0.50);
 
-        var step3Result = performStep3(step2Result);
-        onProgress.apply(0.75);
+            var step3Result = performStep3(step2Result);
+            onProgress.accept(0.75);
 
-        var result = performStep4(step3Result);
-        onProgress.apply(1.0);
+            var result = performStep4(step3Result);
+            onProgress.accept(1.0);
 
-        onComplete.accept(result);
-    } catch (Exception ex) {
-        onError.accept(ex);
-    }
+            onComplete.accept(result);
+        } catch (Exception ex) {
+            onError.accept(ex);
+        }
+    });
 }
 ----
 
@@ -92,42 +98,44 @@ A job can be cancelled. To do that, it would look like this:
 
 [source,java]
 ----
-@Async
+@PreAuthorize("hasAuthority('permission:startjob')")
 public void startBackgroundJob(Consumer<String> onComplete,
                                Consumer<Double> onProgress,
                                Consumer<Exception> onError,
                                Supplier<Boolean> isCancelled) {
-    try {
-        onProgress.apply(0.0);
+    taskExecutor.execute(() -> {
+        try {
+            onProgress.accept(0.0);
 
-        if (isCancelled.get()) {
-            return;
+            if (isCancelled.get()) {
+                return;
+            }
+            var step1Result = performStep1();
+            onProgress.accept(0.25);
+
+            if (isCancelled.get()) {
+                return;
+            }
+            var step2Result = performStep2(step1Result);
+            onProgress.accept(0.50);
+
+            if (isCancelled.get()) {
+                return;
+            }
+            var step3Result = performStep3(step2Result);
+            onProgress.accept(0.75);
+
+            if (isCancelled.get()) {
+                return;
+            }
+            var result = performStep4(step3Result);
+            onProgress.accept(1.0);
+
+            onComplete.accept(result);
+        } catch (Exception ex) {
+            onError.accept(ex);
         }
-        var step1Result = performStep1();
-        onProgress.apply(0.25);
-
-        if (isCancelled.get()) {
-            return;
-        }
-        var step2Result = performStep2(step1Result);
-        onProgress.apply(0.50);
-
-        if (isCancelled.get()) {
-            return;
-        }
-        var step3Result = performStep3(step2Result);
-        onProgress.apply(0.75);
-
-        if (isCancelled.get()) {
-            return;
-        }
-        var result = performStep4(step3Result);
-        onProgress.apply(1.0);
-
-        onComplete.accept(result);
-    } catch (Exception ex) {
-        onError.accept(ex);
-    }
+    });
 }
 ----
 
@@ -150,47 +158,48 @@ Next, implement the service method like this:
 
 [source,java]
 ----
+@PreAuthorize("hasAuthority('permission:startjob')")
 public CancellableJob startBackgroundJob(Consumer<String> onComplete,
-                                         Consumer<Double> onProgress
+                                         Consumer<Double> onProgress,
                                          Consumer<Exception> onError) {
     var cancelled = new AtomicBoolean(false);
     taskExecutor.execute(() -> {
         try {
-            onProgress.apply(0.0);
+            onProgress.accept(0.0);
 
             if (cancelled.get()) {
                 return;
             }
             var step1Result = performStep1();
-            onProgress.apply(0.25);
+            onProgress.accept(0.25);
 
             if (cancelled.get()) {
                 return;
             }
             var step2Result = performStep2(step1Result);
-            onProgress.apply(0.50);
+            onProgress.accept(0.50);
 
             if (cancelled.get()) {
                 return;
             }
             var step3Result = performStep3(step2Result);
-            onProgress.apply(0.75);
+            onProgress.accept(0.75);
 
             if (cancelled.get()) {
                 return;
             }
             var result = performStep4(step3Result);
-            onProgress.apply(1.0);
+            onProgress.accept(1.0);
 
             onComplete.accept(result);
         } catch (Exception ex) {
-            onError.accept(result);
+            onError.accept(ex);
         }
     });
     return () -> cancelled.set(true);
 }
 ----
 
-The user interface would have to store the handle while the job is running, and call the `cancel()` method to cancel it. However, you can't use the `@Async` annotation in this case. It's because `@Async` methods can only return `void` or future-like types. In this case, you may want to return neither.
+The user interface would have to store the handle while the job is running, and call the `cancel()` method to cancel it.
 
 The handle itself is thread safe because you're using an `AtomicBoolean`. You don't need to take any special precautions to call it from the user interface.

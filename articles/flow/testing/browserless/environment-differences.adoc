@@ -1,0 +1,62 @@
+---
+title: Spring Test Lifecycle
+page-title: Spring Test Lifecycle in Browserless Tests | Vaadin
+description: The order in which Spring and the browserless environment set up a test, and how it affects session-scoped beans and authentication.
+meta-description: Learn the order in which Spring and the Vaadin browserless environment set up a test, and how that order affects session-scoped beans and authentication.
+order: 62
+---
+
+
+= Spring Test Lifecycle
+
+`SpringBrowserlessTest` creates the mocked Vaadin environment after Spring has prepared the test instance.
+The order of these steps determines when dependency injection and authentication become available, which affects session-scoped beans and authentication that a test changes later.
+Plain Java and Quarkus tests use their own framework setup, and the <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle.
+
+[#test-lifecycle]
+== Order of Test Setup
+
+For `SpringBrowserlessTest`, the default sequence is:
+
+. JUnit creates the test instance and Spring injects its `@Autowired` fields, before the Vaadin environment exists.
+. JUnit extension callbacks run. With their default timing, Spring Security test annotations populate `SecurityContextHolder`.
+. The base class's `@BeforeEach` method creates the Vaadin service, session, and UI and navigates to the root route.
+. Subclass `@BeforeEach` methods and the test method can use that environment.
+. The inherited cleanup closes the Vaadin environment after the test.
+
+The environment is therefore available after its setup hook, not during initial test-instance injection.
+See <<test-environment#,Test Environment and Lifecycle>> for the common APIs.
+
+[#session-scoped-beans]
+== Session-Scoped Beans
+
+Resolving a `@VaadinSessionScope` bean during test-instance injection fails because no Vaadin session exists yet.
+This failure affects every test in the class, including methods that do not use the field.
+An `ObjectProvider` defers resolution until `getObject()` is called after environment setup.
+A lazy proxy with `@Lazy`, or an `ApplicationContext.getBean()` call made after setup, can also defer lookup.
+
+Spring's `@SessionScope` beans don't fail during test-instance injection.
+Spring's test support binds a mock request and session before injecting the test instance, and the default scoped proxy resolves the bean when it's used.
+Deferred lookup works for these beans too.
+
+Views created during initial or explicit navigation already have the Vaadin environment available, so their session-scoped dependencies can resolve then.
+In <<multi-user#pitfalls-and-guarantees,multi-user Spring tests>>, request- and session-scoped beans resolve for the active user; activate the intended window before resolving a bean directly.
+
+For a complete test, see <<{articles}/building-apps/testing/browserless/setup-spring-boot#session-scoped-beans,Access Session-Scoped Beans>>.
+
+[#authentication-applied-during-a-test]
+== Authentication Applied During a Test
+
+With their default timing, Spring Security's `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` establish authentication before the environment's initial navigation.
+View access control therefore observes the simulated user during that navigation.
+
+Authentication established in the test body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+Subsequent requests use that authentication, but `getCurrentView()` still returns the previously rendered view until another navigation takes place.
+
+`Page.reload()` recreates the UI at the currently active location.
+If initial navigation redirected to the login view, reloading renders the login location again; it does not navigate to the original protected destination.
+
+For a worked Spring test, see <<{articles}/building-apps/testing/browserless/test-view-access#authentication-applied-during-a-test,Navigate after Changing Authentication>>.
+See <<spring-security#,Spring Security Integration>> for setup requirements and session ID rotation.
+
+[discussion-id]`4B6C9E13-7A85-42D0-9F3B-1C8E5D4A2B76`

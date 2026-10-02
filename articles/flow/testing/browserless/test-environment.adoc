@@ -1,0 +1,120 @@
+---
+title: Test Environment and Lifecycle
+page-title: Test Environment and Lifecycle | Vaadin
+description: Browserless test base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
+meta-description: Browserless test base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
+order: 10
+---
+
+
+= Test Environment and Lifecycle
+
+Browserless tests create the Vaadin service, session, and UI in the test JVM.
+The standard base-class setup initializes a new environment before each test method and tears it down afterwards.
+Custom setup, such as <<cdi#,CDI integration>>, replaces initialization while retaining the JUnit lifecycle hooks.
+JUnit's `@TestInstance(PER_CLASS)` changes the test-instance lifecycle; it does not share the Vaadin environment.
+
+== Base Classes and Framework Integration
+
+[cols="1,2"]
+|===
+| Base Class | Integration
+| `BrowserlessTest` | Plain Java, provided by `browserless-test-junit6`.
+| An application-owned CDI subclass of `BrowserlessTest` | Weld and `CdiVaadinServlet`; see <<cdi#,CDI Test Integration>>.
+| `SpringBrowserlessTest` | Spring application context and dependency injection, provided by `browserless-test-spring`.
+| `QuarkusBrowserlessTest` | Quarkus test framework and dependency injection, provided by `browserless-test-quarkus`.
+|===
+
+The <<extensions#,JUnit extensions>> provide composition-based setup for plain Java tests.
+The <<multi-user#,application context API>> supports multiple users and windows.
+
+[#route-scanning]
+== Route Scanning
+
+By default, browserless tests scan the classpath for routes and error views.
+`@ViewPackages(classes = MyView.class)` restricts scanning to the packages of the supplied classes and their sub-packages.
+`@ViewPackages(packages = "com.example.views")` accepts package names instead.
+Both attributes may be combined.
+An empty `@ViewPackages` restricts scanning to the test class's package and its sub-packages.
+
+In Spring tests, `@SpringBootTest` loads the full application context; `@ContextConfiguration` selects a narrower configuration.
+See <<spring-security#,Spring Security Integration>> for access-control initialization when using a reduced context.
+
+== Navigating to Views
+
+With the default environment setup, the loaded view is the root view.
+The custom CDI setup registers routes after initialization and navigates explicitly in the test.
+
+To navigate to another registered view, use the [methodname]`navigate()` methods provided by the base class:
+
+- For a normal view with only a path defined
++
+[methodname]`navigate(MyView.class)`
++
+[methodname]`navigate("myView", MyView.class)`
+- For a view with [interfacename]`HasUrlParameter`
++
+[methodname]`navigate(MyParam.class, "parameter")`
++
+[methodname]`navigate("myParam/parameter", MyParam.class)`
+- For a view with URL template `@Route("template/:param")`
++
+[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
++
+[methodname]`navigate("template/myParam", Template.class)`
+
+- For a location that [since:com.vaadin:vaadin@V25.3]#carries a query string, a fragment, or both#
++
+[methodname]`navigate("myParam/parameter?tab=history&page=2", MyParam.class)`
++
+The location is split up the same way the browser address bar does it, so the query parameters reach the view through the navigation event. A location consisting only of a fragment, such as `"#details"`, identifies a place within the current page rather than a route, so it leaves the current view in place.
+
+All navigation methods return the instantiated view, so that its fields can be used directly for testing.
+
+[NOTE]
+Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
+
+You can also retrieve the current view at any time with [methodname]`getCurrentView()`:
+
+[source,java]
+----
+HasElement view = getCurrentView();
+----
+
+
+== Simulating Keyboard Shortcuts
+
+Use [methodname]`fireShortcut()` to simulate keyboard shortcuts registered with Vaadin's shortcut API:
+
+[source,java]
+----
+// Simulate pressing Enter
+fireShortcut(Key.ENTER);
+
+// Simulate Ctrl+S
+fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
+----
+
+== Components That Don't Exist Yet
+
+Queries traverse the server-side component tree.
+Per-item renderer components may not exist until rendering is requested, and closed overlay content is detached.
+See <<component-query#components-a-query-cannot-find,Components a Query Cannot Find>> for renderer and overlay semantics.
+
+== Server Round Trips
+
+`roundTrip()` processes pending client-server communication in the simulated environment.
+It does not start a browser or execute client-side JavaScript.
+Signal task processing is described separately in <<testing-signals#,Signal Test Environment>>.
+
+For worked examples, choose your framework in <<{articles}/building-apps/testing/browserless#,Browserless Testing>>.
+
+
+== Framework-Specific Timing and Configuration
+
+See <<environment-differences#,Spring Test Lifecycle>> for Spring injection, session-scoped beans, and authentication timing.
+See <<cdi#,CDI Test Integration>> for the custom Weld lifecycle.
+For standard per-test properties, feature flags, and Lookup services, see <<test-configuration#,Test Configuration>> and the <<{articles}/building-apps/testing/browserless/configure-tests#,configuration guide>>.
+
+
+[discussion-id]`0262B190-4113-4A35-BD70-F727FB2F2AD5`

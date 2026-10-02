@@ -40,7 +40,7 @@ export class Example extends LitElement {
   private createItem() {
     const item = document.createElement('vaadin-menu-bar-item');
     const icon = document.createElement('vaadin-icon');
-    icon.style.setProperty('--vaadin-icon-size', '1rem');
+    icon.style.setProperty('--vaadin-icon-size', '1lh');
     item.setAttribute('aria-label', 'Other save options');
     icon.setAttribute('icon', `vaadin:chevron-down`);
     item.appendChild(icon);

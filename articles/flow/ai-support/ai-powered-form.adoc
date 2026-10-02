@@ -10,7 +10,7 @@ section-nav: commercial
 = [since:com.vaadin:vaadin@V25.2]#AI Form Filler#
 
 
-[classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each write is validated through the [classname]`Binder`, or through the component's built-in validators if [classname]`Binder` is not used. Rejected values are reported back so the model can correct them in the same turn.
+[classname]`FormAIController` populates the fields of a <<{articles}/components/form-layout#,[classname]`FormLayout`>> (Vaadin's responsive multi-column form container) or any other layout, using values an LLM extracts from a user prompt or attached files. The controller traverses the layout, discovers every field, and allows the LLM to read the current values, query the available values for selection components like Combo Box or Radio Button Group, and write new values back. Each written field is validated through its [classname]`Binder` binding when it has one, and through the component's own built-in validator otherwise. Rejected values are reported back so the model can correct them in the same turn.
 
 The controller works with any combination of standard Vaadin field components, such as [classname]`TextField`, [classname]`ComboBox`, [classname]`DatePicker`, [classname]`MultiSelectComboBox`, and [classname]`CheckboxGroup`. No extra wiring is needed beyond constructing the controller around the layout and attaching it to the orchestrator.
 
@@ -51,12 +51,14 @@ Example prompts:
 
 .Built-In Workflow Instructions
 [TIP]
-The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior, such as tone, naming conventions, or which fields the user may leave blank. Where the system prompt conflicts with a workflow step, the system prompt takes precedence.
+The controller already informs the LLM of the workflow it needs. You can focus your own system prompt on application-specific behavior, such as tone, naming conventions, or which fields the user may leave blank. Where the system prompt conflicts with a workflow step, the system prompt takes precedence. That precedence covers the workflow steps only: the system prompt can't license overwriting a <<#hiding-field-values,hidden value>> it supplied no value for, or treating user-supplied content as instructions.
 
 
 == Field Discovery
 
-The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. The container can be any component that implements [classname]`HasComponents`. Any component that implements [classname]`HasValue` is treated as a field, and any nested [classname]`HasComponents` is walked recursively.
+The controller walks the container's component tree on every LLM turn, so fields added or removed between turns are picked up automatically. The container can be any component that implements [classname]`HasComponents`. Any component that implements [classname]`HasValue` is treated as a field. The walk recurses into nested [classname]`HasComponents` containers and into [classname]`Composite` components, so fields wrapped in a reusable composite are found too. A component that is both a field and a container, such as a custom field built on [classname]`Composite`, counts as a single field; its internal components are not exposed separately.
+
+The LLM addresses each field by an id. A field that has a component id, set with [methodname]`setId()`, when the controller first discovers it is addressed by that id, which keeps tool calls and conversation logs readable. Component ids must be unique within the form. A field without one gets a random id that is kept internally and never set on the component. Either way, the id is fixed for the rest of the session; setting or changing the component id later has no effect on it.
 
 [classname]`PasswordField` is always hidden from the LLM. To hide other fields, for example internal IDs or anything sensitive that the user must fill in manually, call [methodname]`ignoreField()`:
 
@@ -187,7 +189,7 @@ The selected items are written to the field as a set, in the order returned by t
 
 .Multi-Value Fields Must Implement MultiSelect
 [NOTE]
-A field whose value type is a [classname]`Collection` must implement [classname]`MultiSelect`. The controller rejects two cases at registration time: a [classname]`MultiSelect` field passed through the single-value [methodname]`forField(HasValue)` overload, and a [classname]`Collection`-valued field that doesn't implement [classname]`MultiSelect`.
+A field registered with [methodname]`fieldValueOptions()` whose value type is a [classname]`Collection` must implement [classname]`MultiSelect`. The controller rejects two cases when [methodname]`fieldValueOptions()` is called: a [classname]`MultiSelect` field passed through the single-value [methodname]`forField(HasValue)` overload, and a [classname]`Collection`-valued field that doesn't implement [classname]`MultiSelect`.
 
 
 === Custom Labels for the LLM
@@ -226,13 +228,13 @@ The model sees:
 
 * Each visible field's label, helper text, component type, and any [methodname]`describeField()` text or [classname]`Binder` property-name default.
 * The current value of every visible, non-ignored field, so it can decide which entries to overwrite -- unless <<#hiding-field-values,field values are hidden>>. Disabled and application-set read-only fields are included for context, with a flag telling the model not to write to them.
-* The available labels for a selection field, derived from a combo box or select's eager items, or from the items a [methodname]`fieldValueOptions()` query callback returns for the filter the model supplies.
+* The available labels for a selection field, derived from a combo box or select's eager items, from a fixed [methodname]`fieldValueOptions()` list, or from the items a [methodname]`fieldValueOptions()` query callback returns for the filter the model supplies.
 
 The model does not see:
 
 * Any field excluded with [methodname]`ignoreField()`. Its value, label, and existence are all hidden.
 * Any field the application has hidden via [methodname]`setVisible(false)`, or that sits inside a hidden container.
-* The contents of [classname]`PasswordField`, which is always excluded.
+* Any [classname]`PasswordField`. Like an ignored field, its value, label, and existence are all hidden.
 * Internal data, services, or beans. The model has access only to what the field components themselves show.
 
 .Visible Field Values Are Sent to the Model
@@ -263,7 +265,7 @@ While a fill is in progress, every field the AI can write -- visible, enabled, a
 [role="since:com.vaadin:vaadin@V25.3"]
 == Marking AI Changes
 
-When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller handles this automatically: when a turn ends, every field whose value changed is marked with an "AI" badge. Selecting the badge opens a popover that explains the value was filled by AI and offers a revert control, which restores the field's value from before the AI's first change to it.
+When an AI fill changes several fields at once, users benefit from a visual cue that flags which fields the AI wrote. The controller handles this automatically: when a turn ends successfully, every field whose value changed is marked with an "AI" badge. A turn that ends in an error marks nothing and leaves marks from earlier turns untouched. Selecting the badge opens a popover that explains the value was filled by AI and offers a revert control, which restores the field's value from before the AI's first change to it.
 
 The marker needs no application code:
 
@@ -450,14 +452,7 @@ orchestrator.reconnect(provider)
 
 Field ids and <<#source-tracking,source data>> remain stable across the round-trip because they live on the field components themselves, which Vaadin serializes as part of the UI tree. No separate state object needs saving or restoring; the form fields are the state, and [classname]`VaadinSession` already persists them.
 
-[methodname]`restoreFieldSource()` covers a different round-trip: a form rebuilt from application data rather than restored from the session. When the application persists the filled values itself -- a draft saved to a database, for example -- it can store each field's [classname]`ValueSource` alongside them (the record is serializable) and reattach it in the new session:
-
-[source,java]
-----
-controller.restoreFieldSource(email, storedEmailSource);
-----
-
-Restore the field's value first and the source after: the source binds to the field's value at the moment of the call and goes stale on the next edit, just like a fresh one.
+A form rebuilt from application data rather than restored from the session, such as a draft loaded from a database, starts without marks and sources. The controller has no API for putting them back.
 
 
 == Composing Multiple Forms
