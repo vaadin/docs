@@ -244,25 +244,20 @@ Never `null`.
 For one navigation, the started event and the ended event are fired on the same thread, in that order, even when the navigation throws, so timing state can again be kept in a [classname]`ThreadLocal`.
 The ended event is fired in reverse registration order, so listeners nest around the started one.
 
-*Example*: Timing navigations and tagging each with the view it showed.
+*Example*: Finding broken links in the application.
+
+A navigation that ends with status 404 after the user opened a URL directly usually means a mistyped address or an outdated bookmark.
+When the user followed a router link instead, the application itself links to a route that doesn't exist:
 
 [source,java]
 ----
-ThreadLocal<Long> start = new ThreadLocal<>();
-VaadinServiceEventBus bus = service.getEventBus();
-bus.addListener(NavigationStartedEvent.class,
-        event -> start.set(System.nanoTime()));
-bus.addListener(NavigationEndedEvent.class, event -> {
-    long durationMs = (System.nanoTime() - start.get()) / 1_000_000;
-    start.remove();
-    String result = switch (event.getOutcome()) {
-        case NavigationEndedEvent.Completed completed ->
-                completed.navigationTarget().getSimpleName();
-        case NavigationEndedEvent.Postponed postponed -> "postponed";
-        case NavigationEndedEvent.Failed failed -> "failed";
-        case NavigationEndedEvent.NotShown notShown -> "not shown";
-    };
-    // Record durationMs and result.
+service.getEventBus().addListener(NavigationEndedEvent.class, event -> {
+    if (event.getStatusCode() == 404
+            && event.getTrigger() == NavigationTrigger.ROUTER_LINK) {
+        LoggerFactory.getLogger(getClass()).warn(
+                "Router link points to a missing route: {}",
+                event.getLocation().getPath());
+    }
 });
 ----
 
