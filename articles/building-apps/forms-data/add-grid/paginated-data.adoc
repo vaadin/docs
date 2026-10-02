@@ -96,3 +96,42 @@ include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridVie
 ----
 
 Sort properties are strings that are passed to the application service. They typically correspond to database column names, but in this example they are mapped to the record fields in the `Item` class.
+
+
+== Handling Errors
+
+The callback function runs whenever the grid needs more data, so a failing service call, such as a database timeout, can happen at any time while the user scrolls. If the exception isn't caught, it ends up in the application's error handler, and the user doesn't get any feedback about the rows that failed to load.
+
+Catch the exception in the callback, tell the user what happened, and return an empty result. The grid treats the empty result as the end of the data and stops requesting more rows. Refreshing the data provider resets the grid and loads the data again, so you can offer that as a retry action:
+
+[source,java]
+----
+grid.setItems(query -> {
+    try {
+        return service.findItems(
+                query.getOffset(),
+                query.getLimit(),
+                query.getSortOrders(),
+                filterField.getValue())
+            .stream();
+    } catch (DataAccessException e) {
+        log.error("Error loading items", e);
+        showLoadError(grid);
+        return Stream.empty();
+    }
+});
+
+private void showLoadError(Grid<?> grid) {
+    var notification = new Notification();
+    notification.addThemeVariants(NotificationVariant.ERROR);
+    var retryButton = new Button("Retry", event -> {
+        notification.close();
+        grid.getDataProvider().refreshAll();
+    });
+    notification.add(new Span("Loading the data failed."), retryButton);
+    notification.setDuration(0);
+    notification.open();
+}
+----
+
+Don't return placeholder items to fill the requested page, as they appear as real rows and can be selected or edited. If you also pass a count callback to `setItems()`, handle errors in it in the same way, for example by returning `0`.

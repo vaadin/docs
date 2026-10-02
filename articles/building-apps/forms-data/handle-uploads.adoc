@@ -176,6 +176,40 @@ The built-in upload handlers (`inMemory()`, `toTempFile()`, `toFile()`) call the
 Because the callback runs on the UI thread, avoid long-running processing inside it — this blocks the UI until the operation completes. For heavy tasks like virus scanning, image conversion, or large file imports, delegate the work to a background job and notify the user when it finishes. See <</building-apps/business-logic/background-jobs#,Background Jobs>> for patterns.
 
 
+== Showing Uploaded CSV Data in a Grid
+
+Because the success callback can update the UI, you can also show the contents of an uploaded file right away, for example, to let the user review imported data before saving it. The following example reads a CSV file with a header row into a <</components/grid#,Grid>>. Each row is a `String[]`, and the grid gets one column for each header value:
+
+[source,java]
+----
+Grid<String[]> grid = new Grid<>();
+
+Upload upload = new Upload(UploadHandler.inMemory(
+        (metadata, data) -> {
+            List<String[]> rows = new String(data, StandardCharsets.UTF_8)
+                    .lines()
+                    .filter(line -> !line.isBlank())
+                    .map(line -> line.split(",", -1))
+                    .toList();
+            if (rows.isEmpty()) {
+                return;
+            }
+
+            grid.removeAllColumns();
+            String[] headers = rows.getFirst();
+            for (int i = 0; i < headers.length; i++) {
+                int index = i;
+                grid.addColumn(row -> index < row.length ? row[index] : "")
+                        .setHeader(headers[i]);
+            }
+            grid.setItems(rows.subList(1, rows.size()));
+        }));
+upload.setAcceptedFileTypes("text/csv", ".csv");
+----
+
+Splitting lines by commas doesn't handle quoted values that contain commas or line breaks. For real-world CSV files, parse the data with a CSV library.
+
+
 [[cleaning-up-temporary-files]]
 == Cleaning Up Temporary Files
 
