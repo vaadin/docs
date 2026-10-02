@@ -18,9 +18,9 @@ public class RequestMetricsInitListener implements VaadinServiceInitListener {
             String handler = requestEvent.getHandler()
                     .map(h -> h.getClass().getSimpleName()).orElse("none");
 
-            requestEvent.getFailure().ifPresent(failure -> LoggerFactory
-                    .getLogger(getClass())
-                    .warn("Request failed in {}", handler, failure));
+            requestEvent.getFailure()
+                    .ifPresent(failure -> LoggerFactory.getLogger(getClass())
+                            .warn("Request failed in {}", handler, failure));
 
             long millis = requestEvent.getDuration().toMillis();
             if (millis > 1000) {
