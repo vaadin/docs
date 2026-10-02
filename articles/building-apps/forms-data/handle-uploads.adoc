@@ -256,6 +256,25 @@ upload.addFileRejectedListener(event -> {
 
 This catches files that are too large or have a disallowed type.
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Invalid File Contents
+
+Client-side checks rely on the file name and the type reported by the browser, which the user can fake. To verify the actual contents, add a validator to the upload handler and call `reject()` when the file is invalid. A header validator inspects the first bytes of the file and stops the upload before the rest is received:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.toTempFile(
+        (metadata, file) -> documentService.store(
+                metadata.fileName(), metadata.contentType(), file))
+        .validateHeader(4, (event, header) -> {
+            if (!isPdfSignature(header)) { // Checks for "%PDF"
+                event.reject("The file is not a valid PDF document");
+            }
+        }));
+----
+
+A rejected file never reaches the success callback. See <</components/upload/file-handling#validating-uploads,Validating Uploads>> for all validation phases.
+
 === Service Failure
 
 Wrap the service call in a try-catch inside the handler and show an error notification on failure:
