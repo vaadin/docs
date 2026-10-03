@@ -9,8 +9,9 @@ public class GlobalSearchField extends TextField {
     public GlobalSearchField() {
         setPlaceholder("Search");
         setValueChangeMode(ValueChangeMode.LAZY);
-        addValueChangeListener(event -> getUI().ifPresent(
-                ui -> ComponentUtil.fireEvent(ui,
-                        new SearchEvent(this, event.getValue()))));
+        addValueChangeListener(event -> getUI().ifPresent(ui -> {
+            var searchEvent = new SearchEvent(this, event.getValue());
+            ComponentUtil.fireEvent(ui, searchEvent);
+        }));
     }
 }
