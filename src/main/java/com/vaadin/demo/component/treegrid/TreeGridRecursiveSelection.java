@@ -54,13 +54,15 @@ public class TreeGridRecursiveSelection extends Div {
         Set<Person> result = new HashSet<>();
         for (Person item : items) {
             result.add(item);
-            // HierarchicalQuery takes a filter and a parent. The filter is null
-            // because Tree Grid has no filter of its own, and the parent is the
-            // item whose direct children to fetch.
-            List<Person> children = treeGrid.getDataProvider()
-                    .fetchChildren(new HierarchicalQuery<>(null, item))
-                    .toList();
-            result.addAll(withDescendants(children));
+            if (treeGrid.getDataProvider().hasChildren(item)) {
+                // HierarchicalQuery takes a filter and a parent. The filter is
+                // null because Tree Grid has no filter of its own, and the
+                // parent is the item whose direct children to fetch.
+                List<Person> children = treeGrid.getDataProvider()
+                        .fetchChildren(new HierarchicalQuery<>(null, item))
+                        .toList();
+                result.addAll(withDescendants(children));
+            }
         }
         return result;
     }
