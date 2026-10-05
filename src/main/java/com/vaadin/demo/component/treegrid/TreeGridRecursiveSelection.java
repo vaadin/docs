@@ -40,8 +40,8 @@ public class TreeGridRecursiveSelection extends Div {
                 return;
             }
             treeGrid.asMultiSelect().updateSelection(
-                    withDescendants(event.getAddedSelection()),
-                    withDescendants(event.getRemovedSelection()));
+                    getItemsWithDescendants(event.getAddedSelection()),
+                    getItemsWithDescendants(event.getRemovedSelection()));
         });
         // end::snippet[]
 
@@ -50,7 +50,7 @@ public class TreeGridRecursiveSelection extends Div {
 
     // tag::snippet[]
 
-    private Set<Person> withDescendants(Collection<Person> items) {
+    private Set<Person> getItemsWithDescendants(Collection<Person> items) {
         Set<Person> result = new HashSet<>();
         for (Person item : items) {
             result.add(item);
@@ -61,7 +61,7 @@ public class TreeGridRecursiveSelection extends Div {
                 List<Person> children = treeGrid.getDataProvider()
                         .fetchChildren(new HierarchicalQuery<>(null, item))
                         .toList();
-                result.addAll(withDescendants(children));
+                result.addAll(getItemsWithDescendants(children));
             }
         }
         return result;
