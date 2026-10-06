@@ -1212,6 +1212,24 @@ A [classname]`GridContextMenu` is always about a row, so its tester is obtained 
 
 Starting with Vaadin 25.3, the services that the Spring and Quarkus integrations need have moved from [methodname]`lookupServices()` to the new [methodname]`frameworkLookupServices()` method -- both declared by [classname]`BaseBrowserlessTest`, the base class of [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- and are registered in every case. An override of [methodname]`lookupServices()` therefore adds to them instead of replacing them, which is what keeps those integrations working, and the resulting [classname]`Lookup` holds more services than before. Override [methodname]`frameworkLookupServices()` instead to replace one of the framework services, such as the Spring [classname]`SpringSecurityRequestCustomizer`. [methodname]`lookupServices()` itself is deprecated in favor of the test configuration, which declares the same services on a test class or a test method; existing overrides are still honored. See <<{articles}/flow/testing/browserless/test-configuration#,Test Configuration>>.
 
+=== Browserless Testing: Upload Testers
+
+Starting with Vaadin 25.4, the upload testers behave more like a browser in ways that can affect existing tests:
+
+* With auto upload turned off, [methodname]`UploadTester.upload(...)` and [methodname]`uploadAll(...)` no longer deliver the accepted files to the upload handler or receiver. The files wait in the file list with the `PENDING` status, as they do in the browser until the user starts them. A test that relied on the immediate delivery has to start the files with [methodname]`startUpload(...)`:
++
+[source,java]
+----
+upload.setAutoUpload(false);
+test(upload).upload(file);
+test(upload).startUpload(file); // Added
+test(upload).ensureUploaded();
+----
+* When several entries in the file list share a name, [methodname]`UploadTester.removeFile(String)` removes the most recently added one instead of the oldest one. Use [methodname]`removeFile(int)` to remove the entry at a specific position.
+* [methodname]`test(uploadButton)` returns an [classname]`UploadButtonTester` rather than a [classname]`ButtonTester`. Code that assigns the result to a variable explicitly typed as [classname]`ButtonTester<Button>` no longer compiles and needs the new type, or `var`. [methodname]`click()` still works, since [classname]`UploadButtonTester` extends [classname]`ButtonTester`.
+
+See <<{articles}/flow/testing/browserless/component-testers#uploads-without-auto-upload,Component Testers>> for details.
+
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).
 
