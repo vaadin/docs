@@ -663,6 +663,378 @@ image::images/product-drawer-with-data.png[The product drawer with data]
 If you select items in the grid, their details show up in the drawer. If you clear the selection, the form is also cleared.
 
 
+== Complete Code for This Step
+
+If your application doesn't behave as described, compare your files with these listings. They show every class in the application as it should look at the end of this step.
+
+.ProductCatalogView.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends HorizontalLayout {
+
+    ProductCatalogView(ProductCatalogItemRepository repository,
+                       ProductDetailsRepository productDetailsRepository) {
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name)
+            .setHeader("Name")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END)
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+            .setHeader("Description")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+            .setHeader("Category")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> repository
+            .findByNameContainingIgnoreCase(searchField.getValue(),
+                pageable)
+            .getContent()
+        );
+
+        var drawer = new ProductFormDrawer();
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> productDetailsRepository
+                    .findById(item.productId()))
+                .orElse(null);
+            drawer.setProductDetails(productDetails);
+        });
+
+        // Layout view
+        setSizeFull();
+        setSpacing(false);
+
+        var listLayout = new VerticalLayout(searchField, grid);
+        listLayout.setSizeFull();
+        grid.setSizeFull();
+
+        add(listLayout, drawer);
+        setFlexShrink(0, drawer);
+    }
+}
+----
+====
+
+.ProductCatalogItem.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+
+@Table("PRODUCTS")
+record ProductCatalogItem(
+        @Id long productId,
+        String name,
+        String description,
+        String category,
+        String brand,
+        BigDecimal price
+) {
+    static final String SORT_PROPERTY_NAME = "name";
+    static final String SORT_PROPERTY_PRICE = "price";
+    static final String SORT_PROPERTY_DESCRIPTION = "description";
+    static final String SORT_PROPERTY_CATEGORY = "category";
+    static final String SORT_PROPERTY_BRAND = "brand";
+}
+----
+====
+
+.ProductCatalogItemRepository.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+interface ProductCatalogItemRepository
+    extends PagingAndSortingRepository<ProductCatalogItem, Long> {
+
+    Slice<ProductCatalogItem> findByNameContainingIgnoreCase(String name,
+        Pageable pageable);
+}
+----
+====
+
+.ProductDetails.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Table("PRODUCTS")
+class ProductDetails {
+
+    @Id
+    private Long productId;
+    @Version
+    private Long version;
+    private String name;
+    private String description;
+    private String category;
+    private String brand;
+    private String sku;
+    private LocalDate releaseDate;
+    private BigDecimal price;
+    private BigDecimal discount;
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(BigDecimal discount) {
+        this.discount = discount;
+    }
+}
+----
+====
+
+.ProductDetailsRepository.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.repository.CrudRepository;
+
+interface ProductDetailsRepository
+    extends CrudRepository<ProductDetails, Long> {
+}
+----
+====
+
+.ProductForm.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import org.jspecify.annotations.Nullable;
+
+class ProductForm extends Composite<FormLayout>  {
+
+    private final Binder<ProductDetails> binder;
+
+    ProductForm() {
+        // Create components
+        var nameField = new TextField("Name");
+        var descriptionField = new TextArea("Description");
+        var categoryField = new TextField("Category");
+        var brandField = new TextField("Brand");
+        var skuField = new TextField("SKU");
+        var releaseDateField = new DatePicker("Release Date");
+        var priceField = new BigDecimalField("Price");
+        var discountField = new BigDecimalField("Discount");
+
+        // Layout form
+        var layout = getContent();
+        layout.add(nameField);
+        layout.add(descriptionField);
+        layout.add(categoryField);
+        layout.add(brandField);
+        layout.add(skuField);
+        layout.add(releaseDateField);
+        layout.add(priceField);
+        layout.add(discountField);
+
+        // Bind fields
+        binder = new Binder<>();
+        binder.forField(nameField)
+              .bind(ProductDetails::getName,
+                    ProductDetails::setName);
+        binder.forField(descriptionField)
+              .bind(ProductDetails::getDescription,
+                    ProductDetails::setDescription);
+        binder.forField(categoryField)
+              .bind(ProductDetails::getCategory,
+                    ProductDetails::setCategory);
+        binder.forField(brandField)
+              .bind(ProductDetails::getBrand,
+                    ProductDetails::setBrand);
+        binder.forField(skuField)
+              .bind(ProductDetails::getSku,
+                    ProductDetails::setSku);
+        binder.forField(releaseDateField)
+              .bind(ProductDetails::getReleaseDate,
+                    ProductDetails::setReleaseDate);
+        binder.forField(priceField)
+              .bind(ProductDetails::getPrice,
+                    ProductDetails::setPrice);
+        binder.forField(discountField)
+              .bind(ProductDetails::getDiscount,
+                    ProductDetails::setDiscount);
+        binder.setReadOnly(true);
+    }
+
+    public void setFormDataObject(@Nullable ProductDetails productDetails) {
+        binder.setBean(productDetails);
+    }
+}
+----
+====
+
+.ProductFormDrawer.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.theme.lumo.LumoUtility;
+import org.jspecify.annotations.Nullable;
+
+class ProductFormDrawer extends Composite<VerticalLayout> {
+
+    private final ProductForm form;
+
+    ProductFormDrawer() {
+        var header = new H2("Product Details");
+        form = new ProductForm();
+
+        var layout = getContent();
+        layout.add(header);
+        layout.add(new Scroller(form));
+        layout.setWidth("300px");
+        addClassName(LumoUtility.BoxShadow.MEDIUM);
+    }
+
+    public void setProductDetails(@Nullable ProductDetails productDetails) {
+        form.setFormDataObject(productDetails);
+    }
+}
+----
+====
+
+
 == Next Steps
 
 You have now implemented a simple master-detail view in Vaadin. In the next step, you'll add support for editing and saving product details. Proceed to the <<edit-details#,Edit Product Details>> step to continue the tutorial.
+
+link:{articles}/getting-started/tutorial/edit-details[Next: Edit Product Details, role="button primary water", id="docs-tutorial-show-details-next-cta"]
