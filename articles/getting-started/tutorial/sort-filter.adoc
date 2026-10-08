@@ -407,6 +407,127 @@ class ProductCatalogView extends VerticalLayout {
 If you now type something in the search field, the grid updates automatically after you have stopped typing.
 
 
+== Complete Code for This Step
+
+If your application doesn't behave as described, compare your files with these listings. They show every class in the application as it should look at the end of this step.
+
+.ProductCatalogView.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("")
+@PageTitle("Product Catalog")
+class ProductCatalogView extends VerticalLayout {
+
+    ProductCatalogView(ProductCatalogItemRepository repository) {
+        // Create components
+        var searchField = new TextField();
+        searchField.setPlaceholder("Search");
+        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+
+        var grid = new Grid<ProductCatalogItem>();
+        grid.addColumn(ProductCatalogItem::name)
+            .setHeader("Name")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        grid.addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END)
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        grid.addColumn(ProductCatalogItem::description)
+            .setHeader("Description")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        grid.addColumn(ProductCatalogItem::category)
+            .setHeader("Category")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        grid.addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid.setItemsPageable(pageable -> repository
+            .findByNameContainingIgnoreCase(searchField.getValue(),
+                pageable)
+            .getContent()
+        );
+
+        searchField.addValueChangeListener(e ->
+                grid.getDataProvider().refreshAll());
+
+        // Layout view
+        setSizeFull();
+        grid.setSizeFull();
+        add(searchField);
+        add(grid);
+    }
+}
+----
+====
+
+.ProductCatalogItem.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+
+@Table("PRODUCTS")
+record ProductCatalogItem(
+        @Id long productId,
+        String name,
+        String description,
+        String category,
+        String brand,
+        BigDecimal price
+) {
+    static final String SORT_PROPERTY_NAME = "name";
+    static final String SORT_PROPERTY_PRICE = "price";
+    static final String SORT_PROPERTY_DESCRIPTION = "description";
+    static final String SORT_PROPERTY_CATEGORY = "category";
+    static final String SORT_PROPERTY_BRAND = "brand";
+}
+----
+====
+
+.ProductCatalogItemRepository.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+interface ProductCatalogItemRepository
+    extends PagingAndSortingRepository<ProductCatalogItem, Long> {
+
+    Slice<ProductCatalogItem> findByNameContainingIgnoreCase(String name,
+        Pageable pageable);
+}
+----
+====
+
+
 == Next Steps
 
 With sorting and filtering implemented, your product catalog view is now much more user-friendly. In the next step, you'll add a form for viewing product details in the catalog. Proceed to the <<show-details#,Show Product Details>> step to continue the tutorial.
+
+link:{articles}/getting-started/tutorial/show-details[Next: Show Product Details, role="button primary water", id="docs-tutorial-sort-filter-next-cta"]
