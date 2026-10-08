@@ -25,7 +25,7 @@ You can design application services according to your preferred architectural st
 * The application services should be *stateless*.
 * Application services should *define the boundaries of <<../forms-data/consistency/transactions#,database transactions>>*, so that views never have to manage transactions themselves.
 * The application services should be *<<../security/protect-services#,secure>>*.
-* Views should invoke application services, but application services *should not have dependencies on views*.
+* Views should invoke application services, but application services *should not have dependencies on views*. Simple, read-only views are an exception, as described in <<calling-repositories-from-views,Calling Repositories from Views>>.
 
 [NOTE]
 Application services can use Vaadin's non-UI-related utilities and interfaces, but should not be tightly coupled to UI components.
@@ -102,6 +102,21 @@ public class CustomerService {
 Background jobs are an exception, as they should run independently of whatever triggered them. See <<background-jobs/jobs#transactions,Implementing Jobs>> for details.
 
 For more information about transaction management, see the <<../forms-data/consistency/transactions/declarative#,Declarative Transactions>> documentation page.
+
+
+=== Calling Repositories from Views
+
+By default, views call application services, and only application services call <<../forms-data/persistence#,repositories>>. A simple, read-only view can call a repository directly, though, if all of the following are true:
+
+* *The access control of the view is enough.* <<../security/protect-services#,Method security>> protects services, not repositories. A repository call is protected only by the access rules of the view that makes it.
+* *The view only reads data.* Changes go through application services, which validate the input and define the transaction boundaries.
+* *No business logic is involved.* The view passes its parameters, such as a filter string and a `Pageable`, straight to a repository method.
+* *The repository returns everything the view needs.* Don't rely on lazily loaded associations of the returned entities being loaded when the view accesses them.
+
+As soon as one of these no longer holds, introduce an application service and move the call there. For example, do this when users with different roles should see different data, when an operation needs several repository calls in one transaction, or when the view starts to change data.
+
+[NOTE]
+When you <<../architecture/packages#,package by feature>>, repositories are package private. A view in the same package can call them, but a view in a separate `ui` package can't, unless you make the repository public. Introduce an application service instead.
 
 
 == Service Naming
