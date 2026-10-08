@@ -28,11 +28,17 @@ Here is an example of a button click listener that starts a new virtual thread:
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    Thread.ofVirtual().start(UI.getCurrentOrThrow().accessLater(() -> {
-        // Perform the UI operation here.
-    }, null));
+    var ui = UI.getCurrentOrThrow();
+    Thread.ofVirtual().start(() -> {
+        // Do the work here
+        ui.access(() -> {
+            // Update the UI here
+        });
+    });
 });
 ----
+
+Do the work in the thread itself, and use `UI.access()` only for updating the user interface. The command that you pass to `access()` runs while the user session is locked. If you do slow work inside it, you block all other requests from the same user until it finishes. For more information, see <<updates#getting-the-ui-instance,Getting the UI Instance>>.
 
 This is the easiest way of starting a new user interface thread. If you're able to use virtual threads, they should be your first choice. If you run into problems, though, switch to the `TaskExecutor`.
 
@@ -66,13 +72,17 @@ This example uses a button click listener that starts a UI operation in a backgr
 [source,java]
 ----
 button.addClickListener(clickEvent -> {
-    taskExecutor.execute(UI.getCurrentOrThrow().accessLater(() -> {
-        // Perform the UI operation here.
-    }, null));
+    var ui = UI.getCurrentOrThrow();
+    taskExecutor.execute(() -> {
+        // Do the work here
+        ui.access(() -> {
+            // Update the UI here
+        });
+    });
 });
 ----
 
-Because of the call to `UI.accessLater()`, the user interface is updated through a server push when the task finishes.
+Because of the call to `UI.access()`, the user interface is updated through a server push when the task finishes.
 
 [CAUTION]
 Don't use the `@Async` annotation in Flow views. It turns them into proxies that don't work with Vaadin.
