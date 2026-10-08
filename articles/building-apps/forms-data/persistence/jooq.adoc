@@ -251,6 +251,7 @@ public class OrderRepository {
         return Optional.of(mapToEntity(orderRecord, lineRecords));
     }
 
+    @Transactional
     public void save(Order order) {
         if (order.getId() == null) {
             insert(order);
@@ -279,11 +280,14 @@ public class OrderRepository {
 }
 ----
 
+The `save` and `delete` methods run several statements that must succeed or fail together. They're annotated with `@Transactional`, so they're atomic even when called without an active transaction. When an <<../../business-logic/add-service#transactions,application service>> calls them inside its own transaction, they join it.
+
 This is more work than JPA. You're responsible for:
 
 - Mapping between records and entities
 - Deciding when to insert vs update
 - Managing related records (order lines)
+- Making multi-statement writes atomic
 - Handling optimistic locking
 
 The payoff is complete control. No surprise lazy loading, no proxy magic, no wondering what SQL runs.
@@ -472,11 +476,13 @@ A practical pattern for Vaadin applications:
 [source,java]
 ----
 @Service
+@Transactional(readOnly = true)
 public class OrderService {
 
     private final OrderRepository orderRepository;      // JPA - aggregates
     private final OrderDashboardQuery dashboardQuery;   // jOOQ - queries
 
+    @Transactional
     public void submitOrder(Long orderId) {
         var order = orderRepository.findById(orderId).orElseThrow();
         order.submit();
