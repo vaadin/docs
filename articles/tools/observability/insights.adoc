@@ -13,6 +13,7 @@ Metrics tell you that something is wrong; they don't tell you what a user clicke
 Interaction insights close that gap.
 Observability Kit retains the user interactions that went wrong -- the ones that failed, and the ones that took too long -- together with the route, the component, the event, and the exception behind them.
 It does the same for the data provider queries behind a slow lazy-loading component, which no interaction can account for, and for the errors browsers report -- the one kind of failure the server never handled itself.
+With UI state measurement on, it also names the view fields whose collections keep growing.
 An endpoint then serves them grouped and ready to act on, so a report like "I clicked something on the orders page and got an error" becomes a concrete, replicable interaction.
 
 The payload is a stable, machine-readable contract.
@@ -26,6 +27,7 @@ In development mode the same insights also appear in the <<copilot-panel#,Copilo
 == What Gets Captured
 
 Three collectors run: one over user interactions, one over data provider queries, and one over the errors browsers report.
+A fourth source, growing view state, comes from the UI state measurement rather than from a collector.
 
 === User Interactions
 
@@ -57,6 +59,15 @@ This one additionally requires `vaadin.observability.client` (on by default), si
 A payload carries at most 20 browser-error insights, the most-reported first.
 
 Browser errors have a page of their own: see <<client-errors#,Client Error Insights>> for what a report carries, what reaches its script location, how a report that waited out an outage is reported, and why the payload is capped.
+
+=== Growing View State
+
+A view that keeps what it loads in a field -- every refresh appended to a list, every result cached in a map -- grows on the heap while its component tree stays the same size, so no UI state gauge moves.
+With `vaadin.observability.ui-state` on, each UI measurement also reads the collections its views hold, and a field that keeps growing without shrinking is reported as an insight naming the view class and the field.
+See <<reference#state-outside-the-tree,State Outside the Tree>> for how the measurement works.
+
+This one requires `vaadin.observability.ui-state` (off by default) and a [propertyname]`vaadin.observability.ui-state-growth-samples` above zero (5 by default).
+Unlike the other kinds, it isn't retained in a buffer: it describes the UIs that are open now, not past events.
 
 === What Happens to the Rest
 
@@ -94,7 +105,7 @@ Secure it as you would any other Actuator endpoint -- put it behind authenticati
 The endpoint is part of the Spring Boot starter and needs Actuator on the classpath.
 The payload is also available in-process: inject the [classname]`VaadinObservabilityEndpoint` bean and call [methodname]`section("observability")` -- for example to feed an admin view or an AI agent without going through HTTP.
 
-In plain-Spring and standalone deployments the collectors still run, and you can read the buffers yourself through [methodname]`ObservabilityKit.getRecentInteractions()`, [methodname]`ObservabilityKit.getRecentQueries()`, and [methodname]`ObservabilityKit.getRecentClientErrors()`, passing all three to an [classname]`InsightsService` to render the same payload.
+In plain-Spring and standalone deployments the collectors still run, and you can read the buffers yourself through [methodname]`ObservabilityKit.getRecentInteractions()`, [methodname]`ObservabilityKit.getRecentQueries()`, and [methodname]`ObservabilityKit.getRecentClientErrors()`, together with the growing view state from [methodname]`ObservabilityKit.getRetainedStateGrowth()`, passing all four to an [classname]`InsightsService` to render the same payload.
 
 
 == Reading the Payload
@@ -111,7 +122,7 @@ A `GET` on the endpoint returns the current insights:
 }
 ----
 
-[propertyname]`instrumentation` is `active` when at least one collector is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
+[propertyname]`instrumentation` is `active` when at least one collector -- or the growing view state tracking -- is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
 An empty `insights` array with `instrumentation: active` means the same thing it says: nothing went wrong.
 An empty array with `instrumentation: inactive` means nothing was watching.
 
@@ -119,9 +130,10 @@ Records are grouped, so ten users hitting the same problem produce one insight w
 Interaction errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
 Query errors group by route, component, query kind, and exception type; slow queries group by route, component, and query kind.
 Browser errors group by route, error kind, script source, and stack frame.
+Growing view state groups by view field, so the same view accumulating in a hundred tabs is one insight with a hundred occurrences.
 The route is a *template*, so `orders/17` and `orders/18` group under one `orders/:orderId` insight instead of one per parameter value.
 
-Five insight types can appear in the array:
+Six insight types can appear in the array:
 
 [cols="1,3"]
 |===
@@ -142,6 +154,10 @@ Five insight types can appear in the array:
 |`client-error`
 |An uncaught error or unhandled rejection a browser reported.
 The only insight type that can describe a failure the server never saw; see <<client-errors#,Client Error Insights>>.
+
+|`growing-view-state`
+|A collection held in a view field that keeps growing across measurements of its UI.
+See <<#growing-view-state,A Growing View Field>>.
 |===
 
 
@@ -255,7 +271,77 @@ A fetch reports [propertyname]`requested` against [propertyname]`returned`, whic
 A slow count reports [propertyname]`counted` instead -- the total it arrived at -- because "took four seconds" is far less actionable than "took four seconds counting 2,000,000 items".
 
 A failed query is reported the same way as `data-query-error`, with an [propertyname]`exception` field holding the root cause and no duration figures.
-Query insights carry no [propertyname]`suggestion` or [propertyname]`applicationFrame`: the failing code is the data provider the component was given, which the kit can't name from the query alone.
+Query insights carry no [propertyname]`applicationFrame`: the failing code is the data provider the component was given, which the kit can't name from the query alone.
+They carry a [propertyname]`suggestion` only when the SQL work behind a slow fetch points at a cause, as described next.
+
+[[slow-query-sql]]
+=== What a Slow Data Query Cost in the Database
+
+The data provider's own numbers say what a component asked for and what it got.
+`requested: 150, returned: 150` reads exactly the same whether that page came out of one indexed query or out of sixty thousand, and only the second is a bug.
+With <<reference#database-monitoring,database monitoring>> on (`vaadin.observability.database=true`, Spring Boot starter only), a query insight also carries the SQL work that answering it took:
+
+[source,json]
+----
+"evidence": {
+  "component": "com.vaadin.flow.component.grid.Grid",
+  "queryKind": "fetch",
+  "requested": 150,
+  "returned": 150,
+  "sqlQueries": 60001,
+  "sqlRowsRead": 210458
+}
+----
+
+A slow query's summary says so too, and for a slow fetch the insight gets a [propertyname]`suggestion` naming what the numbers point at:
+
+* A query per item returned -- at least as many queries as items, and at least five -- is the shape of a per-row lookup: an association loaded lazily as each item is read, or a query issued inside the loop that builds the items.
+* A read of ten or more times as many rows as the page holds means the offset and limit aren't reaching the database.
+
+Both are invisible from the Vaadin side alone.
+Each example also carries [propertyname]`sqlQueries` and [propertyname]`sqlRowsRead` for the occurrence it describes.
+
+The queries are counted on the thread the data load runs on, which is where a data provider issues them.
+A load that hands its queries to another thread measures nothing, and the insight then reports no SQL figures rather than zero -- "the database isn't the problem" is the more damaging of the two answers to get wrong.
+Row counts are best-effort in the same way the `vaadin.db.fetch.rows` summary is: a result set that's never closed contributes to the query count but not to the rows.
+
+
+[[growing-view-state]]
+=== A Growing View Field
+
+[source,json]
+----
+{
+  "type": "growing-view-state",
+  "severity": "warning",
+  "category": "capacity",
+  "summary": "SpendingOverviewView.oldData keeps growing: 12,400 elements, up from 310 over 5 measurements without ever shrinking (3 UIs). Its component tree does not grow with it, so this is heap no UI state gauge accounts for.",
+  "evidence": {
+    "route": "spending",
+    "view": "com.example.SpendingOverviewView",
+    "field": "com.example.SpendingOverviewView.oldData",
+    "elements": 12400,
+    "firstElements": 310,
+    "growthSamples": 5,
+    "occurrences": 3,
+    "firstSeen": "2026-08-26T08:40:11.004Z",
+    "lastSeen": "2026-08-26T09:11:52.617Z",
+    "measures": "elements is the size of the collection in the field, plus the sizes of collections nested directly inside it; ..."
+  },
+  "replay": [
+    "Open route 'spending'",
+    "Repeat the interaction that updates the view — a refresh, a filter, a poll — without navigating away",
+    "Expect SpendingOverviewView.oldData to hold more elements after each repetition"
+  ],
+  "suggestion": "Inspect com.example.SpendingOverviewView.oldData. A view that adds what it loads to a field instead of replacing it holds every earlier result for as long as the tab is open, ...",
+  "examples": [ ... ]
+}
+----
+
+The evidence describes the worst UI: [propertyname]`elements` is the field's current size there, [propertyname]`firstElements` the size it started growing from, and [propertyname]`growthSamples` the number of measurements that found it larger.
+[propertyname]`occurrences` is the number of open UIs showing the same growth.
+Each example describes one of those UIs, with its [propertyname]`sessionId` and [propertyname]`uiId`.
+Growing view insights are ordered largest first, since that's where the heap goes.
 
 
 === Examples
@@ -395,10 +481,11 @@ Lengths are capped regardless: 60 characters for a caption, 40 for a value.
 == The Copilot Panel
 
 In development mode the kit adds an *Observability* panel to Vaadin Copilot, reachable from the toolbar in edit, inspect, and test modes.
-It opens on these findings rather than on the numbers -- the endpoint's own payload, ranked with errors first -- and keeps the live `vaadin.*` meters below them.
+Its *Findings* tab shows these insights -- the endpoint's own payload, ranked with errors first -- and the panel opens on it whenever there's something to look at.
+Alongside it, the panel has tabs for the application's vitals, a breakdown of your last interaction, and the live `vaadin.*` meters.
 It also announces a finding it hasn't seen before in the Copilot log, so you learn that something broke without having the panel open.
 
-See the <<copilot-panel#,Copilot Panel>> page for the whole panel: how findings are ranked and read, how to set one aside, what the meter table shows, and what the panel needs to be there.
+See the <<copilot-panel#,Copilot Panel>> page for the whole panel: what each tab shows, how findings are ranked and read, how to set one aside, and what the panel needs.
 Nothing about it exists in production, where neither Copilot nor the dev-tools connection does.
 
 
@@ -425,7 +512,8 @@ Three practicalities:
 
 - Point the agent at the same revision that produced the insights; otherwise the line number in [propertyname]`applicationFrame` may have drifted.
 - The default payload already carries what an agent needs -- the route, component, event, exception type, and application frame -- while withholding exception messages and session IDs, so it's safe to forward to an external tool without enabling <<#detail,detail collection>> first.
-- A query insight carries no [propertyname]`suggestion` or [propertyname]`applicationFrame`, so tell the agent to find the data provider that the named component is given on the named route.
+- A query insight carries no [propertyname]`applicationFrame`, so tell the agent to find the data provider that the named component is given on the named route.
+A growing view state insight names the view field to open instead.
 
 
 == Configuration
@@ -447,12 +535,26 @@ See <<#detail,Sensitive Detail>>.
 
 |`vaadin.observability.insights-capacity`
 |`100`
-|Maximum number of retained records per buffer.
+|Maximum number of retained records per buffer, at most `10000`.
 Interactions, queries, and browser errors are retained separately, so with all three active the total is three times this.
 The oldest is evicted once a buffer's cap is reached.
+
+|`vaadin.observability.ui-state`
+|`false`
+|Required for growing view state insights.
+
+|`vaadin.observability.ui-state-growth-samples`
+|`5`
+|Measurements a view field has to grow in, without shrinking, before it's reported.
+`0` turns growing view state off.
+
+|`vaadin.observability.database`
+|`false`
+|Adds the SQL query and row counts to data query insights.
+Spring Boot starter only.
 |===
 
-In a standalone deployment, use the matching [classname]`ObservabilitySettings` builder methods -- [methodname]`insights()`, [methodname]`insightsDetails()`, and [methodname]`insightsCapacity()`.
+In a standalone deployment, use the matching [classname]`ObservabilitySettings` builder methods -- [methodname]`insights()`, [methodname]`insightsDetails()`, [methodname]`insightsCapacity()`, [methodname]`uiState()`, and [methodname]`uiStateGrowthSamples()`.
 
 
 == Insights, Metrics, and Traces

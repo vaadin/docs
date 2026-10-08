@@ -142,7 +142,23 @@ Registered only when [propertyname]`vaadin.observability.ui-state-bytes-per-node
 |`vaadin.session.uis.max`
 |Gauge
 |Most UIs (browser tabs) held open by one session.
+
+|`vaadin.ui.state.retained.elements`
+|Gauge
+|Elements held in the collection fields of views across all UIs -- state the state tree doesn't contain.
+See <<#state-outside-the-tree,State Outside the Tree>>.
+
+|`vaadin.ui.state.retained.elements.max`
+|Gauge
+|Elements held by the largest single view field.
+
+|`vaadin.ui.state.retained.growing`
+|Gauge
+|View fields whose collection keeps growing across measurements without shrinking.
+Normally zero.
 |===
+
+The three `retained` gauges are registered only when [propertyname]`vaadin.observability.ui-state-growth-samples` is above zero, which it is by default.
 
 These gauges are aggregates only -- totals and maxima, never one series per session or per UI, which would grow unbounded with traffic.
 They carry no tags.
@@ -227,8 +243,10 @@ With tracing off, the binder records the timer directly and tags it with exactly
 This is deliberate: Prometheus rejects same-named meters whose tag-key sets differ, so the two recording paths must never publish `vaadin.request.duration` under differing keys.
 The same holds for `vaadin.rpc.duration` and `vaadin.navigation`.
 
-The span's `ui.id` and `vaadin.client.location` attributes are unbounded and are deliberately kept off the timer on both paths.
+The span's `ui.id`, `vaadin.client.location`, and `vaadin.session.id` attributes are unbounded and are deliberately kept off the timer on both paths.
 ====
+
+The `http.method` tag accepts only the standard HTTP methods; any other method a client sends is recorded as `_other`, so a request can't create a new series by inventing one.
 
 
 [[request-types]]
@@ -278,7 +296,7 @@ A view that embeds another of its own routes therefore reports a second `bootstr
 === Resync Metrics
 
 Controlled by `vaadin.observability.resync`.
-These track UIDL message-recovery events, which indicate a flaky client-server connection.
+These track client message-recovery events, over both HTTP and push.
 
 [cols="2,1,3"]
 |===
@@ -287,8 +305,30 @@ These track UIDL message-recovery events, which indicate a flaky client-server c
 |`vaadin.resync`
 |Counter
 |Client-server message-recovery events.
-Tagged by `type`: `resend` when the client re-sends a request it never got a response for (the server replays its cached response), or `resync` when the client gives up on a missing server message and asks for a full UI-state rebuild.
+Tagged by `type`.
 |===
+
+The `type` tag says what happened:
+
+[cols="1,3"]
+|===
+|`type` |Recorded when
+
+|`resend`
+|The client re-sent a message it never got a response for, and the server replayed its cached response.
+
+|`resync`
+|The client gave up on a missing server message and asked for a full UI-state rebuild.
+
+|`out_of_sync`
+|A message arrived with an ID the server didn't expect, and the user was shown the session synchronization error.
+|===
+
+`resend` and `resync` mean the client lost a server message, which points at a flaky connection.
+`out_of_sync` usually means the UI continued on a server that held an older state of it.
+All three types are registered at startup, so each reports zero before its first event.
+
+The counter is driven by events Flow fires, so it needs no servlet filter and works the same in every setup.
 
 
 [[error-metrics]]
@@ -334,7 +374,8 @@ Set `vaadin.observability.errors=false` to opt out of the decoration entirely.
 === Client Metrics
 
 Controlled by `vaadin.observability.client`.
-These are observed in the browser and reported back to the server, subject to a rate limit of [propertyname]`vaadin.observability.client-rate-per-session` samples per UI in each ten-second window.
+These are observed in the browser and reported back to the server, subject to a rate limit of [propertyname]`vaadin.observability.client-rate-per-session` samples per session in each ten-second window.
+All tabs of a session share that budget.
 
 [cols="2,1,3"]
 |===
@@ -361,6 +402,8 @@ Recorded only when Flow's `requestTiming` deployment setting is on, which is the
 |`vaadin.client.web_vitals.lcp`
 |Timer
 |Largest Contentful Paint.
+Reported once per page load: the candidate that's current when the user first presses a key or a pointer, or when the page is hidden.
+A larger paint after that is the page responding rather than loading, and the earlier, smaller candidates would drag the mean down.
 
 |`vaadin.client.web_vitals.fcp`
 |Timer
@@ -385,7 +428,7 @@ The report can only be sent once the connection is back, so a browser that never
 
 |`vaadin.client.throttled`
 |Counter
-|Client samples rejected by the per-UI rate limit.
+|Client samples rejected by the per-session rate limit.
 Untagged.
 
 |`vaadin.client.dropped`
@@ -518,6 +561,8 @@ On `vaadin.navigation`, also `rerouted`, `forwarded`, and `unknown` -- see <<#na
 |`error`
 |The simple class name of the exception that ended the operation, or `none` when it raised none.
 Distinct from `exception`, which tags the `vaadin.errors` counter.
+With tracing off, the kit records the request and RPC timers itself and caps their `error` values with the same exception-type budget as `exception`, collapsing types beyond it to `_other`.
+With tracing on, the tag is written by Micrometer's observation handler.
 
 |`route`
 |The target route template.
@@ -532,7 +577,7 @@ Capped by the same cardinality limit as `route`: `_unknown` when it can't be res
 
 |`type`
 |On RPC meters and spans, the RPC invocation type as reported by Flow -- `event` for a DOM event, `mSync` for a property sync, `publishedEventHandler` for an [annotationname]`@ClientCallable` method, `channel` for a return channel, and `navigation`.
-On `vaadin.resync`, the recovery kind: `resend` or `resync`.
+On `vaadin.resync`, the recovery kind: `resend`, `resync`, or `out_of_sync`.
 
 |`exception`
 |The simple class name of the counted exception, capped by the same cardinality limit as `route`.
@@ -606,6 +651,26 @@ Emitted only when database monitoring is enabled (see <<#database-monitoring,Dat
 With both data provider and database monitoring on, a slow interaction opens up in full: the `vaadin.rpc.<type>` span that the user triggered, the `vaadin.data.fetch` span for the page the component asked for, and the individual `vaadin.db.query` spans that fetch ran.
 
 
+[[http-observation]]
+=== Spring HTTP Server Observation
+
+In Spring deployments the kit also enriches Spring's own HTTP server observation.
+Each Vaadin request gets its type lifted into the HTTP span, and a UIDL request additionally gets the active view's route template set as the path pattern.
+The `uri` tag on `http.server.requests` and the HTTP span name then read `/orders/:id`, instead of bucketing all UI traffic into a single `/vaadin/uidl` entry, so per-view HTTP latency stays answerable from the standard Spring metrics.
+A UIDL request whose view's route template can't be resolved stays under `/vaadin/uidl`; the kit never falls back to the view's class name or to the literal browser path there.
+
+Every other <<#request-types,request type>> keeps the type itself as its path pattern -- `/vaadin/bootstrap`, `/vaadin/stream`, and so on.
+This also keeps the per-transfer URLs of downloads and uploads, each carrying a UI ID and a one-time security key, out of the `uri` tag.
+
+The templates pass the same [propertyname]`vaadin.observability.route-cardinality-limit` cap as the kit's own `route` tags, and at most 50 distinct view templates ever reach the `uri` tag, regardless of configuration.
+The rest collapse into `/_other`.
+The fixed budget is half of the default of Spring Boot's [propertyname]`management.metrics.web.server.max-uri-tags` (100).
+Once *that* cap is crossed, Spring Boot denies new `http.server.requests` series outright, first come first served across every endpoint of the application, so the kit stays well clear of it.
+Raise `max-uri-tags` when Actuator endpoints and REST controllers need more room, not to get more view templates through.
+
+The enrichment is independent of the `traces` setting: it also applies when only metrics are collected.
+
+
 [[background-work]]
 === Background Work
 
@@ -650,6 +715,11 @@ Span-only, since UI IDs are unbounded.
 |The browser location the request was sent from, or `_unknown`.
 Span-only: it's the literal path, not a route template.
 For templated, cardinality-capped view attribution, use the `route` tag on the navigation meters.
+
+|`vaadin.session.id`
+|The HTTP session ID.
+Present only when [propertyname]`vaadin.observability.traces-session-id` is enabled, which it isn't by default.
+Span-only, since session IDs are unbounded.
 |===
 
 The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
@@ -662,6 +732,7 @@ Flow doesn't report an invocation name for property syncs, which is how a field'
 Those spans carry `type` and `vaadin.rpc.component`, but no `vaadin.rpc.event`.
 
 The `vaadin.db.query` span carries `route`, a `db.rows` attribute with the number of rows read, and -- when [propertyname]`vaadin.observability.database-statement` is enabled -- the parameterized SQL as `db.statement`.
+A request, RPC, or data fetch span under which more queries ran than [propertyname]`vaadin.observability.database-span-limit` allows carries `vaadin.db.queries.unspanned`, the number of queries that got no span of their own; see <<#span-limit,N+1 Loads and the Span Limit>>.
 
 The `vaadin.executor.task` span carries no attributes of its own.
 Its value is structural: it shows where a submitted task ran, under the trace it was submitted from.
@@ -758,6 +829,40 @@ vaadin.observability.ui-state-bytes-per-node=96
 
 Divided into the heap headroom, that's an estimate of how many more tabs the instance can hold.
 
+[[state-outside-the-tree]]
+=== State Outside the Tree
+
+The tree gauges can't see what a view keeps in its own fields.
+A view that appends each refresh to a [classname]`List` -- to show what changed since the last one, say -- grows on the heap every time, while its component tree, and every gauge above, stays flat.
+Only the heap shows it, and the heap can't say which view is to blame.
+
+So with `ui-state` on, each measurement also reads the collections that views hold: the instance fields of every route target and router layout in the tree, and of their superclasses up to the first Flow class, whose declared type is a [classname]`Collection`, a [classname]`Map`, or an array.
+A field's size includes the collections nested directly inside it, so a `List<List<T>>` that gains a whole result set per refresh grows by that result set.
+The kit publishes the totals as `vaadin.ui.state.retained.elements` and `vaadin.ui.state.retained.elements.max`.
+
+It then follows each field of each view instance from one measurement of its UI to the next.
+A field that has grown at [propertyname]`vaadin.observability.ui-state-growth-samples` measurements (5 by default) without shrinking in between is counted in `vaadin.ui.state.retained.growing`.
+A measurement that finds the size unchanged neither counts nor breaks the run, because measurements follow interactions, not the code that adds to the field.
+The gauge is normally zero, so it can be alerted on directly:
+
+[source,yaml]
+----
+- alert: VaadinViewStateGrowing
+  expr: max(vaadin_ui_state_retained_growing) > 0
+  for: 10m
+  annotations:
+    summary: A view keeps accumulating state; see /actuator/vaadin/observability
+----
+
+Which view and field is growing isn't a tag, since that would add a series per view class.
+The insights endpoint reports it instead, as a <<insights#growing-view-state,`growing-view-state` insight>>: one per field, naming the class and the field, how large it is in the worst UI, what it started from, and how many open UIs show the same growth.
+
+What's deliberately not read: only `java.util` implementations are asked for their size, because another collection may do work to answer -- a lazy JPA association loads itself on [methodname]`size()` -- and nothing reachable from an element is followed.
+These figures count what a field holds, not how many bytes that is.
+
+Some collections legitimately grow for a while, like a chat log or rows a user keeps adding.
+Raise `ui-state-growth-samples` if they're reported too early, or set it to `0` to turn the collection reading off.
+
 
 [[database-monitoring]]
 == Database Monitoring
@@ -779,6 +884,9 @@ This is off by default: it reaches outside the Vaadin runtime into the persisten
 It covers all JDBC access -- Spring Data, [classname]`JdbcTemplate`, and raw JDBC -- that flows through a managed [classname]`DataSource`.
 Row counting is best-effort and attributes to `_unknown` when no view is active, such as for background tasks.
 
+The same counting also feeds the interaction insights: a slow data query insight reports how many SQL queries answering it took and how many rows they read.
+See <<insights#slow-query-sql,What a Slow Data Query Cost in the Database>>.
+
 === Locating Slow or Large Queries in a Trace
 
 When tracing is also enabled (`vaadin.observability.traces=true`, the default), each query additionally opens a `vaadin.db.query` span.
@@ -789,6 +897,25 @@ The same observation also yields a `vaadin.db.query` duration timer: database ti
 The span doesn't include the SQL text by default.
 Set `vaadin.observability.database-statement=true` to attach the parameterized statement as `db.statement`.
 This is useful for pinpointing the offending query, but it's opt-in because SQL is higher cardinality and can be sensitive.
+
+[[span-limit]]
+=== N+1 Loads and the Span Limit
+
+An N+1 load -- one query for a list, then one more per row, typically an eagerly or lazily loaded JPA relation -- can issue tens of thousands of queries for a single click.
+A span for each would overflow the tracing exporter's queue (OpenTelemetry's [classname]`BatchSpanProcessor` holds 2048 by default), and the exporter then drops spans from every request, not only the one at fault.
+
+At most [propertyname]`vaadin.observability.database-span-limit` (100 by default) query spans are therefore started under any one parent span -- a Vaadin request, an RPC, or a data provider fetch.
+Past that, a query:
+
+* still gets its `vaadin.db.query` observation, so it counts toward the same timer, with any tags your [classname]`ObservationFilter` instances or `management.observations.key-values.*` properties add, and an [classname]`ObservationPredicate` that disables the observation applies to it too -- database time per view isn't under-reported for exactly the load that's slow;
+* still counts toward the query and row totals of the <<insights#slow-query-sql,slow data query insight>>;
+* gets no span of its own: the starter registers a tracing handler ahead of Spring Boot's default one that takes these observations and creates no span.
+Instead, the parent span carries `vaadin.db.queries.unspanned` with the number left out.
+
+In a trace, an N+1 load therefore looks like a request or fetch span with `vaadin.db.queries.unspanned` set, the first 100 query spans under it -- most with `db.rows=1` -- and one query with a large `db.rows` near their start.
+A query with no enclosing span, such as one on an application thread with no observation, has nothing to count against and isn't limited.
+
+The handler is registered only when Micrometer Tracing is on the classpath, which is the case whenever the application exports spans.
 
 
 == Extending Built-In Instrumentation
