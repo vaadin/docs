@@ -29,17 +29,18 @@ You typically call [methodname]`logout()` from a *button* or *menu item* click l
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import jakarta.annotation.security.PermitAll;
 
-@Route("logout")
-@PermitAll // <1>
-public class LogoutView extends Main {
+@Route("account") // <1>
+@PermitAll // <2>
+public class AccountView extends Main {
 
-    public LogoutView(AuthenticationContext authenticationContext) { // <2>
+    public AccountView(AuthenticationContext authenticationContext) { // <3>
         add(new Button("Logout", event -> authenticationContext.logout()));
     }
 }
 ----
-<1> Grants access to _authenticated users_ -- otherwise, users wouldn't be able to log out.
-<2> Injects [classname]`AuthenticationContext`, which is a Spring Bean.
+<1> Don't map the view to `logout`. That's the path of Spring Security's own logout endpoint.
+<2> Grants access to _authenticated users_ -- otherwise, users wouldn't be able to log out.
+<3> Injects [classname]`AuthenticationContext`, which is a Spring Bean.
 
 
 == Configuring the Logout Success URL
@@ -55,10 +56,14 @@ class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+// tag::snippet[]
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/logged-out.html").permitAll()); // <1>
+// end::snippet[]
         // Configure Vaadin's security using VaadinSecurityConfigurer
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
 // tag::snippet[]
-            configurer.loginView(LoginView.class, "/logged-out.html"); // <1>
+            configurer.loginView(LoginView.class, "/logged-out.html"); // <2>
 // end::snippet[]
         });
         return http.build();
@@ -66,9 +71,14 @@ class SecurityConfig {
     ...
 }
 ----
-<1> Sets `/logged-out.html` as the *logout success URL*.
+<1> Lets anyone access `/logged-out.html`.
+<2> Sets `/logged-out.html` as the *logout success URL*.
 
 If your application runs at `\https://example.com`, users will be redirected to `\https://example.com/logged-out.html` after logging out.
+
+.Allow Access to the Logout Success URL
+[IMPORTANT]
+Users are no longer authenticated after logging out, so the logout success URL has to be accessible without authentication. Vaadin denies requests to URLs that it doesn't recognize, so a static page such as `/logged-out.html` needs its own `permitAll()` rule. Without it, users end up on the login view instead. If the logout success URL points to a Flow view, annotate the view with [annotationname]`@AnonymousAllowed` instead.
 
 
 === Absolute vs. Relative URLs
@@ -80,4 +90,4 @@ The logout success URL can be either absolute or relative.
 
 .Relative logout URLs must include the context path
 [IMPORTANT]
-If your application is deployed at `\https://example.com/app`, the logout URL should be `/app/logged-out.html`.
+If your application is deployed at `\https://example.com/app`, the logout URL should be `/app/logged-out.html`. The request matcher doesn't include the context path, so it stays `/logged-out.html`.
