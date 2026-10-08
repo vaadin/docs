@@ -27,13 +27,15 @@ Although transactions are not specific to relational databases, they are discuss
 
 Databases achieve isolation in two main ways: by locking data, and by keeping multiple versions of it. Many databases combine the two.
 
-A _read lock_, or _shared_ lock, allows multiple transactions to read the same data, concurrently. It prevents any transaction from modifying it while others are reading.
+With locking, a transaction has to get a lock on the data before it can read or modify it. The database uses two kinds of locks for this:
 
-A _write lock_, or _exclusive_ lock, is used when a transaction needs to modify data. It prevents other transactions from writing the data until the lock is released. In a database that relies on locks only, it also prevents other transactions from reading the data.
+A _read lock_, or _shared_ lock, is used when a transaction reads data. Several transactions can hold a read lock on the same data at the same time, but while they do, no transaction can get a write lock on it. The data can be read concurrently, but not modified.
+
+A _write lock_, or _exclusive_ lock, is used when a transaction modifies data. Only one transaction at a time can hold it, and while it does, no other transaction can get either a read lock or a write lock on the same data. Other transactions can neither read nor modify the data until the lock is released.
 
 Depending on the implementation and configuration of the database, and the needs of a transaction, locks can be applied at different levels of granularity. For example, a database may be able to lock individual cells, rows, pages, tables, or even the entire database.
 
-With _multi-version concurrency control_ (MVCC), the database keeps several versions of the same data. When a transaction reads data, it gets a _snapshot_: the data as it was committed at a certain point in time. Because of this, readers don't have to wait for writers, and writers don't have to wait for readers. Transactions that write the same data still have to wait for each other, as the database locks the data being written. PostgreSQL, Oracle, MySQL, and MariaDB all use MVCC. Microsoft SQL Server uses locks by default, but can be configured to use row versioning instead.
+With _multi-version concurrency control_ (MVCC), the database keeps several versions of the same data. When a transaction reads data, it gets a _snapshot_: the data as it was committed at a certain point in time. Reading a snapshot doesn't require a read lock, unless the transaction explicitly locks the data it reads, as in <<../pessimistic-locking#,pessimistic locking>>. Because of this, a write lock doesn't block it. The transaction holding the write lock is working on a newer version of the data, while the reading transaction sees the committed version. Readers don't have to wait for writers, and writers don't have to wait for readers. Transactions that modify the same data still need write locks, so they have to wait for each other. PostgreSQL, Oracle, MySQL, and MariaDB all use MVCC. Microsoft SQL Server uses locks by default, but can be configured to use row versioning instead.
 
 Isolation has an impact on performance. A database that uses locks has to hold more locks, for longer, the stronger the isolation. A database that uses MVCC may have to make transactions wait, or roll them back, when they conflict with each other. Because of this, there are different levels of isolation. They allow you to relax the isolation requirements in favor of improved performance. To understand what these levels mean, you first need to understand some phenomena that can happen when you're reading and writing data at the same time.
 
