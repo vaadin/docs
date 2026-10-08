@@ -83,7 +83,9 @@ const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
-// License check helper command
+// License check helper command. Only the build runs it: Design System
+// Publisher is no longer a product, so dev-mode starts skip the extra Maven
+// run to keep startup fast for people working on the documentation.
 const hasLicenseChecker = (() => {
   const pomFilePath = path.resolve(projectRootPath, 'pom.xml');
   const pomFile = fs.readFileSync(pomFilePath, 'utf8');
@@ -161,7 +163,6 @@ const SCRIPTS = {
   develop: {
     name: `dsp@${DSP_VERSION}:start`,
     commands: [
-      LICENSE_CHECK,
       // Starts docs-app and docs server (concurrently)
       {
         shell: [
@@ -189,7 +190,7 @@ const SCRIPTS = {
         ],
         ignoredLogSignals: ['New version of Astro available', 'Observability agent is not running'],
       },
-    ].filter((p) => !!p),
+    ],
   },
   build: {
     name: `dsp@${DSP_VERSION}:build`,
