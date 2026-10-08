@@ -87,6 +87,8 @@ public class ChatMessages {
 ----
 <1> The bean holds a single subscription for all users. Views bind to `messages()` with [methodname]`bindChildren()`, and Flow pushes new messages to every connected user automatically.
 
+The bean and its signal exist once per JVM. If you run several instances of your application behind a load balancer, each instance subscribes to the stream separately, and users receive the messages that reach the instance they're connected to. This works if the stream delivers every message to every instance -- for example, when it comes from a message broker. If the stream only carries messages produced within the same JVM, users connected to other instances don't receive them.
+
 See <<updates#broadcasting-to-all-users,Broadcasting to All Users>> for the matching view code. Note that the <<#buffering,buffering>> guidance below still applies: signals don't rate-limit updates, so buffer a high-frequency stream before feeding it into the signal.
 
 
@@ -94,7 +96,7 @@ See <<updates#broadcasting-to-all-users,Broadcasting to All Users>> for the matc
 
 In a reactive stream, an error is a terminal event. This means that the subscription is cancelled and no more values are emitted. If you're dealing with a hot stream, you should therefore consider resubscribing to it as a part of error recovery.
 
-You can use the `doOnError()` method to attach a <<callbacks#,callback>> that's called if an error occurs. As for successful completion, you should declare a private method and wrap it inside `UI.accessLater()`.
+To handle errors, pass an error <<callbacks#,callback>> to `subscribe()` as the second argument. As for successful completion, you should declare a private method and wrap it inside `UI.accessLater()`.
 
 For example, a method for handling errors could look like this:
 
@@ -111,11 +113,16 @@ In the following example, a button click listener starts a new background job, a
 ----
 button.addClickListener(clickEvent -> {
     var ui = UI.getCurrentOrThrow();
-    service.startBackgroundJob()
-        .doOnError(ui.accessLater(this::onJobFailed, null))
-        .subscribe(ui.accessLater(this::onJobCompleted, null));
+    service.startBackgroundJob().subscribe(
+        ui.accessLater(this::onJobCompleted, null),
+        ui.accessLater(this::onJobFailed, null)
+    );
 });
 ----
+
+.Don't Handle Errors with `doOnError()`
+[NOTE]
+The `doOnError()` method lets you observe an error, but it doesn't handle it. If you subscribe without an error callback, Reactor treats the error as unhandled and logs an `ErrorCallbackNotImplemented` exception, even if you've called `doOnError()`.
 
 
 == Buffering
