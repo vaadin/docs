@@ -112,6 +112,49 @@ public class ReportDownloadView extends VerticalLayout {
 <1> The service returns an `InputStream`. The content is streamed directly to the client without loading it all into memory first.
 <2> Pass `-1` when the content length isn't known in advance. The browser won't show a progress percentage, but memory usage stays low regardless of file size.
 
+== Exporting Grid Data
+
+To let users download the contents of a <</components/grid#,Grid>>, generate the file from the grid's items when the download starts. The following example exports the selected rows as CSV, or all rows if nothing is selected. It uses a lambda that receives a `DownloadEvent` and writes directly to the response output stream:
+
+[source,java]
+----
+grid.setSelectionMode(Grid.SelectionMode.MULTI);
+
+Anchor exportLink = new Anchor(event -> {
+    Set<Person> selected = grid.getSelectedItems();
+    Stream<Person> people = selected.isEmpty()
+            ? grid.getGenericDataView().getItems() // <1>
+            : selected.stream();
+
+    event.setFileName("people.csv");
+    event.setContentType("text/csv");
+    try (var writer = new PrintWriter(new OutputStreamWriter(
+            event.getOutputStream(), StandardCharsets.UTF_8))) {
+        writer.println("First Name,Last Name,Email");
+        people.forEach(person -> writer.println(String.join(",",
+                toCsvValue(person.getFirstName()),
+                toCsvValue(person.getLastName()),
+                toCsvValue(person.getEmail()))));
+    }
+}, "Export as CSV");
+
+private static String toCsvValue(String value) {
+    if (value == null) {
+        return "";
+    }
+    // Quote values that contain separators, quotes, or line breaks
+    if (value.contains(",") || value.contains("\"")
+            || value.contains("\n") || value.contains("\r")) {
+        return "\"" + value.replace("\"", "\"\"") + "\"";
+    }
+    return value;
+}
+----
+<1> Returns the items in the order they're shown in the grid, including the current sorting and filtering. With a lazy data provider, this fetches all items from the backend, so for large data sets, query the service directly instead.
+
+For more complex files, consider using a CSV or spreadsheet library.
+
+
 == When to Use Each Approach
 
 - *`forFile()`* — the file already exists on disk. Simplest option, handles content type and filename automatically.
