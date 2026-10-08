@@ -70,7 +70,9 @@ If the job needs to provide real-time updates to the user interface (e.g., showi
 
 For event triggered jobs, you should create an event listener that receives events from Spring's event publisher. By default, the event publisher calls each listener in the same thread that published the event. You should therefore give the job to the `TaskExecutor`.
 
-Below is an example of a listener that listens for `MyEvent` to be published. When the event occurs, it triggers the job in a background thread:
+Application services often publish events inside a <<../add-service#transactions,transaction>>. A job triggered by such an event should only run after the transaction has been committed. If the job starts earlier, it runs in a transaction of its own and might not see the changes yet. If the transaction is rolled back, the job would act on changes that never happened. To prevent this, use `@TransactionalEventListener` instead of `@EventListener`. With the default phase, `AFTER_COMMIT`, Spring delivers the event only after the transaction has been committed, and not at all if it's rolled back.
+
+Below is an example of a listener that listens for `MyEvent` to be published. When the transaction that published the event has been committed, it triggers the job in a background thread:
 
 [source,java]
 ----
@@ -83,7 +85,7 @@ class PerformBackgroundJobOnMyEventTrigger {
         this.job = job;
     }
 
-    @EventListener // <1>
+    @TransactionalEventListener // <1>
     @Async // <2>
     public void onMyEvent(MyEvent event) {
         try {
@@ -94,10 +96,14 @@ class PerformBackgroundJobOnMyEventTrigger {
     }
 }
 ----
-<1> Spring calls the trigger when the `MyEvent` is published.
+<1> Spring calls the trigger after the transaction that published `MyEvent` has been committed.
 <2> Spring executes the method using its task executor thread pool.
 
 This example uses the `@Async` annotation, but you can also execute the job, <<../background-jobs#task-execution,programmatically>>.
+
+If an event is published without an active transaction, Spring doesn't call transactional event listeners at all. Set `fallbackExecution = true` on the annotation if the trigger should then run right away. For events that are never published inside a transaction, such as the application events that Spring itself publishes, use `@EventListener`. The <<startup-jobs,startup trigger>> below is an example of this.
+
+The job runs after the commit, so it's not part of the transaction that published the event. If the application stops before the job has finished, or the job fails, the changes are committed but the job's work is never done. See <<../../forms-data/consistency/eventual#,Eventual Consistency>> for ways to deal with this.
 
 
 == Scheduled Jobs
@@ -143,23 +149,35 @@ Programmatic schedulers are more verbose, but they're easier to debug. Therefore
 
 For startup jobs, you should create a startup trigger that executes the job when the application starts.
 
-If you need to block the application initialization until the job is completed, you can execute it in the main thread. For non-blocking execution, consider using a listener for the `ApplicationReadyEvent` to trigger the job once the application is fully initialized.
+If the application shouldn't be ready until the job is completed, implement Spring Boot's `ApplicationRunner` interface and execute the job in the main thread. For non-blocking execution, use a listener for the `ApplicationReadyEvent` to trigger the job once the application is fully initialized.
 
-Here's an example of a trigger that blocks initialization until the job is finished:
+Don't execute the job in the constructor of the trigger. <<../add-service#calling-a-service-on-view-creation,Constructors should be free of side effects>>, and while Spring is still creating beans, the rest of the application hasn't been fully initialized.
+
+Here's an example of a trigger that blocks startup until the job is finished:
 
 [source,java]
 ----
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+
 @Service
-class MyStartupTrigger {
+class MyStartupTrigger implements ApplicationRunner {
+
+    private final MyBackgroundJob job;
 
     MyStartupTrigger(MyBackgroundJob job) {
+        this.job = job;
+    }
+
+    @Override
+    public void run(ApplicationArguments args) { // <1>
         job.executeJob();
     }
 }
 ----
+<1> Spring Boot calls the trigger in the main thread after the application context has been initialized.
 
-[IMPORTANT]
-Whenever you implement a startup trigger, be aware that the application is still being initialized. That means that not all services may be available for your job to use.
+Spring Boot doesn't report the application as ready to accept traffic until all application runners have finished. However, the web server has already started at this point. If the job throws an exception, the application fails to start.
 
 Below is an example of a trigger that executes a job in a background thread after the application has started:
 
