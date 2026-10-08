@@ -96,7 +96,7 @@ public class CrudLocalization extends Div {
 
     private void setupI18n() {
         // tag::snippet[]
-        CrudI18n i18n = CrudI18n.createDefault();
+        CrudI18n i18n = new CrudI18n();
 
         i18n.setNewItem("Luo uusi");
         i18n.setEditItem("Muuta tietoja");
@@ -105,20 +105,27 @@ public class CrudLocalization extends Div {
         i18n.setDeleteItem("Poista...");
         i18n.setEditLabel("Muokkaa");
 
-        CrudI18n.Confirmations.Confirmation delete = i18n.getConfirm()
-                .getDelete();
+        CrudI18n.Confirmations.Confirmation delete = new CrudI18n.Confirmations.Confirmation();
         delete.setTitle("Poista kohde");
         delete.setContent(
                 "Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.");
-        delete.getButton().setConfirm("Poista");
-        delete.getButton().setDismiss("Peruuta");
+        CrudI18n.Confirmations.Confirmation.Button deleteButton = new CrudI18n.Confirmations.Confirmation.Button();
+        deleteButton.setConfirm("Poista");
+        deleteButton.setDismiss("Peruuta");
+        delete.setButton(deleteButton);
 
-        CrudI18n.Confirmations.Confirmation cancel = i18n.getConfirm()
-                .getCancel();
+        CrudI18n.Confirmations.Confirmation cancel = new CrudI18n.Confirmations.Confirmation();
         cancel.setTitle("Hylkää muutokset");
         cancel.setContent("Kohteessa on tallentamattomia muutoksia.");
-        cancel.getButton().setConfirm("Hylkää");
-        cancel.getButton().setDismiss("Peruuta");
+        CrudI18n.Confirmations.Confirmation.Button cancelButton = new CrudI18n.Confirmations.Confirmation.Button();
+        cancelButton.setConfirm("Hylkää");
+        cancelButton.setDismiss("Peruuta");
+        cancel.setButton(cancelButton);
+
+        CrudI18n.Confirmations confirmations = new CrudI18n.Confirmations();
+        confirmations.setDelete(delete);
+        confirmations.setCancel(cancel);
+        i18n.setConfirm(confirmations);
 
         crud.setI18n(i18n);
         // end::snippet[]
