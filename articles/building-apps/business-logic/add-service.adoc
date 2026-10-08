@@ -57,10 +57,8 @@ public class OrderCreationService {
         if (!validationErrors.isEmpty()) {
             throw new ConstraintViolationException(validationErrors);
         }
-        var order = orderRepository.saveAndFlush(createOrderFromForm(orderForm));
-        eventPublisher.publishEvent(new OrderCreatedEvent(order)); // Notify other
-                                                                   // components of
-                                                                   // the new order
+        var order = orderRepository.save(createOrderFromForm(orderForm));
+        eventPublisher.publishEvent(new OrderCreatedEvent(order.orderId())); // <4>
         return order.orderId();
     }
 
@@ -72,6 +70,7 @@ public class OrderCreationService {
 <1> Makes the service into a Spring bean.
 <2> Protects the service from unauthorized access.
 <3> Runs the method inside a database transaction.
+<4> Notifies other components of the new order. The event is published inside the transaction, so a listener that should only react to committed orders uses `@TransactionalEventListener`. See <<background-jobs/triggers#event-triggered-jobs,Event Triggered Jobs>> for details.
 
 
 === Transactions
@@ -128,6 +127,8 @@ When the application service passes the entities directly to the UI layer, they 
 [source,java]
 ----
 @Service
+@Transactional(readOnly = true)
+@PreAuthorize("isAuthenticated()")
 public class CustomerCrudService {
 
     private final CustomerRepository repository;
@@ -136,15 +137,18 @@ public class CustomerCrudService {
         this.repository = repository;
     }
 
-    public Page<Customer> findAll(Specification<Customer> specification, Pageable pageable) {
-        return repository.findAll(specification, pageable);
+    public List<Customer> findByName(String searchTerm, Pageable pageable) {
+        return repository.findByNameContainingIgnoreCase(searchTerm, pageable);
     }
 
+    @Transactional
     public Customer save(Customer customer) {
-        return repository.saveAndFlush(customer);
+        return repository.save(customer);
     }
 }
 ----
+
+Even when the service returns entities, keep the persistence details out of its API. In the example above, the view passes a search term, and a Spring Data `Pageable` that describes which page to fetch and how to sort it. The service decides how to turn them into a query. Don't let the view build the query itself, for example by passing a JPA `Specification` to the service.
 
 Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
 
@@ -172,6 +176,8 @@ For storing data, services typically have to copy data from the DTO to the entit
 [source,java]
 ----
 @Service
+@Transactional(readOnly = true)
+@PreAuthorize("isAuthenticated()")
 public class CustomerCrudService {
 
     private final CustomerRepository repository;
@@ -182,14 +188,15 @@ public class CustomerCrudService {
 
     // In this example, CustomerForm is a Java record.
 
+    @Transactional
     public CustomerForm save(CustomerForm customerForm) {
-        var entity = Optional.ofNullable(customerForm.getId())
+        var entity = Optional.ofNullable(customerForm.id())
             .flatMap(repository::findById)
             .orElseGet(Customer::new);
         entity.setName(customerForm.name());
         entity.setEmail(customerForm.email());
         ...
-        return toCustomerForm(repository.saveAndFlush(entity));
+        return toCustomerForm(repository.saveAndFlush(entity)); // <1>
     }
 
     private CustomerForm toCustomerForm(Customer entity) {
@@ -197,6 +204,9 @@ public class CustomerCrudService {
     }
 }
 ----
+<1> Writes the changes to the database before mapping the entity to a DTO.
+
+This example calls `saveAndFlush()` instead of `save()`. JPA normally writes changes to the database when the transaction commits, which happens only after the method has returned. Values that are assigned on write, such as an incremented <<../forms-data/consistency/optimistic-locking#,version number>>, would then be missing from the returned DTO. When the service returns the entity itself, or nothing at all, `save()` is enough. See <<../forms-data/persistence/spring-data#entity-state-and-saving,JPA & Spring Data>> for details.
 
 When using DTOs, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
 

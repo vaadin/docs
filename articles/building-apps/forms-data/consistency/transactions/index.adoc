@@ -25,23 +25,27 @@ Although transactions are not specific to relational databases, they are discuss
 
 == Transaction Isolation
 
-Databases typically use locks to achieve isolation. A _read lock_, or _shared_ lock, allows multiple transactions to read the same data, concurrently. It prevents any transaction from modifying it while others are reading.
+Databases achieve isolation in two main ways: by locking data, and by keeping multiple versions of it. Many databases combine the two.
 
-A _write lock_, or _exclusive_ lock, is used when a transaction needs to modify data. It prevents other transactions from reading or writing the data until the lock is released.
+A _read lock_, or _shared_ lock, allows multiple transactions to read the same data, concurrently. It prevents any transaction from modifying it while others are reading.
+
+A _write lock_, or _exclusive_ lock, is used when a transaction needs to modify data. It prevents other transactions from writing the data until the lock is released. In a database that relies on locks only, it also prevents other transactions from reading the data.
 
 Depending on the implementation and configuration of the database, and the needs of a transaction, locks can be applied at different levels of granularity. For example, a database may be able to lock individual cells, rows, pages, tables, or even the entire database.
 
-These locks have an impact on performance. Because of this, there are different levels of isolation. They allow you to relax the isolation requirements in favor of improved performance. To understand what these levels mean, you first need to understand some phenomena that can happen when you're reading and writing data at the same time.
+With _multi-version concurrency control_ (MVCC), the database keeps several versions of the same data. When a transaction reads data, it gets a _snapshot_: the data as it was committed at a certain point in time. Because of this, readers don't have to wait for writers, and writers don't have to wait for readers. Transactions that write the same data still have to wait for each other, as the database locks the data being written. PostgreSQL, Oracle, MySQL, and MariaDB all use MVCC. Microsoft SQL Server uses locks by default, but can be configured to use row versioning instead.
 
-Dirty Reads:: A dirty read happens when a transaction reads changes made by another, before that second transaction has been committed. The problem is that should the second transaction be rolled back, the first one has read data that no longer exists. This can happen when there are no locks at all.
+Isolation has an impact on performance. A database that uses locks has to hold more locks, for longer, the stronger the isolation. A database that uses MVCC may have to make transactions wait, or roll them back, when they conflict with each other. Because of this, there are different levels of isolation. They allow you to relax the isolation requirements in favor of improved performance. To understand what these levels mean, you first need to understand some phenomena that can happen when you're reading and writing data at the same time.
 
-Non-Repeatable Reads:: A non-repeatable read happens when a transaction reads the same data twice, but gets different results because a second transaction has updated or deleted the data between the reads. This can occur if the first transaction only holds the read lock while it's reading the data instead of keeping it for its entire duration.
+Dirty Reads:: A dirty read happens when a transaction reads changes made by another, before that second transaction has been committed. The problem is that should the second transaction be rolled back, the first one has read data that no longer exists.
 
-Phantom Reads:: A phantom read is a special kind of non-repeatable read. It happens when a transaction performs a query that should have included data from another transaction. However, at the time of the query, the second transaction had not yet written that data. If the first transaction was to run the same query later, the data would appear. This can happen if the first transaction holds the read lock for its entire duration, but only locks the rows it has read instead of locking the entire table.
+Non-Repeatable Reads:: A non-repeatable read happens when a transaction reads the same data twice, but gets different results because a second transaction has updated or deleted the data, and committed, between the reads.
+
+Phantom Reads:: A phantom read is a special kind of non-repeatable read. It happens when a transaction runs the same query twice, and the second result includes data that a second transaction has inserted, and committed, between the queries.
 
 The ANSI/ISO SQL standard defines four isolation levels: read uncommitted, read committed, repeatable reads, and serializable. These are described in detail here:
 
-Read Uncommitted:: This is the lowest isolation level, where transactions behave as if there were no locks or isolation at all. It allows dirty reads, non-repeatable reads, and phantom reads.
+Read Uncommitted:: This is the lowest isolation level, where transactions can see changes that other transactions have not yet committed. It allows dirty reads, non-repeatable reads, and phantom reads. Avoid this level, as your application could act on data that is later rolled back. Not all databases support it. For example, PostgreSQL treats it as read committed, and Oracle doesn't support it at all.
 
 Read Committed:: This is the second-lowest isolation level. It prevents dirty reads, but allows non-repeatable reads and phantom reads.
 
@@ -49,9 +53,13 @@ Repeatable Reads:: This is the second-highest isolation level. It prevents dirty
 
 Serializable:: This is the highest, but also the most expensive isolation level. Transactions on this level behave as if they were executed sequentially. It prevents dirty reads, non-repeatable reads, and phantom reads.
 
+A database that uses locks implements the higher isolation levels by holding read locks for longer, and by locking more than the rows a transaction has read, such as ranges of rows or entire tables. A database that uses MVCC implements them by choosing which snapshot a transaction sees. On the read committed level, every statement sees the data committed before that statement started. On the higher levels, the entire transaction sees the data committed before its first statement.
+
 Database implementations may also define their own isolation levels, and choose to implement the standard isolation levels in different ways. For instance, a specific database may prevent certain bad behavior on a lower isolation level, even though it would be possible in theory.
 
 Furthermore, their default isolation levels may be different. The database systems PostgreSQL, Microsoft SQL Server, H2, and Oracle use _read committed_ as the default isolation level, whereas MariaDB and MySQL use _repeatable reads_.
+
+On the higher isolation levels, some databases roll back a transaction instead of making it wait, if it conflicts with another one. For example, PostgreSQL rolls back a repeatable read transaction that tries to update a row that another transaction has updated and committed after the first transaction started. Your application then has to execute the transaction again.
 
 Check the documentation for your database if you're not familiar with how it handles transaction isolation.
 
