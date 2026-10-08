@@ -10,7 +10,7 @@ order: 6
 = Creating a Custom Field
 :toclevels: 2
 
-This page explains the essentials for creating a production-ready custom field,
+This page explains the essentials of creating a custom field,
 along with a step-by-step example that you can follow to build your own.
 
 
@@ -238,9 +238,9 @@ public class MyCustomField extends CustomField<Integer> {
     private final NativeLabel label;
     private final Input input;
 
-    public MyCustomField(String label) {
+    public MyCustomField(String labelText) {
         input = createInput();
-        label = new NativeLabel(label);
+        label = new NativeLabel(labelText);
         label.setFor(input);
 
         var layout = new Div(label, input);
@@ -413,11 +413,12 @@ Otherwise, screen readers may announce the field incorrectly, since the label wo
 
 ```java
 private final Div errorDiv = new Div();
+private final Input input;
 
 public MyCustomField() {
     errorDiv.setId("my-custom-field-error-" + uniqueFieldNumber);
 
-    Input input = createInput();
+    input = createInput();
 
     var layout = new Div(label, errorDiv, input);
 
@@ -566,7 +567,7 @@ You can also apply styles programmatically in Java. Options include:
 * Using <<{articles}/styling/utility-classes#lumo-utility-classes, Lumo Utility classes>>, e.g., `label.addClassName(LumoUtility.Padding.Left.SMALL);`
 * Using `HasStyle` API:
 ** With predefined methods, e.g. `label.getStyle().setPaddingLeft("var(--lumo-space-xs)")`
-** With generic property setters, e.g. `label.getStyle().set("padding-left", "var(--lumo-space-xs)"`
+** With generic property setters, e.g. `label.getStyle().set("padding-left", "var(--lumo-space-xs)")`
 
 [TIP]
 If a component does not implement `HasStyle`, you can usually access the same API through `component.getElement().getStyle()`.
@@ -661,63 +662,29 @@ This section highlights the most common cases you may encounter.
 
 === Labels and Input Association
 
-A `CustomField` provides a built-in label.
-For single-input cases, you typically don't need to create an additional label.
-However, the built-in label should be associated with the input element.
+A `CustomField` has the ARIA role `group`, and its built-in label names the group.
+The inputs inside the field need accessible names of their own.
+Otherwise, screen readers announce them without a name, and accessibility checkers report them as errors.
 
-By default, this association does not exist because `CustomField` doesn't know
-which input the label should point to, especially in cases with multiple inputs.
-
-Vaadin does not currently provide a built-in solution for this,
-but you can handle it with a JavaScript call from your Custom Field:
-
-```java
-private void setFor(TextField field) {
-    field.getElement().executeJs("""
-            setTimeout(() => {
-              const inputId = $1.inputElement.id;
-              const mainLabel = $0.querySelector(
-                '#'+$0.getAttribute('aria-labelledby'));
-              mainLabel.setAttribute('for', inputId);
-            }, 100);""", getElement(), field.getElement());
-}
-```
-
-This ensures the main label correctly points to the input element.
-
-=== Role Attribute
-
-By default, a Custom Field has the ARIA role `group`.
-If your field only contains a single input, a more appropriate role is `input`.
-
-Currently, Vaadin does not provide a built-in way to change this.
-You can set it with another JavaScript call:
-
-```java
-getElement().executeJs(
-                "setTimeout(() => $0.setAttribute('role', 'input'), 100);",
-                this);
-```
-
-=== Combining Label and Role Updates
-
-You can combine the label association and role updates into one script,
-and call it inside the `onAttach` method.
-This ensures the accessibility adjustments persist even if the field is detached and reattached.
+`CustomField` doesn't know which input its label belongs to, especially when there are several, so it doesn't name the inputs for you.
+If your field contains a single input, give the input the same name as the field.
+You can do this by overriding `setLabel()`:
 
 ```java
 @Override
-public void onAttach(AttachEvent event) {
-    getElement().executeJs("""
-            setTimeout(() => {
-              $0.setAttribute('role', 'input');
-              const inputId = $1.inputElement.id;
-              const mainLabel = $0.querySelector(
-                '#'+$0.getAttribute('aria-labelledby'));
-              mainLabel.setAttribute('for', inputId);
-            }, 100);""", getElement(), field.getElement());
+public void setLabel(String label) {
+    super.setLabel(label);
+    textField.setAriaLabel(label);
 }
 ```
+
+If your field contains several inputs, give each one a name that tells which part of the value it holds,
+such as "hours" or "minutes".
+Screen readers announce the group label when focus moves into the field, so the names of the inputs don't need to repeat it.
+The <<try-it,Try It>> example below shows how to do this.
+
+Keep the `group` role, even if the field contains a single input.
+ARIA has no role for a generic input: `input` is an abstract role, which you must not use in content.
 
 == Try It
 
@@ -812,10 +779,13 @@ public class DurationField extends CustomField<Duration> {
 
     @Override
     protected void setPresentationValue(Duration newPresentationValue) {
-        var h = (int) newPresentationValue.toHours();
-        var m = newPresentationValue.toMinutesPart();
-        hours.setValue(h);
-        minutes.setValue(m);
+        if (newPresentationValue == null) {
+            hours.clear();
+            minutes.clear();
+        } else {
+            hours.setValue((int) newPresentationValue.toHours());
+            minutes.setValue(newPresentationValue.toMinutesPart());
+        }
     }
 
     @Override
@@ -832,13 +802,15 @@ At this point, you can test the field by adding it to an existing view or by cre
 ```java
 package com.mydomain.myproject.ui.view;
 
+import com.mydomain.myproject.ui.component.DurationField;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.router.Route;
 
 @Route
 public final class MainView extends Main {
     MainView() {
-        var duration = new DurationField("Duration");
+        var duration = new DurationField();
+        duration.setLabel("Duration");
         add(duration);
     }
 }
@@ -868,7 +840,7 @@ andSpan.addClassNames(LumoUtility.Padding.Left.SMALL, LumoUtility.Padding.Right.
 Here's the updated version of the DurationField:
 
 ```java
-package com.mydomain.myproject.ui.components;
+package com.mydomain.myproject.ui.component;
 
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -945,10 +917,13 @@ public class DurationField extends CustomField<Duration> {
 
     @Override
     protected void setPresentationValue(Duration newPresentationValue) {
-        var h = (int) newPresentationValue.toHours();
-        var m = newPresentationValue.toMinutesPart();
-        hours.setValue(h);
-        minutes.setValue(m);
+        if (newPresentationValue == null) {
+            hours.clear();
+            minutes.clear();
+        } else {
+            hours.setValue((int) newPresentationValue.toHours());
+            minutes.setValue(newPresentationValue.toMinutesPart());
+        }
     }
 
     @Override
@@ -993,10 +968,10 @@ You can verify this by opening the view containing the `DurationField` in your b
 The Custom Field can be attached to a Binder to define additional validators.
 
 First, create a DTO class for binding.
-DTOs classes usually are separately from the UI code. Place it under `src/main/java/<your package>/data`, for example `src/main/java/com/mydomain/myproject/ui/component`.
+DTO classes are usually kept separate from the UI code. Place it under `src/main/java/<your package>/data`, for example `src/main/java/com/mydomain/myproject/data`.
 
 ```java
-package com.mydomain.myproject.ui.components;
+package com.mydomain.myproject.data;
 
 import java.time.Duration;
 
@@ -1015,8 +990,7 @@ public class DurationTutorialDTO {
 
 Next, create the binder in the view with the `DurationField` and bind the field:
 
-``` java
-
+```java
 var durationField = new DurationField(); // Create our field
 durationField.setLabel("Duration");
 
@@ -1040,9 +1014,9 @@ A custom validator also can be added.
 For example, add a validator to ensure that the entered duration does not exceed one week:
 
 ```java
-private final long HOURS_IN_A_WEEK = 24 * 7;
+private static final long HOURS_IN_A_WEEK = 24 * 7;
 //...
-binder.forField(duration4)
+binder.forField(durationField)
        .asRequired("Please provide a valid duration.")
        .withValidator((value, context) -> {
            if (value.toHours() > HOURS_IN_A_WEEK) {
@@ -1080,6 +1054,8 @@ protected Duration generateModelValue() {
 Here's the updated DurationField with validation included:
 
 ```java
+package com.mydomain.myproject.ui.component;
+
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
@@ -1087,7 +1063,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import java.time.Duration;
-import java.util.Optional;
 
 public class DurationField extends CustomField<Duration> {
     private static final long MINUTES_IN_HOUR = 60;
@@ -1131,6 +1106,8 @@ public class DurationField extends CustomField<Duration> {
 
     private IntegerField createMinutesField() {
         var minutes = new IntegerField();
+        minutes.setMax(59);
+        minutes.setMin(0);
         minutes.setWidth("45px");
         minutes.setStep(MINUTES_STEP_INTERVAL);
 
@@ -1161,10 +1138,13 @@ public class DurationField extends CustomField<Duration> {
 
     @Override
     protected void setPresentationValue(Duration newPresentationValue) {
-        var h = (int) newPresentationValue.toHours();
-        var m = newPresentationValue.toMinutesPart();
-        hours.setValue(h);
-        minutes.setValue(m);
+        if (newPresentationValue == null) {
+            hours.clear();
+            minutes.clear();
+        } else {
+            hours.setValue((int) newPresentationValue.toHours());
+            minutes.setValue(newPresentationValue.toMinutesPart());
+        }
     }
 
     @Override
@@ -1200,6 +1180,10 @@ This class can be part of the existing `DurationField` class, or as a separate c
 For this example, place it under `src/main/java/<your package>/ui/component/i18n`, for example `src/main/java/com/mydomain/myproject/ui/component/i18n`.
 
 ```java
+package com.mydomain.myproject.ui.component.i18n;
+
+import java.io.Serializable;
+
 public class DurationFieldI18n implements Serializable {
     private String hours = "hours";
     private String minutes = "minutes";
@@ -1289,14 +1273,21 @@ You can now provide localized text either when constructing the field or at a la
 var duration = new DurationField(); // Uses default labels initially
 //...
 duration.setLabel("Ilgums"); // Localized label
-duration.setI18n(new DurationFieldI18n("stundas", "minūtes", "un")); // Localized to different language
+
+var i18n = new DurationFieldI18n(); // Localized to different language
+i18n.setHours("stundas");
+i18n.setMinutes("minūtes");
+i18n.setAnd("un");
+duration.setI18n(i18n);
 ```
 
 
 Here's the updated `DurationField` with localization support:
 
 ```java
-import com.vaadin.cf.components.DurationFieldI18n;
+package com.mydomain.myproject.ui.component;
+
+import com.mydomain.myproject.ui.component.i18n.DurationFieldI18n;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
@@ -1357,6 +1348,8 @@ public class DurationField extends CustomField<Duration> {
 
     private IntegerField createMinutesField() {
         var minutes = new IntegerField();
+        minutes.setMax(59);
+        minutes.setMin(0);
         minutes.setWidth("45px");
         minutes.setStep(MINUTES_STEP_INTERVAL);
 
@@ -1387,10 +1380,13 @@ public class DurationField extends CustomField<Duration> {
 
     @Override
     protected void setPresentationValue(Duration newPresentationValue) {
-        var h = (int) newPresentationValue.toHours();
-        var m = newPresentationValue.toMinutesPart();
-        hours.setValue(h);
-        minutes.setValue(m);
+        if (newPresentationValue == null) {
+            hours.clear();
+            minutes.clear();
+        } else {
+            hours.setValue((int) newPresentationValue.toHours());
+            minutes.setValue(newPresentationValue.toMinutesPart());
+        }
     }
 
     public DurationFieldI18n getI18n() {
@@ -1427,52 +1423,32 @@ public class DurationField extends CustomField<Duration> {
 
 Finally, you'll address the accessibility requirements of this Custom Field.
 
-The challenge is that there is a main label (“Duration”)
-and two inputs ("hours" and "minutes"), each with its own label.
-From an accessibility perspective, it is desired that screen readers announce these as:
+The field has the ARIA role `group`, and its main label, "Duration", names the group.
+Screen readers announce it when focus moves into the field.
+However, the two inputs don't have accessible names of their own,
+because the "hours" and "minutes" labels next to them aren't associated with them.
+Screen readers should announce the inputs as "hours" and "minutes".
 
-* “Duration hours”
-* “Duration minutes”
+You can't associate the labels with the inputs using the `for` attribute,
+because the `<input>` elements are created on the client side, inside the `IntegerField` components.
+Instead, give each input an accessible name with `setAriaLabel()`.
+Use the same text as the visible label, so that users who control the browser by voice can refer to the input by the text they see.
 
-To achieve this:
-
-1. Use `aria-labelledby` on the inputs to reference both the main label and their specific label.
-2. Ensure that labels also conform to HTML semantics by using the `for` attribute to point to their related input.
-
-Since the `for` attribute can reference only one input, a single target must be selected.
-This is acceptable since screen readers prioritize `aria-labelledby` when reading input labels.
-
-Such changes can be handled through JavaScript, avoiding the need to manually generate unique input IDs.
-You'll create a method that does all that on JS side, since it helps to avoid generating separate unique ids for the inputs.
-It's not pretty, but it takes care of everything needed.
+Since the texts come from the localization object, set the accessible names in `updateLabels()`.
+That way, they're updated whenever the localization changes:
 
 ```java
-private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
-    field.getElement().executeJs("""
-            setTimeout(() => {
-              // Find the main label id
-              const originalLabelId = $0.getAttribute('aria-labelledby');
-              // Create a custom label, based on the original label, making it unique
-              const customLabelId = originalLabelId + '-' +  $3;
-              // Set the custom label id to our custom label
-              $2.id = customLabelId;
-              // Make sure our specific input is labeled by the main label and its specific label
-              $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
-
-              const inputId = $1.inputElement.id;
-
-              // Make sure main label is associated with some input
-              var mainLabel = document.getElementById(originalLabelId);
-              mainLabel.setAttribute('for', inputId);
-              // Make sure the 'for' attribute for the more specific label is associate with its input
-              $2.setAttribute('for', inputId);
-            }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
+private void updateLabels() {
+    hoursLabel.setText(i18n.getHours());
+    minutesLabel.setText(i18n.getMinutes());
+    and.setText(i18n.getAnd());
+    hours.setAriaLabel(i18n.getHours());
+    minutes.setAriaLabel(i18n.getMinutes());
 }
 ```
 
-Now, update the `aria-description` to provide a description of the full value.
-A full description of the field's value should also be provided.
-This can be done using aria-description.
+A description of the full value should also be provided.
+You can do this with the `aria-description` attribute:
 
 ```java
 private void updateAriaDescription() {
@@ -1509,28 +1485,21 @@ protected void setPresentationValue(Duration newPresentationValue) {
 }
 ```
 
-Finally, label references need to be fixed.
-However when a field is detached and later reattached, label references are reset.
-To fix this, override the `onAttach` method and call `setFor` for both inputs:
+The values also change when the user edits the inputs.
+To handle that, add a value change listener to both inputs in `createHoursField()` and `createMinutesField()`:
 
 ```java
-@Override
-protected void onAttach(AttachEvent attachEvent) {
-    super.onAttach(attachEvent);
-    setFor(hours, hoursLabel, "hours");
-    setFor(minutes, minutesLabel, "minutes");
-}
+hours.addValueChangeListener(e -> {
+    updateAriaDescription();
+});
 ```
-
-This ensures that accessibility links between labels and inputs are restored each time
-the field is attached to the UI.
 
 Here's the updated DurationField with accessibility support included:
 
 ```java
-package com.vaadin.cf.components.tutorial;
+package com.mydomain.myproject.ui.component;
 
-import com.vaadin.cf.components.DurationFieldI18n;
+import com.mydomain.myproject.ui.component.i18n.DurationFieldI18n;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Span;
@@ -1569,35 +1538,6 @@ public class DurationField extends CustomField<Duration> {
         updateLabels();
 
         add(hours, hoursLabel, and, minutes, minutesLabel);
-    }
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        super.onAttach(attachEvent);
-        setFor(hours, hoursLabel, "hours");
-        setFor(minutes, minutesLabel, "minutes");
-    }
-
-    private void setFor(IntegerField field, NativeLabel label, String labelIdPostfix) {
-        field.getElement().executeJs("""
-                setTimeout(() => {
-                  // Find the main label id
-                  const originalLabelId = $0.getAttribute('aria-labelledby');
-                  // Create a custom label, based on the original label, making it unique
-                  const customLabelId = originalLabelId + '-' +  $3;
-                  // Set the custom label id to our custom label
-                  $2.id = customLabelId;
-                  // Make sure our specific input is labeled by the main label and its specific label
-                  $1.inputElement.setAttribute('aria-labelledby', originalLabelId + " " + customLabelId);
-
-                  const inputId = $1.inputElement.id;
-
-                  // Make sure main label is associated with some input
-                  var mainLabel = document.getElementById(originalLabelId);
-                  mainLabel.setAttribute('for', inputId);
-                  // Make sure the 'for' attribute for the more specific label is associate with its input
-                  $2.setAttribute('for', inputId);
-                }, 100);""", getElement(), field.getElement(), label.getElement(), labelIdPostfix);
     }
 
     private NativeLabel createHoursLabel() {
@@ -1662,10 +1602,13 @@ public class DurationField extends CustomField<Duration> {
 
     @Override
     protected void setPresentationValue(Duration newPresentationValue) {
-        var h = (int) newPresentationValue.toHours();
-        var m = newPresentationValue.toMinutesPart();
-        hours.setValue(h);
-        minutes.setValue(m);
+        if (newPresentationValue == null) {
+            hours.clear();
+            minutes.clear();
+        } else {
+            hours.setValue((int) newPresentationValue.toHours());
+            minutes.setValue(newPresentationValue.toMinutesPart());
+        }
         updateAriaDescription();
     }
 
@@ -1709,6 +1652,8 @@ public class DurationField extends CustomField<Duration> {
         hoursLabel.setText(i18n.getHours());
         minutesLabel.setText(i18n.getMinutes());
         and.setText(i18n.getAnd());
+        hours.setAriaLabel(i18n.getHours());
+        minutes.setAriaLabel(i18n.getMinutes());
         updateAriaDescription();
     }
 }
@@ -1716,12 +1661,10 @@ public class DurationField extends CustomField<Duration> {
 
 === Final Thoughts
 
-In this tutorial, a fully functional `CustomField` was built through a guided tutorial,
-covering not only the basics but also important production-level considerations.
-
-By following these steps, you've seen how to move from a minimal implementation to a robust, production-ready custom field.
-The final component supports data binding, validation, localization, theming, and accessibility
-all while remaining consistent with Vaadin's design system and best practices.
+In this tutorial, you built a `CustomField` step by step,
+starting from a minimal implementation and adding styling, validation, localization, and accessibility.
+The final component supports data binding,
+and behaves consistently with the built-in Vaadin field components.
 
 This pattern can be reused to create other composite fields that behave like built-in Vaadin components,
 helping you extend the framework without sacrificing consistency or usability.

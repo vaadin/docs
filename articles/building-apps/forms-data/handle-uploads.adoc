@@ -122,7 +122,23 @@ This keeps memory usage low regardless of file size, making it the better choice
 [NOTE]
 Temporary files are not automatically deleted. You are responsible for cleaning them up after processing. See <<cleaning-up-temporary-files>>.
 
-For full control over where the upload writes files, use `UploadHandler.toFile()` with a custom `FileFactory` that returns the target `File` for each upload.
+
+=== To a File of Your Choice
+
+`UploadHandler.toFile()` works like `toTempFile()`, but asks a `FileFactory` for the file to write each upload to:
+
+[source,java]
+----
+Upload upload = new Upload(UploadHandler.toFile(
+        (metadata, file) -> processFile(file),
+        metadata -> uploadDirectory // <1>
+                .resolve(UUID.randomUUID().toString()) // <2>
+                .toFile()));
+----
+<1> A `Path` pointing to the directory where you want to store uploads.
+<2> Generates the file name instead of using `metadata.fileName()`. The file name comes from the client, so it can contain path separators that would place the file outside the upload directory.
+
+Use this when you need control over where the upload writes files, such as organizing uploads into a predictable directory structure. As with temporary files, you are responsible for deleting the files when you no longer need them.
 
 
 == Passing the File to a Service
@@ -268,13 +284,16 @@ UploadHandler.inMemory((metadata, data) -> {
                 metadata.contentType(), data);
         Notification.show("File uploaded");
     } catch (Exception e) {
+        log.error("Error storing uploaded file", e);
         Notification notification = Notification.show(
-                "Upload failed: " + e.getMessage());
+                "Upload failed");
         notification.addThemeVariants(
                 NotificationVariant.ERROR);
     }
 });
 ----
+
+Don't show the exception message to the user. It's rarely meaningful to them, and it can reveal internal details such as file paths or SQL statements. Log the exception instead.
 
 === Spring Boot Multipart Limits
 

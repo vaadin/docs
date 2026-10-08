@@ -30,20 +30,20 @@ jOOQ generates `UpdatableRecord` classes for each table. These are active record
 [source,java]
 ----
 // Create
-var record = create.newRecord(CUSTOMER);
-record.setName("Acme Inc");
-record.setEmail("info@acme.com");
-record.store();
+var newCustomer = create.newRecord(CUSTOMER);
+newCustomer.setName("Acme Inc");
+newCustomer.setEmail("info@acme.com");
+newCustomer.store();
 
 // Read
-var record = create.fetchOne(CUSTOMER, CUSTOMER.CUSTOMER_ID.eq(42L));
+var customer = create.fetchOne(CUSTOMER, CUSTOMER.CUSTOMER_ID.eq(42L));
 
 // Update
-record.setEmail("sales@acme.com");
-record.store();
+customer.setEmail("sales@acme.com");
+customer.store();
 
 // Delete
-record.delete();
+customer.delete();
 ----
 
 The `store()` method issues an `INSERT` or `UPDATE` depending on whether the record was created with `newRecord()` or fetched from the database.
@@ -443,30 +443,36 @@ Reuse Spring Data's `Pageable` and `Sort`:
 
 [source,java]
 ----
+private static final Map<String, Field<?>> SORTABLE_FIELDS = Map.of( // <1>
+    "name", CUSTOMER.NAME,
+    "email", CUSTOMER.EMAIL
+);
+
 public List<Customer> findByName(String name, Pageable pageable) {
-    var query = create
+    return create
         .selectFrom(CUSTOMER)
-        .where(CUSTOMER.NAME.contains(name));
-
-    if (pageable.getSort().isSorted()) {
-        query.orderBy(toOrderFields(pageable.getSort()));
-    }
-
-    return query
+        .where(CUSTOMER.NAME.contains(name))
+        .orderBy(toSortFields(pageable.getSort())) // <2>
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetchInto(Customer.class);
 }
 
-private List<OrderField<?>> toOrderFields(Sort sort) {
-    return sort.stream()
-        .map(order -> {
-            var field = CUSTOMER.field(order.getProperty());
-            return order.isAscending() ? field.asc() : field.desc();
-        })
-        .toList();
+private List<SortField<?>> toSortFields(Sort sort) {
+    var sortFields = new ArrayList<SortField<?>>();
+    for (var order : sort) {
+        var field = SORTABLE_FIELDS.get(order.getProperty());
+        if (field == null) {
+            throw new IllegalArgumentException(
+                "Cannot sort by " + order.getProperty());
+        }
+        sortFields.add(order.isAscending() ? field.asc() : field.desc());
+    }
+    return sortFields;
 }
 ----
+<1> Maps the sort property names that callers may use to the columns they sort by. Property names are not column names, and an allowlist keeps callers from sorting by columns you didn't intend to expose.
+<2> An unsorted `Pageable` produces an empty list, which leaves out the `ORDER BY` clause.
 
 
 == Combining with JPA
@@ -489,8 +495,8 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    public Page<OrderListItem> findOrders(OrderFilter filter, Pageable pageable) {
-        return dashboardQuery.findByFilter(filter, pageable);
+    public List<OrdersByStatus> getOrderCountsByStatus(LocalDate since) {
+        return dashboardQuery.getOrderCountsByStatus(since);
     }
 }
 ----
