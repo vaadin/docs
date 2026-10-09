@@ -98,20 +98,21 @@ public class PositiveIntegerValidator implements Validator<Integer> {
 
     @Override
     public ValidationResult apply(Integer num, ValueContext context) { // <1>
-        return (num >= 0)
+        return (num == null || num > 0) // <2>
             ? ValidationResult.ok()
             : ValidationResult.error("number must be positive");
     }
 }
 ----
 <1> The `ValueContext` gives you access to information like the current locale, the field component, the `Binder`, etc.
+<2> An empty field has a `null` value. The validator accepts it, and leaves required fields to `asRequired()`.
 
 You can also implement a validator using a lambda expression instead of a separate class:
 
 [source,java]
 ----
 binder.forField(myNumberField)
-      .withValidator(num -> num >= 0, "number must be positive")
+      .withValidator(num -> num == null || num > 0, "number must be positive")
       .bind(myBean::getInteger, myBean::setInteger);
 ----
 
@@ -128,7 +129,7 @@ public class EmailAddressConverter implements Converter<String, EmailAddress> {
     @Override
     public Result<EmailAddress> convertToModel(String value, ValueContext context) {
         if (value == null) {
-            return null;
+            return Result.ok(null);
         }
         try {
             return Result.ok(new EmailAddress(value));
@@ -169,7 +170,30 @@ binder.forField(myEmailAddress)
 
 For more information about domain primitives, see the <<../consistency/domain-primitives#,Domain Primitives>> deep dive.
 
-// TODO Write about chained validators, i.e. two validators that depend on each other. When one changes, it should trigger the other and vice versa.
+
+=== Cross-Field Validators
+
+Sometimes, whether a value is valid depends on the value of another field. For example, an end date can't be before the start date. By default, a `Binding`-level validator runs only when the value of its own field changes, so it wouldn't notice a change to the start date.
+
+To make the validator react to the other field, too, [since:com.vaadin:vaadin@V25.1]#read the other field's value through the value signal of its binding#. `Binder` then re-runs the validator whenever that value changes:
+
+[source,java]
+----
+var startDateBinding = binder.forField(startDate)
+      .bind(MyBean::getStartDate, MyBean::setStartDate);
+
+binder.forField(endDate)
+      .withValidator(end -> {
+          var start = startDateBinding.valueSignal().get(); // <1>
+          return start == null || end == null || !end.isBefore(start);
+      }, "End date cannot be before start date")
+      .bind(MyBean::getEndDate, MyBean::setEndDate);
+----
+<1> Reading the value signal makes `Binder` re-run this validator whenever the start date changes.
+
+`Binder` now checks the rule whenever either date changes, and shows the error next to the end date field. You don't need a second validator on the start date field for the same rule.
+
+If the error belongs to the form as a whole rather than to a single field, use a <<#binder-level-validators,Binder-level validator>> instead. For more about cross-field validation, see <</flow/binding-data/components-binder-validation#triggering-revalidation,Triggering Revalidation>> and <</flow/ui-state/usage-examples/binder-integration#,Form Binding with Dynamic Validation>> in the reference guide.
 
 
 == Default Validators

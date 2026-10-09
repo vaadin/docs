@@ -41,7 +41,7 @@ public class PaginatedGridView extends VerticalLayout {
                 .findItems(
                         query.getOffset(),
                         query.getLimit(),
-                        query.getSortOrders(),
+                        toItemSortOrders(query.getSortOrders()),
                         filterField.getValue())
                 .stream());
         // @formatter:on hidden-source-line
@@ -58,6 +58,17 @@ public class PaginatedGridView extends VerticalLayout {
         setSizeFull();
     }
 
+    // tag::sortconversion[]
+    // Convert Vaadin's sort orders into the sort orders of the service
+    private static List<ItemSortOrder> toItemSortOrders(
+            List<QuerySortOrder> sortOrders) {
+        return sortOrders.stream()
+                .map(sortOrder -> new ItemSortOrder(sortOrder.getSorted(),
+                        sortOrder.getDirection() == SortDirection.ASCENDING))
+                .toList();
+    }
+    // end::sortconversion[]
+
     // tag::data[]
     // In a real application, this would be in its own file
     static class ItemService {
@@ -72,7 +83,7 @@ public class PaginatedGridView extends VerticalLayout {
         // tag::data[]
 
         public List<Item> findItems(int offset, int limit,
-                List<QuerySortOrder> sortOrders, String filterString) {
+                List<ItemSortOrder> sortOrders, String filterString) {
             // In a real application, this would query a database
             // end::data[]
             var filterLower = filterString.toLowerCase().trim();
@@ -99,33 +110,34 @@ public class PaginatedGridView extends VerticalLayout {
         private final Comparator<Item> defaultComparator = Comparator
                 .comparing(Item::id);
 
-        private Comparator<Item> toComparator(List<QuerySortOrder> sortOrders) {
+        private Comparator<Item> toComparator(List<ItemSortOrder> sortOrders) {
             return sortOrders.stream().map(this::toComparator)
                     .reduce(Comparator::thenComparing)
                     .orElse(defaultComparator);
         }
 
-        private Comparator<Item> toComparator(QuerySortOrder sortOrder) {
-            if (sortOrder.getSorted().equals("name")) {
+        private Comparator<Item> toComparator(ItemSortOrder sortOrder) {
+            if (sortOrder.property().equals("name")) {
                 return observeSortDirection(Comparator.comparing(Item::name),
-                        sortOrder.getDirection());
+                        sortOrder.ascending());
             } else {
                 return observeSortDirection(defaultComparator,
-                        sortOrder.getDirection());
+                        sortOrder.ascending());
             }
         }
 
         private Comparator<Item> observeSortDirection(
-                Comparator<Item> ascendingComparator,
-                SortDirection sortDirection) {
-            return sortDirection == SortDirection.ASCENDING
-                    ? ascendingComparator
+                Comparator<Item> ascendingComparator, boolean ascending) {
+            return ascending ? ascendingComparator
                     : ascendingComparator.reversed();
         }
         // tag::data[]
     }
 
     record Item(long id, String name) {
+    }
+
+    record ItemSortOrder(String property, boolean ascending) {
     }
     // end::data[]
 }
