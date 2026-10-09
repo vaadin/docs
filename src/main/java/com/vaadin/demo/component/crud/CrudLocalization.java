@@ -6,6 +6,8 @@ import com.vaadin.flow.component.crud.BinderCrudEditor;
 import com.vaadin.flow.component.crud.Crud;
 import com.vaadin.flow.component.crud.CrudEditor;
 import com.vaadin.flow.component.crud.CrudI18n;
+import com.vaadin.flow.component.crud.CrudI18n.Confirmations;
+import com.vaadin.flow.component.crud.CrudI18n.Confirmations.Confirmation;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
@@ -105,24 +107,24 @@ public class CrudLocalization extends Div {
         i18n.setDeleteItem("Poista...");
         i18n.setEditLabel("Muokkaa");
 
-        CrudI18n.Confirmations.Confirmation delete = new CrudI18n.Confirmations.Confirmation();
+        Confirmation delete = new Confirmation();
         delete.setTitle("Poista kohde");
         delete.setContent(
                 "Haluatko varmasti poistaa tämän kohteen? Poistoa ei voi perua.");
-        CrudI18n.Confirmations.Confirmation.Button deleteButton = new CrudI18n.Confirmations.Confirmation.Button();
+        Confirmation.Button deleteButton = new Confirmation.Button();
         deleteButton.setConfirm("Poista");
         deleteButton.setDismiss("Peruuta");
         delete.setButton(deleteButton);
 
-        CrudI18n.Confirmations.Confirmation cancel = new CrudI18n.Confirmations.Confirmation();
+        Confirmation cancel = new Confirmation();
         cancel.setTitle("Hylkää muutokset");
         cancel.setContent("Kohteessa on tallentamattomia muutoksia.");
-        CrudI18n.Confirmations.Confirmation.Button cancelButton = new CrudI18n.Confirmations.Confirmation.Button();
+        Confirmation.Button cancelButton = new Confirmation.Button();
         cancelButton.setConfirm("Hylkää");
         cancelButton.setDismiss("Peruuta");
         cancel.setButton(cancelButton);
 
-        CrudI18n.Confirmations confirmations = new CrudI18n.Confirmations();
+        Confirmations confirmations = new Confirmations();
         confirmations.setDelete(delete);
         confirmations.setCancel(cancel);
         i18n.setConfirm(confirmations);
