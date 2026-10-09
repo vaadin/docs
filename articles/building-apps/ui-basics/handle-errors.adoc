@@ -15,7 +15,49 @@ This guide shows how to handle errors application-wide in a Flow application. It
 
 == Copy-Paste into Your Project
 
-The following error handler logs every unexpected exception together with a short error ID, and shows the user a notification with the same ID. Users can mention the ID when they contact support, and you can find the matching log entry:
+The following four classes handle unexpected errors in the same way throughout your application:
+
+* `ErrorReporter` logs each error together with a short error ID, and creates a message for the user that contains the same ID. Users can mention the ID when they contact support, and you can find the matching log entry. In development mode, the message also includes the exception.
+* `ApplicationErrorHandler` shows the message when an event listener, such as a button click listener, throws an exception.
+* `ErrorView` shows the message when navigation fails.
+* `ErrorHandlingConfig` installs the error handler for every new user session.
+
+Put them in the same package.
+
+.`ErrorReporter.java`
+[source,java]
+----
+import com.vaadin.flow.server.VaadinService;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+final class ErrorReporter {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(ErrorReporter.class);
+
+    private ErrorReporter() {
+    }
+
+    static String report(Throwable throwable) {
+        var errorId = UUID.randomUUID().toString().substring(0, 8);
+        log.error("Unexpected error [{}]", errorId, throwable);
+        var message = "Something went wrong. If the problem persists, "
+                + "contact support and mention error " + errorId + ".";
+        if (!isProductionMode()) {
+            message += " Details: " + throwable;
+        }
+        return message;
+    }
+
+    private static boolean isProductionMode() {
+        var service = VaadinService.getCurrent();
+        return service == null
+                || service.getDeploymentConfiguration().isProductionMode();
+    }
+}
+----
 
 .`ApplicationErrorHandler.java`
 [source,java]
@@ -30,7 +72,6 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.server.ErrorEvent;
 import com.vaadin.flow.server.ErrorHandler;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +82,12 @@ class ApplicationErrorHandler implements ErrorHandler {
 
     @Override
     public void error(ErrorEvent event) {
-        var errorId = UUID.randomUUID().toString().substring(0, 8);
-        log.error("Unexpected error [{}]", errorId, event.getThrowable());
-        showError("Something went wrong. If the problem persists, "
-                + "contact support and mention error " + errorId + ".");
+        var message = ErrorReporter.report(event.getThrowable());
+        try {
+            showError(message);
+        } catch (RuntimeException e) {
+            log.warn("Could not show the error message", e);
+        }
     }
 
     private static void showError(String message) {
@@ -65,7 +108,39 @@ class ApplicationErrorHandler implements ErrorHandler {
 }
 ----
 
-The following configuration installs the error handler for every new user session:
+.`ErrorView.java`
+[source,java]
+----
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.ErrorParameter;
+import com.vaadin.flow.router.HasErrorParameter;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.server.HttpStatusCode;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+
+@PageTitle("Error")
+@AnonymousAllowed
+public class ErrorView extends Main
+        implements HasErrorParameter<Exception> {
+
+    @Override
+    public int setErrorParameter(BeforeEnterEvent event,
+            ErrorParameter<Exception> parameter) {
+        var message = ErrorReporter.report(parameter.getException());
+        removeAll();
+        add(new H1("Something went wrong"));
+        add(new Paragraph(message));
+        add(new Button("Go to the start page",
+                click -> UI.getCurrent().navigate("")));
+        return HttpStatusCode.INTERNAL_SERVER_ERROR.getCode();
+    }
+}
+----
 
 .`ErrorHandlingConfig.java`
 [source,java]
@@ -95,7 +170,9 @@ add(new Button("Fail", event -> {
 }));
 ----
 
-For more detailed instructions, and for handling navigation errors and exceptions thrown by services, continue reading below.
+To try the error view, throw the exception from the constructor of a view instead, and navigate to the view.
+
+For more detailed instructions, and for handling other navigation errors and exceptions thrown by services, continue reading below.
 
 
 == What Users See by Default
@@ -130,20 +207,25 @@ These defaults aren't what you want in a production application. A click that se
 
 == Handle Unexpected Errors
 
-Exceptions thrown in event listeners -- button clicks, value changes, [methodname]`UI.access()` tasks, and so on -- end up in the [interfacename]`ErrorHandler` of the user's [classname]`VaadinSession`. The default one, [classname]`DefaultErrorHandler`, logs the exception and shows nothing to the user.
+Exceptions thrown in event listeners -- button clicks, value changes, [methodname]`UI.access()` tasks, signal effects, and so on -- end up in the [interfacename]`ErrorHandler` of the user's [classname]`VaadinSession`. The default one, [classname]`DefaultErrorHandler`, logs the exception and shows nothing to the user.
 
-Replace it with an error handler that logs the exception and tells the user that something went wrong, as the `ApplicationErrorHandler` in the copy-paste example does. Since every session has its own error handler, install it with a [classname]`SessionInitListener`. The listener in turn has to be registered when the Vaadin service starts, which is what the [interfacename]`VaadinServiceInitListener` bean in `ErrorHandlingConfig` does. Vaadin picks up beans of this type automatically. See <<{articles}/flow/advanced/session-and-ui-init-listener#,Session and UI Listeners>> for more about these listeners.
+If you're used to Spring MVC, don't look for [annotationname]`@ControllerAdvice` or [annotationname]`@ExceptionHandler`: they don't apply to Flow views. Flow processes UI events itself rather than through Spring MVC controllers, so the error handler is the place for application-wide error handling.
+
+Replace the default error handler with one that logs the exception and tells the user that something went wrong, as the `ApplicationErrorHandler` in the copy-paste example does. Since every session has its own error handler, install it with a [classname]`SessionInitListener`. The listener in turn has to be registered when the Vaadin service starts, which is what the [interfacename]`VaadinServiceInitListener` bean in `ErrorHandlingConfig` does. Vaadin picks up beans of this type automatically. See <<{articles}/flow/advanced/session-and-ui-init-listener#,Session and UI Listeners>> for more about these listeners.
 
 Keep the following in mind when writing the error handler:
 
 Don't show exception messages to users::
-An exception message is written for developers. It can contain SQL statements, internal identifiers, or other details that are of no use to users, and that you don't want to reveal to an attacker. Show a generic message instead, and log the exception with its stack trace.
+An exception message is written for developers. It can contain SQL statements, internal identifiers, or other details that are of no use to users, and that you don't want to reveal to an attacker. Show a generic message instead, and log the exception with its stack trace. In development mode, showing the exception as well saves you a trip to the log, which is why `ErrorReporter` adds it there.
 
 Give users an error ID::
 A random error ID in both the log entry and the message lets support find the exact log entry when a user reports a problem.
 
 Check that there's a UI::
 Vaadin also calls the error handler when there's no UI to show anything in, for example when a session destroy listener throws an exception. Only show the notification when [methodname]`UI.getCurrent()` returns a UI.
+
+Never let the error handler throw::
+An exception thrown by the error handler escapes request handling altogether. The user then sees the internal error message described in <<#customize-system-messages,Customize System Messages>> instead of yours. Log the error first, and catch any exception thrown while showing the message.
 
 Look for the cause, not only the exception itself::
 The exception that reaches the error handler may wrap the one you're interested in. For example, an exception thrown in a [methodname]`UI.access()` task arrives wrapped in an [classname]`ExecutionException`. When the error handler reacts to specific exception types, check the whole cause chain, as shown in <<#access-denied-by-a-service,Access Denied by a Service>>.
@@ -156,6 +238,39 @@ The default error handler first checks whether an error view is registered for e
 === Errors in Background Threads
 
 The error handler receives the exceptions that Vaadin catches itself, such as those thrown in event listeners and in [methodname]`UI.access()` tasks. An exception thrown in a background thread, for example by a service method running asynchronously, never reaches it. Handle such errors where you start the background job. See <<../server-push/futures#,Consuming Futures>> for an example.
+
+
+=== Customize System Messages
+
+In some situations, the browser shows a _system message_ instead of anything your application does:
+
+* When an exception escapes request handling altogether, the browser shows an _internal error_ message. By default, it's in English, and it asks the user to notify the administrator.
+* When the session has expired, the browser reloads the page. By default, it does this without telling the user why, and any input that wasn't saved is lost.
+
+You can change both with a [interfacename]`SystemMessagesProvider`. Add a bean like the following to `ErrorHandlingConfig`:
+
+[source,java]
+----
+@Bean
+VaadinServiceInitListener systemMessagesInstaller() {
+    return serviceInit -> serviceInit.getSource().setSystemMessagesProvider(
+            info -> { // <1>
+                var messages = new CustomizedSystemMessages();
+                messages.setInternalErrorMessage("The application has to "
+                        + "reload. Take note of any unsaved data, and click "
+                        + "here to continue.");
+                messages.setSessionExpiredNotificationEnabled(true); // <2>
+                messages.setSessionExpiredMessage("Your session has expired. "
+                        + "Take note of any unsaved data, and click here to "
+                        + "continue.");
+                return messages;
+            });
+}
+----
+<1> The [classname]`SystemMessagesInfo` parameter has the locale of the user, which you can use to translate the messages.
+<2> Tells users why the page reloads, before it happens.
+
+See <<{articles}/flow/advanced/customize-system-messages#,Customizing System Messages>> for all the messages and their default values.
 
 
 === Monitoring Errors in Production
@@ -177,7 +292,7 @@ To replace a default error view, create your own error view for the same excepti
 
 .Error Views Aren't Routes
 [IMPORTANT]
-Error views don't have a [annotationname]`@Route` annotation, so automatic layouts with [annotationname]`@Layout` don't apply to them. To show an error view inside your main layout, add [annotationname]`@ParentLayout` to it. Like any other view, an error view also needs an access annotation of its own.
+Error views don't have a [annotationname]`@Route` annotation, so automatic layouts with [annotationname]`@Layout` don't apply to them. To show an error view inside your main layout, add [annotationname]`@ParentLayout` to it. Don't do this for the error view for unexpected errors, though, as explained in <<#replace-the-default-error-view,Replace the Default Error View>>. Like any other view, an error view also needs an access annotation of its own.
 
 
 === Show a Custom Not-Found View
@@ -209,7 +324,7 @@ public class NotFoundView extends Main
 <1> Shows the error view inside the main layout of the application.
 <2> Allows all signed-in users to see the error view. Use [annotationname]`@AnonymousAllowed` instead if users who aren't signed in can navigate in your application, for example between public views.
 <3> Users who navigate to a view that they aren't allowed to access also see this view, so the text covers both cases.
-<4> Returns the HTTP status code that describes the error.
+<4> Returns the HTTP status code that describes the error. When a user opens the URL directly, the browser still receives `200` by default, because the error view is rendered in a later request than the initial page load. See <<{articles}/flow/routing/exceptions#error-resolving,Error Resolving>> for how the `eagerServerLoad` property changes this.
 
 By default, a signed-in user who isn't allowed to access a view sees the same not-found view as for a route that doesn't exist. This is deliberate: the response doesn't reveal whether a view exists at a given URL. Keep this in mind when you write the text of your not-found view.
 
@@ -280,36 +395,15 @@ This doesn't expose your views: they remain protected at the HTTP layer and by n
 
 === Replace the Default Error View
 
-To get rid of the stack trace in development mode and the exception message in production mode, replace [classname]`InternalServerError` with an error view of your own for [classname]`Exception`. Since it replaces the default error view, it also has to log the exception:
+The default error view shows the stack trace in development mode and the exception message in production mode. To get rid of both, replace [classname]`InternalServerError` with an error view of your own for [classname]`Exception`, such as the `ErrorView` in the copy-paste example. Since it replaces the default error view, it also has to log the exception, which `ErrorView` does through `ErrorReporter`.
 
-[source,java]
-----
-@ParentLayout(MainLayout.class)
-@PageTitle("Error")
-@PermitAll
-public class ErrorView extends Main
-        implements HasErrorParameter<Exception> {
+The error view also handles exceptions that you don't have a more specific error view for, so you don't need one per exception type. Two things set it apart from the other error views:
 
-    private static final Logger log = LoggerFactory.getLogger(ErrorView.class);
+It has no parent layout::
+If your main layout throws an exception during navigation, Vaadin can't render an error view inside that layout either. It then falls back to the default [classname]`InternalServerError`, which shows the exception message in production mode. Keep the error view for unexpected errors outside your layouts, and give users a way back to the start page instead.
 
-    @Override
-    public int setErrorParameter(BeforeEnterEvent event,
-            ErrorParameter<Exception> parameter) {
-        var errorId = UUID.randomUUID().toString().substring(0, 8);
-        log.error("Error while navigating to '{}' [{}]",
-                event.getLocation().getPath(), errorId,
-                parameter.getException()); // <1>
-        removeAll();
-        add(new H1("Something went wrong"));
-        add(new Paragraph("If the problem persists, contact support "
-                + "and mention error " + errorId + "."));
-        return HttpStatusCode.INTERNAL_SERVER_ERROR.getCode();
-    }
-}
-----
-<1> Logs the exception with its stack trace, using the same kind of error ID as `ApplicationErrorHandler`.
-
-The error view also handles exceptions that you don't have a more specific error view for, so you don't need one per exception type.
+It allows anonymous access::
+Navigation can also fail for users who aren't signed in, for example in the login view. The error view only shows a generic message and an error ID, so it's safe to show to anyone. With [annotationname]`@PermitAll`, users who aren't signed in would be sent to the login view instead of seeing the error.
 
 
 == Handle Exceptions from Services
@@ -341,6 +435,8 @@ The following table summarizes where to handle common exceptions:
 | It's a bug, or a problem in the environment, such as a database that's down. The user can only try again later or contact support.
 |===
 
+Some teams prefer to handle business rule violations in the error handler as well. The services throw exceptions of a dedicated type of your own, with messages written for users. The error handler then shows the message of such an exception instead of the generic one. This saves a `try-catch` block in every view, but it means that the services decide what users see. If your application supports several languages, let the exception carry a translation key and its parameters instead of a finished message, and translate it in the error handler. Whichever approach you choose, only show the messages of exceptions that you've written for users.
+
 
 === Access Denied by a Service
 
@@ -359,15 +455,18 @@ class ApplicationErrorHandler implements ErrorHandler {
     @Override
     public void error(ErrorEvent event) {
         var throwable = event.getThrowable();
+        String message;
         if (isCausedBy(throwable, AccessDeniedException.class)) { // <1>
             log.warn("A service denied access", throwable); // <2>
-            showError("You don't have permission to perform this action.");
-            return;
+            message = "You don't have permission to perform this action.";
+        } else {
+            message = ErrorReporter.report(throwable);
         }
-        var errorId = UUID.randomUUID().toString().substring(0, 8);
-        log.error("Unexpected error [{}]", errorId, throwable);
-        showError("Something went wrong. If the problem persists, "
-                + "contact support and mention error " + errorId + ".");
+        try {
+            showError(message);
+        } catch (RuntimeException e) {
+            log.warn("Could not show the error message", e);
+        }
     }
 
     private static boolean isCausedBy(Throwable throwable,
@@ -390,6 +489,8 @@ class ApplicationErrorHandler implements ErrorHandler {
 Spring Security's [classname]`org.springframework.security.access.AccessDeniedException` and the router's [classname]`com.vaadin.flow.router.AccessDeniedException` are different classes. Method security throws the former, and navigation access control uses the latter. Check your imports.
 
 If a view calls a protected service while it's being created, and the service denies the call, the user gets the error view for unexpected errors. To avoid this, give the view an access annotation that's at least as strict as the rules of the services it calls when it opens. Navigation access control then stops the user before the view is created.
+
+As you add checks for more exception types, the `error()` method grows into a long chain of `if` statements. Larger applications often split it into small handlers that each deal with one type of exception, and let the error handler try them in order, with `ErrorReporter` as the fallback. Some frameworks built on Vaadin work this way, and let applications contribute their own handlers as Spring beans.
 
 
 === Optimistic Locking Failures
