@@ -13,7 +13,7 @@ import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
 const statusRenderer = ({ item: { status } }: { item: Person }) => {
-  const icon = status === 'Available' ? 'check' : 'close-small';
+  const icon = status === 'Available' ? 'check' : 'close';
   const theme = status === 'Available' ? 'success' : 'error';
 
   return (
