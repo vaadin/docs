@@ -81,9 +81,9 @@ var createProposalButton = new Button("Create Proposal", event -> {
 
 == Displaying Forms in Drawers
 
-// TODO Write about the new master-detail layout that is coming in the next Vaadin version!
+A drawer shows the form next to the items the user selects from, or on top of them when there isn't enough room. Use the <</components/master-detail-layout#,Master-Detail Layout>> component for this. It shows the drawer in its detail area, and switches it to an overlay on narrow screens. For more about the component and the master-detail pattern, see the <<../../views/add-master-detail#,Add a Master-Detail View>> guide.
 
-The following example shows *a drawer that reuses the same form component from the dialog example to edit project proposals*. The caller provides two callbacks: an `onSaveCallback` for handling save logic, and an `onCloseCallback` that runs when the drawer is closed:
+The following example shows *a drawer that reuses the same form component from the dialog example to edit project proposals*. The caller provides two callbacks: an `onSaveCallback` for handling save logic, and an `onCloseCallback` that runs when the user closes the drawer:
 
 [source,java]
 ----
@@ -103,7 +103,7 @@ public class ProposalDrawer extends Section {
 
         var header = new H2("Edit Proposal");
         header.setId("proposal-drawer-header"); // <1>
-        setAriaLabeledBy("proposal-drawer-header");
+        setAriaLabelledBy("proposal-drawer-header");
 
         var saveBtn = new Button("Save", event -> save());
         saveBtn.addThemeVariants(ButtonVariant.PRIMARY);
@@ -114,16 +114,10 @@ public class ProposalDrawer extends Section {
 
         // Configure the drawer
         add(header, form, buttons);
-        addClassNames(LumoUtility.Display.FLEX, // <2>
-                LumoUtility.FlexDirection.COLUMN,
-                LumoUtility.Border.ALL,
-                LumoUtility.Padding.MEDIUM);
-        setVisible(false); // <3>
     }
 
-    public void setProposal(@Nullable Proposal proposal) {
+    public void setProposal(Proposal proposal) {
         form.setFormDataObject(proposal);
-        setVisible(proposal != null);
     }
 
     private void save() {
@@ -139,15 +133,13 @@ public class ProposalDrawer extends Section {
 }
 ----
 <1> Example accessibility improvements -- recommended, but not required for drawer functionality.
-<2> Optional styling —- included here for demonstration purposes but not required for drawer functionality.
-<3> Hide the drawer by default until an item is selected.
 
-To show the drawer when a user selects an item from a grid, you can use the following pattern:
+The drawer doesn't show or hide itself. Instead, the view extends [classname]`MasterDetailLayout`, and sets the drawer as the detail whenever the user selects a proposal in the grid:
 
 [source,java]
 ----
 @Route("proposals")
-public class ProposalView extends Main {
+public class ProposalView extends MasterDetailLayout {
 
     public ProposalView(ProposalService proposalService) {
         var grid = new Grid<Proposal>();
@@ -161,17 +153,21 @@ public class ProposalView extends Main {
             },
             grid::deselectAll // <3>
         );
-        grid.addSelectionListener(event ->
-            drawer.setProposal(event.getFirstSelectedItem().orElse(null)) // <4>
-        );
+        grid.addSelectionListener(event -> {
+            var selected = event.getFirstSelectedItem();
+            selected.ifPresent(drawer::setProposal);
+            setDetail(selected.isPresent() ? drawer : null); // <4>
+        });
+        addBackdropClickListener(event -> grid.deselectAll()); // <5>
+        addDetailEscapePressListener(event -> grid.deselectAll());
 
-        add(grid, drawer);
-
-        // Style the view here...
+        setMaster(grid);
+        setSizeFull();
     }
 }
 ----
 <1> Saves the proposal with an application service.
 <2> Refreshes the grid so that the updated proposal shows up.
-<3> Clears the grid selection when the drawer is closed.
-<4> Displays the selected proposal in the drawer, or closes the drawer if the selection is empty.
+<3> Clears the grid selection when the user closes the drawer.
+<4> Shows the selected proposal in the drawer, or closes the drawer if the selection is empty.
+<5> Clears the selection, and thereby closes the drawer, when the user clicks outside the drawer or presses kbd:[Esc] while it's shown as an overlay.
