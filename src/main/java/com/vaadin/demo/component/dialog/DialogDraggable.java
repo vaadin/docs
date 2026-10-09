@@ -1,6 +1,7 @@
 package com.vaadin.demo.component.dialog;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
+import com.vaadin.flow.component.ModalityMode;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -24,7 +25,7 @@ public class DialogDraggable extends Div {
         FormLayout dialogLayout = createDialogLayout();
         dialog.add(dialogLayout);
         // tag::snippet1[]
-        dialog.setModal(false);
+        dialog.setModality(ModalityMode.MODELESS);
         dialog.setDraggable(true);
         // end::snippet1[]
 
