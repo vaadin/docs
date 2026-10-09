@@ -22,7 +22,7 @@ For deep linking to work, the application must be able to determine the selected
 [NOTE]
 In production applications, avoid exposing database primary keys directly in URLs. Sequential or predictable IDs can be guessed, which may lead to unauthorized data access if authorization has not been implemented correctly. Instead, consider using a randomly generated, public-facing identifier (for example, a UUID or NanoID). This approach improves security and makes the application more future-proof, as changes to the database schema or key strategy won't break existing links.
 
-Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service`, `grid`, and `drawer` variables to fields as you'll be needing them later when you implement the `setParameter()` method. The updated code looks like this:
+Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service` and `grid` variables to fields, as you'll need them later when you implement the `setParameter()` method. The updated code looks like this:
 
 .ProductCatalogView.java
 [source,java]
@@ -59,7 +59,6 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 // tag::snippet[]
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 // end::snippet[]
 
     ProductCatalogView(ProductCatalogService service) {
@@ -96,9 +95,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                 .findItems(searchField.getValue(), pageable)
         );
 
-// tag::snippet[]
-        drawer = new ProductFormDrawer(productDetails -> {
-// end::snippet[]
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -183,7 +180,9 @@ You can now navigate to http://localhost:8080/12, where `12` is the route parame
 
 == Select on Navigation
 
-Now you'll implement `setParameter()` to select the corresponding product in the grid and display its details in the drawer. When there's no parameter, it should clear the selection and hide the drawer.
+Now you'll implement `setParameter()` to select the corresponding product in the grid. When there's no parameter, it should clear the selection.
+
+You don't have to show the drawer here. Selecting an item from code fires the same selection event as a click, so the selection listener you added in the <<show-details#,Show Details>> step shows the drawer for you.
 
 Change the code of `ProductCatalogView` as follows:
 
@@ -221,7 +220,6 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -253,7 +251,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -325,21 +323,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
 // tag::snippet[]
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById) // <1>
-                .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        var productDetails = Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById); // <2>
-        productDetails.ifPresent(drawer::setProductDetails);
-        setDetail(productDetails.isPresent() ? drawer : null);
+                .ifPresentOrElse(grid::select, grid::deselectAll); // <2>
 // end::snippet[]
     }
 }
 ----
-<1> The first service call fetches the `ProductCatalogItem` to select.
-<2> The second service call fetches the `ProductDetails` to show in the drawer.
+<1> Fetch the `ProductCatalogItem` that has the ID from the URL.
+<2> Select the item in the grid. If there's no parameter, or no product with that ID, clear the selection instead. The selection listener then shows or hides the drawer.
 
 If you now navigate to http://localhost:8080/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080 should clear the selection and hide the drawer.
 
@@ -385,7 +377,6 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -417,7 +408,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -488,15 +479,9 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        var productDetails = Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById);
-        productDetails.ifPresent(drawer::setProductDetails);
-        setDetail(productDetails.isPresent() ? drawer : null);
     }
 
 // tag::snippet[]
@@ -516,11 +501,11 @@ From other views, you'll be able to call `ProductCatalogView.showProductCatalog(
 
 == Navigate on Selection
 
-If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. The same happens when adding new items: the product is selected, but the URL stays the same. You'll fix that next.
+If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. You'll fix that next.
 
-Previously, the grid stored the selection state. Now the route parameter is the source of truth, so both selection and deselection should happen through navigation.
+The grid selection still decides what the drawer shows. The URL only has to follow it: whenever the selection changes, the view should navigate to the matching URL. The URL sets the selection when the user opens a link, and follows the selection after that. The <</building-apps/views/add-master-detail#representing-selection-in-the-url,Add a Master-Detail View>> guide describes the same pattern.
 
-Update the grid selection listener and add button click listener as follows:
+Update the grid selection listener as follows:
 
 .ProductCatalogView.java
 [source,java]
@@ -555,7 +540,6 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -587,7 +571,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -596,14 +580,20 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         searchField.addValueChangeListener(e ->
                 grid.getDataProvider().refreshAll());
 
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
 // tag::snippet[]
-        grid.addSelectionListener(e -> e.getFirstSelectedItem()
+            e.getFirstSelectedItem()
                 .map(ProductCatalogItem::productId)
                 .ifPresentOrElse(
                     ProductCatalogView::showProductDetails, // <1>
                     ProductCatalogView::showProductCatalog // <2>
-                ));
+                );
 // end::snippet[]
+        });
         addBackdropClickListener(e -> grid.deselectAll());
         addDetailEscapePressListener(e -> grid.deselectAll());
 
@@ -612,9 +602,8 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                         productDetails -> {
                             var saved = service.save(productDetails);
                             grid.getDataProvider().refreshAll();
-// tag::snippet[]
-                            showProductDetails(saved.getProductId()); // <3>
-// end::snippet[]
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
                         },
                         this::handleException
                 ).open()
@@ -661,15 +650,9 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        var productDetails = Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById);
-        productDetails.ifPresent(drawer::setProductDetails);
-        setDetail(productDetails.isPresent() ? drawer : null);
     }
 
     public static void showProductDetails(long productId) {
@@ -683,11 +666,13 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 ----
 <1> Set the route parameter if there is a selected item.
 <2> Clear the route parameter if there is no selection.
-<3> Navigate to the newly added item.
 
-If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
+If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Since adding a product selects it, the URL follows when you add products, too. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
 
-You may have noticed a potential loop: `setParameter()` calls `grid.select()`, which triggers the selection listener, which calls `setParameter()` again. Vaadin prevents this by comparing URL parameters before navigating -- if you're already on the same view with the same parameter, it does nothing.
+You may have noticed two potential loops:
+
+* When the user selects a product, the selection listener navigates, and `setParameter()` selects the same product again. Since the product is already selected, the grid doesn't fire another selection event.
+* When the user opens a link, `setParameter()` selects the product, and the selection listener navigates to the URL the user is already on. Vaadin compares the URL parameters before navigating, and does nothing if you're already on the same view with the same parameter.
 
 
 == Complete Code for This Step
@@ -729,7 +714,6 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -761,7 +745,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -770,12 +754,18 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         searchField.addValueChangeListener(e ->
                 grid.getDataProvider().refreshAll());
 
-        grid.addSelectionListener(e -> e.getFirstSelectedItem()
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
+            e.getFirstSelectedItem()
                 .map(ProductCatalogItem::productId)
                 .ifPresentOrElse(
                     ProductCatalogView::showProductDetails,
                     ProductCatalogView::showProductCatalog
-                ));
+                );
+        });
         addBackdropClickListener(e -> grid.deselectAll());
         addDetailEscapePressListener(e -> grid.deselectAll());
 
@@ -784,7 +774,8 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
                         productDetails -> {
                             var saved = service.save(productDetails);
                             grid.getDataProvider().refreshAll();
-                            showProductDetails(saved.getProductId());
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
                         },
                         this::handleException
                 ).open()
@@ -831,15 +822,9 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        var productDetails = Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById);
-        productDetails.ifPresent(drawer::setProductDetails);
-        setDetail(productDetails.isPresent() ? drawer : null);
     }
 
     public static void showProductDetails(long productId) {
