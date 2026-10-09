@@ -46,7 +46,7 @@ import com.vaadin.flow.router.OptionalParameter;
 // end::snippet[]
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
@@ -152,7 +152,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -205,7 +205,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 // tag::snippet[]
@@ -305,7 +305,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -368,7 +368,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Optional;
@@ -466,7 +466,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -535,7 +535,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Optional;
@@ -636,7 +636,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -706,7 +706,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Optional;
@@ -803,7 +803,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -912,14 +912,17 @@ interface ProductCatalogItemRepository
 ----
 package com.example.product;
 
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 @Transactional(readOnly = true)
 class ProductCatalogService {
 
@@ -948,7 +951,7 @@ class ProductCatalogService {
     }
 
     @Transactional
-    public ProductDetails save(ProductDetails productDetails) {
+    public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(new ProductDetails(productDetails));
     }
 }
@@ -962,6 +965,12 @@ class ProductCatalogService {
 ----
 package com.example.product;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
@@ -976,13 +985,20 @@ class ProductDetails {
     private Long productId;
     @Version
     private Long version;
+    @NotBlank @Size(max = 100)
     private String name;
+    @NotBlank @Size(max = 500)
     private String description;
+    @NotBlank @Size(max = 100)
     private String category;
+    @Size(max = 100)
     private String brand;
+    @NotBlank @Size(max = 50)
     private String sku;
     private LocalDate releaseDate;
+    @NotNull @PositiveOrZero
     private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100")
     private BigDecimal discount;
 
     public ProductDetails() {
@@ -1101,12 +1117,15 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.validator.BigDecimalRangeValidator;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 class ProductForm extends Composite<FormLayout>  {
@@ -1116,13 +1135,19 @@ class ProductForm extends Composite<FormLayout>  {
     ProductForm() {
         // Create components
         var nameField = new TextField("Name");
+        nameField.setMaxLength(100);
         var descriptionField = new TextArea("Description");
+        descriptionField.setMaxLength(500);
         var categoryField = new TextField("Category");
+        categoryField.setMaxLength(100);
         var brandField = new TextField("Brand");
+        brandField.setMaxLength(100);
         var skuField = new TextField("SKU");
+        skuField.setMaxLength(50);
         var releaseDateField = new DatePicker("Release Date");
         var priceField = new BigDecimalField("Price");
         var discountField = new BigDecimalField("Discount");
+        discountField.setSuffixComponent(new Span("%"));
 
         // Layout form
         var layout = getContent();
@@ -1161,9 +1186,14 @@ class ProductForm extends Composite<FormLayout>  {
                     ProductDetails::setReleaseDate);
         binder.forField(priceField)
               .asRequired("Enter price")
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a price of 0 or more", BigDecimal.ZERO, null))
               .bind(ProductDetails::getPrice,
                     ProductDetails::setPrice);
         binder.forField(discountField)
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a discount between 0 and 100",
+                  BigDecimal.ZERO, BigDecimal.valueOf(100)))
               .bind(ProductDetails::getDiscount,
                     ProductDetails::setDiscount);
     }

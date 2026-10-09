@@ -2,7 +2,7 @@
 title: Edit Details
 page-title: Make the Product Form Editable | Vaadin Tutorial
 description: Add support for editing and saving items in the product catalog.
-meta-description: Learn how to save and validate a form and handle errors in a Vaadin application.
+meta-description: Learn how to save a Vaadin form through an application service, validate the input in both the form and the service, and report save errors to the user.
 order: 25
 ---
 
@@ -12,7 +12,7 @@ order: 25
 
 In the previous step, you implemented a drawer and a form for viewing product details in the product catalog.
 
-In this step, you'll continue working with the drawer and form to make it possible for users to edit and save products. You'll also address some user experience issues discovered along the way.
+In this step, you'll continue working with the drawer and form to make it possible for users to edit and save products. Because the view now starts changing data, you'll add an application service that validates the data before storing it. You'll also address some user experience issues discovered along the way.
 
 .More Information Available
 [TIP]
@@ -127,6 +127,206 @@ class ProductForm extends Composite<FormLayout>  {
 The form can now both read and write `ProductDetails` FDOs.
 
 
+== Add an Application Service
+
+So far, `ProductCatalogView` has called the repositories directly. That has been fine, because the view has only read data, and has passed its parameters, such as the search term, straight to the repositories. See <</building-apps/business-logic/add-service#calling-repositories-from-views,Calling Repositories from Views>> for when a view can do this.
+
+Saving changes is different. The data comes from the user, and it has to be valid before it's stored. Later in this step, you'll make the form validate its input, but the code that stores the data shouldn't trust every caller to have done so. When a view starts changing data, it's time to introduce an <</building-apps/business-logic/add-service#,application service>>. The service sits between the view and the repositories, and validates the input before storing it.
+
+You'll use Jakarta Bean Validation to declare and check the rules. Start by adding the following dependency inside the `<dependencies>` section of `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+----
+
+Then refresh the project in your IDE.
+
+Next, declare the validation rules by adding constraint annotations to the fields of `ProductDetails`. The rules match the constraints of the `products` table in `schema.sql`:
+
+.ProductDetails.java
+[source,java]
+----
+package com.example.product;
+
+// tag::snippet[]
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+// end::snippet[]
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Table("PRODUCTS")
+class ProductDetails {
+
+    @Id
+    private Long productId;
+    @Version
+    private Long version;
+// tag::snippet[]
+    @NotBlank @Size(max = 100) // <1>
+    private String name;
+    @NotBlank @Size(max = 500)
+    private String description;
+    @NotBlank @Size(max = 100)
+    private String category;
+    @Size(max = 100) // <2>
+    private String brand;
+    @NotBlank @Size(max = 50)
+    private String sku;
+    private LocalDate releaseDate;
+    @NotNull @PositiveOrZero // <3>
+    private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100") // <4>
+    private BigDecimal discount;
+// end::snippet[]
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(BigDecimal discount) {
+        this.discount = discount;
+    }
+}
+----
+<1> The name is required, and the database column holds at most 100 characters. `@NotBlank` also rejects names that contain only whitespace.
+<2> The brand is optional, but it can't be longer than the database column.
+<3> The price is required, and it can't be negative.
+<4> The discount is a percentage between 0 and 100.
+
+The annotations only declare the rules. Something has to check them, and that's the job of the service. Create a new class named `ProductCatalogService` in the `com.example.product` package:
+
+.ProductCatalogService.java
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Validated // <1>
+@Transactional(readOnly = true) // <2>
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(
+            ProductCatalogItemRepository productCatalogItemRepository,
+            ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm,
+            Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+    @Transactional // <3>
+    public ProductDetails save(@Valid ProductDetails productDetails) { // <4>
+        return productDetailsRepository.save(productDetails);
+    }
+}
+----
+<1> `@Validated` makes Spring validate the method parameters that are annotated with `@Valid`.
+<2> All methods run inside read-only transactions by default.
+<3> Overrides the class-level annotation, since this method writes data.
+<4> Spring validates `productDetails` before the method runs. If it breaks any of the rules, Spring throws a `ConstraintViolationException`, and nothing is saved.
+
+The service is now responsible for validating the input and for the transactions, as described in the <</building-apps/business-logic/add-service#,Add a Service>> guide.
+
+Only `save()` does any real work. The other two methods delegate to the repositories, and that's fine. Once the view changes data, all its data access should go through the service, which makes the service the single way into the product catalog. For example, if you later protect the service with <</building-apps/security/protect-services#,method security>>, the protection covers everything the view does. You'll switch the view over to the service when you implement saving, later in this step.
+
+
 == Add Save Support to the Product Form Drawer
 
 Next, you have to add save support to the product form drawer. This involves adding a save button and doing something when the user clicks the button.
@@ -220,7 +420,7 @@ At this point, the code no longer compiles. This is because you have changed the
 
 == Implement the Save Callback
 
-Now update `ProductCatalogView` to pass a save callback to the drawer. The callback will use the repository to persist changes, and then refresh the grid:
+Now update `ProductCatalogView` to use the service instead of the repositories, and pass a save callback to the drawer. The callback calls the service to validate and save the changes, and then refreshes the grid:
 
 .ProductCatalogView.java
 [source,java]
@@ -241,8 +441,9 @@ import com.vaadin.flow.router.Route;
 @PageTitle("Product Catalog")
 class ProductCatalogView extends HorizontalLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+// tag::snippet[]
+    ProductCatalogView(ProductCatalogService service) { // <1>
+// end::snippet[]
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -266,17 +467,17 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+// tag::snippet[]
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable) // <2>
         );
+// end::snippet[]
 
 // tag::snippet[]
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails); // <1>
-            grid.getDataProvider().refreshAll(); // <2>
-            return saved; // <3>
+            var saved = service.save(productDetails); // <3>
+            grid.getDataProvider().refreshAll(); // <4>
+            return saved; // <5>
         });
 // end::snippet[]
 
@@ -285,8 +486,9 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
+// tag::snippet[]
+                .flatMap(item -> service.findDetailsById(item.productId())) // <6>
+// end::snippet[]
                 .orElse(null);
             drawer.setProductDetails(productDetails);
         });
@@ -305,11 +507,14 @@ class ProductCatalogView extends HorizontalLayout {
     }
 }
 ----
-<1> Call the repository to save the changes to the database.
-<2> Refresh the grid so that the changes show up there as well.
-<3> Return the updated product details so that the drawer can update the form.
+<1> Inject the service instead of the repositories.
+<2> Fetch the items for the grid through the service.
+<3> Call the service to validate the changes and save them to the database.
+<4> Refresh the grid so that the changes show up there as well.
+<5> Return the updated product details so that the drawer can update the form.
+<6> Fetch the product details through the service.
 
-The view should now look like this:
+Restart the application, since you have added a dependency and changed the data model. The view should now look like this:
 
 [.device]
 image::images/product-drawer-with-save.png[The product drawer with a save button]
@@ -326,9 +531,11 @@ Now clear the selection in the grid, and then click the [guibutton]*Save* button
 
 Next, select another product, make a small change to it and save it. The grid should lose its selection even though the product remains open in the form.
 
-Now clear the Price field and save the item again. You should see this error in the console output:
+Now clear the Price field and save the item again. Nothing happens in the browser, but you should see this error in the console output:
 
- org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column "PRICE";
+ jakarta.validation.ConstraintViolationException: save.productDetails.price: must not be null
+
+The service rejected the product before it reached the database, which is what it's there for. However, the user gets no feedback at all.
 
 Finally, open the product catalog view in two separate browser windows. Select the same product in both browser windows. Make a change in one of them and save it. This operation should work as expected. Then make a change to the same product in the other window and save it. *Nothing should happen.* In the console output, you should see an error:
 
@@ -341,7 +548,7 @@ You have now identified several issues that make the application harder to use:
 
 1. The drawer behaves strangely when no item is selected.
 2. Grid selection is not preserved between updates.
-3. Required fields are not marked nor validated in the UI.
+3. The form doesn't validate its input. Only the service does, and the user can't see why saving failed.
 4. Errors are not reported to the user; they only show up in the console output.
 
 You'll now fix them one by one.
@@ -472,9 +679,9 @@ record ProductCatalogItem(
 If you now try the application, you should notice that the grid preserves the selection between saves.
 
 
-=== Mark Fields as Required
+=== Validate the Form
 
-If you look at the `src/main/resources/schema.sql` file, you'll notice the `products` table contains several columns marked as `NOT NULL`. However, the product form does not enforce this at all at the moment. To fix this, you need to mark the corresponding form fields as required.
+The service now rejects invalid products, but that's a safety net, not a user experience. Users should see what's wrong next to the field they need to fix, before the data even reaches the service. The form should therefore check the same rules as the service: required fields, maximum lengths, and number ranges.
 
 Make the following changes to `ProductForm`:
 
@@ -486,12 +693,21 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+// tag::snippet[]
+import com.vaadin.flow.component.html.Span;
+// end::snippet[]
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+// tag::snippet[]
+import com.vaadin.flow.data.validator.BigDecimalRangeValidator;
+// end::snippet[]
 import org.jspecify.annotations.Nullable;
 
+// tag::snippet[]
+import java.math.BigDecimal;
+// end::snippet[]
 import java.util.Optional;
 
 class ProductForm extends Composite<FormLayout>  {
@@ -501,13 +717,31 @@ class ProductForm extends Composite<FormLayout>  {
     ProductForm() {
         // Create components
         var nameField = new TextField("Name");
+// tag::snippet[]
+        nameField.setMaxLength(100); // <1>
+// end::snippet[]
         var descriptionField = new TextArea("Description");
+// tag::snippet[]
+        descriptionField.setMaxLength(500);
+// end::snippet[]
         var categoryField = new TextField("Category");
+// tag::snippet[]
+        categoryField.setMaxLength(100);
+// end::snippet[]
         var brandField = new TextField("Brand");
+// tag::snippet[]
+        brandField.setMaxLength(100);
+// end::snippet[]
         var skuField = new TextField("SKU");
+// tag::snippet[]
+        skuField.setMaxLength(50);
+// end::snippet[]
         var releaseDateField = new DatePicker("Release Date");
         var priceField = new BigDecimalField("Price");
         var discountField = new BigDecimalField("Discount");
+// tag::snippet[]
+        discountField.setSuffixComponent(new Span("%")); // <2>
+// end::snippet[]
 
         // Layout form
         var layout = getContent();
@@ -524,7 +758,7 @@ class ProductForm extends Composite<FormLayout>  {
         binder = new Binder<>();
         binder.forField(nameField)
 // tag::snippet[]
-              .asRequired("Enter name")
+              .asRequired("Enter name") // <3>
 // end::snippet[]
               .bind(ProductDetails::getName,
                     ProductDetails::setName);
@@ -555,10 +789,17 @@ class ProductForm extends Composite<FormLayout>  {
         binder.forField(priceField)
 // tag::snippet[]
               .asRequired("Enter price")
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a price of 0 or more", BigDecimal.ZERO, null)) // <4>
 // end::snippet[]
               .bind(ProductDetails::getPrice,
                     ProductDetails::setPrice);
         binder.forField(discountField)
+// tag::snippet[]
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a discount between 0 and 100",
+                  BigDecimal.ZERO, BigDecimal.valueOf(100))) // <5>
+// end::snippet[]
               .bind(ProductDetails::getDiscount,
                     ProductDetails::setDiscount);
     }
@@ -579,8 +820,17 @@ class ProductForm extends Composite<FormLayout>  {
     }
 }
 ----
+<1> `setMaxLength()` keeps the user from entering more characters than the database column holds. The field also checks the length on the server, and the binder includes that check when it validates the form.
+<2> Show a percent sign after the discount, so that the user knows it's a percentage.
+<3> `asRequired()` marks the field as required, and shows the error message if the user leaves it empty.
+<4> The price can't be negative. A `null` maximum means that there is no upper limit.
+<5> The discount must be between 0 and 100. The user can still leave it empty.
 
-Each required field should now have a required field indicator. You should also see an error message if you clear any of the fields.
+Each required field should now have a required indicator. Try clearing the Price field, entering a negative price, or entering a discount of 150. The form shows an error message next to the field, and doesn't call the service until you fix it.
+
+The rules now exist in two places: as annotations on `ProductDetails`, and as validators in the form. This is deliberate. The form validates to help the user, and the service validates to protect the data, since it can't trust every caller to have validated the input. If you change a rule, change it in both places. See the <</building-apps/forms-data/consistency/validation#,Validation>> guide for more about validation in the application layer.
+
+You may wonder why the form doesn't read the annotations instead. Vaadin has a `BeanValidationBinder` that does this, but it only applies the annotations to fields that you bind by property name, such as `bind("name")`. This tutorial binds fields with method references instead, so that the compiler checks that the properties exist.
 
 
 === Handle Errors
@@ -702,8 +952,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 @PageTitle("Product Catalog")
 class ProductCatalogView extends HorizontalLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -727,14 +976,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
 // tag::snippet[]
@@ -746,8 +993,7 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
+                .flatMap(item -> service.findDetailsById(item.productId()))
                 .orElse(null);
             drawer.setProductDetails(productDetails);
         });
@@ -793,6 +1039,8 @@ Now, whenever a user triggers an optimistic locking error, a notification should
 [.device]
 image::images/product-drawer-with-opt-lock-error.png[The product drawer with an optimistic locking error notification visible]
 
+All other exceptions still go to Vaadin's default error handler. This includes a `ConstraintViolationException` from the service. Since the form checks the same rules as the service, such an exception means that the form let invalid data through. That's a bug in the application, not something the user can fix.
+
 
 == Complete Code for This Step
 
@@ -822,8 +1070,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 @PageTitle("Product Catalog")
 class ProductCatalogView extends HorizontalLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -847,14 +1094,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
         }, this::handleException);
@@ -864,8 +1109,7 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
+                .flatMap(item -> service.findDetailsById(item.productId()))
                 .orElse(null);
             drawer.setProductDetails(productDetails);
         });
@@ -965,6 +1209,55 @@ interface ProductCatalogItemRepository
 ----
 ====
 
+.ProductCatalogService.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Validated
+@Transactional(readOnly = true)
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(
+            ProductCatalogItemRepository productCatalogItemRepository,
+            ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm,
+            Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+    @Transactional
+    public ProductDetails save(@Valid ProductDetails productDetails) {
+        return productDetailsRepository.save(productDetails);
+    }
+}
+----
+====
+
 .ProductDetails.java
 [%collapsible]
 ====
@@ -972,6 +1265,12 @@ interface ProductCatalogItemRepository
 ----
 package com.example.product;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
@@ -986,13 +1285,20 @@ class ProductDetails {
     private Long productId;
     @Version
     private Long version;
+    @NotBlank @Size(max = 100)
     private String name;
+    @NotBlank @Size(max = 500)
     private String description;
+    @NotBlank @Size(max = 100)
     private String category;
+    @Size(max = 100)
     private String brand;
+    @NotBlank @Size(max = 50)
     private String sku;
     private LocalDate releaseDate;
+    @NotNull @PositiveOrZero
     private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100")
     private BigDecimal discount;
 
     public Long getProductId() {
@@ -1095,12 +1401,15 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.validator.BigDecimalRangeValidator;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 class ProductForm extends Composite<FormLayout>  {
@@ -1110,13 +1419,19 @@ class ProductForm extends Composite<FormLayout>  {
     ProductForm() {
         // Create components
         var nameField = new TextField("Name");
+        nameField.setMaxLength(100);
         var descriptionField = new TextArea("Description");
+        descriptionField.setMaxLength(500);
         var categoryField = new TextField("Category");
+        categoryField.setMaxLength(100);
         var brandField = new TextField("Brand");
+        brandField.setMaxLength(100);
         var skuField = new TextField("SKU");
+        skuField.setMaxLength(50);
         var releaseDateField = new DatePicker("Release Date");
         var priceField = new BigDecimalField("Price");
         var discountField = new BigDecimalField("Discount");
+        discountField.setSuffixComponent(new Span("%"));
 
         // Layout form
         var layout = getContent();
@@ -1155,9 +1470,14 @@ class ProductForm extends Composite<FormLayout>  {
                     ProductDetails::setReleaseDate);
         binder.forField(priceField)
               .asRequired("Enter price")
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a price of 0 or more", BigDecimal.ZERO, null))
               .bind(ProductDetails::getPrice,
                     ProductDetails::setPrice);
         binder.forField(discountField)
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a discount between 0 and 100",
+                  BigDecimal.ZERO, BigDecimal.valueOf(100)))
               .bind(ProductDetails::getDiscount,
                     ProductDetails::setDiscount);
     }
@@ -1252,7 +1572,7 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 
 == Next Steps
 
-You have now turned the read-only product form drawer into a fully functional edit form, complete with validation and error handling. You have also improved the user experience of the application.
+You have now turned the read-only product form drawer into a fully functional edit form, complete with validation and error handling. You have also added an application service that validates the data before storing it, and improved the user experience of the application.
 
 Next, you'll implement support for adding new products to the catalog. Proceed to the <<add-data#,Add Products>> step to continue the tutorial.
 
