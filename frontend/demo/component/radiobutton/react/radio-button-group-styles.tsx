@@ -6,7 +6,11 @@ import { RadioGroup } from '@vaadin/react-components/RadioGroup.js';
 function Example() {
   return (
     // tag::snippet[]
-    <RadioGroup label="Label" helperText="Helper text" theme="helper-above-field vertical">
+    <RadioGroup
+      label="Label"
+      helperText="Helper text"
+      theme="helper-above-field vertical label-aside"
+    >
       <RadioButton value="1" label="Item 1" />
       <RadioButton value="2" label="Item 2" />
       <RadioButton value="3" label="Item 3" />

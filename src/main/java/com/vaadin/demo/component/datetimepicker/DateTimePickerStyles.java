@@ -19,7 +19,8 @@ public class DateTimePickerStyles extends HorizontalLayout {
         DateTimePicker field = new DateTimePicker();
         field.addThemeVariants(DateTimePickerVariant.SMALL,
                 DateTimePickerVariant.ALIGN_RIGHT,
-                DateTimePickerVariant.HELPER_ABOVE);
+                DateTimePickerVariant.HELPER_ABOVE,
+                DateTimePickerVariant.LABEL_ASIDE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

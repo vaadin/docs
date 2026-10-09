@@ -5,7 +5,7 @@ import { Slider } from '@vaadin/react-components/Slider.js';
 function Example() {
   return (
     // tag::snippet[]
-    <Slider theme="helper-above-field" label="Label" helperText="Helper text" />
+    <Slider theme="helper-above-field label-aside" label="Label" helperText="Helper text" />
     // end::snippet[]
   );
 }
