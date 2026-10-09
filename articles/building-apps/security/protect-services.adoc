@@ -50,7 +50,7 @@ class SecurityConfig {
 
 .Test the method security
 [CAUTION]
-Without [annotationname]`@EnableMethodSecurity`, *all services remain unprotected* -- even if you annotate methods with security rules! Always verify that method security is enabled with automatic tests.  _A guide showing you how to do this in a Vaadin application is planned, but not yet written. In the meantime, refer to the https://docs.spring.io/spring-security/reference/servlet/test/method.html[Spring Reference Manual]._
+Without [annotationname]`@EnableMethodSecurity`, *all services remain unprotected* -- even if you annotate methods with security rules! Always verify that method security is enabled with automatic tests, as shown in <<#testing-method-security,Testing Method Security>>.
 
 
 == Securing the Services
@@ -89,3 +89,55 @@ public class ProtectedService {
 <1> Allows all authenticated users to call the service by default.
 <2> Inherits its access permissions from the class-level annotation.
 <3> Overrides the class-level annotation to allow access to administrators only. Note the single quotes `'` around the role name.
+
+
+== Testing Method Security
+
+Because services are ordinary Spring beans, you can test their security rules with plain Spring Boot tests, without involving any views. Add the Spring Security test dependency to your project, if it isn't there already:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+Then call the service as different users, and check that the calls that should be denied throw an [classname]`AccessDeniedException`:
+
+[source,java]
+----
+@SpringBootTest
+class ProtectedServiceTest {
+
+    @Autowired
+    ProtectedService service;
+
+    @Test
+    @WithAnonymousUser // <1>
+    void anonymous_users_cannot_call_the_service() {
+        assertThrows(AccessDeniedException.class,
+            () -> service.callableByAllUsers());
+    }
+
+    @Test
+    @WithMockUser(roles = Roles.USER) // <2>
+    void users_cannot_call_admin_methods() {
+        assertThrows(AccessDeniedException.class,
+            () -> service.callableByAdminsOnly(new MyData()));
+    }
+
+    @Test
+    @WithMockUser(roles = Roles.ADMIN)
+    void admins_can_call_admin_methods() {
+        assertDoesNotThrow(() -> service.callableByAdminsOnly(new MyData()));
+    }
+}
+----
+<1> Runs the test as an anonymous user. Without an annotation like this, there's no authentication at all, and Spring Security throws a different exception.
+<2> Runs the test as an authenticated user with the `USER` role.
+
+If [annotationname]`@EnableMethodSecurity` is missing, the first two tests fail, because nothing stops the calls. The tests therefore protect you against both a missing configuration and a mistake in the security rules.
+
+To test that your views are protected, see <<../testing/browserless/test-view-access#,Test View Access Control>>.
