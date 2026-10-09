@@ -136,7 +136,11 @@ image::images/empty-product-drawer.png[The empty product drawer]
 
 If you inspect the page with your browser's developer tools, you'll see that the drawer is not actually 300px wide. This is because `HorizontalLayout` uses a CSS https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Flexible_box_layout[flexbox] layout under the hood. By default, items in a flexbox container shrink to fit the container when there isn't enough space. In this case, the grid takes up all the available space.
 
-To fix this, you'll set the `flex-shrink` CSS property of the drawer to `0` so that it doesn't shrink. Vaadin has a Java API for that. After adding the drawer to the view, call the `setFlexShrink()` method like this:
+To fix this, you'll set the `flex-shrink` CSS property of the drawer to `0` so that it doesn't shrink. Vaadin has a Java API for that: the `setFlexShrink()` method.
+
+Once the drawer keeps its width, the list layout has to do the shrinking when the browser window is narrow. However, a flexbox item doesn't shrink below the minimum width of its content by default, and the grid's columns count toward that minimum. To let the list layout shrink, set its minimum width to `0`. The grid then scrolls its columns horizontally, instead of the whole page scrolling.
+
+Change the layout code like this:
 
 .ProductCatalogView.java
 [source,java]
@@ -197,19 +201,24 @@ class ProductCatalogView extends HorizontalLayout {
         setSizeFull();
         setSpacing(false);
 
-        var listLayout = new VerticalLayout(searchField, grid); // <1>
+        var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
+        // tag::snippet[]
+        listLayout.setMinWidth("0"); // <1>
+        // end::snippet[]
         grid.setSizeFull();
 
         add(listLayout, drawer);
         // tag::snippet[]
-        setFlexShrink(0, drawer);
+        setFlexShrink(0, drawer); // <2>
         // end::snippet[]
     }
 }
 ----
+<1> Let the list layout shrink below the combined width of the grid's columns.
+<2> Keep the drawer from shrinking.
 
-If you inspect the page again, you'll see that the drawer is now 300px wide as expected.
+If you inspect the page again, you'll see that the drawer is now 300px wide as expected. If you make the browser window narrower, the grid starts to scroll horizontally while the drawer keeps its width.
 
 
 == Create a Product Form
@@ -639,6 +648,7 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
+        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
         add(listLayout, drawer);
@@ -735,6 +745,7 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
+        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
         add(listLayout, drawer);
