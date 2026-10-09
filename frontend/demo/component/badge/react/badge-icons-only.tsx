@@ -12,7 +12,7 @@ function Example() {
         Confirmed
       </Badge>
       <Badge theme="error icon-only">
-        <Icon icon="vaadin:close-small" slot="icon" />
+        <Icon icon="vaadin:close" slot="icon" />
         Cancelled
       </Badge>
       {/* end::snippet[] */}

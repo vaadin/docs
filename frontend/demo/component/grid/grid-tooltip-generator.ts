@@ -70,7 +70,7 @@ export class Example extends LitElement {
   }
 
   private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => {
-    const icon = status === 'Available' ? 'check' : 'close-small';
+    const icon = status === 'Available' ? 'check' : 'close';
     const theme = status === 'Available' ? 'success' : 'error';
 
     return html`

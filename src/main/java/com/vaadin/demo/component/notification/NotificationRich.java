@@ -94,7 +94,7 @@ public class NotificationRich extends HorizontalLayout {
     }
 
     public static Button createCloseBtn() {
-        Button closeBtn = new Button(VaadinIcon.CLOSE_SMALL.create());
+        Button closeBtn = new Button(VaadinIcon.CLOSE.create());
 
         return closeBtn;
     }

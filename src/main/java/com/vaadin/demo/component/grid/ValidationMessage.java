@@ -16,7 +16,7 @@ class ValidationMessage extends HorizontalLayout implements HasText {
         getStyle().set("color", "red");
         setSpacing("var(--vaadin-gap-s)");
 
-        Icon icon = VaadinIcon.EXCLAMATION_CIRCLE_O.create();
+        Icon icon = VaadinIcon.EXCLAMATION_CIRCLE.create();
         icon.setSize("16px");
         add(icon, span);
     }
