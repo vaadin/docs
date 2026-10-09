@@ -350,7 +350,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -383,11 +382,10 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 // tag::snippet[]
         layout.add(saveButton); // <3>
 // end::snippet[]
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
     }
 
@@ -432,7 +430,7 @@ package com.example.product;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -441,7 +439,7 @@ import com.vaadin.flow.router.Route;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
 // tag::snippet[]
     ProductCatalogView(ProductCatalogService service) { // <1>
@@ -489,23 +487,24 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
 // tag::snippet[]
-                .flatMap(item -> service.findDetailsById(item.productId())) // <6>
+                .flatMap(item -> service.findDetailsById(item.productId())); // <6>
 // end::snippet[]
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 }
 ----
@@ -526,12 +525,7 @@ You should now be able to select a product, make some changes to it and save the
 
 == Improve the User Experience
 
-Now clear the selection in the grid, and then click the [guibutton]*Save* button on the empty form. You should see a stack trace in the console output, caused by this error:
-
- java.lang.IllegalStateException: No form data object
-
-
-Next, select another product, make a small change to it and save it. The grid should lose its selection even though the product remains open in the form.
+Select a product, make a small change to it and save it. The grid should lose its selection even though the product remains open in the form.
 
 Now clear the Price field and save the item again. Nothing happens in the browser, but you should see this error in the console output:
 
@@ -548,82 +542,11 @@ This is because Spring Data uses <</building-apps/forms-data/consistency/optimis
 
 You have now identified several issues that make the application harder to use:
 
-1. The drawer behaves strangely when no item is selected.
-2. Grid selection is not preserved between updates.
-3. The form doesn't validate its input. Only the service does, and the user can't see why saving failed.
-4. Errors are not reported to the user; they only show up in the console output.
+1. Grid selection is not preserved between updates.
+2. The form doesn't validate its input. Only the service does, and the user can't see why saving failed.
+3. Errors are not reported to the user; they only show up in the console output.
 
 You'll now fix them one by one.
-
-
-=== Hide Empty Drawer
-
-The drawer has no purpose if there is no selection. Therefore, you should hide it by default and only show it when there are details to show.
-
-Open `ProductFormDrawer` and make the following changes:
-
-.ProductFormDrawer.java
-[source,java]
-----
-package com.example.product;
-
-import com.vaadin.flow.component.Composite;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.orderedlayout.Scroller;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
-
-class ProductFormDrawer extends Composite<VerticalLayout> {
-
-    @FunctionalInterface
-    interface SaveCallback {
-        ProductDetails save(ProductDetails productDetails);
-    }
-
-    private final SaveCallback saveCallback;
-    private final ProductForm form;
-
-    ProductFormDrawer(SaveCallback saveCallback) {
-        this.saveCallback = saveCallback;
-
-        var header = new H2("Product Details");
-        form = new ProductForm();
-
-        var saveButton = new Button("Save", e -> save());
-        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
-
-        var layout = getContent();
-        layout.add(header);
-        layout.add(new Scroller(form));
-        layout.add(saveButton);
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
-// tag::snippet[]
-        setVisible(false); // <1>
-// end::snippet[]
-    }
-
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
-        form.setFormDataObject(productDetails);
-// tag::snippet[]
-        setVisible(productDetails != null); // <2>
-// end::snippet[]
-    }
-
-    private void save() {
-        form.getFormDataObject().ifPresent(productDetails -> {
-            var saved = saveCallback.save(productDetails);
-            form.setFormDataObject(saved);
-        });
-    }
-}
-----
-<1> When the drawer is first created, it is empty by design and so should be hidden.
-<2> Show the drawer only when it contains product details.
-
-Now try the application. The drawer should only show up when you have selected a product in the grid.
 
 
 === Preserve Grid Selection
@@ -861,7 +784,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -901,14 +823,11 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         layout.add(header);
         layout.add(new Scroller(form));
         layout.add(saveButton);
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
-        setVisible(false);
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
-        setVisible(productDetails != null);
     }
 
     private void save() {
@@ -937,10 +856,10 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 // tag::snippet[]
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 // end::snippet[]
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -952,7 +871,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogService service) {
         // Create components
@@ -995,22 +914,23 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
 // tag::snippet[]
@@ -1058,9 +978,9 @@ package com.example.product;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -1070,7 +990,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogService service) {
         // Create components
@@ -1111,22 +1031,23 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -1515,7 +1436,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -1547,14 +1467,11 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         layout.add(header);
         layout.add(new Scroller(form));
         layout.add(saveButton);
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
-        setVisible(false);
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
-        setVisible(productDetails != null);
     }
 
     private void save() {
