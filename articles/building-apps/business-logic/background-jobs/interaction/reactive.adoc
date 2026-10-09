@@ -9,7 +9,7 @@ order: 30
 
 = Producing Reactive Streams
 
-When using Flow or Hilla to build your user interface, you can use `Flux` or `Mono` from https://projectreactor.io/[Reactor] to allow your background jobs to interact with them. Reactor has an extensive API, which means you can do many things with it. This also means that it can be more difficult to learn than using callbacks or `CompletableFuture`.
+You can use `Flux` or `Mono` from https://projectreactor.io/[Reactor] to allow your background jobs to interact with the user interface. Unlike <<callbacks#,callbacks>> and <<futures#,futures>>, reactive streams work with both Flow views and <</building-apps/react#,React views>>. Reactor has an extensive API, which means you can do many things with it. This also means that it can be more difficult to learn than using callbacks or `CompletableFuture`.
 
 This page is about returning the result of a background job to the user who started it. You can also use reactive streams to broadcast updates to all users. That use case is covered in <</building-apps/server-push/reactive#,Consuming Reactive Streams>> and <</building-apps/server-push/updates#broadcasting-to-all-users,Broadcasting to All Users>>.
 
@@ -32,21 +32,21 @@ public Mono<String> startBackgroundJob() {
 
 If the `doSomethingThatTakesALongTime()` method throws an exception, the `Mono` terminates with an error.
 
-To update the user interface, you have to subscribe to the `Mono` or `Flux`. For more information about how to do this, see the <</building-apps/server-push/reactive#,Consuming Reactive Streams>> documentation page.
+To update the user interface, you have to subscribe to the `Mono` or `Flux`. For more information about how to do this in a Flow view, see the <</building-apps/server-push/reactive#,Consuming Reactive Streams>> documentation page. For React views, see <</hilla/guides/reactive-services#,Reactive Services>>.
 
 [IMPORTANT]
-Hilla only supports `Flux`, so if your job is returning a `Mono`, you have to convert it to a `Flux` inside your `@BrowserCallable` service. You can do this by calling the `Mono.flux()` method.
+A React view calls the job through a <</building-apps/react/call-services#,browser-callable service>>, which can return a `Flux` but not a `Mono`. If your job returns a `Mono`, convert it to a `Flux` inside your `@BrowserCallable` service by calling the `Mono.flux()` method.
 
 
 == Reporting Progress
 
-If your background job only needs to report its progress without actually returning a result, you can return a `Flux<Double>`. Your job should then emit progress updates, and complete the stream when done. However, you may often want also to return a result. Since Hilla only supports returning a single `Flux`, you have to use the same stream for emitting both progress updates and the end result. The code may be a bit messy, but it works.
+If your background job only needs to report its progress without actually returning a result, you can return a `Flux<Double>`. Your job should then emit progress updates, and complete the stream when done. However, you may often want also to return a result. The simplest way to do this, which also works for React views, is to use the same stream for emitting both progress updates and the end result. The code may be a bit messy, but it works.
 
 You first need to create a data type that can contain both progress updates and the result. For a job that returns a string, it could look like this:
 
 [source,java]
 ----
-import com.vaadin.hilla.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public record BackgroundJobOutput(
         @Nullable Double progressUpdate,
@@ -63,9 +63,6 @@ public record BackgroundJobOutput(
 ----
 
 The two built-in methods, `progressUpdate()` and `finished()` make the code look better when it's time to create instances of `BackgroundJobOutput`.
-
-[NOTE]
-If you've worked with sealed classes, you may be tempted to create a sealed interface called `BackgroundJobOutput`, and then create two records that implement that interface: one for progress updates; and another for the result. However, Hilla doesn't support this at the moment.
 
 Next, you have to implement the background job like this:
 
