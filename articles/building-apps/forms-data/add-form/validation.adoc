@@ -98,20 +98,21 @@ public class PositiveIntegerValidator implements Validator<Integer> {
 
     @Override
     public ValidationResult apply(Integer num, ValueContext context) { // <1>
-        return (num >= 0)
+        return (num == null || num > 0) // <2>
             ? ValidationResult.ok()
             : ValidationResult.error("number must be positive");
     }
 }
 ----
 <1> The `ValueContext` gives you access to information like the current locale, the field component, the `Binder`, etc.
+<2> An empty field has a `null` value. The validator accepts it, and leaves required fields to `asRequired()`.
 
 You can also implement a validator using a lambda expression instead of a separate class:
 
 [source,java]
 ----
 binder.forField(myNumberField)
-      .withValidator(num -> num >= 0, "number must be positive")
+      .withValidator(num -> num == null || num > 0, "number must be positive")
       .bind(myBean::getInteger, myBean::setInteger);
 ----
 
@@ -128,7 +129,7 @@ public class EmailAddressConverter implements Converter<String, EmailAddress> {
     @Override
     public Result<EmailAddress> convertToModel(String value, ValueContext context) {
         if (value == null) {
-            return null;
+            return Result.ok(null);
         }
         try {
             return Result.ok(new EmailAddress(value));

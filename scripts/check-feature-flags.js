@@ -46,7 +46,6 @@ function resolveVersions() {
     if (!match) {
       throw new Error(`Could not resolve version for ${repo.artifact} from Maven dependency tree`);
     }
-    // eslint-disable-next-line @typescript-eslint/prefer-destructuring
     versions[repo.name] = match[1];
     console.log(`  ${repo.artifact} -> ${match[1]}`);
   }
@@ -135,7 +134,6 @@ function extractFeatureIds(source) {
   const constRegex = /static\s+final\s+String\s+(\w+)\s*=\s*"([^"]+)"/g;
   let m;
   while ((m = constRegex.exec(cleaned)) !== null) {
-    // eslint-disable-next-line @typescript-eslint/prefer-destructuring
     constantsMap[m[1]] = m[2];
   }
 

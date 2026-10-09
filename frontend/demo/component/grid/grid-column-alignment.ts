@@ -29,7 +29,7 @@ export class Example extends LitElement {
 
   randomDate() {
     const futureDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
-    return format(futureDate, 'P');
+    return format(futureDate, 'MM/dd/yyyy');
   }
 
   randomAmount() {

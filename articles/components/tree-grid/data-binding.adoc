@@ -10,57 +10,10 @@ section-nav: badge-flow
 = Binding Data to Tree Grid [badge-flow]#Flow#
 :toclevels: 2
 
-Tree Grid supports several ways to bind hierarchical data, depending on where the data lives and how much control you need:
+Tree Grid supports two ways to bind hierarchical data, depending on where the data lives and how much control you need:
 
-- The <<#setting-items,setItems>> method for quick setup from a collection of root items and their children.
 - <<#tree-data-provider,TreeData and TreeDataProvider>> APIs for creating and binding in-memory hierarchies.
 - <<#custom-data-providers,Custom hierarchical data providers>> for advanced cases, like connecting to a database.
-
-== Setting Items
-
-The simplest way to populate Tree Grid is to use the [methodname]`setItems(rootItems, childItemProvider)` method. It takes a collection of root items and a callback that returns the children of each item:
-
-[.example]
---
-.Example.java
-[source,java]
-----
-Folder invoices = new Folder("Invoices", List.of());
-Folder documents = new Folder("Documents", List.of(invoices));
-Folder work = new Folder("Work", List.of(documents));
-Folder family = new Folder("Family", List.of());
-
-// First argument: root-level folders shown at the top level of the tree.
-// Second argument: a callback that returns the children of each folder.
-treeGrid.setItems(List.of(work, family), Folder::children);
-
-// Result:
-//
-// ├── Work
-// │   └── Documents
-// │       └── Invoices
-// └── Family
-----
-
-[source,java]
-.Folder.java
-----
-public record Folder(String name, List<Folder> children) {}
-----
---
-
-Behind the scenes, the [methodname]`setItems` method creates a [classname]`TreeData` structure by eagerly traversing the root items and their descendants: it calls the child item provider on each root item, then on each returned child, and continues until no more children are returned.
-
-The [classname]`TreeData` structure and its [classname]`TreeDataProvider` are then available via the `TreeGrid#getTreeData` and `TreeGrid#getDataProvider` methods:
-
-[source,java]
-----
-TreeData<Folder> treeData = treeGrid.getTreeData();
-TreeDataProvider<Folder> treeDataProvider = (TreeDataProvider<Folder>) treeGrid.getDataProvider();
-----
-
-The next section explains the [classname]`TreeData` and [classname]`TreeDataProvider` concepts in more detail, and how to use them to modify, sort, and filter hierarchical data.
-
 
 == Tree Data Provider
 
@@ -93,25 +46,33 @@ include::{root}/src/main/java/com/vaadin/demo/component/treegrid/databinding/Fol
 ----
 --
 
+The example passes [enumname]`HierarchyFormat.FLATTENED` to the [classname]`TreeDataProvider` constructor. This format is recommended for [classname]`TreeData`, as it ensures Tree Grid preserves its scroll position after the hierarchy is modified. More details about hierarchy formats are provided later in this article in the <<#hierarchy-formats,Hierarchy Formats>> section.
+
+The following sections show how to use these instances to add, move, remove, sort, and filter items.
+
+.Deprecated Shorthand Methods
 [NOTE]
 ====
-Using the [enumname]`HierarchyFormat.FLATTENED` option with [classname]`TreeDataProvider` is recommended to ensure Tree Grid preserves its scroll position after the TreeData's hierarchy is modified. More details about hierarchy formats are provided later in this article in the <<#hierarchy-formats,Hierarchy Formats>> section.
+The [methodname]`TreeGrid#setItems(rootItems, childItemProvider)` and [methodname]`TreeGrid#setTreeData(treeData)` methods, and the single-argument [classname]`TreeDataProvider` constructor, are deprecated since V25.3. They use [enumname]`HierarchyFormat.NESTED`, which will change to [enumname]`HierarchyFormat.FLATTENED` in the next major version. Create the [classname]`TreeDataProvider` with an explicit hierarchy format instead, as shown above. See <<{articles}/upgrading/25-2-to-25-3#deprecations-to-address-before-vaadin-26,Deprecations to Address>> in the upgrade guide for details.
 ====
 
 === Adding Items
 
-The [classname]`TreeData` structure provides methods for adding both root-level and child items. In the example below, the [methodname]`TreeData#addRootItems(T... items)` and [methodname]`TreeData#addItem(T parent, T child)` methods are used to construct a simple folder hierarchy:
+The quickest way to populate a [classname]`TreeData` structure from existing objects is to add them with the [methodname]`TreeData#addItems(rootItems, childItemProvider)` method. It takes a collection of root items and a callback that returns the children of each item:
 
+[.example]
+--
 [source,java]
+.Example.java
 ----
-Folder work = new Folder("Work");
-Folder documents = new Folder("Documents");
-Folder invoices = new Folder("Invoices");
-Folder family = new Folder("Family");
+Folder invoices = new Folder("Invoices", List.of());
+Folder documents = new Folder("Documents", List.of(invoices));
+Folder work = new Folder("Work", List.of(documents));
+Folder family = new Folder("Family", List.of());
 
-treeData.addRootItems(work, family);
-treeData.addItem(work, documents);
-treeData.addItem(documents, invoices);
+// First argument: root-level folders shown at the top level of the tree.
+// Second argument: a callback that returns the children of each folder.
+treeData.addItems(List.of(work, family), Folder::children);
 
 // Result:
 //
@@ -121,18 +82,54 @@ treeData.addItem(documents, invoices);
 // └── Family
 ----
 
-The resulting tree structure can be navigated using the [methodname]`TreeData#getChildren(T parent)` and [methodname]`TreeData#getParent(T item)` methods:
+[source,java]
+.Folder.java
+----
+public record Folder(String name, List<Folder> children) {}
+----
+--
+
+The [methodname]`addItems` method traverses the root items and their descendants eagerly: it calls the child item provider on each root item, then on each returned child, and continues until no more children are returned.
+
+The resulting tree structure can be navigated with the [methodname]`TreeData#getChildren(T parent)` and [methodname]`TreeData#getParent(T item)` methods:
 
 [source,java]
 ----
-treeData.getChildren(new Folder("Documents")); // => List(Folder("Invoices"))
+treeData.getChildren(documents); // => [invoices]
 
-treeData.getParent(new Folder("Invoices")); // => Folder("Documents")
+treeData.getParent(invoices); // => documents
 
-treeData.getChildren(new Folder("Family")); // => empty List
+treeData.getChildren(family); // => [] (no children)
 
-treeData.getParent(new Folder("Family")); // => null (root item)
+treeData.getParent(family); // => null (root item)
 ----
+
+Individual items can be added to an existing hierarchy later with the [methodname]`TreeData#addRootItems(T... items)` and [methodname]`TreeData#addItem(T parent, T child)` methods. The following example adds a new root folder with a child folder on a button click:
+
+[source,java]
+----
+Button addButton = new Button("Add folder", event -> {
+    Folder projects = new Folder("Projects");
+    Folder reports = new Folder("Reports");
+
+    treeData.addRootItems(projects);
+    treeData.addItem(projects, reports);
+
+    // Refresh the Tree Grid to reflect the changes in the UI
+    treeDataProvider.refreshAll();
+});
+
+// Result after the click:
+//
+// ├── Work
+// │   └── Documents
+// │       └── Invoices
+// ├── Family
+// └── Projects
+//     └── Reports
+----
+
+Items added dynamically to an already rendered Tree Grid don't automatically appear in the UI. To reflect such changes, you must explicitly call the [methodname]`TreeDataProvider#refreshAll()` method, as shown above.
 
 === Moving Items within Tree
 
@@ -162,7 +159,7 @@ treeGrid.addDropListener(event -> {
 });
 ----
 
-Modifying the [classname]`TreeData` structure doesn't automatically update the Tree Grid UI. To reflect such changes, you should always explicitly call the [methodname]`TreeDataProvider#refreshAll()` method, as shown above.
+Modifying the [classname]`TreeData` structure doesn't automatically update the Tree Grid UI. To reflect such changes, you must explicitly call the [methodname]`TreeDataProvider#refreshAll()` method, as shown above.
 
 Alternatively, if the hierarchy remains unchanged and only item properties are updated, you can use a more targeted method like [methodname]`TreeDataProvider#refreshItem(item)` instead.
 
@@ -259,6 +256,29 @@ searchInput.addValueChangeListener(event -> {
 The `setFilter` method re-renders the Tree Grid automatically, so calling `refreshAll` isn't necessary.
 
 When a filter is set, Tree Data Provider evaluates it against every item in the tree, including items in collapsed branches. If any item matches, all of its ancestors are included in the result, so the whole path from the root to the matching item is preserved, even if those ancestors don't match themselves. However, setting a filter doesn't expand collapsed items automatically, so only the currently expanded part of the path is displayed in Tree Grid.
+
+To reveal all matching items, expand the filtered tree after setting the filter. You can use the [methodname]`expandRecursively` method for this: it already takes the filter into account, so you only need to pass it the filtered root items from the data provider:
+
+[source,java]
+----
+searchInput.addValueChangeListener(event -> {
+    String searchTerm = event.getValue();
+
+    treeDataProvider.setFilter((folder) ->
+            folder.name().toLowerCase().contains(searchTerm.toLowerCase()));
+
+    if (!searchTerm.isEmpty()) {
+        // HierarchicalQuery takes a filter and a parent. The filter is null
+        // because the one set with setFilter is applied automatically, and
+        // the parent is null to fetch the root items.
+        List<Folder> rootItems = treeDataProvider
+                .fetchChildren(new HierarchicalQuery<>(null, null)).toList();
+        treeGrid.expandRecursively(rootItems, Integer.MAX_VALUE);
+    }
+});
+----
+
+Items expanded this way stay expanded when the filter changes or is cleared. To show only the paths to the current matches, collapse the previously expanded items before expanding the new ones.
 
 == Custom Data Providers
 

@@ -76,9 +76,7 @@ function Example() {
             padding: 'var(--vaadin-padding-l) var(--vaadin-padding-l) var(--vaadin-padding-s)',
           }}
         >
-          <h4 id="notifications-heading">
-            Notifications
-          </h4>
+          <h4 id="notifications-heading">Notifications</h4>
           <Button
             slot="end"
             theme="small"

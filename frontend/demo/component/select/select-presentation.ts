@@ -1,10 +1,7 @@
 import 'Frontend/demo/init'; // hidden-source-line
-import '@vaadin/item';
-import '@vaadin/list-box';
 import '@vaadin/select';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { selectRenderer } from '@vaadin/select/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -28,33 +25,25 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-select
-        label="Choose doctor"
-        style="width: 15em;"
-        ${selectRenderer(this.renderer, this.people)}
-      ></vaadin-select>
+      <vaadin-select label="Choose doctor" style="width: 15em;">
+        <vaadin-select-list-box slot="overlay">
+          ${this.people.map(
+            (person) => html`
+              <vaadin-select-item value="${person.id}">
+                <div class="person-item">
+                  <vaadin-avatar
+                    .img="${person.pictureUrl}"
+                    .name="${`${person.firstName} ${person.lastName}`}"
+                  ></vaadin-avatar>
+                  <span>${person.firstName} ${person.lastName}</span>
+                  <span>${person.profession}</span>
+                </div>
+              </vaadin-select-item>
+            `
+          )}
+        </vaadin-select-list-box>
+      </vaadin-select>
       <!-- end::snippet[] -->
     `;
   }
-
-  // tag::renderer[]
-  private renderer = () => html`
-    <vaadin-list-box>
-      ${this.people.map(
-        (person) => html`
-          <vaadin-item value="${person.id}">
-            <div class="person-item">
-              <vaadin-avatar
-                .img="${person.pictureUrl}"
-                .name="${`${person.firstName} ${person.lastName}`}"
-              ></vaadin-avatar>
-              <span>${person.firstName} ${person.lastName}</span>
-              <span>${person.profession}</span>
-            </div>
-          </vaadin-item>
-        `
-      )}
-    </vaadin-list-box>
-  `;
-  // end::renderer[]
 }

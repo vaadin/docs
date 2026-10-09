@@ -1,9 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-picker';
-import { addDays, formatISO } from 'date-fns';
+import { addDays, formatISO, isWeekend, parseISO } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DatePicker, DatePickerValidatedEvent } from '@vaadin/date-picker';
+import type { DatePicker, DatePickerDate, DatePickerValidatedEvent } from '@vaadin/date-picker';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('date-picker-validation')
@@ -23,15 +23,26 @@ export class Example extends LitElement {
   @state()
   private maxDate = addDays(new Date(), 60);
 
+  // tag::snippet[]
+  private closedDates = [3, 4].map((days) =>
+    formatISO(addDays(new Date(), days), { representation: 'date' })
+  );
+
+  private isOfficeClosed = (isoDate: string) =>
+    isWeekend(parseISO(isoDate)) || this.closedDates.includes(isoDate);
+
+  private isDateDisabled = ({ year, month, day }: DatePickerDate) =>
+    this.isOfficeClosed(formatISO(new Date(year, month, day), { representation: 'date' }));
+
   protected override render() {
     return html`
-      <!-- tag::snippet[] -->
       <vaadin-date-picker
         label="Appointment date"
-        helper-text="Must be within 60 days from today"
+        helper-text="Must be a business day within 60 days from today"
         required
         .min="${formatISO(this.minDate, { representation: 'date' })}"
         .max="${formatISO(this.maxDate, { representation: 'date' })}"
+        .isDateDisabled="${this.isDateDisabled}"
         .errorMessage="${this.errorMessage}"
         @validated="${(event: DatePickerValidatedEvent) => {
           const field = event.target as DatePicker;
@@ -43,12 +54,14 @@ export class Example extends LitElement {
             this.errorMessage = 'Too early, choose another date';
           } else if (field.value > field.max!) {
             this.errorMessage = 'Too late, choose another date';
+          } else if (this.isOfficeClosed(field.value)) {
+            this.errorMessage = 'The office is closed, choose another date';
           } else {
             this.errorMessage = '';
           }
         }}"
       ></vaadin-date-picker>
-      <!-- end::snippet[] -->
     `;
   }
+  // end::snippet[]
 }

@@ -39,7 +39,7 @@ AIOrchestrator.builder(provider, systemPrompt)
         .build();
 ----
 
-The supplier is invoked once per turn, right before the request goes out. The returned string is passed to the model without further interpretation; compose multiple pieces of context with plain string concatenation. Setting a supplier replaces the default current-date-and-time line; include it yourself if you still want it:
+The supplier is invoked once per turn, right before the request goes out. The orchestrator doesn't interpret the returned string; compose multiple pieces of context with plain string concatenation. The built-in providers append it to the end of the user message in a delimited `<session_context>` block, with a short note telling the model that the block comes from the application. Only the user's own text appears in the Message List and in the conversation history. Setting a supplier replaces the default current-date-and-time line; include it yourself if you still want it:
 
 [source,java]
 ----
@@ -76,9 +76,9 @@ AIOrchestrator.builder(provider, systemPrompt)
 
 The supplier runs on the UI thread under the session lock, so it can read [methodname]`UI.getCurrent()` and any session-scoped state. Keep it fast -- anything that touches a database, a remote service, or the file system should be done outside the supplier and cached in session-scoped state.
 
-A supplier that throws an exception aborts the turn through the normal error path: the assistant placeholder is replaced with a generic error message, the [classname]`ResponseListener` (if registered) fires with the thrown exception, and the exception propagates to the caller of the prompt entry point.
+A supplier that throws an exception aborts the turn through the normal error path: the Message List shows a generic error message under the assistant name, the [classname]`ResponseListener` (if registered) fires with the thrown exception, and the exception propagates to the caller of the prompt entry point.
 
 
 == Why Not the System Prompt
 
-The system prompt is sent verbatim on every turn. Many LLM providers use it as the cache prefix to keep latency and cost down between calls; putting per-turn values such as the current time or the active tenant into the system prompt invalidates that cache on every request. Session context is delivered through a separate per-turn channel that lives outside the system prompt, so the system prompt stays cacheable.
+The system prompt is sent unchanged on every turn. Many LLM providers use it as the cache prefix to keep latency and cost down between calls; putting per-turn values such as the current time or the active tenant into the system prompt invalidates that cache on every request. Session context travels with the user message instead, after the user's text, so the system prompt and the tool definitions stay identical from turn to turn and the prefix cache keeps hitting.

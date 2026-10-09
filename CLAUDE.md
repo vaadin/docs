@@ -65,6 +65,10 @@ meta-description: A 150-160 character description for search engines.
 - **section-nav**: Navigation behavior (e.g., `badge`)
 - **page-links**: Related links shown on the page
 
+## Moving or Removing Pages
+
+A page's URL is its path under `articles/` without the extension and without a trailing `/index`. When a change moves or removes a page, add a redirect from the old URL to `redirects` in `dspublisher/config/default.json`, pointing at the page that replaces it. Write both paths without the path prefix, and keep the entries sorted by source path. The Check Redirects workflow fails a pull request that leaves an old URL without one; run `npm run check-redirects` to check locally against `origin/main`.
+
 ## Code Example Patterns
 
 ### File Locations
@@ -246,6 +250,12 @@ Vaadin Framework reference documentation. Technical, code-centric, unopinionated
 ### articles/hilla
 
 Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
+
+The `articles/hilla/lit` sub-tree documents Hilla with Lit, which is deprecated and is removed in Vaadin 26. Every page in it carries the deprecation banner in its front matter (`banner`, `banner-id: hilla-lit-deprecated`, `banner-style: caution`), so any page added there needs one too. The banner goes in front matter rather than on the page title because a shared page's title sits inside the content tag, where a badge would render on the React page as well. Index pages are served without a trailing slash, so their banner link needs one level less than a sibling page's.
+
+Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials, which both pages include, so that removing `articles/hilla/lit` does not break the React pages. A partial keeps the directory depth of the page it was extracted from, so `{root}{root-fix}` includes and page-relative xrefs resolve identically from both wrappers. Nothing outside `articles/hilla/lit` may include it, and every link into it has to go when the tree does. There are two: the one from a partial to the Lit-only Web Component field strategy page, guarded with `ifdef::hilla-lit[]` so it disappears with the tree, and the note in `articles/hilla/guides/event-handling.adoc` pointing React readers at the Lit binding syntax, which has to be removed with it.
+
+Pages whose content does not depend on the frontend framework exist only in the main section; the Lit section does not repeat them, and its section index pages link to them instead. A shared partial that links to such a page uses an absolute `{articles}/hilla/...` xref, so the link resolves to the main page from both wrappers. When a topic is otherwise framework-independent but has a few Lit-specific details, the main page carries them as short notes instead of a separate Lit page. The reference documentation is entirely in the main section; `articles/hilla/lit` has no reference pages.
 
 ### articles/components
 

@@ -63,7 +63,7 @@ export class Example extends LitElement {
   private birthdayRenderer: GridColumnBodyLitRenderer<Person> = (person) => {
     const birthday = parseISO(person.birthday);
     return html`
-      <div>${format(birthday, 'P')}</div>
+      <div>${format(birthday, 'MM/dd/yyyy')}</div>
       <div style="font-size: .875rem; color: var(--vaadin-text-color-secondary);">
         Age: ${differenceInYears(Date.now(), birthday)}
       </div>

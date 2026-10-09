@@ -5,6 +5,9 @@ import com.vaadin.demo.domain.DataService;
 import com.vaadin.demo.domain.Person;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider.HierarchyFormat;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -17,7 +20,10 @@ public class TreeGridBasic extends Div {
     public TreeGridBasic() {
         // tag::snippet[]
         TreeGrid<Person> treeGrid = new TreeGrid<>();
-        treeGrid.setItems(managers, this::getStaff);
+        TreeData<Person> treeData = new TreeData<>();
+        treeData.addItems(managers, this::getStaff);
+        treeGrid.setDataProvider(
+                new TreeDataProvider<>(treeData, HierarchyFormat.FLATTENED));
         treeGrid.addHierarchyColumn(Person::getFirstName)
                 .setHeader("First name");
         treeGrid.addColumn(Person::getLastName).setHeader("Last name");

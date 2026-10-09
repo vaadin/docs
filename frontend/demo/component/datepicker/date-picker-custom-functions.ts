@@ -1,7 +1,6 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/date-picker';
-import { format as dateFnsFormat } from 'date-fns/format';
-import { parse as dateFnsParse } from 'date-fns/parse';
+import { format, parse } from 'date-fns';
 import { html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import type { DatePicker, DatePickerChangeEvent, DatePickerDate } from '@vaadin/date-picker';
@@ -19,7 +18,7 @@ export class Example extends LitElement {
   private datePicker!: DatePicker;
 
   @state()
-  private selectedDateValue: string = dateFnsFormat(new Date(), 'yyyy-MM-dd');
+  private selectedDateValue: string = format(new Date(), 'yyyy-MM-dd');
 
   // tag::snippet[]
   protected override firstUpdated() {
@@ -27,11 +26,11 @@ export class Example extends LitElement {
       const { year, month, day } = dateParts;
       const date = new Date(year, month, day);
 
-      return dateFnsFormat(date, 'yyyy-MM-dd');
+      return format(date, 'yyyy-MM-dd');
     };
 
     const parseDateIso8601 = (inputValue: string): DatePickerDate => {
-      const date = dateFnsParse(inputValue, 'yyyy-MM-dd', new Date());
+      const date = parse(inputValue, 'yyyy-MM-dd', new Date());
 
       return { year: date.getFullYear(), month: date.getMonth(), day: date.getDate() };
     };

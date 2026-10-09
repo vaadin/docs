@@ -3,7 +3,7 @@ import '@vaadin/button';
 import '@vaadin/context-menu';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ContextMenuItem } from '@vaadin/context-menu';
+import type { ContextMenuItemData } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('context-menu-classname')
@@ -16,7 +16,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: ContextMenuItem[] = [
+  private items: ContextMenuItemData[] = [
     { text: 'Share' },
     { text: 'Duplicate' },
     { text: 'Delete', className: 'custom' },

@@ -1,8 +1,9 @@
 ---
 title: Datadog
 page-title: How to use Datadog together with Observability Kit | Vaadin
-description: Learn how to use Datadog together with Observability Kit.
-meta-description: Learn how to use Datadog, a commercial service for collecting and viewing telemetry data, together with Observability Kit in Vaadin.
+description: Learn how to export Observability Kit metrics and traces to Datadog.
+meta-description: Learn how to export Vaadin Observability Kit telemetry to Datadog through an OpenTelemetry collector and Micrometer.
+order: 40
 page-links:
   - https://www.datadoghq.com[Website]
 ---
@@ -10,22 +11,23 @@ page-links:
 
 = Datadog Integration
 
-Datadog is a commercial service for collecting and viewing telemetry data, with support for metrics, traces, and limited support for logs. It can be integrated with Observability Kit.
+Datadog is a commercial service for collecting and viewing telemetry data, with support for metrics, traces, and logs.
+Datadog doesn't accept the OpenTelemetry Protocol (OTLP) directly, so an https://opentelemetry.io/docs/collector/[OpenTelemetry collector] is used as a proxy: the kit's metrics and traces are exported to the collector over OTLP, and the collector's Datadog exporter converts and forwards them to Datadog's API.
+
 
 == Account Setup
 
-To set up an account with Datadog, go to the https://www.datadoghq.com/[Datadog website] and click on [guilabel]*Free Trial*. Select the appropriate region for storing data. Then fill in the remaining details and follow their instructions.
+To set up an account, go to the https://www.datadoghq.com/[Datadog website] and click [guilabel]*Free Trial*.
+Select the appropriate region for storing data, fill in the remaining details, and follow the instructions.
 
-To complete the sign-up process, you'll have to install one of their agents and have it send data. An agent isn't required for the Observability Kit integration, so it can be removed immediately afterwards.
-
-The last sign-up step provides instructions for installing the agent. An easy way to run the agent once is to use the Docker option. This allows you to create a container, send some data, and then stop and remove the container immediately afterwards.
+Completing sign-up involves installing one of Datadog's agents to send some data.
+That agent isn't required for this integration, so it can be removed immediately afterwards.
+An easy way to run it once is the Docker option: create a container, send some data, then stop and remove the container.
 
 
 == OpenTelemetry Collector Setup
 
-Datadog doesn't support the OpenTelemetry APIs, directly. Instead, the https://opentelemetry.io/docs/collector/[OpenTelemetry collector] must be used as a proxy for converting data into the Datadog format and forwarding it to their API endpoints.
-
-Start by creating a [filename]`collector.yaml` configuration file with the following content:
+Create a [filename]`collector.yaml` configuration file that receives OTLP and exports to Datadog:
 
 .collector.yaml
 [source,yaml]
@@ -57,27 +59,30 @@ service:
       exporters: [datadog]
 ----
 
-Replace the following placeholders in the configuration:
+Replace the following placeholders:
 
 [unordered]
-`DD_SITE`:: The domain of the Datadog region for which you registered. You can get this from the browsers address bar when logged into the Datadog UI. For example, for the US1 region the value should be `datadoghq.com`; for the EU region, `datadoghq.eu`.
-`DD_API_KEY`:: An API key for authenticating against the Datadog API. To create an API key, open the Datadog web UI, click on `Organization Setting` and then `API Keys`. Create a new key. Make sure to save it, and then insert it into the configuration here.
+`DD_SITE`:: The domain of the Datadog region you registered for.
+Read it from the browser's address bar when logged into the Datadog UI -- for example `datadoghq.com` for US1, or `datadoghq.eu` for the EU region.
+`DD_API_KEY`:: An API key for authenticating against the Datadog API.
+To create one, open the Datadog web UI, go to [guilabel]*Organization Settings* then [guilabel]*API Keys*, and create a key.
 
-You can run the collector either by downloading and running the binary manually, or by using Docker.
+Run the collector either by downloading the binary or with Docker:
 
 [.example]
 --
-Download the binary from the https://github.com/open-telemetry/opentelemetry-collector-releases/releases/latest[latest release on GitHub]. Make sure to download the `otelcol_contrib_` variant. It includes support for Datadog and the correct variant for your operating system.
+Download the binary from the https://github.com/open-telemetry/opentelemetry-collector-releases/releases/latest[latest release on GitHub].
+Download the `otelcol_contrib_` variant -- it includes the Datadog exporter -- for your operating system.
 
-Next, run the collector using the following command:
+Then run the collector:
 
 [source,terminal]
 ----
 <source-info group="Binary"></source-info>
-otelcontribcol_linux_amd64 --config collector.yaml
+otelcol-contrib --config collector.yaml
 ----
 
-Run the OpenTelemetry collector Docker image, and pass the configuration file as a volume like so:
+Run the OpenTelemetry collector Docker image, passing the configuration file as a volume:
 
 [source,terminal]
 ----
@@ -87,28 +92,66 @@ docker run --name otelcol -p 4317:4317 -p 4318:4318 -v collector.yaml:/etc/otelc
 --
 
 
+== Configure the Application
+
+Add Actuator and the OpenTelemetry starter, which brings in the OTLP metrics registry and the tracing bridge with the OTLP exporter:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-opentelemetry</artifactId>
+</dependency>
+----
+
+Point both pipelines at the local collector:
+
+.`application.properties`
+[source,properties]
+----
+spring.application.name=vaadin
+
+# Metrics over OTLP to the collector
+management.otlp.metrics.export.url=http://localhost:4318/v1/metrics
+
+# Traces over OTLP to the collector
+management.opentelemetry.tracing.export.otlp.endpoint=http://localhost:4318/v1/traces
+management.tracing.sampling.probability=1.0
+----
+
+If the collector runs on another host, change the URLs accordingly.
+
+
 == Logging Setup
 
-Datadog doesn't support collecting logs in the OpenTelemetry format. You can use the following work-arounds for collecting log data, and correlating them with the traces collected by Observability Kit.
+Datadog doesn't ingest logs over OTLP.
+The following work-around sends logs to the Datadog logs API and correlates them with the kit's traces.
 
 .Logback Configuration
 [%collapsible]
 ====
 
-This method uses a Logback appender to send logs to the Datadog TCP logs API, while also adding the necessary Datadog metadata to correlate logs to traces.
+This method uses a Logback TCP appender to send logs to Datadog while adding the metadata needed to correlate logs with traces.
 
-First, add the following dependency to your Maven configuration to include a TCP appender for Logback:
+Add a TCP appender for Logback:
 
 [source,xml]
 ----
 <dependency>
     <groupId>net.logstash.logback</groupId>
     <artifactId>logstash-logback-encoder</artifactId>
-    <version>7.2</version>
+    <version>7.4</version>
 </dependency>
 ----
 
-To correlate logs to traces collected by Observability Kit, you need to customize the JSON output of Logback. To do that, create a [classname]`DataDogContextProvider` class with the following content:
+Micrometer Tracing places the current `traceId` and `spanId` in the logging MDC.
+To correlate logs with traces, convert those to the `dd.trace_id` and `dd.span_id` fields Datadog expects.
+Create a [classname]`DataDogContextProvider` class:
 
 [source,java]
 ----
@@ -123,34 +166,29 @@ import java.util.Map;
 
 public class DataDogContextProvider extends AbstractJsonProvider<ILoggingEvent> {
     @Override
-    public void writeTo(JsonGenerator generator, ILoggingEvent iLoggingEvent) throws IOException {
-        Map<String, String> mdcPropertyMap = iLoggingEvent.getMDCPropertyMap();
+    public void writeTo(JsonGenerator generator, ILoggingEvent event) throws IOException {
+        Map<String, String> mdc = event.getMDCPropertyMap();
 
-        if (mdcPropertyMap.containsKey("trace_id")) {
-            String traceId = mdcPropertyMap.get("trace_id");
-            String traceIdHexString = traceId.substring(traceId.length() - 16 );
-            long datadogTraceId = Long.parseUnsignedLong(traceIdHexString, 16);
-            String datadogTraceIdString = Long.toUnsignedString(datadogTraceId);
-
-            generator.writeStringField("dd.trace_id", datadogTraceIdString);
-            System.out.println("dd.trace_id: " + datadogTraceIdString);
+        if (mdc.containsKey("traceId")) {
+            String traceId = mdc.get("traceId");
+            String low64 = traceId.substring(traceId.length() - 16);
+            long ddTraceId = Long.parseUnsignedLong(low64, 16);
+            generator.writeStringField("dd.trace_id", Long.toUnsignedString(ddTraceId));
         }
 
-        if (mdcPropertyMap.containsKey("span_id")) {
-            String spanId = mdcPropertyMap.get("span_id");
-            String spanIdHexString = spanId.substring(spanId.length() - 16 );
-            long datadogSpanId = Long.parseUnsignedLong(spanIdHexString, 16);
-            String datadogSpanIdString = Long.toUnsignedString(datadogSpanId);
-
-            generator.writeStringField("dd.span_id", datadogSpanIdString);
+        if (mdc.containsKey("spanId")) {
+            String spanId = mdc.get("spanId");
+            long ddSpanId = Long.parseUnsignedLong(spanId, 16);
+            generator.writeStringField("dd.span_id", Long.toUnsignedString(ddSpanId));
         }
     }
 }
 ----
 
-This class checks if the log event has the `trace_id` and `span_id` attributes. It writes corresponding Datadog trace and span IDs to the JSON output.
+This reads the `traceId` and `spanId` from the MDC and writes the corresponding Datadog IDs into the JSON output.
 
-Next, create a custom Logback encoder that makes use of this JSON provider. The encoder extends from [classname]`LogstashEncoder`, which is an encoder that generates JSON output that can be processed by the Datadog logging endpoint:
+Next, create a custom encoder that registers the provider.
+It extends [classname]`LogstashEncoder`, which produces JSON that the Datadog logging endpoint can process:
 
 [source,java]
 ----
@@ -165,15 +203,13 @@ public class DataDogLogstashEncoder extends LogstashEncoder {
     @Override
     protected AbstractCompositeJsonFormatter<ILoggingEvent> createFormatter() {
         AbstractCompositeJsonFormatter<ILoggingEvent> formatter = super.createFormatter();
-
-        ((LogstashFormatter)formatter).addProvider(new DataDogContextProvider());
-
+        ((LogstashFormatter) formatter).addProvider(new DataDogContextProvider());
         return formatter;
     }
 }
 ----
 
-Next add a new TCP appender to your Logback configuration, using the encoder created above, like so:
+Add a TCP appender that uses the encoder to your Logback configuration:
 
 [source,xml]
 ----
@@ -191,20 +227,20 @@ Next add a new TCP appender to your Logback configuration, using the encoder cre
 </appender>
 ----
 
-The configuration has two variables that need to be passed as system variables when running the Java agent:
+The configuration references two variables, which use the same values as the collector configuration:
 
 [unordered]
-`DD_SITE`:: The domain of the Datadog region for which you registered. This should have the same value as in the collector configuration from earlier.
-`DD_API_KEY`:: An API key for authenticating against the Datadog API. This should have the same value as in the collector configuration from earlier.
+`DD_SITE`:: The domain of your Datadog region.
+`DD_API_KEY`:: An API key for authenticating against the Datadog API.
 
-For example, to pass these system variables when running the application, use this:
+Pass them when running the application, for example:
 
 [source,terminal]
 ----
-java -DDD_SITE=datadoghq.eu -DDD_API_KEY=1234ABCD ...
+java -DDD_SITE=datadoghq.eu -DDD_API_KEY=1234ABCD -jar myapp.jar
 ----
 
-Finally, register the appender for the root logger to take it into effect. You would do that like so:
+Finally, register the appender for the root logger:
 
 [source,xml]
 ----
@@ -217,61 +253,34 @@ Finally, register the appender for the root logger to take it into effect. You w
 ====
 
 
-[[configuration-file]]
-== Observability Kit Configuration
-
-To configure Observability Kit, create an [filename]`agent.properties` file with the following content:
-
-.agent.properties
-[source,properties]
-----
-otel.service.name=vaadin
-otel.traces.exporter=otlp
-otel.metrics.exporter=otlp
-----
-
-In the configuration above, the service name is defined as `vaadin`, which is also the default of the agent. The service name can be customized.
-
-By default, the OpenTelemetry Protocol (OTLP) exporters assume that the OpenTelemetry collector is running locally. Therefore, you don't need to configure endpoints. If the collector is running on a different system, you need to configure an endpoint for the exporter:
-
-.agent.properties
-[source,properties]
-----
-otel.exporter.otlp.endpoint=https://collector.my-domain.net:4317
-----
-
-
-== Running the Application
-
-include::./_run-app.adoc[]
-
-
 == Viewing Data
+
 
 === Viewing Traces
 
-In the Datadog web UI, select [guilabel]*APM* and then [guilabel]*Traces* from the menu on the left. The view provides graphs of the number of requests, failed requests and latency, as well as a list of the latest traces.
+In the Datadog web UI, select [guilabel]*APM* then [guilabel]*Traces*.
+The view graphs the number of requests, failed requests, and latency, along with a list of the latest traces.
 
-The search bar allows filtering for tags, which are attribute values of spans. To get an idea of what kind of tags can be filtered, click on a trace. This displays a detailed view with all tags recorded for the span. Clicking on a tag will present an option on which to filter that specific tag value.
+The search bar filters by tags, which are span attribute values.
+Click a trace to see the tags recorded for its spans; click a tag to filter on that value.
+Clicking a trace ID opens a side panel with detailed information such as nested spans, attributes, and related logs.
 
-Clicking on a trace ID will display a side panel that shows detailed information about a specific trace, such as nested spans, and attributes and related logs.
-
-See Datadog documentation for https://docs.datadoghq.com/tracing/trace_explorer/?tab=listview[Trace Explorer] for more information on how to use this view.
+See the Datadog https://docs.datadoghq.com/tracing/trace_explorer/?tab=listview[Trace Explorer] documentation for more.
 
 
 === Viewing Metrics
 
-In the Datadog web UI, select [guilabel]*Metrics* and then [guilabel]*Explorer* from the menu on the left.
+In the Datadog web UI, select [guilabel]*Metrics* then [guilabel]*Explorer*.
+Enter one of the metrics collected by the kit -- for example `vaadin.sessions.active` -- to view it.
 
-In the metrics input field, enter one of the metrics collected by Observability Kit. For example, use `otel.process.runtime.jvm.memory.usage` to view the JVM memory usage.
-
-See Datadog documentation for the https://docs.datadoghq.com/metrics/explorer/[Metrics Explorer] for more information on how to use this view.
+See the Datadog https://docs.datadoghq.com/metrics/explorer/[Metrics Explorer] documentation for more.
 
 
 === Viewing Logs
 
-Logging integration is limited to the Logback logging framework.
+Log integration is limited to the Logback logging framework, as described above.
 
-In the Datadog web UI, select [guilabel]*Logs* from the menu on the left. The view shows a list of recent log entries, which can be filtered by text or log level.
+In the Datadog web UI, select [guilabel]*Logs*.
+The view lists recent log entries, which can be filtered by text or log level.
 
-See Datadog documentation for the https://docs.datadoghq.com/logs/explorer/[Logs Explorer] for more information on how to use this view.
+See the Datadog https://docs.datadoghq.com/logs/explorer/[Logs Explorer] documentation for more.

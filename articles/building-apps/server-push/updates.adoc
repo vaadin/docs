@@ -104,6 +104,10 @@ When any user calls `post()`, every open `ChatView` receives the new message. Co
 [NOTE]
 Use a `@Component` singleton for application-wide state, or a `@VaadinSessionScope` bean for state shared between the tabs of a single user. For more on scoping signals, see <</flow/ui-state/shared-signals#signal-scope-patterns,Signal Scope Patterns>>.
 
+.Running Several Application Instances
+[IMPORTANT]
+A singleton bean exists once per JVM. If you run several instances of your application behind a load balancer, each instance has its own `ChatMessages` bean and its own signal. A message posted on one instance doesn't reach the users connected to the other instances. To broadcast across instances, publish the messages through an external system, such as a message broker, and let each instance feed them into its own signal.
+
 
 === Highlighting Background Changes
 
@@ -274,6 +278,12 @@ Another risk you have to manage when updating the user interface in response to 
 When you know events are coming no faster than two to four events per second, you can push on every event. However, if they're more frequent, you have to buffer events and update the user interface in batches — for signals, this means buffering before you write to the signal. This is quite easy to do if you're using a `Flux` from https://projectreactor.io/[Reactor]. See the <<reactive#,Consuming Reactive Streams>> documentation page for more information about this.
 
 The buffering duration depends on the size of the UI update, and the network latency. In some applications, you may need to use a longer buffer duration. In others, a shorter one might work. You should try various durations to see what's best for your application.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+== Updates That Never Arrive
+
+Flooding is one failure; a client that receives nothing is another. Updates scheduled for a UI are held in memory until a response is written for its browser, so a job that keeps scheduling updates for a client that isn't receiving them -- a laptop that went to sleep, a closed push connection, a discarded tab -- grows the heap until the session expires. See <<{articles}/flow/component-internals/element-api/calling-javascript#undelivered-invocations, Undelivered Invocations>> for the warning Flow logs and for what to do instead.
 
 
 == Avoiding Unnecessary Pushes

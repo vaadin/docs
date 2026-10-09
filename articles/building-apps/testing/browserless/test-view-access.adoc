@@ -1,0 +1,391 @@
+---
+title: Test View Access Control
+page-title: Test View Access Control | Vaadin
+description: Verify anonymous, authorized, and unauthorized navigation in Spring and Quarkus browserless tests.
+meta-description: Verify anonymous, authorized, and unauthorized navigation in Spring and Quarkus browserless tests, using mock users and the test security annotations.
+order: 70
+---
+
+
+= Test View Access Control
+
+This page covers Spring Security and Quarkus Security in separate sections.
+For Java EE/CDI, use <<setup-cdi#,the CDI setup>> with your application's CDI access-control beans and login flow.
+
+First configure <<{articles}/building-apps/security/protect-views#,view protection>> in your application.
+These examples assume a public default route, a login view, and views restricted to specific roles.
+Adapt the route names and roles to your application.
+
+[#spring]
+== Spring Security
+
+Start with <<{articles}/building-apps/testing/browserless/setup-spring-boot#,the Spring Boot test setup>>, and add the Spring Security test dependency:
+
+[source,xml]
+----
+<dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-test</artifactId>
+        <scope>test</scope>
+</dependency>
+----
+
+
+=== Simulate Users with Spring Security Annotations
+
+With [annotationname]`@SpringBootTest`, view access control works without extra setup.
+Spring Security test annotations -- such as [annotationname]`@WithMockUser`, [annotationname]`@WithAnonymousUser`, or [annotationname]`@WithUserDetails` -- set the simulated user for each test method.
+The authentication is in place before the test creates the UI and navigates to the default route, so a simulated user who is logged in isn't redirected to the login view, and custom redirect logic for authenticated users works as expected.
+See the https://docs.spring.io/spring-security/reference/servlet/test/method.html#test-method-withmockuser[Spring Security documentation] for the annotations.
+
+Extend [classname]`SpringBrowserlessTest` and annotate test methods with the user to simulate.
+For the simplest cases, use [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser`, providing the username and roles that should be granted:
+
+.Tests with Mock Users
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.html.Anchor;
+
+@SpringBootTest
+public class ViewSecurityTest extends SpringBrowserlessTest {
+
+    @Test
+    @WithAnonymousUser
+    void anonymousUser_protectedView_redirectToLogin() {
+        navigate("protected", LoginView.class);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void anonymousUser_publicView_signInLinkPresent() {
+        // public view is default page
+        Assertions.assertInstanceOf(PublicView.class, getCurrentView());
+
+        Anchor anchor = find(Anchor.class).withText("Sign in").single();
+        Assertions.assertTrue(
+                test(anchor).isUsable(),
+                "Sign in link should be available for anonymous user");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void adminUser_adminView_viewShown() {
+        navigate(AdminRoleView.class);
+
+        Assertions.assertTrue(
+                find(Avatar.class).single().isVisible(),
+                "Avatar should be visible for logged users");
+    }
+}
+----
+
+
+=== Test with a Reduced Application Context
+
+In a test that selects its beans with [annotationname]`@ContextConfiguration` instead of loading the full application context, register view access control yourself.
+Vaadin applies access control through a [classname]`NavigationAccessControl` registered as a [classname]`BeforeEnterListener` for the UI.
+Provide a [classname]`VaadinServiceInitListener` that registers it, in a test configuration class:
+
+.Set Up NavigationAccessControl in a Test Configuration
+[source,java]
+----
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.spring.security.SpringNavigationAccessControl;
+
+@TestConfiguration
+class TestViewSecurityConfig {
+
+    @Bean
+    VaadinServiceInitListener setupViewSecurityScenario() {
+        SpringNavigationAccessControl accessControl = new SpringNavigationAccessControl();
+        accessControl.setLoginView(LoginView.class);
+        return event -> {
+            event.getSource().addUIInitListener(uiEvent -> {
+                uiEvent.getUI().addBeforeEnterListener(accessControl);
+            });
+        };
+    }
+}
+----
+
+Annotate the class with [annotationname]`@TestConfiguration` rather than [annotationname]`@Configuration`.
+Spring Boot's component scan skips test configuration classes, so the class doesn't leak into `@SpringBootTest` contexts in the same package, which already have access control.
+
+Alternatively, import the out-of-the-box [classname]`NavigationAccessControlInitializer`, which requires only a [classname]`NavigationAccessControl` bean:
+
+.Set Up NavigationAccessControl with NavigationAccessControlInitializer
+[source,java]
+----
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import com.vaadin.flow.server.auth.NavigationAccessControl;
+import com.vaadin.flow.spring.security.NavigationAccessControlInitializer;
+import com.vaadin.flow.spring.security.SpringNavigationAccessControl;
+
+@TestConfiguration
+@Import({NavigationAccessControlInitializer.class})
+class TestViewSecurityConfig {
+
+    @Bean
+    NavigationAccessControl navigationAccessControl() {
+        SpringNavigationAccessControl accessControl = new SpringNavigationAccessControl();
+        accessControl.setLoginView(LoginView.class);
+        return accessControl;
+    }
+}
+----
+
+Use this variant only in a reduced context.
+With Spring Security, a `@SpringBootTest` context already defines a `navigationAccessControl` bean, so importing the class there fails with a bean definition override error.
+
+When the test needs custom User objects or complex grant rules, provide a custom [classname]`UserDetailsService` and annotate the test method with [annotationname]`@WithUserDetails`.
+The following test also includes the `TestViewSecurityConfig` class from the start of this section, which applies view access control:
+
+.Tests with Mock UserDetailsService
+[source,java]
+----
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ContextConfiguration;
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.router.RouteNotFoundError;
+
+@ContextConfiguration(classes = {
+        SecurityTestConfig.class, TestViewSecurityConfig.class })
+class SpringUnitSecurityTest extends SpringBrowserlessTest {
+
+    @Test
+    @WithUserDetails("admin")
+    void superuser_adminView_viewShown() {
+        navigate(AdminRoleView.class);
+
+        Assertions.assertTrue(
+                find(Avatar.class).single().isVisible(),
+                "Avatar should be visible for logged users");
+    }
+
+    @Test
+    @WithUserDetails
+    void user_adminView_accessDenied() {
+        RouteNotFoundError errorView = navigate("admin-role",
+                RouteNotFoundError.class);
+        Assertions.assertTrue(
+                errorView.getElement().getChild(0).getOuterHTML()
+                        .contains("Reason: Access is denied"),
+                "Admin view should be accessible only by users with ADMIN role");
+    }
+
+
+}
+
+@TestConfiguration
+class SecurityTestConfig {
+
+    @Bean
+    UserDetailsService mockUserDetailsService() {
+
+        return new UserDetailsService() {
+            @Override
+            public UserDetails loadUserByUsername(String username)
+                    throws UsernameNotFoundException {
+                if ("user".equals(username)) {
+                    return new User(username, UUID.randomUUID().toString(),
+                            List.of(
+                                new SimpleGrantedAuthority("ROLE_DEV"),
+                                new SimpleGrantedAuthority("ROLE_USER")
+                        ));
+                }
+                if ("admin".equals(username)) {
+                    return new User(username, UUID.randomUUID().toString(),
+                            List.of(
+                                new SimpleGrantedAuthority("ROLE_SUPERUSER"),
+                                new SimpleGrantedAuthority("ROLE_ADMIN")
+                        ));
+                }
+                throw new UsernameNotFoundException(
+                        "User " + username + " not exists");
+            }
+        };
+    }
+}
+----
+
+[CAUTION]
+Overriding beans with [annotationname]`@MockitoBean` or [annotationname]`@MockBean` makes Spring cache a separate application context for that test class. In a multi-class run, this can prevent the simulated user from being applied during navigation, causing protected views to redirect unexpectedly to the login view -- sometimes in *other* test classes. If security navigation tests fail only when the whole suite runs, suspect a bean override elsewhere. See <<{articles}/building-apps/testing/browserless/speed-up-tests#using-a-reduced-application-context,Using a Reduced Application Context>> for a context-friendly way to replace services.
+
+[#authentication-applied-during-a-test]
+=== Navigate after Changing Authentication
+
+The default Spring Security test annotations establish authentication before initial navigation.
+When a test changes authentication later, navigate again to apply access control to the new user.
+For a root route that redirects anonymous users to `LoginView`, use this Spring test method:
+
+[source,java]
+----
+@Test
+@WithMockUser(username = "admin", roles = "ADMIN",
+        setupBefore = TestExecutionEvent.TEST_EXECUTION)
+void adminSignsInDuringTest_adminViewShown() {
+    // Setup navigated to the root route while the user was still anonymous,
+    // and access control redirected that navigation to the login view.
+    Assertions.assertInstanceOf(LoginView.class, getCurrentView());
+
+    // Navigating again applies access control to the current authentication.
+    navigate(AdminView.class);
+
+    Assertions.assertTrue(find(Avatar.class).single().isVisible());
+}
+----
+
+The example uses Spring Security's `TestExecutionEvent` from `org.springframework.security.test.context.support`.
+For a login-form test, perform the application's login action and then navigate to the protected view before asserting its contents.
+See <<{articles}/flow/testing/browserless/environment-differences#authentication-applied-during-a-test,Authentication Timing>> for why reloading the current location does not replace this step.
+
+[#quarkus]
+== Quarkus Security
+
+Start with <<{articles}/building-apps/testing/browserless/setup-quarkus#,the Quarkus test setup>>.
+
+=== Set Up View Access Control
+
+The Vaadin Quarkus extension doesn't register view access control automatically, so browserless tests register it themselves.
+Vaadin applies access control through a [classname]`NavigationAccessControl` registered as a [classname]`BeforeEnterListener` for the UI.
+Register it in a [classname]`QuarkusTestProfile` class that provides an observer for the Vaadin [classname]`ServiceInitEvent`:
+
+.NavigationAccessControl for Quarkus Project Test
+[source,java]
+----
+import jakarta.enterprise.event.Observes;
+import com.vaadin.browserless.quarkus.mocks.MockQuarkusServletService;
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.auth.NavigationAccessControl;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.test.junit.QuarkusTestProfile;
+
+public class ViewSecurityTestProfile implements QuarkusTestProfile {
+
+    @Override
+    public String getConfigProfile() {
+        return "test-security"; // <1>
+    }
+
+    @IfBuildProfile("test-security") // <1>
+    public static class NavigationAccessControlObserver {
+
+        public void serviceInit(@Observes ServiceInitEvent event) { // <2>
+            // @QuarkusTest starts the whole application, so we check
+            // the VaadinService type to enable access control only for
+            // browserless tests
+            if (event.getSource() instanceof MockQuarkusServletService) { // <3>
+                event.getSource().addUIInitListener(uiEvent -> {
+                    // Customize the NavigationAccessControl as needed
+                    NavigationAccessControl accessControl = new NavigationAccessControl();
+                    accessControl.setLoginView(LoginView.class);
+
+                    uiEvent.getUI().addBeforeEnterListener(accessControl);
+                });
+            }
+        }
+    }
+}
+----
+<1> Sets the configuration profile to be used for the test. The observer class is annotated with [annotationname]`@IfBuildProfile`, so it's active only in tests that use this profile.
+<2> Listens for Vaadin [classname]`ServiceInitEvent`. This is the same as implementing [classname]`VaadinServiceInitListener` and registering the class to be loaded by Java [classname]`ServiceLoader`.
+<3> Checks that execution is started by the browserless test. This is required because [annotationname]`@QuarkusTest` causes the whole application to start when running the test.
+
+=== Simulate Users with Quarkus Test Security
+
+When Quarkus Security is on the classpath, [classname]`QuarkusBrowserlessTest` reads the authentication details from the Quarkus [classname]`SecurityIdentity`.
+The Quarkus [annotationname]`@TestSecurity` annotation then sets the simulated user for each test method.
+As with Spring, the authentication is in place before the test creates the UI and navigates to the default route, so logged-in users aren't redirected to the login view.
+See the https://quarkus.io/guides/security-testing[Quarkus Security Testing documentation] for the annotation.
+
+Add the Quarkus Security test dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-test-security</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+
+Extend [classname]`QuarkusBrowserlessTest` and annotate test methods with [annotationname]`@TestSecurity`, providing the username and roles that should be granted:
+
+.Tests with Mock Users
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.html.Anchor;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+import io.quarkus.test.security.TestSecurity;
+
+@QuarkusTest
+@TestProfile(ViewSecurityTestProfile.class) // <1>
+class ViewSecurityTest extends QuarkusBrowserlessTest {
+
+    @Test // <2>
+    void anonymousUser_protectedView_redirectToLogin() {
+        navigate("protected", LoginView.class);
+    }
+
+    @Test // <2>
+    void anonymousUser_publicView_signInLinkPresent() {
+        // public view is default page
+        Assertions.assertInstanceOf(PublicView.class, getCurrentView());
+
+        Anchor anchor = find(Anchor.class).withText("Sign in").single();
+        Assertions.assertTrue(
+                test(anchor).isUsable(),
+                "Sign in link should be available for anonymous user");
+    }
+
+    @Test
+    @TestSecurity(user = "admin", roles = "ADMIN") // <3>
+    void adminUser_adminView_viewShown() {
+        navigate(AdminRoleView.class);
+
+        Assertions.assertTrue(
+                find(Avatar.class).single().isVisible(),
+                "Avatar should be visible for logged users");
+    }
+}
+----
+<1> Selects the test profile that registers view access control.
+<2> A test without [annotationname]`@TestSecurity` runs as an anonymous user. Don't use `@TestSecurity(authorizationEnabled = false)` for this: it disables Quarkus security checks, such as [annotationname]`@RolesAllowed` on services that the view calls.
+<3> Simulates an authenticated user with the `ADMIN` role.
+
+== Run the Security Tests
+
+Run the security tests together with the rest of the suite using `mvn test`.
+For concurrent users and security isolation, see <<{articles}/building-apps/testing/browserless/test-multiple-users#,Test Multiple Users and Windows>>.
+
+
+[discussion-id]`011585C3-F724-4B8D-B0B2-A52595587AAA`

@@ -18,74 +18,70 @@ The _Application Shell_ in Vaadin Flow is also known as the _Bootstrap Page_, or
 
 The developer has full control of the contents of [filename]`index.html`. You can modify it in various ways.
 
-On the client side, you can edit [filename]`frontend/index.html` when the content is static, for instance the `<viewport>` tag. On the server side, you can make changes that require dynamic server content, or when Java syntax is preferred. An example of would be making the application installable by enabling the `@PWA` built-in feature.
+On the client side, you can take control of [filename]`index.html` when the content is static, for instance the `<viewport>` tag. Copy the generated file into the [filename]`frontend` folder rather than writing one from scratch, as described in <<default-bootstrap-template-and-entry-point, Default Template & Entry Point>>. On the server side, you can make changes that require dynamic server content, or when Java syntax is preferred. An example of would be making the application installable by enabling the `@PWA` built-in feature.
 
 You can implement [interfacename]`AppShellConfigurator` for cases covered by the [classname]`AppShellSettings` API, or by annotations. And you can configure an [interfacename]`IndexHtmlRequestListener` for advanced cases to modify the document structure.
 
 
 == Application Shell Template
 
-The Vaadin servlet uses the [filename]`frontend/index.html` file as a template to generate the bootstrap page response. The servlet processes the template and injects the following information:
+The Vaadin servlet uses an [filename]`index.html` file as a template to generate the bootstrap page response: the one in the [filename]`frontend` folder where the project has one, and the generated default otherwise. The servlet processes the template and injects the following information:
 
 - `<base href='./relative/to/root'>`: Vaadin calculates the relative path from the current request path to the root path of the application. This is required for relative links in view templates to work correctly.
-- Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]`frontend/index.ts` file. It uses a pre-configured https://vitejs.dev/[Vite] instance that's included with `vaadin-maven-plugin` as a module bundler. Therefore, the [filename]`frontend/index.html` template doesn't need to include explicitly the [filename]`index.ts` script -- or the [filename]`index.js` script.
+- Bundled script: Vaadin automatically adds the bundled and optimized script generated from the [filename]`frontend/index.tsx` file. It uses a pre-configured https://vitejs.dev/[Vite] instance that's included with `vaadin-maven-plugin` as a module bundler. Therefore, the [filename]`index.html` template doesn't need to include explicitly the [filename]`index.tsx` script -- or the [filename]`index.ts` or [filename]`index.js` script.
 
 [TIP]
-The `frontend` directory path can be changed by providing the property `vaadin.frontend.frontend.folder` when running the Maven goals `prepare-frontend` or `build-frontend` from `vaadin-maven-plugin`.
+The `frontend` directory path can be changed with the `frontendDirectory` parameter of `vaadin-maven-plugin`, which the `prepare-frontend` and `build-frontend` goals use. The build records the path so that the application can read it at runtime from the `vaadin.frontend.folder` property. See <<{articles}/flow/configuration/maven#properties, Plugin Configuration Options>> for details.
 
 
 === Default Template & Entry Point [[default-bootstrap-template-and-entry-point]]
 
-If the [filename]`index.html` or [filename]`index.ts` files in the frontend folder are missing, `vaadin-maven-plugin` generates a default corresponding file in the [filename]`target` folder. In that case, the application uses only server-side routing. You can take control of these files by moving them into the [filename]`frontend` folder. By default, these files look similar to the following:
+Where the [filename]`index.html` or [filename]`index.tsx` file is missing from the frontend folder, the build generates a default into [filename]`frontend/generated/`, so neither file has to exist in the project. For [filename]`index.html`, that location is [since:com.vaadin:vaadin@V25.3]#new in Vaadin 25.3#: earlier versions generated the file into the [filename]`frontend` folder itself. Without an [filename]`index.tsx`, the application uses only server-side routing. To take control of one of these files, copy it from [filename]`frontend/generated/` into the [filename]`frontend` folder, where it replaces the generated default. By default, these files look similar to the following:
 
 .Default `index.html`
 [source,html]
 ----
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
-    body, #outlet {
-      height: 100vh;
-      width: 100vw;
+    html, body, #outlet {
+      height: 100%;
+      width: 100%;
       margin: 0;
     }
   </style>
   <!-- index.ts is included here automatically (either by the dev server or during the build) -->
 </head>
 <body>
-  <!-- vaadin-router in index.ts needs an outlet for displaying the views -->
+  <!-- This outlet div is where the views are rendered -->
   <div id="outlet"></div>
 </body>
 </html>
 ----
 
-.Default `index.ts` [[default-index-ts]]
-[source,typescript]
+.Default `index.tsx` [[default-index-ts]]
+[source,tsx]
 ----
-// import Vaadin client-router to handle client-side and server-side navigation
-import { Router } from '@vaadin/router';
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router';
+import { router } from 'Frontend/generated/routes.js'; // <1>
 
-// import Flow module to enable navigation to Vaadin server-side views
-import { Flow } from '@vaadin/flow-frontend';
+function App() {
+  return <RouterProvider router={router} />;
+}
 
-const {serverSideRoutes} = new Flow({
-  imports: () => import('../target/frontend/generated-flow-imports')
-});
-
-const routes = [
-  // for client-side, place routes below
-
-  // for server-side, the next magic line sends all unmatched routes:
-  ...serverSideRoutes // IMPORTANT: this must be the last entry in the array
-];
-
-// The Vaadin router needs an outlet in the index.html page to display views
-export const router = new Router(document.querySelector('#outlet'));
-router.setRoutes(routes);
+const outlet = document.getElementById('outlet')!; // <2>
+const root = createRoot(outlet);
+root.render(createElement(App));
 ----
+<1> The routes themselves are configured in [filename]`routes.tsx`, which registers the server-side (i.e., Flow) routes and any client-side React routes. If you add your own [filename]`frontend/routes.tsx` file, the import points to that file instead of the generated one.
+<2> The `outlet` element is the one declared in [filename]`index.html`; it's where the router renders the views.
+
+For more about configuring the routes, see the <<{articles}/hilla/reference/react-router#, React Router Reference>>.
 
 This is the best place to customize the application shell, for example to put an analytics tag in the page.
 
@@ -167,6 +163,32 @@ public class AppShell implements AppShellConfigurator {
 ----
 include::{root}/src/main/java/com/vaadin/demo/flow/advanced/bootstrap/ServiceListener.java[tags=snippet]
 ----
+
+
+==== Using an SVG Favicon[[svg-favicon]]
+
+Modern browsers support scalable SVG favicons. Place the SVG file in a folder served as static resources, for example [filename]`src/main/resources/META-INF/resources/icons/favicon.svg`, and add it with [methodname]`addFavIcon()`. Use `any` as the size, since a vector image scales to any size:
+
+[source,java]
+----
+@Override
+public void configurePage(AppShellSettings settings) {
+  settings.addFavIcon("icon", "icons/favicon.svg", "any");
+}
+----
+
+Browsers detect the image format from the `Content-Type` of the response. To declare the type explicitly in the link element -- `type="image/svg+xml"` -- use the [methodname]`addLink()` overload that takes a map of attributes:
+
+[source,java]
+----
+@Override
+public void configurePage(AppShellSettings settings) {
+  settings.addLink("icons/favicon.svg",
+          Map.of("rel", "icon", "type", "image/svg+xml"));
+}
+----
+
+Not all browsers support SVG favicons. To provide a fallback for them, add a PNG or ICO favicon as well.
 
 
 ==== Java Annotations[[java-annotations]]

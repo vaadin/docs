@@ -1,0 +1,57 @@
+---
+title: Signal Test Environment
+page-title: Signal Test Environment | Vaadin
+description: Signal propagation, background task processing, shared-signal updates, and write confirmation in browserless tests.
+meta-description: Signal propagation, background task processing, shared-signal updates, and write confirmation in browserless tests.
+order: 35
+---
+
+
+= Signal Test Environment
+
+Browserless tests register a test `SignalEnvironment` to make signal effects deterministic.
+The same environment is used by the standard base-class setup, JUnit extensions, and application contexts.
+A custom initialization override must call `initSignalsSupport()` to retain this behavior, as shown in <<cdi#,CDI Test Integration>>.
+
+[#synchronous]
+== Synchronous Propagation
+
+For attached components, signal mutations on the test UI thread run dependent effects and bindings before the mutation returns.
+This applies to value and list signals, computed signals, component bindings, and `Signal.effect()`.
+A tester action that changes a signal therefore completes its synchronous UI updates before the next assertion.
+
+For binding APIs, see <<{articles}/flow/ui-state/building-ui#,Component Bindings>> and <<{articles}/flow/ui-state/element-bindings#,Element Bindings>>.
+
+[#background-threads]
+== Updates from Background Threads
+
+Mutations off the UI thread queue effects instead of applying them inline.
+`runPendingSignalsTasks()` waits up to 100 milliseconds for the first pending task and then drains the queue.
+It returns `true` if it processed any tasks.
+The `(long, TimeUnit)` overload changes the wait time.
+Processing the queue is not a guarantee that arbitrary application background work has completed.
+
+The method is also available on JUnit extensions and on each `BrowserlessUIContext`.
+When the calling thread holds the window's session lock, the window API temporarily releases it while waiting so background threads can enqueue tasks.
+
+== Shared Signals
+
+Changes observed from another session require queued effect processing.
+Changes made and observed on the same test UI thread propagate synchronously.
+See <<multi-user#signals,Signals Across Windows>> for context activation requirements.
+
+[#shared-signal-writes]
+== Shared-Signal Write Confirmation
+
+A shared-signal write applies optimistically: `peek()` can expose its new value before confirmation.
+The returned `SignalOperation` completes after its confirmation task is processed.
+Result callbacks run in the context that initiated the operation.
+
+Blocking on the operation before draining the queue prevents the confirmation task from running on the blocked test thread.
+Drain the queue before awaiting or asserting the result.
+
+[[confirming-a-write]][[custom-effects]][[listsignal-and-bindchildren]][[valuesignal-computed-signal-and-bindtext]][[what-you-can-bind]]For a worked example, see <<{articles}/building-apps/testing/browserless/test-signals#,Test Signal-Based Views>>.
+
+
+
+[discussion-id]`6518E8AD-13F8-48D7-A826-289115FB9A1A`

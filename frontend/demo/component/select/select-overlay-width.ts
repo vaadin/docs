@@ -4,7 +4,7 @@ import '@vaadin/list-box';
 import '@vaadin/select';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { SelectItem } from '@vaadin/select';
+import type { SelectItemData } from '@vaadin/select';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -20,7 +20,7 @@ export class Example extends LitElement {
   }
 
   @state()
-  private items: SelectItem[] = [];
+  private items: SelectItemData[] = [];
 
   protected override async firstUpdated() {
     const { people } = await getPeople({ count: 5 });

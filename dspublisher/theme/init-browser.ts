@@ -8,6 +8,19 @@ import './preview-diff';
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
+// Preview deployments are served from docs-preview-pr-<n>.fly.dev, while the HaaS
+// cookie dialog stores consent in a `privacyPolicy` cookie scoped to
+// `domain=vaadin.com`. The browser rejects that cookie on the preview host, so
+// consent is never stored and the dialog is shown again on every page load.
+// Pre-set the cookie to -1, the value the dialog's own Decline button writes and
+// the only value it never asks again after, so previews are never prompted.
+// `__DOCS_PREVIEW_DIFF__` is declared in ./preview-diff and injected by the build
+// (vite.dspublisher.ts); referenced with `typeof` so a build that doesn't define
+// it doesn't throw.
+if (typeof __DOCS_PREVIEW_DIFF__ !== 'undefined' && __DOCS_PREVIEW_DIFF__) {
+  document.cookie = 'privacyPolicy=-1; path=/; max-age=31536000; samesite=lax';
+}
+
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
 }

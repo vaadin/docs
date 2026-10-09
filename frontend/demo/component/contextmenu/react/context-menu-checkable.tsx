@@ -4,14 +4,14 @@ import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-lin
 import { useSignal } from '@vaadin/hilla-react-signals';
 import {
   ContextMenu,
-  type ContextMenuItem,
+  type ContextMenuItemData,
   type ContextMenuItemSelectedEvent,
 } from '@vaadin/react-components/ContextMenu.js';
 
 function Example() {
   useSignals(); // hidden-source-line
   // tag::snippet[]
-  const items = useSignal<ContextMenuItem[]>([
+  const items = useSignal<ContextMenuItemData[]>([
     { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },

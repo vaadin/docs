@@ -190,21 +190,21 @@ For example, you can't divide or multiply two amounts of money. You can add and 
 ----
 public final class MonetaryAmount {
     private final CurrencyUnit currency;
-    private final BigDecimal value;
+    private final BigDecimal amount;
     ...
 
-    public MonetaryAmount add(MonetaryAmount amount) {
-        requireSameCurrency(amount);
-        return new MonetaryAmount(currency, value.add(amount.value));
+    public MonetaryAmount add(MonetaryAmount other) {
+        requireSameCurrency(other);
+        return new MonetaryAmount(currency, amount.add(other.amount));
     }
 
-    public MonetaryAmount subtract(MonetaryAmount amount) {
-        requireSameCurrency(amount);
-        return new MonetaryAmount(currency, value.subtract(amount.value));
+    public MonetaryAmount subtract(MonetaryAmount other) {
+        requireSameCurrency(other);
+        return new MonetaryAmount(currency, amount.subtract(other.amount));
     }
 
-    private void requireSameCurrency(MonetaryAmount amount) {
-        if (!currency.equals(amount.currency)) {
+    private void requireSameCurrency(MonetaryAmount other) {
+        if (!currency.equals(other.currency)) {
             throw new IllegalArgumentException("Must have same currency");
         }
     }
@@ -220,8 +220,8 @@ public final class Discount {
     ...
 
     public MonetaryAmount applyTo(MonetaryAmount regularPrice) {
-        return new MonetaryAmount(currency,
-            discountFactor.multiply(regularPrice.value()));
+        return new MonetaryAmount(regularPrice.currency(),
+            discountFactor.multiply(regularPrice.amount()));
     }
 }
 ----
@@ -287,7 +287,7 @@ public class MonetaryAmountConverter implements Converter<BigDecimal, MonetaryAm
     public Result<MonetaryAmount> convertToModel(BigDecimal value,
             ValueContext valueContext) {
         if (value == null) {
-            return null;
+            return Result.ok(null);
         }
         try {
             return Result.ok(new MonetaryAmount(currency, value));
@@ -356,7 +356,7 @@ To use domain primitives in Hilla, you have to make sure that they can be serial
 public final class Quantity {
     ...
 
-    @JsonCreate
+    @JsonCreator
     public Quantity(int value) {
         ...
     }
@@ -368,8 +368,8 @@ public final class Quantity {
 }
 ----
 
-If you now use the `Quantity` domain primitive in a <<{articles}/hilla/guides/endpoints#,Hilla endpoint>>, it's treated as a `number` in TypeScript. No `Quantity` type is created in TypeScript.
+If you now use the `Quantity` domain primitive in a <<{articles}/hilla/guides/browser-callable-services#,browser-callable service>>, it's treated as a `number` in TypeScript. No `Quantity` type is created in TypeScript.
 
-Multi-value domain primitives are converted into their own TypeScript types, as long as they meet the requirements of <<{articles}/hilla/guides/endpoints#objects,Hilla endpoint objects>>.
+Multi-value domain primitives are converted into their own TypeScript types, as long as they meet the requirements of <<{articles}/hilla/guides/browser-callable-services#objects,browser-callable service objects>>.
 
 The input is validated on the server side by the domain primitive constructors, during JSON deserialization. However, an `IllegalArgumentException` thrown here becomes a `400 Bad Request` on the client side. Hilla is able to deduce that this is a validation error, but not from which field. Your system remains safe from bad data, but the user experience is not good. To improve it, you have to <<{articles}/hilla/guides/forms/binder-validation#defining-custom-client-side-validators,define custom client-side validators>> on your fields.

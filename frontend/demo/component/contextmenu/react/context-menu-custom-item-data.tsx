@@ -1,10 +1,10 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components';
+import { ContextMenu, type ContextMenuItemData } from '@vaadin/react-components';
 
 function Example() {
   // tag::snippet[]
-  const items: Array<ContextMenuItem<{ value: string }>> = [
+  const items: Array<ContextMenuItemData<{ value: string }>> = [
     {
       text: 'Copy as plain text',
       value:
