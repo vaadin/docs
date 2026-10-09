@@ -11,7 +11,7 @@ public class LoginAdditionalInformation extends Div {
 
     public LoginAdditionalInformation() {
         // tag::snippet[]
-        LoginI18n i18n = LoginI18n.createDefault();
+        LoginI18n i18n = new LoginI18n();
         i18n.setAdditionalInformation(
                 "Contact admin@company.com if you're experiencing issues logging into your account");
 
