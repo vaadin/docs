@@ -20,7 +20,7 @@ public class IconsInside extends Div {
 
         // Wrap the icon inside a composition
         HorizontalLayout helper = new HorizontalLayout();
-        helper.add(new Icon("vaadin", "info-circle-o"));
+        helper.add(new Icon("vaadin", "info-circle"));
         helper.add(new NativeLabel("Here be help"));
         field.setHelperComponent(helper);
 

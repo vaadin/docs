@@ -21,7 +21,7 @@ public class BadgeIcons extends HorizontalLayout {
         warning.addThemeVariants(BadgeVariant.WARNING);
 
         Badge denied = new Badge("Denied",
-                VaadinIcon.EXCLAMATION_CIRCLE_O.create());
+                VaadinIcon.EXCLAMATION_CIRCLE.create());
         denied.addThemeVariants(BadgeVariant.ERROR);
 
         // end::snippet[]

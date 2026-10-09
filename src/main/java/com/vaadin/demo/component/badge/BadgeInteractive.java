@@ -34,7 +34,7 @@ public class BadgeInteractive extends VerticalLayout {
 
     // tag::snippet2[]
     private Badge createFilterBadge(String profession) {
-        Button clearButton = new Button(VaadinIcon.CLOSE_SMALL.create());
+        Button clearButton = new Button(VaadinIcon.CLOSE.create());
         clearButton.addThemeVariants(ButtonVariant.TERTIARY);
         clearButton.getStyle().set("height", "1.5rem")
                 .set("min-width", "1.5rem").set("margin", "0")
