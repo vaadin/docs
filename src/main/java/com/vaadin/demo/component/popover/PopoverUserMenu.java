@@ -45,7 +45,7 @@ public class PopoverUserMenu extends HorizontalLayout {
 
         Popover popover = new Popover();
         popover.setModal(true);
-        popover.setRole("menu");
+        popover.setAriaRole("menu");
         popover.setAriaLabel("User menu");
         popover.setTarget(button);
         popover.setPosition(PopoverPosition.BOTTOM_END);
