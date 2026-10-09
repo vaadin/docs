@@ -505,7 +505,7 @@ If you select an item in the grid now, the drawer opens as before -- but the URL
 
 The grid selection still decides what the drawer shows. The URL only has to follow it: whenever the selection changes, the view should navigate to the matching URL. The URL sets the selection when the user opens a link, and follows the selection after that. The <</building-apps/views/add-master-detail#representing-selection-in-the-url,Add a Master-Detail View>> guide describes the same pattern.
 
-Update the grid selection listener as follows:
+Update the grid selection listener and `setParameter()` as follows:
 
 .ProductCatalogView.java
 [source,java]
@@ -532,6 +532,9 @@ import com.vaadin.flow.router.Route;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+// tag::snippet[]
+import java.util.Objects;
+// end::snippet[]
 import java.util.Optional;
 
 @Route("")
@@ -650,6 +653,14 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
+// tag::snippet[]
+        var selectedId = grid.asSingleSelect().getOptionalValue()
+                .map(ProductCatalogItem::productId)
+                .orElse(null);
+        if (Objects.equals(productId, selectedId)) {
+            return; // <3>
+        }
+// end::snippet[]
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
@@ -666,12 +677,13 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 ----
 <1> Set the route parameter if there is a selected item.
 <2> Clear the route parameter if there is no selection.
+<3> If the grid already has this product selected, there's nothing to do. This is the case when the navigation comes from the selection listener, so `setParameter()` doesn't fetch an item that the grid already has.
 
 If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Since adding a product selects it, the URL follows when you add products, too. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
 
 You may have noticed two potential loops:
 
-* When the user selects a product, the selection listener navigates, and `setParameter()` selects the same product again. Since the product is already selected, the grid doesn't fire another selection event.
+* When the user selects a product, the selection listener navigates, which calls `setParameter()`. Since the product is already selected, `setParameter()` returns without doing anything.
 * When the user opens a link, `setParameter()` selects the product, and the selection listener navigates to the URL the user is already on. Vaadin compares the URL parameters before navigating, and does nothing if you're already on the same view with the same parameter.
 
 
@@ -706,6 +718,7 @@ import com.vaadin.flow.router.Route;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Route("")
@@ -822,6 +835,12 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
+        var selectedId = grid.asSingleSelect().getOptionalValue()
+                .map(ProductCatalogItem::productId)
+                .orElse(null);
+        if (Objects.equals(productId, selectedId)) {
+            return;
+        }
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
