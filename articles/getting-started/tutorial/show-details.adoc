@@ -36,20 +36,18 @@ class ProductFormDrawer extends Composite<VerticalLayout> { // <1>
 
         var layout = getContent(); // <2>
         layout.add(header);
-        layout.setWidth("300px"); // <3>
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)"); // <4>
     }
 }
 ----
 <1> Create a <</flow/component-internals/basic#composite-components,composite component>> that encapsulates a `VerticalLayout`.
 <2> The `getContent()` method returns the encapsulated layout.
-<3> Set a fixed width for the drawer.
-<4> Add a border on the left to separate the drawer visually from the grid. The `--vaadin-border-color-secondary` value is one of the <</styling/themes/base#border-color,base style properties>>, which work with any theme.
 
-Next, add the drawer to the `ProductCatalogView`, effectively turning it into a master-detail view. This requires two steps:
+Next, add the drawer to `ProductCatalogView`, turning it into a master-detail view. You'll use the <</components/master-detail-layout#,Master-Detail Layout>> component for this. It has a _master_ area, which shows the product list, and a _detail_ area, which shows the drawer. When there's enough room, it shows the areas side by side, with a border between them. When there isn't, it shows the detail area as an overlay on top of the master area. See <</building-apps/views/add-master-detail#,Add a Master-Detail View>> for more about this pattern.
 
-1. Change the layout of the `ProductCatalogView` to use a `HorizontalLayout` instead of a `VerticalLayout`.
-2. Add an instance of the `ProductFormDrawer` to the `ProductCatalogView`.
+This requires two steps:
+
+1. Make `ProductCatalogView` extend `MasterDetailLayout` instead of `VerticalLayout`.
+2. Put the search field and the grid in the master area, and the drawer in the detail area.
 
 Change the code of the `ProductCatalogView` as follows:
 
@@ -62,7 +60,7 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 // tag::snippet[]
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 // end::snippet[]
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -72,7 +70,9 @@ import com.vaadin.flow.router.Route;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+// tag::snippet[]
+class ProductCatalogView extends MasterDetailLayout {
+// end::snippet[]
 
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
@@ -115,110 +115,29 @@ class ProductCatalogView extends HorizontalLayout {
         // Layout view
         // tag::snippet[]
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px"); // <1>
+        setExpandMaster(true); // <2>
 
-        var listLayout = new VerticalLayout(searchField, grid); // <1>
+        var listLayout = new VerticalLayout(searchField, grid); // <3>
         listLayout.setSizeFull();
         grid.setSizeFull();
 
-        add(listLayout, drawer); // <2>
+        setMaster(listLayout); // <4>
+        setDetail(drawer); // <5>
         // end::snippet[]
     }
 }
 ----
-<1> Wrap the search field and grid in a `VerticalLayout` to create the list part of the master-detail view.
-<2> Add both the list layout and the drawer to the view.
+<1> Make the detail area, and thereby the drawer, 300 pixels wide.
+<2> Let the master area grow to fill the space that the drawer doesn't use.
+<3> Wrap the search field and grid in a `VerticalLayout` to create the list part of the master-detail view.
+<4> Show the list layout in the master area.
+<5> Show the drawer in the detail area. For now, the drawer is always visible. You'll change this later in this step.
 
 The view should now look like this:
 
 [.device]
 image::images/empty-product-drawer.png[The empty product drawer]
-
-If you inspect the page with your browser's developer tools, you'll see that the drawer is not actually 300px wide. This is because `HorizontalLayout` uses a CSS https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Flexible_box_layout[flexbox] layout under the hood. By default, items in a flexbox container shrink to fit the container when there isn't enough space. In this case, the grid takes up all the available space.
-
-To fix this, you'll set the `flex-shrink` CSS property of the drawer to `0` so that it doesn't shrink. Vaadin has a Java API for that: the `setFlexShrink()` method.
-
-Once the drawer keeps its width, the list layout has to do the shrinking when the browser window is narrow. However, a flexbox item doesn't shrink below the minimum width of its content by default, and the grid's columns count toward that minimum. To let the list layout shrink, set its minimum width to `0`. The grid then scrolls its columns horizontally, instead of the whole page scrolling.
-
-Change the layout code like this:
-
-.ProductCatalogView.java
-[source,java]
-----
-package com.example.product;
-
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-
-@Route("")
-@PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
-
-    ProductCatalogView(ProductCatalogItemRepository repository) {
-        // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
-
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
-        );
-
-        var drawer = new ProductFormDrawer();
-
-        searchField.addValueChangeListener(e ->
-                grid.getDataProvider().refreshAll());
-
-
-        // Layout view
-        setSizeFull();
-        setSpacing(false);
-
-        var listLayout = new VerticalLayout(searchField, grid);
-        listLayout.setSizeFull();
-        // tag::snippet[]
-        listLayout.setMinWidth("0"); // <1>
-        // end::snippet[]
-        grid.setSizeFull();
-
-        add(listLayout, drawer);
-        // tag::snippet[]
-        setFlexShrink(0, drawer); // <2>
-        // end::snippet[]
-    }
-}
-----
-<1> Let the list layout shrink below the combined width of the grid's columns.
-<2> Keep the drawer from shrinking.
-
-If you inspect the page again, you'll see that the drawer is now 300px wide as expected. If you make the browser window narrower, the grid starts to scroll horizontally while the drawer keeps its width.
 
 
 == Create a Product Form
@@ -289,13 +208,13 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         layout.add(header);
         // tag::snippet[]
         layout.add(new Scroller(form)); // <1>
+        layout.setHeightFull(); // <2>
         // end::snippet[]
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
     }
 }
 ----
 <1> The `Scroller` component makes the form scrollable in case it doesn't fit in the drawer.
+<2> Make the drawer as tall as the detail area. Otherwise, the drawer grows with the form, and the `Scroller` has nothing to scroll.
 
 The view should now look like this:
 
@@ -539,9 +458,6 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-// tag::snippet[]
-import org.jspecify.annotations.Nullable;
-// end::snippet[]
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -558,12 +474,11 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         var layout = getContent();
         layout.add(header);
         layout.add(new Scroller(form));
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
+        layout.setHeightFull();
     }
 
 // tag::snippet[]
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
     }
 // end::snippet[]
@@ -571,9 +486,9 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 ----
 <1> Because you're calling a method on the form from `setProductDetails()` below, the form can no longer be a local variable.
 
-Next, you'll add a selection listener to the product grid. Whenever a user selects an item, you'll fetch the details from the `ProductDetailsRepository` and show it in the drawer. If no item is selected, you'll clear the drawer.
+Next, you'll add a selection listener to the product grid. Whenever a user selects an item, you'll fetch the details from the `ProductDetailsRepository` and show them in the drawer. If no item is selected, you'll remove the drawer from the detail area. Master-Detail Layout shows the detail area only when it contains something, so this hides the drawer.
 
-Update `ProductCatalogView` as follows:
+Update `ProductCatalogView` as follows. Also remove the `setDetail(drawer)` call from the layout code. From now on, the selection listener decides when to show the drawer.
 
 .ProductCatalogView.java
 [source,java]
@@ -583,7 +498,7 @@ package com.example.product;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -592,7 +507,7 @@ import com.vaadin.flow.router.Route;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository,
 // tag::snippet[]
@@ -636,38 +551,42 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem() // <2>
                 .flatMap(item -> productDetailsRepository
-                    .findById(item.productId())) // <3>
-                .orElse(null); // <4>
-            drawer.setProductDetails(productDetails); // <5>
+                    .findById(item.productId())); // <3>
+            productDetails.ifPresent(drawer::setProductDetails); // <4>
+            setDetail(productDetails.isPresent() ? drawer : null); // <5>
         });
+        addBackdropClickListener(e -> grid.deselectAll()); // <6>
+        addDetailEscapePressListener(e -> grid.deselectAll());
         // end::snippet[]
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 }
 ----
-<1> Inject `ProductDetailsRepository` so that you can call it from the selection listener.
-<2> `getFirstSelectedItem()` return an `Optional` that contains the selected item if there is one. The name comes from the fact that Grid supports selecting multiple items if you configure it to.
-<3> `findById()` also returns an `Optional` that contains the details if found in the database.
-<4> Return `null` if the selection is empty, or the product details can't be found in the database.
-<5> Populate the drawer. If `productDetails` is `null`, the form is cleared.
+<1> Inject `ProductDetailsRepository` so that you can call it from the selection listener. The view still only reads data, so it can keep calling the repositories directly.
+<2> `getFirstSelectedItem()` returns an `Optional` that contains the selected item if there is one. The name comes from the fact that Grid supports selecting multiple items if you configure it to.
+<3> `findById()` also returns an `Optional`. The result is empty if no item is selected, or if the product details can't be found in the database.
+<4> Populate the drawer, if there are details to show.
+<5> Show the drawer in the detail area if there are details to show. Otherwise, remove it, which hides the detail area.
+<6> When the drawer appears as an overlay, the user can close it by clicking outside it, or by pressing kbd:[Esc]. Both clear the grid selection, which hides the drawer through the selection listener.
 
 The view should now look like this:
 
 [.device]
 image::images/product-drawer-with-data.png[The product drawer with data]
 
-If you select items in the grid, their details show up in the drawer. If you clear the selection, the form is also cleared.
+If you select items in the grid, their details show up in the drawer. If you clear the selection, the drawer disappears and the grid takes up the whole view.
+
+Now make the browser window narrower. When the list and the drawer no longer fit side by side, the drawer slides in on top of the list instead. Close it by clicking outside it or by pressing kbd:[Esc]. You didn't have to write any code for this, since Master-Detail Layout handles it for you.
 
 
 == Complete Code for This Step
@@ -684,7 +603,7 @@ package com.example.product;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -693,7 +612,7 @@ import com.vaadin.flow.router.Route;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository,
                        ProductDetailsRepository productDetailsRepository) {
@@ -734,22 +653,23 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
                 .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                    .findById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var listLayout = new VerticalLayout(searchField, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 }
 ----
@@ -1015,7 +935,6 @@ import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -1028,11 +947,10 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         var layout = getContent();
         layout.add(header);
         layout.add(new Scroller(form));
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
     }
 }
