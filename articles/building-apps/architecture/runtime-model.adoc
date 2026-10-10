@@ -32,10 +32,12 @@ The following diagram shows what happens when a user clicks a button in a Flow v
 image::images/request-flow.png[A diagram of a click traveling from a button in the browser to its listener on the server, and the resulting changes traveling back]
 
 . The user clicks a button. The button is a web component, such as `<vaadin-button>`, that Vaadin has added to the page. The Flow client engine -- the part of Vaadin that runs in the browser -- receives the click event.
-. The client engine sends the event to the server in an HTTP request. The server finds the user's [classname]`VaadinSession` through the session cookie, and locks it. It then finds the [classname]`UI` of the browser tab that sent the event, and calls the click listeners of the corresponding [classname]`Button` object.
+. The client engine sends the event to the server, usually in an HTTP request. The server finds the user's [classname]`VaadinSession`, and locks it. It then finds the [classname]`UI` of the browser tab that sent the event, and calls the click listeners of the corresponding [classname]`Button` object.
 . Your click listener runs on the server as ordinary Java code. It can read the values of the fields in the view, because the browser has sent them to the server when they changed. It can call an application service directly, in the same thread, without an API layer.
-. When the listener returns, Flow collects the changes made to components during the request, and sends them to the browser as JSON in the HTTP response. Then it releases the session lock.
+. When the listener returns, Flow collects the changes made to components during the request, and releases the session lock. It then sends the changes to the browser as JSON in the HTTP response.
 . The client engine applies the changes to the page, and the user sees the result.
+
+If you use <<{articles}/building-apps/server-push#,server push>> with the `WEBSOCKET` transport, the event and the changes travel over the push connection's WebSocket instead of an HTTP request and response. The server handles them the same way, but servlet filters -- such as a filter that adds a request ID to log messages -- don't run for them. The default transport, `WEBSOCKET_XHR`, uses the WebSocket only for messages from the server, so events still arrive as HTTP requests.
 
 Navigating between Flow views, and loading more rows as the user scrolls a <<{articles}/building-apps/forms-data/add-grid#,grid>>, work the same way. <<{articles}/flow/what-is-flow#,What Is Flow?>> describes these in more detail.
 
@@ -94,7 +96,7 @@ This model has the following consequences:
 
 == Threads and the Session Lock
 
-The servlet container handles each request in a thread of its own. Before Flow calls any of your listeners, it locks the user's [classname]`VaadinSession`. It releases the lock after it has sent the response. This has the following consequences:
+The server handles each request in a thread of its own. Before Flow calls any of your listeners, it locks the user's [classname]`VaadinSession`, and it keeps the lock until it has collected the resulting changes. This has the following consequences:
 
 * *UI code is single-threaded per user.* You don't need to synchronize access to components or to the fields of a view, because only one thread at a time works with a session. Requests from different users run in parallel, in different threads.
 * *A user's tabs wait for each other.* The lock covers the whole session, not a single UI. If a listener in one tab takes ten seconds, the user's other tabs can't do anything during those ten seconds either.
