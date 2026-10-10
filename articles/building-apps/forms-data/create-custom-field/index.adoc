@@ -90,6 +90,58 @@ public class SingleDiceCustomField extends CustomField<Integer> {
 }
 ```
 
+==== Example: Editable Label
+
+The following example shows text as a plain label that turns into a `TextField` when the user double-clicks it, or focuses it and presses Enter. When the text field loses focus, the label shows the new value again. Because the component is a Custom Field, you can bind it with `Binder` like any other field.
+
+```java
+public class EditableLabel extends CustomField<String> {
+    private final Span label = new Span();
+    private final TextField textField = new TextField();
+
+    public EditableLabel() {
+        label.getElement().setAttribute("tabindex", "0"); // <1>
+        label.getElement().addEventListener("dblclick", e -> startEditing());
+        label.getElement().addEventListener("keydown", e -> startEditing())
+                .setFilter("event.key === 'Enter'");
+
+        textField.setVisible(false);
+        textField.addBlurListener(e -> stopEditing());
+
+        add(label, textField);
+    }
+
+    private void startEditing() {
+        label.setVisible(false);
+        textField.setVisible(true);
+        textField.focus();
+    }
+
+    private void stopEditing() {
+        label.setText(textField.getValue());
+        textField.setVisible(false);
+        label.setVisible(true);
+    }
+
+    @Override
+    protected String generateModelValue() {
+        return textField.getValue();
+    }
+
+    @Override
+    protected void setPresentationValue(String value) {
+        var text = value == null ? "" : value;
+        textField.setValue(text);
+        label.setText(text);
+    }
+}
+```
+<1> Makes the label reachable with the keyboard.
+
+An empty label has no size, so the user can't double-click it. If the value can be empty, give the label a minimum width or show placeholder text in it.
+
+If the text should be editable at all times, use a regular `TextField` instead of a `contenteditable` element. A text field already supports `Binder`, validation, and accessibility.
+
 === Extending `AbstractField`
 
 For finer control than `CustomField` provides, you can extend `AbstractField` or one of its helper classes.
