@@ -20,7 +20,7 @@ This page explains the runtime model of Flow views, and how React views differ f
 * *Interactions are round trips.* When a user clicks a button with a server-side listener, the browser sends the click to the server, and waits for the resulting changes to come back.
 * *One user, one lock.* The server handles the requests of one user's session one at a time. Requests from different users run in parallel.
 * *Sessions live in server memory.* Scaling out requires sticky sessions. Surviving the loss of a server requires session replication.
-* *No server, no UI.* A Flow view can't run any Java code while the connection is down. When the connection returns, the user continues where they left off -- if the server still has their session.
+* *Two copies, kept in sync.* The browser and the server each hold a copy of the UI, and Flow keeps them in sync. A Flow view can't run any Java code while the connection is down. When the connection returns, the user continues where they left off -- if the server still has their UI.
 
 
 == What Happens When a User Clicks a Button
@@ -32,7 +32,7 @@ The following diagram shows what happens when a user clicks a button in a Flow v
 image::images/request-flow.png[A diagram of a click traveling from a button in the browser to its listener on the server, and the resulting changes traveling back]
 
 . The user clicks a button. The button is a web component, such as `<vaadin-button>`, that Vaadin has added to the page. The Flow client engine -- the part of Vaadin that runs in the browser -- receives the click event.
-. The client engine sends the event to the server, usually in an HTTP request. The server finds the user's [classname]`VaadinSession`, and locks it. It then finds the [classname]`UI` of the browser tab that sent the event, and calls the click listeners of the corresponding [classname]`Button` object.
+. The client engine sends the event to the server, by default in an HTTP request. The server finds the user's [classname]`VaadinSession`, and locks it. It then finds the [classname]`UI` of the browser tab that sent the event, and calls the click listeners of the corresponding [classname]`Button` object.
 . Your click listener runs on the server as ordinary Java code. It can read the values of the fields in the view, because the browser has sent them to the server when they changed. It can call an application service directly, in the same thread, without an API layer.
 . When the listener returns, Flow collects the changes made to components during the request, and releases the session lock. It then sends the changes to the browser as JSON in the HTTP response.
 . The client engine applies the changes to the page, and the user sees the result.
@@ -57,7 +57,7 @@ This has practical consequences:
 
 == Where State Lives
 
-For Flow views, the server is the source of truth. The browser renders what the server tells it to render, and doesn't hold any UI state of its own that the server relies on. On the server, the state is organized as follows:
+For Flow views, the server is the source of truth. The browser holds a copy of the UI, which is the page that the user sees. Flow keeps that copy in sync with the server, as described in <<#keeping-the-browser-and-server-in-sync,Keeping the Browser and Server in Sync>>. On the server, the state is organized as follows:
 
 [cols="1,2,2,3",options="header"]
 |===
@@ -106,23 +106,53 @@ The server handles each request in a thread of its own. Before Flow calls any of
 <<{articles}/building-apps/server-push/threads#,User Interface Threads>> shows how to start background work from a view, and <<{articles}/building-apps/business-logic/background-jobs#,Background Jobs>> covers work that runs independently of any user. To find listeners that hold the lock for too long, you can [since:com.vaadin:vaadin@V25.3]#measure lock wait and hold times# through the <<{articles}/flow/advanced/session-lock-and-rpc-listeners#,service event bus>>.
 
 
-== When the Connection Is Lost
+== Keeping the Browser and Server in Sync
 
-When the browser can't reach the server, the view stays on the screen as it was, and Vaadin shows that it's trying to reconnect. Events that the user triggers in the meantime are queued, and the browser keeps trying to deliver them, by default every five seconds.
+The browser and the server each hold a copy of the UI. The browser has the page that the user sees, including anything that the user has typed but that hasn't reached the server yet. The server has the component tree. A change counts only once it has reached the server: until then, your Java code doesn't know about it.
+
+Flow keeps the two copies in sync by exchanging messages: events from the browser, and changes from the server. It numbers the messages in both directions, so that each side can tell whether it has missed one:
+
+* The browser sends one message at a time. While it waits for the response, it queues any new events, and sends them after the response has arrived.
+* If no response arrives, the browser sends the same message again. The server recognizes a message that it has already handled, and sends the same response again instead of calling the listeners a second time. A click that's resent because of a network problem is therefore handled only once.
+* The browser applies the changes from the server in the order in which the server made them.
+
+
+=== When the Connection Is Lost
+
+When the browser can't reach the server, the view stays on the screen as it was, and Vaadin shows that it's trying to reconnect. The browser keeps trying to deliver the waiting message, by default every five seconds.
+
+The user can keep typing and clicking in the meantime. The browser queues the events, but nothing that needs the server happens: no listener runs, no dialog opens, and no server-side validation takes place. Until the events reach the server, what the user enters exists only in the browser.
 
 What happens when the connection returns depends on whether the server still has the user's UI:
 
-* *The UI still exists.* The queued events are delivered, and the user continues where they left off.
-* *The UI is gone.* This happens if the browser was offline long enough to miss three heartbeats, the session expired, or the server was restarted. Vaadin then reloads the page, which creates a new UI. Anything the user hadn't saved is lost, and if the application requires login, the user has to log in again. You can show a message before the reload, or redirect elsewhere, by <<{articles}/flow/advanced/customize-system-messages#,customizing the system messages>>.
+* *The UI still exists.* The browser delivers the queued events, and the user continues where they left off.
+* *The UI is gone.* This happens if the browser was offline long enough to miss three heartbeats, the session expired, or the server was restarted. Vaadin then reloads the page, which creates a new UI. Anything the user hadn't saved is lost, including the events that were waiting to be delivered. If the application requires login, the user also has to log in again. You can show a message before the reload, or redirect elsewhere, by <<{articles}/flow/advanced/customize-system-messages#,customizing the system messages>>.
 
 A Flow view can't work offline. If a part of your application has to keep working without a connection, implement it as a React view.
+
+
+=== When the Copies Drift Apart
+
+A message from the server can also go missing while the connection seems to work, and the UI still exists on the server. The browser notices this when the next message arrives with a number that it doesn't expect. If the missing message doesn't arrive within five seconds, the browser asks the server for the complete state of the UI, and rebuilds the page from it without reloading. This is called _resynchronization_.
+
+Resynchronization typically happens because of:
+
+* An unreliable network that loses packets.
+* A proxy, load balancer, firewall, or virus scanner that closes or interferes with push connections -- for example, a proxy whose connection timeout is shorter than the push timeout.
+
+Resynchronization repairs the page, but it has side effects that your code has to tolerate:
+
+* *Components are detached and attached again.* The server runs the detach and attach listeners of every component in the UI, including your [methodname]`onDetach()` and [methodname]`onAttach()` methods, even though the user didn't navigate anywhere. Make sure that code in them can run more than once. For example, a view that subscribes to updates when it's attached has to unsubscribe when it's detached, or it ends up with two subscriptions.
+* *Pending JavaScript calls are discarded.* Calls made with [methodname]`executeJs()` that haven't reached the browser are dropped. If the page depends on such a call, make it from [methodname]`onAttach()`, so that it runs again after a resynchronization.
+
+The server logs a warning every time it resynchronizes a UI. If the warning shows up often, check the network infrastructure between the browser and the server. See <<{articles}/flow/advanced/server-client-communication#,Sync Server & Client UI States>> for the details of the mechanism and its configuration.
 
 
 == What This Means for Deployment
 
 Because each user's UI state lives in the memory of one server, deploying a Flow application differs from deploying a stateless REST API:
 
-* *Load balancers need sticky sessions.* All requests of a session have to reach the server that holds it. See <<{articles}/flow/production/distributed-deployment#,Distributed Deployment Architecture>>.
+* *Load balancers need sticky sessions.* All requests of a session have to reach the server that holds it. Without sticky sessions, requests reach servers that don't have the user's session, and users get unexpected reloads that lose their unsaved work. See <<{articles}/flow/production/distributed-deployment#,Distributed Deployment Architecture>>.
 * *Losing a server loses its sessions.* A server can stop because it crashed, because the cluster scaled down, or because you deployed a new version. Its users then get a reload on their next interaction, and lose anything they hadn't saved. To avoid this, replicate the sessions to other servers. Replication requires everything in the UI to be serializable, and generic replication solutions don't work with the Vaadin session lock. The commercial <<{articles}/tools/kubernetes#,Kubernetes Kit>> provides session replication and rolling updates on Kubernetes.
 * *Memory decides capacity.* The number of concurrent users a server can handle depends on how many UIs they keep open, and on what those UIs hold. Size your servers by load testing your own views.
 * *In-memory state is per instance.* Each instance has its own caches, <<{articles}/building-apps/server-push/updates#broadcasting-to-all-users,shared signals>>, and other singletons. A change on one instance doesn't reach users connected to another one.
