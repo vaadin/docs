@@ -22,7 +22,7 @@ For deep linking to work, the application must be able to determine the selected
 [NOTE]
 In production applications, avoid exposing database primary keys directly in URLs. Sequential or predictable IDs can be guessed, which may lead to unauthorized data access if authorization has not been implemented correctly. Instead, consider using a randomly generated, public-facing identifier (for example, a UUID or NanoID). This approach improves security and makes the application more future-proof, as changes to the database schema or key strategy won't break existing links.
 
-Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service`, `grid`, and `drawer` variables to fields as you'll be needing them later when you implement the `setParameter()` method. The updated code looks like this:
+Start by making `ProductCatalogView` implement `HasUrlParameter<Long>`. While you're at it, change the `service` and `grid` variables to fields, as you'll need them later when you implement the `setParameter()` method. The updated code looks like this:
 
 .ProductCatalogView.java
 [source,java]
@@ -33,6 +33,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -46,19 +47,18 @@ import com.vaadin.flow.router.OptionalParameter;
 // end::snippet[]
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
 // tag::snippet[]
-class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> { // <1>
+class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> { // <1>
 // end::snippet[]
 
 // tag::snippet[]
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 // end::snippet[]
 
     ProductCatalogView(ProductCatalogService service) {
@@ -95,9 +95,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .findItems(searchField.getValue(), pageable)
         );
 
-// tag::snippet[]
-        drawer = new ProductFormDrawer(productDetails -> {
-// end::snippet[]
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -108,10 +106,12 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
@@ -127,7 +127,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -136,11 +137,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -152,7 +151,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -181,7 +180,9 @@ You can now navigate to http://localhost:8080/12, where `12` is the route parame
 
 == Select on Navigation
 
-Now you'll implement `setParameter()` to select the corresponding product in the grid and display its details in the drawer. When there's no parameter, it should clear the selection and hide the drawer.
+Now you'll implement `setParameter()` to select the corresponding product in the grid. When there's no parameter, it should clear the selection.
+
+You don't have to show the drawer here. Selecting an item from code fires the same selection event as a click, so the selection listener you added in the <<show-details#,Show Details>> step shows the drawer for you.
 
 Change the code of `ProductCatalogView` as follows:
 
@@ -194,6 +195,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -205,7 +207,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 // tag::snippet[]
@@ -214,11 +216,10 @@ import java.util.Optional;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -250,7 +251,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -261,10 +262,12 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
@@ -280,7 +283,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -289,11 +293,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -305,7 +307,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -321,20 +323,15 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
 // tag::snippet[]
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById) // <1>
-                .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        drawer.setProductDetails(Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById) // <2>
-                .orElse(null));
+                .ifPresentOrElse(grid::select, grid::deselectAll); // <2>
 // end::snippet[]
     }
 }
 ----
-<1> The first service call fetches the `ProductCatalogItem` to select.
-<2> The second service call fetches the `ProductDetails` to show in the drawer.
+<1> Fetch the `ProductCatalogItem` that has the ID from the URL.
+<2> Select the item in the grid. If there's no parameter, or no product with that ID, clear the selection instead. The selection listener then shows or hides the drawer.
 
 If you now navigate to http://localhost:8080/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080 should clear the selection and hide the drawer.
 
@@ -357,6 +354,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -368,18 +366,17 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Optional;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -411,7 +408,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -422,10 +419,12 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
@@ -441,7 +440,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -450,11 +450,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -466,7 +464,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -481,14 +479,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        drawer.setProductDetails(Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById)
-                .orElse(null));
     }
 
 // tag::snippet[]
@@ -508,11 +501,11 @@ From other views, you'll be able to call `ProductCatalogView.showProductCatalog(
 
 == Navigate on Selection
 
-If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. The same happens when adding new items: the product is selected, but the URL stays the same. You'll fix that next.
+If you select an item in the grid now, the drawer opens as before -- but the URL doesn't change. You'll fix that next.
 
-Previously, the grid stored the selection state. Now the route parameter is the source of truth, so both selection and deselection should happen through navigation.
+The grid selection still decides what the drawer shows. The URL only has to follow it: whenever the selection changes, the view should navigate to the matching URL. The URL sets the selection when the user opens a link, and follows the selection after that. The <</building-apps/views/add-master-detail#representing-selection-in-the-url,Add a Master-Detail View>> guide describes the same pattern.
 
-Update the grid selection listener and add button click listener as follows:
+Update the grid selection listener and `setParameter()` as follows:
 
 .ProductCatalogView.java
 [source,java]
@@ -524,6 +517,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -535,18 +529,20 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+// tag::snippet[]
+import java.util.Objects;
+// end::snippet[]
 import java.util.Optional;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -578,7 +574,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -587,23 +583,30 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
         searchField.addValueChangeListener(e ->
                 grid.getDataProvider().refreshAll());
 
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
 // tag::snippet[]
-        grid.addSelectionListener(e -> e.getFirstSelectedItem()
+            e.getFirstSelectedItem()
                 .map(ProductCatalogItem::productId)
                 .ifPresentOrElse(
                     ProductCatalogView::showProductDetails, // <1>
                     ProductCatalogView::showProductCatalog // <2>
-                ));
+                );
 // end::snippet[]
+        });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
                         productDetails -> {
                             var saved = service.save(productDetails);
                             grid.getDataProvider().refreshAll();
-// tag::snippet[]
-                            showProductDetails(saved.getProductId()); // <3>
-// end::snippet[]
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
                         },
                         this::handleException
                 ).open()
@@ -611,7 +614,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -620,11 +624,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -636,7 +638,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -651,14 +653,17 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
+// tag::snippet[]
+        var selectedId = grid.asSingleSelect().getOptionalValue()
+                .map(ProductCatalogItem::productId)
+                .orElse(null);
+        if (Objects.equals(productId, selectedId)) {
+            return; // <3>
+        }
+// end::snippet[]
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        drawer.setProductDetails(Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById)
-                .orElse(null));
     }
 
     public static void showProductDetails(long productId) {
@@ -672,11 +677,18 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 ----
 <1> Set the route parameter if there is a selected item.
 <2> Clear the route parameter if there is no selection.
-<3> Navigate to the newly added item.
+<3> If the grid already has this product selected, there's nothing to do. This is the case when the navigation comes from the selection listener, so `setParameter()` doesn't fetch an item that the grid already has.
 
-If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
+If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Since adding a product selects it, the URL follows when you add products, too. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
 
-You may have noticed a potential loop: `setParameter()` calls `grid.select()`, which triggers the selection listener, which calls `setParameter()` again. Vaadin prevents this by comparing URL parameters before navigating -- if you're already on the same view with the same parameter, it does nothing.
+You may have noticed two potential loops:
+
+* When the user selects a product, the selection listener navigates, which calls `setParameter()`. Since the product is already selected, `setParameter()` returns without doing anything.
+* When the user opens a link, `setParameter()` selects the product, and the selection listener navigates to the URL the user is already on. Vaadin compares the URL parameters before navigating, and does nothing if you're already on the same view with the same parameter.
+
+Each call to `UI.navigate()` also adds an entry to the browser history. Because the view navigates whenever the selection changes, each product the user selects becomes a history entry, and so does clearing the selection. The browser's Back and Forward buttons then step through these entries. Each step calls `setParameter()`, which updates the selection and the drawer, so the view always matches the URL. Try it: select three products one after another, and then press the Back button three times.
+
+The downside is that a user who has looked at many products has to press Back many times to leave the catalog. Avoiding this means changing the URL without adding a history entry. `UI.navigate()` can't do that, and the lower-level <</flow/browser-apis/history-api#,History API>> that can bypasses the router, so this tutorial keeps one entry per selection.
 
 
 == Complete Code for This Step
@@ -695,6 +707,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -706,18 +719,18 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Long> {
+class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
     private final Grid<ProductCatalogItem> grid;
-    private final ProductFormDrawer drawer;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -749,7 +762,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
                 .findItems(searchField.getValue(), pageable)
         );
 
-        drawer = new ProductFormDrawer(productDetails -> {
+        var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
@@ -758,19 +771,28 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
         searchField.addValueChangeListener(e ->
                 grid.getDataProvider().refreshAll());
 
-        grid.addSelectionListener(e -> e.getFirstSelectedItem()
+        grid.addSelectionListener(e -> {
+            var productDetails = e.getFirstSelectedItem()
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
+            e.getFirstSelectedItem()
                 .map(ProductCatalogItem::productId)
                 .ifPresentOrElse(
                     ProductCatalogView::showProductDetails,
                     ProductCatalogView::showProductCatalog
-                ));
+                );
+        });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
                         productDetails -> {
                             var saved = service.save(productDetails);
                             grid.getDataProvider().refreshAll();
-                            showProductDetails(saved.getProductId());
+                            service.findItemById(saved.getProductId())
+                                   .ifPresent(grid::select);
                         },
                         this::handleException
                 ).open()
@@ -778,7 +800,8 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -787,11 +810,9 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -803,7 +824,7 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                     "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -818,14 +839,15 @@ class ProductCatalogView extends HorizontalLayout implements HasUrlParameter<Lon
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
-        // Update grid selection
+        var selectedId = grid.asSingleSelect().getOptionalValue()
+                .map(ProductCatalogItem::productId)
+                .orElse(null);
+        if (Objects.equals(productId, selectedId)) {
+            return;
+        }
         Optional.ofNullable(productId)
                 .flatMap(service::findItemById)
                 .ifPresentOrElse(grid::select, grid::deselectAll);
-        // Show or hide the drawer
-        drawer.setProductDetails(Optional.ofNullable(productId)
-                .flatMap(service::findDetailsById)
-                .orElse(null));
     }
 
     public static void showProductDetails(long productId) {
@@ -912,14 +934,17 @@ interface ProductCatalogItemRepository
 ----
 package com.example.product;
 
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 @Transactional(readOnly = true)
 class ProductCatalogService {
 
@@ -948,7 +973,7 @@ class ProductCatalogService {
     }
 
     @Transactional
-    public ProductDetails save(ProductDetails productDetails) {
+    public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(new ProductDetails(productDetails));
     }
 }
@@ -962,6 +987,12 @@ class ProductCatalogService {
 ----
 package com.example.product;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
@@ -976,13 +1007,20 @@ class ProductDetails {
     private Long productId;
     @Version
     private Long version;
+    @NotBlank @Size(max = 100)
     private String name;
+    @NotBlank @Size(max = 500)
     private String description;
+    @NotBlank @Size(max = 100)
     private String category;
+    @Size(max = 100)
     private String brand;
+    @NotBlank @Size(max = 50)
     private String sku;
     private LocalDate releaseDate;
+    @NotNull @PositiveOrZero
     private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100")
     private BigDecimal discount;
 
     public ProductDetails() {
@@ -1101,12 +1139,15 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.validator.BigDecimalRangeValidator;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 class ProductForm extends Composite<FormLayout>  {
@@ -1116,13 +1157,19 @@ class ProductForm extends Composite<FormLayout>  {
     ProductForm() {
         // Create components
         var nameField = new TextField("Name");
+        nameField.setMaxLength(100);
         var descriptionField = new TextArea("Description");
+        descriptionField.setMaxLength(500);
         var categoryField = new TextField("Category");
+        categoryField.setMaxLength(100);
         var brandField = new TextField("Brand");
+        brandField.setMaxLength(100);
         var skuField = new TextField("SKU");
+        skuField.setMaxLength(50);
         var releaseDateField = new DatePicker("Release Date");
         var priceField = new BigDecimalField("Price");
         var discountField = new BigDecimalField("Discount");
+        discountField.setSuffixComponent(new Span("%"));
 
         // Layout form
         var layout = getContent();
@@ -1161,9 +1208,14 @@ class ProductForm extends Composite<FormLayout>  {
                     ProductDetails::setReleaseDate);
         binder.forField(priceField)
               .asRequired("Enter price")
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a price of 0 or more", BigDecimal.ZERO, null))
               .bind(ProductDetails::getPrice,
                     ProductDetails::setPrice);
         binder.forField(discountField)
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a discount between 0 and 100",
+                  BigDecimal.ZERO, BigDecimal.valueOf(100)))
               .bind(ProductDetails::getDiscount,
                     ProductDetails::setDiscount);
     }
@@ -1199,7 +1251,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -1231,14 +1282,11 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         layout.add(header);
         layout.add(new Scroller(form));
         layout.add(saveButton);
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
-        setVisible(false);
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
-        setVisible(productDetails != null);
     }
 
     private void save() {
