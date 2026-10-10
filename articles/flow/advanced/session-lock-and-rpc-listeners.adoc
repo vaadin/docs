@@ -10,7 +10,7 @@ order: 850
 = [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
 Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
-The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, the data provider queries those invocations trigger, and the server-side navigations that a router link click, a `UI.navigate()` call, or a page load can start.
+The events the framework fires cover the machinery that a request passes through: the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, the data provider queries those invocations trigger, the server-side navigations that a router link click, a `UI.navigate()` call, or a page load can start, and the redirect to the page shown when a browser is too old to run the application.
 Listening to them is useful for performance monitoring, distributed tracing, and diagnosing lock contention -- without modifying application logic.
 
 The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
@@ -270,6 +270,21 @@ service.getEventBus().addListener(NavigationEndedEvent.class, event -> {
     }
 });
 ----
+
+
+== Browser Compatibility Events
+
+[classname]`UnsupportedBrowserEvent` is fired when a browser is redirected to the page telling it that it's too old to run the application, just before that page is written to the response.
+It carries the [classname]`VaadinService`, through [methodname]`getService()`, the [classname]`VaadinSession` of the browser, through [methodname]`getSession()`, and the [classname]`VaadinRequest` for the page, through [methodname]`getRequest()` -- the request's `User-Agent` header identifies the browser.
+
+[source,java]
+----
+service.getEventBus().addListener(UnsupportedBrowserEvent.class,
+        event -> log(event.getSession(),
+                event.getRequest().getHeader("User-Agent")));
+----
+
+A browser too old to run the inline script that detects the need for the redirect never makes the redirected request, so no event is fired for it.
 
 
 == Other Framework Events
