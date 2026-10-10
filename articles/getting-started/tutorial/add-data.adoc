@@ -2,7 +2,7 @@
 title: Add Data
 page-title: Add Data with a Dialog and a Form - Vaadin Tutorial
 description: Build your first Vaadin dialog and implement support for adding new items to the product catalog.
-meta-description: Add products to a database from a Vaadin dialog. Build the form, validate input, save through a service, select the new row, and handle constraint violations.
+meta-description: Add products to a database from a Vaadin dialog. Reuse the product form, save through the service, select the new row, and handle constraint violations.
 order: 30
 ---
 
@@ -25,7 +25,7 @@ You'll start by creating the dialog and adding a button for opening it to the pr
 
 You'll now create a <</components/dialog#,Dialog>> for adding new products to the catalog. A dialog in Vaadin extends the `Dialog` class. It has a header, a footer, and a content area, and it can be opened and closed.
 
-You'll reuse the `ProductForm` from the earlier steps and display that in the content are. You'll add two buttons to the footer: a [guibutton]*Save* button for inserting the new product, and a [guibutton]*Cancel* button for closing the dialog without saving.
+You'll reuse the `ProductForm` from the earlier steps and display that in the content area. You'll add two buttons to the footer: a [guibutton]*Save* button for inserting the new product, and a [guibutton]*Cancel* button for closing the dialog without saving.
 
 Create a new `AddProductDialog` class like this:
 
@@ -83,6 +83,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -95,10 +96,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -122,14 +122,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
         }, this::handleException);
@@ -139,11 +137,12 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
 // tag::snippet[]
         var addButton = new Button("Add Product",
@@ -152,7 +151,8 @@ class ProductCatalogView extends HorizontalLayout {
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
 // tag::snippet[]
         var toolbar = new HorizontalLayout(); // <2>
@@ -163,11 +163,9 @@ class ProductCatalogView extends HorizontalLayout {
         var listLayout = new VerticalLayout(toolbar, grid);
 // end::snippet[]
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -213,7 +211,7 @@ The [guibutton]*Cancel* button is trivial to implement: it should close the dial
 
 The [guibutton]*Save* button is more interesting: it should validate the form, insert the product into the catalog, refresh the grid, and close the dialog. You'll use the same callback based design pattern that you used in `ProductFormDrawer`. This keeps the coding style consistent and also allows you to reuse some logic from `ProductCatalogView`.
 
-Update `AddProductCatalog` as follows:
+Update `AddProductDialog` as follows:
 
 .AddProductDialog.java
 [source,java]
@@ -293,6 +291,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -305,10 +304,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -332,14 +330,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
         }, this::handleException);
@@ -349,17 +345,18 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
 // tag::snippet[]
         var addButton = new Button("Add Product", e ->
             new AddProductDialog(
                 productDetails -> {
-                    productDetailsRepository.save(productDetails); // <1>
+                    service.save(productDetails); // <1>
                     grid.getDataProvider().refreshAll(); // <2>
                 },
                 this::handleException // <3>
@@ -369,7 +366,8 @@ class ProductCatalogView extends HorizontalLayout {
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -378,11 +376,9 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -401,7 +397,7 @@ class ProductCatalogView extends HorizontalLayout {
     }
 }
 ----
-<1> Call the repository to insert the product into the database.
+<1> Call the service to validate the product and insert it into the database.
 <2> Refresh the grid so that the new product shows up.
 <3> Re-use the `handleException()` method for error handling.
 
@@ -455,6 +451,60 @@ interface ProductCatalogItemRepository
 
 Spring Data automatically implements the method for you.
 
+Then make the method available to the view by adding a `findItemById` method to `ProductCatalogService`:
+
+.ProductCatalogService.java
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Validated
+@Transactional(readOnly = true)
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(
+            ProductCatalogItemRepository productCatalogItemRepository,
+            ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm,
+            Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+// tag::snippet[]
+    public Optional<ProductCatalogItem> findItemById(Long id) {
+        return productCatalogItemRepository.findById(id);
+    }
+// end::snippet[]
+
+    @Transactional
+    public ProductDetails save(@Valid ProductDetails productDetails) {
+        return productDetailsRepository.save(productDetails);
+    }
+}
+----
+
 Next, call the method to retrieve the `ProductCatalogItem` after having inserted a new `ProductDetails`. Modify the save callback in `ProductCatalogView` as follows:
 
 .ProductCatalogView.java
@@ -466,6 +516,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -478,10 +529,9 @@ import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -505,14 +555,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
         }, this::handleException);
@@ -522,20 +570,21 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
             new AddProductDialog(
                 productDetails -> {
 // tag::snippet[]
-                    var saved = productDetailsRepository.save(productDetails);
+                    var saved = service.save(productDetails);
                     grid.getDataProvider().refreshAll();
-                    repository.findById(saved.getProductId())
-                              .ifPresent(grid::select);
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
 // end::snippet[]
                 },
                 this::handleException
@@ -544,7 +593,8 @@ class ProductCatalogView extends HorizontalLayout {
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -553,11 +603,9 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -582,7 +630,11 @@ Now when you add a new product, it should automatically be selected and show up 
 
 === Handle Constraint Violation
 
-Next, you'll handle the constraint violation error. Because the `PRODUCTS` table only contains one unique column - `sku` - you can assume that any `DataIntegrityViolationException` thrown concerns this column. Update the `handleException()` method in `ProductCatalogView` as follows:
+Next, you'll handle the duplicate SKU. Spring translates database errors into its own exception hierarchy, and reports a violation of a unique constraint as a `DuplicateKeyException`. Since `sku` is the only unique column in the `PRODUCTS` table apart from the generated ID, a `DuplicateKeyException` from saving a product means that the SKU is already in use.
+
+Catch `DuplicateKeyException` rather than its superclass, `DataIntegrityViolationException`. The superclass also covers other violations, such as a negative price, and reporting those as a duplicate SKU would confuse the user. Since the service validates the input, such violations shouldn't reach the database. If one does, it's a bug, and belongs in Vaadin's default error handler.
+
+Update the `handleException()` method in `ProductCatalogView` as follows:
 
 .ProductCatalogView.java
 [source,java]
@@ -593,6 +645,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -602,16 +655,15 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 // tag::snippet[]
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 // end::snippet[]
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
-    ProductCatalogView(ProductCatalogItemRepository repository,
-                       ProductDetailsRepository productDetailsRepository) {
+    ProductCatalogView(ProductCatalogService service) {
         // Create components
         var searchField = new TextField();
         searchField.setPlaceholder("Search");
@@ -635,14 +687,12 @@ class ProductCatalogView extends HorizontalLayout {
         grid.addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-        grid.setItemsPageable(pageable -> repository
-            .findByNameContainingIgnoreCase(searchField.getValue(),
-                pageable)
-            .getContent()
+        grid.setItemsPageable(pageable -> service
+            .findItems(searchField.getValue(), pageable)
         );
 
         var drawer = new ProductFormDrawer(productDetails -> {
-            var saved = productDetailsRepository.save(productDetails);
+            var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
         }, this::handleException);
@@ -652,19 +702,20 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> productDetailsRepository
-                    .findById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
             new AddProductDialog(
                 productDetails -> {
-                    var saved = productDetailsRepository.save(productDetails);
+                    var saved = service.save(productDetails);
                     grid.getDataProvider().refreshAll();
-                    repository.findById(saved.getProductId())
-                              .ifPresent(grid::select);
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
                 },
                 this::handleException
             ).open()
@@ -672,7 +723,8 @@ class ProductCatalogView extends HorizontalLayout {
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -681,11 +733,9 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -698,7 +748,7 @@ class ProductCatalogView extends HorizontalLayout {
             notification.setDuration(3000);
             notification.open();
 // tag::snippet[]
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                 "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -732,205 +782,12 @@ Here's what happened:
 6. Spring Data saw that the version was already set and assumed this was an _existing_ entity that needed updating, not a new one.
 7. The update failed because no such row exists in the database -- hence the optimistic locking error.
 
-If this had been a REST API, the `ProductDetails` object would always be a new instance and this would not be a problem. Since you're reusing the object, you have to work around this problem. You can do this in different ways, but the user interface itself should not need to know about any of them. Because of that, you'll have to do some refactoring.
+If this had been a REST API, the `ProductDetails` object would always be a new instance and this would not be a problem. Since you're reusing the object, you have to work around this problem. You can do this in different ways, but the user interface shouldn't need to know about any of them. It's a persistence detail, and the view already saves products through `ProductCatalogService`. That makes the service the right place for the workaround.
 
 
-=== Refactor
+=== Work Around the Version Bug
 
-Since you'll be working around a limitation in your persistence layer, you want to hide it from the user interface. You'll therefore introduce an <</building-apps/business-logic/add-service#,application service>> that acts as an intermediary between the user interface and your repositories.
-
-Create a new class named `ProductCatalogService` in the `com.example.product` package. The first version declares all methods needed by `ProductCatalogView` and delegates to the corresponding repository, like this:
-
-.ProductCatalogService.java
-[source,java]
-----
-package com.example.product;
-
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-
-@Service
-@Transactional(readOnly = true) // <1>
-class ProductCatalogService {
-
-    private final ProductCatalogItemRepository productCatalogItemRepository;
-    private final ProductDetailsRepository productDetailsRepository;
-
-    public ProductCatalogService(
-            ProductCatalogItemRepository productCatalogItemRepository,
-            ProductDetailsRepository productDetailsRepository) {
-        this.productCatalogItemRepository = productCatalogItemRepository;
-        this.productDetailsRepository = productDetailsRepository;
-    }
-
-    public List<ProductCatalogItem> findItems(String searchTerm,
-            Pageable pageable) {
-        return productCatalogItemRepository
-            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
-    }
-
-    public Optional<ProductDetails> findDetailsById(Long id) {
-        return productDetailsRepository.findById(id);
-    }
-
-    public Optional<ProductCatalogItem> findItemById(Long id) {
-        return productCatalogItemRepository.findById(id);
-    }
-
-    @Transactional // <2>
-    public ProductDetails save(ProductDetails productDetails) {
-        return productDetailsRepository.save(productDetails);
-    }
-}
-----
-<1> All methods run inside read-only transactions by default.
-<2> Overrides the class-level annotation, since this method writes data.
-
-The service is now responsible for the transactions, as described in the <</building-apps/business-logic/add-service#transactions,Add a Service>> guide.
-
-.Validate in the Service, Too
-[TIP]
-In this tutorial, the form validates the input before it reaches the service. In a real application, the service should validate its input as well, since it can't trust that every caller has done so. See the <</building-apps/forms-data/consistency/validation#,Validation>> guide for how to do this.
-
-Next, refactor `ProductCatalogView` to use the service instead of the repositories:
-
-.ProductCatalogView.java
-[source,java]
-----
-package com.example.product;
-
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
-
-@Route("")
-@PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
-
-// tag::snippet[]
-    ProductCatalogView(ProductCatalogService service) {
-// end::snippet[]
-        // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
-
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
-// tag::snippet[]
-        grid.setItemsPageable(pageable -> service
-            .findItems(searchField.getValue(), pageable)
-        );
-// end::snippet[]
-
-        var drawer = new ProductFormDrawer(productDetails -> {
-// tag::snippet[]
-            var saved = service.save(productDetails);
-// end::snippet[]
-            grid.getDataProvider().refreshAll();
-            return saved;
-        }, this::handleException);
-
-        searchField.addValueChangeListener(e ->
-                grid.getDataProvider().refreshAll());
-
-        grid.addSelectionListener(e -> {
-            var productDetails = e.getFirstSelectedItem()
-// tag::snippet[]
-                .flatMap(item -> service.findDetailsById(item.productId()))
-// end::snippet[]
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
-        });
-
-        var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-// tag::snippet[]
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-// end::snippet[]
-                        },
-                        this::handleException
-                ).open()
-        );
-
-        // Layout view
-        setSizeFull();
-        setSpacing(false);
-
-        var toolbar = new HorizontalLayout();
-        toolbar.setWidthFull();
-        toolbar.addToStart(searchField);
-        toolbar.addToEnd(addButton);
-
-        var listLayout = new VerticalLayout(toolbar, grid);
-        listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
-        grid.setSizeFull();
-
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
-    }
-
-    private void handleException(RuntimeException exception) {
-        if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                "Another user has edited the same product. "
-                + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
-            var notification = new Notification(
-                "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
-        } else {
-            // Delegate to Vaadin's default error handler
-            throw exception;
-        }
-    }
-}
-----
-
-With the persistence logic encapsulated, you now have to decide how to fix this bug. The easiest options are the following:
+The easiest ways to work around this bug are the following:
 
 1. Set the version to `null` before saving an item that doesn't yet have an ID.
 2. Make a copy of the object and pass the copy to the repository, then return it if successful.
@@ -944,6 +801,12 @@ Start by adding two constructors to `ProductDetails` - a _default constructor_ f
 ----
 package com.example.product;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
@@ -958,13 +821,20 @@ class ProductDetails {
     private Long productId;
     @Version
     private Long version;
+    @NotBlank @Size(max = 100)
     private String name;
+    @NotBlank @Size(max = 500)
     private String description;
+    @NotBlank @Size(max = 100)
     private String category;
+    @Size(max = 100)
     private String brand;
+    @NotBlank @Size(max = 50)
     private String sku;
     private LocalDate releaseDate;
+    @NotNull @PositiveOrZero
     private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100")
     private BigDecimal discount;
 
 // tag::snippet[]
@@ -1066,14 +936,17 @@ Next, update the `ProductCatalogService` so that it passes a copy of `ProductDet
 ----
 package com.example.product;
 
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 @Transactional(readOnly = true)
 class ProductCatalogService {
 
@@ -1102,7 +975,7 @@ class ProductCatalogService {
     }
 
     @Transactional
-    public ProductDetails save(ProductDetails productDetails) {
+    public ProductDetails save(@Valid ProductDetails productDetails) {
 // tag::snippet[]
         return productDetailsRepository.save(new ProductDetails(productDetails));
 // end::snippet[]
@@ -1128,6 +1001,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -1136,12 +1010,12 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @Route("")
 @PageTitle("Product Catalog")
-class ProductCatalogView extends HorizontalLayout {
+class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogService service) {
         // Create components
@@ -1182,10 +1056,12 @@ class ProductCatalogView extends HorizontalLayout {
 
         grid.addSelectionListener(e -> {
             var productDetails = e.getFirstSelectedItem()
-                .flatMap(item -> service.findDetailsById(item.productId()))
-                .orElse(null);
-            drawer.setProductDetails(productDetails);
+                .flatMap(item -> service.findDetailsById(item.productId()));
+            productDetails.ifPresent(drawer::setProductDetails);
+            setDetail(productDetails.isPresent() ? drawer : null);
         });
+        addBackdropClickListener(e -> grid.deselectAll());
+        addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
                 new AddProductDialog(
@@ -1201,7 +1077,8 @@ class ProductCatalogView extends HorizontalLayout {
 
         // Layout view
         setSizeFull();
-        setSpacing(false);
+        setDetailSize("300px");
+        setExpandMaster(true);
 
         var toolbar = new HorizontalLayout();
         toolbar.setWidthFull();
@@ -1210,11 +1087,9 @@ class ProductCatalogView extends HorizontalLayout {
 
         var listLayout = new VerticalLayout(toolbar, grid);
         listLayout.setSizeFull();
-        listLayout.setMinWidth("0");
         grid.setSizeFull();
 
-        add(listLayout, drawer);
-        setFlexShrink(0, drawer);
+        setMaster(listLayout);
     }
 
     private void handleException(RuntimeException exception) {
@@ -1226,7 +1101,7 @@ class ProductCatalogView extends HorizontalLayout {
             notification.addThemeVariants(NotificationVariant.WARNING);
             notification.setDuration(3000);
             notification.open();
-        } else if (exception instanceof DataIntegrityViolationException) {
+        } else if (exception instanceof DuplicateKeyException) {
             var notification = new Notification(
                 "The SKU is already in use. Please enter another one.");
             notification.setPosition(Notification.Position.MIDDLE);
@@ -1315,14 +1190,17 @@ interface ProductCatalogItemRepository
 ----
 package com.example.product;
 
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Validated
 @Transactional(readOnly = true)
 class ProductCatalogService {
 
@@ -1351,7 +1229,7 @@ class ProductCatalogService {
     }
 
     @Transactional
-    public ProductDetails save(ProductDetails productDetails) {
+    public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(new ProductDetails(productDetails));
     }
 }
@@ -1365,6 +1243,12 @@ class ProductCatalogService {
 ----
 package com.example.product;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
@@ -1379,13 +1263,20 @@ class ProductDetails {
     private Long productId;
     @Version
     private Long version;
+    @NotBlank @Size(max = 100)
     private String name;
+    @NotBlank @Size(max = 500)
     private String description;
+    @NotBlank @Size(max = 100)
     private String category;
+    @Size(max = 100)
     private String brand;
+    @NotBlank @Size(max = 50)
     private String sku;
     private LocalDate releaseDate;
+    @NotNull @PositiveOrZero
     private BigDecimal price;
+    @DecimalMin("0") @DecimalMax("100")
     private BigDecimal discount;
 
     public ProductDetails() {
@@ -1504,12 +1395,15 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.validator.BigDecimalRangeValidator;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 class ProductForm extends Composite<FormLayout>  {
@@ -1519,13 +1413,19 @@ class ProductForm extends Composite<FormLayout>  {
     ProductForm() {
         // Create components
         var nameField = new TextField("Name");
+        nameField.setMaxLength(100);
         var descriptionField = new TextArea("Description");
+        descriptionField.setMaxLength(500);
         var categoryField = new TextField("Category");
+        categoryField.setMaxLength(100);
         var brandField = new TextField("Brand");
+        brandField.setMaxLength(100);
         var skuField = new TextField("SKU");
+        skuField.setMaxLength(50);
         var releaseDateField = new DatePicker("Release Date");
         var priceField = new BigDecimalField("Price");
         var discountField = new BigDecimalField("Discount");
+        discountField.setSuffixComponent(new Span("%"));
 
         // Layout form
         var layout = getContent();
@@ -1564,9 +1464,14 @@ class ProductForm extends Composite<FormLayout>  {
                     ProductDetails::setReleaseDate);
         binder.forField(priceField)
               .asRequired("Enter price")
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a price of 0 or more", BigDecimal.ZERO, null))
               .bind(ProductDetails::getPrice,
                     ProductDetails::setPrice);
         binder.forField(discountField)
+              .withValidator(new BigDecimalRangeValidator(
+                  "Enter a discount between 0 and 100",
+                  BigDecimal.ZERO, BigDecimal.valueOf(100)))
               .bind(ProductDetails::getDiscount,
                     ProductDetails::setDiscount);
     }
@@ -1602,7 +1507,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import org.jspecify.annotations.Nullable;
 
 class ProductFormDrawer extends Composite<VerticalLayout> {
 
@@ -1634,14 +1538,11 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         layout.add(header);
         layout.add(new Scroller(form));
         layout.add(saveButton);
-        layout.setWidth("300px");
-        getStyle().setBorderLeft("1px solid var(--vaadin-border-color-secondary)");
-        setVisible(false);
+        layout.setHeightFull();
     }
 
-    public void setProductDetails(@Nullable ProductDetails productDetails) {
+    public void setProductDetails(ProductDetails productDetails) {
         form.setFormDataObject(productDetails);
-        setVisible(productDetails != null);
     }
 
     private void save() {
@@ -1718,7 +1619,7 @@ class AddProductDialog extends Dialog {
 
 == Next Steps
 
-You have now build a fully functional Vaadin application with the following features:
+You have now built a fully functional Vaadin application with the following features:
 
 - Paginated data loading
 - Sorting and filtering
