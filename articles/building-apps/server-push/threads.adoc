@@ -145,3 +145,29 @@ protected void onAttach(AttachEvent attachEvent) {
 <3> You still cancel the scheduled task on detach. Signals manage the _binding_ lifecycle, not the scheduler.
 
 For more on binding components to signals, see <<updates#pushing-state-with-signals,Pushing State with Signals>>.
+
+
+== Calling Protected Services
+
+Spring Security keeps the current user in a `SecurityContext` that's bound to the request thread. The threads described on this page don't inherit it. Suppose the work calls an application service that's protected with method security, as described in <<{articles}/building-apps/security/protect-services#,Protect Services>>. Spring then denies access, even though the same call works in a click listener. The user gets no feedback, as the error only shows up in the log.
+
+To run the work as the current user, wrap it in a `DelegatingSecurityContextRunnable` from the `org.springframework.security.concurrent` package. Create the wrapper while you're still in the request thread, so that it captures the security context of the request:
+
+[source,java]
+----
+button.addClickListener(clickEvent -> {
+    var ui = UI.getCurrentOrThrow();
+    Thread.ofVirtual().start(new DelegatingSecurityContextRunnable(() -> { // <1>
+        var report = reportService.generateReport(); // <2>
+        ui.access(() -> {
+            // Update the UI here
+        });
+    }));
+});
+----
+<1> The wrapper is created in the click listener, where the security context of the current user is available.
+<2> The protected service sees the same user as it would in the click listener.
+
+The same wrapper works for tasks that you give to the `TaskExecutor`. For other ways of propagating the security context, see https://docs.spring.io/spring-security/reference/servlet/integrations/concurrency.html[Concurrency Support] in the Spring Security Reference Manual.
+
+This applies to work that a user starts from the UI. <<{articles}/building-apps/business-logic/background-jobs#,Background jobs>> that run independently of any user shouldn't rely on method security at all, as explained in <<{articles}/building-apps/business-logic/background-jobs/jobs#security,Jobs>>.
