@@ -1,0 +1,359 @@
+---
+title: Add Tests
+page-title: Add Service and Browserless Tests | Vaadin Tutorial
+description: Write automated tests for the product catalog's service and view.
+meta-description: Write automated tests for a Vaadin application. Test the service's validation with a Spring Boot test, and the view's grid and form with browserless tests.
+order: 40
+---
+
+= Add Tests
+:toclevels: 2
+
+So far, you've checked each feature by hand: you've run the application, clicked around, and read the console output. That works while the application is small, but every change can break something that you checked earlier, and nobody checks everything again by hand after every change.
+
+In this step, you'll write automated tests that do the checking for you. You'll test `ProductCatalogService` against the database, and test the product catalog view with browserless tests, which use the view the way a user does.
+
+.Write Tests Together with the Feature
+[IMPORTANT]
+In a real project, you'd write each test while you build the feature that it covers. For example, you'd write the service tests in the <<edit-details#,Edit Details>> step, together with the validation. This tutorial collects the tests into a step of their own only to keep the earlier steps focused on one topic each.
+
+.More Information Available
+[TIP]
+This step is based on the <</building-apps/testing#,Testing>> guides. Read them if you want more detailed information about testing Vaadin applications.
+
+
+== Check the Test Dependencies
+
+The project skeleton that you downloaded in the <<setup#,Setup Project>> step already contains everything you need for testing. Open `pom.xml` and find these two dependencies in the `<dependencies>` section:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+
+The first one brings in the JUnit test framework and Spring Boot's test support. The second one lets you test Vaadin views without a browser. The `test` scope keeps both out of the application that you deploy. If your `pom.xml` doesn't have them, add them, and refresh the project in your IDE.
+
+Test classes go in the `src/test/java` directory. The classes of the product catalog are package-private, so the tests have to be in the same package, `com.example.product`. Create the `src/test/java/com/example/product` directory if it doesn't exist yet.
+
+
+== Test the Service
+
+In the <<edit-details#,Edit Details>> step, you made `ProductCatalogService` validate products before storing them, and made the form check the same rules. Since the form stops invalid input before it reaches the service, the service's validation never shows up in the UI. If someone removed it by accident, the application would still seem to work. A test is how you make sure that the validation works, and keeps working.
+
+Create a new class named `ProductCatalogServiceTest` in the `src/test/java/com/example/product` directory:
+
+.ProductCatalogServiceTest.java
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.ConstraintViolationException;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@SpringBootTest // <1>
+@Transactional // <2>
+class ProductCatalogServiceTest {
+
+    @Autowired // <3>
+    private ProductCatalogService service;
+
+    @Test // <4>
+    void save_validProduct_assignsId() {
+        var saved = service.save(newProduct());
+        assertNotNull(saved.getProductId());
+    }
+
+    @Test
+    void save_negativePrice_throwsConstraintViolation() {
+        var product = newProduct();
+        product.setPrice(new BigDecimal("-1.00"));
+        assertThrows(ConstraintViolationException.class,
+                () -> service.save(product)); // <5>
+    }
+
+    @Test
+    void save_duplicateSku_throwsDuplicateKey() {
+        var product = newProduct();
+        product.setSku("NBK-A5-DOT"); // <6>
+        assertThrows(DuplicateKeyException.class,
+                () -> service.save(product));
+    }
+
+    private static ProductDetails newProduct() { // <7>
+        var product = new ProductDetails();
+        product.setName("Travel Mug");
+        product.setDescription("Insulated travel mug, 400 ml");
+        product.setCategory("Home & Kitchen");
+        product.setSku("MUG-400-TRV");
+        product.setPrice(new BigDecimal("14.90"));
+        return product;
+    }
+}
+----
+<1> `@SpringBootTest` starts the application for the test, including the database and its sample data.
+<2> `@Transactional` runs each test in a transaction, and rolls it back when the test ends.
+<3> Inject the service that you're testing.
+<4> `@Test` marks the method as a test. The name says what the test calls, with what input, and what result it expects.
+<5> The test passes only if `save()` throws a `ConstraintViolationException`.
+<6> This Stock Keeping Unit (SKU) already belongs to the Notebook A5 product in `data.sql`.
+<7> Each test starts from a valid product, and changes only the property that it tests.
+
+The first test does more than check that saving works. It also proves that `newProduct()` returns a valid product. When another test gets a `ConstraintViolationException`, the cause must be the one property that the test changed.
+
+Spring starts the application only once, and reuses it for the other tests in the same run, as long as they have the same configuration. That includes the in-memory database. Without `@Transactional`, the travel mug that the first test saves would stay in the database, and show up in the tests that you write next. With it, every test starts with the data from `data.sql`.
+
+Run the test class from your IDE. In IntelliJ IDEA, click the green arrow next to the class name, and select [guibutton]*Run 'ProductCatalogServiceTest'*. You can also run all tests from a terminal with `./mvnw test` (`mvnw test` on Windows). All three tests should pass.
+
+A test is only useful if it fails when something breaks. Try it: remove the `@Valid` annotation from the `save()` method of `ProductCatalogService`, and run the tests again. The negative price test now fails:
+
+ org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <jakarta.validation.ConstraintViolationException> but was: <org.springframework.dao.DataIntegrityViolationException>
+
+Saving still fails, but now the database rejects the negative price, because the `products` table has a check constraint for it. The test expects the service to reject the price before it reaches the database, so it catches the missing validation. Put the `@Valid` annotation back before you continue.
+
+
+== Test the View
+
+The service test calls the service directly. To check what the user sees, you also have to test the view. Vaadin's browserless tests do this without a browser. They run the view in the same JVM as the test. They simulate what a user does: open a URL, select a grid row, type into a field, and click a button. Since they don't need a browser or a web server, they run almost as fast as the service test.
+
+Create a new class named `ProductCatalogViewTest` in the same directory:
+
+.ProductCatalogViewTest.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.TextField;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
+class ProductCatalogViewTest extends SpringBrowserlessTest { // <1>
+
+    @Test
+    void selectRow_showsProductInDrawer() {
+        navigate(ProductCatalogView.class); // <2>
+        var grid = test(find(Grid.class).single(),
+                ProductCatalogItem.class); // <3>
+
+        grid.select(0); // <4>
+
+        var nameField = find(TextField.class).withLabel("Name").single(); // <5>
+        assertEquals(grid.getRow(0).name(), nameField.getValue());
+    }
+
+    @Test
+    void saveNegativePrice_showsErrorMessage() {
+        navigate(ProductCatalogView.class, 1L); // <6>
+        var priceField = find(BigDecimalField.class).withLabel("Price").single();
+
+        test(priceField).setValue(new BigDecimal("-1.00")); // <7>
+        test(find(Button.class).withText("Save").single()).click();
+
+        assertTrue(priceField.isInvalid()); // <8>
+        assertEquals("Enter a price of 0 or more", priceField.getErrorMessage());
+    }
+
+    @Test
+    void saveDuplicateSku_showsNotification() {
+        navigate(ProductCatalogView.class, 1L);
+        var skuField = find(TextField.class).withLabel("SKU").single();
+
+        test(skuField).setValue("NBK-A5-DOT");
+        test(find(Button.class).withText("Save").single()).click();
+
+        var notification = find(Notification.class).single(); // <9>
+        assertEquals("The SKU is already in use. Please enter another one.",
+                test(notification).getText());
+    }
+}
+----
+<1> `SpringBrowserlessTest` sets up a Vaadin environment for each test, and creates views through Spring, so the view gets the real service.
+<2> `navigate()` opens the view, as if the user had entered its URL in the browser.
+<3> `find()` looks up components in the UI, and `test()` wraps a component in a tester that simulates user actions. Passing the item type of the grid gives you a tester that knows the type of the rows.
+<4> Select the first row, as if the user had clicked it.
+<5> The Name field is in the drawer. If the drawer didn't open, `single()` would throw an exception, and the test would fail.
+<6> Open product 1 directly, using the route parameter that you added in the <<deep-link#,Deep Link>> step.
+<7> The tester enters the value the way a user does, so the binder validates it. It also fails the test unless the field is visible and enabled, since a user couldn't type into it otherwise.
+<8> The binder marks the field as invalid, and shows the error message next to it.
+<9> Find the notification that the view opens when saving fails.
+
+The tests find fields by their labels, and buttons by their text, the same way a user finds them on the screen. The view has only one grid, so the test finds it by its type. This way, the tests don't depend on how the view stores its components, and the view doesn't have to expose them to the tests.
+
+The second test doesn't check that the product stayed unchanged in the database. It doesn't have to: if the form let the negative price through, the service would throw a `ConstraintViolationException`. The view passes that exception on, and the exception fails the test.
+
+The third test covers the other half of the duplicate SKU case. The service test showed that the service throws a `DuplicateKeyException` when the SKU is already in use. This test shows that the view turns the exception into a message that the user understands.
+
+None of these tests changes the database: in the second test, the form stops the save, and in the third, the database rejects it. That's why the class doesn't need `@Transactional`. If you write a view test that saves a change, add `@Transactional` to it, as in the service test. It works the same way in browserless tests.
+
+Run the tests again. All six tests should pass. To see a view test fail, change the error message of the price validator in `ProductForm`, or remove the `DuplicateKeyException` branch from `handleException()` in `ProductCatalogView`. Undo the change before you continue.
+
+Maven also runs the tests when you build the application for production with `./mvnw package`, and stops the build if any of them fails. That way, a change that breaks one of the tested features can't reach your users unnoticed.
+
+
+== Complete Code for This Step
+
+This step doesn't change the application code. If a test fails although you haven't changed anything since the last step, compare your application classes with the <<deep-link#complete-code-for-this-step,complete code of the Deep Link step>>. These listings show the test classes as they should look at the end of this step.
+
+.ProductCatalogServiceTest.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.ConstraintViolationException;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@SpringBootTest
+@Transactional
+class ProductCatalogServiceTest {
+
+    @Autowired
+    private ProductCatalogService service;
+
+    @Test
+    void save_validProduct_assignsId() {
+        var saved = service.save(newProduct());
+        assertNotNull(saved.getProductId());
+    }
+
+    @Test
+    void save_negativePrice_throwsConstraintViolation() {
+        var product = newProduct();
+        product.setPrice(new BigDecimal("-1.00"));
+        assertThrows(ConstraintViolationException.class,
+                () -> service.save(product));
+    }
+
+    @Test
+    void save_duplicateSku_throwsDuplicateKey() {
+        var product = newProduct();
+        product.setSku("NBK-A5-DOT");
+        assertThrows(DuplicateKeyException.class,
+                () -> service.save(product));
+    }
+
+    private static ProductDetails newProduct() {
+        var product = new ProductDetails();
+        product.setName("Travel Mug");
+        product.setDescription("Insulated travel mug, 400 ml");
+        product.setCategory("Home & Kitchen");
+        product.setSku("MUG-400-TRV");
+        product.setPrice(new BigDecimal("14.90"));
+        return product;
+    }
+}
+----
+====
+
+.ProductCatalogViewTest.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.BigDecimalField;
+import com.vaadin.flow.component.textfield.TextField;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
+class ProductCatalogViewTest extends SpringBrowserlessTest {
+
+    @Test
+    void selectRow_showsProductInDrawer() {
+        navigate(ProductCatalogView.class);
+        var grid = test(find(Grid.class).single(),
+                ProductCatalogItem.class);
+
+        grid.select(0);
+
+        var nameField = find(TextField.class).withLabel("Name").single();
+        assertEquals(grid.getRow(0).name(), nameField.getValue());
+    }
+
+    @Test
+    void saveNegativePrice_showsErrorMessage() {
+        navigate(ProductCatalogView.class, 1L);
+        var priceField = find(BigDecimalField.class).withLabel("Price").single();
+
+        test(priceField).setValue(new BigDecimal("-1.00"));
+        test(find(Button.class).withText("Save").single()).click();
+
+        assertTrue(priceField.isInvalid());
+        assertEquals("Enter a price of 0 or more", priceField.getErrorMessage());
+    }
+
+    @Test
+    void saveDuplicateSku_showsNotification() {
+        navigate(ProductCatalogView.class, 1L);
+        var skuField = find(TextField.class).withLabel("SKU").single();
+
+        test(skuField).setValue("NBK-A5-DOT");
+        test(find(Button.class).withText("Save").single()).click();
+
+        var notification = find(Notification.class).single();
+        assertEquals("The SKU is already in use. Please enter another one.",
+                test(notification).getText());
+    }
+}
+----
+====
+
+
+== Next Steps
+
+You've now added automated tests for the service and the view. In seconds, and without a browser, they check both the validation that the UI hides and the behavior that the user sees. Keep adding tests as you add features. The <</building-apps/testing#,Testing>> guides show how to <</building-apps/testing/browserless/test-user-interactions#,test dialogs, navigation, and keyboard shortcuts>>, how to <</building-apps/testing/browserless/test-view-access#,test access control>>, and how to <</building-apps/testing/browserless/debug-tests#,debug a failing test>>.
+
+This was the last step of the tutorial. You've built a product catalog where users can list, sort, filter, view, edit, and add products, and share links to individual products. You've also written tests that check it. Along the way, you've used patterns that larger business applications rely on, too: data transfer objects, form data objects, validation, optimistic locking, route parameters, and automated tests.
+
+Before you can put the catalog in front of real users, you need to secure it, move it to a real database, and deploy it. The next page points you to the guides for each of these.
+
+link:{articles}/getting-started/next-steps[Next: Expand Your Vaadin Project, role="button primary water", id="docs-tutorial-add-tests-next-cta"]
