@@ -62,12 +62,16 @@ Three events expose both:
 |Immediately after the outermost hold has been released (the hold count reached zero).
 |===
 
-All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`.
+All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`, and the [classname]`VaadinSession` it protects, through [methodname]`getSession()`.
+The session is an empty [classname]`Optional` when it isn't known yet -- for a lock taken before the session has been created in a new HTTP session -- or no longer known -- once the session has been removed from the HTTP session, since the lock only keeps a removed session through a weak reference.
+
+[classname]`SessionLockAcquiredEvent.getWaitTime()` gives how long the thread waited for the lock, from the moment it was requested until it was acquired, including time other threads spent holding it.
+[classname]`SessionLockReleasedEvent.getHoldTime()` gives how long the thread then held the lock, from acquisition until release.
+Flow measures both itself, so no listener has to time anything on its own; it only measures them while a listener is registered to receive the value, so an application that listens to neither pays nothing for the timing.
 
 The same lock instance protects a session whether it's acquired by the framework while handling a request, or through [methodname]`VaadinSession.lock()` -- for example from <<server-push#,`UI.access()`>>.
 Events are fired for the _outermost_ acquisition only; reentrant re-locks aren't reported.
-For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released.
-This makes a [classname]`ThreadLocal` a natural place to record timing, as shown in the following example:
+For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released, as shown in the following example:
 
 [source,java]
 ----
@@ -77,7 +81,8 @@ include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/SessionLock
 When several listeners are registered, the requested and acquired events are delivered in registration order, while the released event is delivered in reverse registration order.
 Listeners therefore nest like `try`/`finally` blocks: a listener registered later sees the release before one registered earlier does.
 
-Listeners registered after a session's lock has already been created are still honored.
+Listeners registered after a session's lock has already been created are still honored, but only a listener already registered for [classname]`SessionLockReleasedEvent` at the moment the lock was acquired is notified of its release.
+A listener added while a thread is already holding the lock therefore misses the release event for that hold; it's notified of the next one.
 
 
 == RPC Invocation Events
