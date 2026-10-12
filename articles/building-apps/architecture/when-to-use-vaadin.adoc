@@ -1,0 +1,108 @@
+---
+title: When to Use Vaadin
+page-title: When to use Vaadin, and when to choose something else
+description: What Vaadin optimizes for, what its server-side approach costs, and the kinds of applications where that trade-off pays off, and where it doesn't.
+meta-description: Learn what Vaadin optimizes for, what its server-side UI costs in memory, latency, and deployment, and which applications it fits, and which it doesn't.
+order: 1
+---
+
+
+= When to Use Vaadin
+
+Vaadin is built for business applications: the internal tools, back-office systems, and portals that employees, customers, and partners log in to. It isn't built for every web application. Its server-side approach saves a lot of work in some applications, and costs more than it saves in others.
+
+This page is for experienced Java developers who are evaluating Vaadin. It explains what Vaadin optimizes for, what that costs, and where Vaadin recommends it -- and where it doesn't. The recommendations are Vaadin's opinion. <<runtime-model#,How a Vaadin Application Works>> explains the mechanics behind them.
+
+Most of this page is about Flow views, which you write in Java and which run on the server. They're the default way to build a Vaadin application, and both the main benefits and the main costs come from them. A Vaadin application can also have React views, which run in the browser. Where React views change the picture, this page says so.
+
+
+== What Vaadin Optimizes For
+
+Vaadin makes the following choices for you. Each one saves work in a business application, and most of them come at a cost, described in <<#what-it-costs,What It Costs>>.
+
+*One language and one team.* You write Flow views in Java, in the same project as the rest of the application, and you can use any Java library in them. With Vaadin's UI components, layouts, and themes, a Java developer can build a complete view without writing HTML, CSS, or JavaScript. There's no separate frontend project to build, test, and deploy, and no hand-off between a frontend team and a backend team.
+
+*No API for your own UI.* A click listener in a Flow view calls your application services directly, in the same thread, as ordinary Java code. You don't design, version, document, and secure an API whose only client is your own user interface.
+
+*Business logic, validation, and access control on the server.* The browser displays the UI components and sends user events to the server. The decisions -- what the user may see, what's valid, what happens next -- are made in Java, where the user can't change them. With security enabled, Flow views are denied until an annotation grants access, and Flow ignores events from UI components that are hidden or disabled. The services behind the views still need protection of their own, as described in <<{articles}/building-apps/security/protect-services#,Protect Services>>.
+
+*A maintained library of UI components.* Vaadin includes the <<{articles}/components#,UI components>> that business applications are made of, such as grids, form fields, date pickers, dialogs, and layouts. Vaadin designs them for WCAG 2.1 level AA, maintains them, and releases them with the framework, so you don't assemble and upgrade a set of third-party libraries. Flow views and React views use the same UI components.
+
+*Applications that live for years.* Because views are Java, the compiler and your IDE's refactoring tools cover the UI code too. When you change an entity or a service, you find the views that it affects at compile time, not in production. Vaadin releases on a published schedule, and a minor version deprecates features without removing them, so upgrading to it is usually a version bump. <<licensing-and-maintenance#,Licensing, Support & Maintenance>> describes the release and maintenance model.
+
+
+== What It Costs
+
+The costs come from running the UI on the server, so they apply to Flow views. <<runtime-model#,How a Vaadin Application Works>> explains each of them in detail.
+
+*Server memory per user and per tab.* The server keeps the UI of every open browser tab in memory, for as long as the tab stays open. How many users a server can handle depends on its memory, and on what your views hold. See <<runtime-model#where-state-lives,Where State Lives>>.
+
+*A round trip per interaction that runs Java code.* A click with a server-side listener, navigating between views, and loading more rows into a grid all wait for the network. Over a local network, this is hard to notice. Over a slow mobile or intercontinental connection, every such interaction pays the delay. See <<runtime-model#which-interactions-need-the-server,Which Interactions Need the Server>>.
+
+*A dependency on the connection.* A Flow view can't run any Java code while the connection is down, and it can't work offline. See <<runtime-model#when-the-connection-is-lost,When the Connection Is Lost>>.
+
+*Stateful deployment.* Load balancers need sticky sessions, so that each user's requests reach the server that holds their UI. When a server stops -- because it crashed, the cluster scaled down, or you deployed a new version -- its users lose anything they hadn't saved, unless you replicate the sessions. See <<runtime-model#what-this-means-for-deployment,What This Means for Deployment>>.
+
+*Less direct control over the rendered HTML.* You build a Flow view from UI components in Java, not from markup. You can <<{articles}/styling#,style>> the UI components, use <<{articles}/components/html-elements#,HTML elements>> from Java, and <<{articles}/building-apps/components#,wrap>> web components and React components of your own. You don't write the markup of a view by hand, though. If the exact markup, look, and interactions of a view are what makes it valuable, a hand-written frontend gives you more control.
+
+React views avoid the first three costs: they keep their state in the browser, and contact the server only when they call a service. In exchange, they bring back some of what Flow views save you: a TypeScript frontend, the skills to build it, and services that the browser can call. Vaadin generates type-safe TypeScript clients for those services, so you don't design a REST API, but each service is now reachable from the browser, and becomes your security boundary. <<runtime-model#how-react-views-differ,How React Views Differ>> compares the two kinds of views.
+
+
+== Where the Trade-Offs Pay Off
+
+Vaadin recommends its server-side approach for the following kinds of applications. What they have in common is that the users are known, they use the application for work, and the application is maintained for years.
+
+*Internal tools and back-office systems.* Every user logs in, so the number of concurrent users has a known upper limit, and you can size the servers for it by load testing. The users are typically on office or company networks, where round trips are short. These applications are mostly forms, grids, and workflows, which is what the UI components are built for.
+
+*Portals for authenticated customers and partners.* The same reasoning applies to portals and self-service applications that customers and partners log in to. The users are fewer and more predictable than those of a public website, and the data they see, and what they may do with it, is decided on the server.
+
+*Data-heavy forms and grids.* A grid fetches only the rows that the user scrolls to, straight from an application service, and leaves filtering and sorting to the database. You don't build a REST endpoint for it. A form validates its input in Java, with rules that you'd otherwise have to write twice, in the frontend and in the API. See <<{articles}/building-apps/forms-data/add-grid/paginated-data#,Add a Paginated Grid>> and <<{articles}/building-apps/forms-data/add-form/validation#,Form Validation>>.
+
+*Long-lived applications.* An application that's maintained for many years, often by people who didn't write it, benefits from having one language, a UI that the compiler checks, and fewer libraries to upgrade.
+
+*Java-centric teams.* A team of Java developers can build and maintain the whole application without first learning a JavaScript framework and its toolchain, and without splitting into a frontend team and a backend team.
+
+*Modernizing Swing and older Vaadin applications.* A Flow view is a tree of UI components with listeners, written in Java -- much like a Swing user interface. The team's skills carry over, and so can the domain logic and services behind the old user interface. Applications built with older Vaadin versions already use the server-side model, although the API has changed since. <<{articles}/upgrading/version-comparison#,Vaadin Version Comparison>> shows how much. Vaadin also has <<{articles}/tools#,tools>> for modernizing older applications.
+
+
+== Where Vaadin Isn't the Right Choice
+
+In the following situations, Vaadin recommends another approach, at least for part of the application. These aren't all-or-nothing decisions: an application can use Vaadin for the parts behind the login, and something else for the rest.
+
+[cols="2,3,3",options="header"]
+|===
+|Situation |Why Vaadin doesn't fit |Do React views help?
+
+|Public content that has to be found through search engines
+|Vaadin builds both kinds of views in the browser with JavaScript. It doesn't render pages to HTML on the server for search engines. A Flow view also keeps a UI on the server for every visitor, crawlers included.
+|No. Keep content pages on a content management system or a static site, and link from them to the Vaadin application.
+
+|Many anonymous visitors, especially with sudden spikes in traffic
+|A Flow view keeps a UI in server memory for every visitor, and an open tab keeps it alive. Memory, and therefore capacity, grows with the number of concurrent visitors.
+|Partly. React views keep no UI state on the server, so they suit a public part of a business application, such as a landing page or a sign-up form. A high-traffic public site is better built and scaled separately from the business application.
+
+|Offline-first applications
+|A Flow view can't run any Java code without a connection.
+|Partly. React views can keep working offline, but storing data in the browser and synchronizing it with the server is your own code. See <<{articles}/hilla/guides/client-caching#,Client-Side Data Caching>>. If most of the application has to work offline, most of it would be React views, and the benefits of writing the UI in Java no longer apply.
+
+|A separate single-page application, or a public API
+|If the organization wants a separate frontend team with a framework of its own, or needs a public API for mobile applications and partners anyway, the benefits of one team and no API mostly don't apply.
+|Partly. React views give you a React frontend with type-safe calls to Java services, but they're part of the Vaadin application, and are built and deployed with it. Their services serve the application's own views. A public API for other clients is something you design separately.
+
+|Consumer products, where the user interface is the product
+|The exact look and interactions are what sets the product apart, and you want full control over the markup.
+|Partly. React views give you full control over the markup, and can still use Vaadin's UI components. If most of the product is built that way, though, the benefits of writing the UI in Java no longer apply.
+|===
+
+Within a business application, individual views that react to every keystroke or pointer movement -- such as a drawing canvas or a real-time editor -- are also a better fit for React views. See <<runtime-model#choosing-flow-or-react-views,Choosing Flow or React Views>>.
+
+
+== Try It Before You Decide
+
+The costs on this page depend on your views, your users, and your network, so Vaadin recommends that you measure them rather than rely on general figures:
+
+. Build one view that's typical of your application, with realistic data, in the <<{articles}/getting-started/quick-start#,Quick Start>> project or a project of your own. The <<{articles}/getting-started/tutorial#,Tutorial>> shows how to build a complete one.
+. Try the view with network throttling turned on in the browser's developer tools, at the latency your users have.
+. Measure how much memory a session with that view costs, and estimate from it how much memory your expected number of concurrent users and tabs needs.
+
+Then read <<runtime-model#,How a Vaadin Application Works>> before you decide how to deploy, and <<licensing-and-maintenance#,Licensing, Support & Maintenance>> to see which features you'd use are free.
