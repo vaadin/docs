@@ -71,15 +71,53 @@ With <<{articles}/building-apps/server-push#,server push>>, the browser opens a 
 
 If the proxy doesn't forward them, the request fails with status 501, and the browser tries again every few seconds. After a while, it falls back to long polling, which works, but needs a new request after every message from the server. Because the application keeps working, the problem is easy to miss. To check that the WebSocket connection works, look at the request to `/VAADIN/push` in the browser's developer tools, or in the proxy's access log. Its status should be 101, which means that the connection was upgraded.
 
+If you can't make the proxy forward the upgrade, set the push transport to long polling. The browser then uses long polling from the start, instead of trying a WebSocket connection first:
+
+[source,java]
+----
+@Push(transport = Transport.LONG_POLLING)
+public class Application implements AppShellConfigurator {
+}
+----
+
+To use long polling only in the deployments that need it, set the transport in a UI init listener instead, with [methodname]`ui.getPushConfiguration().setTransport(Transport.LONG_POLLING)`.
+
 
 == Keep Push Connections Open
 
 Proxies close connections that have been idle for too long, and a push connection can be idle for minutes. The example raises the 60-second default of `nginx` to 300 seconds with `proxy_read_timeout`. Load balancers in cloud platforms have similar idle timeouts. See <<{articles}/flow/production/reverse-proxy#push-connection-timeout,Push Connection Timeout>> for why 60 seconds isn't enough.
 
+If you can't raise the idle timeout -- for example, in a load balancer that you don't control -- make the push connection send its heartbeat more often instead. By default, it sends one every 60 seconds. The interval is a parameter of Atmosphere, the library that Vaadin uses for push, and you set it as an init parameter of the Vaadin servlet. Add the following bean to a configuration class:
+
+[source,java]
+----
+@Bean
+static BeanPostProcessor pushHeartbeat() {
+    return new BeanPostProcessor() {
+        @Override
+        public Object postProcessBeforeInitialization(Object bean,
+                String beanName) {
+            if (bean instanceof ServletRegistrationBean<?> registration
+                    && registration.getServlet() instanceof SpringServlet) {
+                registration.addInitParameter(
+                        "org.atmosphere.interceptor.HeartbeatInterceptor.heartbeatFrequencyInSeconds",
+                        "15"); // <1>
+            }
+            return bean;
+        }
+    };
+}
+----
+<1> Use an interval that's shorter than the idle timeout of the proxy.
+
+Each push connection then carries a small message at that interval, so the proxy doesn't consider it idle.
+
 
 == Send Each User to the Same Instance
 
 If you run several instances of the application, the load balancer has to send all requests of a user to the instance that holds their session. This is called _sticky sessions_ or _session affinity_. Without it, users get unexpected reloads, and lose their unsaved work. See <<{articles}/flow/production/reverse-proxy#load-balancing-sticky-session,Load Balancing with Sticky Session>> for `nginx` and Apache HTTPD configurations, and <<{articles}/building-apps/architecture/capacity-and-failover#test-what-users-see-when-a-server-stops,Test What Users See When a Server Stops>> for what happens when an instance stops.
+
+On Kubernetes, the Ingress NGINX controller has been retired. Its replacement, the Gateway API, doesn't require its implementations to support session persistence, so choose one that does. The <<{articles}/tools/kubernetes/getting-started#gateway,Kubernetes Kit>> guide uses Envoy Gateway.
 
 
 == Next Steps
