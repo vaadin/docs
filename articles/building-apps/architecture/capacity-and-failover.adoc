@@ -55,6 +55,17 @@ To estimate the memory that you need, multiply the memory per session by the num
 
 When a session costs more than you expect, save the histogram before you open the sessions and while they're open, and compare the two. The classes whose instance counts grew in proportion to the number of sessions show what the sessions hold. In the example measurement, the view that held all of its items had 10,000 more instances of the entity class per tab, whereas the lazy-loading view had only the 50 entities that its grid had fetched.
 
+.Retained Sizes Mislead
+[CAUTION]
+====
+Heap analyzers, such as https://eclipse.dev/mat/[Eclipse Memory Analyzer] and https://visualvm.github.io/[VisualVM], show the _retained size_ of each object in a heap dump: the memory that would be freed if only that object were gone. The retained size of a [classname]`VaadinSession` isn't what the session costs:
+
+* It leaves out everything that's also reachable from elsewhere. If your views use a <<{articles}/building-apps/server-push/updates#broadcasting-to-all-users,shared signal>> or an <<{articles}/building-apps/server-push/updates#avoiding-memory-leaks,event bus>>, every UI is reachable through the shared object as well as through its own session. The analyzer then attributes the memory of the UIs to neither.
+* The analyzers compute object sizes themselves. Eclipse Memory Analyzer 1.17 and VisualVM 2.2.2 don't take <<runtime-model#what-this-means-for-deployment,compact object headers>> into account, so with compact object headers -- the default from Java 27 -- the sizes they show are too large.
+
+In the example measurement, both analyzers showed a retained size of about 93 KB per session, less than a third of what the sessions added to the live heap. With a shared signal or an event bus in the view, the retained size dropped below 2 KB per session, although the live heap grew as much as before. With compact object headers, the analyzers still showed 24 bytes for each `java.lang.Long`, which then takes 16 bytes.
+====
+
 To reduce the memory per session, load data lazily, as described in <<{articles}/building-apps/forms-data/add-grid/paginated-data#,Add a Paginated Grid>>. To free the memory of sessions that nobody uses, close idle sessions, as described in <<runtime-model#where-state-lives,Where State Lives>>.
 
 
