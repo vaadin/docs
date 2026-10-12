@@ -551,57 +551,28 @@ You'll now fix them one by one.
 
 === Preserve Grid Selection
 
-Grid selection is currently lost after saving because the grid relies on object equality when re-selecting items after a refresh. Since `ProductCatalogItem` is a record, all of its components are included in `equals()` by default.
+The grid loses its selection after saving because, by default, it uses `equals()` to recognize the selected item after a refresh. Since `ProductCatalogItem` is a record, all its components are included in `equals()`.
 
 When the grid reloads data, it receives updated items from the database. These updated instances are therefore never equal to the previously selected ones, causing the selection to be cleared.
 
-To fix this, override `equals()` and `hashCode()` in `ProductCatalogItem` so that equality is based only on the item ID:
+To fix this, tell the grid to identify items by their product ID instead. The `setItemsPageable()` method returns a _data view_, which you can use to configure how the grid handles its items. Change the `setItemsPageable()` call in `ProductCatalogView` as follows:
 
-.ProductCatalogItem.java
+.ProductCatalogView.java
 [source,java]
 ----
-package com.example.product;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
-import java.math.BigDecimal;
-// tag::snippet[]
-import java.util.Objects;
-// end::snippet[]
-
-@Table("PRODUCTS")
-record ProductCatalogItem(
-        @Id long productId,
-        String name,
-        String description,
-        String category,
-        String brand,
-        BigDecimal price
-) {
-    static final String SORT_PROPERTY_NAME = "name";
-    static final String SORT_PROPERTY_PRICE = "price";
-    static final String SORT_PROPERTY_DESCRIPTION = "description";
-    static final String SORT_PROPERTY_CATEGORY = "category";
-    static final String SORT_PROPERTY_BRAND = "brand";
-
-// tag::snippet[]
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        ProductCatalogItem that = (ProductCatalogItem) o;
-        return productId == that.productId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(productId);
-    }
-// end::snippet[]
-}
+grid.setItemsPageable(pageable -> service
+    .findItems(searchField.getValue(), pageable)
+).setIdentifierProvider(ProductCatalogItem::productId); // <1>
 ----
+<1> The grid now treats items with the same product ID as the same item, even if their other values have changed.
+
+You could get the same result by overriding `equals()` and `hashCode()` in `ProductCatalogItem`. However, that would change what equality means for the record everywhere it's used, only to suit the grid. The identifier provider keeps the decision in the view that needs it.
 
 If you now try the application, you should notice that the grid preserves the selection between saves.
+
+.Vaadin 25.3.2 or Later Required
+[NOTE]
+In earlier versions, the grid ignores the identifier provider when it selects items, so the selection is still lost after saving. If your project uses an earlier version, update the `vaadin.version` property in `pom.xml`.
 
 
 === Validate the Form
@@ -899,7 +870,7 @@ class ProductCatalogView extends MasterDetailLayout {
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
         grid.setItemsPageable(pageable -> service
             .findItems(searchField.getValue(), pageable)
-        );
+        ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
@@ -1238,7 +1209,7 @@ class ProductCatalogView extends MasterDetailLayout {
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
         grid.setItemsPageable(pageable -> service
             .findItems(searchField.getValue(), pageable)
-        );
+        ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
             var saved = service.save(productDetails);
@@ -1303,7 +1274,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 @Table("PRODUCTS")
 record ProductCatalogItem(
@@ -1319,18 +1289,6 @@ record ProductCatalogItem(
     static final String SORT_PROPERTY_DESCRIPTION = "description";
     static final String SORT_PROPERTY_CATEGORY = "category";
     static final String SORT_PROPERTY_BRAND = "brand";
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        ProductCatalogItem that = (ProductCatalogItem) o;
-        return productId == that.productId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(productId);
-    }
 }
 ----
 ====
