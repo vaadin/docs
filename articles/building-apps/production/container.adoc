@@ -56,7 +56,7 @@ A Vaadin application keeps the UI state of every user in the heap, so give the h
 
 Always run the container with a memory limit, such as the `-m` option of `docker run`, or a memory limit in Kubernetes. Without a limit, the JVM sizes its heap according to the memory of the whole host.
 
-How much memory your application needs depends on how many users it has, and on what its views keep in memory. Measure it, rather than relying on a rule of thumb. <<{articles}/building-apps/architecture/runtime-model#where-state-lives,Where State Lives>> explains what takes up the memory.
+How much memory your application needs depends on how many sessions it holds, and on what its views keep in memory. <<{articles}/building-apps/architecture/capacity-and-failover#measure-memory-per-session,Measure Memory per Session>> shows how to find out.
 
 To pass other JVM options without rebuilding the image, set the `JAVA_TOOL_OPTIONS` environment variable on the container. The JVM reads its options from it.
 
@@ -77,9 +77,7 @@ If you build the JAR on a CI server anyway, as described in <<ci#,Build on CI>>,
 
 == Stop Containers Gracefully
 
-When a container platform stops a container, it first sends the application a stop signal. Spring Boot then shuts down gracefully: it stops accepting new requests, and waits up to 30 seconds for the active requests to complete. Open server push connections don't delay the shutdown.
-
-The users who were connected to the stopped instance lose their UI state, as described in <<{articles}/building-apps/architecture/runtime-model#what-this-means-for-deployment,What This Means for Deployment>>. To keep users' sessions when an instance stops, the sessions have to be replicated to other instances. On Kubernetes, the <<{articles}/tools/kubernetes#,Kubernetes Kit>> does this, and supports rolling updates.
+When a container platform stops a container, it first sends the application a stop signal, and Spring Boot shuts down gracefully. Open server push connections don't delay the shutdown. The users on the stopped instance lose their UI state, though. <<{articles}/building-apps/architecture/capacity-and-failover#test-what-users-see-when-a-server-stops,Test What Users See When a Server Stops>> shows what this looks like, and compares the ways to handle it: accepting the reload, draining the instance, and replicating sessions.
 
 The https://docs.spring.io/spring-boot/how-to/deployment/cloud.html#howto.deployment.cloud.kubernetes.container-lifecycle[Spring Boot documentation] explains how to delay the shutdown on Kubernetes, so that no new requests are routed to a pod that's already shutting down.
 

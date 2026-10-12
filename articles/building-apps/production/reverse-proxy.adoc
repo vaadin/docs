@@ -53,7 +53,7 @@ Then tell the application to trust the forwarded headers:
 server.forward-headers-strategy=native
 ----
 
-The <<{articles}/flow/production/reverse-proxy#,Reverse Proxies>> reference has configurations for Apache HTTPD, for other deployment scenarios, and for load balancing.
+The <<{articles}/flow/production/reverse-proxy#,Reverse Proxies>> reference has configurations for Apache HTTPD, for other deployment scenarios, for load balancing, and for <<{articles}/flow/production/reverse-proxy#proxying-multiple-backend-vaadin-application,several applications behind one proxy>>.
 
 
 == Tell the Application About TLS
@@ -74,19 +74,12 @@ If the proxy doesn't forward them, the request fails with status 501, and the br
 
 == Keep Push Connections Open
 
-A push connection can stay idle for minutes, while the server has nothing to send. Proxies close connections that have been idle for too long. In `nginx`, the default is 60 seconds, which is the same as Vaadin's push heartbeat interval, and leaves no margin. The example raises it to 300 seconds with `proxy_read_timeout`.
-
-Load balancers in cloud platforms have similar idle timeouts. Check that yours is longer than 60 seconds. See <<{articles}/flow/production/reverse-proxy#push-connection-timeout,Push Connection Timeout>> for details.
+Proxies close connections that have been idle for too long, and a push connection can be idle for minutes. The example raises the 60-second default of `nginx` to 300 seconds with `proxy_read_timeout`. Load balancers in cloud platforms have similar idle timeouts. See <<{articles}/flow/production/reverse-proxy#push-connection-timeout,Push Connection Timeout>> for why 60 seconds isn't enough.
 
 
 == Send Each User to the Same Instance
 
-If you run several instances of the application, the load balancer has to send all requests of a user to the instance that holds their session. This is called _sticky sessions_ or _session affinity_. Without it, users get unexpected reloads, and lose their unsaved work. See <<{articles}/flow/production/reverse-proxy#load-balancing-sticky-session,Load Balancing with Sticky Session>> for `nginx` and Apache HTTPD configurations, and <<{articles}/building-apps/architecture/runtime-model#what-this-means-for-deployment,What This Means for Deployment>> for what happens when an instance stops.
-
-
-== Run Several Applications Behind One Proxy
-
-If several Vaadin applications share a host name, give each one its own session cookie name with the `server.servlet.session.cookie.name` property. Otherwise, the applications overwrite each other's session cookie, and the users keep losing their sessions.
+If you run several instances of the application, the load balancer has to send all requests of a user to the instance that holds their session. This is called _sticky sessions_ or _session affinity_. Without it, users get unexpected reloads, and lose their unsaved work. See <<{articles}/flow/production/reverse-proxy#load-balancing-sticky-session,Load Balancing with Sticky Session>> for `nginx` and Apache HTTPD configurations, and <<{articles}/building-apps/architecture/capacity-and-failover#test-what-users-see-when-a-server-stops,Test What Users See When a Server Stops>> for what happens when an instance stops.
 
 
 == Next Steps
