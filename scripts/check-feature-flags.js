@@ -97,8 +97,8 @@ function findProviderClasses(repoPath) {
   const spiFiles = gitFindFiles(repoPath, SPI_SERVICE);
   const classes = [];
   for (const spiFile of spiFiles) {
-    // Skip test resources
-    if (spiFile.includes('src/test/')) continue;
+    // Skip test resources (src/test/) and test modules (e.g. flow-tests/)
+    if (/(^|\/)[\w-]*tests?\//.test(spiFile)) continue;
     const content = gitShow(repoPath, spiFile);
     if (!content) continue;
     for (const line of content.split('\n')) {
