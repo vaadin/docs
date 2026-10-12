@@ -1,0 +1,94 @@
+---
+title: Deploy Behind a Proxy
+page-title: How to run a Vaadin application behind a reverse proxy
+description: Run a Vaadin application behind a reverse proxy that handles TLS, let server push through it, and keep users on the same instance.
+meta-description: Run a Vaadin application behind a reverse proxy or load balancer. Forward the original scheme, let server push WebSockets through, and use sticky sessions.
+order: 40
+---
+
+
+= Deploy Behind a Proxy
+
+In production, a reverse proxy or a load balancer usually sits between the browsers and the application. It terminates TLS, and can serve several applications under one domain, or distribute requests over several instances. For a Vaadin application, the proxy has to:
+
+* Tell the application which scheme and host the browser used.
+* Let the WebSocket connections of server push through.
+* Keep idle push connections open.
+* Send all requests of a user to the same instance, if there are several.
+
+The following `nginx` configuration does the first three for a single instance:
+
+.`nginx.conf`
+[source]
+----
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 443 ssl;
+    server_name app.example.com;
+    ssl_certificate     /etc/nginx/certs/cert.pem;
+    ssl_certificate_key /etc/nginx/certs/key.pem;
+
+    location / {
+        proxy_pass http://app:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 300s;
+    }
+}
+----
+
+Then tell the application to trust the forwarded headers:
+
+.`application-prod.properties`
+[source,properties]
+----
+server.forward-headers-strategy=native
+----
+
+The <<{articles}/flow/production/reverse-proxy#,Reverse Proxies>> reference has configurations for Apache HTTPD, for other deployment scenarios, and for load balancing.
+
+
+== Tell the Application About TLS
+
+When the proxy terminates TLS, the application receives plain HTTP requests. The proxy passes the original host in the `Host` header, the scheme in the `X-Forwarded-Proto` header, and the address of the browser in the `X-Forwarded-For` header. The `server.forward-headers-strategy=native` property makes the application use them.
+
+Without it, the application thinks that the browser uses HTTP. For example, it redirects users who aren't logged in to `http://` instead of `https://`, and sends the session cookie without the `Secure` attribute.
+
+Spring Boot enables forwarded headers by default when it detects a supported cloud platform. See the https://docs.spring.io/spring-boot/how-to/webserver.html#howto.webserver.use-behind-a-proxy-server[Spring Boot documentation] for details.
+
+
+== Let Server Push Through
+
+With <<{articles}/building-apps/server-push#,server push>>, the browser opens a WebSocket connection to the `/VAADIN/push` path. A WebSocket connection starts as an HTTP request, which asks the server to upgrade the connection with the `Upgrade` and `Connection` headers. `nginx` doesn't forward these headers unless you tell it to, as the `proxy_set_header` lines in the example do. Other proxies have similar settings, which the <<{articles}/flow/production/reverse-proxy#websockets-in-a-vaadin-application,Reverse Proxies>> reference describes for Apache HTTPD.
+
+If the proxy doesn't forward them, the request fails with status 501, and the browser tries again every few seconds. After a while, it falls back to long polling, which works, but needs a new request after every message from the server. Because the application keeps working, the problem is easy to miss. To check that the WebSocket connection works, look at the request to `/VAADIN/push` in the browser's developer tools, or in the proxy's access log. Its status should be 101, which means that the connection was upgraded.
+
+
+== Keep Push Connections Open
+
+A push connection can stay idle for minutes, while the server has nothing to send. Proxies close connections that have been idle for too long. In `nginx`, the default is 60 seconds, which is the same as Vaadin's push heartbeat interval, and leaves no margin. The example raises it to 300 seconds with `proxy_read_timeout`.
+
+Load balancers in cloud platforms have similar idle timeouts. Check that yours is longer than 60 seconds. See <<{articles}/flow/production/reverse-proxy#push-connection-timeout,Push Connection Timeout>> for details.
+
+
+== Send Each User to the Same Instance
+
+If you run several instances of the application, the load balancer has to send all requests of a user to the instance that holds their session. This is called _sticky sessions_ or _session affinity_. Without it, users get unexpected reloads, and lose their unsaved work. See <<{articles}/flow/production/reverse-proxy#load-balancing-sticky-session,Load Balancing with Sticky Session>> for `nginx` and Apache HTTPD configurations, and <<{articles}/building-apps/architecture/runtime-model#what-this-means-for-deployment,What This Means for Deployment>> for what happens when an instance stops.
+
+
+== Run Several Applications Behind One Proxy
+
+If several Vaadin applications share a host name, give each one its own session cookie name with the `server.servlet.session.cookie.name` property. Otherwise, the applications overwrite each other's session cookie, and the users keep losing their sessions.
+
+
+== Next Steps
+
+The proxy and the container platform need to know whether the application is running and ready for requests. <<health-checks#,Add Health Checks>> shows which URLs to give them.

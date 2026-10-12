@@ -1,0 +1,96 @@
+---
+title: Build for Production
+page-title: How to create a production build of a Vaadin application
+description: Create a JAR that runs in production mode, and understand what the build needs.
+meta-description: Build a Vaadin application for production with Maven, check that it runs in production mode, and find out when the build needs Node.js or a license key.
+order: 10
+---
+
+
+= Build for Production
+
+When you start a Vaadin application from your IDE, it runs in development mode, with live reload and other development tools. A production build creates an executable JAR that runs in production mode instead. It serves an optimized frontend bundle, and leaves the development tools out.
+
+To build and start the application, run:
+
+[source,terminal]
+----
+./mvnw clean package
+java -jar target/*.jar
+----
+
+Then look for this line in the log:
+
+----
+Vaadin is running in production mode.
+----
+
+
+== What the Build Does
+
+The `package` phase compiles the application and runs its tests, so a failing test stops the build. The `build-frontend` goal of the Vaadin Maven plugin then prepares the frontend bundle, and marks the build for production mode. Finally, Spring Boot packages everything into a single JAR in the `target` directory.
+
+Projects from https://start.vaadin.com[`start.vaadin.com`] are set up for this. If you created the [filename]`pom.xml` yourself, check that it has the following parts:
+
+.`pom.xml`
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-dev</artifactId>
+        <optional>true</optional> <!--1-->
+    </dependency>
+    <!-- ... -->
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>build-frontend</goal> <!--2-->
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <!-- ... -->
+    </plugins>
+</build>
+----
+<1> The development tools are an optional dependency, so the JAR doesn't include them.
+<2> Prepares the frontend bundle, and marks the build for production mode.
+
+If the log says `Vaadin is running in DEVELOPMENT mode` instead, or the application fails to start, see <<{articles}/flow/production/troubleshooting#,Troubleshooting>>.
+
+
+== When the Build Needs Node.js
+
+A Vaadin application needs a frontend bundle: the JavaScript and CSS of the UI components, and of any frontend code that the application adds. The build provides it in one of two ways:
+
+* *A pre-compiled bundle.* If the application uses only Vaadin's UI components and themes, and loads its own stylesheets with `@StyleSheet`, the build uses a bundle that comes with Vaadin. It doesn't need Node.js, and the build log says `A production mode bundle build is not needed`.
+* *An application-specific bundle.* If the application adds frontend code of its own -- for example, an npm package, a JavaScript module, or an add-on with frontend code -- the build runs npm and Vite to create a bundle for it. This needs Node.js and takes longer. The build log says `A production mode bundle build is needed`, and the line before it gives the reason.
+
+The <<{articles}/flow/production/production-build#,Production Build>> reference lists everything that requires an application-specific bundle.
+
+An application-specific bundle is also written to [filename]`src/main/bundles/prod.bundle`. Commit this file. The next build reuses it, and doesn't run npm or Vite at all, as long as the frontend code hasn't changed. When the frontend code changes, the build notices it, and creates a new bundle. Commit that one, too.
+
+
+== When the Build Needs a License Key
+
+If the application uses a commercial feature, the production build checks that you have a license for it. On a machine without a license key, such as a fresh build server, the build fails with the following message, followed by a list of the commercial features it found:
+
+----
+Commercial features require a subscription.
+----
+
+On your development machine, you get the key by logging in to your Vaadin account, as described in <<{articles}/flow/configuration/licenses#,License Validation & Troubleshooting>>. To give the key to a build server, see <<ci#,Build on CI>>. To find out which features are commercial, see <<{articles}/building-apps/architecture/licensing-and-maintenance#,Licensing, Support & Maintenance>>.
+
+
+== Next Steps
+
+The JAR contains the configuration that's in [filename]`src/main/resources/application.properties`. Production needs different settings and secrets, which shouldn't be in the source code. <<configure#,Configure the Application>> shows how to provide them.
