@@ -46,14 +46,14 @@ function Example() {
             Add note
           </h2>
         }
-        footerRenderer={() => (
+        footer={
           <>
             <Button onClick={close}>Cancel</Button>
             <Button theme="primary" onClick={close}>
               Add note
             </Button>
           </>
-        )}
+        }
       >
         <FormLayout autoResponsive columnWidth="18rem" expandFields>
           <TextField label="Title" />
