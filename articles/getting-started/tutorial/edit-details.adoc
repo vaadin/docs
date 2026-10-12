@@ -12,7 +12,7 @@ order: 25
 
 In the previous step, you implemented a drawer and a form for viewing product details in the product catalog.
 
-In this step, you'll continue working with the drawer and form to make it possible for users to edit and save products. Because the view now starts changing data, you'll add an application service that validates the data before storing it. You'll also address some user experience issues discovered along the way.
+In this step, you'll continue working with the drawer and form to make it possible for users to edit and save products. Because the view now starts changing data, you'll add an application service that validates the data before storing it. You'll also address some user experience issues discovered along the way. Finally, you'll make it possible to delete products.
 
 .More Information Available
 [TIP]
@@ -410,7 +410,7 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 ====
 Backends often modify the data object during saving, for example by updating a version number (<</building-apps/forms-data/consistency/optimistic-locking#,optimistic locking>>) or a last-modified timestamp.
 
-If the backend updates the same object instance, the callback can simply return that instance. If the backend performs the update elsewhere (such as in the database), it typically returns a new, updated instance instead.
+If the backend updates the same object instance, the callback can return that instance. If the backend performs the update elsewhere (such as in the database), it typically returns a new, updated instance instead.
 
 By always returning the object, the callback supports both cases without special handling.
 ====
@@ -937,6 +937,224 @@ All other exceptions still go to Vaadin's default error handler. This includes a
 Because the form stops invalid input, you can no longer see the service's validation in the UI. In a real project, you'd now write an automated test for it, together with the feature. This tutorial collects its tests into the <<add-tests#,Add Tests>> step at the end, where you write that test.
 
 
+== Delete Products
+
+Users can now edit products, but they can't remove them from the catalog. You'll add a [guibutton]*Delete* button to the drawer. Since a deleted product can't be restored, the button asks the user to confirm first.
+
+Start by adding a `delete()` method to `ProductCatalogService`:
+
+.ProductCatalogService.java
+[source,java]
+----
+package com.example.product;
+
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Validated
+@Transactional(readOnly = true)
+class ProductCatalogService {
+
+    private final ProductCatalogItemRepository productCatalogItemRepository;
+    private final ProductDetailsRepository productDetailsRepository;
+
+    public ProductCatalogService(
+            ProductCatalogItemRepository productCatalogItemRepository,
+            ProductDetailsRepository productDetailsRepository) {
+        this.productCatalogItemRepository = productCatalogItemRepository;
+        this.productDetailsRepository = productDetailsRepository;
+    }
+
+    public List<ProductCatalogItem> findItems(String searchTerm,
+            Pageable pageable) {
+        return productCatalogItemRepository
+            .findByNameContainingIgnoreCase(searchTerm, pageable).getContent();
+    }
+
+    public Optional<ProductDetails> findDetailsById(Long id) {
+        return productDetailsRepository.findById(id);
+    }
+
+    @Transactional
+    public ProductDetails save(@Valid ProductDetails productDetails) {
+        return productDetailsRepository.save(productDetails);
+    }
+
+// tag::snippet[]
+    @Transactional // <1>
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails); // <2>
+    }
+// end::snippet[]
+}
+----
+<1> Like `save()`, this method writes data, so it overrides the class-level read-only transaction.
+<2> Spring Data deletes the product that has the same ID, but only if it also has the same version.
+
+Spring Data checks the version when deleting a product, the same way it does when saving one. If another user has changed the product since it was loaded, the versions don't match, and nothing is deleted. Instead, Spring Data throws an `OptimisticLockingFailureException`, which `ProductCatalogView` already handles.
+
+Next, add the button to `ProductFormDrawer`. It works like the [guibutton]*Save* button, with a callback that does the actual deleting. To pass the product to the callback, the drawer now keeps the product that it shows in a field:
+
+.ProductFormDrawer.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+// tag::snippet[]
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+// end::snippet[]
+import com.vaadin.flow.component.html.H2;
+// tag::snippet[]
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+// end::snippet[]
+import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+
+class ProductFormDrawer extends Composite<VerticalLayout> {
+
+    @FunctionalInterface
+    interface SaveCallback {
+        ProductDetails save(ProductDetails productDetails);
+    }
+
+// tag::snippet[]
+    @FunctionalInterface
+    interface DeleteCallback {
+        void delete(ProductDetails productDetails); // <1>
+    }
+// end::snippet[]
+
+    @FunctionalInterface
+    interface ErrorCallback {
+        void handleException(RuntimeException e);
+    }
+
+    private final SaveCallback saveCallback;
+// tag::snippet[]
+    private final DeleteCallback deleteCallback;
+// end::snippet[]
+    private final ErrorCallback errorCallback;
+    private final ProductForm form;
+// tag::snippet[]
+    private ProductDetails productDetails; // <2>
+// end::snippet[]
+
+// tag::snippet[]
+    ProductFormDrawer(SaveCallback saveCallback, DeleteCallback deleteCallback,
+                      ErrorCallback errorCallback) {
+// end::snippet[]
+        this.saveCallback = saveCallback;
+// tag::snippet[]
+        this.deleteCallback = deleteCallback;
+// end::snippet[]
+        this.errorCallback = errorCallback;
+
+        var header = new H2("Product Details");
+        form = new ProductForm();
+
+        var saveButton = new Button("Save", e -> save());
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
+// tag::snippet[]
+        var deleteButton = new Button("Delete", e -> delete());
+        deleteButton.addThemeVariants(ButtonVariant.ERROR); // <3>
+// end::snippet[]
+
+        var layout = getContent();
+        layout.add(header);
+        layout.add(new Scroller(form));
+// tag::snippet[]
+        layout.add(new HorizontalLayout(saveButton, deleteButton)); // <4>
+// end::snippet[]
+        layout.setHeightFull();
+    }
+
+    public void setProductDetails(ProductDetails productDetails) {
+// tag::snippet[]
+        this.productDetails = productDetails;
+// end::snippet[]
+        form.setFormDataObject(productDetails);
+    }
+
+    private void save() {
+        form.getFormDataObject().ifPresent(productDetails -> {
+            try {
+                var saved = saveCallback.save(productDetails);
+// tag::snippet[]
+                setProductDetails(saved); // <5>
+// end::snippet[]
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+    }
+
+// tag::snippet[]
+    private void delete() {
+        var dialog = new ConfirmDialog(); // <6>
+        dialog.setHeader("Delete Product");
+        dialog.setText("Are you sure you want to permanently delete this product?");
+        dialog.setCancelable(true); // <7>
+        dialog.setConfirmText("Delete");
+        dialog.setConfirmButtonTheme("error primary"); // <8>
+        dialog.addConfirmListener(event -> {
+            try {
+                deleteCallback.delete(productDetails); // <9>
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+        dialog.open();
+    }
+// end::snippet[]
+}
+----
+<1> The delete callback doesn't return anything, since the drawer has nothing left to show after deleting.
+<2> The drawer keeps the product that it shows, including its version.
+<3> The error variant makes the button red, which warns the user that the action is destructive.
+<4> Show the buttons side by side.
+<5> After saving, keep the saved product instead of the old one, since only the saved product has the new version. Otherwise, deleting a product right after saving it would fail with an optimistic locking error.
+<6> <</components/confirm-dialog#,Confirm Dialog>> is a dialog for confirming an action. It has a header, a text, and up to three buttons.
+<7> Show a [guibutton]*Cancel* button. Clicking it, or pressing kbd:[Esc], closes the dialog without deleting anything.
+<8> Make the confirm button red as well.
+<9> Delete the product only after the user has confirmed. Errors go to the same error callback as when saving.
+
+Since the constructor of `ProductFormDrawer` has changed again, the code doesn't compile until you update `ProductCatalogView`. Pass a delete callback to the drawer, between the save callback and the error handler:
+
+[source,java]
+----
+var drawer = new ProductFormDrawer(productDetails -> {
+    var saved = service.save(productDetails);
+    grid.getDataProvider().refreshAll();
+    return saved;
+// tag::snippet[]
+}, productDetails -> {
+    service.delete(productDetails); // <1>
+    grid.deselectAll(); // <2>
+    grid.getDataProvider().refreshAll(); // <3>
+// end::snippet[]
+}, this::handleException);
+----
+<1> Call the service to delete the product from the database.
+<2> Clear the selection. The selection listener then hides the drawer.
+<3> Refresh the grid so that the deleted product disappears from it.
+
+Select a product, click [guibutton]*Delete*, and confirm. The product disappears from the grid, and the drawer closes. If you click [guibutton]*Cancel* instead, the product stays.
+
+To see the version check in action, open the same product in two browser windows. Change and save the product in one of them. Then delete it in the other. The notification about another user's edit appears, and the product stays in the catalog.
+
+See the <</building-apps/ui-basics/add-dialogs-popovers#,Add Dialogs and Popovers>> guide for more about Confirm Dialog and other dialogs.
+
+
 == Complete Code for This Step
 
 If your application doesn't behave as described, compare your files with these listings. They show every class in the application as it should look at the end of this step.
@@ -997,6 +1215,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -1136,6 +1358,11 @@ class ProductCatalogService {
     @Transactional
     public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(productDetails);
+    }
+
+    @Transactional
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails);
     }
 }
 ----
@@ -1393,7 +1620,9 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -1405,16 +1634,25 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
     }
 
     @FunctionalInterface
+    interface DeleteCallback {
+        void delete(ProductDetails productDetails);
+    }
+
+    @FunctionalInterface
     interface ErrorCallback {
         void handleException(RuntimeException e);
     }
 
     private final SaveCallback saveCallback;
+    private final DeleteCallback deleteCallback;
     private final ErrorCallback errorCallback;
     private final ProductForm form;
+    private ProductDetails productDetails;
 
-    ProductFormDrawer(SaveCallback saveCallback, ErrorCallback errorCallback) {
+    ProductFormDrawer(SaveCallback saveCallback, DeleteCallback deleteCallback,
+                      ErrorCallback errorCallback) {
         this.saveCallback = saveCallback;
+        this.deleteCallback = deleteCallback;
         this.errorCallback = errorCallback;
 
         var header = new H2("Product Details");
@@ -1422,15 +1660,18 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 
         var saveButton = new Button("Save", e -> save());
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
+        var deleteButton = new Button("Delete", e -> delete());
+        deleteButton.addThemeVariants(ButtonVariant.ERROR);
 
         var layout = getContent();
         layout.add(header);
         layout.add(new Scroller(form));
-        layout.add(saveButton);
+        layout.add(new HorizontalLayout(saveButton, deleteButton));
         layout.setHeightFull();
     }
 
     public void setProductDetails(ProductDetails productDetails) {
+        this.productDetails = productDetails;
         form.setFormDataObject(productDetails);
     }
 
@@ -1438,11 +1679,28 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         form.getFormDataObject().ifPresent(productDetails -> {
             try {
                 var saved = saveCallback.save(productDetails);
-                form.setFormDataObject(saved);
+                setProductDetails(saved);
             } catch (RuntimeException e) {
                 errorCallback.handleException(e);
             }
         });
+    }
+
+    private void delete() {
+        var dialog = new ConfirmDialog();
+        dialog.setHeader("Delete Product");
+        dialog.setText("Are you sure you want to permanently delete this product?");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Delete");
+        dialog.setConfirmButtonTheme("error primary");
+        dialog.addConfirmListener(event -> {
+            try {
+                deleteCallback.delete(productDetails);
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+        dialog.open();
     }
 }
 ----
@@ -1451,7 +1709,7 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 
 == Next Steps
 
-You have now turned the read-only product form drawer into a fully functional edit form, complete with validation and error handling. You have also added an application service that validates the data before storing it, and improved the user experience of the application.
+You have now turned the read-only product form drawer into a fully functional edit form, complete with validation and error handling. You have also added an application service that validates the data before storing it, improved the user experience of the application, and made it possible to delete products after a confirmation.
 
 Next, you'll implement support for adding new products to the catalog. Proceed to the <<add-data#,Add Products>> step to continue the tutorial.
 

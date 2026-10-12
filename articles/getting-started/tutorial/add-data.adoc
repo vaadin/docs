@@ -130,6 +130,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -276,7 +280,7 @@ class AddProductDialog extends Dialog {
 // end::snippet[]
 }
 ----
-<1> This save callback does not need to return an object as the dialog will be closed on success.
+<1> This save callback doesn't need to return an object, since the dialog closes on success.
 <2> Create a new, empty form data object for each dialog instance.
 <3> This is almost the same implementation as in `ProductFormDrawer`, but instead of re-populating the form with a new FDO it closes the dialog.
 
@@ -338,6 +342,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -502,6 +510,11 @@ class ProductCatalogService {
     public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(productDetails);
     }
+
+    @Transactional
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails);
+    }
 }
 ----
 
@@ -563,6 +576,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -695,6 +712,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -982,6 +1003,11 @@ class ProductCatalogService {
         return productDetailsRepository.save(new ProductDetails(productDetails));
 // end::snippet[]
     }
+
+    @Transactional
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails);
+    }
 }
 ----
 
@@ -1051,6 +1077,10 @@ class ProductCatalogView extends MasterDetailLayout {
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -1220,6 +1250,11 @@ class ProductCatalogService {
     @Transactional
     public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(new ProductDetails(productDetails));
+    }
+
+    @Transactional
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails);
     }
 }
 ----
@@ -1493,7 +1528,9 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -1505,16 +1542,25 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
     }
 
     @FunctionalInterface
+    interface DeleteCallback {
+        void delete(ProductDetails productDetails);
+    }
+
+    @FunctionalInterface
     interface ErrorCallback {
         void handleException(RuntimeException e);
     }
 
     private final SaveCallback saveCallback;
+    private final DeleteCallback deleteCallback;
     private final ErrorCallback errorCallback;
     private final ProductForm form;
+    private ProductDetails productDetails;
 
-    ProductFormDrawer(SaveCallback saveCallback, ErrorCallback errorCallback) {
+    ProductFormDrawer(SaveCallback saveCallback, DeleteCallback deleteCallback,
+                      ErrorCallback errorCallback) {
         this.saveCallback = saveCallback;
+        this.deleteCallback = deleteCallback;
         this.errorCallback = errorCallback;
 
         var header = new H2("Product Details");
@@ -1522,15 +1568,18 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 
         var saveButton = new Button("Save", e -> save());
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
+        var deleteButton = new Button("Delete", e -> delete());
+        deleteButton.addThemeVariants(ButtonVariant.ERROR);
 
         var layout = getContent();
         layout.add(header);
         layout.add(new Scroller(form));
-        layout.add(saveButton);
+        layout.add(new HorizontalLayout(saveButton, deleteButton));
         layout.setHeightFull();
     }
 
     public void setProductDetails(ProductDetails productDetails) {
+        this.productDetails = productDetails;
         form.setFormDataObject(productDetails);
     }
 
@@ -1538,11 +1587,28 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         form.getFormDataObject().ifPresent(productDetails -> {
             try {
                 var saved = saveCallback.save(productDetails);
-                form.setFormDataObject(saved);
+                setProductDetails(saved);
             } catch (RuntimeException e) {
                 errorCallback.handleException(e);
             }
         });
+    }
+
+    private void delete() {
+        var dialog = new ConfirmDialog();
+        dialog.setHeader("Delete Product");
+        dialog.setText("Are you sure you want to permanently delete this product?");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Delete");
+        dialog.setConfirmButtonTheme("error primary");
+        dialog.addConfirmListener(event -> {
+            try {
+                deleteCallback.delete(productDetails);
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+        dialog.open();
     }
 }
 ----
@@ -1613,10 +1679,10 @@ You have now built a fully functional Vaadin application with the following feat
 - Paginated data loading
 - Sorting and filtering
 - Forms and validation
-- Editing and inserting
+- Editing, inserting, and deleting
 
-You have also refactored and improved the structure of the code as new features and bugs have emerged. Although this example application is quite simple, the patterns you have learned are just as useful in larger, real-world business applications.
+You have also refactored and improved the structure of the code as new features and bugs have emerged. Although this example application is quite simple, the patterns you have learned are as useful in larger, real-world business applications.
 
-Next, you'll implement support for deep linking. Proceed to the <<deep-link#,Add Deep Linking>> step to continue the tutorial.
+So far, the application has only one view. Next, you'll add a main layout with a navigation menu, and a second view to navigate to. Proceed to the <<add-navigation#,Add Navigation>> step to continue the tutorial.
 
-link:{articles}/getting-started/tutorial/deep-link[Next: Add Deep Linking, role="button primary water", id="docs-tutorial-add-data-next-cta"]
+link:{articles}/getting-started/tutorial/add-navigation[Next: Add Navigation, role="button primary water", id="docs-tutorial-add-data-next-cta"]
