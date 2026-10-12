@@ -145,6 +145,22 @@ The example here uses the `@Scheduled` and `@Async` annotations, but you can als
 Programmatic schedulers are more verbose, but they're easier to debug. Therefore, you should start with annotations when you implement schedulers. If you later need more control over scheduling, or run into problems that are difficult to debug, you should switch to a programmatic approach.
 
 
+[[scheduled-jobs-on-several-instances]]
+=== Scheduled Jobs on Several Instances
+
+Spring schedules jobs in every running instance of the application. When you run more than one instance -- for example, behind a load balancer -- each instance runs each scheduled job. A job that sends reminder emails then sends every email once per instance.
+
+To run a job in only one instance at a time, do one of the following:
+
+* *Lock the job.* A library such as https://github.com/lukas-krecan/ShedLock[ShedLock] keeps a lock in a shared database. When the job is due, the instance that gets the lock runs it, and the other instances skip that run.
+* *Use a clustered scheduler.* https://www.quartz-scheduler.org/[Quartz] can store its jobs in a shared database, and in clustered mode, it fires each job in one instance only. Spring Boot auto-configures Quartz; see https://docs.spring.io/spring-boot/reference/io/quartz.html[Quartz Scheduler] in the Spring Boot documentation.
+* *Schedule jobs in one instance only.* For example, enable scheduling through a configuration property that you set in one instance. This is the simplest option, but when that instance is down, no jobs run.
+
+Even so, make your jobs <<jobs#idempotent-jobs,idempotent>>, so that an extra run does no harm.
+
+The same applies to <<startup-jobs,startup jobs>>: every instance runs them, every time it starts.
+
+
 == Startup Jobs
 
 For startup jobs, you should create a startup trigger that executes the job when the application starts.
