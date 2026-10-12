@@ -171,7 +171,7 @@ const SCRIPTS = {
           'concurrently',
           '--kill-others',
           '--raw',
-          `"npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
+          `"node dspublisher/wait-for-frontend-plugins.js && npx -y @vaadin/dspublisher@${DSP_VERSION} --develop"`,
           `"mvn -C -Dspring-boot.run.arguments=--server.port=${docsPort}"`,
         ],
         phases: [
