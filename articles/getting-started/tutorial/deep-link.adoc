@@ -3,13 +3,13 @@ title: Deep Link
 page-title: Add Deep Linking to the Product Catalog | Vaadin Tutorial
 description: Use a route parameter to store the product item selection.
 meta-description: Learn how to use a route parameter to manage selection in a Vaadin application.
-order: 35
+order: 40
 ---
 
 
 = Add Deep Linking
 
-In the previous step, you added support for creating new products in the catalog.
+In the previous step, you added a main layout with a navigation menu, and gave the product catalog the path `products`.
 
 In this step, you'll add support for deep linking, making it possible to share and bookmark links to individual products.
 
@@ -43,15 +43,21 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 // tag::snippet[]
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+// end::snippet[]
+import com.vaadin.flow.router.Menu;
+// tag::snippet[]
 import com.vaadin.flow.router.OptionalParameter;
 // end::snippet[]
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
-@Route("")
+@Route("products")
+@RouteAlias("")
 @PageTitle("Product Catalog")
+@Menu(order = 1, icon = "vaadin:package")
 // tag::snippet[]
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> { // <1>
 // end::snippet[]
@@ -99,6 +105,10 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -175,7 +185,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 <1> Implement `HasUrlParameter<Long>` to add a single route parameter of type `Long` to the view.
 <2> Make the route parameter optional with the `@OptionalParameter` annotation.
 
-You can now navigate to http://localhost:8080/12, where `12` is the route parameter value. The view won't look any different yet — you'll fix that next.
+You can now navigate to http://localhost:8080/products/12, where `12` is the route parameter value. The view won't look any different yet — you'll fix that next.
 
 
 == Select on Navigation
@@ -204,9 +214,11 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
@@ -214,8 +226,10 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import java.util.Optional;
 // end::snippet[]
 
-@Route("")
+@Route("products")
+@RouteAlias("")
 @PageTitle("Product Catalog")
+@Menu(order = 1, icon = "vaadin:package")
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
@@ -255,6 +269,10 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -333,7 +351,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 <1> Fetch the `ProductCatalogItem` that has the ID from the URL.
 <2> Select the item in the grid. If there's no parameter, or no product with that ID, clear the selection instead. The selection listener then shows or hides the drawer.
 
-If you now navigate to http://localhost:8080/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080 should clear the selection and hide the drawer.
+If you now navigate to http://localhost:8080/products/12, you should see an item selected in the grid and its details visible in the drawer. Try different product IDs -- the test data contains products from 1 to 50. Navigating to http://localhost:8080/products should clear the selection and hide the drawer.
 
 
 == Add Navigation Methods
@@ -363,16 +381,20 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Optional;
 
-@Route("")
+@Route("products")
+@RouteAlias("")
 @PageTitle("Product Catalog")
+@Menu(order = 1, icon = "vaadin:package")
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
@@ -412,6 +434,10 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -496,7 +522,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 }
 ----
 
-From other views, you'll be able to call `ProductCatalogView.showProductCatalog()` to open the catalog, or `ProductCatalogView.showProductDetails(productId)` to jump to a specific product. For now, you'll use these methods internally.
+Other classes in the `com.example.product` package can call `ProductCatalogView.showProductCatalog()` to open the catalog, or `ProductCatalogView.showProductDetails(productId)` to jump to a specific product. For now, you'll use these methods internally.
 
 
 == Navigate on Selection
@@ -526,9 +552,11 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
@@ -537,8 +565,10 @@ import java.util.Objects;
 // end::snippet[]
 import java.util.Optional;
 
-@Route("")
+@Route("products")
+@RouteAlias("")
 @PageTitle("Product Catalog")
+@Menu(order = 1, icon = "vaadin:package")
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
@@ -578,6 +608,10 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -679,7 +713,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 <2> Clear the route parameter if there is no selection.
 <3> If the grid already has this product selected, there's nothing to do. This is the case when the navigation comes from the selection listener, so `setParameter()` doesn't fetch an item that the grid already has.
 
-If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter. Since adding a product selects it, the URL follows when you add products, too. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
+If you now select an item in the grid, you should see the URL change. Clearing the selection should also remove the URL parameter, and so does deleting the selected product. Since adding a product selects it, the URL follows when you add products, too. The [guilabel]*Product Catalog* item in the menu stays highlighted throughout, since you made the menu items match nested paths in the previous step. Even though you are calling `UI.navigate()`, the page is not reloading and the `ProductCatalogView` instance remains the same. Vaadin notices you are already on the view that you are trying to navigate to, and only calls `setParameter()` again.
 
 You may have noticed two potential loops:
 
@@ -716,17 +750,21 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Objects;
 import java.util.Optional;
 
-@Route("")
+@Route("products")
+@RouteAlias("")
 @PageTitle("Product Catalog")
+@Menu(order = 1, icon = "vaadin:package")
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
@@ -766,6 +804,10 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
             var saved = service.save(productDetails);
             grid.getDataProvider().refreshAll();
             return saved;
+        }, productDetails -> {
+            service.delete(productDetails);
+            grid.deselectAll();
+            grid.getDataProvider().refreshAll();
         }, this::handleException);
 
         searchField.addValueChangeListener(e ->
@@ -975,6 +1017,11 @@ class ProductCatalogService {
     @Transactional
     public ProductDetails save(@Valid ProductDetails productDetails) {
         return productDetailsRepository.save(new ProductDetails(productDetails));
+    }
+
+    @Transactional
+    public void delete(ProductDetails productDetails) {
+        productDetailsRepository.delete(productDetails);
     }
 }
 ----
@@ -1248,7 +1295,9 @@ package com.example.product;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
@@ -1260,16 +1309,25 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
     }
 
     @FunctionalInterface
+    interface DeleteCallback {
+        void delete(ProductDetails productDetails);
+    }
+
+    @FunctionalInterface
     interface ErrorCallback {
         void handleException(RuntimeException e);
     }
 
     private final SaveCallback saveCallback;
+    private final DeleteCallback deleteCallback;
     private final ErrorCallback errorCallback;
     private final ProductForm form;
+    private ProductDetails productDetails;
 
-    ProductFormDrawer(SaveCallback saveCallback, ErrorCallback errorCallback) {
+    ProductFormDrawer(SaveCallback saveCallback, DeleteCallback deleteCallback,
+                      ErrorCallback errorCallback) {
         this.saveCallback = saveCallback;
+        this.deleteCallback = deleteCallback;
         this.errorCallback = errorCallback;
 
         var header = new H2("Product Details");
@@ -1277,15 +1335,18 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
 
         var saveButton = new Button("Save", e -> save());
         saveButton.addThemeVariants(ButtonVariant.PRIMARY);
+        var deleteButton = new Button("Delete", e -> delete());
+        deleteButton.addThemeVariants(ButtonVariant.ERROR);
 
         var layout = getContent();
         layout.add(header);
         layout.add(new Scroller(form));
-        layout.add(saveButton);
+        layout.add(new HorizontalLayout(saveButton, deleteButton));
         layout.setHeightFull();
     }
 
     public void setProductDetails(ProductDetails productDetails) {
+        this.productDetails = productDetails;
         form.setFormDataObject(productDetails);
     }
 
@@ -1293,11 +1354,28 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         form.getFormDataObject().ifPresent(productDetails -> {
             try {
                 var saved = saveCallback.save(productDetails);
-                form.setFormDataObject(saved);
+                setProductDetails(saved);
             } catch (RuntimeException e) {
                 errorCallback.handleException(e);
             }
         });
+    }
+
+    private void delete() {
+        var dialog = new ConfirmDialog();
+        dialog.setHeader("Delete Product");
+        dialog.setText("Are you sure you want to permanently delete this product?");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Delete");
+        dialog.setConfirmButtonTheme("error primary");
+        dialog.addConfirmListener(event -> {
+            try {
+                deleteCallback.delete(productDetails);
+            } catch (RuntimeException e) {
+                errorCallback.handleException(e);
+            }
+        });
+        dialog.open();
     }
 }
 ----
@@ -1355,6 +1433,71 @@ class AddProductDialog extends Dialog {
                 errorCallback.handleException(e);
             }
         });
+    }
+}
+----
+====
+
+.MainLayout.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.base.ui;
+
+import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.server.menu.MenuConfiguration;
+
+@Layout
+class MainLayout extends AppLayout {
+
+    MainLayout() {
+        // Create components
+        var toggle = new DrawerToggle();
+        var title = new H1("Click & Collect");
+
+        var menu = new SideNav();
+        MenuConfiguration.getMenuEntries().forEach(entry -> {
+            var item = new SideNavItem(entry.title(), entry.menuClass(),
+                new Icon(entry.icon()));
+            item.setMatchNested(true);
+            menu.addItem(item);
+        });
+
+        // Layout navigation bar and drawer
+        addToNavbar(toggle, title);
+        addToDrawer(menu);
+    }
+}
+----
+====
+
+.OrdersView.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.order;
+
+import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("orders")
+@PageTitle("Orders")
+@Menu(order = 2, icon = "vaadin:cart")
+class OrdersView extends VerticalLayout {
+
+    OrdersView() {
+        add(new Paragraph("Customer orders will be listed here."));
     }
 }
 ----
