@@ -69,6 +69,9 @@ class OlderVersionNotice extends LitElement {
 
   dismissed = false;
 
+  // TODO: Pick one design and remove the other (see `?older-version=1|2`)
+  design: 1 | 2 = 1;
+
   connectedCallback() {
     super.connectedCallback();
     this.findLatestPage();
@@ -97,17 +100,19 @@ class OlderVersionNotice extends LitElement {
 
   private async submit(e: SubmitEvent) {
     e.preventDefault();
-    if (this.status === 'sending') {
+    if (this.status === 'sending' || this.status === 'done') {
       return;
     }
     const email = new FormData(e.target as HTMLFormElement).get('email');
     this.status = 'sending';
     try {
-      const response = await fetch(SIGNUP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, version: `${this.current.number}.x` }),
-      });
+      const response = simulate
+        ? await simulateSignup(String(email))
+        : await fetch(SIGNUP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, version: `${this.current.number}.x` }),
+          });
       if (!response.ok) {
         throw new Error(`Signup failed with status ${response.status}`);
       }
@@ -119,16 +124,45 @@ class OlderVersionNotice extends LitElement {
     }
   }
 
-  private renderForm() {
-    if (this.status === 'done') {
-      return html`
-        <p class="success" role="status">
-          ${checkIcon} You're subscribed. We'll email you when a security fix ships.
-        </p>
-      `;
-    }
-
+  // On success, only the submit button changes: it turns into the confirmation.
+  // The live region announces it to screen readers.
+  private renderSubmitButton(label: string) {
+    const done = this.status === 'done';
     const sending = this.status === 'sending';
+    return html`
+      <button
+        class="submit ${done ? 'done' : ''}"
+        aria-disabled=${done || sending ? 'true' : 'false'}
+      >
+        ${done ? html`${checkIcon} Subscribed` : sending ? html`${spinnerIcon} Subscribing…` : label}
+      </button>
+    `;
+  }
+
+  private renderStatus() {
+    return html`
+      <span class="visually-hidden" role="status">
+        ${this.status === 'done' ? "You're subscribed to security alerts." : ''}
+      </span>
+    `;
+  }
+
+  private renderError() {
+    return this.status === 'error'
+      ? html`<p role="alert">Something went wrong. Please try again.</p>`
+      : nothing;
+  }
+
+  private renderPrivacy() {
+    return html`
+      <p class="privacy">
+        Unsubscribe anytime.
+        <a href=${PRIVACY_POLICY_URL} target="_blank" rel="noopener">Privacy policy</a>
+      </p>
+    `;
+  }
+
+  private renderForm() {
     return html`
       <form @submit=${this.submit}>
         <span class="email-field">
@@ -140,22 +174,201 @@ class OlderVersionNotice extends LitElement {
             autocomplete="email"
             placeholder="you@company.com"
             aria-label="Email address"
-            ?readonly=${sending}
+            ?readonly=${this.status === 'sending' || this.status === 'done'}
           />
         </span>
-        <button class="submit" aria-disabled=${sending ? 'true' : 'false'}>
-          ${sending ? html`${spinnerIcon} Subscribing…` : 'Get Security Alerts'}
-        </button>
+        ${this.renderSubmitButton('Get Security Alerts')}
       </form>
-      ${
-        this.status === 'error'
-          ? html`<p role="alert">Something went wrong. Please try again.</p>`
-          : nothing
-      }
-      <p class="privacy">
-        Unsubscribe anytime.
-        <a href=${PRIVACY_POLICY_URL} target="_blank" rel="noopener">Privacy policy</a>
+      ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
+    `;
+  }
+
+  private get latestLink() {
+    return html`<a href=${this.latestPage ?? this.latest.path}>${this.latest.title}</a>`;
+  }
+
+  private renderDesign1() {
+    return html`
+      <div class="title">
+        You're reading the ${this.current.title} docs. The latest version is ${this.latestLink}.
+      </div>
+      <p class="intro">
+        Staying on ${this.current.number}? Get security fix alerts and a reminder before free
+        maintenance ends.
       </p>
+      ${this.renderForm()}
+      <!-- Same markup as a [.buttons] list in AsciiDoc, as in the commercial feature notice -->
+      <div class="ulist buttons">
+        <ul>
+          <li>
+            <p>
+              <a href="/docs/v${this.latest.number}/upgrading">
+                Upgrade Guide: ${this.current.number} → ${this.latest.number}
+              </a>
+            </p>
+          </li>
+          <li>
+            <p>
+              <a href=${EXTENDED_MAINTENANCE_URL}
+                >Extended Maintenance for ${this.current.number}</a
+              >
+            </p>
+          </li>
+        </ul>
+      </div>
+    `;
+  }
+
+  // Design 2 keeps the notice short and moves the signup form into a dialog
+  private renderDesign2() {
+    return html`
+      <div class="title">You're reading the ${this.current.title} docs.</div>
+      <p class="intro">${this.latestLink} is the latest version.</p>
+      <div class="ulist buttons">
+        <ul>
+          <li>
+            <p>
+              ${
+                this.status === 'done'
+                  ? html`<a
+                      href="#security-alerts"
+                      class="done"
+                      aria-disabled="true"
+                      @click=${(e: Event) => e.preventDefault()}
+                      >${checkIcon} Subscribed</a
+                    >`
+                  : html`<a href="#security-alerts" role="button" @click=${this.openDialog}>
+                      Get Security Alerts for ${this.current.number}
+                    </a>`
+              }
+            </p>
+          </li>
+          <li>
+            <p>
+              <a href=${EXTENDED_MAINTENANCE_URL}
+                >Extended Maintenance for ${this.current.number}</a
+              >
+            </p>
+          </li>
+          <li class="primary">
+            <p>
+              <a href="/docs/v${this.latest.number}/upgrading">
+                Upgrade Guide: ${this.current.number} → ${this.latest.number}
+              </a>
+            </p>
+          </li>
+        </ul>
+      </div>
+    `;
+  }
+
+  private openDialog(e: Event) {
+    e.preventDefault();
+    if (this.status === 'error') {
+      this.status = 'idle';
+    }
+    const dialog = this.querySelector('dialog');
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+      this.animateDialog(dialog, 'in');
+    }
+  }
+
+  private closing = false;
+
+  private async closeDialog() {
+    const dialog = this.querySelector('dialog');
+    if (!dialog?.open || this.closing) {
+      return;
+    }
+    this.closing = true;
+    await this.animateDialog(dialog, 'out');
+    dialog.close();
+    this.closing = false;
+  }
+
+  // Fades and slightly scales the dialog, and fades its backdrop
+  private async animateDialog(dialog: HTMLDialogElement, direction: 'in' | 'out') {
+    if (reducedMotion()) {
+      return;
+    }
+    const options: KeyframeAnimationOptions = {
+      duration: 150,
+      easing: 'ease-out',
+      direction: direction === 'in' ? 'normal' : 'reverse',
+    };
+    await Promise.all([
+      dialog.animate(
+        [
+          { opacity: 0, transform: 'scale(0.96)' },
+          { opacity: 1, transform: 'none' },
+        ],
+        options
+      ).finished,
+      dialog.animate([{ opacity: 0 }, { opacity: 1 }], { ...options, pseudoElement: '::backdrop' })
+        .finished,
+    ]);
+  }
+
+  // Esc closes the dialog through closeDialog(), so it animates out too
+  private cancelDialog(e: Event) {
+    e.preventDefault();
+    this.closeDialog();
+  }
+
+  // Closes the dialog on clicks on its backdrop, which target the dialog itself.
+  // Clicks on the dialog's padding also do, so the position is checked too.
+  private closeDialogOnBackdropClick(e: MouseEvent) {
+    const dialog = e.currentTarget as HTMLDialogElement;
+    if (e.target !== dialog) {
+      return;
+    }
+    const rect = dialog.getBoundingClientRect();
+    const inside =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom;
+    if (!inside) {
+      this.closeDialog();
+    }
+  }
+
+  private renderDialog() {
+    return html`
+      <dialog
+        aria-labelledby="older-version-notice-dialog-title"
+        @click=${this.closeDialogOnBackdropClick}
+        @cancel=${this.cancelDialog}
+      >
+        <button class="dismiss" aria-label="Close" @click=${this.closeDialog}>${closeIcon}</button>
+        <div class="dialog-title" id="older-version-notice-dialog-title">
+          Get ${this.current.title} Security Alerts
+        </div>
+        <p class="dialog-description">
+          Get an email when a security fix ships, and a reminder before free maintenance ends.
+        </p>
+        <form @submit=${this.submit}>
+          <label for="older-version-notice-email">Email address</label>
+          <input
+            id="older-version-notice-email"
+            autofocus
+            type="email"
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="you@company.com"
+            ?readonly=${this.status === 'sending' || this.status === 'done'}
+          />
+          ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
+          <div class="dialog-actions">
+            <button type="button" class="cancel" @click=${this.closeDialog}>
+              ${this.status === 'done' ? 'Close' : 'Cancel'}
+            </button>
+            ${this.renderSubmitButton('Subscribe')}
+          </div>
+        </form>
+      </dialog>
     `;
   }
 
@@ -168,40 +381,14 @@ class OlderVersionNotice extends LitElement {
             <tr>
               <td class="icon"><div class="title">Note</div></td>
               <td class="content">
-                <div class="title">
-                  You're reading the ${this.current.title} docs. The latest version is
-                  <a href=${this.latestPage ?? this.latest.path}>${this.latest.title}</a>.
-                </div>
-                <p class="intro">
-                  Staying on ${this.current.number}? Get security fix alerts and a reminder before
-                  free maintenance ends.
-                </p>
-                ${this.renderForm()}
-                <!-- Same markup as a [.buttons] list in AsciiDoc, as in the commercial feature notice -->
-                <div class="ulist buttons">
-                  <ul>
-                    <li>
-                      <p>
-                        <a href="/docs/v${this.latest.number}/upgrading">
-                          Upgrade Guide: ${this.current.number} → ${this.latest.number}
-                        </a>
-                      </p>
-                    </li>
-                    <li>
-                      <p>
-                        <a href=${EXTENDED_MAINTENANCE_URL}>
-                          Extended Maintenance for ${this.current.number}
-                        </a>
-                      </p>
-                    </li>
-                  </ul>
-                </div>
+                ${this.design === 2 ? this.renderDesign2() : this.renderDesign1()}
               </td>
             </tr>
           </tbody>
         </table>
         <button class="dismiss" aria-label="Dismiss" @click=${this.dismiss}>${closeIcon}</button>
       </div>
+      ${this.design === 2 ? this.renderDialog() : nothing}
     `;
   }
 }
@@ -209,10 +396,18 @@ class OlderVersionNotice extends LitElement {
 customElements.define('docs-older-version-notice', OlderVersionNotice);
 
 // The version selector is empty on the dev server, so `?older-version` in the
-// URL shows the notice as if viewing V24, ignoring an earlier dismissal or signup
+// URL shows the notice as if viewing V24, ignoring an earlier dismissal or signup.
+// `?older-version=2` shows design 2.
 const simulate =
   process.env.NODE_ENV === 'development' &&
   new URLSearchParams(location.search).has('older-version');
+
+// On the dev server, the signup is simulated: it succeeds after a second, or
+// fails when the email address starts with "fail"
+async function simulateSignup(email: string) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return new Response(null, { status: email.startsWith('fail') ? 500 : 200 });
+}
 
 // Returns undefined until the version selector has rendered, and null when the
 // current version isn't older than the latest one
@@ -289,6 +484,9 @@ function attachOlderVersionNotice() {
     notice = new OlderVersionNotice();
     notice.current = versions.current;
     notice.latest = versions.latest;
+    if (simulate && new URLSearchParams(location.search).get('older-version') === '2') {
+      notice.design = 2;
+    }
   }
   article.prepend(notice);
 }
