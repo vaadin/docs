@@ -66,6 +66,8 @@ This method is particularly useful for:
 * Generating dynamic content
 * Streaming large files
 
+By default, the returned handler doesn't answer byte range requests, which media players use to seek and which Safari requires before it plays audio or video at all. Call [methodname]`enableRangeRequests()` to opt in, but only when the callback returns the same content, with a known content length, on every call — see <<#byte-ranges,Byte Range Requests>>.
+
 [role="since:com.vaadin:vaadin@V25.2"]
 ==== Overriding the File Name
 
@@ -97,6 +99,16 @@ This method is useful for serving static resources like images, templates, fonts
 
 If the resource name starts with `/`, it will then look from `/src/main/resources` without the class path prepended.
 
+By default, these handlers don't answer byte range requests, which media players use to seek and which Safari requires before it plays audio or video at all. Call [methodname]`enableRangeRequests()` on the handler to opt in:
+
+[source,java]
+----
+Video video = new Video(DownloadHandler
+        .forClassResource(MyView.class, "intro.mp4").enableRangeRequests());
+----
+
+See <<#byte-ranges,Byte Range Requests>> for when this is safe and what it costs.
+
 === Download A File From File System
 
 The `forFile` method allows you to serve files from the server's file system.
@@ -107,6 +119,8 @@ Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-an
 ----
 
 This method is useful for serving files that are stored on the server's file system.
+
+Unlike the other factory methods, it also answers byte range requests by default, by seeking in the file — see <<#byte-ranges,Byte Range Requests>> — which makes it the recommended way to serve large media.
 
 The [classname]`Anchor` component sets the `download` attribute by default and download handlers extending [classname]`AbstractDownloadHandler` also set the `Content-Disposition` to `attachment`.
 If the content should be inlined to the page, this have to be set explicitly by calling the [methodname]`inline()` method on the `DownloadHandler` instance and using `AttachmentType.INLINE`:
@@ -455,5 +469,23 @@ Anchor downloadLink = new Anchor(new DownloadHandler() {
     }
 }, "Download meeting notes");
 ----
+
+[#byte-ranges]
+=== Byte Range Requests
+
+A byte range request asks for part of a response instead of the whole thing. Media players use them to seek, and Safari refuses to play audio or video from a handler that doesn't answer them. [methodname]`DownloadHandler.forFile()` always answers them, by seeking in the file. [methodname]`forClassResource`, [methodname]`forServletResource`, and [methodname]`fromInputStream` don't by default. Call [methodname]`enableRangeRequests()` on the handler to opt in:
+
+[source,java]
+----
+Video video = new Video(DownloadHandler
+        .forClassResource(MyView.class, "intro.mp4").enableRangeRequests());
+----
+
+Enabling it isn't free or safe for every kind of content these methods can serve:
+
+* A class or servlet resource inside a packaged jar or war is often compressed, so each range re-inflates the bytes before it, which adds up for large media fetched in many small ranges.
+* An input stream handler calls its callback again for every range request, so ranges are only correct when the callback returns the same content, with a known content length, every time. A stream that can seek, such as a [classname]`FileInputStream`, skips the bytes before a range; other streams read through them instead.
+
+[methodname]`isRangeRequestsEnabled()` reports whether a given handler answers range requests, which code built on [interfacename]`DownloadHandler` can check before deciding how to serve or render the content.
 
 [discussion-id]`C82C3953-6480-493C-A5D6-E397BC072DBA`
