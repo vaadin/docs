@@ -14,8 +14,8 @@ import com.vaadin.flow.router.Route;
 public class BufferedGridView extends VerticalLayout {
 
     BufferedGridView() {
-        // In a real application, this would be injected or
-        // retrieved via a service locator
+        // In a real application, this would be a Spring bean
+        // injected through the constructor
         var service = new ItemService();
 
         // Create components

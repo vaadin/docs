@@ -16,7 +16,7 @@ export class Example extends LitElement {
     return html`
       <!-- tag::snippet[] -->
       <vaadin-checkbox-group
-        theme="helper-above-field vertical"
+        theme="helper-above-field vertical label-aside"
         label="Label"
         helper-text="Helper text"
       >

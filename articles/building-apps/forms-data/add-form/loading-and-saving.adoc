@@ -50,7 +50,7 @@ You don't need a separate `findById` method when using *Load from Selection*. Al
 [source,java]
 ----
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW) // <1>
+@Transactional(readOnly = true) // <1>
 @PreAuthorize("isAuthenticated()") // <2>
 public class ProposalService {
 
@@ -59,10 +59,10 @@ public class ProposalService {
     }
 }
 ----
-<1> Always use transactions when saving and loading data.
+<1> Always use transactions when loading and saving data. Methods that only load data can use read-only transactions. See the <<../../business-logic/add-service#transactions,Add a Service>> guide for details.
 <2> Always secure your application services. See the <<../../security/protect-services#,Protect Services>> guide for details.
 
-// TODO Link to the article about grids once it's written.
+For how to connect a service method like this to a grid, see the <<../add-grid/paginated-data#,Add a Paginated Grid>> guide.
 
 
 === Fetch and Load
@@ -72,7 +72,7 @@ If you're using *Fetch and Load*, you need a separate method for fetching the FD
 [source,java]
 ----
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional(readOnly = true)
 @PreAuthorize("isAuthenticated()")
 public class ProposalService {
 
@@ -108,11 +108,12 @@ Here's an example of an application service that saves and retrieves a `Proposal
 [source,java]
 ----
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional(readOnly = true)
 @PreAuthorize("isAuthenticated()")
 public class ProposalService {
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional // <1>
     public Proposal save(Proposal proposal) {
         // Validate and save the proposal.
     }
@@ -120,6 +121,7 @@ public class ProposalService {
     // (Other methods omitted for brevity)
 }
 ----
+<1> Overrides the read-only default, since this method writes data.
 
 Returning the saved FDO allows the UI to access generated fields, such as IDs or timestamps, without needing to reload the data. However, if your UI does not need the result -- for example if it navigates to a different view, or refreshes itself -- the method should not return anything.
 
@@ -157,16 +159,18 @@ The following example demonstrates how the `Proposal` and `PersistentProposal` c
 [source,java]
 ----
 @Service
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional(readOnly = true)
 @PreAuthorize("isAuthenticated()")
 public class ProposalService {
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public PersistentProposal insert(Proposal proposal) {
         // Validate and insert the proposal.
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public PersistentProposal update(PersistentProposal proposal) {
         // Validate and update the proposal.
     }
@@ -198,7 +202,7 @@ The stale FDO remains in memory until you refresh the grid. To avoid this, you s
 * Copy the FDO before passing it to the form. Copying ensures that the original object shown in the grid remains unchanged if the user cancels or validation fails.
 * Refresh the grid both after saving and canceling. This replaces any stale objects with fresh ones.
 
-Here's an example of the Fetch and Load approach in practice:
+Here's an example of the Load from Selection approach in practice:
 
 [source,java]
 ----
@@ -231,7 +235,7 @@ public class ProposalView extends Main {
 
 If you need a refresher on form binding, buffered mode and write-through mode, see the <<fields-and-binding#,Fields & Binding>> guide.
 
-// TODO Links to guides about grids and selection via URL parameter
+For more about grids, see the <<../add-grid#,Add a Grid>> guides. To make the selected item part of the URL, so that users can bookmark it, pass its ID as a <<../../views/pass-data/route-parameters#,route parameter>>. Then load it with the Fetch and Load approach described next.
 
 
 === Fetch and Load
@@ -376,7 +380,7 @@ private void editProposal(PersistentProposal existingProposal) {
 }
 
 private void saveProposal() {
-    form.getFormDataObject().ifPresent(fdo => {
+    form.getFormDataObject().ifPresent(fdo -> {
         if (existingProposal == null) {
             editProposal(service.insert(fdo));
         } else {

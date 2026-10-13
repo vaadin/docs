@@ -2,7 +2,7 @@
 title: Strong Consistency
 page-title: How to achieve strong consistency in your app | Vaadin
 description: Learn about strong consistency and how to achieve it.
-meta-description: Learn about strong consistency and how to achieve it in your applications.
+meta-description: Learn what strong consistency means, how transactions and locking achieve it in a Vaadin application, and why users can still see stale data on their screens.
 order: 5
 ---
 
@@ -11,10 +11,32 @@ order: 5
 
 Strong consistency, or immediate consistency, means that the effects of an update are immediately observable across the entire system. For instance, if a user inserts a new record into the system, it should be visible to all other users as soon as the user has pressed the [guibutton]*Save* button.
 
-One way of achieving strong consistency is to use transactions. Modern databases support transactions. As a general rule, you should use them whenever your business application reads or writes data. For more information about this, see the <<transactions#,Transactions>> documentation page.
 
-// TODO Write something about monolits and self-contained systems here as well.
+== Transactions
 
-.Work in progress
-[IMPORTANT]
-This page is a stub. It'll be expanded later.
+One way of achieving strong consistency is to use transactions. Modern databases support transactions. As a general rule, you should use them whenever your business application reads or writes data. When a transaction commits, all its changes become visible to other transactions at once. If it fails, none of them do. For more information about this, see the <<transactions#,Transactions>> documentation page.
+
+In a Vaadin application, the <<../../business-logic/add-service#transactions,application services>> define the transactions. When a view calls an application service, the service method runs in a transaction, and commits it when it returns. A business operation therefore either completes, or leaves no trace.
+
+
+== Where Strong Consistency Ends
+
+A transaction covers only the data in a single database. A <<../../architecture/monoliths#,monolith>> typically keeps all its data in one database, so a single local transaction can cover any business operation. The same applies to a self-contained system that owns its data and doesn't need to call other systems to complete an operation. This is one of the main advantages of these architectures.
+
+Once a business operation involves several systems, each with its own database, a local transaction no longer covers it. This is typically the case with <<../../architecture/microservices#,microservices>>. Distributed transactions exist, but they are complex, and many systems don't support them. Instead, you accept that the systems are consistent with each other only after a while. For more information, see <<eventual#,Eventual Consistency>>.
+
+You can also choose eventual consistency within a single application. For example, you might create an invoice in a background job, after the transaction that shipped the order has been committed.
+
+
+== Concurrent Updates
+
+Transactions alone don't prevent lost updates. Suppose that two users open the same record in a form, change it, and save it. Both transactions succeed, and the second save overwrites the changes of the first, without any error.
+
+To prevent this, use <<optimistic-locking#,optimistic locking>>. It detects that the record has changed since the user loaded it, and rejects the second save. The user can then reload the record and try again. When conflicts are frequent, or when a decision depends on data that mustn't change before the transaction commits, use <<pessimistic-locking#,pessimistic locking>> instead.
+
+
+== Stale Data in the User Interface
+
+Strong consistency applies to the data in the database, not to what users see on their screens. A Flow view keeps the data it has loaded in its components, on the server. The components don't change when another user updates the database. A grid that a user opened earlier may therefore show values that are no longer current.
+
+This is often acceptable. Optimistic locking prevents users from saving changes that are based on stale data, and users see the current data when they reload the view. If users need to see changes as soon as they happen, use <<../../server-push#,server push>> to update their views. See <<../../server-push/updates#broadcasting-to-all-users,Broadcasting to All Users>> for an example.

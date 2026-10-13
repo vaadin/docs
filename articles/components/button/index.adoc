@@ -168,34 +168,40 @@ The most obvious alternative to disabling a button is to hide it. This reduces U
 Another option is to keep the button visible and enabled, but show an error, e.g. using a Notification, when it's clicked. This option is best combined with some custom styling of the button to give the user a hint that the action is unavailable.
 
 
-=== Prevent Multiple Clicks
+=== Prevent Multiple Clicks [badge-flow]#Flow#
 
-Buttons can be configured to be disabled when clicked. This can be useful especially for actions that take a bit longer to perform. Not only does this avoid the need for special handling of additional clicks while the action is in progress, but it also communicates to the user that the action was received successfully and is being processed.
+Buttons can be configured to be disabled when clicked. The button is disabled immediately on the client side, so additional clicks don't reach the server while the action is being processed. This also communicates to the user that the click was received.
+
+In most cases, the button only needs to be disabled while the server handles the click. Use the [since:com.vaadin:vaadin@V25.4]#`UNTIL_RESPONSE` mode# for this. The button is enabled again automatically once the click has been handled, so no additional code is needed in the click listener.
 
 [.example,themes="lumo,aura"]
 --
 
-ifdef::lit[]
-[source,html]
-----
-include::{root}/frontend/demo/component/button/button-disable-long-action.ts[render,tags=snippet,indent=0,group=Lit]
-----
-endif::[]
-
 ifdef::flow[]
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/component/button/ButtonDisableLongAction.java[render,tags=snippet,indent=0,group=Flow]
-----
-endif::[]
-
-ifdef::react[]
-[source,tsx]
-----
-include::{root}/frontend/demo/component/button/react/button-disable-long-action.tsx[render,tags=snippet,indent=0,group=React]
+include::{root}/src/main/java/com/vaadin/demo/component/button/ButtonDisableOnClick.java[render,tags=snippet,indent=0,group=Flow]
 ----
 endif::[]
 --
+
+When the action continues after the click listener returns, for example in a <</building-apps/business-logic/background-jobs#,background job>>, use the [since:com.vaadin:vaadin@V25.4]#`UNTIL_ENABLED` mode# instead. The button then stays disabled until the application enables it again:
+
+[source,java]
+----
+Button button = new Button("Generate Report");
+button.setDisableOnClick(DisableOnClickMode.UNTIL_ENABLED);
+button.addClickListener(event -> {
+    var ui = UI.getCurrent();
+    reportService.generateReport()
+            .thenAccept(ui.accessLater(report -> {
+                showReport(report);
+                button.setEnabled(true);
+            }, null));
+});
+----
+
+Updating the button from a background thread requires <</building-apps/server-push#,server push>>.
 
 
 == Focus

@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { FormItem } from '@vaadin/react-components/FormItem.js';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
-import { IntegerField } from '@vaadin/react-components/IntegerField';
+import { IntegerField } from '@vaadin/react-components/IntegerField.js';
 
 export default reactExample(() => (
   <FormLayout autoResponsive labelsAside>

@@ -43,7 +43,7 @@ public class BadgeIconsOnlyTable extends Div {
             badge.addThemeVariants(BadgeVariant.SUCCESS,
                     BadgeVariant.ICON_ONLY);
         } else {
-            badge = new Badge("No", VaadinIcon.CLOSE_SMALL.create());
+            badge = new Badge("No", VaadinIcon.CLOSE.create());
             badge.addThemeVariants(BadgeVariant.ERROR, BadgeVariant.ICON_ONLY);
         }
         return badge;

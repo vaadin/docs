@@ -185,7 +185,7 @@ The exit code is the contract, and means the same thing on every platform: `0` t
 [[runtimes]]
 == Launch With Various Containers
 
-The daemon can start the application in more than one way. It either launches a class with a `main` method directly, or runs the application through a supported server plugin declared in the project's own pom, in the build's own JVM. Which one it uses is detected automatically. Everything else about the loop is unchanged: the same commands, the same exit codes, the same change-set rules. Once the application is up, `status` names the runtime it chose:
+The daemon can start the application in more than one way. It either launches a class with a `main` method directly, or runs the application through a supported server plugin declared in the project's own pom. Which one it uses is detected automatically. Everything else about the loop is unchanged: the same commands, the same exit codes, the same change-set rules. Once the application is up, `status` names the runtime it chose:
 
 [cols="1,3"]
 |===
@@ -195,20 +195,40 @@ The daemon can start the application in more than one way. It either launches a 
 | A class with a `main` method, launched directly with `java`. Chosen when the project names one, or declares no supported server plugin.
 
 | `jetty-ee10`
-| Through the `jetty-ee10` Maven plugin.
+| Through the `jetty-ee10` Maven plugin, inside the build's own JVM.
 
 | `jetty-ee11`
-| Through the `jetty-ee11` Maven plugin.
+| Through the `jetty-ee11` Maven plugin, inside the build's own JVM.
+
+| `wildfly`
+| Through the WildFly Maven plugin, which starts a server process of its own.
+
+| `tomee`
+| Through the TomEE Maven plugin, which starts a server process of its own.
+
+| `payara`
+| Through the Payara Server Maven plugin, which starts a server process of its own.
+
+| `payara-micro`
+| Through the Payara Micro Maven plugin, which starts a server process of its own.
+
+| `liberty`
+| Through the Open Liberty Maven plugin, which starts a server process of its own.
+
+| `cargo`
+| Through the Codehaus Cargo Maven plugin, which starts a server process of its own and covers every container Cargo drives, Apache Tomcat included.
 |===
 
-WAR-packaged projects are supported. More runtimes are planned.
+WAR-packaged projects are supported.
 
-`-Dvaadin.dev.runtime=<main|jetty-ee10|jetty-ee11>` overrides the detected choice.
+`-Dvaadin.dev.runtime=<main|jetty-ee10|jetty-ee11|wildfly|tomee|payara|payara-micro|liberty|cargo>` overrides the detected choice.
 
 Running through a server plugin brings a few differences worth knowing:
 
-* *The plugin needs no extra configuration.* If it is set to rescan or to run in a forked JVM, the daemon turns that off for its own run, without changing the pom.
+* *The plugin needs no extra configuration.* If it is set to rescan, to redeploy on a schedule, or to run in a forked JVM, the daemon turns that off for its own run, without changing the pom.
 * *A restart costs more,* because it is a Maven invocation rather than a bare JVM launch. Edits that hot-swap are unaffected.
+* *WildFly, TomEE, Payara Server, Payara Micro, Open Liberty, and Cargo start a server process rather than running inside the build's JVM.* The first `start` also provisions or unpacks that server, which takes longer than an ordinary boot, so these are given a longer startup window than `jetty-ee10` and `jetty-ee11` are.
+* *A class the running application hasn't loaded yet keeps its pre-edit bytes until the next restart,* because these containers deploy a copy of the WAR rather than serving `target/classes` directly. A hot swap still applies normally to classes already loaded.
 
 
 == What Apply Reports

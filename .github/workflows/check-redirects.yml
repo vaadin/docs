@@ -1,0 +1,27 @@
+name: Check Redirects
+
+on:
+  pull_request:
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # A pull request is checked out as its merge commit with the base branch,
+      # whose first parent is the base branch. Comparing the two shows exactly
+      # the pages that merging would remove, so one parent is all the history
+      # that's needed.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Check that removed and moved pages have redirects
+        run: node scripts/check-redirects.mjs HEAD^1

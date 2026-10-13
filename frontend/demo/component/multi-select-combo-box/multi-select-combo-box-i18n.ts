@@ -35,6 +35,10 @@ export class Example extends LitElement {
     selected: ' hinzugefügt',
     deselected: ' entfernt',
     total: '{count} Einträge ausgewählt',
+    selectAll: 'Alle auswählen',
+    deselectAll: 'Alle abwählen',
+    selectFiltered: 'Gefilterte auswählen',
+    deselectFiltered: 'Gefilterte abwählen',
   };
 
   protected override render() {
@@ -45,6 +49,7 @@ export class Example extends LitElement {
         item-id-path="id"
         .items="${this.items}"
         .i18n="${this.i18n}"
+        select-all-button-visible
       ></vaadin-multi-select-combo-box>
     `;
   }
