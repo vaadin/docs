@@ -157,16 +157,23 @@ Enforce such rules in the application service as well. Load the record, and chec
 public class CustomerCrudService {
 
     private final CustomerRepository repository;
+// tag::snippet[]
+    private final SecurityContextHolderStrategy securityContextHolderStrategy;
+// end::snippet[]
 
-    CustomerCrudService(CustomerRepository repository) {
+    CustomerCrudService(CustomerRepository repository,
+// tag::snippet[]
+            SecurityContextHolderStrategy securityContextHolderStrategy) { // <1>
+// end::snippet[]
         this.repository = repository;
+        this.securityContextHolderStrategy = securityContextHolderStrategy;
     }
 
     @Transactional
     public CustomerForm update(CustomerForm customerForm) {
         var entity = repository.findById(customerForm.id()).orElseThrow();
 // tag::snippet[]
-        if (!mayEdit(entity)) { // <1>
+        if (!mayEdit(entity)) { // <2>
             throw new AccessDeniedException("Not allowed to edit customer " + entity.getId());
         }
 // end::snippet[]
@@ -176,19 +183,20 @@ public class CustomerCrudService {
     }
 
 // tag::snippet[]
-    private static boolean mayEdit(Customer customer) {
-        var user = SecurityContextHolder.getContext().getAuthentication();
-        return customer.getAccountManager().equals(user.getName()) // <2>
+    private boolean mayEdit(Customer customer) {
+        var user = securityContextHolderStrategy.getContext().getAuthentication();
+        return customer.getAccountManager().equals(user.getName()) // <3>
                 || AuthorityUtils.authorityListToSet(user.getAuthorities())
-                        .contains("ROLE_" + Roles.ADMIN); // <3>
+                        .contains("ROLE_" + Roles.ADMIN); // <4>
     }
 // end::snippet[]
     ...
 }
 ----
-<1> Checks the stored record, so the rule holds regardless of what the view sends.
-<2> [methodname]`getName()` returns the user name when users log in with a login form, and the subject identifier of the provider when they log in through an <<connect-identity-provider#,identity provider>>. Store the same value in the record.
-<3> Administrators may edit every customer.
+<1> Gives the service access to the current user. Vaadin provides the [interfacename]`SecurityContextHolderStrategy` of Spring Security as a bean, so you can inject it instead of calling the static [classname]`SecurityContextHolder`.
+<2> Checks the stored record, so the rule holds regardless of what the view sends.
+<3> [methodname]`getName()` returns the user name when users log in with a login form, and the subject identifier of the provider when they log in through an <<connect-identity-provider#,identity provider>>. Store the same value in the record.
+<4> Administrators may edit every customer.
 
 The [classname]`AccessDeniedException` reaches the view in the same way as when [annotationname]`@PreAuthorize` denies a call. See <<../ui-basics/handle-errors#access-denied-by-a-service,Handle Errors>> for how to show it to the user. The view should still offer only the actions that the user may perform, as described in <<protect-views#,Protect Views>>, but the check in the service is what protects the data.
 
@@ -202,7 +210,7 @@ For lists, apply the rule in the query, so that users only receive the records t
 [source,java]
 ----
 public List<Customer> findMyCustomers(Pageable pageable) {
-    var user = SecurityContextHolder.getContext().getAuthentication();
+    var user = securityContextHolderStrategy.getContext().getAuthentication();
     return repository.findByAccountManager(user.getName(), pageable);
 }
 ----
