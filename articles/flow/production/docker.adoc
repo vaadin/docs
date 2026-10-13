@@ -18,21 +18,23 @@ To build and run the image, you need https://docs.docker.com/desktop/[Docker Des
 
 Projects downloaded from https://start.vaadin.com[Vaadin Start] include a [filename]`Dockerfile` that runs the Maven build inside Docker. You don't need to build the application before building the image, and the machine that builds the image doesn't need Java.
 
-To build the image and run it on port 8080, run the following commands in the project directory:
+To build the image and run it on port 8080 with a memory limit of 2 GB, run the following commands in the project directory:
 
 [source,terminal]
 ----
 docker build -t my-app .
-docker run -p 8080:8080 my-app
+docker run -p 8080:8080 -m 2g my-app
 ----
 
 The [filename]`Dockerfile` has three stages:
 
 . The first stage provides the `jq` tool, which the build stage uses to read a license key.
-. The build stage uses an Eclipse Temurin JDK image, and runs `./mvnw clean package -DskipTests`, so the tests don't run. It keeps the downloaded Maven dependencies in a build cache between builds.
-. The runtime stage uses an Eclipse Temurin JRE image based on Alpine Linux. It copies the JAR from the build stage, and starts the application with the `prod` Spring profile active.
+. The build stage uses an Eclipse Temurin JDK image, and runs `./mvnw clean package -DskipTests`, so the tests don't run. It keeps the downloaded Maven dependencies in a build cache between builds. It then splits the JAR into layers, so that the dependencies end up in their own image layer.
+. The runtime stage uses an Eclipse Temurin JRE image based on Alpine Linux. It copies the layers from the build stage, and runs the application as an unprivileged user, with the `prod` Spring profile active.
 
-The images are for the Java version that you selected on Vaadin Start. The application runs as the `root` user, with the default memory settings of the JVM.
+The images are for the Java version that you selected on Vaadin Start. The JVM may use 75% of the container's memory for the heap, instead of its default of 25%. Always set a memory limit for the container, for example with the `-m` option of `docker run`. Without a limit, the JVM sizes its heap according to the memory of the whole host.
+
+The project also contains a [filename]`.dockerignore` file, which keeps local build output, the [filename]`node_modules` directory, the Git repository, and IDE files out of the build context.
 
 The project contains no configuration for the `prod` profile. To add production settings, put them in [filename]`src/main/resources/application-prod.properties`. When the profile is active, Spring Boot reads this file in addition to [filename]`application.properties`, and its values take precedence.
 
