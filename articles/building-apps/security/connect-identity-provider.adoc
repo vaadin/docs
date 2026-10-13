@@ -1,0 +1,284 @@
+---
+title: Connect an Identity Provider
+page-title: How to connect a Vaadin application to an identity provider
+description: Learn how to let users log in with their existing account at an OpenID Connect identity provider, such as Keycloak.
+meta-description: Connect a Vaadin application to an OpenID Connect identity provider like Keycloak. Log users in, map the provider's roles, and end both sessions on logout.
+order: 5
+---
+
+
+= Connect an Identity Provider
+:toclevels: 2
+
+In production, users usually log in with the account they already have at their organization's identity provider, such as Keycloak, Microsoft Entra ID, or Okta. The provider checks their password and any second factor, and lets them move between applications without logging in again. A Vaadin application connects to such a provider through OpenID Connect (OIDC), using the OAuth2 client of Spring Security.
+
+This guide replaces the in-memory users and the login view of <<add-login#,Add Login>> with an identity provider. It uses Keycloak as the example. It then maps the roles that the provider knows to the roles that <<protect-views#,Protect Views>> and <<protect-services#,Protect Services>> check, and makes logging out of the application end the session at the provider as well. The application side is the same for every OIDC provider. What differs between providers is how you register the application, and how the provider puts roles in its tokens.
+
+.Replaces SSO Kit
+[NOTE]
+SSO Kit is deprecated, and the next major version of Vaadin doesn't include it. Its major features are available in Spring Security and in Vaadin's Spring Security integration, which this guide uses. To move an application that already uses the kit, see <<{articles}/tools/sso/migrating-to-spring-security#,Migrating from SSO Kit to Spring Security>>.
+
+
+== Register the Application
+
+The application is a _client_ of the identity provider, and the provider only lets registered clients log users in. For local development, run Keycloak in a container as described in Keycloak's https://www.keycloak.org/getting-started/getting-started-docker[Get Started with Docker] guide, but map it to another port, such as `8180`, since the Vaadin application uses `8080`. Create a realm, and the users that you want to log in with.
+
+Then create a client in the realm, under [guilabel]*Clients* > [guilabel]*Create client*, with the following settings:
+
+[guilabel]*Client ID*:: An identifier for the application, such as `my-app`.
+[guilabel]*Client authentication*:: On. The application then proves its identity to Keycloak with a client secret, which you find on the [guilabel]*Credentials* tab of the client once you've saved it.
+[guilabel]*Valid redirect URIs*:: `\http://localhost:8080/login/oauth2/code/keycloak`. After logging the user in, Keycloak sends them back to this URL, where Spring Security completes the login. The last part of the path is the registration ID that you choose in <<#configure-the-provider,Configure the Provider>>.
+[guilabel]*Valid post logout redirect URIs*:: `\http://localhost:8080`. After logging the user out, Keycloak sends them to this URL. See <<#log-out,Log Out>> for details, including why there's no trailing slash.
+
+When you deploy the application, register its production URLs in the same way.
+
+
+== Add the Dependency
+
+Add the OAuth2 client starter of Spring Boot. It includes the Spring Security starter that you added in <<add-login#,Add Login>>, so it can replace that dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+</dependency>
+----
+
+
+== Configure the Provider
+
+Tell Spring Security where the provider is, and how the application identifies itself:
+
+.`application.properties`
+[source,properties]
+----
+spring.security.oauth2.client.registration.keycloak.client-id=my-app
+spring.security.oauth2.client.registration.keycloak.client-secret=${KEYCLOAK_CLIENT_SECRET}
+spring.security.oauth2.client.registration.keycloak.scope=openid,profile,email
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8180/realms/my-realm
+----
+
+* `client-secret` reads the secret from an environment variable, so that it doesn't end up in version control.
+* The `openid` scope makes the login an OpenID Connect login. The `profile` and `email` scopes give the application the user's name and email address.
+* `issuer-uri` is the URL of the realm. Spring Security reads the endpoints and signing keys of the provider from the discovery document at this URL.
+
+The `keycloak` part of the property names is the _registration ID_. It's yours to choose, and it appears in the URLs that Spring Security uses for the login, such as the redirect URI that you registered earlier.
+
+For the other properties, and for providers that have no discovery document, see the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/index.html[Spring Security reference].
+
+
+== Configure the Login
+
+Replace the login view in the security configuration with the login page of the provider:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+// tag::snippet[]
+            configurer.oauth2LoginPage("/oauth2/authorization/keycloak"); // <1>
+// end::snippet[]
+        });
+        return http.build();
+    }
+}
+----
+<1> Spring Security sends users who request this path to the provider registered as `keycloak`.
+
+Remove the [interfacename]`UserDetailsManager` bean and the login view: the provider handles both now. When users who haven't logged in open a view, Vaadin redirects them to the provider's login page. After they've logged in, the provider sends them back, and the application shows the view they originally requested.
+
+The views and their security annotations stay as they are. However, until you map the provider's roles as described in the next section, users have no roles, so they can only open views that are annotated with [annotationname]`@PermitAll` or [annotationname]`@AnonymousAllowed`.
+
+
+=== Showing Who Is Logged In
+
+The authenticated user is now an [interfacename]`OidcUser`, which holds the _claims_ that the provider sent about the user, such as their name and email address. Get it from [classname]`AuthenticationContext`:
+
+[source,java]
+----
+@Route("")
+@PermitAll
+public class MainView extends Main {
+
+    public MainView(AuthenticationContext authenticationContext) {
+        authenticationContext.getAuthenticatedUser(OidcUser.class)
+                .map(OidcUser::getFullName) // <1>
+                .ifPresent(name -> add(new Span("Logged in as " + name)));
+    }
+}
+----
+<1> Claims are optional in OpenID Connect, so check the ones you use against what your provider actually sends.
+
+To refer to a user in your own data -- for example, as the owner of a record -- use the user's _subject_ identifier, the `sub` claim. The OpenID Connect specification requires it to be unique within the provider and never reassigned, whereas user names and email addresses can change. The [methodname]`getName()` method of the Spring Security [interfacename]`Authentication` returns it by default. <<protect-services#protecting-individual-records,Protecting Individual Records>> shows how to use it in an application service.
+
+
+== Map the Provider's Roles
+
+After logging in through a provider, a user has no roles in Spring Security. By default, Spring Security grants only an `OIDC_USER` authority, and a `SCOPE_` authority for each scope. Every view annotated with [annotationname]`@RolesAllowed`, and every service method that checks [methodname]`hasRole()`, denies access.
+
+Providers can send the roles of a user as a claim in the ID token, but OpenID Connect doesn't standardize the name of the claim, and not every provider sends one by default. The general approach is to make the provider add the roles to the ID token, and to map that claim to roles in the application.
+
+In Keycloak, open the client under [guilabel]*Clients*, and go to its [guilabel]*Client scopes* tab. The first scope on the tab, [guilabel]*my-app-dedicated*, holds the client's own mappers. Keycloak creates it for every client and names it after the client ID. The [guilabel]*Client scopes* page of the realm doesn't list it. Open the scope, and select [guilabel]*Configure a new mapper* > [guilabel]*User Realm Role*. If the scope already has mappers, the button is [guilabel]*Add mapper* > [guilabel]*By configuration* instead.
+
+Set both [guilabel]*Name* and [guilabel]*Token Claim Name* to `roles`, and leave [guilabel]*Add to ID token* and [guilabel]*Multivalued* on. The ID token of a user then contains a `roles` claim that lists the realm roles of the user.
+
+Name the realm roles in Keycloak exactly like the roles of the application, such as `ADMIN` and `USER`, since role names are case-sensitive.
+
+Then map the claim in a [interfacename]`GrantedAuthoritiesMapper` bean. Spring Security applies the bean to the OAuth2 login without any further configuration:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+    ...
+// tag::snippet[]
+    @Bean
+    GrantedAuthoritiesMapper rolesClaimMapper() {
+        return authorities -> {
+            var mapped = new HashSet<GrantedAuthority>(authorities); // <1>
+            for (var authority : authorities) {
+                if (authority instanceof OidcUserAuthority oidcUser) {
+                    var roles = oidcUser.getIdToken().getClaimAsStringList("roles"); // <2>
+                    if (roles != null) {
+                        roles.forEach(role ->
+                                mapped.add(new SimpleGrantedAuthority("ROLE_" + role))); // <3>
+                    }
+                }
+            }
+            return mapped;
+        };
+    }
+// end::snippet[]
+}
+----
+<1> Keeps the authorities that Spring Security has already granted.
+<2> Reads the claim that you configured at the provider.
+<3> Spring Security stores roles as authorities with the `ROLE_` prefix. [annotationname]`@RolesAllowed` and [methodname]`hasRole()` add the prefix to the role names they check.
+
+Users can now open the views that their roles allow. The tests from <<protect-services#testing-method-security,Testing Method Security>> and <<../testing/browserless/test-view-access#,Test View Access Control>> don't change, since [annotationname]`@WithMockUser` sets the roles directly, regardless of how users log in.
+
+The same mapper works for other providers that put roles in a claim of the ID token. If your provider sends groups rather than roles, or uses names that differ from the roles of the application, translate them in the mapper -- for example, with a [interfacename]`Map` from group name to role. To read claims that only the access token contains, replace the user service instead, as described in the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html#oauth2login-advanced-map-authorities[Spring Security reference].
+
+
+[role="since:com.vaadin:vaadin@V25.4"]
+=== A Shortcut for Keycloak
+
+Keycloak adds the roles of a user to the access token by default. With Keycloak, you can therefore skip both the mapper at the provider and the [interfacename]`GrantedAuthoritiesMapper` bean, and have [classname]`VaadinSecurityConfigurer` read the roles from the access token:
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .oauth2LoginPage("/oauth2/authorization/keycloak")
+        .keycloakRoleMapping());
+----
+
+For the roles that this maps, and for using it with a user service of your own, see <<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>>.
+
+
+=== Testing the Mapping
+
+If the provider stops sending the claim -- for example, because someone changes the client configuration -- users can still log in, but they lose their roles. Test the mapper with the claim it expects:
+
+[source,java]
+----
+class SecurityConfigTest {
+
+    @Test
+    void maps_the_roles_claim_to_roles() {
+        var idToken = OidcIdToken.withTokenValue("id-token")
+                .subject("user")
+                .claim("roles", List.of(Roles.ADMIN))
+                .build();
+        var authorities = new SecurityConfig().rolesClaimMapper()
+                .mapAuthorities(List.of(new OidcUserAuthority(idToken)));
+        assertThat(authorities)
+                .extracting(GrantedAuthority::getAuthority)
+                .contains("ROLE_" + Roles.ADMIN);
+    }
+}
+----
+
+To check the provider's side, log in as users with different roles, and verify that each of them can open exactly the views that their roles allow.
+
+
+[[log-out]]
+== Log Out
+
+Logging out works as described in <<add-logout#,Add Logout>>: call [methodname]`logout()` on [classname]`AuthenticationContext`.
+
+With [methodname]`oauth2LoginPage()`, logging out also ends the user's session at the provider. Spring Security sends the browser to the provider's logout endpoint, which ends the session and sends the user back to the application. This is called https://openid.net/specs/openid-connect-rpinitiated-1_0.html[RP-Initiated Logout]. Without it, the user would only be logged out of the application: the next time they log in, the provider would recognize the session and log them in without asking for a password.
+
+By default, the provider sends the user back to the root URL of the application. The root view requires a login, so the user ends up on the provider's login page.
+
+The provider only redirects to URLs that are registered for the client as post-logout redirect URLs. Keycloak compares them exactly, and the default URL has no trailing slash. This is why the client in <<#register-the-application,Register the Application>> has `\http://localhost:8080` rather than `\http://localhost:8080/`. With a URL that isn't registered, Keycloak shows an error page instead of logging the user out.
+
+To send users somewhere else after logging out, such as a page that confirms the logout, pass its URL as the second argument:
+
+[source,java]
+----
+configurer.oauth2LoginPage("/oauth2/authorization/keycloak", "{baseUrl}/logged-out.html");
+----
+
+Register the URL at the provider, and allow access to the page without authentication, as described in <<add-logout#configuring-the-logout-success-url,Configuring the Logout Success URL>>. For the variables that the URL can contain, see <<{articles}/flow/integrations/spring/oauth2#enable-oauth2-login-in-vaadin,OAuth2 Authentication>>.
+
+
+=== When the User Logs Out Elsewhere
+
+Logging out of the application ends the session at the provider, but it doesn't work the other way around. When the user logs out of another application that shares the session at the provider, or when an administrator ends the session there, the user stays logged in to the Vaadin application until their session expires.
+
+To end the application's session as well, enable https://openid.net/specs/openid-connect-backchannel-1_0.html[Back-Channel Logout]. The provider then notifies the application directly when a session ends:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.oauth2LoginPage("/oauth2/authorization/keycloak");
+        });
+// tag::snippet[]
+        http.oidcLogout(logout -> logout.backChannel(Customizer.withDefaults()));
+// end::snippet[]
+        return http.build();
+    }
+
+// tag::snippet[]
+    @Bean
+    HttpSessionEventPublisher httpSessionEventPublisher() { // <1>
+        return new HttpSessionEventPublisher();
+    }
+// end::snippet[]
+    ...
+}
+----
+<1> Lets Spring Security forget about sessions that end in other ways, such as by timing out.
+
+In Keycloak, set the [guilabel]*Backchannel logout URL* of the client to `\http://localhost:8080/logout/connect/back-channel/keycloak`, where `keycloak` is the registration ID. The provider has to be able to reach the application at that URL.
+
+When the provider ends a session, the application invalidates the corresponding HTTP session. The browser finds out on its next request to the server, and the user ends up on the provider's login page.
+
+Two details matter in production:
+
+* To invalidate the session, Spring Security calls the application's own logout endpoint, at the address where the notification from the provider arrived. If the application can't reach itself at that address -- for example, because it runs behind a proxy -- set an internal address with `backChannel.logoutUri(...)`.
+* Spring Security remembers which provider session belongs to which HTTP session in memory. In a cluster, the server that receives the notification might not be the one that holds the session. To share the information between servers, store it in a shared location, such as a database, with an [interfacename]`OidcSessionRegistry` of your own. See the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/logout.html[Spring Security reference] for details.
+
+
+== What This Guide Doesn't Cover
+
+* *Security Assertion Markup Language (SAML) 2.0*. [classname]`VaadinSecurityConfigurer` has no configuration specific to SAML, and this guide covers only OpenID Connect. Spring Security supports SAML 2.0 on its own: see https://docs.spring.io/spring-security/reference/servlet/saml2/login/index.html[SAML 2.0 Login]. If your identity provider supports both protocols, use OpenID Connect.
+* *React views*. The server-side configuration is the same for React views. The client side differs from <<../react/security#,Secure React Views>>, since the provider shows the login form. See <<{articles}/tools/sso/migrating-to-spring-security#migrating-a-hilla-application,Migrating a Hilla Application>> for how to give the client the user's details and protect routes.
+* *Several identity providers*. Spring Security supports several client registrations, but [methodname]`oauth2LoginPage()` takes a single login page. To let users choose between providers, point it to a view of your own that links to each provider's `/oauth2/authorization/{registrationId}` path.
+* *Multi-tenancy*. See <<protect-services#tenant-isolation,Tenant Isolation>>.
