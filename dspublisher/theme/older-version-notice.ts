@@ -69,8 +69,8 @@ class OlderVersionNotice extends LitElement {
 
   dismissed = false;
 
-  // TODO: Pick one design and remove the other (see `?older-version=1|2`)
-  design: 1 | 2 = 1;
+  // TODO: Pick one design and remove the others (see `?older-version=1|2|3`)
+  design: 1 | 2 | 3 = 1;
 
   connectedCallback() {
     super.connectedCallback();
@@ -126,15 +126,23 @@ class OlderVersionNotice extends LitElement {
 
   // On success, only the submit button changes: it turns into the confirmation.
   // The live region announces it to screen readers.
-  private renderSubmitButton(label: string) {
+  // All three labels are rendered in the same grid cell, and only the current
+  // one is visible, so the button keeps the width of the widest one
+  private renderSubmitButton(label: string, className = 'submit') {
     const done = this.status === 'done';
     const sending = this.status === 'sending';
+    const state = (name: string, current: boolean, content: unknown) =>
+      html`<span class="state state-${name} ${current ? 'current' : ''}">${content}</span>`;
     return html`
       <button
-        class="submit ${done ? 'done' : ''}"
+        class="${className} ${done ? 'done' : ''}"
         aria-disabled=${done || sending ? 'true' : 'false'}
       >
-        ${done ? html`${checkIcon} Subscribed` : sending ? html`${spinnerIcon} Subscribing…` : label}
+        <span class="states">
+          ${state('idle', !done && !sending, label)}
+          ${state('sending', sending, html`${spinnerIcon} Subscribing…`)}
+          ${state('done', done, html`${checkIcon} Subscribed`)}
+        </span>
       </button>
     `;
   }
@@ -372,7 +380,61 @@ class OlderVersionNotice extends LitElement {
     `;
   }
 
+  // Design 3 takes after the hero on the docs home page, and uses its markup and styles
+  private renderDesign3() {
+    return html`
+      <div class="openblock hero">
+        <div class="content">
+          <header>
+            <span class="eyebrow">${this.current.title} Docs</span>
+            <a class="latest" href=${this.latestPage ?? this.latest.path}>
+              Latest version: ${this.latest.title}
+            </a>
+            <button class="dismiss" aria-label="Dismiss" @click=${this.dismiss}>
+              ${closeIcon}
+            </button>
+          </header>
+          <div class="column">
+            <h2>Staying on ${this.current.title}?</h2>
+            <p class="lead">
+              Get an email when a security advisory affects your version, with the fixed release and
+              how to upgrade, and a reminder before free maintenance ends.
+            </p>
+            <form class="buttons" @submit=${this.submit}>
+              <span class="email-field">
+                ${emailIcon}
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autocomplete="email"
+                  placeholder="you@company.com"
+                  aria-label="Email address"
+                  ?readonly=${this.status === 'sending' || this.status === 'done'}
+                />
+              </span>
+              ${this.renderSubmitButton('Get Security Alerts', 'button primary water')}
+            </form>
+            ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
+            <div class="buttons">
+              <a class="button secondary water" href="/docs/v${this.latest.number}/upgrading">
+                Upgrade Guide: ${this.current.number} → ${this.latest.number}
+              </a>
+              <a class="button secondary water" href=${EXTENDED_MAINTENANCE_URL}>
+                Extended Maintenance for ${this.current.number}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
+    if (this.design === 3) {
+      return this.renderDesign3();
+    }
+
     // Uses the markup of an AsciiDoc admonition block, so it gets the docs' callout styles
     return html`
       <div class="admonitionblock note">
@@ -397,7 +459,7 @@ customElements.define('docs-older-version-notice', OlderVersionNotice);
 
 // The version selector is empty on the dev server, so `?older-version` in the
 // URL shows the notice as if viewing V24, ignoring an earlier dismissal or signup.
-// `?older-version=2` shows design 2.
+// `?older-version=2` and `?older-version=3` show designs 2 and 3.
 const simulate =
   process.env.NODE_ENV === 'development' &&
   new URLSearchParams(location.search).has('older-version');
@@ -484,8 +546,9 @@ function attachOlderVersionNotice() {
     notice = new OlderVersionNotice();
     notice.current = versions.current;
     notice.latest = versions.latest;
-    if (simulate && new URLSearchParams(location.search).get('older-version') === '2') {
-      notice.design = 2;
+    const design = simulate ? new URLSearchParams(location.search).get('older-version') : null;
+    if (design === '2' || design === '3') {
+      notice.design = Number(design) as 2 | 3;
     }
   }
   article.prepend(notice);
