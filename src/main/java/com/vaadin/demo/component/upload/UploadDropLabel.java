@@ -23,7 +23,7 @@ public class UploadDropLabel extends Div {
         Upload upload = new Upload(inMemoryHandler);
 
         Span dropLabel = createDropLabel();
-        Icon dropIcon = VaadinIcon.CLOUD_UPLOAD_O.create();
+        Icon dropIcon = VaadinIcon.CLOUD_UPLOAD.create();
 
         upload.setDropLabel(dropLabel);
         upload.setDropLabelIcon(dropIcon);

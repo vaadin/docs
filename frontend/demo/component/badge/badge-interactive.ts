@@ -59,7 +59,7 @@ export class Example extends LitElement {
                   style="height: 1.5rem; min-width: 1.5rem; margin: 0; padding: 0"
                   @click="${this.onClick}"
                 >
-                  <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
+                  <vaadin-icon icon="vaadin:close"></vaadin-icon>
                 </vaadin-button>
               </vaadin-badge>
             `

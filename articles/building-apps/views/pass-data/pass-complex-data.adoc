@@ -116,7 +116,7 @@ When a view navigates directly to another view, use the target instance returned
 // tag::direct-navigation-source[]
 [source,java]
 ----
-UI.getCurrent().navigate(TargetView.class)
+UI.getCurrentOrThrow().navigate(TargetView.class)
         .ifPresent(view -> view.update(data));
 ----
 // end::direct-navigation-source[]
@@ -144,7 +144,7 @@ The lookup must happen after navigation has completed.
 ----
 triggerNavigation(); // Custom navigation logic
 
-if (UI.getCurrent().getCurrentView() instanceof TargetView targetView) {
+if (UI.getCurrentOrThrow().getCurrentView() instanceof TargetView targetView) {
     targetView.update(data);
 }
 ----
@@ -183,9 +183,14 @@ Retrieve the stored data in the target view:
 [source,java]
 ----
 var data = VaadinSession.getCurrent().getAttribute(EmployeeData.class);
-update(data);
+if (data != null) {
+    update(data);
+}
 ----
 // end::session-target[]
+
+If the user opens the target view directly, for example through a bookmark, there's no data to retrieve.
+That's why the target view checks for `null` before calling [methodname]`update(EmployeeData)`.
 
 The benefits of session storage can also be drawbacks.
 The data remains in the session until you replace it, clear it, or the session expires.
@@ -204,7 +209,7 @@ Although that method is no longer available directly on components, [classname]`
 // tag::ui-source[]
 [source,java]
 ----
-ComponentUtil.setData(UI.getCurrent(), "employee-data", data);
+ComponentUtil.setData(UI.getCurrentOrThrow(), "employee-data", data);
 
 triggerNavigation(); // Custom navigation logic
 ----
@@ -217,12 +222,14 @@ Retrieve the data from the same [classname]`UI` instance in the target view:
 // tag::ui-target[]
 [source,java]
 ----
-var data = (EmployeeData) ComponentUtil.getData(UI.getCurrent(), "employee-data");
-update(data);
+if (ComponentUtil.getData(UI.getCurrentOrThrow(), "employee-data")
+        instanceof EmployeeData data) {
+    update(data);
+}
 ----
 // end::ui-target[]
 
-The [classname]`TargetView` retrieves the `employee-data` value using [methodname]`ComponentUtil.getData()` and uses it to update its components.
+The [classname]`TargetView` retrieves the `employee-data` value using [methodname]`ComponentUtil.getData()` and, if it's present, uses it to update its components.
 
 Data attached to the [classname]`UI` doesn't survive a page refresh because the refresh creates a new UI instance.
 The [annotationname]`@PreserveOnRefresh` annotation can preserve the target view and its component state, but it doesn't copy data attached to the old UI to the new one.
@@ -292,7 +299,9 @@ Inject the same bean into the target view:
 public TargetView(ActiveEmployeeBean activeEmployeeBean) {
     // ...
     var data = activeEmployeeBean.getData();
-    update(data);
+    if (data != null) {
+        update(data);
+    }
     // ...
 }
 ----

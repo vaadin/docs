@@ -1,0 +1,96 @@
+---
+title: Add Health Checks
+page-title: How to add Actuator health checks to a Vaadin application
+description: Give load balancers and container platforms URLs to check, without creating user sessions.
+meta-description: Add health checks to a Vaadin application with Spring Boot Actuator. Allow them through Spring Security, and avoid probes that create sessions or always pass.
+order: 50
+---
+
+
+= Add Health Checks
+
+Load balancers and container platforms check regularly whether each instance of the application works. https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.health[Spring Boot Actuator] provides the endpoints for this. Add it to your project:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+----
+
+The application then has the following endpoints. Each one returns status 200 and a JSON response with `"status":"UP"` when everything is fine, and status 503 when it isn't:
+
+`/actuator/health/liveness`::
+Whether the application is running. If this check fails, the container platform should restart the container.
+
+`/actuator/health/readiness`::
+Whether the application is ready to handle requests. If this check fails, the load balancer should stop sending requests to the instance.
+
+`/actuator/health`::
+The overall health of the application, including the database and other systems that it uses.
+
+If you have <<{articles}/building-apps/security#,secured the application>>, also allow the health checks through security, as described next.
+
+
+== Allow the Health Checks Through Security
+
+The Vaadin security configuration requires login for every request that it doesn't explicitly allow. A health check doesn't log in, so it's redirected to the login view.
+
+Allow the health endpoint before applying the Vaadin configuration:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@EnableWebSecurity
+@Configuration
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(EndpointRequest.to("health")).permitAll()); // <1>
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class);
+        });
+        return http.build();
+    }
+}
+----
+<1> Allows the health endpoint, including `liveness` and `readiness`. In Spring Boot 4, the [classname]`EndpointRequest` class is in the [packagename]`org.springframework.boot.security.autoconfigure.actuate.web.servlet` package.
+
+By default, the health endpoint shows only the status, not the details of the checks, so it's safe to allow it for everyone. Don't allow the other Actuator endpoints in the same way. <<logs-and-metrics#,Collect Logs & Metrics>> shows how to expose them on a separate port.
+
+
+== Don't Check a View
+
+Point the health checks at the Actuator endpoints, never at `/` or another view. Every request to a view from a client without a session cookie, such as a health check, creates a new session. The session stays in memory until it expires, by default after 30 minutes. A check every ten seconds therefore keeps 180 sessions in memory, for each load balancer node that performs it.
+
+Also check that the URL you configure actually reaches Actuator. A Vaadin application answers any path that isn't mapped to something else with its bootstrap page and status 200 -- including a mistyped Actuator path. If the application requires login, it redirects the request to the login view instead. A health check that accepts any successful status, or follows redirects, counts both as healthy. Kubernetes, for example, accepts any status from 200 to 399. Before you rely on a check, request its URL yourself, and make sure that the response is JSON with `"status":"UP"`, not an HTML page.
+
+
+== Choose What Each Check Covers
+
+Use the liveness endpoint for checks that restart the application, and the readiness endpoint for checks that route traffic. For example, in Kubernetes:
+
+[source,yaml]
+----
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+----
+
+Don't use `/actuator/health` for liveness. It includes the database, so when the database is unavailable, the container platform restarts every instance of the application, which doesn't fix the database. By default, the liveness and readiness endpoints don't include any external systems. The https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.kubernetes-probes.external-state[Spring Boot documentation] explains how to decide what to include in them.
+
+When the application shuts down, it stops accepting new requests, including those to the readiness endpoint, so the load balancer stops sending requests to the instance. <<container#stop-containers-gracefully,Stop Containers Gracefully>> describes what happens to the users of that instance.
+
+
+== Next Steps
+
+Health checks tell whether the application works. To see how well it works, add logs and metrics, as described in <<logs-and-metrics#,Collect Logs & Metrics>>.

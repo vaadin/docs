@@ -2,7 +2,7 @@
 title: Eventual Consistency
 page-title: What is Eventual Consistency and how to achieve it | Vaadin
 description: Learn about eventual consistency and how to achieve it.
-meta-description: Learn what eventual consistency is and how you can achieve it.
+meta-description: Learn what eventual consistency is, and how to use transactional event listeners and background jobs to achieve it in your Vaadin business applications.
 order: 50
 ---
 
@@ -11,8 +11,80 @@ order: 50
 
 Eventual consistency means that the effects of an update are not immediately observable across the entire system. Instead, it takes some time for changes to propagate. This time can be from a few milliseconds to several days, depending on the business requirements.
 
-// TODO Microservices, Spring Modulith, domain events, sagas.
+Eventual consistency is often a deliberate choice. You split the work into a part that has to happen immediately, and a part that can happen a moment later. For example, when an order is shipped, its status has to change right away, but its invoice can be created in the background.
 
-.Work in progress
-[IMPORTANT]
-This page is a stub. It'll be expanded later.
+== Reacting to Committed Changes
+
+In a Spring application, you can implement this by having an <<../../business-logic/add-service#,application service>> publish an event inside its transaction. A listener then does the follow-up work in a <<../../business-logic/background-jobs#,background job>>.
+
+In the following example, an application service marks an order as shipped, and publishes an `OrderShippedEvent`:
+
+[source,java]
+----
+@Service
+@PreAuthorize("isAuthenticated()")
+public class OrderShippingService {
+
+    private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    OrderShippingService(OrderRepository orderRepository,
+            ApplicationEventPublisher eventPublisher) {
+        this.orderRepository = orderRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public void markAsShipped(OrderId orderId) {
+        var order = orderRepository.findById(orderId).orElseThrow();
+        order.markAsShipped();
+        orderRepository.save(order);
+        eventPublisher.publishEvent(new OrderShippedEvent(orderId)); // <1>
+    }
+}
+----
+<1> Publishes the event inside the transaction.
+
+A listener reacts to the event by creating an invoice for the order:
+
+[source,java]
+----
+@Service
+class CreateInvoiceOnOrderShippedTrigger {
+    private static final Logger log = LoggerFactory.getLogger(CreateInvoiceOnOrderShippedTrigger.class);
+    private final InvoiceCreationJob job;
+
+    CreateInvoiceOnOrderShippedTrigger(InvoiceCreationJob job) {
+        this.job = job;
+    }
+
+    @TransactionalEventListener // <1>
+    @Async // <2>
+    public void onOrderShipped(OrderShippedEvent event) {
+        try {
+            job.createInvoicesForOrders(List.of(event.orderId())); // <3>
+        } catch (Exception ex) {
+            log.error("Error creating invoice for order {}", event.orderId(), ex);
+        }
+    }
+}
+----
+<1> Spring calls the listener only after the transaction that marked the order as shipped has been committed.
+<2> The invoice is created in a background thread, so the user doesn't have to wait for it.
+<3> The <<../../business-logic/background-jobs/jobs#transactions,job>> runs in a transaction of its own.
+
+For a moment after the commit, the order is shipped but has no invoice. Once the job has finished, the data is consistent again.
+
+A plain `@EventListener` isn't enough here. Together with `@Async`, it could start the job before the order has been committed, so that the job doesn't find the shipped order. It could also start the job after the transaction has been rolled back, creating an invoice for an order that was never shipped. For more information about event listeners as job triggers, see <<../../business-logic/background-jobs/triggers#event-triggered-jobs,Event Triggered Jobs>>.
+
+Put only the data the listener needs in the event, such as the ID of the order. Don't put entities in it. The listener runs in another thread, after the transaction that loaded the entity has ended.
+
+
+== Handling Lost Events
+
+A transactional event listener isn't part of the transaction that published the event. If the application stops after the commit, but before the listener has finished, the follow-up work is never done. The same happens if the job fails. In the example above, the order would stay shipped, but never get an invoice.
+
+How much this matters depends on the business. These are common ways of dealing with it:
+
+* Run the follow-up job on a schedule, as well. For example, a <<../../business-logic/background-jobs/triggers#scheduled-jobs,scheduled trigger>> could create invoices for all shipped orders that don't have one, every night. This requires the job to handle <<../../business-logic/background-jobs/jobs#batch-jobs,all applicable inputs>>, and to be <<../../business-logic/background-jobs/jobs#idempotent-jobs,idempotent>>.
+* Store a record of each event in the database, in the same transaction that publishes it, and keep track of which events have been handled. Unhandled events can then be delivered again, for instance when the application restarts. The https://docs.spring.io/spring-modulith/reference/events.html[event publication registry] of Spring Modulith does this for Spring application events. It considers a delivery completed when the listener returns without throwing an exception. Therefore, if you use it, let exceptions propagate out of the listener instead of catching and logging them.

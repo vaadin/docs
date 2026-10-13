@@ -40,8 +40,13 @@ public class DateRangePicker extends CustomField<LocalDateRange> {
 
     @Override
     protected void setPresentationValue(LocalDateRange dateRange) {
-        start.setValue(dateRange.getStartDate());
-        end.setValue(dateRange.getEndDate());
+        if (dateRange == null) {
+            start.clear();
+            end.clear();
+        } else {
+            start.setValue(dateRange.getStartDate());
+            end.setValue(dateRange.getEndDate());
+        }
     }
 
     @Override

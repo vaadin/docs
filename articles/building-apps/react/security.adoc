@@ -188,6 +188,10 @@ export const config: ViewConfig = {
 };
 ----
 
+.React and Flow Views Have Opposite Defaults
+[IMPORTANT]
+A React view is public unless it, or a layout around it, sets `loginRequired`. A Flow view is the opposite: it's denied to everyone unless an annotation grants access, as described in <<../security/protect-views#,Protect Views>>. When you add a React view to an application whose Flow views all require login, the new view is still public until you set `loginRequired` on it.
+
 
 == Restricting Access by Role
 
@@ -268,15 +272,18 @@ By default users are redirected to the root URL (`/`) after logging out. To chan
 [source,java]
 .SecurityConfig.java
 ----
+http.authorizeHttpRequests(auth -> auth
+        .requestMatchers("/logged-out.html").permitAll()); // <1>
 http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-    configurer.loginView("/login", "/logged-out.html"); // <1>
+    configurer.loginView("/login", "/logged-out.html"); // <2>
 });
 ----
-<1> Redirect to `/logged-out.html` after logout.
+<1> Lets users who have logged out load the page. Vaadin denies requests to URLs that it doesn't recognize, including your own static pages, so without this rule users end up on the login view instead.
+<2> Redirect to `/logged-out.html` after logout.
 
 .Relative Logout URLs Must Include the Context Path
 [IMPORTANT]
-A relative logout URL must include the application's context path. If the application is deployed at `\https://example.com/app`, use `/app/logged-out.html`.
+A relative logout URL must include the application's context path. If the application is deployed at `\https://example.com/app`, use `/app/logged-out.html`. The request matcher doesn't include the context path, so it stays `/logged-out.html`.
 
 
 == Protecting Browser-Callable Services
@@ -319,7 +326,22 @@ public class ProtectedService {
 
 === Using Spring Method Security
 
-If you want to protect a browser-callable service with Spring method security instead -- for example to reuse an existing protected Flow service -- add [annotationname]`@AnonymousAllowed` to bypass Vaadin's own check, then apply Spring's [annotationname]`@PreAuthorize`:
+If you want to protect a browser-callable service with Spring method security instead -- for example to reuse an existing protected Flow service -- add [annotationname]`@AnonymousAllowed` to bypass Vaadin's own check, then apply Spring's [annotationname]`@PreAuthorize`.
+
+Spring evaluates [annotationname]`@PreAuthorize` only when method security is enabled, so first add [annotationname]`@EnableMethodSecurity` to your security configuration class, as described in <<../security/protect-services#enabling-method-security,Protect Services>>:
+
+[source,java]
+.SecurityConfig.java
+----
+@EnableWebSecurity
+@EnableMethodSecurity
+@Configuration
+class SecurityConfig {
+    ...
+}
+----
+
+Then annotate the service:
 
 [source,java]
 ----
@@ -328,7 +350,7 @@ If you want to protect a browser-callable service with Spring method security in
 @PreAuthorize("isAuthenticated()") // <2>
 public class ProtectedService {
 
-    public MyData callableByAllUsers() {
+    public void callableByAllUsers() {
     }
 
     @PreAuthorize("hasRole('" + Roles.ADMIN + "')")
@@ -338,6 +360,10 @@ public class ProtectedService {
 ----
 <1> Bypass Vaadin's access check.
 <2> Enforce access with Spring method security instead.
+
+.Without Method Security, the Service Is Open to Everyone
+[CAUTION]
+If [annotationname]`@EnableMethodSecurity` is missing, Spring ignores [annotationname]`@PreAuthorize`, and [annotationname]`@AnonymousAllowed` lets anyone call the service -- including users who haven't logged in. Verify with an automated test that an unauthenticated call is rejected.
 
 .Don't Enable JSR-250 Annotations in Spring Security
 [WARNING]

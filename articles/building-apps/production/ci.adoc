@@ -1,0 +1,77 @@
+---
+title: Build on CI
+page-title: How to build and test a Vaadin application on a CI server
+description: Build, test, and package a Vaadin application on every change, with a license key when needed.
+meta-description: Build, test, and package a Vaadin application on a CI server, such as GitHub Actions. Provide a license key for commercial features, and keep the build fast.
+order: 70
+---
+
+
+= Build on CI
+
+A continuous integration (CI) server builds and tests the application on every change, and produces the artifact that you deploy. The following GitHub Actions workflow builds the application, runs its tests, creates the production JAR, and builds a container image from it:
+
+.`.github/workflows/build.yml`
+[source,yaml]
+----
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw -B verify
+        env:
+          VAADIN_OFFLINE_KEY: ${{ secrets.VAADIN_OFFLINE_KEY }}
+
+      - name: Build container image
+        run: docker build -t my-app:${{ github.sha }} .
+----
+
+Other CI servers need the same steps: a JDK, the Maven wrapper that comes with the project, and Docker.
+
+
+== What the Workflow Does
+
+The workflow runs for every push to the `main` branch, and for every pull request:
+
+. It checks out the code, and installs Java. Use the version that the `java.version` property in your [filename]`pom.xml` specifies. The `cache` option keeps the Maven dependencies between runs, so they aren't downloaded every time.
+. `./mvnw -B verify` compiles the application, runs the tests, and creates the production JAR, as described in <<build#,Build for Production>>. If a test fails, the workflow stops. The <<{articles}/building-apps/testing#,Testing>> guides show how to write tests for your views that run without a browser, and therefore also on a CI server.
+. It builds the container image with the [filename]`Dockerfile` from <<container#,Build a Container Image>>.
+
+To deploy the image, push it to the container registry that your platform uses. How to log in and push depends on the registry.
+
+
+== Provide the License Key
+
+If the application uses commercial features, the production build needs a license key, and fails without one. The CI server needs a server license key, which you can download from https://vaadin.com/myaccount/licenses[your Vaadin account]. See <<{articles}/flow/configuration/licenses#server-license-key,Validation on CI/CD or Build Server>> for details.
+
+Don't commit the key. Store the contents of the key file as a secret in the CI server instead. In GitHub, add it as a repository secret named `VAADIN_OFFLINE_KEY`. The workflow passes it to the build in the `VAADIN_OFFLINE_KEY` environment variable, where Vaadin looks for it.
+
+If the application doesn't use commercial features, the build doesn't need a key. The variable is then empty, which does no harm.
+
+GitHub doesn't give secrets to workflows that run for pull requests from forks of the repository. If your application uses commercial features, the production build of such pull requests fails.
+
+
+== Keep the Frontend Build Fast
+
+If the application uses only Vaadin's UI components and themes, the build uses a pre-compiled frontend bundle, and the CI server doesn't need Node.js. If the application has an application-specific bundle, commit [filename]`src/main/bundles/prod.bundle`, as described in <<build#when-the-build-needs-node-js,When the Build Needs Node.js>>. The CI build then reuses it, and runs npm and Vite only when the frontend code has changed.
+
+
+== Next Steps
+
+You now have a production JAR, a container image, and a build that creates them on every change. To run more than one instance of the application, see <<{articles}/building-apps/production#running-more-than-one-instance,Running More Than One Instance>>.
