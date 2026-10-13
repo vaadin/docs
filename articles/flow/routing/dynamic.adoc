@@ -19,7 +19,7 @@ The [classname]`RouteConfiguration` class can be used to limit route access to:
 You can access the scope using the static methods [methodname]`forSessionScope()` and [methodname]`forApplicationScope()` from the [classname]`RouteConfiguration` class.
 
 [NOTE]
-All components annotated with `@Route` are added to the application scope at startup, unless the <<Dynamic Registration of @Route Annotated Classes, `registerAtStartup`>> element has been set to `false`.
+All components annotated with `@Route` are added to the application scope at startup, unless the <<Dynamic Registration of @Route Annotated Classes, `registerAtStartup`>> element has been set to `false`, or the <<Restricting a Route to Development Mode, `developmentOnly`>> element has been set to `true` and the application runs in production mode.
 
 == Configuring User-Specific Routes
 
@@ -91,7 +91,7 @@ For further related information, see:
 [[application.startup]]
 == Adding Routes on Application Startup
 
-You can register routes during application startup using the [classname]`ServiceInitLister`.
+You can register routes during application startup using the [classname]`ServiceInitLister`. Use this approach when registration depends on conditions other than whether the application runs in production mode -- for a route that should only be reachable during development, prefer the `developmentOnly` parameter described in <<Restricting a Route to Development Mode>>.
 
 *Example*: Using [classname]`ServiceInitLister` to register a route during deployment.
 
@@ -214,6 +214,26 @@ if (getCurrentUser().hasAccessToReporting()) {
             .setAnnotatedRoute(ReportView.class);
 }
 ----
+
+[[dynamic.development-only]]
+== Restricting a Route to Development Mode
+
+Views meant only for development, such as debugging tools or example views kept in a project, can be marked with the `developmentOnly` parameter of the [annotationname]`@Route` annotation. A development only route isn't registered when the application runs in production mode, so it can't be navigated to. This applies both to automatic registration at startup and to [methodname]`setAnnotatedRoute()`, and to any [annotationname]`@RouteAlias` of the class.
+
+*Example*: Marking a debug view as available only during development.
+[source,java]
+----
+@Route(value = "debug", developmentOnly = true)
+public class DebugView extends Div {
+    // implementation omitted
+}
+----
+
+Registering the class explicitly on a path, for example with [methodname]`setRoute()`, doesn't read the [annotationname]`@Route` annotation and isn't affected by `developmentOnly`.
+
+A development only route's frontend dependencies, such as its own `@JsModule` or `@CssImport` resources, are left out of the production frontend bundle, provided no other route also uses them.
+
+By default, routes are always available, regardless of the mode the application runs in.
 
 == Example: Adding a New View on User Log-in
 
