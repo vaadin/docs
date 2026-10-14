@@ -5,9 +5,9 @@
 import { html, LitElement, nothing, svg } from 'lit';
 import { property, state } from 'lit/decorators.js';
 
-// TODO: Replace SIGNUP_URL with the real endpoint before shipping. The form
-// POSTs JSON `{ email, version }` to it and expects a 2xx response.
-const SIGNUP_URL = 'https://example.invalid/TODO-security-alert-signup';
+const SECURITY_ALERTS_SIGNUP_URL = 'https://api.hsforms.com/submissions/v3/integration/submit/1840687/969cc021-0410-4622-88da-e1366b19ef94';
+const SECURITY_ALERTS_SUBSCRIPTION_TYPE = 922129;
+
 const EXTENDED_MAINTENANCE_URL = 'https://vaadin.com/maintenance';
 const PRIVACY_POLICY_URL = 'https://vaadin.com/privacy-policy';
 
@@ -52,7 +52,11 @@ class OlderVersionNotice extends LitElement {
   createRenderRoot() {
     return this;
   }
-
+  
+  @state() private emailError = '';
+  @state() private emailEmpty = true;
+  private emailDebounce?: number;
+  
   @property({ attribute: false })
   current!: Version;
 
@@ -68,6 +72,26 @@ class OlderVersionNotice extends LitElement {
   private latestPage?: string;
 
   dismissed = false;
+  
+  private validateEmail(input: HTMLInputElement) {
+    this.emailError =
+      !input.value || input.checkValidity()
+      ? ''
+      : 'Please enter a valid email address, e.g. you@company.com';
+    }
+
+  private onEmailInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    this.emailEmpty = !input.value.trim();
+    this.emailError = '';
+    clearTimeout(this.emailDebounce);
+    this.emailDebounce = window.setTimeout(() => this.validateEmail(input), 600);
+  }
+
+  private onEmailBlur(e: Event) {
+    clearTimeout(this.emailDebounce);
+    this.validateEmail(e.target as HTMLInputElement);
+  }
 
   // TODO: Pick one design and remove the others (see `?older-version=1|2|3`)
   design: 1 | 2 | 3 = 1;
@@ -75,6 +99,7 @@ class OlderVersionNotice extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.findLatestPage();
+    clearTimeout(this.emailDebounce);
   }
 
   private async findLatestPage() {
@@ -103,15 +128,36 @@ class OlderVersionNotice extends LitElement {
     if (this.status === 'sending' || this.status === 'done') {
       return;
     }
+    if (this.emailError || this.emailEmpty) {
+      this.renderRoot.querySelector<HTMLInputElement>('input[name="email"]')?.focus();
+      return;
+    }
     const email = new FormData(e.target as HTMLFormElement).get('email');
     this.status = 'sending';
     try {
       const response = simulate
         ? await simulateSignup(String(email))
-        : await fetch(SIGNUP_URL, {
+        : await fetch(SECURITY_ALERTS_SIGNUP_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, version: `${this.current.number}.x` }),
+            body: JSON.stringify({
+                fields: [
+                    { objectTypeId: '0-1', name: 'email', value: email },
+                    { objectTypeId: '0-1', name: 'first_offer_source', value: 'Get Security Alerts' },
+                ],
+                context: {
+                    pageUri: window.location.href,
+                    pageName: document.title,
+                },
+                legalConsentOptions: {
+                    legitimateInterest: {
+                    value: true,
+                    subscriptionTypeId: SECURITY_ALERTS_SUBSCRIPTION_TYPE,
+                    legalBasis: 'LEAD',
+                    text: `You\'ll receive security emails and may unsubscribe at any time. More in our <a href=${PRIVACY_POLICY_URL} target="_blank">Privacy Policy</a>.`,
+                    },
+                }
+            })
           });
       if (!response.ok) {
         throw new Error(`Signup failed with status ${response.status}`);
@@ -133,10 +179,12 @@ class OlderVersionNotice extends LitElement {
     const sending = this.status === 'sending';
     const state = (name: string, current: boolean, content: unknown) =>
       html`<span class="state state-${name} ${current ? 'current' : ''}">${content}</span>`;
+    const isDisabled = done || sending || this.emailError || this.emailEmpty ? true : false;
     return html`
       <button
         class="${className} ${done ? 'done' : ''}"
-        aria-disabled=${done || sending ? 'true' : 'false'}
+        disabled=${isDisabled}
+        aria-disabled=${isDisabled}
       >
         <span class="states">
           ${state('idle', !done && !sending, label)}
@@ -155,21 +203,21 @@ class OlderVersionNotice extends LitElement {
     `;
   }
 
+  private renderEmailError() {
+    return html`<p id="email-error" class="field-error" role="alert">${this.emailError}</p>`;
+  }
+
   private renderError() {
-    return this.status === 'error'
-      ? html`<p role="alert">Something went wrong. Please try again.</p>`
-      : nothing;
+    return html`<p class="field-error" role="alert">${this.status === 'error' ? 'Something went wrong. Please try again.' : ''}</p>`;
   }
 
   private renderPrivacy() {
     return html`
       <p class="privacy">
-        Unsubscribe anytime.
-        <a href=${PRIVACY_POLICY_URL} target="_blank" rel="noopener">Privacy policy</a>
+        You'll receive security emails and may unsubscribe at any time. More in our <a href=${PRIVACY_POLICY_URL} target="_blank">Privacy Policy</a>.
       </p>
     `;
   }
-
   private renderForm() {
     return html`
       <form @submit=${this.submit}>
@@ -182,14 +230,20 @@ class OlderVersionNotice extends LitElement {
             autocomplete="email"
             placeholder="you@company.com"
             aria-label="Email address"
+            aria-invalid=${this.emailError ? 'true' : 'false'}
+            aria-describedby="email-error"
+            pattern="[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}"
+            title="Please enter a valid email address, e.g. you@company.com"
+            @input=${this.onEmailInput}
+            @blur=${this.onEmailBlur}
             ?readonly=${this.status === 'sending' || this.status === 'done'}
           />
         </span>
         ${this.renderSubmitButton('Get Security Alerts')}
       </form>
-      ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
-    `;
-  }
+    ${this.renderEmailError()} ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
+  `;
+}
 
   private get latestLink() {
     return html`<a href=${this.latestPage ?? this.latest.path}>${this.latest.title}</a>`;
@@ -366,6 +420,8 @@ class OlderVersionNotice extends LitElement {
             required
             autocomplete="email"
             placeholder="you@company.com"
+            pattern="[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}"
+            title="Please enter a valid email address, e.g. you@company.com"
             ?readonly=${this.status === 'sending' || this.status === 'done'}
           />
           ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
@@ -397,8 +453,7 @@ class OlderVersionNotice extends LitElement {
           <div class="column">
             <h2>Staying on ${this.current.title}?</h2>
             <p class="lead">
-              Get an email when a security advisory affects your version, with the fixed release and
-              how to upgrade, and a reminder before free maintenance ends.
+              You'll receive security emails and may unsubscribe at any time. More in our <a href=${PRIVACY_POLICY_URL} target="_blank">Privacy Policy</a>.
             </p>
             <form class="buttons" @submit=${this.submit}>
               <span class="email-field">
@@ -410,12 +465,18 @@ class OlderVersionNotice extends LitElement {
                   autocomplete="email"
                   placeholder="you@company.com"
                   aria-label="Email address"
+                  aria-invalid=${this.emailError ? 'true' : 'false'}
+                  aria-describedby="email-error"
+                  pattern="[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}"
+                  title="Please enter a valid email address, e.g. you@company.com"
+                  @input=${this.onEmailInput}
+                  @blur=${this.onEmailBlur}
                   ?readonly=${this.status === 'sending' || this.status === 'done'}
                 />
               </span>
               ${this.renderSubmitButton('Get Security Alerts', 'button primary water')}
             </form>
-            ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
+            ${this.renderEmailError()} ${this.renderStatus()} ${this.renderError()} ${this.renderPrivacy()}
             <div class="buttons">
               <a class="button secondary water" href="/docs/v${this.latest.number}/upgrading">
                 Upgrade Guide: ${this.current.number} → ${this.latest.number}
