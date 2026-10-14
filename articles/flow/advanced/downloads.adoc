@@ -17,6 +17,7 @@ This API supports various download scenarios, from simple file downloads to comp
 This documentation covers the main features of the `DownloadHandler` API, including:
 
 * <<#common,Common download scenarios>>
+* <<#onclick,Starting a download from a component click>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
 * <<#low-level,Low-level API features>>
@@ -115,6 +116,44 @@ If the content should be inlined to the page, this have to be set explicitly by 
 ----
 Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-and-conditions.md")).inline(), AttachmentType.INLINE, "View Terms and Conditions");
 ----
+
+[#onclick]
+== Starting a Download From a Component Click
+
+The examples above bind a `DownloadHandler` to an `Anchor`, which renders a regular link and lets the browser handle the download natively. [methodname]`Download.onClick` offers the same download, bound instead to a click on a [classname]`Button` or any other component that implements [interfacename]`ClickNotifier` -- so the component keeps its own look, keyboard handling, and click listeners instead of being wrapped in a link:
+
+[source,java]
+----
+Button export = new Button("Export");
+Download.onClick(export, DownloadHandler.fromInputStream(event -> {
+    byte[] report = reportService.createReport();
+    return new DownloadResponse(new ByteArrayInputStream(report),
+            "report.pdf", "application/pdf", report.length);
+}));
+----
+
+The download starts in the browser's own click handler, inside the user gesture, without waiting for a server round trip. The handler itself still runs on the server, but only once the browser requests the file -- so the file name and response headers can be decided at that point, as with any `DownloadHandler`.
+
+[methodname]`onClick` also accepts a URL the browser can already address, optionally with a suggested file name:
+
+[source,java]
+----
+Download.onClick(exportButton, "/files/report.pdf");
+Download.onClick(exportButton, "/files/report.pdf", "report.pdf");
+----
+
+Browsers use the suggested file name only for same-origin URLs; for other URLs the server has to send the name in a `Content-Disposition` header instead.
+
+The handler is served only while the component is attached, visible, and enabled. If a button disables itself on click, the browser may still request the file after the component is disabled; call [methodname]`allowDisabled()` on the handler to serve it in that case:
+
+[source,java]
+----
+Download.onClick(export,
+        DownloadHandler.fromInputStream(event -> ...).allowDisabled());
+----
+
+[methodname]`onClick` returns a [classname]`Registration`. Calling [methodname]`remove()` on it removes the click listener and, for a handler-based download, unregisters the handler so its URL stops serving the file.
+
 
 [#custom]
 == Custom Download Handlers
