@@ -118,6 +118,48 @@ public VaadinSecurityConfigurer keycloakRoleMapping()
 
 [since:com.vaadin:vaadin@V25.4]#Enables mapping of Keycloak realm and client roles to Spring Security granted authorities (disabled by default).# Keycloak puts the roles of a user into the access token, so they aren't part of the authenticated user by default. Enabling the mapping decodes the access token and maps its roles, which makes `@RolesAllowed("admin")` and `hasRole("admin")` match a Keycloak role named `admin`. Works only together with `oauth2LoginPage(String)` and its overloads. See <<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> for details.
 
+===== Login Success and Failure Handling
+
+[source,java]
+----
+public VaadinSecurityConfigurer successUrlResolver(VaadinSavedRequestAwareAuthenticationSuccessHandler.SuccessUrlResolver successUrlResolver)
+----
+
+Sets the resolver for the URL to redirect to after authentication, for example to send users to a landing page that depends on their roles. When the resolver returns a URL, it takes precedence over both the previously accessed page and the default success URL, even when `alwaysUse` is enabled on [methodname]`defaultSuccessUrl()`. When it returns `null`, the user is redirected as if no resolver was set. Works only together with `loginView(String)` or `oauth2LoginPage(String)` and their variants.
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .loginView(LoginView.class)
+        .successUrlResolver((request, authentication, savedUrl) -> authentication
+                .getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))
+                        ? "/admin"
+                        : null));
+----
+
+[source,java]
+----
+public VaadinSecurityConfigurer failureHandler(AuthenticationFailureHandler failureHandler)
+----
+
+Configures the handler for a failed authentication, for example to audit failed login attempts or to redirect to a custom error page. This overrides the default behavior of redirecting back to the login view with an `error` parameter. Works only together with `loginView(String)` or `oauth2LoginPage(String)` and their variants.
+
+If the handler redirects to a URL other than the login view, that URL must be permitted explicitly in the authorization rules, since the default rules otherwise deny it and the user ends up back on the login view without seeing the error.
+
+[source,java]
+----
+http.authorizeHttpRequests(auth -> auth
+        .requestMatchers("/login-failed.html").permitAll());
+
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .loginView(LoginView.class)
+        .failureHandler((request, response, exception) -> {
+            auditLog.failedLogin(request.getParameter("username"));
+            response.sendRedirect("/login-failed.html");
+        }));
+----
+
 ===== Logout Configuration
 
 [source,java]
