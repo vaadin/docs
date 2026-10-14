@@ -1,8 +1,8 @@
 ---
 title: Copilot Panel
 page-title: Viewing Vaadin Observability Kit insights in Copilot
-description: The development-mode panel that shows what went wrong and the live Vaadin meters, without a monitoring backend.
-meta-description: Use the Observability Kit panel in Vaadin Copilot to see failed and slow interactions, browser errors, and the live vaadin.* meters as you develop.
+description: The development-mode panel that shows how the application feels, where an interaction's time went, the live Vaadin meters, and what went wrong -- without a monitoring backend.
+meta-description: Use the Observability Kit panel in Vaadin Copilot to see vitals, interaction timing, live vaadin.* meters, and failed or slow interactions as you develop.
 order: 38
 ---
 
@@ -11,7 +11,7 @@ order: 38
 
 Metrics and insights normally need a backend, a dashboard, or at least a `curl` against an Actuator endpoint.
 During development, Observability Kit skips all of that.
-It contributes an *Observability* panel to Vaadin Copilot that shows the same findings the <<insights#,insights endpoint>> publishes, with the live `vaadin.*` meters underneath them.
+It contributes an *Observability* panel to Vaadin Copilot with four tabs: the application's vitals read against common budgets, a breakdown of your last interaction, the live `vaadin.*` meters, and the same findings the <<insights#,insights endpoint>> publishes.
 
 The panel is development-mode only.
 In production, Copilot and the development tools connection don't exist, so the panel is never loaded and the server never answers for it.
@@ -23,85 +23,190 @@ Start the application in development mode and open it in a browser.
 The panel is registered with Copilot under the heading *Observability*, behind a bar chart icon in the Copilot toolbar, and it's available in edit, inspect, and test modes.
 
 Nothing needs to be configured to get it.
-The kit injects the panel once per UI whenever it runs outside production mode, provided the license check passed.
+The panel is part of the kit's development-mode frontend bundle, so it's always there in development mode, with or without a license; see <<#license,Without a License>>.
 
 
-== Findings First
+== Tabs
 
-The panel opens on the findings rather than on the numbers, because a meter is a number: `vaadin.errors 3` doesn't say which route, which component, or which line to open.
+The panel has four tabs:
 
-The findings are the insights described on the <<insights#,Interaction Insights>> page -- failed interactions, interactions that ran over the UX budget, failed and slow data provider queries, and browser errors -- and they're the endpoint's own payload, unaltered.
-The same service, the same grouping, and the same withholding of sensitive detail apply, so a finding read here and one served to an agent can't drift apart.
+[cols="1,3"]
+|===
+|Tab |Answers
 
-The panel ranks them for display: errors before warnings, then the most-reported first, then the most recent.
-An error that ten users hit outranks one that happened once.
+|*Vitals*
+|How does the application feel right now?
 
-The header says how many findings need attention.
-When there are none, it reads *Insights* and the body explains which of two things that means:
+|*Last interaction*
+|Where did the time of my last click go?
 
-- *No problems detected yet*, when the collectors are bound and nothing has gone wrong.
-- *Insights are not being collected*, when nothing was watching in the first place.
+|*Metrics*
+|What do the numbers say?
 
-See <<#requirements,What the Panel Needs>> for the settings behind the second case.
+|*Findings*
+|What went wrong, and where in the code should I look?
+|===
 
-Before the first payload arrives the panel says it's waiting, rather than claiming that nothing is wrong.
+The first insights payload picks the tab the panel opens on: *Findings* when something needs attention, *Vitals* when nothing does.
+Once you pick a tab yourself, your choice stands.
+When findings need attention, the tab reads *Findings (n)* with their number.
 
+The tab choice, like the latency and filter choices described below, survives closing and reopening the panel, but not a page reload.
 
-== Reading a Finding
-
-Each row shows the summary, a severity dot, and a line of context underneath: the route, the component or script, how many occurrences the group has, and when it was last seen.
-
-Select a row to expand it.
-The expanded row shows the finding's full evidence, the [propertyname]`replay` steps that reproduce it, and the [propertyname]`suggestion` -- exactly as the server wrote them.
-Rows stay expanded while their occurrence count climbs, and while you close the panel to look at the code and open it again.
-
-The *Copy* button on a row puts the whole finding on the clipboard as JSON.
-That's the shortest path from noticing a problem to handing it to an AI agent that has the codebase checked out; see <<insights#ai-agents,Fixing Insights with an AI Agent>> for what an agent does with it.
-Copying needs the browser's clipboard API, which is available on `localhost` and over HTTPS; the button confirms with *Copied*, or reports *Failed* where the browser denies access.
+The *Vitals* and *Last interaction* tabs end with an *All metrics* link that jumps to the *Metrics* tab, and the time of the last update.
 
 
-== Findings You Aren't Working On
+[[vitals]]
+== Vitals
 
-"3 findings need attention" is only worth reading while all three are news, so two kinds fold away behind a collapsed line under the list -- "2 hidden findings", "3 findings gone quiet", or "5 findings set aside (2 hidden, 3 gone quiet)":
+The *Vitals* tab shows a handful of figures measured from real interactions in your browser and your server, each read against a common budget.
+The budgets are rules of thumb, not hard limits.
 
-Hidden by hand:: Every row has a *Hide* button, for the known slow query in the feature you aren't touching today.
-It stays hidden even as the finding keeps recurring -- a dismissal that undid itself on the next occurrence would be no dismissal at all -- and is remembered in the browser's `localStorage`, so the reload that follows every code change doesn't ask you to hide everything again.
-*Unhide* puts it back.
+[cols="2,3,1"]
+|===
+|Card |Measured from |Budget
 
-Gone quiet:: A finding nothing has re-triggered for 30 minutes is history rather than attention.
-This one is automatic and reverses itself: the moment it recurs, [propertyname]`lastSeen` moves and it's back in the count.
+|Interaction response
+|`vaadin.client.request.duration`: one UIDL round trip as the browser saw it.
+Every Vaadin interaction is a server round trip, so Interaction to Next Paint (INP) can be no faster than this.
+|200 ms
 
-Nothing is discarded.
-The fold always shows how many findings are behind it and which of the two reasons put them there, and one click renders them, faded, with their detail and replay intact.
+|Server time per interaction
+|`vaadin.request.duration` with `vaadin.interaction=rpc`.
+|50 ms
+
+|View navigation
+|`vaadin.request.duration` with `vaadin.interaction=navigation`, with the share spent in the navigation lifecycle (`vaadin.navigation`) in the note.
+|200 ms
+
+|Grid data fetch
+|`vaadin.data.fetch.duration`, per page, with the rows asked for against the rows returned (`vaadin.data.fetch.requested` and `vaadin.data.fetch.rows`).
+|100 ms
+
+|Page load (LCP)
+|This page load's Largest Contentful Paint as the browser currently reports it, with the First Contentful Paint in the note.
+|2.5 s
+
+|Server bootstrap
+|This page load's own navigation timing, from request start to response start.
+Shown only once the server has recorded a `bootstrap` request.
+|200 ms
+|===
+
+Except for the two page-load cards, which describe the page you're on, a card shows the server's mean across all the meter's tag values.
+
+Each card has a bar scaled to one and a half times its budget, with a tick at the budget, and a verdict:
+
+* *Good*, at or under the budget.
+The interaction response card says *Instant* at or under a quarter of its budget, 50 ms.
+* *Slightly slow*, up to one and a half times the budget.
+* *Over budget*, beyond that.
+
+A card with no samples yet shows a dash.
+When the data fetch returns fewer than half the rows it asked for, the card reminds you that development data is small, and production data won't be.
+
+=== What Will This Feel Like in Production?
+
+On `localhost` the network costs nothing, so every figure measured during development flatters the application.
+Below the cards, pick a user's round-trip latency -- *Localhost*, *30 ms*, *80 ms* (the default), or *200 ms* -- and two tiles add it to the measured server time of a typical interaction and of a view navigation, judging each against a 200 ms budget.
+
+The result is an estimate: measured time plus one round trip.
+Server time also grows with concurrent users, which a development machine doesn't have.
 
 
-== New Findings Announce Themselves
+[[last-interaction]]
+== Last Interaction
 
-The panel keeps watching while its window is closed, and writes a line to the Copilot log for each finding the payload didn't have before.
-This is the point of the panel for most of a working day: you don't have to have it open to learn that something broke.
+The *Last interaction* tab breaks down the last thing you did in the application -- such as a click on a button in a view -- into where its time went.
+The heading names the event, the component with its caption, and the view, and says whether the interaction failed.
 
-Announcements are deduplicated on the same grouping key the endpoint uses, so one problem notifies once, however often it recurs.
-Only findings that the current page raised are announced -- anything first seen since the page loaded, including during the load itself, so a slow query on the landing view is reported.
-The retained records outlive a reload, and those older findings are not announced again.
-A finding you hid isn't announced either.
+The total is read against the 200 ms INP budget and split into three parts:
 
-Errors are logged as errors and everything else as a warning, each prefixed with `Observability:`.
-The message is a summary, cut to 300 characters when longer.
+Network and transfer:: The browser's round trip minus the server time.
+Close to zero on `localhost`, and the part that grows in production.
 
-[NOTE]
-Announcements are best-effort.
-Copilot's plugin API has no notification of its own, so the line is written as a log event on Copilot's event bus; a Copilot that drops it costs you a notification, never the panel.
+Server:: The time your listeners, services, and database calls took, summed over every invocation in the same request.
+A property sync that arrived with a click doesn't replace the click as the headline, and a failure stays visible as one.
+
+Browser render:: How long the browser took to apply the changes to the page.
+
+A note says how many events were handled in that one server round trip, because more than one round trip per interaction is a common latency multiplier in production.
+
+The server half comes from the kit's interaction collector, and the browser half from the browser's latest request and render samples.
+A browser sample is matched to the interaction only when it was taken within five seconds of it, after correcting for the difference between the browser's and the server's clocks.
+Without client metrics, the network share reads as not available, and the total is the server and render time.
+
+Some things to keep in mind:
+
+* The last interaction is recorded only in development mode.
+Polls and the kit's own requests that carry browser samples to the server aren't interactions and are skipped.
+* It's the application's last interaction, not the tab's: with two browser tabs open, the panel shows whichever interacted last.
+* It refreshes only while the panel is open.
+
+=== Slowest Things This Session
+
+Below the breakdown, a table lists what has been slowest so far, sorted by mean time, each against its budget:
+
+[cols="2,3,1"]
+|===
+|Row |Meter |Budget
+
+|View navigation
+|Navigation request time, with the navigation lifecycle and other server work in the sub-line.
+|200 ms
+
+|Grid data fetch
+|`vaadin.data.fetch.duration`, with the rows requested per page.
+|100 ms
+
+|Grid size query
+|`vaadin.data.count.duration`.
+|100 ms
+
+|Initial page request
+|`vaadin.request.duration` for `bootstrap` requests.
+|200 ms
+
+|Component events (RPC)
+|`vaadin.rpc.duration`.
+|50 ms
+
+|Session lock wait
+|`vaadin.session.lock.wait`.
+|50 ms
+
+|Background tasks
+|`vaadin.executor.task`.
+|100 ms
+|===
+
+Only rows with at least one measurement are shown.
+When a row is over its budget, a tip under the table explains what usually causes it, for the slowest such row.
 
 
-== Live Meters by Route
+[[metrics]]
+== Metrics
 
-Below the findings is the *Metrics* section, holding every `vaadin.*` meter in the running registry.
-Its header carries the meter count and the time of the last snapshot.
+The *Metrics* tab holds every `vaadin.*` meter in the running registry.
 
-The section is folded away when there's something to look at above it and unfolded when there isn't.
-That's decided once, by the first payload that reaches the panel; after you fold or unfold it yourself, your choice stands.
+=== Key Metrics
 
-Meters are *grouped by the route they were recorded on*, and each group is headed by its route template:
+Five key metrics are pinned above the full list: interaction response time, server time per event, view navigation, data fetch per page, and Largest Contentful Paint.
+They're the same figures as the first five vitals, here as the server mean across all their tag values, so the LCP figure is the mean over every page load rather than the current one.
+Each row shows the meter it's read from, a sparkline of the last twenty polls, the value, and whether it's within its budget.
+
+=== All Meters
+
+Below the key metrics is the full meter list, with two filters, both on by default:
+
+Hide idle:: Hides meters that haven't measured anything yet: a count of zero, and a value of zero.
+A registry is mostly timers that nothing has hit yet.
+
+Hide heartbeat & static:: Hides the meters of requests nobody is asking about: `heartbeat`, `push`, and `static` <<reference#request-types,request types>>, and polls.
+
+The list says how many meters it's showing and how many each filter hid.
+
+Meters are *grouped by the route they were recorded on*, and each group is headed by its route template and its number of meters:
 
 [cols="1,3"]
 |===
@@ -127,7 +232,7 @@ Every other route follows alphabetically, then the two sentinel groups, and *Gen
 Route groups are matched against the browser's location by route template, so `orders/:orderId` is the current group while you're on `/orders/17`.
 An application served under a context path has that path in front of every location and in none of the templates, so nothing matches and the groups stay alphabetical.
 
-Each row shows the meter name, its remaining tags, its value, and a sparkline of the last twenty polls.
+Each row shows the meter name, its remaining tags -- without `route`, which the group heading already says -- its value, and a sparkline of the last twenty polls.
 The value column is derived per meter type rather than raw:
 
 [cols="1,3"]
@@ -145,28 +250,115 @@ Timers are in milliseconds.
 |The current value.
 |===
 
-The panel refreshes the meters every three seconds while it's open, and asks for nothing while it's closed.
-Insights are polled either way, less often when the panel is closed, which is what makes the announcements possible.
-
 [NOTE]
 Only meters whose name starts with `vaadin.` are exposed to the panel.
 Your own meters, including the ones described on the <<customization#,Custom Instrumentation>> page, are recorded into the same registry but aren't shown here.
 
 
+[[findings]]
+== Findings
+
+The *Findings* tab shows the insights described on the <<insights#,Interaction Insights>> page -- failed interactions, interactions that ran over the UX budget, failed and slow data provider queries, browser errors, and growing view state -- and they're the endpoint's own payload, unaltered.
+The same service, the same grouping, and the same withholding of sensitive detail apply, so a finding read here and one served to an agent can't drift apart.
+
+A meter is a number: `vaadin.errors 3` doesn't say which route, which component, or which line to open.
+A finding does, and carries the replay steps and the suggestion with it.
+
+The panel ranks the findings for display: errors before warnings, then the most-reported first, then the most recent.
+An error that ten users hit outranks one that happened once.
+
+The header says how many findings need attention.
+When there are none, it reads *Insights* and the body explains which of these it means:
+
+- *No problems detected yet*, when the collectors are bound and nothing has gone wrong.
+- *Nothing needs attention right now*, when there are findings, but all of them are <<#set-aside,set aside>>.
+- *Insights are not being collected*, when nothing was watching in the first place.
+See <<#requirements,What the Panel Needs>> for the settings behind this case.
+
+Before the first payload arrives, the panel says it's waiting for the first snapshot, rather than claiming that nothing is wrong.
+
+=== Reading a Finding
+
+Each row shows the summary, a severity dot, and a line of context underneath: the route, the component or script, how many occurrences the group has, and when it was last seen.
+Where the component's caption was collected, the context line names the component by it -- `'Process return' Button` rather than `Button`.
+
+Select a row to expand it.
+The expanded row shows the finding's full evidence, the [propertyname]`replay` steps that reproduce it, and the [propertyname]`suggestion` -- exactly as the server wrote them.
+In development mode, the replay steps of an interaction name the components by their captions and list the values the user had filled in; see <<insights#dev-replay,Replay Steps That Replay>>.
+Rows stay expanded while their occurrence count climbs, and while you close the panel to look at the code and open it again.
+
+The *Copy* button on a row puts the whole finding on the clipboard as JSON.
+That's the shortest path from noticing a problem to handing it to an AI agent that has the codebase checked out; see <<insights#ai-agents,Fixing Insights with an AI Agent>> for what an agent does with it.
+Copying needs the browser's clipboard API, which is available on `localhost` and over HTTPS; the button confirms with *Copied*, or reports *Failed* where the browser denies access.
+
+[[set-aside]]
+=== Findings You Aren't Working On
+
+"3 findings need attention" is only worth reading while all three are news, so two kinds fold away behind a collapsed line under the list -- "2 hidden findings", "3 findings gone quiet", or "5 findings set aside (2 hidden, 3 gone quiet)":
+
+Hidden by hand:: Every row has a *Hide* button, for the known slow query in the feature you aren't touching today.
+It stays hidden even as the finding keeps recurring -- a dismissal that undid itself on the next occurrence would be no dismissal at all -- and is remembered in the browser's `localStorage`, so the reload that follows every code change doesn't ask you to hide everything again.
+A hidden finding is remembered for seven days, and for at most 200 findings, the most recently hidden kept.
+*Unhide* puts it back.
+
+Gone quiet:: A finding nothing has re-triggered for 30 minutes is history rather than attention.
+This one is automatic and reverses itself: the moment it recurs, [propertyname]`lastSeen` moves and it's back in the count.
+
+Nothing is discarded.
+The fold always shows how many findings are behind it and which of the two reasons put them there, and one click renders them, faded, with their detail and replay intact.
+
+=== New Findings Announce Themselves
+
+The panel keeps watching while its window is closed, and writes a line to the Copilot log for each finding the payload didn't have before.
+This is the point of the panel for most of a working day: you don't have to have it open to learn that something broke.
+
+Announcements are deduplicated on the same grouping key the endpoint uses, so one problem notifies once, however often it recurs.
+Only findings that the current page raised are announced -- anything first seen since the page loaded, including during the load itself, so a slow query on the landing view is reported.
+The retained records outlive a reload, and those older findings are not announced again.
+A finding you hid isn't announced either.
+
+Errors are logged as errors and everything else as a warning, each prefixed with `Observability:`.
+The message is a summary, cut to 300 characters when longer.
+
+[NOTE]
+Announcements are best-effort.
+Copilot's plugin API has no notification of its own, so the line is written as a log event on Copilot's event bus; a Copilot that drops it costs you a notification, never the panel.
+
+
+== Refreshing
+
+While the panel is open, it refreshes the meters and the findings every three seconds.
+While it's closed, it asks for no meters at all, and asks for the findings every fifth tick -- about every fifteen seconds -- which is what makes the announcements possible.
+The last interaction travels with the meters, so it too refreshes only while the panel is open.
+
+
 [[requirements]]
 == What the Panel Needs
 
-The meter table needs nothing beyond the kit being installed and licensed.
+The meters need nothing beyond the kit being installed and licensed.
+What the other tabs show depends on the instrumentation that feeds them:
 
-The findings need [propertyname]`vaadin.observability.insights`, which is on by default, together with the instrumentation that feeds each kind:
+* The browser-side figures -- the interaction response and page load vitals, and the network share of the last interaction -- need `client`.
+* The *Last interaction* tab needs [propertyname]`vaadin.observability.insights`, which is on by default, together with `errors` or `requests`.
+* The findings need `insights` too, together with the instrumentation that feeds each kind:
+** An interaction insight needs `errors` for the failures or `requests` for the over-budget records -- either one is enough.
+** A data provider query insight needs `data` as well.
+** A browser error needs `client` and `errors`.
+** Growing view state needs `ui-state`, which is off by default.
 
-* An interaction insight needs `errors` for the failures or `requests` for the over-budget records -- either one is enough.
-* A data provider query insight needs `data` as well.
-* A browser error needs `client` and `errors`.
-
-The panel says that insights aren't being collected only when nothing is watching at all: when `insights` is off, or when both `errors` and `requests` are.
+The panel says that insights aren't being collected only when nothing is watching at all: when `insights` is off, or when `errors` and `requests` are both off and `ui-state` isn't on.
 That's the case worth distinguishing from an empty list that reads like "nothing is wrong".
 Switching off only `data` or only `client` leaves the panel collecting, and simply drops that kind of finding.
 
-The panel is loaded only outside production mode, and only when the license check passed.
+The panel is loaded only outside production mode.
 Nothing about it reaches a production deployment.
+
+
+[[license]]
+== Without a License
+
+The panel appears in development mode even when the kit has no valid license, so that it doesn't look like an idle application.
+Until a license check has passed, the kit counts as unlicensed: it collects no metrics and no insights, the vitals show dashes, the meter list and the findings say they're not collected without a license, and every tab carries a notice explaining why.
+
+The notice links to the https://vaadin.com/enterprise[Vaadin enterprise page].
+If you already have a license, log in from the Vaadin Copilot menu and restart the application.
