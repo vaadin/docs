@@ -1,0 +1,130 @@
+---
+title: Collect Logs & Metrics
+page-title: How to collect logs and metrics from a Vaadin application
+description: Make logs machine-readable, and expose metrics on a port that users can't reach.
+meta-description: Collect logs and metrics from a Vaadin app with Spring Boot and Micrometer. Write structured logs, expose metrics safely, and know which metrics to watch.
+order: 60
+---
+
+
+= Collect Logs & Metrics
+
+Spring Boot writes the application log to the console, and Spring Boot Actuator, which you added in <<health-checks#,Add Health Checks>>, collects metrics with https://micrometer.io[Micrometer]. This guide shows how to make both useful in production, and what to watch in a Vaadin application.
+
+
+== Write Logs for Machines
+
+In a container, write the log to the console, which is the default. The container platform collects it from there. To make it easier for a log management system to parse, switch to a structured JSON format:
+
+.`application-prod.properties`
+[source,properties]
+----
+logging.structured.format.console=ecs
+----
+
+Each log event is then written as one line of JSON. Besides `ecs` for the Elastic Common Schema, Spring Boot supports `logstash` and `gelf`. See https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured[Structured Logging] for details.
+
+To change a log level without rebuilding the application, set an environment variable. For example, `LOGGING_LEVEL_COM_EXAMPLE=DEBUG` sets the level of the `com.example` package to `DEBUG`.
+
+
+=== What to Look for in a Vaadin Application
+
+* *Unexpected errors.* By default, when a listener throws an exception, Vaadin logs it, but the user sees nothing. The <<{articles}/building-apps/ui-basics/handle-errors#,Handle Errors>> guide logs each error with a short ID, and shows the same ID to the user. When a user reports a problem, you can find the matching log entry.
+* *Resynchronization warnings.* Vaadin logs a warning when it has to resynchronize the UI of a browser tab. If the warnings are frequent, check the network, the proxies, and the load balancers between the browsers and the server. See <<{articles}/building-apps/architecture/runtime-model#when-the-copies-drift-apart,When the Copies Drift Apart>>.
+* *Missing context.* If a servlet filter adds information to every log message, such as a request ID or the user name, the information is missing from messages logged in background threads. With the `WEBSOCKET` push transport, it's also missing from messages logged in listeners, because the events from the browser don't pass through servlet filters. See <<{articles}/building-apps/architecture/runtime-model#what-happens-when-a-user-clicks-a-button,What Happens When a User Clicks a Button>>.
+
+
+== Expose Metrics
+
+To let a monitoring system collect the metrics, add the Micrometer registry for it. For Prometheus, add the following dependency:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+    <scope>runtime</scope>
+</dependency>
+----
+
+Then expose the `prometheus` endpoint, together with `health`, on a separate port:
+
+.`application-prod.properties`
+[source,properties]
+----
+management.server.port=8081
+management.endpoints.web.exposure.include=health,prometheus
+----
+
+Prometheus can then collect the metrics from `/actuator/prometheus` on port 8081. Don't make that port reachable from the internet: don't forward it in the reverse proxy, or publish it from the container. Metrics reveal details of your application that users have no reason to see.
+
+The health endpoints move to port 8081 too, so update the health checks from <<health-checks#,Add Health Checks>>.
+
+
+=== Give Actuator Its Own Security Configuration
+
+If the application uses Spring Security, the requests to the management port pass through the security configuration as well. The Vaadin security configuration can't handle them, and they fail with status 500. Add a separate security filter chain for the Actuator endpoints:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@Bean
+@Order(1) // <1>
+SecurityFilterChain managementSecurityFilterChain(HttpSecurity http)
+        throws Exception {
+    http.securityMatcher(EndpointRequest.toAnyEndpoint())
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()); // <2>
+    return http.build();
+}
+----
+<1> Makes this filter chain handle the Actuator requests before the Vaadin filter chain.
+<2> Allows all requests to the Actuator endpoints.
+
+[WARNING]
+This filter chain allows everyone to use every exposed Actuator endpoint. It's safe only when the endpoints are on a separate port that users can't reach. Without `management.server.port`, the endpoints are on the same port as the application, and this filter chain makes them public.
+
+
+=== Keep the Probes on the Application Port
+
+A check against the management port can succeed even when the application port no longer accepts requests. For this reason, Spring Boot recommends serving the liveness and readiness checks on the application port as well:
+
+.`application-prod.properties`
+[source,properties]
+----
+management.endpoint.health.probes.add-additional-paths=true
+----
+
+This adds `/livez` and `/readyz` to the application port. Allow them in the Vaadin security configuration, as in <<health-checks#allow-the-health-checks-through-security,Allow the Health Checks Through Security>>, but with the following request matcher:
+
+[source,java]
+----
+.requestMatchers(EndpointRequest.toAdditionalPaths(
+        WebServerNamespace.SERVER, "health")).permitAll()
+----
+
+
+== Know Which Metrics to Watch
+
+Spring Boot and Micrometer record metrics for the JVM, the web server, the database connection pool, and more. In a Vaadin application, start with the following ones. The names are as they appear in Prometheus:
+
+`tomcat_sessions_active_current_sessions`::
+The number of sessions in memory. Each session holds the UI state of one user. The number is usually higher than the number of people using the application, as explained in <<{articles}/building-apps/architecture/capacity-and-failover#count-sessions-not-users,Count Sessions, Not Users>>. To change how long sessions stay, see <<configure#decide-how-long-sessions-live,Decide How Long Sessions Live>>.
+
+`jvm_memory_used_bytes{area="heap"}` and `jvm_gc_pause_seconds`::
+The memory used by the heap, where the UI state lives, and the time spent in garbage collection. If the heap stays close to its maximum, the application is running out of memory.
+
+`http_server_requests_seconds`::
+The number and duration of HTTP requests. All requests that Vaadin handles, such as page loads and round trips from the UI, have the `uri="/**"` tag. The metric therefore shows how fast the application responds overall, but not which view is slow.
+
+`logback_events_total{level="error"}`::
+The number of errors logged. Alert when it starts to grow.
+
+For metrics about Vaadin itself, such as the number of active UIs, how long requests wait for the session lock, and how long Vaadin takes to handle each request, see <<{articles}/tools/observability#,Observability Kit>>. It records them in the same Micrometer registry.
+
+To find out how much memory your application needs per session, and how fast it responds under load, before you go to production, see <<{articles}/building-apps/architecture/capacity-and-failover#,Measure Capacity and Test Failover>>.
+
+
+== Next Steps
+
+Each guide so far has added a step to building and deploying the application. <<ci#,Build on CI>> runs these steps automatically on every change.

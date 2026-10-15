@@ -45,7 +45,7 @@ async function checkPreConditions() {
 
     // Verify Maven is installed
     await new Promise((resolve, reject) => {
-      const ps = spawn('mvn', ['--version'], {
+      const ps = spawn('mvn --version', {
         stdio: 'ignore',
         shell: true,
       });
@@ -370,12 +370,14 @@ function finish() {
  */
 async function execute(shellCommand, phases, ignoredLogSignals = []) {
   return new Promise((resolve) => {
-    const parts = Array.isArray(shellCommand) ? shellCommand : shellCommand.split(' ');
-    const ps = spawn(parts[0], [...parts.slice(1)], { shell: true });
+    // Pass the whole command line as one string: with `shell: true`, Node
+    // would only concatenate separate args anyway, and warns about it (DEP0190).
+    const command = Array.isArray(shellCommand) ? shellCommand.join(' ') : shellCommand;
+    const ps = spawn(command, { shell: true });
 
     ps.on('close', (code) => {
       if (code !== 0) {
-        console.error(`${shellCommand} failed with code ${code}`);
+        console.error(`${command} failed with code ${code}`);
         process.exit(code);
       }
 

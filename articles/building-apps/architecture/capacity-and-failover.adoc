@@ -1,0 +1,143 @@
+---
+title: Capacity & Failover
+page-title: Measure the capacity and failover of a Vaadin application
+description: How to measure what a session costs in memory and latency, and what users experience when a server stops.
+meta-description: Measure the memory per session and per browser tab of a Vaadin application, the latency of its interactions, and what users see when a server goes down.
+order: 6
+---
+
+
+= Measure Capacity and Test Failover
+
+A Flow view keeps its UI state in server memory, and every interaction that runs Java code is a round trip to the server, as <<runtime-model#,How a Vaadin Application Works>> explains. How many users a server can hold, how fast your views respond over your users' network, and what users experience when a server stops all depend on your own views and infrastructure. No rule of thumb answers these questions, but you can measure them before you decide how to deploy. This page shows how.
+
+
+== Measure Memory per Session
+
+What a session costs is how much the _live heap_ -- the objects that survive a full garbage collection -- grows while the session is open. To measure it, compare the live heap with and without a known number of sessions:
+
+. <<{articles}/building-apps/production/build#,Build the application for production>>, and run it with the same Java version and JVM options as in production. The Java version alone can change the result, as the tip in <<runtime-model#what-this-means-for-deployment,What This Means for Deployment>> shows.
+. Warm the application up by opening each view a few times. The first sessions pay for one-time initialization. In the example measurement below, each of the first three sessions added 1.6 MB to the live heap, but later sessions only about 0.3 MB each.
+. Read the live heap, as described below.
+. Open a known number of sessions, each showing the views that your users keep open, with realistic data. A <<{articles}/flow/testing/load-testing#,load test>> does this with realistic user behavior. For a first estimate, a browser automation tool, such as Playwright, can open each session in a browser context of its own.
+. While the sessions are open, read the live heap again. Divide the growth by the number of sessions.
+. Repeat with twice as many sessions. The cost per session should stay about the same. If it doesn't, the application wasn't warmed up, or the server doesn't hold the sessions you think it does.
+
+To read the live heap, run the `jcmd` tool of the JDK against the process of the application:
+
+[source,terminal]
+----
+jcmd <pid> GC.class_histogram
+----
+
+Without the `-all` option, the command counts only the objects that are still reachable, and the `Total` line at the end shows their size in bytes. The histogram also shows how many instances of each class exist. The counts of `com.vaadin.flow.server.VaadinSession` and `com.vaadin.flow.component.UI` are the numbers of sessions and browser tabs that the server holds. The command pauses the application while it runs, so don't run it on a production server under load.
+
+To measure what an additional browser tab costs, open sessions with two tabs each, and compare the result with sessions that have one tab.
+
+.Example Measurement
+[NOTE]
+An application from https://start.vaadin.com[Vaadin Start], whose view has a form and a grid that fetches its rows lazily, ran in production mode on Java 25. Each session with one tab added about 290 KB to the live heap, both with 50 and with 100 sessions. A second tab in the same session added about 160 KB. When the grid held all of its 10,000 items in memory instead, each tab took about four times as much. These numbers describe that application only. Your views hold different things, so measure them.
+
+
+=== Count Sessions, Not Users
+
+A server usually holds more sessions than there are people using the application at the moment:
+
+* *Sessions outlive their users.* When a user closes a tab, the browser tells the server, which removes the UI. The session stays until it expires -- in Spring Boot, by default 30 minutes after its last request, as set by the `server.servlet.session.timeout` property. In the example measurement, sessions whose tabs had been closed released most of their memory, but stayed on the server. <<runtime-model#where-state-lives,Where State Lives>> explains when UIs and sessions end.
+* *Load tests start new sessions.* A k6 virtual user clears its cookies after each iteration by default, so every iteration of a <<{articles}/flow/testing/load-testing#,generated load test>> starts a new session. The sessions of earlier iterations stay until they expire. Run the test for longer than the session timeout -- for example, with the <<{articles}/flow/testing/load-testing/load-profiles#soak-pattern,soak pattern>> -- so that the number of sessions levels off.
+
+Count the sessions on the server instead of assuming them. With Spring Boot Actuator and the embedded Tomcat, the `tomcat.sessions.active.current` metric shows the number of active sessions. The <<{articles}/flow/testing/load-testing#metrics,load test helper>> adds the number of active UIs per view, and <<{articles}/tools/observability/reference#ui-state-size,Observability Kit>> tracks how much UI state the live sessions hold in production.
+
+To estimate the memory that you need, multiply the memory per session by the number of sessions that you expect at peak, including those that haven't expired yet. Then run a load test with that many sessions. The live heap has to stay well below the maximum heap size, and the response times have to meet your goals. In a container, the JVM gets only a quarter of the container's memory for the heap by default, as explained in <<{articles}/building-apps/production/container#give-the-jvm-enough-memory,Give the JVM Enough Memory>>.
+
+
+=== Find What Takes the Memory
+
+When a session costs more than you expect, save the histogram before you open the sessions and while they're open, and compare the two. The classes whose instance counts grew in proportion to the number of sessions show what the sessions hold. In the example measurement, the view that held all of its items had 10,000 more instances of the entity class per tab, whereas the lazy-loading view had only the 50 entities that its grid had fetched.
+
+.Retained Sizes Mislead
+[CAUTION]
+====
+Heap analyzers, such as https://eclipse.dev/mat/[Eclipse Memory Analyzer] and https://visualvm.github.io/[VisualVM], show the _retained size_ of each object in a heap dump: the memory that would be freed if only that object were gone. The retained size of a [classname]`VaadinSession` isn't what the session costs:
+
+* It leaves out everything that's also reachable from elsewhere. If your views use a <<{articles}/building-apps/server-push/updates#broadcasting-to-all-users,shared signal>> or an <<{articles}/building-apps/server-push/updates#avoiding-memory-leaks,event bus>>, every UI is reachable through the shared object as well as through its own session. The analyzer then attributes the memory of the UIs to neither.
+* The analyzers compute object sizes themselves. Eclipse Memory Analyzer 1.17 and VisualVM 2.2.2 don't take <<runtime-model#what-this-means-for-deployment,compact object headers>> into account, so with compact object headers -- the default from Java 27 -- the sizes they show are too large.
+
+In the example measurement, both analyzers showed a retained size of about 93 KB per session, less than a third of what the sessions added to the live heap. With a shared signal or an event bus in the view, the retained size dropped below 2 KB per session, although the live heap grew as much as before. With compact object headers, the analyzers still showed 24 bytes for each `java.lang.Long`, which then takes 16 bytes.
+====
+
+To reduce the memory per session, load data lazily, as described in <<{articles}/building-apps/forms-data/add-grid/paginated-data#,Add a Paginated Grid>>. To free the memory of sessions that nobody uses, close idle sessions, as described in <<runtime-model#where-state-lives,Where State Lives>>.
+
+
+== Measure Interaction Latency
+
+In a Flow view, the user waits for the round trips of each interaction. A round trip takes the network delay plus the time that the server needs, and then the browser needs time to show the result. Count the round trips and add the network delay in a browser, and measure the server time under load.
+
+
+=== Count the Round Trips
+
+Open the developer tools of the browser, select the network tab, and filter the requests by `v-r=uidl`. Each request is one round trip to the server. Perform the interactions that your users perform the most, and count the requests that each one makes. The browser sends one such request at a time, so the round trips of an interaction add up.
+
+In the example application, adding an item with the form, navigating to another view, and scrolling the grid each made two requests. The first one carried the event. In the second one, the grid confirmed the data that it had received, so that the server could release the rows that the grid no longer showed.
+
+
+=== Add Network Delay
+
+Repeat the interactions with the network delay of your users. In Chrome's developer tools, you can add a custom network throttling profile with the latency that you want. In automated tests, you can do the same through the Chrome DevTools Protocol, which works only with Chromium-based browsers. This is how you do it in a https://playwright.dev/java/[Playwright] test:
+
+[source,java]
+----
+CDPSession cdp = page.context().newCDPSession(page);
+JsonObject conditions = new JsonObject();
+conditions.addProperty("offline", false);
+conditions.addProperty("latency", 300); // Milliseconds added to every request
+conditions.addProperty("downloadThroughput", -1);
+conditions.addProperty("uploadThroughput", -1);
+cdp.send("Network.emulateNetworkConditions", conditions);
+----
+
+With 300 milliseconds added to every request, each of the interactions in the example application took between 0.6 and 0.8 seconds, compared with 0.1 to 0.2 seconds without the delay.
+
+
+=== Measure Server Time Under Load
+
+The time that the server needs grows with the load. To measure it, run a load test with the load generator close to the server, so that network delay doesn't distort the result. Read the response time of each request from the <<{articles}/flow/testing/load-testing#html-report,HTML report>>. To estimate what users experience at that load, add the network delay of your users to each round trip. <<{articles}/flow/testing/load-testing/thresholds#,Thresholds>> make the load test fail when response times exceed your goals.
+
+In production, Observability Kit measures each round trip both in the browser and on the server, and the difference is the network's share. See <<{articles}/tools/observability/reference#client-interaction-timing,Interaction Timing From the Browser>>.
+
+
+== Test What Users See When a Server Stops
+
+A server stops when it crashes, when the cluster scales down, and when you deploy a new version. Unless you replicate sessions, the users on that server lose their sessions. See what that looks like before your users do:
+
+. Open the application in a browser, and type something into a form without saving it.
+. Stop the server that the browser is connected to. If you have only one server, restart it: the restarted server doesn't have the session either.
+. Continue in the browser.
+
+In the example application, which uses <<{articles}/building-apps/server-push#,server push>>, nothing changed on the page while the server was down, until the user clicked a button. Vaadin then showed that it was reconnecting. As soon as a server without the user's session answered, Vaadin reloaded the page, and both the text in the field and the click were lost. When the user didn't do anything, the page reloaded by itself a few seconds after the server had come back. If your application requires login, the user also has to log in again.
+
+To see how many users a stop affects, stop one of several servers during a load test. The <<{articles}/flow/testing/load-testing#error-handler,checks of the load test>> report the requests whose session had expired.
+
+Spring Boot shuts down gracefully by default: it stops accepting new requests, and gives the requests in progress up to 30 seconds to finish. It doesn't wait for sessions to end, so a graceful shutdown doesn't save the sessions.
+
+
+=== Choose How to Handle a Stopped Server
+
+The three ways to deal with a stopped server differ in what users experience, and in what they require:
+
+[cols="1,2,3",options="header"]
+|===
+|Approach |Users on the stopped server |Requirements
+
+|Accept a reload
+|Lose unsaved work, and may have to log in again.
+|<<{articles}/flow/production/reverse-proxy#load-balancing-sticky-session,Sticky sessions>> only. To limit the damage, deploy when few users are active, keep view state in the database or the URL, and <<{articles}/flow/advanced/customize-system-messages#,customize the system messages>> to explain the reload.
+
+|Drain the server
+|Don't notice anything if their sessions end before the server stops. A crash still causes a reload.
+|A load balancer that sends new sessions to other servers while existing sessions stay on the old one, and time for those sessions to end. Heartbeats keep a session with an open tab alive, so such a session ends on its own only if you close idle sessions. Decide how long you wait at most. <<{articles}/tools/kubernetes/update-version#,Rolling Updates>> shows this pattern with Kubernetes Kit, which can also notify users that a new version is available.
+
+|Replicate sessions
+|Continue where they left off, even after a crash.
+|A serializable UI, distributed storage for the sessions, and the cost of serializing the session after each request. See <<{articles}/flow/production/distributed-deployment#session-replication,Session Replication>> and <<{articles}/tools/kubernetes/session-replication#,Kubernetes Kit Session Replication>>.
+|===

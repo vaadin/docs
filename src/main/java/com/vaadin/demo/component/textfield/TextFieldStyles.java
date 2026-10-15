@@ -15,7 +15,8 @@ public class TextFieldStyles extends HorizontalLayout {
         // tag::snippet[]
         TextField field = new TextField();
         field.addThemeVariants(TextFieldVariant.SMALL,
-                TextFieldVariant.ALIGN_RIGHT, TextFieldVariant.HELPER_ABOVE);
+                TextFieldVariant.ALIGN_RIGHT, TextFieldVariant.HELPER_ABOVE,
+                TextFieldVariant.LABEL_ASIDE);
         // end::snippet[]
         field.setLabel("Label");
         field.setHelperText("Helper text");

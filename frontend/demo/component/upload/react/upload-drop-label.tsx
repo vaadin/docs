@@ -8,7 +8,7 @@ function Example() {
   return (
     // tag::snippet[]
     <Upload>
-      <Icon slot="drop-label-icon" icon="vaadin:cloud-upload-o" />
+      <Icon slot="drop-label-icon" icon="vaadin:cloud-upload" />
       <span slot="drop-label">
         Files will be uploaded to our cloud. See our&nbsp;
         <a href="https://vaadin.com/privacy-policy" target="_blank">

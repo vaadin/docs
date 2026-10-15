@@ -20,7 +20,7 @@ function Example() {
         Warning
       </Badge>
       <Badge theme="error">
-        <Icon icon="vaadin:exclamation-circle-o" slot="icon" />
+        <Icon icon="vaadin:exclamation-circle" slot="icon" />
         Denied
       </Badge>
     </HorizontalLayout>

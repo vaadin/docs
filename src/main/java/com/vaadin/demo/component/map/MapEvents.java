@@ -64,7 +64,7 @@ public class MapEvents extends VerticalLayout {
         });
 
         // tag::snippet[]
-        map.addViewMoveEndEventListener(e -> {
+        map.addViewMoveEndListener(e -> {
             Coordinate center = e.getCenter();
             Extent extent = e.getExtent();
             String info = "";
@@ -78,7 +78,7 @@ public class MapEvents extends VerticalLayout {
             viewEventInfo.setValue(info);
         });
 
-        map.addClickEventListener(e -> {
+        map.addClickListener(e -> {
             Coordinate coordinates = e.getCoordinate();
             String info = String.format("Coordinates = { x: %s, y: %s }",
                     coordinates.getX(), coordinates.getY());

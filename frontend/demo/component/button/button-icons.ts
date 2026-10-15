@@ -29,7 +29,7 @@ export class Example extends LitElement {
         <!-- Icon button using a tooltip to provide a textual description of
              the action that it triggers -->
         <vaadin-button aria-label="Close">
-          <vaadin-icon icon="vaadin:close-small"></vaadin-icon>
+          <vaadin-icon icon="vaadin:close"></vaadin-icon>
           <vaadin-tooltip slot="tooltip" text="Close the dialog"></vaadin-tooltip>
         </vaadin-button>
 
