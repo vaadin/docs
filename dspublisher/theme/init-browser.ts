@@ -1,6 +1,4 @@
 import { html, LitElement, nothing } from 'lit';
-import { state } from 'lit/decorators.js';
-import { iframeResizer } from 'iframe-resizer';
 
 // Import all Lumo CSS custom properties into the global style scope
 import '@vaadin/vaadin-lumo-styles/color.js';
@@ -89,82 +87,39 @@ class Footer extends LitElement {
     return this;
   }
 
-  @state()
-  private documentTitle = document.title;
-
-  private __titleObserver = new MutationObserver(() => {
-    this.documentTitle = document.title;
-  });
-
-  connectedCallback() {
-    super.connectedCallback();
-
-    const titleElement = document.head.querySelector('title');
-    if (titleElement) {
-      this.__titleObserver.observe(titleElement, {
-        subtree: true,
-        characterData: true,
-        childList: true,
-      });
-    } else {
-      console.warn('No title element found in the document');
-    }
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-
-    this.__titleObserver.disconnect();
-  }
-
-  protected firstUpdated() {
-    iframeResizer({ log: true }, '#discussion-iframe');
-  }
-
   render() {
     const id = document.querySelector('.discussion-id')?.textContent;
 
-    // Don't render discussions in development builds and if no discussion ID is set
-    if (process.env.NODE_ENV === 'development' || !id) {
-      return nothing;
-    }
+    // Don't render if no discussion ID is set
+    if (!id) return nothing;
 
-    const url = encodeURI(document.location.pathname);
-
-    let iframeSrc =
-      window.location.hostname == 'preview.vaadin.com'
-        ? 'https://preview.vaadin.com'
-        : 'https://vaadin.com';
-
-    iframeSrc += `/vaadincom/discussion-service/embed.html?root=DOCS&id=${id}&url=${url}&name=${encodeURI(
-      this.documentTitle
-    )}&description=`;
 
     return html`
       <style>
-        .discussion-wrapper {
+        .forum-discussions {
           margin-top: 3rem;
           padding: 2rem 0;
           border-top: 1px solid var(--docs-divider-color-1);
         }
-
-        .discussion-wrapper p b {
-          color: var(--docs-heading-text-color);
+        .forum-discussions-title {
+          font-weight: 600;
         }
-
-        .discussion-wrapper iframe {
-          color-scheme: normal;
-          border: 0;
-          margin: 0 -8px;
-          width: calc(100% + 16px);
-          max-width: none;
+        .forum-discussions p {
+          color: var(--docs-heading-text-color);
+          margin-bottom: 1.5rem;
+          margin-top: 0.5rem;
+        }
+        .forum-discussions a {
+          letter-spacing: 0;
+          padding-left: 2rem;
+          padding-right: 2rem;
+          text-transform: uppercase;
         }
       </style>
-      <section class="discussion-wrapper">
-        <p>
-          <b>Was this page helpful?</b><br />Leave a comment below or <a href="https://vaadin.com/forum/" rel="noopened">join our forum</a> for further discussions, questions, and sharing your code examples.
-        </p>
-        <iframe id="discussion-iframe" src="${iframeSrc}"></iframe>
+      <section class="forum-discussions">
+        <span class="forum-discussions-title">Have a question or want to share your approach?</span>
+        <p>Join the conversation in our community forum. You'll find the Vaadin team and other developers sharing questions, answers, and code examples. Search what's been asked before, or start a new thread.</p>
+        <a href="https://vaadin.com/forum/latest" class="button primary water">Vaadin Forum</a>
       </section>
     `;
   }
