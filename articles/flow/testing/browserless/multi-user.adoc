@@ -1,8 +1,8 @@
 ---
 title: Application, User, and Window Contexts
 page-title: Application, User, and Window Contexts | Vaadin
-description: Browserless context ownership, thread affinity, window activation, security isolation, factories, and configuration.
-meta-description: Browserless context ownership, thread affinity, window activation, security isolation, factories, and configuration.
+description: Browserless context ownership, thread affinity, window activation, security isolation, single-component tests, factories, and configuration.
+meta-description: Browserless context ownership, thread affinity, window activation, security isolation, single-component tests, factories, and configuration.
 order: 32
 ---
 
@@ -76,6 +76,66 @@ Every window exposes the same testing DSL as [classname]`BrowserlessTest`, scope
 - [methodname]`window.getCurrentView()` and [methodname]`window.roundTrip()` -- convenience accessors that mirror their [classname]`BrowserlessTest` counterparts.
 
 
+== Testing a Single Component
+
+A component such as a form or a custom field can be tested on its own, without an [annotationname]`@Route` view that wraps it. The [methodname]`forComponent(...)` factories create an application context without routes: no view packages are scanned, and the component is the only content of the window's [classname]`UI`.
+
+[cols="1,2"]
+|===
+| Factory | Returns
+
+| [methodname]`BrowserlessUIContext.forComponent(Component)`
+| A single window with the given instance attached. The component is constructed before any [classname]`UI` exists.
+
+| [methodname]`BrowserlessUIContext.forComponent(Supplier<Component>)`
+| A single window with the component produced by the factory attached.
+
+| [methodname]`BrowserlessApplicationContext.forComponent(Supplier<Component>)`
+| The application context. Every window created with [methodname]`newUser().newWindow()` gets a component from the factory.
+|===
+
+The factory runs from [methodname]`UI.init()`, after the window's [classname]`UI`, session, and security context are installed, so a constructor that calls [methodname]`UI.getCurrent()` sees the live environment. Use a factory instead of an instance when the constructor needs the [classname]`UI` or the session.
+
+[source,java]
+----
+try (var window = BrowserlessUIContext.forComponent(MyForm::new)) {
+    window.findTextField().withLabel("Name").setValue("Ada");
+}
+----
+
+The [classname]`BrowserlessUIContext` variants are single-window shorthands. Use [methodname]`BrowserlessApplicationContext.forComponent(...)` when the test needs several windows or users, and make the factory return a new instance on each call: attaching the same instance to a second window moves it there and leaves the first window empty.
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
+    var ada = app.newUser().newWindow();
+    var bob = app.newUser().newWindow();
+    // Each window holds its own MyForm instance
+}
+----
+
+The context created by [methodname]`forComponent(...)` closes itself when a window's [classname]`UI` is detached, so closing either the returned window or the returned application context tears down the whole environment.
+
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Configuring the Environment
+
+Each factory has an overload that takes a [classname]`BrowserlessConfiguration` as the first argument. The configuration sets application properties, feature flags, and [classname]`Lookup` services the same way as [methodname]`withConfiguration(...)` on the <<#customizing-the-application-context,builder>>, and it is already in effect when the component factory runs:
+
+[source,java]
+----
+var configuration = BrowserlessConfiguration.builder()
+        .withFeatureFlags("defaultAutoResponsiveFormLayout")
+        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
+        .build();
+try (var window = BrowserlessUIContext.forComponent(configuration,
+        MyForm::new)) {
+    // ...
+}
+----
+
+Like any application context, these factories don't read [annotationname]`@BrowserlessTestConfig`. Pass [methodname]`BrowserlessConfiguration.from(getClass())` to reuse the configuration that the test class declares; see <<test-configuration#configuring-without-annotations, Configuring without Annotations>>.
+
+
 [#signals]
 == Signals
 
@@ -118,6 +178,9 @@ For advanced setups, [classname]`BrowserlessApplicationContext.Builder` exposes 
 
 | [methodname]`withViewPackages(String...)` / [methodname]`withViewPackages(Class<?>...)`
 | Adds packages to scan for [annotationname]`@Route`-annotated views. Successive calls accumulate.
+
+| [methodname]`withoutRoutes()`
+| Disables [annotationname]`@Route` discovery, so building the context skips the classpath scan. View packages are ignored once this is set. The <<#testing-a-single-component,`forComponent(...)` factories>> use it.
 
 | [methodname]`withComponentTesterPackages(String...)` / [methodname]`withComponentTesterPackages(Class<?>...)`
 | Adds packages to scan for custom [classname]`ComponentTester` implementations.
