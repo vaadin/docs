@@ -10,9 +10,11 @@ const SUBSCRIPTION_TYPE_ID = 922129;
 const OFFER_SOURCE = 'Get Security Alerts';
 const PRIVACY_POLICY_URL = 'https://vaadin.com/privacy-policy';
 
-// Shown under the form, and recorded with the consent in HubSpot, so the two
-// have to say the same thing
-const CONSENT_TEXT = 'Unsubscribe anytime.';
+// Shown under the form, and recorded with the consent in HubSpot. It has to be
+// the same as the consent text defined for the form in HubSpot. It's copied here
+// by hand; if the signup stays, it could be fetched from HubSpot instead.
+const CONSENT_TEXT = "You'll receive security emails and may unsubscribe at any time.";
+const PRIVACY_POLICY_LINK_TEXT = 'Privacy Policy';
 
 const EMAIL_PATTERN = '[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}';
 // No period at the end, as it could read as part of the address
@@ -210,8 +212,10 @@ class SecurityAlerts extends LitElement {
               : nothing
           }
           <p class="privacy">
-            ${CONSENT_TEXT}
-            <a href=${PRIVACY_POLICY_URL} target="_blank" rel="noopener">Privacy policy</a>
+            ${CONSENT_TEXT} More in our
+            <a href=${PRIVACY_POLICY_URL} target="_blank" rel="noopener"
+              >${PRIVACY_POLICY_LINK_TEXT}</a
+            >.
           </p>
         </div>
       </section>
@@ -237,7 +241,7 @@ function sendSignup(email: string) {
           value: true,
           subscriptionTypeId: SUBSCRIPTION_TYPE_ID,
           legalBasis: 'LEAD',
-          text: `${CONSENT_TEXT} <a href="${PRIVACY_POLICY_URL}" target="_blank">Privacy policy</a>`,
+          text: `${CONSENT_TEXT} More in our <a href="${PRIVACY_POLICY_URL}" target="_blank">${PRIVACY_POLICY_LINK_TEXT}</a>.`,
         },
       },
     }),
