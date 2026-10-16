@@ -1,0 +1,111 @@
+---
+title: Remote Services
+page-title: How to call remote services from a Vaadin application
+description: Learn how to call other systems over HTTP from the application services of a Vaadin application.
+meta-description: Call REST services from a Vaadin application with Spring's RestClient. Set timeouts, handle failures, and learn what to consider when passing access tokens.
+order: 10
+---
+
+
+= Call a Remote Service
+:toclevels: 2
+
+When your application needs data from another system, call that system from an <<../business-logic/add-service#,application service>>, not from a view. This guide shows how to do this with Spring's `RestClient`, and what to take into account in a Vaadin application. It assumes that your application uses Spring Boot.
+
+
+== Adding the Client
+
+Spring Boot configures a `RestClient.Builder` bean when `spring-boot-starter-restclient` is on the classpath. The Vaadin starter doesn't include it, so add it to your project:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-restclient</artifactId>
+</dependency>
+----
+
+Build a client from the builder in the application service, and read the address of the remote service from your configuration:
+
+[source,java]
+----
+@Service
+public class WeatherService {
+
+    private final RestClient restClient;
+
+    WeatherService(RestClient.Builder builder,
+            @Value("${weather.base-url}") String baseUrl) {
+        this.restClient = builder.baseUrl(baseUrl).build(); // <1>
+    }
+
+    public Forecast getForecast(String city) {
+        return restClient.get()
+                .uri("/forecasts/{city}", city)
+                .retrieve()
+                .body(Forecast.class);
+    }
+}
+----
+<1> Each service that injects the builder gets a copy of its own, so changing it doesn't affect other services.
+
+For more about the client, see https://docs.spring.io/spring-framework/reference/integration/rest-clients.html[REST Clients] in the Spring Framework documentation, and https://docs.spring.io/spring-boot/reference/io/rest-client.html[Calling REST Services] in the Spring Boot documentation.
+
+
+== Setting Timeouts
+
+By default, the client waits for a response for as long as it takes: Spring Boot sets no timeouts. In a Vaadin application, a call made from a listener runs while the session of the user is locked. Until the call returns, the user can't do anything in any of their browser tabs, as explained in <<../architecture/runtime-model#threads-and-the-session-lock,Threads and the Session Lock>>.
+
+Set timeouts for all clients in `application.properties`:
+
+[source,properties]
+----
+spring.http.clients.connect-timeout=2s
+spring.http.clients.read-timeout=5s
+----
+
+When none of Apache HttpClient, Jetty, or Reactor Netty is on the classpath, Spring Boot uses the HTTP client of the JDK. With it, the read timeout limits the time for the whole response, including its body.
+
+If a call can take longer than users should wait, don't make it in a listener. Run it in a background thread, and show the result with server push, as described in <<../server-push/threads#,User Interface Threads>>.
+
+
+== Handling Failures
+
+When a call fails, `RestClient` throws a subclass of `RestClientException`:
+
+* `ResourceAccessException` when it can't connect to the remote service, or when the service doesn't respond in time.
+* `HttpClientErrorException` when the service responds with a 4xx status code, and `HttpServerErrorException` for a 5xx status code. Both have the status code and the body of the response.
+
+These exceptions describe HTTP, not your application. Catch them in the application service, and turn them into something that the view can act on:
+
+[source,java]
+----
+public Optional<Forecast> findForecast(String city) {
+    try {
+        return Optional.ofNullable(restClient.get()
+                .uri("/forecasts/{city}", city)
+                .retrieve()
+                .body(Forecast.class));
+    } catch (HttpClientErrorException.NotFound e) {
+        return Optional.empty(); // <1>
+    } catch (RestClientException e) {
+        throw new WeatherUnavailableException(e); // <2>
+    }
+}
+----
+<1> A city that the remote service doesn't know is an ordinary result.
+<2> An exception of your own tells the view that the forecast isn't available right now. The view can show an error, as described in <<../ui-basics/handle-errors#,Handle Errors>>.
+
+To retry failed calls, Spring Framework provides the `@Retryable` annotation. It has no effect until you add `@EnableResilientMethods` to a configuration class. See https://docs.spring.io/spring-framework/reference/core/resilience.html[Resilience Features] in the Spring Framework documentation. Every retry adds to the time that the user waits, and to the time that the session stays locked.
+
+
+== Passing the User's Access Token
+
+When a remote service needs to know who the user is, it can accept the access token that your application got when the user logged in through an <<../security/connect-identity-provider#,identity provider>>. Spring Security can add the token to each request through `OAuth2ClientHttpRequestInterceptor`. This guide doesn't cover how to set it up. See https://docs.spring.io/spring-security/reference/servlet/oauth2/client/authorized-clients.html#oauth2-client-rest-client[RestClient Integration] in the Spring Security documentation.
+
+In a Vaadin application, take the following into account:
+
+* The interceptor finds the user in the Spring Security context. In a background thread, the context is empty.
+* The `OAuth2AuthorizedClientManager` that Spring Security registers by default needs the current HTTP request. A listener has it, but a background thread doesn't. Neither does a listener when server push uses the `WEBSOCKET` transport, since the messages from the browser then arrive over the WebSocket connection. Without the request, the call fails.
+
+For calls outside a request, Spring Security provides `AuthorizedClientServiceOAuth2AuthorizedClientManager`. See https://docs.spring.io/spring-security/reference/servlet/oauth2/client/core.html#oauth2Client-authorized-manager-provider[OAuth2AuthorizedClientManager] in the Spring Security documentation.
