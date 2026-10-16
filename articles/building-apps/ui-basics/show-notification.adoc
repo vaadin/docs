@@ -200,6 +200,43 @@ notification.open();
 ----
 
 
+== Undoing an Action
+
+For actions that can't be reverted once they've been performed, such as sending a message, you can give the user a short time to change their mind. Delay the action, show a notification with an Undo button, and cancel the delayed action if the user clicks it:
+
+[source,java]
+----
+private void sendMessage(String message) {
+    ScheduledFuture<?> sending = taskScheduler.schedule( // <1>
+            () -> messageService.send(message),
+            Instant.now().plusSeconds(5));
+
+    Notification notification = new Notification();
+    notification.setDuration(5000); // <2>
+
+    Button undoButton = new Button("Undo", event -> {
+        notification.close();
+        if (sending.cancel(false)) { // <3>
+            Notification.show("Message not sent");
+        } else {
+            Notification.show("The message was already sent");
+        }
+    });
+
+    HorizontalLayout layout = new HorizontalLayout(
+            new Span("Message sent"), undoButton);
+    layout.setAlignItems(Alignment.CENTER);
+    notification.add(layout);
+    notification.open();
+}
+----
+<1> The message is sent by a background task after five seconds. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use the `TaskScheduler`.
+<2> The notification stays open for as long as the action can be undone.
+<3> `cancel()` returns `false` if the task has already started or finished. In that case, the action can't be undone anymore.
+
+If the action needs to update the UI when it's performed, use server push as described in <</building-apps/server-push#,Server Push>>.
+
+
 == Centralizing Notification Logic
 
 As your application grows, constructing notifications by hand in every view leads to inconsistency — different durations, positions, and styles across the codebase. Create a utility class with static methods so that every notification looks and behaves the same:
