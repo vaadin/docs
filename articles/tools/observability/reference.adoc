@@ -175,44 +175,42 @@ Controlled by `vaadin.observability.navigation`.
 
 |`vaadin.navigation`
 |Timer
-|Navigation duration, from `beforeEnter` to `afterNavigation`.
+|Navigation duration, from Flow's [classname]`NavigationStartedEvent` to its [classname]`NavigationEndedEvent`.
 Tagged by `route`, `outcome`, and `error`.
 |===
 
-Every navigation that *starts* is recorded, including the ones that never complete -- which would otherwise leave a span dangling.
-The `outcome` tag says how it ended:
+Every navigation that starts is recorded once, including the ones that fail or are postponed.
+A [methodname]`forwardTo()`, a [methodname]`rerouteTo()`, or an error view is part of the navigation that caused it, not a navigation of its own.
+The `route` tag is the view the requested location resolves to, so a navigation that was sent elsewhere is recorded under the view that was asked for.
+A location that no view resolves to is recorded under the view shown in the end.
+
+The `outcome` tag says how the navigation ended:
 
 [cols="1,3"]
 |===
 |`outcome` |Recorded for
 
 |`success`
-|The navigation reached `afterNavigation`.
+|The requested view was shown.
 
 |`rerouted`
-|A listener called [methodname]`rerouteTo()`, so this navigation was replaced by another.
+|Another view, or the requested view with other route parameters, was shown: a listener called [methodname]`rerouteTo()` or [methodname]`forwardTo()`.
 This is a routing decision -- an access guard sending the user elsewhere -- not a failure.
+A re-entrant [methodname]`UI.navigate()` from a view's [methodname]`beforeEnter()` or [methodname]`onAttach()` runs inside the outer navigation and is recorded as `rerouted` too.
 
 |`forwarded`
-|A listener called [methodname]`forwardTo()` or [methodname]`forwardToUrl()`, or handed off to a client-side route.
+|No view was shown: a listener called [methodname]`forwardToUrl()`, the location is a client-side route, or a [annotationname]`@PreserveOnRefresh` view first asked the browser for its window name.
 
 |`error`
-|The navigation failed: [methodname]`rerouteToError()`, or an exception while the view was being built.
+|The navigation failed: [methodname]`rerouteToError()`, an exception while the view was being built, or a location without a view.
 
 |`unknown`
-|The navigation was neither completed nor redirected.
-A re-entrant [methodname]`UI.navigate()` from a view's [methodname]`beforeEnter()` or [methodname]`onAttach()` superseded it, or its UI was detached while it was still open.
+|A [classname]`BeforeLeaveEvent` listener postponed the navigation.
+Resuming it with [methodname]`proceed()` is recorded as a navigation of its own.
 |===
 
-.Building an Error Rate on This Timer
-[IMPORTANT]
-====
-Two consequences follow from timing the router's own chain -- an error view is a navigation in its own right, and it's one that succeeds:
-
-* An unknown URL never reaches a [methodname]`beforeEnter()` that could fail, so it's recorded as the error view rendering successfully: `route=RouteNotFoundError, outcome=success`.
-Alert on that route rather than on `outcome`.
-* A view that throws while being built produces *two* samples: the failed navigation to the view (`outcome=error`), and the navigation to the error view that replaces it (`route=InternalServerError, outcome=success`).
-====
+An unknown URL is recorded under the error view that was shown, as `route=RouteNotFoundError, outcome=error`.
+A view that throws while being built is recorded once, under its own route with `outcome=error`.
 
 
 === Request Metrics
@@ -252,7 +250,9 @@ The `http.method` tag accepts only the standard HTTP methods; any other method a
 [[request-types]]
 === Request Types
 
-Every request Vaadin handles is classified before it's timed, and the class becomes the `vaadin.request.type` tag on `vaadin.request.duration` -- and, with tracing on, the `vaadin.request.<type>` span name.
+Every request Vaadin handles is classified, and the class becomes the `vaadin.request.type` tag on `vaadin.request.duration` -- and, with tracing on, the `vaadin.request.<type>` span name.
+The type comes from the Flow request handler that handled the request.
+When the handler doesn't tell -- no handler handled it, or it's not one of the UIDL, heartbeat, stream, or bootstrap handlers -- the type comes from the request's URL and headers.
 The types differ so much in what they do that a single average across all of them means nothing.
 
 [cols="1,3"]
@@ -264,7 +264,7 @@ The types differ so much in what they do that a single average across all of the
 The one type broken down further, by the `vaadin.interaction` tag.
 
 |`bootstrap`
-|A page load: the HTML document request, and the `init` request the client engine follows it with to have the UI created.
+|A page load: the [filename]`index.html` request, the `init` request the client engine follows it with to have the UI created, and the bootstrap of an embedded web component.
 The server's side of `vaadin.client.bootstrap.duration`.
 
 |`stream`
@@ -272,7 +272,7 @@ The server's side of `vaadin.client.bootstrap.duration`.
 A transfer is expected to be long-running, which is why it's kept out of the other buckets: averaged in with page loads, it both hides its own outliers and inflates theirs.
 
 |`push`
-|A push channel request, on any transport.
+|A push channel request, on any transport, and every message the client sends over a push connection.
 
 |`heartbeat`
 |The keep-alive the browser sends for an open UI.
@@ -284,9 +284,10 @@ A transfer is expected to be long-running, which is why it's kept out of the oth
 |Everything left, an application's own endpoints under the Vaadin servlet among them.
 |===
 
-A page load is recognized from the browser's `Sec-Fetch-Dest` header, falling back to an `Accept` header that asks for `text/html` first for browsers old enough not to send it.
+A page load is a request Flow answers with [filename]`index.html`, whether a browser, an uptime check, a crawler, or a `fetch()` -- the service worker caching the page, for example -- sent it: each one costs the server a page load.
+Flow doesn't answer a request the browser marks as a script, style, image, or similar resource with [filename]`index.html`.
+When the handler doesn't tell the type, a page load is recognized from the browser's `Sec-Fetch-Dest` header, falling back to an `Accept` header that asks for `text/html` first for browsers old enough not to send it.
 A `fetch()` to an application endpoint that happens to sit under the Vaadin servlet is therefore not counted as one.
-The classification is deliberately conservative in that direction: a page load that can't be told apart from application traffic stays `other` rather than diluting `bootstrap`.
 
 An embedded route counts as a page load too.
 A request whose destination is an `iframe`, `frame`, `embed`, or `object` is served the same [filename]`index.html` and builds a UI of its own, and `vaadin.client.bootstrap.duration` records it from the browser's end as well.
@@ -349,10 +350,10 @@ Tagged by `exception`, `route`, and `component`.
 The counter covers both kinds of server-side failure:
 
 Exceptions that escape request handling:: For example one thrown by a custom [classname]`RequestHandler`.
-These reach a [classname]`VaadinRequestInterceptor`.
+Flow reports these at the end of the request, and the kit counts them from there.
 
 Failures Flow routes to the session's error handler:: For example a click or value-change listener that throws, a [methodname]`UI.access()` body, or a detach listener.
-Flow catches these and hands them to [methodname]`VaadinSession.getErrorHandler()` rather than letting them escape, so they never reach a request interceptor.
+Flow catches these and hands them to [methodname]`VaadinSession.getErrorHandler()` rather than letting them escape, so they're never reported at the end of the request.
 The kit therefore decorates that handler, which is also what lets it attribute a failure to a component.
 
 A failure during navigation -- a [methodname]`beforeEnter()` callback or a view constructor that throws -- is neither kind.
@@ -729,6 +730,8 @@ Span-only, since session IDs are unbounded.
 The nested spans carry the tags of their corresponding meters: `vaadin.navigation <route>` carries `route` and `outcome`; `vaadin.rpc.<type>` carries `type`.
 
 The RPC span additionally carries two span-only, high-cardinality attributes when they can be resolved: `vaadin.rpc.event` (the invocation name, such as a DOM event name, invoked method name, or navigation location) and `vaadin.rpc.component` (the class name of the targeted [classname]`Component`).
+The component is set only when the RPC targets the element of a component, not a plain child element inside it.
+For a field wrapped in a [classname]`Composite`, it names the outer composite -- your own class, such as `com.acme.EmailField` -- rather than the field inside it.
 These are attached to the span only, never as timer tags, because of their cardinality.
 Together they let you trace a failure back to the interaction that caused it -- which component, and which event.
 
