@@ -137,7 +137,7 @@ export class Example extends LitElement {
           .values="${[30, 25, 32, 26, 15, 31, 24, 32, 21, 8, 12, 32]}"
         ></vaadin-chart-series>
         <vaadin-chart-series
-          title="Poud sterling"
+          title="Pound sterling"
           .values="${[32, 21, 8, 12, 32, 21, 12, 30, 25, 19, 26, 15]}"
         ></vaadin-chart-series>
       </vaadin-chart>
