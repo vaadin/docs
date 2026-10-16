@@ -34,6 +34,7 @@ public class ChartsOverview extends Div {
         // tag::snippet[]
         Chart column = new Chart(ChartType.COLUMN);
         Configuration columnConf = column.getConfiguration();
+        columnConf.setTitle((String) null);
         columnConf.getxAxis().setCategories("Jan", "Feb", "Mar");
         columnConf.getyAxis().setTitle("");
         columnConf.addSeries(new ListSeries("Tokyo", 49.9, 71.5, 106.4));
@@ -42,6 +43,7 @@ public class ChartsOverview extends Div {
 
         Chart area = new Chart(ChartType.AREA);
         Configuration areaConf = area.getConfiguration();
+        areaConf.setTitle((String) null);
         areaConf.getxAxis().setCategories("Jan", "Feb", "Mar", "Apr", "May",
                 "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
         areaConf.getxAxis().setVisible(false);
@@ -61,6 +63,7 @@ public class ChartsOverview extends Div {
 
         Chart pie = new Chart(ChartType.PIE);
         Configuration pieConf = pie.getConfiguration();
+        pieConf.setTitle((String) null);
         pieConf.getTooltip().setPointFormat(
                 "{series.name}: <b>{point.percentage:.1f}%</b>");
         PlotOptionsPie pieOptions = new PlotOptionsPie();
@@ -80,6 +83,7 @@ public class ChartsOverview extends Div {
 
         Chart polar = new Chart();
         Configuration polarConf = polar.getConfiguration();
+        polarConf.setTitle((String) null);
         polarConf.getChart().setPolar(true);
         XAxis polarXAxis = new XAxis();
         polarXAxis.setTickInterval(45);
