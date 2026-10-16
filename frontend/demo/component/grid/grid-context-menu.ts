@@ -1,12 +1,9 @@
 import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/context-menu';
 import '@vaadin/grid';
-import '@vaadin/item';
-import '@vaadin/list-box';
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import type { ContextMenuLitRenderer } from '@vaadin/context-menu/lit.js';
-import { contextMenuRenderer } from '@vaadin/context-menu/lit.js';
+import { customElement, query, state } from 'lit/decorators.js';
+import type { ContextMenu, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import type { Grid } from '@vaadin/grid';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -29,39 +26,14 @@ export class Example extends LitElement {
   }
 
   // tag::snippet[]
-  private renderMenu: ContextMenuLitRenderer = (context, menu) => {
-    const { sourceEvent } = context.detail as { sourceEvent: Event };
-    const grid = menu.firstElementChild as Grid<Person>;
+  @query('vaadin-context-menu')
+  private menu!: ContextMenu;
 
-    const eventContext = grid.getEventContext(sourceEvent);
-    const person = eventContext.item!;
-
-    const clickHandler = (_action: string) => () => {
-      // console.log(`${action}: ${person.firstName} ${person.lastName}`);
-    };
-
-    return html`
-      <vaadin-context-menu-list-box>
-        <vaadin-context-menu-item @click="${clickHandler('Edit')}">
-          Edit
-        </vaadin-context-menu-item>
-        <vaadin-context-menu-item @click="${clickHandler('Delete')}">
-          Delete
-        </vaadin-context-menu-item>
-        <hr />
-        <vaadin-context-menu-item @click="${clickHandler('Email')}">
-          Email (${person.email})
-        </vaadin-context-menu-item>
-        <vaadin-context-menu-item @click="${clickHandler('Call')}">
-          Call (${person.address.phone})
-        </vaadin-context-menu-item>
-      </vaadin-context-menu-list-box>
-    `;
-  };
+  private person?: Person;
 
   protected override render() {
     return html`
-      <vaadin-context-menu ${contextMenuRenderer(this.renderMenu, [])}>
+      <vaadin-context-menu @item-selected="${this.onItemSelected}">
         <vaadin-grid .items="${this.items}" @vaadin-contextmenu="${this.onContextMenu}">
           <vaadin-grid-column path="firstName"></vaadin-grid-column>
           <vaadin-grid-column path="lastName"></vaadin-grid-column>
@@ -73,10 +45,27 @@ export class Example extends LitElement {
   }
 
   onContextMenu(e: MouseEvent) {
+    const { item, section } = (e.currentTarget as Grid<Person>).getEventContext(e);
     // Prevent opening context menu on header row.
-    if ((e.currentTarget as Grid).getEventContext(e).section !== 'body') {
+    if (section !== 'body' || !item) {
       e.stopPropagation();
+      return;
     }
+
+    // Set the items for the clicked row before the menu opens.
+    this.person = item;
+    this.menu.items = [
+      { text: 'Edit' },
+      { text: 'Delete' },
+      { component: 'hr' },
+      { text: `Email (${item.email})` },
+      { text: `Call (${item.address.phone})` },
+    ];
+  }
+
+  onItemSelected(e: ContextMenuItemSelectedEvent) {
+    const person = this.person;
+    console.log(`${e.detail.value.text}: ${person?.firstName} ${person?.lastName}`);
   }
   // end::snippet[]
 }
