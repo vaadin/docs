@@ -114,6 +114,30 @@ binder.forField(emailField)
     .bind(Person::getEmail, Person::setEmail);
 ----
 
+Validators run in the order they're added, and validation stops at the first validator that fails. The field then shows the error message of that validator only. Once the user has fixed the problem, the next failing validator shows its message.
+
+To show all failing rules at once, for example the rules of a password, combine them into a single validator that runs all of them and joins their error messages:
+
+[source,java]
+----
+List<Validator<String>> rules = List.of(
+        new StringLengthValidator("Use at least 8 characters", 8, null),
+        new RegexpValidator("Include a number", ".*\\d.*"),
+        new RegexpValidator("Include an uppercase letter", ".*\\p{Lu}.*"));
+
+binder.forField(passwordField)
+    .withValidator((password, context) -> {
+        String errors = rules.stream()
+                .map(rule -> rule.apply(password, context))
+                .filter(ValidationResult::isError)
+                .map(ValidationResult::getErrorMessage)
+                .collect(Collectors.joining(" "));
+        return errors.isEmpty() ? ValidationResult.ok()
+                : ValidationResult.error(errors);
+    })
+    .bind(User::getPassword, User::setPassword);
+----
+
 
 === Triggering Revalidation
 
