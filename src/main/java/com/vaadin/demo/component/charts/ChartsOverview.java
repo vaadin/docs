@@ -34,6 +34,7 @@ public class ChartsOverview extends Div {
         // tag::snippet[]
         Chart column = new Chart(ChartType.COLUMN);
         Configuration columnConf = column.getConfiguration();
+        columnConf.getChart().setStyledMode(true);
         columnConf.setTitle((String) null);
         columnConf.getxAxis().setCategories("Jan", "Feb", "Mar");
         columnConf.getyAxis().setTitle("");
@@ -43,6 +44,7 @@ public class ChartsOverview extends Div {
 
         Chart area = new Chart(ChartType.AREA);
         Configuration areaConf = area.getConfiguration();
+        areaConf.getChart().setStyledMode(true);
         areaConf.setTitle((String) null);
         areaConf.getxAxis().setCategories("Jan", "Feb", "Mar", "Apr", "May",
                 "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
@@ -63,6 +65,7 @@ public class ChartsOverview extends Div {
 
         Chart pie = new Chart(ChartType.PIE);
         Configuration pieConf = pie.getConfiguration();
+        pieConf.getChart().setStyledMode(true);
         pieConf.setTitle((String) null);
         pieConf.getTooltip().setPointFormat(
                 "{series.name}: <b>{point.percentage:.1f}%</b>");
@@ -83,6 +86,7 @@ public class ChartsOverview extends Div {
 
         Chart polar = new Chart();
         Configuration polarConf = polar.getConfiguration();
+        polarConf.getChart().setStyledMode(true);
         polarConf.setTitle((String) null);
         polarConf.getChart().setPolar(true);
         XAxis polarXAxis = new XAxis();
