@@ -40,9 +40,6 @@ const shieldIcon = icon(
   svg`<path d="M12 3l8 3v5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" />`
 );
 const checkIcon = icon(svg`<path d="M5 13l4 4L19 7" />`);
-const envelopeIcon = icon(
-  svg`<rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" />`
-);
 const spinnerIcon = icon(svg`<path d="M12 3a9 9 0 1 0 9 9" />`);
 
 class SecurityAlerts extends LitElement {
@@ -154,7 +151,7 @@ class SecurityAlerts extends LitElement {
         <span class="states">
           ${state('idle', !done && !sending, 'Get Alerts')}
           ${state('sending', sending, html`${spinnerIcon} Subscribing…`)}
-          ${state('done', done, html`${envelopeIcon} Check Your Inbox`)}
+          ${state('done', done, html`${checkIcon} Subscribed`)}
         </span>
       </button>
     `;
@@ -165,10 +162,10 @@ class SecurityAlerts extends LitElement {
       <section class="security-alerts" aria-labelledby="security-alerts-title">
         <span class="shield">${shieldIcon}</span>
         <div>
-          <h3 id="security-alerts-title">Security Alerts for the Vaadin Version You Use</h3>
+          <h3 id="security-alerts-title">Vaadin Security Alerts</h3>
           <p class="lead">
-            Get an email when a security advisory affects your version, with the fixed release and
-            how to upgrade. Security emails only.
+            Get an email for every Vaadin security advisory, including those that only affect older
+            versions, with the fixed releases and how to upgrade. Security emails only.
           </p>
           <!-- Validated by the component, so its error message is shown instead of the browser's -->
           <form novalidate @submit=${this.submit}>
@@ -200,13 +197,9 @@ class SecurityAlerts extends LitElement {
               </div>
               ${this.renderButton()}
             </div>
-            <!-- The button says "Check Your Inbox"; this announces it to screen readers -->
+            <!-- The button says "Subscribed"; this announces it to screen readers -->
             <span class="visually-hidden" role="status">
-              ${
-                this.status === 'done'
-                  ? 'Check your inbox to confirm your subscription to security alerts.'
-                  : ''
-              }
+              ${this.status === 'done' ? 'You are now subscribed to Vaadin security alerts.' : ''}
             </span>
           </form>
           ${
