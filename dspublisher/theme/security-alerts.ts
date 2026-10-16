@@ -167,7 +167,7 @@ class SecurityAlerts extends LitElement {
           <h3 id="security-alerts-title">Vaadin Security Alerts</h3>
           <p class="lead">
             Get an email for every Vaadin security advisory, including those that only affect older
-            versions, with the fixed releases and how to upgrade. Security emails only.
+            versions, with the fixed releases and how to upgrade.
           </p>
           <!-- Validated by the component, so its error message is shown instead of the browser's -->
           <form novalidate @submit=${this.submit}>
