@@ -5,6 +5,9 @@ import { iframeResizer } from 'iframe-resizer';
 // Highlights PR changes on preview deployments (no-op on the production site)
 import './preview-diff';
 
+// Points readers of older versions to the latest one (no-op on the latest docs)
+import './older-version-notice';
+
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
