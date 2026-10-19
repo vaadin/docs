@@ -21,6 +21,7 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,6 +91,7 @@ public class GridManualPagination extends VerticalLayout {
     }
     // end::snippet[]
 
+    @NotNull
     private VerticalLayout wrapWithVerticalLayout(Component component1, Component component2) {
         var gridWithPaginationLayout = new VerticalLayout(component1, component2);
         gridWithPaginationLayout.setPadding(false);
@@ -98,6 +100,7 @@ public class GridManualPagination extends VerticalLayout {
         return gridWithPaginationLayout;
     }
 
+    @NotNull
     private TextField createSearchField() {
         TextField searchField = new TextField();
         searchField.setWidth("50%");
