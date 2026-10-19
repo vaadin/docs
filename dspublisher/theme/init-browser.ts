@@ -5,6 +5,9 @@ import { iframeResizer } from 'iframe-resizer';
 // Highlights PR changes on preview deployments (no-op on the production site)
 import './preview-diff';
 
+// Security alert signup form on the docs home page
+import './security-alerts';
+
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
