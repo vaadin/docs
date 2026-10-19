@@ -1,0 +1,247 @@
+---
+title: Share Components between Applications
+page-title: How to share Vaadin components between your applications
+description: Learn how to share a component library and a theme between your organization's own applications.
+meta-description: Share Vaadin components and a theme between your own applications through a private Maven repository, with aligned Vaadin versions and isolated tests.
+order: 35
+---
+
+
+= Share Components between Applications
+:toclevels: 2
+
+The most common reason to package a component is to share it between your organization's own applications, not to publish it for everyone. This article covers what changes compared to a public add-on: hosting the library in a private Maven repository, keeping its Vaadin version aligned with the applications, sharing a theme so the applications look the same, versioning, and testing. It builds on <<package-component#,Package a Component>>, which explains the project setup itself.
+
+
+== What Your Team Needs to Know
+
+A component library built in Java needs one frontend skill from day one: CSS, for styling the components and the shared theme. TypeScript, npm, and the frontend build only come in when you wrap a third-party <<wrap-js-library#,JavaScript library>>, <<wrap-web-component#,web component>>, or <<wrap-react-component#,React component>>.
+
+The choice also affects every application that uses the library. A library that consists of Java classes and stylesheets loaded with `@StyleSheet` lets the applications use Vaadin's <<{articles}/flow/configuration/development-mode#precompiled-bundle,pre-compiled frontend bundle>>. As soon as the library uses `@JsModule`, `@CssImport`, or `@NpmPackage`, every application that depends on it builds its own frontend bundle with npm and Vite, both during development and for production. Vaadin installs the tools automatically, but builds take longer, and the build servers need access to the npm registry.
+
+
+== Set Up the Library Project
+
+Start from the https://github.com/vaadin/addon-starter-flow[Vaadin Add-on Starter] as described in <<package-component#getting-started,Package a Component>>, and adjust it for internal use:
+
+- *Use your organization's group ID*, such as `com.acme.ui`. The starter's `org.vaadin.addons` group ID is the convention for public add-ons.
+- *Remove the `directory` profile and the `src/main/assembly/` folder.* They only build the ZIP file for the Vaadin Directory.
+- *Keep the rest*: the `maven-jar-plugin` configuration that leaves Vaadin's build metadata out of the JAR, and the Jetty setup for trying the components out in a demo view.
+
+Put each component's static resources in a folder named after the library, such as `src/main/resources/META-INF/resources/acme-components/`. The folder becomes part of the URL, so a unique name prevents clashes with the applications' own resources.
+
+If you also share a theme, as described in <<share-a-theme>>, consider a multi-module Maven project with the component library and the theme as separate modules. You release them together under the same version, but applications can still depend on only one of them.
+
+
+== Publish to a Private Repository
+
+To deploy the library to your organization's Maven repository, such as Sonatype Nexus or JFrog Artifactory, add a `distributionManagement` section to the library's `pom.xml`. Use separate repositories for releases and snapshots:
+
+[source,xml]
+----
+<distributionManagement>
+    <repository>
+        <id>acme-releases</id>
+        <url>https://repo.acme.com/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+        <id>acme-snapshots</id>
+        <url>https://repo.acme.com/repository/maven-snapshots/</url>
+    </snapshotRepository>
+</distributionManagement>
+----
+
+Keep the credentials out of the POM. Maven reads them from `~/.m2/settings.xml`, matching each `server` to a repository by its `id`. On a build server, read them from environment variables:
+
+[source,xml]
+----
+<settings>
+    <servers>
+        <server>
+            <id>acme-releases</id>
+            <username>${env.REPO_USERNAME}</username>
+            <password>${env.REPO_PASSWORD}</password>
+        </server>
+        <server>
+            <id>acme-snapshots</id>
+            <username>${env.REPO_USERNAME}</username>
+            <password>${env.REPO_PASSWORD}</password>
+        </server>
+    </servers>
+</settings>
+----
+
+Then build and deploy the library:
+
+[source,terminal]
+----
+mvn clean deploy
+----
+
+A version that ends with `-SNAPSHOT` goes to the snapshot repository, and any other version to the release repository. To automate the version bump, tagging, and deployment of a release, use the https://maven.apache.org/maven-release/maven-release-plugin/[Maven Release Plugin] or your build server's release pipeline.
+
+
+== Use the Library in an Application
+
+Applications need access to the repository before they can depend on the library. Most organizations configure a mirror in each developer's and build server's `settings.xml`, pointing at a repository group (Nexus) or virtual repository (Artifactory) that combines Maven Central with the organization's own repositories:
+
+[source,xml]
+----
+<settings>
+    <mirrors>
+        <mirror>
+            <id>acme</id>
+            <mirrorOf>*</mirrorOf>
+            <url>https://repo.acme.com/repository/maven-public/</url>
+        </mirror>
+    </mirrors>
+</settings>
+----
+
+Alternatively, add the repository to the application's `pom.xml`:
+
+[source,xml]
+----
+<repositories>
+    <repository>
+        <id>acme-releases</id>
+        <url>https://repo.acme.com/repository/maven-releases/</url>
+    </repository>
+</repositories>
+----
+
+If the repository requires authentication, add a `server` with the same `id` to `settings.xml`, as when publishing. Then add the library as a regular dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.acme.ui</groupId>
+    <artifactId>acme-components</artifactId>
+    <version>${acme-components.version}</version>
+</dependency>
+----
+
+The components are ready to use. Each component loads its own stylesheets and frontend resources, so the application doesn't need any further configuration.
+
+
+== Keep Vaadin Versions Aligned
+
+The library and each application declare a Vaadin version of their own, but the one in the application decides which Vaadin version runs. The application imports the `vaadin-bom` in its `dependencyManagement` section, and Maven applies the managed versions to transitive dependencies as well. The `vaadin-core` dependency that comes with the library therefore resolves to the application's Vaadin version. The library's `vaadin.version` only decides which Vaadin API the library compiles and runs its own tests against.
+
+What this means depends on how the versions differ:
+
+Same version::
+The application runs the library on the Vaadin version it was tested with.
+
+Application on a newer minor version::
+This usually works, as the API the library was compiled against is still there. Minor versions occasionally deprecate or change APIs, though, so check the <<{articles}/upgrading#,upgrade instructions>> and run the library's tests against the newer version.
+
+Application on an older minor version::
+The library compiles and the application builds, but any call to an API that was added after the application's Vaadin version fails at runtime with a `NoSuchMethodError` or `NoClassDefFoundError`. Avoid this by building the library against the oldest Vaadin version that any consuming application uses.
+
+Different major version::
+This isn't supported. Release a new major version of the library for each Vaadin major version, as described in <<version-the-library>>.
+
+[NOTE]
+.Gradle Resolves to the Highest Version
+Gradle resolves version conflicts by picking the highest requested version. If the library is built against a newer Vaadin version than the application declares, Gradle upgrades the Vaadin dependencies that the library brings in, and the application no longer runs the Vaadin version it declares. Building the library against the oldest Vaadin version in use avoids this, too.
+
+=== npm Package Versions
+
+If the library wraps client-side code, its `@NpmPackage` annotations decide which npm package versions the consuming applications install. When two libraries, or a library and the application, declare the same package with different versions, the frontend build uses one of them and logs a warning that starts with `Multiple npm versions for`. Which version wins depends on the order in which classes are scanned, so don't rely on it. Wrap each npm package in one library only, and let the applications and other libraries depend on that library instead of declaring the package again.
+
+
+[[share-a-theme]]
+== Share a Theme
+
+The components in the library should look right in any application, so they style themselves with theme custom properties instead of fixed values, as described in <<style-component#use-theme-custom-properties,Use Theme Custom Properties>>. To make several applications look the same, package the look itself as a shared theme: a JAR with a master stylesheet that imports Aura or Lumo and customizes it. See <<{articles}/styling/advanced/reusable-theme#,Creating Reusable Themes>> for how to package one.
+
+A shared theme is also the place for design tokens: custom properties that hold your organization's design decisions, so that components and applications use the same values. Set the theme's own properties there, and define your own tokens with a prefix, for example in a `tokens.css` file that the theme's master stylesheet imports:
+
+.`src/main/resources/META-INF/resources/acme-theme/tokens.css`
+[source,css]
+----
+html {
+    /* Aura's customizable properties */
+    --aura-accent-color-light: #0b5cad;
+    --aura-accent-color-dark: #7cb8f2;
+
+    /* Your organization's own tokens */
+    --acme-content-max-width: 75rem;
+}
+----
+
+Components in the library use the tokens with a fallback value, so they still work in an application that doesn't load the theme:
+
+[source,css]
+----
+.acme-page-content {
+    max-width: var(--acme-content-max-width, 80rem);
+    margin-inline: auto;
+}
+----
+
+Applications load the theme from their app shell class with `@StyleSheet`, before their own stylesheets, as shown in <<{articles}/styling/advanced/reusable-theme#,Creating Reusable Themes>>. Keep the theme in its own artifact or module, separate from the components, so an application can adopt the look without the components and the other way around.
+
+
+[[version-the-library]]
+== Version the Library
+
+Follow the <<publish-component#versioning,semantic versioning>> rules for public add-ons. For a library that only your own applications use, a few more rules help:
+
+*Treat the Vaadin version as part of the API.* Moving the library to a newer Vaadin minor version raises the minimum for every application that upgrades the library. Release it as a new minor version, never as a patch, and state the required Vaadin version in the release notes. Moving to a new Vaadin major version is a new major version of the library.
+
+*Upgrade the library first.* No application can move to a new Vaadin major version before the library does. Plan the library upgrade early, and keep a branch for the previous major version so that applications can still receive fixes while they migrate.
+
+*Deprecate before removing.* Mark API you want to remove with `@Deprecated(forRemoval = true)` in a minor version, and remove it in the next major version. Applications can then move to the new minor version first, and fix the deprecation warnings at their own pace.
+
+*Release often, and depend on releases.* Applications should depend on released versions only. A snapshot version changes under the application without notice, so use snapshots only while developing the library and an application side by side.
+
+If you maintain several libraries, publish a BOM that manages their versions, and import it in each application next to the Vaadin BOM. The applications then upgrade all the libraries by changing one version:
+
+[source,xml]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId>
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.acme.ui</groupId>
+            <artifactId>acme-bom</artifactId>
+            <version>${acme.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+----
+
+
+== Test the Library in Isolation
+
+Test the components in the library's own build, rather than only through the applications that use them. Then a broken component fails the library's build, not the build of every application that upgrades it.
+
+*Use browserless tests.* They run the components on the server without a browser, which makes them fast enough to run on every build. Components rarely need a dependency injection container, so use the <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java setup>>, and test each component on its own without a view, as described in <<{articles}/building-apps/testing/browserless/test-custom-components#,Test a Custom Component>>.
+
+*Ship testers for complex components.* If applications need to test views that contain your components, write a custom tester for each component that's hard to drive through its children. Publish the testers in a separate artifact, such as `acme-components-testing`, which applications add with the `test` scope and register with `@ComponentTesterPackages`. This keeps the testing library out of the applications' runtime.
+
+*Test against the Vaadin versions in use.* The starter takes the Vaadin version from the `vaadin.version` property, so a build server can run the tests once for each Vaadin version that the applications use:
+
+[source,terminal]
+----
+mvn verify -Dvaadin.version=<version>
+----
+
+For trying the components out by hand, use the demo views in `src/test/java`, as described in <<package-component#testing-the-add-on,Package a Component>>.
+
+
+== Pitfalls
+
+*Don't load the theme from a component.* A stylesheet loaded with `@StyleSheet` on a component class applies to the whole page once the component is used, so the application would change its look depending on which views have been opened. Load the theme from the application's app shell class only.
+
+*Keep application code out of the library.* Components get their data through their API, such as setters, `setItems()`, and callbacks, instead of calling the applications' services or entities. A library that depends on one application can't be shared with the others.

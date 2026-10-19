@@ -2,7 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { IntegerField, type IntegerFieldElement } from '@vaadin/react-components/IntegerField';
+import { IntegerField, type IntegerFieldElement } from '@vaadin/react-components/IntegerField.js';
 
 function Example() {
   useSignals(); // hidden-source-line

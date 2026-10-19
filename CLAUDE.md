@@ -65,6 +65,10 @@ meta-description: A 150-160 character description for search engines.
 - **section-nav**: Navigation behavior (e.g., `badge`)
 - **page-links**: Related links shown on the page
 
+## Moving or Removing Pages
+
+A page's URL is its path under `articles/` without the extension and without a trailing `/index`. When a change moves or removes a page, add a redirect from the old URL to `redirects` in `dspublisher/config/default.json`, pointing at the page that replaces it. Write both paths without the path prefix, and keep the entries sorted by source path. The Check Redirects workflow fails a pull request that leaves an old URL without one; run `npm run check-redirects` to check locally against `origin/main`.
+
 ## Code Example Patterns
 
 ### File Locations

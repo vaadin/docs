@@ -1,7 +1,8 @@
 import '@vaadin/icon';
 import '@vaadin/icons';
+import '@vaadin/popover';
 import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { Iconset } from '@vaadin/icon/vaadin-iconset.js';
 import vaadinFontIcons from '@vaadin/icons/assets/vaadin-font-icons.json';
@@ -23,6 +24,8 @@ interface VaadinIconMeta {
   code: string;
   categories: string[];
   meta: string[];
+  deprecated?: boolean;
+  replacement?: string;
 }
 
 const OTHER_CATEGORY = 'Other';
@@ -40,6 +43,9 @@ interface IconEntry {
   fullName: string;
   searchText: string;
   code?: string;
+  deprecated?: boolean;
+  replacement?: string;
+  isBrand?: boolean;
 }
 
 const ICON_SIZES = [16, 20, 24, 32];
@@ -58,6 +64,9 @@ export class IconsPreview extends LitElement {
 
   @state()
   iconSize = DEFAULT_ICON_SIZE;
+
+  @state()
+  showDeprecated = false;
 
   @property({ type: String, attribute: 'iconset-type' })
   iconsetType: IconSetType = 'vaadin';
@@ -81,6 +90,9 @@ export class IconsPreview extends LitElement {
         fullName: `${this.iconsetType}:${name}`,
         searchText: [name, ...(meta?.meta ?? [])].join(' ').toLowerCase(),
         code: meta?.code,
+        deprecated: meta?.deprecated,
+        replacement: meta?.replacement,
+        isBrand: meta?.categories?.includes('Brand'),
       };
     });
 
@@ -126,8 +138,11 @@ export class IconsPreview extends LitElement {
   protected override render() {
     const term = this.searchTerm.trim().toLowerCase();
     const isSearching = term.length > 0;
+    const visibleEntries = (this.iconEntries ?? []).filter(
+      (entry) => this.showDeprecated || !entry.deprecated
+    );
     const matches = isSearching
-      ? (this.iconEntries ?? []).filter((entry) => entry.searchText.includes(term))
+      ? visibleEntries.filter((entry) => entry.searchText.includes(term))
       : [];
 
     return html`
@@ -148,6 +163,21 @@ export class IconsPreview extends LitElement {
           margin: var(--docs-space-m) var(--docs-space-s);
           justify-content: space-between;
           width: 96%;
+        }
+
+        .docs-icon-filters {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--docs-space-m);
+        }
+
+        .docs-icon-deprecated-toggle {
+          display: flex;
+          align-items: center;
+          gap: 0.25em;
+          font-size: var(--docs-font-size-s);
+          color: var(--docs-body-text-color);
         }
 
         .docs-icon-size-picker {
@@ -180,7 +210,7 @@ export class IconsPreview extends LitElement {
           text-align: center;
         }
 
-        .docs-icon-scroll {
+        .docs-icon-scroll.docs-icon-scroll {
           width: 100%;
           max-height: 60vh;
           margin: 0;
@@ -228,11 +258,11 @@ export class IconsPreview extends LitElement {
 
         .docs-icon-preview {
           text-align: center;
-          padding-bottom: var(--docs-space-l);
+          padding-block: var(--docs-space-m);
           line-height: 1;
         }
 
-        .docs-icon-preview vaadin-icon {
+        .docs-icon-preview > div > vaadin-icon {
           margin-bottom: 0.5em;
           height: var(--vaadin-icon-size, 24px);
           width: var(--vaadin-icon-size, 24px);
@@ -250,6 +280,49 @@ export class IconsPreview extends LitElement {
           color: var(--docs-secondary-text-color);
         }
 
+        .docs-icon-deprecated > div {
+          position: relative;
+
+          &:not(:hover, :focus) {
+            opacity: 0.4;
+
+            &::before {
+              opacity: 0;
+            }
+          }
+
+          &::before {
+            content: 'Deprecated';
+            position: absolute;
+            top: -1.7lh;
+            left: 50%;
+            translate: -50%;
+            font-size: var(--docs-font-size-2xs);
+            font-weight: var(--docs-font-weight-strong);
+            color: var(--docs-secondary-text-color);
+            background: var(--docs-surface-color-1);
+            border: 1px solid var(--docs-divider-color-1);
+            padding: 0.2em 0.3em;
+            border-radius: 0.3em;
+            letter-spacing: -0.05em;
+          }
+        }
+
+        .docs-icon-replacement {
+          display: flex;
+          align-items: center;
+          gap: var(--docs-space-s);
+          font-size: var(--docs-font-size-xs);
+
+          code {
+            font-family: var(--docs-font-family-monospace);
+          }
+
+          > vaadin-icon {
+            flex: none;
+          }
+        }
+
         .docs-icon-search {
           flex: none;
           max-width: 20em;
@@ -264,12 +337,44 @@ export class IconsPreview extends LitElement {
       </style>
 
       <div class="docs-icon-toolbar">
-        <input
-          class="docs-icon-search"
-          type="search"
-          aria-label="Search all icons"
-          placeholder="Search all icons"
-        />
+        <div class="docs-icon-filters">
+          <input
+            class="docs-icon-search"
+            type="search"
+            aria-label="Search all icons"
+            placeholder="Search all icons"
+          />
+          ${
+            this.iconsetType === 'vaadin'
+              ? html`
+                  <label id="docs-show-deprecated" class="docs-icon-deprecated-toggle">
+                    <input
+                      type="checkbox"
+                      .checked=${this.showDeprecated}
+                      @change=${(event: Event) => {
+                        this.showDeprecated = (event.target as HTMLInputElement).checked;
+                      }}
+                    />
+                    Show deprecated
+                  </label>
+                  <vaadin-popover
+                    for="docs-show-deprecated"
+                    .trigger=${['hover', 'focus']}
+                    position="top"
+                    theme="arrow"
+                  >
+                    <a
+                      href="https://github.com/vaadin/web-components/pull/12452"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      More about the deprecations
+                    </a>
+                  </vaadin-popover>
+                `
+              : ''
+          }
+        </div>
         <fieldset class="docs-icon-size-picker">
           ${ICON_SIZES.map(
             (size) => html`
@@ -297,7 +402,7 @@ export class IconsPreview extends LitElement {
             `
           : this.iconsetType === 'vaadin'
             ? this.renderCategorized()
-            : this.renderGrid(this.iconEntries ?? [])
+            : this.renderGrid(visibleEntries)
       }
     `;
   }
@@ -305,16 +410,59 @@ export class IconsPreview extends LitElement {
   private renderGrid(entries: IconEntry[]) {
     return html`
       <ul class="docs-icon-scroll docs-icon-grid">
-        ${entries.map(
-          (icon) => html`
-            <li class="docs-icon-preview">
-              <vaadin-icon icon="${icon.fullName}"></vaadin-icon>
-              <span class="docs-icon-preview-name">${icon.fullName}</span>
-              ${icon.code ? html`<span class="docs-icon-preview-code">\\${icon.code}</span>` : ''}
-            </li>
-          `
-        )}
+        ${entries.map((icon, index) => this.renderIcon(icon, `search-${index}`))}
       </ul>
+    `;
+  }
+
+  private renderIcon(icon: IconEntry, idSuffix: string) {
+    const targetId = `docs-icon-${this.iconsetType}-${idSuffix}`;
+    const replacementFullName = `${this.iconsetType}:${icon.replacement}`;
+    const hasPopover = Boolean(icon.deprecated && [icon.isBrand, icon.replacement].some(Boolean));
+
+    return html`
+      <li class="docs-icon-preview${icon.deprecated ? ' docs-icon-deprecated' : ''}">
+        <div id=${targetId} tabindex=${hasPopover ? '0' : nothing}>
+          <vaadin-icon icon="${icon.fullName}"></vaadin-icon>
+          <span class="docs-icon-preview-name">${icon.fullName}</span>
+          ${icon.code ? html`<span class="docs-icon-preview-code">\\${icon.code}</span>` : ''}
+        </div>
+        ${
+          hasPopover
+            ? html`
+                <vaadin-popover
+                  for=${targetId}
+                  .trigger=${['hover', 'focus']}
+                  position="bottom"
+                  theme="arrow"
+                  aria-label="Deprecation guidance"
+                >
+                  ${
+                    icon.isBrand
+                      ? html`
+                          <span>
+                            Use
+                            <a
+                              href="https://simpleicons.org"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              >simpleicons.org</a
+                            >
+                            instead
+                          </span>
+                        `
+                      : html`
+                          <div class="docs-icon-replacement">
+                            <span>Use <code>${replacementFullName}</code> instead</span>
+                            <vaadin-icon icon=${replacementFullName}></vaadin-icon>
+                          </div>
+                        `
+                  }
+                </vaadin-popover>
+              `
+            : ''
+        }
+      </li>
     `;
   }
 
@@ -323,28 +471,21 @@ export class IconsPreview extends LitElement {
       <div class="docs-icon-scroll">
         ${
           this.categorizedIcons &&
-          [...this.categorizedIcons.entries()].map(
-            ([category, icons]) => html`
-              <section class="docs-icon-category">
-                <h3 class="docs-icon-category-heading">${category}</h3>
-                <ul class="docs-icon-grid">
-                  ${icons.map(
-                    (icon) => html`
-                      <li class="docs-icon-preview">
-                        <vaadin-icon icon="${icon.fullName}"></vaadin-icon>
-                        <span class="docs-icon-preview-name">${icon.fullName}</span>
-                        ${
-                          icon.code
-                            ? html`<span class="docs-icon-preview-code">\\${icon.code}</span>`
-                            : ''
-                        }
-                      </li>
-                    `
-                  )}
-                </ul>
-              </section>
-            `
-          )
+          [...this.categorizedIcons.entries()].map(([category, icons], categoryIndex) => {
+            const visibleIcons = icons.filter((icon) => this.showDeprecated || !icon.deprecated);
+            return visibleIcons.length
+              ? html`
+                  <section class="docs-icon-category">
+                    <h3 class="docs-icon-category-heading">${category}</h3>
+                    <ul class="docs-icon-grid">
+                      ${visibleIcons.map((icon, iconIndex) =>
+                        this.renderIcon(icon, `category-${categoryIndex}-${iconIndex}`)
+                      )}
+                    </ul>
+                  </section>
+                `
+              : '';
+          })
         }
       </div>
     `;

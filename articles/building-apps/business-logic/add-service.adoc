@@ -23,9 +23,9 @@ You can design application services according to your preferred architectural st
 
 * The application services should have *high cohesion*. This means that all the methods in your service should relate to the same thing.
 * The application services should be *stateless*.
-* Application services should *initiate and complete <<../forms-data/consistency/transactions#,database transactions>>* before returning results.
+* Application services should *define the boundaries of <<../forms-data/consistency/transactions#,database transactions>>*, so that views never have to manage transactions themselves.
 * The application services should be *<<../security/protect-services#,secure>>*.
-* Views should invoke application services, but application services *should not have dependencies on views*.
+* Views should invoke application services, but application services *should not have dependencies on views*. Simple, read-only views are an exception, as described in <<calling-repositories-from-views,Calling Repositories from Views>>.
 
 [NOTE]
 Application services can use Vaadin's non-UI-related utilities and interfaces, but should not be tightly coupled to UI components.
@@ -51,16 +51,14 @@ public class OrderCreationService {
         this.eventPublisher = eventPublisher;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // <3>
+    @Transactional // <3>
     public OrderId createOrder(OrderForm orderForm) {
         var validationErrors = validator.validate(orderForm);
         if (!validationErrors.isEmpty()) {
             throw new ConstraintViolationException(validationErrors);
         }
-        var order = orderRepository.saveAndFlush(createOrderFromForm(orderForm));
-        eventPublisher.publishEvent(new OrderCreatedEvent(order)); // Notify other
-                                                                   // components of
-                                                                   // the new order
+        var order = orderRepository.save(createOrderFromForm(orderForm));
+        eventPublisher.publishEvent(new OrderCreatedEvent(order.orderId())); // <4>
         return order.orderId();
     }
 
@@ -72,6 +70,53 @@ public class OrderCreationService {
 <1> Makes the service into a Spring bean.
 <2> Protects the service from unauthorized access.
 <3> Runs the method inside a database transaction.
+<4> Notifies other components of the new order. The event is published inside the transaction, so a listener that should only react to committed orders uses `@TransactionalEventListener`. See <<background-jobs/triggers#event-triggered-jobs,Event Triggered Jobs>> for details.
+
+
+=== Transactions
+
+Use Spring's default transaction propagation, `REQUIRED`, for application services. When a view calls a service, there is typically no active transaction, so Spring starts one and commits it when the method returns. When a service is called by another service that already has an active transaction, it joins that transaction. The work of both services is then committed or rolled back together.
+
+Mark methods that only read data as read-only. This allows Spring and your persistence technology to optimize the transaction. A convenient way of doing this is to make all methods read-only at the class level, and to override this for the methods that write data:
+
+[source,java]
+----
+@Service
+@Transactional(readOnly = true) // <1>
+@PreAuthorize("isAuthenticated()")
+public class CustomerService {
+
+    public Optional<Customer> findById(long customerId) {
+        // ...
+    }
+
+    @Transactional // <2>
+    public Customer save(Customer customer) {
+        // ...
+    }
+}
+----
+<1> All methods run inside read-only transactions by default.
+<2> Overrides the class-level annotation, since this method writes data.
+
+Background jobs are an exception, as they should run independently of whatever triggered them. See <<background-jobs/jobs#transactions,Implementing Jobs>> for details.
+
+For more information about transaction management, see the <<../forms-data/consistency/transactions/declarative#,Declarative Transactions>> documentation page.
+
+
+=== Calling Repositories from Views
+
+By default, views call application services, and only application services call <<../forms-data/persistence#,repositories>>. A simple, read-only view can call a repository directly, though, if all of the following are true:
+
+* *The access control of the view is enough.* <<../security/protect-services#,Method security>> protects services, not repositories. A repository call is protected only by the access rules of the view that makes it.
+* *The view only reads data.* Changes go through application services, which validate the input and define the transaction boundaries.
+* *No business logic is involved.* The view passes its parameters, such as a filter string and a `Pageable`, straight to a repository method.
+* *The repository returns everything the view needs.* Don't rely on lazily loaded associations of the returned entities being loaded when the view accesses them.
+
+As soon as one of these no longer holds, introduce an application service and move the call there. For example, do this when users with different roles should see different data, when an operation needs several repository calls in one transaction, or when the view starts to change data.
+
+[NOTE]
+When you <<../architecture/packages#,package by feature>>, repositories are package private. A view in the same package can call them, but a view in a separate `ui` package can't, unless you make the repository public. Introduce an application service instead.
 
 
 == Service Naming
@@ -87,7 +132,7 @@ Vaadin does not enforce a specific naming convention for application services. W
 
 == Input & Output
 
-Application services often need to communicate with <<../forms-data/persistence#,repositories or data access objects>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTO:s). Both have advantages and disadvantages.
+Application services often need to communicate with <<../forms-data/persistence#,repositories or data access objects>> to fetch and store data. They also need to pass this data to the UI layer. For this, there are two options: pass the entities directly; or pass Data Transfer Objects (DTOs). Both have advantages and disadvantages.
 
 
 === Entities
@@ -97,6 +142,8 @@ When the application service passes the entities directly to the UI layer, they 
 [source,java]
 ----
 @Service
+@Transactional(readOnly = true)
+@PreAuthorize("isAuthenticated()")
 public class CustomerCrudService {
 
     private final CustomerRepository repository;
@@ -105,21 +152,24 @@ public class CustomerCrudService {
         this.repository = repository;
     }
 
-    public Page<Customer> findAll(Specification<Customer> specification, Pageable pageable) {
-        return repository.findAll(specification, pageable);
+    public List<Customer> findByName(String searchTerm, Pageable pageable) {
+        return repository.findByNameContainingIgnoreCase(searchTerm, pageable);
     }
 
+    @Transactional
     public Customer save(Customer customer) {
-        return repository.saveAndFlush(customer);
+        return repository.save(customer);
     }
 }
 ----
 
+Even when the service returns entities, keep the persistence details out of its API. In the example above, the view passes a search term, and a Spring Data `Pageable` that describes which page to fetch and how to sort it. The service decides how to turn them into a query. Don't let the view build the query itself, for example by passing a JPA `Specification` to the service.
+
 Using entities in your application service is a good idea when your user interface and entities match each other, closely. For example, you could have a form with fields that match the fields of the entity -- or a grid with columns that match them.
 
-Your entities should be _anemic_, which means that they only contain data and little to no business logic.
-
 In both cases, the user interface and the entities are likely to change at the same time, for the same reason. For example, if you need to add a field, you'll add it to both the user interface and the entity.
+
+When you pass entities to the UI layer like this, they should be _anemic_, which means that they only contain data and little to no business logic. If your entities contain business logic, use DTOs instead.
 
 
 === Data Transfer Objects
@@ -130,17 +180,19 @@ In other cases, the user interface may need only a subset of the data stored ins
 
 You may also have a situation where the domain model and user interface are changing independently of each other. For example, the domain model may have to be adjusted every year due to government regulations while the user interface remains about the same.
 
-In this case, the application services should accept DTO:s as input, and return DTO:s as output. The entities should no longer be part of the application layer API.
+In this case, the application services should accept DTOs as input, and return DTOs as output. The entities should no longer be part of the application layer API.
 
-This adds another responsibility to the application service: mapping between entities and DTO:s.
+This adds another responsibility to the application service: mapping between entities and DTOs.
 
-When using query classes, you can do the mapping in them by returning their DTO:s, directly. The query DTO:s become part of the application layer API.
+When using query classes, you can do the mapping in them by returning their DTOs, directly. The query DTOs become part of the application layer API.
 
 For storing data, services typically have to copy data from the DTO to the entity. For example, like this:
 
 [source,java]
 ----
 @Service
+@Transactional(readOnly = true)
+@PreAuthorize("isAuthenticated()")
 public class CustomerCrudService {
 
     private final CustomerRepository repository;
@@ -151,14 +203,15 @@ public class CustomerCrudService {
 
     // In this example, CustomerForm is a Java record.
 
+    @Transactional
     public CustomerForm save(CustomerForm customerForm) {
-        var entity = Optional.ofNullable(customerForm.getId())
+        var entity = Optional.ofNullable(customerForm.id())
             .flatMap(repository::findById)
             .orElseGet(Customer::new);
         entity.setName(customerForm.name());
         entity.setEmail(customerForm.email());
         ...
-        return toCustomerForm(repository.saveAndFlush(entity));
+        return toCustomerForm(repository.saveAndFlush(entity)); // <1>
     }
 
     private CustomerForm toCustomerForm(Customer entity) {
@@ -166,13 +219,16 @@ public class CustomerCrudService {
     }
 }
 ----
+<1> Writes the changes to the database before mapping the entity to a DTO.
 
-When using DTO:s, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
+This example calls `saveAndFlush()` instead of `save()`. JPA normally writes changes to the database when the transaction commits, which happens only after the method has returned. Values that are assigned on write, such as an incremented <<../forms-data/consistency/optimistic-locking#,version number>>, would then be missing from the returned DTO. When the service returns the entity itself, or nothing at all, `save()` is enough. See <<../forms-data/persistence/spring-data#entity-state-and-saving,JPA & Spring Data>> for details.
+
+When using DTOs, you have more code to maintain. Some changes, like adding a new field to the application, requires more work. However, your user interface and domain model are isolated from each other, and can evolve independently.
 
 
 === Domain Payload Objects
 
-When using <<../forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTO:s, as well. In this case, the DTO:s are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTO:s.
+When using <<../forms-data/consistency/domain-primitives#,domain primitives>>, you should use them in your DTOs, as well. In this case, the DTOs are called _Domain Payload Objects_ (DPO). They're used in the exact same way as DTOs.
 
 
 === Validation
@@ -184,13 +240,15 @@ You can validate the input in different ways. For more information, see the <<..
 
 == Package Naming
 
-For Java packages containing services, the recommended naming convention is `[feature].service`, where `[feature]` represents the full-stack feature the service belongs to. If the feature package is very small, you can simplify the structure and put the service directly in `[feature]`.
+Put an application service directly in the package of the full-stack feature it belongs to, rather than in a separate `service` sub-package. A `service` sub-package would force the repositories and entities that the service uses to be public, too.
 
-For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm.service`
+For example, services related to "customer relationship management" would be placed in: [packagename]`com.example.application.crm`
 
-This structure keeps services well-organized, easy to find, and clearly associated with their purpose.
+In a small feature, the views can be in the same package as the service. As the feature grows, move the views to a `ui` sub-package, such as [packagename]`com.example.application.crm.ui`. The service then has to be public, as it forms the API that the views call. The views themselves can remain package private.
 
-See the <<../architecture/packages#,Package Structure>> documentation page for more information.
+This structure keeps services easy to find, and next to the rest of their feature. It also lets the Java compiler ensure that other packages only call the public API of the feature.
+
+See the <<../architecture/packages#,Package Structure>> documentation page for more information, including when to package by layer instead.
 
 
 == Injecting a Service into a View

@@ -14,7 +14,6 @@ const config = {
       "pom.xml",
       ".eslintrc.js",
       ".gitignore",
-      ".npmrc",
       ".prettierrc",
       "tsconfig.json",
       "types.d.ts",

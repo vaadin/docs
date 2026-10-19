@@ -2,13 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect, useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import {
-  ContextMenu,
-  type ContextMenuElement,
-  type ContextMenuRendererContext,
-} from '@vaadin/react-components/ContextMenu.js';
-import { ContextMenuItem } from '@vaadin/react-components/ContextMenuItem.js';
-import { ContextMenuListBox } from '@vaadin/react-components/ContextMenuListBox.js';
+import { ContextMenu, type ContextMenuElement } from '@vaadin/react-components/ContextMenu.js';
 import { Grid, type GridElement } from '@vaadin/react-components/Grid.js';
 import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
@@ -17,7 +11,7 @@ import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 function Example() {
   useSignals(); // hidden-source-line
   const items = useSignal<Person[]>([]);
-  const gridRef = useRef<GridElement>(null);
+  const gridRef = useRef<GridElement<Person>>(null);
 
   useEffect(() => {
     getPeople().then(({ people }) => {
@@ -25,55 +19,49 @@ function Example() {
     });
   }, []);
 
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (grid) {
-      // Workaround: Prevent opening context menu on header row.
-      // @ts-expect-error vaadin-contextmenu isn't a GridElement event.
-      grid.addEventListener('vaadin-contextmenu', (e) => {
-        if (grid.getEventContext(e).section !== 'body') {
-          e.stopPropagation();
-        }
-      });
-    }
-  }, [gridRef.current]);
-
   // tag::snippet[]
-  const renderMenu = ({
-    context,
-  }: Readonly<{
-    context: ContextMenuRendererContext;
-    original: ContextMenuElement;
-  }>) => {
-    if (!gridRef.current) {
-      return null;
-    }
+  const menuRef = useRef<ContextMenuElement>(null);
 
-    const { sourceEvent } = context.detail as { sourceEvent: Event };
-    const grid = gridRef.current;
+  useEffect(() => {
+    const grid = gridRef.current!;
+    const menu = menuRef.current!;
+    let person: Person | undefined;
 
-    const eventContext = grid.getEventContext(sourceEvent);
-    const person = eventContext.item;
+    const onContextMenu = (e: Event) => {
+      const { item, section } = grid.getEventContext(e);
+      // Prevent opening context menu on header row.
+      if (section !== 'body' || !item) {
+        e.stopPropagation();
+        return;
+      }
 
-    const clickHandler = (action: string) => () => {
-      console.log(`${action}: ${person.firstName} ${person.lastName}`);
+      // Set the items for the clicked row before the menu opens.
+      person = item;
+      menu.items = [
+        { text: 'Edit' },
+        { text: 'Delete' },
+        { component: 'hr' },
+        { text: `Email (${item.email})` },
+        { text: `Call (${item.address.phone})` },
+      ];
     };
 
-    return (
-      <ContextMenuListBox>
-        <ContextMenuItem onClick={clickHandler('Edit')}>Edit</ContextMenuItem>
-        <ContextMenuItem onClick={clickHandler('Delete')}>Delete</ContextMenuItem>
-        <hr />
-        <ContextMenuItem onClick={clickHandler('Email')}>Email ({person.email})</ContextMenuItem>
-        <ContextMenuItem onClick={clickHandler('Call')}>
-          Call ({person.address.phone})
-        </ContextMenuItem>
-      </ContextMenuListBox>
-    );
-  };
+    const onItemSelected = (e: CustomEvent<{ value: { text?: string } }>) => {
+      console.log(`${e.detail.value.text}: ${person?.firstName} ${person?.lastName}`);
+    };
+
+    // @ts-expect-error vaadin-contextmenu isn't a GridElement event.
+    grid.addEventListener('vaadin-contextmenu', onContextMenu);
+    menu.addEventListener('item-selected', onItemSelected);
+    return () => {
+      // @ts-expect-error vaadin-contextmenu isn't a GridElement event.
+      grid.removeEventListener('vaadin-contextmenu', onContextMenu);
+      menu.removeEventListener('item-selected', onItemSelected);
+    };
+  }, []);
 
   return (
-    <ContextMenu renderer={renderMenu}>
+    <ContextMenu ref={menuRef}>
       <Grid items={items.value} ref={gridRef}>
         <GridColumn path="firstName" />
         <GridColumn path="lastName" />

@@ -29,7 +29,11 @@ export class Example extends LitElement {
   protected override render() {
     return html`
       <!-- tag::snippet[] -->
-      <vaadin-custom-field label="Price" helper-text="Helper text" theme="small helper-above-field">
+      <vaadin-custom-field
+        label="Price"
+        helper-text="Helper text"
+        theme="small helper-above-field label-aside"
+      >
         <vaadin-horizontal-layout style="gap: var(--vaadin-gap-s);">
           <vaadin-text-field accessible-name="Amount" theme="small"></vaadin-text-field>
           <vaadin-select

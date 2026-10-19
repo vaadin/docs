@@ -107,6 +107,89 @@ Each attachment has a name, a URL, and a MIME type. The MIME type determines how
 You can listen for attachment click events to handle downloads or other actions.
 
 
+[#typing-indicator]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Typing Indicator [badge-flow]#Flow#
+
+:preview-feature: the Message List typing indicator
+:feature-flag: com.vaadin.experimental.messageListTypingIndicator
+:ticket-url: https://github.com/vaadin/flow-components/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+Message List can show which users are typing, for example to tell the participants of a chat that a reply is on its way. The typing indicator appears after the last message. By default, it shows the avatars and names of the typing users, and the text _Typing…_. If the list is scrolled to the end when the indicator appears, the list scrolls to keep the indicator in view.
+
+[.example,themes="lumo,aura"]
+--
+[source,typescript]
+----
+include::{root}/frontend/demo/component/messages/message-list-typing-indicator.ts[preimport,hidden]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/messages/MessageListTypingIndicator.java[render,tags=snippet,indent=0]
+----
+--
+
+Set the typing users with [methodname]`setTypingUsers()`. Each call replaces the current typing users, and a call without users hides the indicator. Message List doesn't remove the users on its own, so update them when someone stops typing or sends a message. [methodname]`getTypingUsers()` returns the current users, for example to filter out the one who stopped.
+
+Without the feature flag, the methods that configure the typing indicator throw a [classname]`MessageListTypingIndicatorExperimentalFeatureException`, at the latest when the list is attached. The `aiComponents` flag of the <<{articles}/flow/ai-support#,AI support features>> enables the typing indicator as well.
+
+Each typing user is a [classname]`MessageListUser`. Like the sender of a message, it has a name, an abbreviation, an image, and a color index for the avatar, and class names added with [methodname]`addClassNames()` apply to the avatar. Changing any of these updates the indicator right away. The image is either a URL set with [methodname]`setImage()`, or a [classname]`DownloadHandler` set with [methodname]`setImageHandler()`, which Message List serves as a resource. Since the resource is registered for the list that the user was last added to, use a separate [classname]`MessageListUser` instance for each list.
+
+Message List hides the typing indicator from assistive technologies and keeps it out of the focus order. Instead, it announces the names of the typing users and the typing indicator text through a live region.
+
+
+=== Indicator Types
+
+Set the type of the typing indicator with [methodname]`setTypingIndicatorType()`, passing one of the [classname]`MessageListTypingIndicatorType` constants. You can change the type at any time, even while the indicator is visible.
+
+[cols="1,3"]
+|===
+|Type |Description
+
+|`DEFAULT`
+|Shows the indicator like a message: the avatars and names of the typing users, and the typing indicator text as the content.
+
+|`ELLIPSIS`
+|Shows the avatars of the typing users and an animated ellipsis. The names and the typing indicator text aren't shown, but screen readers still announce them.
+
+|`MINIMAL`
+|Shows the indicator as a single compact row: the avatars, followed by the names of the typing users and the typing indicator text, which appears in lowercase.
+
+|===
+
+
+=== Typing Indicator Text
+
+Replace the default text _Typing…_, for example with a translation, by setting a [classname]`MessageListI18n` object:
+
+[source,java]
+----
+list.setI18n(new MessageListI18n()
+        .setTypingIndicatorText("Escribiendo…"));
+----
+
+The names of the typing users are joined into a list in the language of the page, so the text is the only part that needs a translation. The screen reader announcement and the `MINIMAL` type put the text right after the names, so choose a text that reads well there.
+
+
+=== Binding to a Signal
+
+Use [methodname]`bindTypingUsers()` to bind the typing users to a <<{articles}/flow/ui-state#,signal>>. The indicator then follows the signal: it updates whenever users are added to or removed from the list signal, and whenever the value of an individual user signal changes. While a binding is active, calling [methodname]`setTypingUsers()` or binding another signal throws a [classname]`BindingActiveException`. The indicator follows the signal only while the list is attached.
+
+[source,java]
+----
+ListSignal<MessageListUser> typingUsers = new ListSignal<>();
+list.bindTypingUsers(typingUsers);
+
+// Linsey starts typing
+ValueSignal<MessageListUser> linseyTyping = typingUsers.insertLast(linsey);
+
+// Linsey stops typing
+typingUsers.remove(linseyTyping);
+----
+
+
 == Usage for AI Chats
 
 For a higher-level approach that eliminates boilerplate wiring, see the <<{articles}/flow/ai-support#,AI support features>>, which connect Message List and Message Input to an LLM provider automatically.
@@ -120,6 +203,7 @@ Combine Message List with Message Input to create effective AI chat interfaces. 
 Follow these best practices for a smooth user experience:
 
 * Append tokens to assistant messages in real time as they arrive
+* Distinguish the user's prompts from the assistant's responses, for example with the <<styling#one-to-one-conversations,style variants for one-to-one conversations>>
 * Show visual indicators for system activity
 * Preserve conversation history by loading past messages and maintaining session state
 

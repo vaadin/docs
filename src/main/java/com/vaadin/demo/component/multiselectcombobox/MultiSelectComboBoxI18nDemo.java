@@ -17,6 +17,7 @@ public class MultiSelectComboBoxI18nDemo extends Div {
         comboBox.setItems(DataService.getCountries());
         comboBox.setItemLabelGenerator(Country::getName);
         comboBox.setWidth("300px");
+        comboBox.setSelectAllButtonVisible(true);
         add(comboBox);
 
         // tag::snippet[]
@@ -26,6 +27,10 @@ public class MultiSelectComboBoxI18nDemo extends Div {
         i18n.setSelected(" hinzugefügt");
         i18n.setDeselected(" entfernt");
         i18n.setTotal("{count} Einträge ausgewählt");
+        i18n.setSelectAll("Alle auswählen");
+        i18n.setDeselectAll("Alle abwählen");
+        i18n.setSelectFiltered("Gefilterte auswählen");
+        i18n.setDeselectFiltered("Gefilterte abwählen");
 
         comboBox.setI18n(i18n);
         // end::snippet[]
