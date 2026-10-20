@@ -1,0 +1,87 @@
+---
+title: Customize the App Icon
+page-title: How to customize the app icon in a Vaadin application
+description: Learn how to replace the browser tab icon, and where to go next for home screen icons and splash screens.
+meta-description: Customize the favicon of your Vaadin application to show your own icon in browser tabs and bookmarks, with or without enabling PWA support.
+order: 27
+---
+
+= Customize the App Icon
+:toclevels: 2
+
+The icon in the browser tab is one of the first things users see. Replacing it with your own is a quick way to make the application feel like yours. This article shows how to add a simple favicon, and how the icon works when the application is a Progressive Web Application (PWA).
+
+
+== Copy-Paste into Your Project
+
+Add a [filename]`favicon.ico` file to the root of your static resources:
+
+* *Spring Boot (JAR)*: [filename]`src/main/resources/META-INF/resources/favicon.ico`
+* *WAR*: [filename]`src/main/webapp/favicon.ico`
+
+No code is needed. Browsers request [filename]`/favicon.ico` automatically when the page doesn't declare an icon, and Vaadin serves the file from your static resources. When you use <<../security#,Spring Security>>, [filename]`/favicon.ico` is already accessible without logging in, so the icon also shows on the login view.
+
+This works only when the application runs at the root of the server. If it has a context path, for example `\https://example.com/my-app/`, browsers still look for the icon at `\https://example.com/favicon.ico`. In that case, declare the icon explicitly as shown in the next section.
+
+
+== Using a PNG or SVG Favicon
+
+To use another image format, or a file in another location, declare the icon in the application shell. Implement `AppShellConfigurator` and add the icon in [methodname]`configurePage()`:
+
+[source,java]
+----
+import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.server.AppShellSettings;
+
+@SpringBootApplication
+public class Application implements AppShellConfigurator {
+
+    @Override
+    public void configurePage(AppShellSettings settings) {
+        settings.addFavIcon("icon", "icons/favicon.svg", "any");
+        settings.addFavIcon("icon", "icons/favicon-32x32.png", "32x32");
+    }
+}
+----
+
+Place the files in the [filename]`icons/` folder of your static resources, for example [filename]`src/main/resources/META-INF/resources/icons/favicon.svg`. The paths are relative to the application root, so they work with a context path, too.
+
+The size `any` tells the browser that the SVG scales to any size. Not all browsers support SVG favicons, so also add a PNG or [filename]`.ico` file as a fallback.
+
+If you use Spring Security, allow anonymous users to access the files. Otherwise the browser can't load the icon on the login view.
+
+For all the options for customizing the page header, see <<{articles}/flow/advanced/modifying-the-bootstrap-page#application-shell-configurator,Modifying the Bootstrap Page>>.
+
+
+== Icons in a Progressive Web Application
+
+A favicon only covers browser tabs and bookmarks. Users can also add the application to the home screen of a mobile phone, or install it on their computer. To customize the icon in these places, enable PWA support by adding the `@PWA` annotation to the application shell:
+
+[source,java]
+----
+@PWA(name = "My Application", shortName = "My App")
+@SpringBootApplication
+public class Application implements AppShellConfigurator {
+}
+----
+
+With the annotation, you don't need a separate favicon. Vaadin generates all the icons that the application needs from a single image, [filename]`icons/icon.png` in your static resources. Replace that image with your own -- a square PNG of at least 512 &times; 512 pixels -- and Vaadin uses it for:
+
+* Favicon in browser tabs
+* Icon on home screens and in bookmarks
+* Icons of the installed application
+* Splash screens shown while the installed application starts
+* Logo on the offline page
+
+Without your own image, Vaadin uses the Vaadin logo.
+
+.Don't add a separate favicon to a PWA
+[IMPORTANT]
+When the `@PWA` annotation is present, Vaadin adds its own favicon links to the page, and browsers use them instead of [filename]`favicon.ico`. To change the favicon of a PWA, replace [filename]`icons/icon.png` -- don't add a separate [filename]`favicon.ico`.
+
+For details on the generated icon sizes, how to override individual images, and how to change the icon path, see <<{articles}/flow/configuration/pwa#icons,PWA Application Icons>>.
+
+
+== Troubleshooting
+
+Browsers cache favicons aggressively. If the old icon still shows after you've replaced the file, reload the page while bypassing the cache, or open the application in a private window.
