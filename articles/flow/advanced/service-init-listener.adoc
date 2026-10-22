@@ -9,7 +9,7 @@ order: 100
 
 = Service Init Listener
 
-The [classname]`ServiceInitEvent` is fired when your Vaadin application starts. It's a good place to configure the [classname]`RequestHandler`, [classname]`IndexHtmlRequestListener` and <<dependency-filter#,`DependencyFilter`>> objects. You can also use it to <</flow/routing/dynamic#application.startup,dynamically register routes>> during application startup, and to <<session-and-ui-init-listener#, register session and UI listeners>>.
+The [classname]`ServiceInitEvent` is fired when your Vaadin application starts. It's a good place to configure the [classname]`RequestHandler`, [interfacename]`SessionlessRequestHandler`, [classname]`IndexHtmlRequestListener` and <<dependency-filter#,`DependencyFilter`>> objects. You can also use it to <</flow/routing/dynamic#application.startup,dynamically register routes>> during application startup, and to <<session-and-ui-init-listener#, register session and UI listeners>>.
 
 In Spring and CDI applications, the [classname]`ServiceInitEvent` is fired as an application event. It's enough to annotate your bean method accepting [classname]`ServiceInitEvent` as a parameter with the https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/event/EventListener.html[`@EventListener`] (Spring) or https://jakarta.ee/specifications/cdi/4.0/apidocs/jakarta.cdi/jakarta/enterprise/event/observes[`@Observes`] (CDI) annotation. The following shows an example of this:
 
@@ -51,10 +51,18 @@ public class ApplicationServiceInitListener
             // RequestHandler to change how responses are handled
             return false;
         });
+
+        event.addSessionlessRequestHandler((request, response) -> {
+            // SessionlessRequestHandler for a resource that's the
+            // same for every user, such as a shared script
+            return false;
+        });
     }
 
 }
 ----
+
+Use [interfacename]`SessionlessRequestHandler` instead of [interfacename]`RequestHandler` for a resource that doesn't depend on the requesting user's [classname]`VaadinSession`, such as a script served to every visitor. The service calls every registered sessionless handler before it looks up the session of the request, so such a handler never creates a session and doesn't lock it, and it behaves the same way whether or not the request has a session. All sessionless handlers run before any [interfacename]`RequestHandler`, including ones added through [methodname]`addRequestHandler`.
 
 In a Spring or CDI project, all beans implementing the [interfacename]`VaadinServiceInitListener` interface are registered automatically. Remember to add the `@Component` annotation to the class, to make it a managed bean.
 
