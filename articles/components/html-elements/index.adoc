@@ -25,6 +25,7 @@ The module `flow-html-components` contains the following components:
 It can link to many kinds of targets, such as web pages, files, email addresses, or specific locations in the same page.
 | `Article`  | `article` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/article[article element] is independent, self-contained content, such as a forum post, a blog entry, or a comment. For creating hyperlinks that navigate to a different route in your application, see <<{articles}/flow/routing/navigation#using-the-routerlink-component,RouterLink>> component.
 | `Aside`  | `aside` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/aside[aside element] represents content that is indirectly related to the document’s main content, such as a sidebar.
+| `Audio` | `audio` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/audio[audio element] is the browser's built-in audio player. See the <<#media-components,Media Components>> section for more information.
 | `DescriptionList` | `dl` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dl[description list element] represents a description list, commonly used to implement a glossary or to display metadata (a list of key-value pairs).
 | `Div` | `div` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/div[div element] is a generic container for content.
 | `Emphasis` | `em` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/em[emphasis element] is for words that have a stressed emphasis compared to the surrounding text.
@@ -52,9 +53,11 @@ It can link to many kinds of targets, such as web pages, files, email addresses,
 | `Pre` | `pre` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/pre[pre-formatted text element] represents pre-formatted text which is to be presented exactly as written in the HTML file, thus preserving both spaces and line breaks.
 | `RangeInput` | `input` | The range input element is an https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input[input element] with its `type` attribute set to `"range"`. It provides a dedicated API for slider-style inputs and is typically used to represent numeric values on a slider.
 | `Section` | `section` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/section[section element] represents a generic standalone section of a document. A section should typically include a heading (`H1`,...`H6`).
+| `Source` | `source` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/source[source element] lists one of the alternative files a `Video` or `Audio` component can play. See the <<#media-components,Media Components>> section for more information.
 | `Span` | `span` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/span[span element] is a generic inline container for phrasing content, which does not inherently represent anything. It is typically used to style a specific portion of text or as a placeholder for dynamic content.
 | [since:com.vaadin:vaadin@V25.3]#`Table`# | `table` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/table[table element] represents data presented in a two-dimensional table comprised of rows and columns of cells containing data. It comes with a family of components for the caption, column groups, sections, rows, and cells; see the <<table#,Table>> page. `Table` is low-level and flexible, which suits smaller data sets that are part of the page. For lazy loading, large data sets, sorting, and filtering, prefer <<{articles}/components/grid#,Grid>>, <<{articles}/components/grid-pro#,Grid Pro>> or <<{articles}/components/tree-grid#,Tree Grid>>.
 | `UnorderedList` | `ul` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/ul[unordered list element] represents an unordered list of items (`ListItem`), typically rendered as a bulleted list.
+| `Video` | `video` | The https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/video[video element] is the browser's built-in video player. See the <<#media-components,Media Components>> section for more information.
 |===
 
 
@@ -91,5 +94,33 @@ The Flow API provides convenient constants and methods that make Flex Layout con
 
 [CAUTION]
 It is generally recommended to use the <<{articles}/components/horizontal-layout#,Horizontal Layout>> or the <<{articles}/components/vertical-layout#,Vertical Layout>> component instead. They offer nearly all the same features as Flex Layout, but with better default styling (such as gaps and padding) and a more intuitive API. Flex Layout remains available in the Vaadin API primarily for backward compatibility. However, it is not recommended for use going forward.
+
+
+== Media Components
+
+`Video` and `Audio` are components for the browser's built-in media players. Both extend `Media`, which holds the attributes and the sources they share. Each accepts one or more `Source` children -- one per file format the recording is offered in -- and the browser plays the first one it can decode:
+
+[source,java]
+----
+Video video = new Video();
+video.addSource("/intro.webm", "video/webm");
+video.addSource("/intro.mp4", "video/mp4");
+video.setControlsVisible(true);
+video.setPoster("/intro-poster.jpg");
+----
+
+Neither player shows any controls until [methodname]`setControlsVisible(true)` is called. `Media` also provides [methodname]`setAutoplay(boolean)`, [methodname]`setLoop(boolean)`, and [methodname]`setMuted(boolean)`, as well as [methodname]`setPreload(Media.Preload)`, a hint for how much of the file the browser should fetch before playback is requested: `AUTO`, `METADATA`, or `NONE`. `Video` additionally accepts a [methodname]`setPoster(String)` image, shown while the video is downloading and before it's first played.
+
+A source, or a video's poster, can be served by a [classname]`DownloadHandler` instead of coming from a URL of its own, which is the way to use a file the application produces rather than one available at a static address:
+
+[source,java]
+----
+video.addSource(DownloadHandler.fromInputStream(event ->
+        new DownloadResponse(recordingService.open(meetingId),
+                "meeting.mp4", "video/mp4", -1)),
+        "video/mp4");
+----
+
+A handler used this way is served inline, rather than as a file attachment, and stays reachable while the player -- or one of its ancestors -- is disabled, since the browser requests it while rendering the page rather than as a result of a user action.
 
 [discussion-id]`6774751B-921E-4B79-941E-830D9C3532B4`
