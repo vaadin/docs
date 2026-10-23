@@ -1,0 +1,135 @@
+---
+title: Unsaved Changes
+page-title: How to warn users about unsaved form changes in Vaadin
+description: Learn how to warn users before they leave a form with unsaved changes.
+meta-description: Warn users before they leave a Vaadin form with unsaved changes. Track changes with Binder, confirm navigation, and use the browser's warning on reload.
+order: 25
+---
+
+
+= Protect Unsaved Changes
+:toclevels: 2
+
+When users leave a form, anything they haven't saved is lost. This guide shows how to ask them first, both when they navigate to another view, and when they reload the page or close the browser tab.
+
+.Part of a Series
+[TIP]
+This is part 5 of the *Add a Form* series. It builds on the concepts introduced in the <<fields-and-binding#,Fields & Binding>> and <<loading-and-saving#,Loading & Saving>> guides.
+
+
+== Tracking Changes
+
+In buffered mode, `Binder` keeps track of the fields that the user has changed since the form last read or wrote its FDO. Make this available to the view that contains the form:
+
+.ProposalForm.java
+[source,java]
+----
+public class ProposalForm extends Composite<FormLayout> {
+
+    private final Binder<Proposal> binder;
+
+    // (Constructor and other methods omitted for brevity)
+
+    public boolean hasChanges() {
+        return binder.hasChanges(); // <1>
+    }
+
+    public Registration addStatusChangeListener(StatusChangeListener listener) {
+        return binder.addStatusChangeListener(listener); // <2>
+    }
+}
+----
+<1> Returns `true` if the user has changed a field since the form last read or wrote the FDO.
+<2> Lets the view react when the changes come and go. You'll need it for <<#warning-before-the-page-unloads,warning before the page unloads>>.
+
+This works only in buffered mode. In write-through mode, `Binder` writes every valid change to the FDO right away, so `hasChanges()` almost always returns `false`. If your form uses write-through mode, you have to track the changes yourself.
+
+By default, a field that the user changes, and then changes back to its original value, still counts as changed. To ignore such changes, call `binder.setChangeDetectionEnabled(true)`.
+
+
+== Confirming Navigation
+
+To ask the user before they navigate to another view, implement [interfacename]`BeforeLeaveObserver` in the view, and postpone the navigation while the user decides:
+
+.ProposalView.java
+[source,java]
+----
+@Route("proposals")
+public class ProposalView extends Main implements BeforeLeaveObserver {
+
+    private final ProposalForm form;
+
+    // (Constructor and other methods omitted for brevity)
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        if (form.hasChanges()) {
+            var action = event.postpone(); // <1>
+            var dialog = new ConfirmDialog();
+            dialog.setHeader("Discard Changes?");
+            dialog.setText("You have unsaved changes. Do you want to discard them?");
+            dialog.setCancelable(true);
+            dialog.setConfirmText("Discard");
+            dialog.setConfirmButtonTheme("error primary");
+            dialog.addConfirmListener(e -> action.proceed()); // <2>
+            dialog.addCancelListener(e -> action.cancel()); // <3>
+            dialog.open();
+        }
+    }
+}
+----
+<1> Stops the navigation until you call `proceed()` or `cancel()`.
+<2> Continues the navigation to wherever the user was going.
+<3> Keeps the user in the view. The dialog also sends this event when the user presses kbd:[Esc].
+
+The observer is called for links and navigation menus, for navigation from your own code, and for the back and forward buttons of the browser. When the user stays after pressing the back button, the address bar keeps showing the URL of the view.
+
+Always call `cancel()` when the user stays. Otherwise, the browser keeps waiting for the postponed navigation, and the links in the application stop working until the user reloads the page.
+
+The user can lose changes in other ways than navigation, too. For example, selecting another item in a grid replaces the contents of the form, and so does closing a drawer. Call `form.hasChanges()` before you load another FDO or close the form, and ask the user in the same way.
+
+For more about the navigation events, see <<{articles}/flow/routing/lifecycle#,Navigation Lifecycle>>.
+
+
+== Warning Before the Page Unloads
+
+`BeforeLeaveObserver` only sees navigation within the application. When the user reloads the page, closes the browser tab, or types another address, the browser leaves the page without asking the server.
+
+The browser can still ask the user to confirm, through a https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event[`beforeunload` event] handler. The handler runs in the browser, and it can't wait for the server to tell whether the form has changes. Instead, turn the handler on and off from the server whenever this changes:
+
+.ProposalView.java
+[source,java]
+----
+@Route("proposals")
+public class ProposalView extends Main implements BeforeLeaveObserver {
+
+    private final ProposalForm form;
+
+    public ProposalView() {
+        // (Creating the components omitted for brevity)
+        form.addStatusChangeListener(event -> getUI().ifPresent(ui ->
+            ui.beforeClientResponse(this, context ->
+                setUnloadWarning(form.hasChanges())))); // <1>
+    }
+
+    private void setUnloadWarning(boolean enabled) {
+        getUI().ifPresent(ui -> ui.getPage().executeJs(
+            "window.onbeforeunload = $0 ? e => e.preventDefault() : null",
+            enabled)); // <2>
+    }
+
+    @Override
+    protected void onDetach(DetachEvent event) {
+        event.getUI().getPage().executeJs("window.onbeforeunload = null"); // <3>
+    }
+
+    // (beforeLeave() omitted for brevity)
+}
+----
+<1> The status of the form changes when the user changes a field, and when the form reads or writes its FDO. While the form is being cleared, `hasChanges()` can still return `true`, so this checks it only when the round trip is about to end.
+<2> Turns the warning of the browser on or off.
+<3> Turns the warning off when the user leaves the view. Otherwise, the warning would stay on in the next view.
+
+The browser shows a message of its own, which you can't change.
+
+The warning covers only the changes that have reached the server. By default, a text field sends its value when the user presses kbd:[Enter] or moves the focus elsewhere. If the user reloads the page while still typing in a field, the browser doesn't warn.
