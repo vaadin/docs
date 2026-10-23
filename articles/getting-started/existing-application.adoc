@@ -1,0 +1,243 @@
+---
+title: Existing Applications
+page-title: Add a Vaadin UI to an Existing Spring Boot Application
+description: Add a Vaadin UI to a Java application that you already have, next to its REST API, security configuration, and database code.
+meta-description: Add a Vaadin UI to an existing Spring Boot application, next to its REST controllers, security configuration, and JPA entities. Quarkus and Jakarta EE, too.
+order: 25
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+= Add a Vaadin UI to an Existing Application
+
+You don't need a new project to use Vaadin. An application with a Vaadin UI is a regular Java application, and Vaadin is its UI layer. You add Vaadin to the application that you already have, and the views that you write call your existing services, like any other Spring bean would. The REST controllers, the security configuration, and the JPA entities of the application keep working as before.
+
+This page shows how to add Vaadin to a Spring Boot application that's built with Maven. It also shows how the UI fits in with the code that the application already has. For Quarkus, Jakarta EE, and Gradle, see <<#other-platforms,Quarkus, Jakarta EE, and Gradle>>.
+
+
+== Before You Start
+
+Vaadin runs next to Spring MVC, in the servlet container that Spring Boot embeds. If the application doesn't use Spring MVC yet, the Vaadin starter adds it. Check that the application meets the minimum versions of Java and Spring Boot listed in <<{articles}/compatibility#,Supported Technologies>>.
+
+
+== Add the Dependencies
+
+Add the Vaadin version, the Vaadin bill of materials (BOM), and the Vaadin dependencies to the corresponding sections of [filename]`pom.xml`:
+
+.`pom.xml`
+[source,xml,subs="+attributes"]
+----
+<properties>
+    <vaadin.version>{vaadin-version}</vaadin.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-bom</artifactId> <!--1-->
+            <version>${vaadin.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-spring-boot-starter</artifactId> <!--2-->
+    </dependency>
+    <dependency>
+        <groupId>com.vaadin</groupId>
+        <artifactId>vaadin-dev</artifactId>
+        <optional>true</optional> <!--3-->
+    </dependency>
+</dependencies>
+----
+<1> The BOM manages the versions of the Vaadin modules, so you don't have to declare them. If the application already imports other bills of materials, add this one next to them.
+<2> The starter contains the Spring integration of Vaadin and the free UI components. To use the commercial components as well, also add the `com.vaadin:vaadin` dependency. See <<{articles}/building-apps/architecture/licensing-and-maintenance#,Licensing, Support & Maintenance>>.
+<3> The `vaadin-dev` dependency enables development mode, which you need when running the application during development. Marking it optional keeps it out of the JAR that the Spring Boot Maven plugin builds.
+
+
+== Enable the Production Build
+
+Add the Vaadin Maven plugin to the `build` section, next to the Spring Boot Maven plugin that the application already has:
+
+.`pom.xml`
+[source,xml]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-maven-plugin</artifactId>
+            <version>${vaadin.version}</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>build-frontend</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+The `build-frontend` goal runs when Maven packages the application. It prepares the frontend bundle of the UI, and marks the build for production mode. It doesn't run when you start the application during development. The build doesn't need Node.js, unless the application adds frontend code of its own. See <<{articles}/building-apps/production/build#,Build for Production>> for how to check that the packaged application runs in production mode.
+
+
+== Create a View
+
+A view is a Java class that builds a screen of the UI out of components. Vaadin creates views through Spring, so a view can take any Spring bean as a constructor parameter, such as an existing service.
+
+For example, suppose that the application has a [classname]`CustomerService`, which its REST controllers use, and which returns customers as [classname]`CustomerDto` records. This view shows them in a grid:
+
+.`CustomerListView.java`
+[source,java]
+----
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("customers") // <1>
+@PageTitle("Customers")
+public class CustomerListView extends VerticalLayout {
+
+    public CustomerListView(CustomerService customerService) { // <2>
+        var grid = new Grid<CustomerDto>();
+        grid.addColumn(CustomerDto::name).setHeader("Name");
+        grid.addColumn(CustomerDto::email).setHeader("Email");
+        grid.setItems(customerService.findAll()); // <3>
+        add(new H1("Customers"), grid);
+    }
+}
+----
+<1> The `@Route` annotation makes the class a view, and maps it to the path `/customers`. The `@PageTitle` annotation sets the title of the browser tab.
+<2> Spring injects the existing service, as it does in a controller.
+<3> The view calls the service directly. There's no REST API or JSON mapping between the UI and the service, because the view runs on the server, in the same application. See <<{articles}/building-apps/architecture/runtime-model#,How Vaadin Works at Runtime>> for what this means for the application.
+
+Put the view in the package of the application class, or in a package under it. Vaadin looks for views there, in the same way as Spring looks for components. See <<{articles}/flow/integrations/spring/routing#,Routing with Spring>> for how to use other packages.
+
+The grid holds all the customers that the service returns. For many rows, have the grid load them from the service page by page instead, as described in <<{articles}/building-apps/forms-data/add-grid/paginated-data#,Add a Paginated Grid>>.
+
+You don't have to change the application class. Vaadin styles the UI with its default theme, Aura. To choose the theme explicitly, see <<{articles}/styling/themes#,Themes>>.
+
+
+== Run the Application
+
+If the application uses Spring Security, set it up for the UI first, as described in <<#spring-security,Spring Security>>.
+
+Start the application as before, for example from your IDE, or with `./mvnw spring-boot:run`. The first start takes longer than usual, because Maven downloads the Vaadin dependencies. Then open the path of the view in your browser, for example http://localhost:8080/customers.
+
+The REST API keeps answering at the same URLs as before.
+
+
+== REST Controllers
+
+Vaadin is mapped to the root path of the application by default, but Spring MVC gets each request first. A request that a controller of the application handles goes to that controller, and Vaadin gets the rest. The REST API keeps its URLs, and a view can use any path that no controller uses. If a controller and a view have the same path, the controller takes precedence. For example, a view with `@Route("")` doesn't show if a controller already answers at the root path.
+
+To keep the UI and the API apart by path, you can map Vaadin to a path of its own with the `vaadin.url-mapping` property:
+
+.`application.properties`
+[source,properties]
+----
+vaadin.url-mapping=/ui/*
+----
+
+The views are then under `/ui`, for example at `/ui/customers`. A custom mapping has caveats related to static resources, which are described in <<{articles}/flow/integrations/spring/configuration#vaadin-url-mapping,Vaadin URL Mapping>>. To keep Vaadin from handling some paths at all, for example the paths of Swagger UI, list them in the `vaadin.exclude-urls` property instead. See <<{articles}/flow/integrations/spring/configuration#prevent-handling-of-specific-urls,Prevent Handling of Specific URLs>>.
+
+The controllers and the views can use the same services. For more about running a REST API next to a Vaadin UI, see <<{articles}/building-apps/integration/rest-api#,REST API Alongside Vaadin>>.
+
+
+== Spring Security
+
+A Vaadin UI makes requests of its own. The browser loads the UI, and then sends each user interaction to the server. Spring Security has to let these requests through, and Vaadin has to know which views each user may open. [classname]`VaadinSecurityConfigurer` sets this up. It configures CSRF protection for the requests of the UI, the login view, and access control for the views.
+
+Use [classname]`VaadinSecurityConfigurer` in one `SecurityFilterChain`, and keep the existing configuration of the REST API in another. The Vaadin filter chain matches every request, and by default denies any request that it has no rule for. Therefore, give the existing filter chain a security matcher for the paths of the API, and an `@Order` value, so that Spring Security tries it first:
+
+.`SecurityConfig.java`
+[source,java]
+----
+@Configuration
+@EnableWebSecurity
+class SecurityConfig {
+
+    @Bean
+    @Order(1) // <1>
+    SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/api/**"); // <2>
+        // The existing configuration of the REST API
+        return http.build();
+    }
+
+    @Bean // <3>
+    SecurityFilterChain vaadinFilterChain(HttpSecurity http) throws Exception {
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            configurer.loginView(LoginView.class); // <4>
+        });
+        return http.build();
+    }
+}
+----
+<1> Spring Security uses the first filter chain that matches a request, trying them in order from the lowest `@Order` value to the highest.
+<2> This filter chain handles only the requests of the REST API. If the API doesn't have a common path prefix, list its paths.
+<3> A filter chain without `@Order` comes after all the ordered ones. The Vaadin filter chain handles all other requests.
+<4> The login view is a Vaadin view. See <<{articles}/building-apps/security/add-login#create-a-login-view,Create a Login View>> for how to create one. If users log in through an identity provider, such as Keycloak, see <<{articles}/building-apps/security/connect-identity-provider#,Connect an Identity Provider>> instead.
+
+Other paths that the application serves outside the Vaadin UI and the REST API need rules of their own, too. For example, <<{articles}/building-apps/production/health-checks#allow-the-health-checks-through-security,Add Health Checks>> shows how to allow the health endpoint of Spring Boot Actuator.
+
+When [classname]`VaadinSecurityConfigurer` is in use, nobody can open a view that doesn't have an access annotation. To let every logged-in user open the view that you created earlier, annotate it with `@PermitAll`:
+
+.`CustomerListView.java`
+[source,java]
+----
+@Route("customers")
+@PageTitle("Customers")
+@PermitAll
+public class CustomerListView extends VerticalLayout {
+    ...
+}
+----
+
+To limit a view to users with certain roles, use `@RolesAllowed` instead. See <<{articles}/building-apps/security/protect-views#,Protect Views>>.
+
+Method security on the services, such as `@PreAuthorize` annotations, also applies when a view calls them. A view calls a service as the user who's logged in to the UI. See <<{articles}/building-apps/security/protect-services#,Protect Services>>.
+
+For the options of the configurer, see <<{articles}/flow/security/vaadin-security-configurer#,Vaadin Security Configurer>>. The <<{articles}/building-apps/security#,Security>> guides cover login, logout, and access control step by step.
+
+
+== JPA Entities
+
+The views can use the existing entities and repositories through the services. However, unlike a REST controller, a view keeps its state in server memory between requests. An entity that a view holds is detached: the transaction that loaded it has ended. If the view accesses a lazy association that wasn't loaded in that transaction, Hibernate throws a `LazyInitializationException`.
+
+The `spring.jpa.open-in-view` property of Spring Boot doesn't help here. It keeps the entity manager open while Spring MVC handles a request, but it has no effect on the requests that Vaadin handles. Instead, have the services load everything that a view needs inside their transactions, for example with an entity graph, or with a query that returns DTOs.
+
+The Building Apps guides recommend turning `open-in-view` off, so that the REST controllers and the views follow the same rules. In an existing application, first check that no REST controller relies on it, for example by serializing a lazy association into a JSON response.
+
+See <<{articles}/building-apps/forms-data/persistence/spring-data#entities-in-flow-views,Entities in Flow Views>> for how to load what a view needs, and how to keep what it holds in memory small.
+
+
+[[other-platforms]]
+== Quarkus, Jakarta EE, and Gradle
+
+Spring Boot is recommended, but not required. You write views in the same way on every platform, but how you add Vaadin to the application differs.
+
+Quarkus::
+Add the Vaadin Quarkus extension to the application, as described in <<{articles}/flow/integrations/quarkus#quarkus.setup,Existing Projects>>. Views can inject the CDI beans of the application. If a REST resource of the application is mapped to the root path with `@Path("/")`, it can hide the Vaadin UI. <<{articles}/flow/integrations/quarkus#integrating-vaadin-with-existing-quarkus-application,Integrating Vaadin with Existing Quarkus Application>> shows how to map Vaadin to a path of its own.
+
+Jakarta EE::
+On a Jakarta EE server, add the Vaadin CDI add-on to the application, as described in <<{articles}/flow/integrations/cdi#,Using CDI with Vaadin>>. Views can then inject the CDI beans of the application. See <<{articles}/flow/integrations/cdi/instantiated-beans#,Using CDI Beans>>.
+
+Gradle::
+Apply the Vaadin Gradle plugin, import the Vaadin BOM, and add the Vaadin dependencies to the existing build files. <<starters/gradle#build-file,The Build Files>> shows them for a Spring Boot application.
+
+
+== Next Steps
+
+To learn how to build views step by step, follow the <<tutorial#,Tutorial>>. It builds a new Spring Boot application, but its views work the same way in yours. The <<next-steps#,Next Steps>> page lists the Building Apps guides that most applications need next, such as navigation, security, testing, and deployment.
+
+To keep the UI in a Maven module of its own, see <<{articles}/building-apps/architecture/project-structure/multi-module#,Multi-Module Projects>>.
