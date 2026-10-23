@@ -642,7 +642,7 @@ class ProductCatalogView extends MasterDetailLayout {
 }
 ----
 
-Now when you add a new product, it should automatically be selected and show up in the drawer.
+Restart the application, since you changed a repository interface. Now when you add a new product, it should automatically be selected and show up in the drawer.
 
 
 === Handle Constraint Violation
@@ -791,7 +791,7 @@ Now try to create a new item with the SKU `NBK-A5-DOT`. You should receive a not
 
 How is this possible? How can another user have edited a product that you haven't even inserted yet?
 
-You have now discovered a mismatch between how Spring Data and Vaadin assume data objects should be used. These mismatches are prone to happen whenever you're dealing with mutable data objects, like `ProductDetails` in this case.
+You have now run into a problem that can happen whenever a form keeps editing the same mutable object across saves, like `ProductDetails` in this case. Spring Data changes the object while saving it, and a rolled-back transaction doesn't undo that change.
 
 Here's what happened:
 
@@ -806,16 +806,16 @@ Here's what happened:
 If this had been a REST API, the `ProductDetails` object would always be a new instance and this would not be a problem. Since you're reusing the object, you have to work around this problem. You can do this in different ways, but the user interface shouldn't need to know about any of them. It's a persistence detail, and the view already saves products through `ProductCatalogService`. That makes the service the right place for the workaround.
 
 
-=== Work Around the Version Bug
+=== Save a Copy of the Product
 
-The easiest ways to work around this bug are the following:
+The easiest ways to avoid this problem are the following:
 
 1. Set the version to `null` before saving an item that doesn't yet have an ID.
 2. Make a copy of the object and pass the copy to the repository, then return it if successful.
 
 Making a copy is more elegant because it ensures the original object remains unchanged until the transaction commits successfully. This follows a principle of keeping data objects immutable during uncertain operations. Also, you have already designed your UI callbacks to support backends that return new instances of data objects after saving them.
 
-This bug is a cost of using the entity as the FDO. A separate FDO would avoid it as well, because the form would never hold the object that Spring Data changes. Copying the entity before saving gives the same protection without a second class, which is enough while the form and the table match one-to-one.
+This problem is a cost of using the entity as the FDO. A separate FDO would avoid it as well, because the form would never hold the object that Spring Data changes. Copying the entity before saving gives the same protection without a second class, which is enough while the form and the table match one-to-one.
 
 Start by adding two constructors to `ProductDetails` - a _default constructor_ for creating new instances, and a _copy constructor_ for creating copies:
 
@@ -1674,7 +1674,7 @@ class AddProductDialog extends Dialog {
 
 == Next Steps
 
-You have now built a fully functional Vaadin application with the following features:
+You have now built a fully functional Spring Boot application with a Vaadin UI. It has the following features:
 
 - Paginated data loading
 - Sorting and filtering
