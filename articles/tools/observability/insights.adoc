@@ -75,6 +75,7 @@ Everything else is dropped.
 Retained records live in bounded in-memory ring buffers of [propertyname]`vaadin.observability.insights-capacity` entries each, 100 by default, and the oldest is evicted once a buffer is full.
 Interactions, queries, and browser errors are retained separately, so with all three active the total is three times the capacity.
 Keeping them apart means a burst of slow queries can't evict the failed interactions, and neither can the flood of buffered reports that arrives when a network outage ends.
+There's no time window: a record stays until newer records of its kind evict it, however old it is.
 Nothing is written to disk, and the buffers don't survive a restart.
 
 Collection is best-effort: if capturing a record fails, the error is swallowed rather than interfering with data loading or the framework's own error handling.
@@ -100,6 +101,8 @@ If your application restricts endpoint access globally with [propertyname]`manag
 ====
 The payload describes what users did and what broke, so treat the endpoint as privileged.
 Secure it as you would any other Actuator endpoint -- put it behind authentication, or bind the management port to an internal interface with `management.server.port` and `management.server.address`.
+In an application secured with Spring Security, the Vaadin security configuration redirects an unauthenticated request to the login view, which a script or an agent can't get past.
+<<integrations/prometheus#secure-the-endpoint,Secure the Endpoint>> shows a separate filter chain with HTTP Basic authentication that covers this endpoint as well.
 ====
 
 The endpoint is part of the Spring Boot starter and needs Actuator on the classpath.
@@ -125,6 +128,7 @@ A `GET` on the endpoint returns the current insights:
 [propertyname]`instrumentation` is `active` when at least one collector -- or the growing view state tracking -- is bound, and `inactive` when the kit registered no instrumentation at all -- for example when the license check failed or the feature is off.
 An empty `insights` array with `instrumentation: active` means the same thing it says: nothing went wrong.
 An empty array with `instrumentation: inactive` means nothing was watching.
+See <<#empty-payload,An Empty Payload>> for what it takes to produce an insight.
 
 Records are grouped, so ten users hitting the same problem produce one insight with ten occurrences.
 Interaction errors group by route, component, event, and exception type; slow interactions group by route, component, and event.
@@ -159,6 +163,48 @@ The only insight type that can describe a failure the server never saw; see <<cl
 |A collection held in a view field that keeps growing across measurements of its UI.
 See <<#growing-view-state,A Growing View Field>>.
 |===
+
+
+[[empty-payload]]
+=== An Empty Payload
+
+On first use, the payload is usually `{"schemaVersion":1,"instrumentation":"active","insights":[]}`.
+That's the expected result for an application in which nothing has gone wrong, because ordinary use doesn't produce insights.
+A record is retained only when one of the following happens:
+
+[cols="1,3"]
+|===
+|Insight |Retained when
+
+|`user-interaction-error`
+|An event listener, [annotationname]`@ClientCallable` method, property sync, or return channel throws.
+
+|`slow-user-interaction`
+|The server spends more than 1000 ms handling one RPC invocation.
+The time the request waits for the session lock, the network transfer, and the rendering in the browser don't count.
+A click that feels slow to the user can therefore stay under the budget.
+
+|`data-query-error`
+|A data provider count or fetch query throws.
+
+|`slow-data-query`
+|A data provider count or fetch query takes more than 1000 ms.
+
+|`client-error`
+|A browser reports an uncaught error or an unhandled promise rejection.
+
+|`growing-view-state`
+|A collection in a view field grows in [propertyname]`vaadin.observability.ui-state-growth-samples` measurements of its UI (5 by default) without shrinking in between.
+Requires `vaadin.observability.ui-state=true`, which is off by default.
+|===
+
+The 1000 ms budget is fixed: there's no property to change it.
+The records are kept since the application started, not for a time window; see <<#what-happens-to-the-rest,What Happens to the Rest>>.
+
+To check that collection works, make something fail on purpose -- for example, a button whose click listener throws an exception, or one that calls `Thread.sleep(1500)`.
+Click it and read the endpoint again.
+A `user-interaction-error` or `slow-user-interaction` insight should appear, naming the button's class and the route of its view.
+If nothing appears, check that `vaadin.observability.insights` is on, together with `errors` for failures and `requests` for slow interactions, as listed in <<#configuration,Configuration>>.
 
 
 === A Failed Interaction

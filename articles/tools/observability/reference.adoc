@@ -41,6 +41,48 @@ Timer:: Records both a count of events and the distribution of their durations.
 Distribution summary:: Records both a count of events and the distribution of a non-time measurement, such as the number of rows read from a query.
 
 
+[[which-meters-appear]]
+=== Which Meters Appear When
+
+Not every meter on this page is in the registry after a first run with the default configuration.
+Before concluding that a meter is missing, check whether it's turned off or hasn't recorded anything yet.
+
+The following meters are off by default, and appear only with the configuration listed:
+
+[cols="2,3"]
+|===
+|Meters |Required Configuration
+
+|`vaadin.ui.state.*`, `vaadin.session.state.nodes.max`, and `vaadin.session.uis.max`
+|`vaadin.observability.ui-state=true`.
+See <<#ui-state-size,UI State Size>>.
+
+|`vaadin.ui.state.size`
+|`vaadin.observability.ui-state=true` and a value for [propertyname]`vaadin.observability.ui-state-bytes-per-node`.
+See <<#nodes-not-bytes,Nodes, Not Bytes>>.
+
+|`vaadin.db.fetch.rows` and `vaadin.db.query`
+|`vaadin.observability.database=true`, with the Spring Boot starter.
+See <<#database-monitoring,Database Monitoring>>.
+
+|`vaadin.client.render.duration`
+|Flow's `requestTiming` deployment setting, which is on by default only outside production mode.
+
+|The `_bucket` series of a timer
+|Histogram buckets enabled for that timer.
+See <<integrations#percentiles,Percentiles and Histogram Buckets>>.
+|===
+
+A meter with tags gets its first series only when it records its first value, because the series is keyed by the tag values.
+Until then it's absent rather than zero.
+For example, `vaadin.navigation` appears after the first navigation, the `vaadin.data.*` meters after the first lazy load, `vaadin.errors` after the first error, and the client timers after the first report from a browser, which is sent every five seconds.
+`vaadin.resync` is the exception: all its types are registered at startup.
+
+None of the UI state gauges is tagged by route.
+They're aggregates across all UIs, so they tell you how much state the server holds, but not which view holds it.
+To find a view that keeps accumulating state, use `vaadin.ui.state.views.stale` and `vaadin.ui.state.retained.growing`, and read the <<insights#growing-view-state,`growing-view-state` insight>>, which names the view class and the field.
+
+
 === Session Metrics
 
 Controlled by `vaadin.observability.sessions`.

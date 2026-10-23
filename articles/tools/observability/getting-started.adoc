@@ -85,6 +85,12 @@ management.endpoints.web.exposure.include=prometheus
 
 The metrics are then available at `GET /actuator/prometheus`.
 
+.Using Spring Security?
+[IMPORTANT]
+In an application secured with Spring Security, the Vaadin security configuration also handles `/actuator/prometheus`, and redirects a request that isn't logged in to the login view.
+A scraper can't log in, so it collects the login page instead of the metrics.
+Give the Actuator endpoints a security filter chain of their own, as shown in <<integrations/prometheus#secure-the-endpoint,Secure the Endpoint>>.
+
 For traces, add a Micrometer tracing bridge -- for example OpenTelemetry or Zipkin -- as you would for any Micrometer-instrumented application.
 See the <<integrations#,Integrations>> page for vendor-specific setup.
 
@@ -216,6 +222,10 @@ Keep a reference to both registries -- for example in a static holder -- if you 
 
 == Troubleshooting
 
+`/actuator/prometheus` redirects to the login view::
+The Vaadin security configuration is handling the Actuator requests.
+Add a separate filter chain for them, as shown in <<integrations/prometheus#secure-the-endpoint,Secure the Endpoint>>.
+
 No `vaadin.*` meters appear at all::
 In development mode the kit validates your commercial license at startup.
 If validation fails, the application keeps running but the kit registers no instrumentation -- it logs a warning rather than failing the build or the deployment.
@@ -224,6 +234,15 @@ Check the application log; the <<insights#,insights endpoint>> also reports `ins
 `vaadin.errors` is missing::
 The counter is registered lazily, on the first error it counts.
 An application that hasn't failed yet publishes no `vaadin.errors` series -- absence means zero, not a broken setup.
+
+A meter from the Reference page is missing::
+Some meter groups are off by default, and some meters appear only after their first measurement.
+For example, the `vaadin.ui.state.*` gauges need `vaadin.observability.ui-state=true`.
+See <<reference#which-meters-appear,Which Meters Appear When>>.
+
+The insights endpoint returns an empty list::
+With `instrumentation: active`, an empty list means that no interaction or query has failed or taken longer than one second on the server since the application started.
+See <<insights#empty-payload,An Empty Payload>> for what qualifies and how to check that collection works.
 
 The names look different in the backend::
 Backends render Micrometer's dotted names in their own conventions, and Prometheus also renames the `.created` counters to `vaadin_sessions_total` and `vaadin_ui_total`.
