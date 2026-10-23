@@ -72,6 +72,35 @@ include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/event
 ====
 
 
+== Communicating Between Components in the Same UI
+
+Sometimes a component needs to notify other components that it has no reference to. For example, a search field in the main layout might need to tell the current view to filter its content. Since the [classname]`UI` is a component, too, you can use its event bus to pass events between components in the same browser window or tab, without coupling them to each other.
+
+Use [methodname]`ComponentUtil.fireEvent()` to fire an event on the `UI`, and [methodname]`ComponentUtil.addListener()` to listen to it. The event is a regular [classname]`ComponentEvent`, whose source is the component that fired it.
+
+.Firing a `SearchEvent` on the `UI` when the value of a search field changes
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/events/ui/GlobalSearchField.java[indent=0]
+----
+====
+
+The `UI` usually lives longer than the components listening to it. Add the listener when the component is attached, and remove it when the component is detached, so that the `UI` doesn't keep a reference to a component that's no longer shown. The [methodname]`whenAttached()` method does both: the [classname]`Registration` returned by [methodname]`ComponentUtil.addListener()` is removed when the component is detached. See <<basic#,Vaadin Component Basics>> for more about attach and detach.
+
+.Listening to `SearchEvent` on the `UI` while the view is attached
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/events/ui/OrdersView.java[indent=0]
+----
+====
+
+Events fired on the `UI` only reach components in the same browser window or tab. To reach all windows and tabs of the same user, use an event bus stored in the `VaadinSession`. When the components share state rather than react to events, such as which item is currently selected, a <<../ui-state/local-signals#,local signal>> that both components bind to is often simpler.
+
+
 == Firing Events from the Client
 
 You can connect a component event to a client-side DOM event by using the `@DomEvent` annotation on your event class. Vaadin will automatically fire the server-side event when the specified DOM event occurs in the browser.
