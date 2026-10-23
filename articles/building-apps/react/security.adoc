@@ -36,20 +36,27 @@ Authentication happens on the server, so you need a service that exposes the cur
 @BrowserCallable
 public class UserInfoService {
 
-    @PermitAll // <1>
+    private final SecurityContextHolderStrategy securityContextHolderStrategy;
+
+    UserInfoService(SecurityContextHolderStrategy securityContextHolderStrategy) { // <1>
+        this.securityContextHolderStrategy = securityContextHolderStrategy;
+    }
+
+    @PermitAll // <2>
     public @NonNull UserInfo getUserInfo() {
-        var auth = SecurityContextHolder.getContext().getAuthentication(); // <2>
+        var auth = securityContextHolderStrategy.getContext().getAuthentication(); // <3>
         var authorities = auth.getAuthorities()
             .stream()
             .map(GrantedAuthority::getAuthority)
             .toList();
-        return new UserInfo(auth.getName(), authorities); // <3>
+        return new UserInfo(auth.getName(), authorities); // <4>
     }
 }
 ----
-<1> Allows any authenticated user to call this method.
-<2> Reads the user from Spring Security.
-<3> Returns the user details to the client.
+<1> Vaadin provides the [interfacename]`SecurityContextHolderStrategy` of Spring Security as a bean, so you can inject it instead of calling the static [classname]`SecurityContextHolder`.
+<2> Allows any authenticated user to call this method.
+<3> Reads the user from Spring Security.
+<4> Returns the user details to the client.
 
 Vaadin has no built-in user-information type, so define your own. Add any extra fields you need, such as an email address or avatar URL:
 
