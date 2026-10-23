@@ -263,10 +263,12 @@ Most of what the dev loop can't do it reports honestly, by escalating to a resta
 
 [IMPORTANT]
 ====
-*Annotation processors don't run.* A source file recompiled by the dev loop loses every member and class a processor would have generated. A project using Lombok, MapStruct, or Dagger needs `mvn compile` rather than `apply`.
+*Annotation processors don't run.* With the default `javac` compiler, a source file recompiled by the dev loop loses every member and class a processor would have generated. A project using Lombok, MapStruct, or Dagger needs `mvn compile` rather than `apply` -- or the Maven compiler, below.
 
-*An edit that changes what a class promises its callers isn't supported.* Only the change-set is recompiled, so callers you didn't edit keep the bytecode they were compiled with. Rename or re-sign a method, or change a `static final` constant, and those callers are stale -- a `NoSuchMethodError` at runtime, or for an inlined constant no error at all and the old value -- while `apply` reports `Stable`. A restart doesn't fix it. Recompile with Maven after such an edit.
+*An edit that changes what a class promises its callers isn't supported.* With the default `javac` compiler, only the change-set is recompiled, so callers you didn't edit keep the bytecode they were compiled with. Rename or re-sign a method, or change a `static final` constant, and those callers are stale -- a `NoSuchMethodError` at runtime, or for an inlined constant no error at all and the old value -- while `apply` reports `Stable`. A restart doesn't fix it. Recompile with Maven after such an edit, or use the Maven compiler, below.
 ====
+
+`-Dvaadin.dev.compiler=maven` (see <<#configuration,Configuration>>) lifts both limitations: each apply then compiles through the project's own `maven-compiler-plugin` instead of in-process `javac`, so annotation processors run and callers nobody edited are recompiled along with everything else the build decides needs it. The cost is time, a Maven invocation per apply rather than tens of milliseconds, and that a build failure the project's own compile enforces -- `-Werror`, for instance -- now fails the apply too.
 
 Also worth knowing: JPA entity mappings never hot-reload, a structural change to a proxied Spring bean (including a Spring Data repository) always restarts, a class that only now carries a Spring stereotype (`@Component`, `@Service`, `@Repository`, `@Controller`, `@RestController`, `@ControllerAdvice`, `@RestControllerAdvice`, or `@Configuration`) or `@Entity` restarts too -- component scanning and the JPA metamodel are both fixed at startup, so a class the application never had gets no bean definition and no mapping -- and in the default dev-bundle mode any non-theme frontend edit restarts the application to rebuild the bundle, which takes tens of seconds.
 
@@ -306,6 +308,8 @@ The flags reach the application JVM alone, after the loop's own, so where the JV
 .vaadin/vaadin-dev shutdown
 VAADIN_DEV_DAEMON_OPTS="-Dvaadin.dev.jvmArgs=-Xmx2g|--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED" .vaadin/vaadin-dev start
 ----
+
+`-Dvaadin.dev.compiler=maven` switches the compiler an apply uses from the default `javac`, in-process, to the project's own `maven-compiler-plugin` -- see <<#limitations,Limitations>> for what that trades away and what it fixes. `status` names which compiler is active.
 
 
 == Troubleshooting
