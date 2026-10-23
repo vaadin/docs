@@ -217,20 +217,28 @@ UploadHandler.toTempFile((metadata, file) -> {
 
 [source,java]
 ----
+private UploadMetadata pendingMetadata;
 private File pendingFile;
 
 public MyView(DocumentService documentService) {
     // In the upload handler:
     Upload upload = new Upload(UploadHandler.toTempFile(
             (metadata, file) -> {
+                deletePendingFile(); // Replaces an earlier upload
+                pendingMetadata = metadata;
                 pendingFile = file;
                 preview.setSrc(file);
             }));
 
     // In the save button handler:
     save.addClickListener(event -> {
-        documentService.store(pendingFile);
-        deletePendingFile();
+        if (pendingFile != null) {
+            documentService.store(
+                    pendingMetadata.fileName(),
+                    pendingMetadata.contentType(),
+                    pendingFile);
+            deletePendingFile();
+        }
     });
 
     // Clean up if the user navigates away without saving:
@@ -241,6 +249,7 @@ private void deletePendingFile() {
     if (pendingFile != null) {
         pendingFile.delete();
         pendingFile = null;
+        pendingMetadata = null;
     }
 }
 ----
