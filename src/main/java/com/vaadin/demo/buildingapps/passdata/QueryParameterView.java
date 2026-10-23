@@ -8,7 +8,7 @@ import com.vaadin.flow.signals.Signal;
 
 // tag::snippet[]
 @Route("building-apps/pass-data/query-parameter")
-public class QueryParameterView extends VerticalLayout {
+class QueryParameterView extends VerticalLayout {
 
     private static final String QUERY_PARAM_FILTER = "filter";
 
