@@ -81,7 +81,7 @@ SharedMapSignal<String> order = new SharedMapSignal<>(String.class);
 order.put("status", "pending");
 
 Signal.runInTransaction(() -> {
-    SharedValueSignal<String> status = order.peek().get("status");
+    SharedValueSignal<String> status = order.get().get("status");
 
     // Transaction fails if current status is not "pending"
     status.verifyValue("pending");
@@ -264,11 +264,13 @@ Signal.runInTransaction(() -> {
     order.put("trackingNumber", tracking);
 });
 
-// Avoid: Separate updates that might leave inconsistent state
+// Avoid: Separate updates that others can observe one at a time
 order.put("status", "shipped");
-order.put("shippedAt", Instant.now().toString()); // What if this fails?
+order.put("shippedAt", Instant.now().toString());
 order.put("trackingNumber", tracking);
 ----
+
+Each separate update is committed on its own, so other users can see the order as shipped before it has a tracking number.
 
 
 === Use Verification for Conditional Updates
@@ -278,8 +280,8 @@ When updates depend on current state, use verification:
 [source,java]
 ----
 Signal.runInTransaction(() -> {
-    SharedValueSignal<String> status = order.peek().get("status");
-    SharedValueSignal<String> assignee = order.peek().get("assignee");
+    SharedValueSignal<String> status = order.get().get("status");
+    SharedValueSignal<String> assignee = order.get().get("assignee");
 
     // Ensure we're updating the expected state
     status.verifyValue("pending");
