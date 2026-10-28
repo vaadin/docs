@@ -153,6 +153,12 @@ Target `main` unless the change only applies to a released version, in which
 case target that version's branch (`v25.3`, …). Never target `latest`; it is a
 tag.
 
+Add the `target/v25.3` label to every pull request whose change also applies to
+Vaadin 25.3 — a fix, or a change to a feature 25.3 already has. A bot then
+cherry-picks the merged change to the `v25.3` branch, and labels the pull
+request `need to pick manually v25.3` when the cherry-pick does not apply
+cleanly. Leave the label off for features that are new in a later version.
+
 Write the commit subject and the pull request title as `<type>: <summary>`,
 starting with an imperative verb and under 72 characters. Use `docs` for
 documentation changes, and `feat`, `fix`, `chore` or `ci` for the publisher
