@@ -42,8 +42,8 @@ never target it.
 A change to `main` that also applies to the latest stable release, which is
 what the published documentation shows by default, gets that release's
 `target/…` label (`target/v25.3`), and is cherry-picked to its branch after it
-is merged — see `CONVENTIONS.md`. Changes are not backported to older
-releases by default. A cherry-pick that does not apply cleanly is labeled
+is merged — see `CONVENTIONS.md`. Do not add labels for older
+releases. A cherry-pick that does not apply cleanly is labeled
 `need to pick manually …` and has to be backported by hand.
 
 ## Checks on a Pull Request
