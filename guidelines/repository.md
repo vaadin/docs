@@ -39,10 +39,12 @@ versions have their own branches (`v24`, `v25.3`, …), and a fix that only
 applies to a released version is made there. `latest` is a tag, not a branch;
 never target it.
 
-A change to `main` that also applies to a released version gets that version's
+A change to `main` that also applies to the latest stable release, which is
+what the published documentation shows by default, gets that release's
 `target/…` label (`target/v25.3`), and is cherry-picked to its branch after it
-is merged — see `CONVENTIONS.md`. A cherry-pick that does not apply cleanly is
-labeled `need to pick manually …` and has to be backported by hand.
+is merged — see `CONVENTIONS.md`. Older releases are not backported to by
+default. A cherry-pick that does not apply cleanly is labeled
+`need to pick manually …` and has to be backported by hand.
 
 ## Checks on a Pull Request
 

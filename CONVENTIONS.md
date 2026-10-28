@@ -153,12 +153,14 @@ Target `main` unless the change only applies to a released version, in which
 case target that version's branch (`v25.3`, …). Never target `latest`; it is a
 tag.
 
-Add the `target/v<version>` label (for example `target/v25.3`) to every pull
-request whose change also applies to that maintained release — a fix, or a
-change to a feature the release already has. A bot then cherry-picks the merged
-change to the `v<version>` branch, and labels the pull request
+When a change also applies to the latest stable release — the version the
+published documentation shows by default — add that release's
+`target/v<version>` label to the pull request (for example `target/v25.3`). This
+covers fixes and changes to features the release already has; leave the label
+off for features that are new in a later version. A bot then cherry-picks the
+merged change to the `v<version>` branch, and labels the pull request
 `need to pick manually v<version>` when the cherry-pick does not apply cleanly.
-Leave the label off for features that are new in a later version.
+Do not add labels for older releases.
 
 Write the commit subject and the pull request title as `<type>: <summary>`,
 starting with an imperative verb and under 72 characters. Use `docs` for
