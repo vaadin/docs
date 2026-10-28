@@ -64,7 +64,7 @@ Cross-user updates only reach the browser immediately if <<{articles}/flow/advan
 
 An application that relied on that default has no `@Push` annotation anywhere, and migrating removes the thing that was compensating. The result is easy to miss in testing: everything still works for the user making a change, and other users see it only the next time they interact with the page. Add `@Push` before migrating, while Collaboration Kit is still there to make the two behave the same.
 
-To confirm which case you're in, look for the Collaboration Kit warning in the server log at startup, or set [methodname]`setAutomaticallyActivatePush(false)` and check that real-time updates still arrive.
+To confirm which case you're in, look for the Collaboration Kit warning in the server log after opening a collaborative view, or set [methodname]`setAutomaticallyActivatePush(false)` and check that real-time updates still arrive.
 
 
 === Migrate Incrementally
@@ -352,7 +352,7 @@ public static Registration trackPresence(Component owner,
 [methodname]`Signal.effect()` looks like the right tool, because it's already component-bound and already survives detach and re-attach. It can't work, in three separate ways:
 
 * An effect that reads the list with [methodname]`peek()` and inserts throws [classname]`MissingSignalUsageException` on creation, because it reads no signal.
-* An effect that reads with [methodname]`get()` and inserts depends on its own output, and is disposed with an infinite-loop error -- delivered to the uncaught exception handler rather than to the caller.
+* An effect that reads with [methodname]`get()` and inserts depends on its own output, and is disposed with an infinite-loop error -- delivered to the session error handler rather than to the caller.
 * Even a well-formed effect wouldn't re-add the user, because an effect doesn't re-run on re-attach when nothing has changed.
 
 [methodname]`whenAttached()` is the correct construction.
@@ -908,12 +908,12 @@ Collaboration Kit assigns each user a color index on first sight, from a registr
 
 Nothing equivalent ships with signals. Hashing the identifier, as <<#step-2-replace-userinfo,Step 2>> does, matches what Collaboration Kit itself falls back to, and it needs no coordination -- but two users in the same topic can collide.
 
-Allocating from the users actually present is better than either, and the transaction machinery makes it safe. Reading the list inside the transaction makes the whole insert conditional on that list not having changed, so two simultaneous joins can't claim the same index -- the loser is rejected and retries:
+Allocating from the users actually present is better than either, and the transaction machinery makes it safe. Reading the list inside the transaction makes the whole insert conditional on that list not having changed, so two simultaneous joins can't claim the same index -- the loser's transaction is rejected, and that user isn't added. Unlike [methodname]`update()`, a transaction isn't retried automatically: to retry, keep the [classname]`TransactionOperation` rather than only its return value, and run the transaction again if its result isn't successful:
 
 [source,java]
 ----
 static SharedValueSignal<Collaborator> join(
-        SharedListSignal<Collaborator> collaborators, String name) {
+        SharedListSignal<Collaborator> collaborators, User user) {
     return Signal.runInTransaction(() -> {
         Set<Integer> taken = collaborators.get().stream()
                 .map(SharedValueSignal::peek).filter(Objects::nonNull)
@@ -922,7 +922,8 @@ static SharedValueSignal<Collaborator> join(
         while (taken.contains(free)) {
             free++;
         }
-        return collaborators.insertLast(new Collaborator(name, free)).signal();
+        return collaborators.insertLast(new Collaborator(user.getId(),
+                user.getName(), user.getImageUrl(), free)).signal();
     }).returnValue();
 }
 ----
@@ -1001,7 +1002,7 @@ Tracked in https://github.com/vaadin/flow/issues/25866[flow#25866].
 
 The behavior of `ifEmpty()` and `ifNotEmpty()` is available, as <<#conditional-operations,Conditional Operations>> shows: read the list inside the transaction, or insert at `ListPosition.between(null, null)`. What's missing is narrower than it first appears, and in two directions.
 
-*Nothing is named for it.* [classname]`SharedMapSignal` has [methodname]`verifyHasKey()`, [methodname]`verifyKeyAbsent()`, and [methodname]`putIfAbsent()`. [classname]`SharedListSignal` has [methodname]`verifyPosition()` and [methodname]`verifyChild()`, both of which need an existing entry to point at. The `between(null, null)` idiom isn't documented as "only if empty" anywhere, and it sits one character away from `new ListPosition(null, null)`, which means the opposite -- no position constraint at all.
+*Nothing is named for it.* [classname]`SharedMapSignal` has [methodname]`verifyHasKey()`, [methodname]`verifyKeyAbsent()`, and [methodname]`putIfAbsent()`. [classname]`SharedListSignal` has [methodname]`verifyPosition()` and [methodname]`verifyChild()`, both of which need an existing entry to point at. The `between(null, null)` idiom isn't documented as "only if empty" anywhere, and it's easy to confuse with `new ListPosition(null, null)`, which means the opposite -- no position constraint at all, usable as a [methodname]`verifyPosition()` condition but not for an insert.
 
 *The read is stricter than the predicate.* A read inside a transaction registers a condition on the node's last update, not on the predicate you wrote. An item inserted and removed again elsewhere leaves the list empty but still rejects the transaction. On a busy list that shows up as spurious rejections the application has to retry, where `ifEmpty()` would have succeeded.
 
@@ -1101,7 +1102,7 @@ Use this to confirm the migration covers everything before removing the Collabor
 
 | Disconnect cleanup
 | Build it
-| Detach listeners, which Flow's unload beacon already triggers on tab close
+| A [methodname]`whenAttached()` cleanup, which Flow's unload beacon already triggers on tab close
 
 | Previous value in change events
 | Missing

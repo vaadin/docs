@@ -15,7 +15,9 @@ import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 import org.jspecify.annotations.NonNull;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Route("crud-editor-with-signals")
 public class CrudEditorExample extends VerticalLayout {
@@ -23,6 +25,8 @@ public class CrudEditorExample extends VerticalLayout {
     // tag::item-signal[]
     static private final Item NEW_ITEM = new Item();
     // end::item-signal[]
+
+    static private final AtomicLong NEXT_ID = new AtomicLong(100);
 
     public CrudEditorExample() {
         // tag::grid-setup[]
@@ -87,11 +91,15 @@ public class CrudEditorExample extends VerticalLayout {
                 itemBinder.writeBean(item);
                 item = saveItem(item);
 
+                // Show the new item in the grid, or refresh the updated one
+                if (creatingItem) {
+                    itemGrid.getListDataView().addItem(item);
+                } else {
+                    itemGrid.getListDataView().refreshItem(item);
+                }
+
                 // Update the selected item signal to use the saved item
                 selectedItemSignal.set(item);
-
-                // Refresh the data in the grid
-                itemGrid.getDataProvider().refreshAll();
 
                 // Show success notification
                 final String successMessage = creatingItem ? "Item added"
@@ -118,7 +126,8 @@ public class CrudEditorExample extends VerticalLayout {
     }
 
     static private List<Item> listItems() {
-        return List.of(new Item(1, "Laptop", "Tech"),
+        // A mutable list, so that new items can be added to the grid
+        return new ArrayList<>(List.of(new Item(1, "Laptop", "Tech"),
                 new Item(2, "Desk Chair", "Office"),
                 new Item(3, "Monitor", "Tech"), new Item(4, "Keyboard", "Tech"),
                 new Item(5, "Mouse Pad", "Office"),
@@ -128,13 +137,15 @@ public class CrudEditorExample extends VerticalLayout {
                 new Item(9, "Notebook", "Office"),
                 new Item(10, "Pen Set", "Office"),
                 new Item(11, "Cable Ties", "Tech"),
-                new Item(12, "Extension Cord", "Tech"));
+                new Item(12, "Extension Cord", "Tech")));
     }
 
     static private @NonNull Item saveItem(@NonNull Item item) {
         // Make the item change persistent, for example, using a database
         final Item savedItem = new Item();
-        savedItem.setId(item.getId());
+        // Assign an ID to a new item, like a database would do
+        savedItem.setId(
+                item.getId() == 0 ? NEXT_ID.getAndIncrement() : item.getId());
         savedItem.setProduct(item.getProduct());
         savedItem.setCategory(item.getCategory());
         return savedItem;
@@ -187,6 +198,18 @@ public class CrudEditorExample extends VerticalLayout {
 
         public void setCategory(@NonNull String category) {
             this.category = category;
+        }
+
+        // Items are identified by their ID, so that the saved copy of an item
+        // matches the item shown in the grid
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Item other && id == other.id;
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(id);
         }
 
         @Override

@@ -136,7 +136,7 @@ Signal operations return result objects that provide information about the opera
 
 === SignalOperation
 
-The base interface for all signal operations. Operations return a [classname]`CompletableFuture` that resolves when the operation completes:
+The base class for all signal operations. Operations return a [classname]`CompletableFuture` that resolves when the operation completes:
 
 [source,java]
 ----
@@ -208,7 +208,7 @@ TransactionOperation<Void> txOp = Signal.runInTransaction(() -> {
 // Check transaction status via the inherited result()
 CompletableFuture<SignalOperation.ResultOrError<Void>> result = txOp.result();
 
-if (result.isDone()) {
+if (result.isDone() && result.join().successful()) {
     System.out.println("Transaction committed successfully");
 }
 ----
@@ -229,23 +229,26 @@ String returnValue = txOp.returnValue(); // "Order confirmed"
 
 == Bypassing Transactions
 
-Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes. If you need to modify a signal from within an effect (and you're certain there's no risk of infinite loops), use [methodname]`runWithoutTransaction()`:
+Use [methodname]`Signal.runWithoutTransaction()` to run code outside the current transaction. Changes made inside it are applied immediately and aren't part of the transaction, so they're kept even if the transaction fails:
 
 [source,java]
 ----
-Signal.effect(component, () -> {
-    String value = sourceSignal.get();
+Signal.runInTransaction(() -> {
+    SharedValueSignal<String> status = order.get().get("status");
+    status.verifyValue("pending");
+    status.set("confirmed");
 
-    // WARNING: This might lead to infinite loops.
-    // Do this only if absolutely necessary.
+    // Applied immediately, even if the verification above fails.
+    // auditLog is a separate SharedListSignal<String>, which is allowed
+    // because it's not part of the transaction.
     Signal.runWithoutTransaction(() -> {
-        derivedSignal.set(transformValue(value));
+        auditLog.insertLast("Confirmation attempted by " + currentUser);
     });
 });
 ----
 
 [WARNING]
-Using `runWithoutTransaction()` bypasses safety checks. Only use it when you're certain the update won't cause an infinite loop.
+Changes made with `runWithoutTransaction()` don't get the atomicity and isolation guarantees of the surrounding transaction. Use it only for updates that must be applied regardless of whether the transaction succeeds.
 
 
 == Best Practices

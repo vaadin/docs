@@ -134,10 +134,10 @@ Signal<Double> total = Signal.computed(() -> {
     double subtotal = price.get() * quantity.get();
     return subtotal * (1 + taxRate.get());
 });
-// total.get() returns 220.0
+// total.peek() returns 220.0 (subject to floating-point rounding)
 
 quantity.set(3.0);
-// total.get() now returns 330.0
+// total.peek() now returns 330.0
 ----
 
 
@@ -153,11 +153,11 @@ Use [methodname]`Signal.cached()` to add caching to such a computation. A cached
 Signal<Integer> expensiveComputation = Signal.cached(() ->
     performExpensiveCalculation(inputSignal.get()));
 
-expensiveComputation.get(); // Computes the value
-expensiveComputation.get(); // Returns the cached value
+expensiveComputation.peek(); // Computes the value
+expensiveComputation.peek(); // Returns the cached value
 
 inputSignal.set(newInput);
-expensiveComputation.get(); // Recomputes because a dependency changed
+expensiveComputation.peek(); // Recomputes because a dependency changed
 ----
 
 Use plain [methodname]`Signal.computed()` for cheap derivations such as string concatenation or simple arithmetic, where the bookkeeping overhead of caching would outweigh the cost of recomputing the value. Use [methodname]`Signal.cached()` when the computation is expensive — for example, filtering or sorting a large list — and the value is read multiple times.
@@ -222,7 +222,7 @@ Signal.effect(component, () -> {
 
 === Executing Code without Tracking
 
-The [methodname]`Signal.untracked()` method executes a block of code without tracking any signal dependencies:
+The [methodname]`Signal.untracked()` method executes a block of code without tracking any signal dependencies and returns the value of the block:
 
 [source,java]
 ----
@@ -231,10 +231,8 @@ Signal.effect(component, () -> {
     String trackedValue = trackedSignal.get();
 
     // Everything inside untracked() is not tracked
-    Signal.untracked(() -> {
-        String untrackedValue = anotherSignal.get(); // Not tracked
-        processValue(untrackedValue);
-    });
+    String untrackedValue = Signal.untracked(() -> anotherSignal.get());
+    processValue(untrackedValue);
 });
 ----
 
@@ -254,6 +252,8 @@ Registration cleanup = Signal.unboundEffect(() -> {
 // Later, when the effect is no longer needed
 cleanup.remove();
 ----
+
+A standalone effect runs without holding the session lock, even when it's created while holding the lock. If the effect callback modifies components or other UI state, it must acquire the lock with [methodname]`UI.access()`.
 
 [WARNING]
 Standalone effects can lead to memory leaks through any instances referenced by the closure of the effect callback. Always store the [classname]`Registration` and call [methodname]`remove()` when the effect is no longer needed.
@@ -380,7 +380,7 @@ See <<building-ui#,Component Bindings>> for available binding methods.
 
 === Avoid Changing Signals in Effects
 
-Updating a signal in reaction to another signal might cause an infinite loop. Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes.
+Updating a signal in reaction to another signal might cause an infinite loop. If an effect changes a signal that it depends on, directly or through other effects, Flow detects the loop, deactivates the effect, and reports an [classname]`IllegalStateException` to the error handler.
 
 Use a computed signal when one signal's value depends on another:
 
@@ -392,7 +392,7 @@ Signal<String> derivedValue = Signal.computed(() -> {
 });
 ----
 
-If you must modify a signal from an effect and are certain there's no risk of infinite loops, use [methodname]`runWithoutTransaction()`:
+Modify a signal from an effect only if absolutely necessary, and only when you're certain there's no risk of infinite loops:
 
 [source,java]
 ----
@@ -401,9 +401,7 @@ Signal.effect(component, () -> {
 
     // WARNING: This might lead to infinite loops.
     // Do this only if absolutely necessary.
-    Signal.runWithoutTransaction(() -> {
-        otherSignal.set(value);
-    });
+    otherSignal.set(value);
 });
 ----
 

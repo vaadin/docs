@@ -13,6 +13,7 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ListSignal;
 import com.vaadin.flow.signals.local.ValueSignal;
@@ -64,7 +65,10 @@ public class RealtimeDashboard extends VerticalLayout {
 
         // Register with scheduler - service will call our callback
         // No need for UI.access() - signals handle thread safety
-        schedulerService.scheduleDashboardDataUpdate(this::onDataUpdate);
+        // Receive updates while the view is attached, and stop them when
+        // it's detached
+        whenAttached(ui -> schedulerService
+                .scheduleDashboardDataUpdate(this::onDataUpdate));
     }
     // end::constructor[]
 
@@ -138,6 +142,7 @@ public class RealtimeDashboard extends VerticalLayout {
             berlinTimelineSignal.get();
             londonTimelineSignal.get();
             newYorkTimelineSignal.get();
+            timelineCategoriesSignal.get();
             chart.drawChart();
         });
 
@@ -176,7 +181,7 @@ public class RealtimeDashboard extends VerticalLayout {
 
             // Effect: Update changeSignal when the main signal changes
             // This tracks the previous value to calculate percentage change
-            Signal.unboundEffect(() -> {
+            Signal.effect(this, () -> {
                 double current = signal.get().doubleValue();
                 double previous = changeSignal.peek().current();
                 changeSignal.set(new Change(previous, current));
@@ -273,13 +278,15 @@ public class RealtimeDashboard extends VerticalLayout {
         private final java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter
                 .ofPattern("HH:mm:ss");
 
-        void scheduleDashboardDataUpdate(
+        Registration scheduleDashboardDataUpdate(
                 java.util.function.Consumer<DashboardData> callback) {
             // Schedule periodic updates every 2 seconds
-            scheduler.scheduleAtFixedRate(() -> {
-                DashboardData data = generateData();
-                callback.accept(data);
-            }, 0, 2, java.util.concurrent.TimeUnit.SECONDS);
+            java.util.concurrent.ScheduledFuture<?> task = scheduler
+                    .scheduleAtFixedRate(() -> {
+                        DashboardData data = generateData();
+                        callback.accept(data);
+                    }, 0, 2, java.util.concurrent.TimeUnit.SECONDS);
+            return () -> task.cancel(false);
         }
 
         private DashboardData generateData() {

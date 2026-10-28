@@ -27,7 +27,7 @@ All element bindings follow consistent rules:
 
 - When a feature is bound to a signal, its value is kept synchronized with the signal value while the element is in the attached state
 - When the element is detached, signal value changes have no effect
-- Passing `null` as the signal unbinds the existing binding
+- The signal must not be `null`: passing `null` throws a [classname]`NullPointerException` and doesn't remove an existing binding
 - While a signal is bound, any attempt to set the value manually (other than through the signal) throws [classname]`BindingActiveException`
 - Attempting to bind a new signal while one is already bound throws [classname]`BindingActiveException`
 
@@ -57,11 +57,6 @@ counter.set(5); // updating the signal value
 span.getElement().getText(); // returns "Clicked 0 times"
 add(span); // re-attaching the element to the UI
 span.getElement().getText(); // returns "Clicked 5 times"
-
-span.getElement().bindText(null); // unbinds the existing binding
-span.getElement().getText(); // returns "Clicked 5 times"
-span.getElement().setText("");
-span.getElement().getText(); // returns ""
 ----
 
 
@@ -162,7 +157,7 @@ span.getElement().addPropertyChangeListener("hidden", "change", event -> {
     Notification.show("'hidden' property changed to: " + event.getValue());
 });
 
-// After a property change event from the client, signal.get() returns the updated value
+// After a property change event from the client, hidden.peek() returns the updated value
 ----
 
 
@@ -224,7 +219,7 @@ foo.set(true);
 // DOM has "<span class='bar foo'>"
 
 span.getElement().getClassList().clear();
-// DOM has "<span class>". Binding is also removed.
+// Throws BindingActiveException because bindings are active
 ----
 
 
@@ -269,7 +264,7 @@ background.set(""); // same with null
 // DOM has "<span style='color: red;'>"
 
 span.getElement().getStyle().clear();
-// DOM has "<span style>". Binding is also removed.
+// Throws BindingActiveException because bindings are active
 ----
 
 
@@ -283,7 +278,7 @@ Theme names are per-component style variants. They are not how an application sw
 ----
 ValueSignal<Boolean> smallVariant = new ValueSignal<>(false);
 
-component.getThemeList().bind("small", smallVariant);
+component.getElement().getThemeList().bind("small", smallVariant);
 // Theme "small" is applied when smallVariant is true
 
 smallVariant.set(true);
@@ -300,7 +295,7 @@ Use the group binding variant to bind an entire list of theme names to a signal:
 ----
 ValueSignal<List<String>> themes = new ValueSignal<>(List.of("compact", "row-stripes"));
 
-component.getThemeList().bind(themes);
+component.getElement().getThemeList().bind(themes);
 // Component has themes "compact" and "row-stripes"
 
 themes.set(List.of("no-border"));
@@ -374,16 +369,19 @@ The [classname]`BindingContext` provides:
 == HTML Content Binding
 
 .`Html#bindHtmlContent(Signal<String> signal)`
+
+The signal value is the outer HTML of the component. It must have exactly one root element, and the root tag must stay the same as the root tag of the component:
+
 [source,java]
 ----
-ValueSignal<String> htmlContent = new ValueSignal<>("<strong>Bold text</strong>");
+ValueSignal<String> htmlContent = new ValueSignal<>("<span><strong>Bold text</strong></span>");
 
 Html html = new Html("<span></span>");
 html.bindHtmlContent(htmlContent);
-// HTML content is now "<strong>Bold text</strong>"
+// Inner HTML is now "<strong>Bold text</strong>"
 
-htmlContent.set("<em>Italic text</em>");
-// HTML content is now "<em>Italic text</em>"
+htmlContent.set("<span><em>Italic text</em></span>");
+// Inner HTML is now "<em>Italic text</em>"
 ----
 
 [WARNING]
@@ -483,8 +481,4 @@ add(component);
 
 component.getTextContent(); // returns "Signal value: 0.0"
 component.setTextContent(""); // throws BindingActiveException
-
-component.bindTextContent(null); // unbinds the existing binding
-component.setTextContent("");
-component.getTextContent(); // returns ""
 ----
