@@ -46,7 +46,7 @@ labeled `need to pick manually …` and has to be backported by hand.
 
 ## Checks on a Pull Request
 
-Every pull request runs these workflows. Run the local equivalent before opening
+Every pull request runs these workflows, except Format Check, which only runs for pull requests to `main`. Run the local equivalent before opening
 one.
 
 | Workflow            | What it checks                                                                 | Run locally                                   |
