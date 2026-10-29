@@ -571,7 +571,8 @@ To add impersonation to a Vaadin application, add Spring Security's [classname]`
 @Bean
 SecurityFilterChain securityFilterChain(HttpSecurity http,
         UserDetailsService userDetailsService,
-        SecurityContextHolderStrategy strategy) throws Exception {
+        SecurityContextHolderStrategy strategy,
+        ApplicationEventPublisher eventPublisher) throws Exception {
     var matchers = PathPatternRequestMatcher.withDefaults();
 
     var switchUserFilter = new SwitchUserFilter();
@@ -582,6 +583,8 @@ SecurityFilterChain securityFilterChain(HttpSecurity http,
     switchUserFilter.setExitUserMatcher(
             matchers.matcher(HttpMethod.GET, "/impersonate/exit"));
     switchUserFilter.setTargetUrl("/");
+    switchUserFilter.setApplicationEventPublisher(eventPublisher);
+    switchUserFilter.afterPropertiesSet();
     http.addFilterAfter(switchUserFilter, AuthorizationFilter.class);
 
     // Authorize impersonation for admin/impersonated admin
@@ -598,7 +601,7 @@ SecurityFilterChain securityFilterChain(HttpSecurity http,
 }
 ----
 
-The filter is added after the [classname]`AuthorizationFilter`, so that the authorization rules are checked before a user is switched. Don't declare the filter as a bean of its own: Spring Boot would then also register it as a servlet filter outside the security filter chain.
+The filter is added after the [classname]`AuthorizationFilter`, so that the authorization rules are checked before a user is switched. Don't declare the filter as a bean of its own: Spring Boot would then also register it as a servlet filter outside the security filter chain. Since the filter isn't a bean, call [methodname]`afterPropertiesSet()` yourself -- it creates the success and failure handlers -- and pass it the [interfacename]`ApplicationEventPublisher`, so that it publishes an [classname]`AuthenticationSwitchUserEvent` for your audit log whenever a user is switched.
 
 This allows users with the `ADMIN` role or when impersonating admin to call the impersonate endpoint.
 
