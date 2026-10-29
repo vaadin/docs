@@ -88,7 +88,6 @@ Having a log-in view is one of the basic requirements of many authentication and
 ----
 @Route("login")
 @PageTitle("Login")
-@AnonymousAllowed
 public class LoginView extends VerticalLayout implements BeforeEnterObserver,
         ComponentEventListener<AbstractLogin.LoginEvent> {
 
@@ -131,6 +130,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver,
 }
 ----
 
+The log-in view doesn't need an access annotation: [classname]`NavigationAccessControl` always allows navigation to the log-in view set in <<#adding-vaadinserviceinitlistener,Adding VaadinServiceInitListener>>.
+
 In this example, Vaadin's Login Form component is used for the sake of brevity. However, you could instead implement a more verbose log-in view.
 
 
@@ -141,6 +142,7 @@ Typically, you'd let the user log out by using a log-out button. The following e
 .[filename]`MainLayout.java`
 [source,java]
 ----
+@AnonymousAllowed // <1>
 public class MainLayout extends AppLayout {
 
     public MainLayout() {
@@ -161,13 +163,14 @@ public class MainLayout extends AppLayout {
     }
 }
 ----
+<1> The access annotations of a layout are checked in addition to those of the views inside it. This layout hosts both public and protected views, so it allows anonymous access.
 
 
 == Adding `VaadinServiceInitListener`
 
 To restrict access to views, a [classname]`VaadinServiceInitListener` must be registered for the [classname]`VaadinService` to initialize and enable the [classname]`NavigationAccessControl` for all UIs:
 
-.[filename]`NavigationControlAccessCheckerInitializer.java`
+.[filename]`NavigationAccessCheckerInitializer.java`
 [source,java]
 ----
 import com.vaadin.flow.server.ServiceInitEvent;
@@ -179,7 +182,7 @@ public class NavigationAccessCheckerInitializer implements VaadinServiceInitList
 
     private NavigationAccessControl accessControl;
 
-    public NavigationControlAccessCheckerInitializer() {
+    public NavigationAccessCheckerInitializer() {
         accessControl = new NavigationAccessControl(); // <1>
         accessControl.setLoginView(LoginView.class); // <2>
     }
@@ -206,13 +209,13 @@ This class still needs to be loaded, so you should follow the instructions in th
 
 == Enable Loading of VaadinServiceInitListener
 
-To enable the Java SPI loading mechanism to load the [classname]`NavigationControlAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
+To enable the Java SPI loading mechanism to load the [classname]`NavigationAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
 
 First, under the `resources/META-INF/services` directory, create a file named exactly `com.vaadin.flow.server.VaadinServiceInitListener`.
 
-Next, put the fully qualified name of the [classname]`NavigationControlAccessCheckerInitializer` into this newly created file. For example, if the [classname]`NavigationControlAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file, `org.vaadin.example.security.NavigationControlAccessCheckerInitializer`.
+Next, put the fully qualified name of the [classname]`NavigationAccessCheckerInitializer` into this newly created file. For example, if the [classname]`NavigationAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file, `org.vaadin.example.security.NavigationAccessCheckerInitializer`.
 
-This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`NavigationControlAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
+This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`NavigationAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
 
 
 == Access Annotations
@@ -232,7 +235,7 @@ Below are some usage examples:
 .Allow All Users to Navigate to View
 [source,java]
 ----
-@Route(value = "", layout = MainView.class)
+@Route(value = "", layout = MainLayout.class)
 @PageTitle("Public View")
 @AnonymousAllowed
 public class PublicView extends VerticalLayout {
@@ -243,7 +246,7 @@ public class PublicView extends VerticalLayout {
 .Allow Only Authenticated Users to Navigate to View
 [source,java]
 ----
-@Route(value = "private", layout = MainView.class)
+@Route(value = "private", layout = MainLayout.class)
 @PageTitle("Private View")
 @PermitAll
 public class PrivateView extends VerticalLayout {
@@ -254,7 +257,7 @@ public class PrivateView extends VerticalLayout {
 .Allow Only Users with `ADMIN` Role to Navigate to View
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
 @RolesAllowed("ROLE_ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
@@ -280,14 +283,14 @@ public abstract class AbstractAdminView extends VerticalLayout {
     // ...
 }
 
-@Route(value = "user-listing", layout = MainView.class)
+@Route(value = "user-listing", layout = MainLayout.class)
 @PageTitle("User Listing")
 public class UserListingView extends AbstractAdminView {
     // ...
 }
 ----
 
-Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. By design, the annotations aren't read from parent layouts or parent views. This would make it unnecessarily complex to determine which security level should be applied. If multiple annotations are specified on a single view class, the following rules are applied:
+Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. Security annotations on parent layouts are also checked: if a parent layout lacks an access annotation, access to the views within it is denied. Both the layout and the view must grant access for navigation to succeed. If multiple annotations are specified on a single view class, the following rules are applied:
 
 - `DenyAll` overrides other annotations;
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`; and
