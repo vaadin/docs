@@ -26,7 +26,7 @@ To enable the mechanism in a Vaadin Flow Spring Boot application without any sec
 - Spring Security dependencies;
 - Log-out capability;
 - Security configuration class that uses [classname]`VaadinSecurityConfigurer`; and
-- One of these annotations on each view class: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`.
+- One of these annotations on each view class and on each layout class: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`. The log-in view is the only exception.
 
 A complete example project, including the source code from this document, is available at https://github.com/vaadin/flow-crm-tutorial[`github.com/vaadin/flow-crm-tutorial`].
 
@@ -111,6 +111,7 @@ To initiate logging out of a web application, you would typically provide a log-
 .[filename]`MainLayout.java`
 [source,java]
 ----
+@AnonymousAllowed // <1>
 public class MainLayout extends AppLayout {
 
     private final transient AuthenticationContext authContext;
@@ -136,6 +137,7 @@ public class MainLayout extends AppLayout {
     }
 }
 ----
+<1> A layout needs an access annotation of its own, as described in <<annotation-inheritance,Annotation Inheritance & Overrides>>. This layout hosts both public and protected views, so it allows anonymous access. Its header only shows the log-out button to authenticated users.
 
 The same component also covers programmatic access checks elsewhere in the application, such as deciding whether to render a navigation item or to enable an action. Roles are given without the role prefix, which [classname]`AuthenticationContext` adds when comparing against the granted authorities (see <<role-prefix, Roles & the Role Prefix>>). An application migrating from a custom security mechanism therefore doesn't need a security utility class of its own:
 
@@ -294,7 +296,7 @@ Below is an example using [annotationname]`@AnonymousAllowed` to enable all user
 
 [source,java]
 ----
-@Route(value = "", layout = MainView.class)
+@Route(value = "", layout = MainLayout.class)
 @PageTitle("Public View")
 @AnonymousAllowed
 public class PublicView extends VerticalLayout {
@@ -306,7 +308,7 @@ This next example is using [annotationname]`@PermitAll` to allow only authentica
 
 [source,java]
 ----
-@Route(value = "private", layout = MainView.class)
+@Route(value = "private", layout = MainLayout.class)
 @PageTitle("Private View")
 @PermitAll
 public class PrivateView extends VerticalLayout {
@@ -318,7 +320,7 @@ This example is using [annotationname]`@RolesAllowed` to enable only the users w
 
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
 @RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
@@ -358,6 +360,7 @@ static GrantedAuthorityDefaults grantedAuthorityDefaults() {
 ----
 
 
+[[annotation-inheritance]]
 === Annotation Inheritance & Overrides
 
 As shown in the example here, the security annotations are inherited from the closest parent class that has them. Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes.
@@ -369,7 +372,7 @@ public abstract class AbstractAdminView extends VerticalLayout {
     // ...
 }
 
-@Route(value = "user-listing", layout = MainView.class)
+@Route(value = "user-listing", layout = MainLayout.class)
 @PageTitle("User Listing")
 public class UserListingView extends AbstractAdminView {
     // ...
@@ -428,9 +431,7 @@ public class MyView extends VerticalLayout {
 
 If the user is already authenticated and tries to navigate to a view for which they don't have permission, an error message is displayed. The message depends on the application mode.
 
-In development mode, Vaadin shows the [classname]`RouteAccessDeniedError` view, which shows an _Access Denied_ message with a list of available routes. In production mode, Vaadin shows the [classname]`RouteAccessDeniedError` view, which shows by default a message that reads, _Could Not Navigate to 'RequestedRouteName'_. As a security precaution, the message won't say whether the navigation target exists.
-
-The [classname]`RouteAccessDeniedError` is not by default a view, but a reroute to the [classname]`RouteNotFoundError` view for better backwards compatibility.
+The default error handler for denied access, [classname]`RouteAccessDeniedError`, doesn't render anything itself. It reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. As a security precaution, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows by default a message that reads, _Could not navigate to 'RequestedRouteName'_.
 
 
 == Custom Error Messages for Unauthorized Views
@@ -445,6 +446,7 @@ The following is one example of this approach, using a custom error by overridin
 
 [source,java]
 ----
+@PermitAll // <1>
 public class CustomAccessDeniedError extends RouteAccessDeniedError {
     @Override
     public int setErrorParameter(BeforeEnterEvent event,
@@ -454,6 +456,7 @@ public class CustomAccessDeniedError extends RouteAccessDeniedError {
     }
 }
 ----
+<1> Overrides the [annotationname]`@AnonymousAllowed` annotation that [classname]`RouteAccessDeniedError` carries, for the reason explained below.
 
 This next example provides a custom error by implementing an interface:
 
@@ -480,7 +483,7 @@ If you want to reroute to a different error type, you would do something like th
 
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
 @RolesAllowed("ADMIN")
 @AccessDeniedErrorRouter(rerouteToError = NotFoundException.class)
@@ -489,7 +492,7 @@ public class AdminView extends VerticalLayout {
 }
 ----
 
-[classname]`AccessDeniedErrorRouter` annotation redirects by default to [classname]`AccessDeniedException`, if not changed. Annotation is to be used together with [annotationname]`@Route`, or if present, together with access annotation: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`.
+By default, the [annotationname]`@AccessDeniedErrorRouter` annotation reroutes to the error view for [classname]`AccessDeniedException`. The exception class given in `rerouteToError` needs a public no-argument constructor. The annotation is to be used together with [annotationname]`@Route`, or if present, together with access annotation: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`.
 
 
 == Navigation Access Control & Spring's URL-Pattern-Based HTTP Security
@@ -533,7 +536,7 @@ Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security a
 
 == Testing Access Control
 
-Browserless tests support Spring Security, so you can test view access control without starting a browser or a server. Annotate a test with Spring Security's [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser` to navigate as a user with given roles, or as an anonymous user, and assert which view is shown. See <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>> for details.
+Browserless tests support Spring Security, so you can test view access control without starting a browser or a server. Annotate a test with Spring Security's [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser` to navigate as a user with given roles, or as an anonymous user, and assert which view is shown. See <<{articles}/flow/testing/browserless/spring-security#,Spring Security Integration>> for the reference, and <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>> for a guide with examples.
 
 To test services that are protected with Spring method security, see <<{articles}/building-apps/security/protect-services#testing-method-security,Testing Method Security>>.
 
@@ -611,23 +614,27 @@ The filter is added after the [classname]`AuthorizationFilter`, so that the auth
 
 This allows users with the `ADMIN` role or when impersonating admin to call the impersonate endpoint.
 
+.GET Requests Aren't Protected Against CSRF
+[WARNING]
+Spring Security's CSRF protection only covers requests that change state, such as `POST` requests, so the `GET` endpoints in this example aren't protected by it. A link or an image on another site can make the browser of a logged-in administrator call them, and switch to another user or end the impersonation. If that's a concern for your application, map the endpoints to `POST` instead, and submit them from a form that includes Spring Security's CSRF token.
+
 To impersonate a user, a call to the `impersonate` URL needs to be done.
 
 [source,java]
 ----
 Button impersonate = new Button("Impersonate user", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate?username=user"))
+  getUI().ifPresent(ui -> ui.getPage().setLocation("impersonate?username=user"))
 );
 ----
 
-This has the admin impersonate the `user` account without having to know their password.
+This has the admin impersonate the `user` account without having to know their password. The URL is relative: Vaadin sets the base URL of the page to the root of the application, so the URL also works when the application isn't deployed at the root context path.
 
 To exit impersonation, call the exit URL like this:
 
 [source,java]
 ----
 Button exitImpersonation = new Button("Exit impersonation", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate/exit"))
+  getUI().ifPresent(ui -> ui.getPage().setLocation("impersonate/exit"))
 );
 ----
 
