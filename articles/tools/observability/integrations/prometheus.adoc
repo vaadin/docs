@@ -50,6 +50,61 @@ Setting `spring.application.name` tags every meter with a consistent service nam
 Start your application, exercise a few views, then open `http://localhost:8080/actuator/prometheus` and confirm the Vaadin meters appear -- for example `vaadin_sessions_active` or `vaadin_request_duration_seconds_count`.
 
 
+[[secure-the-endpoint]]
+== Secure the Endpoint
+
+Exposing the endpoint is necessary, but in an application that uses Spring Security it isn't sufficient.
+The Vaadin security configuration handles every request that no other filter chain claims, including `/actuator/prometheus`, and answers an unauthenticated one by redirecting it to the login view.
+You can see this with `curl`:
+
+[source,terminal]
+----
+curl -i http://localhost:8080/actuator/prometheus
+----
+
+A `302` response with a `Location` header pointing at the login view means the scrape never reaches the endpoint.
+Prometheus follows the redirect, receives the login page instead of metrics, and fails to parse it.
+No Vaadin series appear, and the only trace of the problem is the scrape error on the [guilabel]*Targets* page of Prometheus.
+
+A scraper can't fill in a login form, so give the Actuator endpoints a security filter chain of their own, with HTTP Basic authentication and no session, ordered ahead of the Vaadin one:
+
+.`ActuatorSecurityConfig.java`
+[source,java]
+----
+@Configuration
+class ActuatorSecurityConfig {
+
+    @Bean
+    @Order(1) // <1>
+    SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http.securityMatcher(EndpointRequest.toAnyEndpoint()) // <2>
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(EndpointRequest.to("health"))
+                        .permitAll() // <3>
+                        .anyRequest().hasRole("METRICS")) // <4>
+                .httpBasic(Customizer.withDefaults()) // <5>
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)); // <6>
+        return http.build();
+    }
+}
+----
+<1> Spring Security uses the first filter chain that matches a request. Leave the Vaadin configuration without an `@Order`, so that this chain comes first.
+<2> Applies this chain to the Actuator endpoints only, including the `vaadin` insights endpoint. In Spring Boot 4, the [classname]`EndpointRequest` class is in the [packagename]`org.springframework.boot.security.autoconfigure.actuate.web.servlet` package.
+<3> Keeps the health endpoint open for load balancers and container probes. Remove this line if nothing needs to reach it anonymously.
+<4> Requires an authenticated user with the `METRICS` role. Create a dedicated account for the scraper in your user store, rather than reusing a person's.
+<5> Answers an unauthenticated request with `401` and a `WWW-Authenticate` header, instead of a redirect to the login view.
+<6> Creates no HTTP session for a scrape. Without this, every scrape would leave a session behind on the server.
+
+Then give Prometheus the scraper's credentials, as shown in the next section.
+Check the chain with `curl -u USER:PASSWORD http://localhost:8080/actuator/prometheus`, which should now return the metrics, while the same request without `-u` returns `401`.
+
+If Prometheus scrapes from inside a private network, you can also move the Actuator endpoints to a management port that users can't reach, and permit all requests there instead of authenticating them.
+See <<{articles}/building-apps/production/logs-and-metrics#expose-metrics,Collect Logs & Metrics>> for that setup.
+
+
 == Scrape the Endpoint
 
 Configure Prometheus to scrape the Actuator endpoint.
@@ -64,9 +119,15 @@ global:
 scrape_configs:
   - job_name: 'vaadin'
     metrics_path: '/actuator/prometheus'
+    basic_auth: # Only when the endpoint is secured.
+      username: 'prometheus'
+      password_file: '/PATH/TO/password.txt'
     static_configs:
       - targets: ['localhost:8080']
 ----
+
+Leave out `basic_auth` if the endpoint isn't behind authentication, for example on an internal management port.
+Otherwise, use the credentials of the scraper account from <<#secure-the-endpoint,Secure the Endpoint>>.
 
 https://prometheus.io/download/[Download Prometheus, role="button secondary water"]
 
