@@ -573,7 +573,7 @@ An insecure solution -- which is basically a security breach -- would be to ask 
 
 By using impersonation, the system knows who has really logged in. Therefore, it can track an impersonator's actions for an audit log, if there is one in place.
 
-To add impersonation to a Vaadin application, add Spring Security's [classname]`SwitchUserFilter` to the security filter chain, and secure the impersonation endpoints with the appropriate request matchers:
+To add impersonation to a Vaadin application, add Spring Security's [classname]`SwitchUserFilter` to the security filter chain, and secure the impersonation endpoints with the appropriate request matchers. By default, the filter switches users on `POST` requests to `/login/impersonate`, and ends the impersonation on `POST` requests to `/logout/impersonate`:
 
 [source,java]
 ----
@@ -582,15 +582,9 @@ SecurityFilterChain securityFilterChain(HttpSecurity http,
         UserDetailsService userDetailsService,
         SecurityContextHolderStrategy strategy,
         ApplicationEventPublisher eventPublisher) throws Exception {
-    var matchers = PathPatternRequestMatcher.withDefaults();
-
     var switchUserFilter = new SwitchUserFilter();
     switchUserFilter.setSecurityContextHolderStrategy(strategy);
     switchUserFilter.setUserDetailsService(userDetailsService);
-    switchUserFilter.setSwitchUserMatcher(
-            matchers.matcher(HttpMethod.GET, "/impersonate"));
-    switchUserFilter.setExitUserMatcher(
-            matchers.matcher(HttpMethod.GET, "/impersonate/exit"));
     switchUserFilter.setTargetUrl("/");
     switchUserFilter.setApplicationEventPublisher(eventPublisher);
     switchUserFilter.afterPropertiesSet();
@@ -598,8 +592,8 @@ SecurityFilterChain securityFilterChain(HttpSecurity http,
 
     // Authorize impersonation for admin/impersonated admin
     http.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/impersonate").hasAnyRole("ADMIN", "PREVIOUS_ADMINISTRATOR")
-            .requestMatchers("/impersonate/exit").hasRole("PREVIOUS_ADMINISTRATOR"));
+            .requestMatchers("/login/impersonate").hasAnyRole("ADMIN", "PREVIOUS_ADMINISTRATOR")
+            .requestMatchers("/logout/impersonate").hasRole("PREVIOUS_ADMINISTRATOR"));
 
     // Configure Vaadin's security using VaadinSecurityConfigurer
     http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
@@ -614,28 +608,50 @@ The filter is added after the [classname]`AuthorizationFilter`, so that the auth
 
 This allows users with the `ADMIN` role or when impersonating admin to call the impersonate endpoint.
 
-.GET Requests Aren't Protected Against CSRF
-[WARNING]
-Spring Security's CSRF protection only covers requests that change state, such as `POST` requests, so the `GET` endpoints in this example aren't protected by it. A link or an image on another site can make the browser of a logged-in administrator call them, and switch to another user or end the impersonation. If that's a concern for your application, map the endpoints to `POST` instead, and submit them from a form that includes Spring Security's CSRF token.
-
-To impersonate a user, a call to the `impersonate` URL needs to be done.
+The impersonation endpoints are protected by Spring Security's CSRF protection, like any other `POST` request outside of Vaadin's internal requests. To call them from a view, submit a form that includes Spring Security's CSRF token. Vaadin adds the token and the name of its request parameter to the page as `_csrf` and `_csrf_parameter` meta tags, so the form can read them from there:
 
 [source,java]
 ----
-Button impersonate = new Button("Impersonate user", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("impersonate?username=user"))
-);
+private void postToSecurityEndpoint(String url, String username) {
+    UI.getCurrentOrThrow().getPage().executeJs("""
+            const meta = name =>
+                document.querySelector(`meta[name="${name}"]`).content;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = $0;
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.append(input);
+            };
+            addField(meta('_csrf_parameter'), meta('_csrf'));
+            if ($1) {
+                addField('username', $1);
+            }
+            document.body.append(form);
+            form.submit();
+            """, url, username);
+}
+----
+
+To impersonate a user, submit the user name to the impersonate endpoint:
+
+[source,java]
+----
+Button impersonate = new Button("Impersonate user",
+        e -> postToSecurityEndpoint("login/impersonate", "user"));
 ----
 
 This has the admin impersonate the `user` account without having to know their password. The URL is relative: Vaadin sets the base URL of the page to the root of the application, so the URL also works when the application isn't deployed at the root context path.
 
-To exit impersonation, call the exit URL like this:
+To exit impersonation, submit to the exit endpoint:
 
 [source,java]
 ----
-Button exitImpersonation = new Button("Exit impersonation", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("impersonate/exit"))
-);
+Button exitImpersonation = new Button("Exit impersonation",
+        e -> postToSecurityEndpoint("logout/impersonate", null));
 ----
 
 
