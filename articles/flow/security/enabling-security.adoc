@@ -608,14 +608,14 @@ The filter is added after the [classname]`AuthorizationFilter`, so that the auth
 
 This allows users with the `ADMIN` role or when impersonating admin to call the impersonate endpoint.
 
-The impersonation endpoints are protected by Spring Security's CSRF protection, like any other `POST` request outside of Vaadin's internal requests. To call them from a view, submit a form that includes Spring Security's CSRF token. Vaadin adds the token and the name of its request parameter to the page as `_csrf` and `_csrf_parameter` meta tags, so the form can read them from there:
+The impersonation endpoints are protected by Spring Security's CSRF protection, like any other `POST` request outside of Vaadin's internal requests. To call them from a view, submit a form that includes Spring Security's CSRF token. Vaadin adds the token and the name of its request parameter to the page as `_csrf` and `_csrf_parameter` meta tags, so the form can read them from there. The meta tags are only present when CSRF protection is enabled, so the form skips the token otherwise:
 
 [source,java]
 ----
 private void postToSecurityEndpoint(String url, String username) {
     UI.getCurrentOrThrow().getPage().executeJs("""
             const meta = name =>
-                document.querySelector(`meta[name="${name}"]`).content;
+                document.querySelector(`meta[name="${name}"]`)?.content;
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = $0;
@@ -626,7 +626,10 @@ private void postToSecurityEndpoint(String url, String username) {
                 input.value = value;
                 form.append(input);
             };
-            addField(meta('_csrf_parameter'), meta('_csrf'));
+            const csrfParameter = meta('_csrf_parameter');
+            if (csrfParameter) {
+                addField(csrfParameter, meta('_csrf'));
+            }
             if ($1) {
                 addField('username', $1);
             }
