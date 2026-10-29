@@ -90,73 +90,9 @@ To enable Spring Security, certain dependencies should be added to the project. 
 ----
 
 
-== Log-Out Capability
-
-To initiate logging out of a web applications, you would typically provide a log-out button. Here is a basic implementation of a log-out button shown on the header of the main layout:
-
-.[filename]`MainLayout.java`
-[source,java]
-----
-public class MainLayout extends AppLayout {
-
-    private SecurityService securityService;
-
-    public MainLayout(@Autowired SecurityService securityService) {
-        this.securityService = securityService;
-
-        H1 logo = new H1("Vaadin CRM");
-        logo.addClassName("logo");
-        HorizontalLayout header;
-        if (securityService.getAuthenticatedUser() != null) {
-            Button logout = new Button("Logout", click ->
-                    securityService.logout());
-            header = new HorizontalLayout(logo, logout);
-        } else {
-            header = new HorizontalLayout(logo);
-        }
-
-        // Other page components omitted.
-
-        addToNavbar(header);
-    }
-}
-----
-
-The method of getting the authenticated user and logging them out may vary from one application to another. Here's a basic example of this with the Spring Security API:
-
-.[filename]`SecurityService.java`
-[source,java]
-----
-@Component
-public class SecurityService {
-
-    private static final String LOGOUT_SUCCESS_URL = "/";
-
-    public UserDetails getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
-        if (authentication != null
-                && authentication.getPrincipal() instanceof UserDetails userDetails) {
-            return userDetails;
-        }
-        // Anonymous or no authentication.
-        return null;
-    }
-
-    public void logout() {
-        UI.getCurrentOrThrow().getPage().setLocation(LOGOUT_SUCCESS_URL);
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.logout(
-                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
-                null);
-    }
-}
-----
-
-
 == Security Utilities
 
-To access authenticated user details and to simplify the handling of logout, Vaadin provides an [classname]`AuthenticationContext` component -- which is strictly integrated with Spring Security -- that can be injected into views and services.
+To access authenticated user details and to log users out, Vaadin provides an [classname]`AuthenticationContext` component -- which is strictly integrated with Spring Security -- that can be injected into views and services.
 
 The [classname]`AuthenticationContext` by design does not implement [classname]`java.io.Serializable`. Vaadin view fields referencing this object must be defined `transient`. The class exposes the following utility methods:
 
@@ -168,7 +104,8 @@ The [classname]`AuthenticationContext` by design does not implement [classname]`
 - [methodname]`hasAuthority(String authority)`, [methodname]`hasAnyAuthority(String... authorities)`, [methodname]`hasAllAuthorities(String... authorities)` check if the user has been granted certain authorities.
 - [methodname]`logout` initiates the Spring Security logout process and redirects the user to the configured logout URL.
 
-Here's an implementation of a log-out button shown on the header of the main layout that uses the [classname]`AuthenticationContext` component:
+[[log-out-capability]]
+To initiate logging out of a web application, you would typically provide a log-out button. Here's an implementation of a log-out button shown on the header of the main layout that uses the [classname]`AuthenticationContext` component:
 
 .[filename]`MainLayout.java`
 [source,java]
@@ -211,6 +148,42 @@ if (authContext.hasRole("ADMIN")) { // Not "ROLE_ADMIN".
 ----
 
 Hiding a navigation item is a usability measure, not a security measure. The view it points to still needs its own access annotation, since a user can navigate there by entering the URL directly.
+
+
+=== Custom Security Utilities
+
+If [classname]`AuthenticationContext` doesn't fit your needs -- for example, because you want to return your own user type or add application-specific helpers -- you can write a security utility of your own with the Spring Security API. Here's a basic example:
+
+.[filename]`SecurityService.java`
+[source,java]
+----
+@Component
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public Optional<UserDetails> getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication != null
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            return Optional.of(userDetails);
+        }
+        // Anonymous or no authentication.
+        return Optional.empty();
+    }
+
+    public void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation(LOGOUT_SUCCESS_URL);
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(
+                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
+                null);
+    }
+}
+----
+
+You can inject the service into views in the same way as [classname]`AuthenticationContext`. Unlike [methodname]`AuthenticationContext.logout()`, the [methodname]`logout()` method in this example only clears the security context and redirects to a fixed URL. It doesn't run the other logout handlers or the logout success URL configured for Spring Security.
 
 
 == Security Configuration Class
