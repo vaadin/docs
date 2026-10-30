@@ -21,7 +21,7 @@ export default [
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['scripts/*.js', 'scripts/*.mjs', 'scripts/pick/*.js', 'vite.*.ts'],
+          allowDefaultProject: ['scripts/*.js', 'scripts/*.mjs', 'vite.*.ts'],
         },
       },
     },
