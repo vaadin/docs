@@ -27,7 +27,7 @@ try (var window = BrowserlessUIContext.forComponent(new MyForm())) {
 }
 ----
 
-The returned window is a [classname]`BrowserlessUIContext`, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<{articles}/flow/testing/browserless/multi-user#, Application, User, and Window Contexts>> for the context API.
+The returned window is a [classname]`BrowserlessUIContext`, the same type as the windows in the other guides, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<{articles}/flow/testing/browserless/multi-user#, Application, User, and Window Contexts>> for the context API.
 
 If the component's constructor needs [methodname]`UI.getCurrent()` or the session, pass a factory instead: [methodname]`BrowserlessUIContext.forComponent(MyForm::new)`. The factory runs after the Vaadin thread-locals are installed, so the constructor observes the live environment.
 
@@ -170,24 +170,41 @@ The [annotationname]`@Tests` annotation also has an [methodname]`fqn` attribute 
 
 === Register and Use the Tester
 
-Keep your tester in an application-owned package and annotate the test class with [annotationname]`@ComponentTesterPackages`.
+Keep your tester in an application-owned package, and tell the application context to scan that package with [methodname]`withComponentTesterPackages()`.
 The `test()` method then returns the custom tester for the field:
 
 .`PersonFormViewTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.ComponentTesterPackages;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
 
-@ComponentTesterPackages("com.example.application.views.personform")
-class PersonFormViewTest extends BrowserlessTest {
+class PersonFormViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(builder -> builder
+                .withViewPackages(PersonFormView.class)
+                .withComponentTesterPackages(PhoneNumberFieldTester.class));
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
 
     @Test
     void enterPhoneNumber() {
-        PersonFormView view = navigate(PersonFormView.class);
-        PhoneNumberFieldTester phone = test(view.phone);
+        PersonFormView view = window.navigate(PersonFormView.class);
+        PhoneNumberFieldTester phone = window.test(view.phone);
 
         phone.setCountryCode("+358");
         phone.setNumber("40 1234567");
@@ -196,6 +213,9 @@ class PersonFormViewTest extends BrowserlessTest {
     }
 }
 ----
+
+[methodname]`withComponentTesterPackages()` also accepts package names.
+A test that extends a base class declares the package with the [annotationname]`@ComponentTesterPackages` annotation on the test class instead, such as `@ComponentTesterPackages("com.example.application.views.personform")`.
 
 
 == Create a Custom Locator

@@ -9,12 +9,19 @@ order: 62
 
 = Spring Test Lifecycle
 
-`SpringBrowserlessTest` creates the mocked Vaadin environment after Spring has prepared the test instance.
+A Spring browserless test creates the mocked Vaadin environment after Spring has prepared the test instance.
 The order of these steps determines when dependency injection and authentication become available, which affects session-scoped beans and authentication that a test changes later.
 Plain Java and Quarkus tests use their own framework setup, and the <<cdi#,Java EE/CDI integration>> has its own Weld lifecycle.
 
 [#test-lifecycle]
 == Order of Test Setup
+
+With an application context, the sequence is:
+
+. JUnit creates the test instance and Spring injects its `@Autowired` fields, including the Spring `ApplicationContext`, before any Vaadin environment exists.
+. The test's `@BeforeEach` method, or the test method itself, creates the browserless application context from the Spring application context. For a secured context, each user's authentication is installed when the test creates the user.
+. Each window that the test opens creates its UI and navigates to the root route.
+. The test closes the browserless application context, typically in an `@AfterEach` method. Spring keeps its application context cached for other tests.
 
 For `SpringBrowserlessTest`, the default sequence is:
 
@@ -24,7 +31,7 @@ For `SpringBrowserlessTest`, the default sequence is:
 . Subclass `@BeforeEach` methods and the test method can use that environment.
 . The inherited cleanup closes the Vaadin environment after the test.
 
-The environment is therefore available after its setup hook, not during initial test-instance injection.
+In both cases, the environment is available after its setup, not during initial test-instance injection.
 See <<test-environment#,Test Environment and Lifecycle>> for the common APIs.
 
 [#session-scoped-beans]
@@ -47,10 +54,10 @@ For a complete test, see <<{articles}/building-apps/testing/browserless/setup-sp
 [#authentication-applied-during-a-test]
 == Authentication Applied During a Test
 
-With their default timing, Spring Security's `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` establish authentication before the environment's initial navigation.
+A secured application context installs each user's authentication before the user's windows open, and in `SpringBrowserlessTest`, Spring Security's `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` establish authentication before the environment's initial navigation, with their default timing.
 View access control therefore observes the simulated user during that navigation.
 
-Authentication established in the test body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+Authentication established in the test body, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION` in a base-class test, arrives after initial navigation.
 Subsequent requests use that authentication, but `getCurrentView()` still returns the previously rendered view until another navigation takes place.
 
 `Page.reload()` recreates the UI at the currently active location.

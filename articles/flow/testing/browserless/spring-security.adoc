@@ -9,8 +9,9 @@ order: 60
 
 = Spring Security Integration
 
-`SpringBrowserlessTest` integrates the simulated Vaadin environment with Spring Security test authentication.
-By default, authentication from Spring Security test annotations is available before UI creation and initial navigation, so route access checks observe the test user.
+A secured application context integrates the simulated Vaadin environment with Spring Security.
+Each user carries its own authentication, which is in place before the user's windows are created and navigate to the root route, so route access checks observe that user.
+`SpringBrowserlessTest` takes the authentication of its single user from Spring Security test annotations instead.
 
 == Navigation Access Control
 
@@ -20,21 +21,28 @@ A restricted Spring context may need explicit registration through a `VaadinServ
 
 == Authentication Sources
 
-Spring Security test annotations such as `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` select authentication for individual test methods.
+`SpringBrowserlessApplicationContext.createSecured()` returns a context whose `newUser()` overloads set the authentication of each user:
+
+- `newUser()` installs an `AnonymousAuthenticationToken`, like `@WithAnonymousUser`.
+- `newUser(String username, String... roles)` installs a `UsernamePasswordAuthenticationToken` in the shape that `@WithMockUser` produces, adding the `ROLE_` prefix to roles that lack it.
+- `newUser(Authentication)` installs the given authentication, for example one built from a `UserDetailsService`.
+
+Spring Security test annotations don't affect the users of a secured context.
+See <<multi-user#authenticated-users-with-spring-security,Authenticated Users with Spring Security>> for how the context switches the security context between users.
+
+In `SpringBrowserlessTest`, Spring Security test annotations such as `@WithMockUser`, `@WithAnonymousUser`, and `@WithUserDetails` select authentication for individual test methods.
 They require `spring-security-test` on the test classpath.
 `@WithUserDetails` uses a `UserDetailsService` from the selected application context.
 
-Authentication established in the test method, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION`, arrives after initial navigation.
+Authentication established after a window has opened -- in the test method, through the application's own login action, or with `setupBefore = TestExecutionEvent.TEST_EXECUTION` in a base-class test -- arrives after initial navigation.
 The rendered view is not replaced automatically; another navigation applies access control to the new authentication.
 See <<environment-differences#authentication-applied-during-a-test,Authentication Applied During a Test>> for the lifecycle contract and the linked test example.
 
 == Application Context Isolation
 
 Bean overrides such as `@MockitoBean` and `@MockBean` change Spring's test context cache key.
-When multiple contexts are used in a suite, the browserless security integration can fail to apply the simulated user during navigation, including in other test classes.
+When multiple contexts are used in a suite, the security integration of `SpringBrowserlessTest` can fail to apply the simulated user during navigation, including in other test classes.
 For a practical service-substitution approach, see <<{articles}/building-apps/testing/browserless/speed-up-tests#using-a-reduced-application-context,Using a Reduced Application Context>>.
-
-For simultaneous authenticated users, the <<multi-user#,application context API>> maintains security state per user.
 
 [[set-up-view-access-control]][[testing-with-spring-security-annotations]]For a worked example, see <<{articles}/building-apps/testing/browserless/test-view-access#,Test View Access Control>>.
 

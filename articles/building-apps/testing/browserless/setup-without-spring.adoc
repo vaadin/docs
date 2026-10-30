@@ -1,8 +1,8 @@
 ---
 title: Set Up Browserless Tests in Plain Java
 page-title: Set Up Browserless Tests in Plain Java | Vaadin
-description: Configure browserless tests in a plain Java project using a base class or a JUnit extension.
-meta-description: Configure browserless tests in a plain Java project using a base class or a JUnit extension.
+description: Configure browserless tests in a plain Java project with an application context, a base class, or a JUnit extension.
+meta-description: Configure browserless tests in a plain Java project with an application context, a base class, or a JUnit extension.
 order: 20
 ---
 
@@ -10,7 +10,7 @@ order: 20
 = Set Up Browserless Tests in Plain Java
 
 Use this setup when the view and its collaborators can be constructed without a dependency injection container.
-Tests extend `BrowserlessTest`, which creates the Vaadin environment but no dependency injection container.
+Tests create the Vaadin environment with `BrowserlessApplicationContext`, which doesn't start a dependency injection container.
 For Java EE/CDI injection, use <<setup-cdi#,the CDI setup>>; for Quarkus, use <<setup-quarkus#,the Quarkus setup>>.
 
 
@@ -30,13 +30,83 @@ Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven pro
 No other test framework dependencies are required.
 
 
+[#first-browserless-test]
 == Create a Test
 
 Create this view:
 
 include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
 
-Create a test class that extends [classname]`BrowserlessTest`, in the same Java package as the view under `src/test/java`:
+Create a test class in the same Java package as the view under `src/test/java`:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+class HelloWorldViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(HelloWorldView.class); // <1>
+        window = app.newUser().newWindow(); // <2>
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close(); // <3>
+    }
+
+    @Test
+    void setText_clickButton_notificationIsShown() {
+        window.navigate(HelloWorldView.class); // <4>
+
+        window.findTextField().withLabel("Your name").setValue("Test");
+        window.findButton().withText("Say hello").click();
+
+        Assertions.assertEquals("Hello Test",
+                window.findNotification().getText());
+    }
+
+}
+----
+<1> Creates the application context. It scans the package of `HelloWorldView` and its sub-packages for routes; if your views are in several packages, pass a class from each.
+<2> Creates a user with its own Vaadin session, and opens a window for that user. The window shows the root route.
+<3> Closes the application context, together with every user and window created from it.
+<4> The test drives the UI through the window: it finds components by their label or text, and types and clicks, as a user does.
+
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test method does.
+
+When only one test method needs the application context, create it in the test with try-with-resources instead of in `@BeforeEach` and `@AfterEach` methods:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.create(HelloWorldView.class)) {
+    var window = app.newUser().newWindow();
+    // Drive the UI through the window and assert the outcome.
+}
+----
+
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+The test passes when entering a name and clicking the button shows the expected notification.
+
+
+[#base-class-or-extension]
+== Use a Base Class or an Extension Instead
+
+A test can also extend `BrowserlessTest`, which creates the Vaadin environment with one user and one window before each test method, and closes it afterwards.
+The test then calls the window methods on itself:
 
 .`HelloWorldViewTest.java`
 [source,java]
@@ -62,18 +132,9 @@ class HelloWorldViewTest extends BrowserlessTest {
 }
 ----
 
-See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
+The base class scans the whole classpath for routes, unless the test class has a `@ViewPackages` annotation.
 
-
-== Run the Test
-
-Run the test from your IDE or with `mvn test`.
-The test passes when entering a name and clicking the button shows the expected notification.
-
-
-== Use an Extension Instead of a Base Class
-
-If your test class already extends another class, register an instance of `BrowserlessExtension` instead.
+If the test class already extends another class, register an instance of `BrowserlessExtension` to get the same lifecycle.
 It's included in the same dependency.
 
 .`CartViewExtensionTest.java`
@@ -105,12 +166,14 @@ class CartViewExtensionTest {
 Call the methods on the extension instance to navigate and interact with components.
 The example assumes a `CartView` with an [guibutton]*Add to cart* button and a span with the ID `cart-size` that shows the number of items.
 For lifecycle and configuration options, see <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>>.
+See <<./#base-classes,Base Classes>> for when to choose a base class.
 
 
 == Next Steps
 
 * <<test-user-interactions#,Test User Interactions>> explains how the test works and how to cover more complex views.
 * <<debug-tests#,Debug a Failing Browserless Test>> helps when a test fails.
+* <<{articles}/flow/testing/browserless/multi-user#,Application, User, and Window Contexts>> describes the context API in detail.
 
 
 [discussion-id]`D68CAC9E-6131-45C9-84E6-6D1CA1E44E81`

@@ -9,9 +9,10 @@ order: 90
 
 = Test Signal-Based Views
 
-The examples use the plain Java setup; for another framework, change the base class as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
-Put each test class in the view's package, because the examples read package-private view fields.
-The Java EE/CDI setup installs the signal test environment with its `initSignalsSupport()` call, so keep that call when you change the setup.
+The examples use the plain Java setup; for another framework, create the application context as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
+Put the test class in the views' package, because the examples read package-private view fields.
+The application context installs the signal test environment for you.
+The Java EE/CDI setup installs it with its `initSignalsSupport()` call, so keep that call when you change the setup.
 
 [#synchronous]
 == Assert Changes After a User Action
@@ -50,27 +51,45 @@ The test clicks the button and asserts the label right away:
 
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
 
-@ViewPackages(classes = CounterSignalView.class)
-class CounterSignalTest extends BrowserlessTest {
+class SignalViewsTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(CounterSignalView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
 
     @Test
     void clickIncrement_labelUpdatesSynchronously() {
-        var view = navigate(CounterSignalView.class);
-        Assertions.assertEquals("Count: 0", test(view.label).getText());
+        var view = window.navigate(CounterSignalView.class);
+        Assertions.assertEquals("Count: 0", window.test(view.label).getText());
 
-        test(view.increment).click();
+        window.test(view.increment).click();
 
         // No waiting and no runPendingSignalsTasks() — the computed signal
         // and bindText effect already ran on the test thread.
-        Assertions.assertEquals("Count: 1", test(view.label).getText());
+        Assertions.assertEquals("Count: 1", window.test(view.label).getText());
     }
 }
 ----
+
+The context scans the package of `CounterSignalView` for routes, so the other views on this page, in the same package, are available as well.
+Add the remaining tests to the same class.
 
 
 === Test List Changes
@@ -104,24 +123,15 @@ The inserted child is present as soon as the click returns:
 
 [source,java]
 ----
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
+@Test
+void addTag_childAppearsSynchronously() {
+    var view = window.navigate(TagListView.class);
+    Assertions.assertEquals(0, view.list.getComponentCount());
 
-@ViewPackages(classes = TagListView.class)
-class TagListTest extends BrowserlessTest {
+    window.test(view.addButton).click();
 
-    @Test
-    void addTag_childAppearsSynchronously() {
-        var view = navigate(TagListView.class);
-        Assertions.assertEquals(0, view.list.getComponentCount());
-
-        test(view.addButton).click();
-
-        // The bindChildren effect rebuilt the list synchronously.
-        Assertions.assertEquals(1, view.list.getComponentCount());
-    }
+    // The bindChildren effect rebuilt the list synchronously.
+    Assertions.assertEquals(1, view.list.getComponentCount());
 }
 ----
 
@@ -132,7 +142,7 @@ Both tests pass without flushing anything because the mutation happens on the te
 
 Most signal-driven UI is wired up with the [methodname]`bind*` family rather than explicit effects. From a test's perspective, each binding is a different property to assert on after a signal changes:
 
-- [methodname]`bindText(signal)` — assert with [methodname]`test(component).getText()` or [methodname]`component.getText()`.
+- [methodname]`bindText(signal)` — assert with [methodname]`window.test(component).getText()` or [methodname]`component.getText()`.
 - [methodname]`bindVisible(signal)` / [methodname]`bindEnabled(signal)` — assert visibility or enabled state; a tester's [methodname]`isUsable()` reflects both.
 - [methodname]`bindValue(signal, setter)` — two-way. Mutate the signal and assert the field value, or set the field value through its tester and assert the signal with [methodname]`signal.peek()`.
 - [methodname]`bindChildren(listSignal, factory)` — assert the rendered child count or the individual entries.
@@ -181,24 +191,14 @@ The test changes the field and asserts the notification right away:
 
 [source,java]
 ----
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
-import com.vaadin.flow.component.notification.Notification;
+@Test
+void valueExceedsLimit_notificationShownSynchronously() {
+    var view = window.navigate(ThresholdView.class);
 
-@ViewPackages(classes = ThresholdView.class)
-class ThresholdTest extends BrowserlessTest {
+    window.test(view.amount).setValue("150");
 
-    @Test
-    void valueExceedsLimit_notificationShownSynchronously() {
-        var view = navigate(ThresholdView.class);
-
-        test(view.amount).setValue("150");
-
-        Assertions.assertEquals("Over limit",
-                test(find(Notification.class).single()).getText());
-    }
+    Assertions.assertEquals("Over limit",
+            window.test(window.find(Notification.class).single()).getText());
 }
 ----
 
@@ -211,11 +211,11 @@ A signal mutated *off* the UI thread — from a service callback, a [classname]`
 [source,java]
 ----
 // The view starts asynchronous work that mutates a signal on a background thread
-test(view.startBackgroundWork).click();
+window.test(view.startBackgroundWork).click();
 
 // Drain the queued signal effects, then assert
-runPendingSignalsTasks();
-Assertions.assertEquals("Done", test(view.status).getText());
+window.runPendingSignalsTasks();
+Assertions.assertEquals("Done", window.test(view.status).getText());
 ----
 
 See <<{articles}/flow/testing/browserless/testing-signals#background-threads,signal task processing>> for timeout and return-value semantics.
@@ -225,7 +225,7 @@ See <<{articles}/flow/testing/browserless/testing-signals#background-threads,sig
 
 <<{articles}/flow/ui-state/shared-signals#, Shared signals>> -- [classname]`SharedValueSignal`, [classname]`SharedNumberSignal`, [classname]`SharedListSignal`, and the other shared types -- are the most common source of background updates in a test. A change made in one session is propagated to every other session that observes the signal, and that propagation is inherently asynchronous: the observing side sees it through a queued effect rather than inline.
 
-As a result, a change that an observer should react to needs the same treatment as any other off-thread mutation. After triggering the change, call [methodname]`runPendingSignalsTasks()` before asserting on the observing side. A change made and observed on the same test thread -- such as mutating a shared signal and asserting a binding on the same view -- still propagates synchronously and needs no flush. For tests that drive several sessions or windows observing one shared signal, see <<{articles}/flow/testing/browserless/multi-user#signals, Signals in Multi-User Tests>>.
+As a result, a change that an observer should react to needs the same treatment as any other off-thread mutation. After triggering the change, call [methodname]`runPendingSignalsTasks()` before asserting on the observing side. A change made and observed on the same test thread -- such as mutating a shared signal and asserting a binding on the same view -- still propagates synchronously and needs no flush. For tests that drive several sessions or windows observing one shared signal, see <<test-multiple-users#signals,Share Signals between Users>>.
 
 
 [#shared-signal-writes]
@@ -274,29 +274,21 @@ The entry is in the list right after the click, but the status label still reads
 
 [source,java]
 ----
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
+@Test
+void submitTicket_statusUpdatesWhenWriteIsConfirmed() {
+    var view = window.navigate(TicketView.class);
+    window.test(view.title).setValue("Printer is jammed");
 
-@ViewPackages(classes = TicketView.class)
-class TicketViewTest extends BrowserlessTest {
+    window.test(view.submit).click();
 
-    @Test
-    void submitTicket_statusUpdatesWhenWriteIsConfirmed() {
-        var view = navigate(TicketView.class);
-        test(view.title).setValue("Printer is jammed");
+    // Inserted optimistically, but not confirmed yet.
+    Assertions.assertEquals(1, view.tickets.peek().size());
+    Assertions.assertEquals("Saving...", window.test(view.status).getText());
 
-        test(view.submit).click();
+    window.runPendingSignalsTasks();
 
-        // Inserted optimistically, but not confirmed yet.
-        Assertions.assertEquals(1, view.tickets.peek().size());
-        Assertions.assertEquals("Saving...", test(view.status).getText());
-
-        runPendingSignalsTasks();
-
-        Assertions.assertEquals("Ticket created", test(view.status).getText());
-    }
+    Assertions.assertEquals("Ticket created",
+            window.test(view.status).getText());
 }
 ----
 
@@ -306,16 +298,20 @@ A test that gets hold of the operation itself -- because the code under test ret
 ----
 @Test
 void submitTicket_operationConfirmedAfterDrainingQueue() {
-    var view = navigate(TicketView.class);
+    var view = window.navigate(TicketView.class);
 
     var operation = view.submitTicket("Printer is jammed");
     Assertions.assertFalse(operation.result().isDone());
 
-    runPendingSignalsTasks();
+    window.runPendingSignalsTasks();
 
     Assertions.assertTrue(operation.result().join().successful());
 }
 ----
+
+The test calls the view directly, outside a window method.
+That works because the window stays active after `navigate()`, so the confirmation is dispatched through its UI.
+In a test with several windows, call `activate()` on the intended window first.
 
 [WARNING]
 Don't block on the operation before draining the queue. A call such as [code]`operation.result().get(5, TimeUnit.SECONDS)` always times out, because the confirmation task can only run on the very thread that's blocked waiting for it. A timeout there means the queue hasn't been drained -- not that the write was lost.

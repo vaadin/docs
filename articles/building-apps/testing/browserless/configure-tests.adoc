@@ -10,27 +10,45 @@ order: 110
 = [since:com.vaadin:vaadin@V25.3]#Configure a Browserless Test#
 
 Use this guide after setting up a <<./#choose-your-framework,plain Java, Spring Boot, Quarkus, or Java EE/CDI test>>.
-The configuration annotations work with every setup, including the `AbstractCdiViewTest` base class of the Java EE/CDI setup.
+An application context takes its Vaadin configuration from the code that creates it.
+Tests that extend a base class, including the `AbstractCdiViewTest` base class of the Java EE/CDI setup, declare it with an annotation instead.
 
-== Configure One Test Class
+== Configure the Application Context
 
-Add `@BrowserlessTestConfig` to the test class to enable a feature and set a Vaadin deployment property.
+Pass a configurer to [methodname]`create()` to enable a feature and set a Vaadin deployment property, together with the view packages to scan.
 For the plain Java setup:
 
 .`ResponsiveFormLayoutTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.BrowserlessTestConfig;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
 import com.vaadin.experimental.FeatureFlags;
 import com.vaadin.flow.server.VaadinService;
 
-@BrowserlessTestConfig(
-        applicationProperties = "devmode.sessionSerialization.enabled=true",
-        featureFlags = "defaultAutoResponsiveFormLayout")
-class ResponsiveFormLayoutTest extends BrowserlessTest {
+class ResponsiveFormLayoutTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(builder -> builder
+                .withViewPackages(ResponsiveFormView.class)
+                .withApplicationProperty(
+                        "devmode.sessionSerialization.enabled", "true")
+                .withFeatureFlags("defaultAutoResponsiveFormLayout"));
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
 
     @Test
     void featureIsEnabled() {
@@ -42,50 +60,78 @@ class ResponsiveFormLayoutTest extends BrowserlessTest {
 }
 ----
 
-Keep `SpringBrowserlessTest` and `@SpringBootTest` for Spring Boot, `AbstractCdiViewTest` for Java EE/CDI, or `QuarkusBrowserlessTest` and `@QuarkusTest` for Quarkus.
+`ResponsiveFormView` stands for the view whose behavior depends on the setting.
+The Spring and Quarkus factories take the same configurer: `SpringBrowserlessApplicationContext.create(applicationContext, builder -> ...)` and `QuarkusBrowserlessApplicationContext.create(builder -> ...)`.
 Choose an identifier from <<{articles}/flow/configuration/feature-flags#,Feature Flags>>; an unknown identifier fails instead of silently enabling a new feature.
 The example checks the flag itself; in your tests, assert the application behavior that the setting changes.
-The settings are local to the test environment, so the test doesn't need to edit a feature-flags file or reset system properties afterwards.
+The settings are local to the application context, so the test doesn't need to edit a feature-flags file or reset system properties afterwards.
 
-== Override a Setting for One Method
+== Use a Different Setting in One Test
 
-To test the same view with the feature disabled, annotate the test method that verifies the fallback behavior:
+To test the same view with the feature disabled, the test needs an application context with a different configuration.
+Put such tests in a test class of their own, or create the application context in each test method with try-with-resources, instead of in a `@BeforeEach` method:
 
 [source,java]
 ----
 @Test
-@BrowserlessTestConfig(featureFlags = "defaultAutoResponsiveFormLayout=false")
 void featureIsDisabled() {
-    FeatureFlags flags = FeatureFlags.get(
-            VaadinService.getCurrent().getContext());
-    Assertions.assertFalse(
-            flags.isEnabled("defaultAutoResponsiveFormLayout"));
+    try (var app = BrowserlessApplicationContext.create(builder -> builder
+            .withViewPackages(ResponsiveFormView.class)
+            .withFeatureFlag("defaultAutoResponsiveFormLayout", false))) {
+        var window = app.newUser().newWindow();
+        window.navigate(ResponsiveFormView.class);
+
+        FeatureFlags flags = FeatureFlags.get(
+                VaadinService.getCurrent().getContext());
+        Assertions.assertFalse(
+                flags.isEnabled("defaultAutoResponsiveFormLayout"));
+    }
 }
 ----
 
-The method-level value replaces the class-level value of that flag; the class-level application property still applies.
-Use a per-method environment for this pattern. `BrowserlessClassExtension` shares one environment and rejects method-level configuration.
-See <<{articles}/flow/testing/browserless/test-configuration#merging-class-and-method-configuration,Configuration Merging>> for inheritance and precedence rules.
+The window stays active after it opens and after each window method, so static Vaadin APIs such as [methodname]`VaadinService.getCurrent()` return its state.
 
 == Override a Spring-Defined Property
 
-In a Spring Boot test, a Vaadin property already defined in the Spring environment takes precedence over `@BrowserlessTestConfig`.
+In a Spring Boot test, a Vaadin property already defined in the Spring environment takes precedence over the configuration of the application context.
 Use Spring's `@TestPropertySource` on that test class to change it:
 
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestPropertySource;
-import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.startup.ApplicationConfiguration;
 
 @SpringBootTest
 @TestPropertySource(properties =
         "vaadin.devmode.sessionSerialization.enabled=true")
-class SessionSerializationTest extends SpringBrowserlessTest {
+class SessionSerializationTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                HelloWorldView.class);
+        app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
 
     @Test
     void sessionSerializationIsEnabled() {
@@ -96,7 +142,25 @@ class SessionSerializationTest extends SpringBrowserlessTest {
 }
 ----
 
-== Configure an Extension or an Application Context
+[#base-classes-and-extensions]
+== Configure a Base Class or an Extension
+
+A test that extends a base class declares the configuration with the `@BrowserlessTestConfig` annotation on the test class:
+
+[source,java]
+----
+@BrowserlessTestConfig(
+        applicationProperties = "devmode.sessionSerialization.enabled=true",
+        featureFlags = "defaultAutoResponsiveFormLayout")
+class ResponsiveFormLayoutTest extends BrowserlessTest {
+    // Test methods call navigate(), find(), and test() on the test itself.
+}
+----
+
+The annotation works with every base class: `BrowserlessTest`, `SpringBrowserlessTest`, `QuarkusBrowserlessTest`, and `AbstractCdiViewTest`.
+To change a setting for one test method, annotate that method, for example with `@BrowserlessTestConfig(featureFlags = "defaultAutoResponsiveFormLayout=false")`.
+The method-level value replaces the class-level value of that flag; the class-level application property still applies.
+See <<{articles}/flow/testing/browserless/test-configuration#merging-class-and-method-configuration,Configuration Merging>> for inheritance and precedence rules.
 
 For a plain Java JUnit extension, configure the instance that creates the environment:
 
@@ -107,21 +171,11 @@ BrowserlessExtension extension = new BrowserlessExtension()
         .withFeatureFlags("defaultAutoResponsiveFormLayout");
 ----
 
-For an application context created in a multi-user test, configure its builder:
+`BrowserlessClassExtension` shares one environment across the test class, so it rejects method-level configuration.
 
-[source,java]
-----
-try (var app = BrowserlessApplicationContext.create(builder -> builder
-        .withViewPackages(CartView.class)
-        .withFeatureFlags("defaultAutoResponsiveFormLayout"))) {
-    var window = app.newUser().newWindow();
-    window.navigate(CartView.class);
-    // Exercise the view and assert the behavior enabled by the flag.
-}
-----
-
-An application context created this way does not read annotations on the test class.
-See <<{articles}/flow/testing/browserless/test-configuration#configuring-without-annotations,Programmatic Configuration>> for explicitly importing a configuration, registering Lookup services, and combining programmatic settings with annotations.
+An application context doesn't read `@BrowserlessTestConfig`.
+To reuse a configuration that a test class declares with the annotation, pass it to the builder with `withConfiguration(BrowserlessConfiguration.from(getClass()))`.
+See <<{articles}/flow/testing/browserless/test-configuration#configuring-without-annotations,Programmatic Configuration>> for importing a configuration, registering Lookup services, and combining programmatic settings with annotations.
 
 
 [discussion-id]`C941CDE1-ACC5-47F3-82D9-90A3D1D0C1FC`

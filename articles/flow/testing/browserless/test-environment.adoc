@@ -1,8 +1,8 @@
 ---
 title: Test Environment and Lifecycle
 page-title: Test Environment and Lifecycle | Vaadin
-description: Browserless test base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
-meta-description: Browserless test base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
+description: Browserless application contexts and base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
+meta-description: Browserless application contexts and base classes, environment lifecycle, route scanning, navigation, and simulated server round trips.
 order: 10
 ---
 
@@ -10,42 +10,59 @@ order: 10
 = Test Environment and Lifecycle
 
 Browserless tests create the Vaadin service, session, and UI in the test JVM.
-The standard base-class setup initializes a new environment before each test method and tears it down afterwards.
-Custom setup, such as <<cdi#,CDI integration>>, replaces initialization while retaining the JUnit lifecycle hooks.
-JUnit's `@TestInstance(PER_CLASS)` changes the test-instance lifecycle; it does not share the Vaadin environment.
+An application context exists from its creation until the test closes it, so the test decides whether it lives for one test method or for the whole class.
+The base classes and the <<extensions#,JUnit extensions>> initialize a new environment before each test method, or each test class, and tear it down afterwards.
+Custom setup, such as <<cdi#,CDI integration>>, replaces the base-class initialization while retaining the JUnit lifecycle hooks.
+JUnit's `@TestInstance(PER_CLASS)` changes the test-instance lifecycle; it does not share the Vaadin environment of a base class.
 
-== Base Classes and Framework Integration
+[#entry-points]
+== Entry Points and Framework Integration
+
+The <<multi-user#,application context API>> is the main entry point.
+It creates any number of users and windows, and each window provides the testing methods described on these pages:
+
+[cols="1,2"]
+|===
+| Application Context Factory | Integration
+| `BrowserlessApplicationContext` | Plain Java, provided by `browserless-test-junit6`.
+| `SpringBrowserlessApplicationContext` | Spring application context and dependency injection, provided by `browserless-test-spring`.
+| `QuarkusBrowserlessApplicationContext` | Quarkus test framework and dependency injection, provided by `browserless-test-quarkus`.
+|===
+
+A base class creates one user with one window per test method, and provides the same testing methods on the test class itself:
 
 [cols="1,2"]
 |===
 | Base Class | Integration
 | `BrowserlessTest` | Plain Java, provided by `browserless-test-junit6`.
-| An application-owned CDI subclass of `BrowserlessTest` | Weld and `CdiVaadinServlet`; see <<cdi#,CDI Test Integration>>.
+| An application-owned CDI subclass of `BrowserlessTest` | Weld and `CdiVaadinServlet`; see <<cdi#,CDI Test Integration>>. The application context API does not apply this setup.
 | `SpringBrowserlessTest` | Spring application context and dependency injection, provided by `browserless-test-spring`.
 | `QuarkusBrowserlessTest` | Quarkus test framework and dependency injection, provided by `browserless-test-quarkus`.
 |===
 
-The <<extensions#,JUnit extensions>> provide composition-based setup for plain Java tests.
-The <<multi-user#,application context API>> supports multiple users and windows.
+The <<extensions#,JUnit extensions>> provide the same single-window lifecycle for plain Java tests without inheritance.
 
 [#route-scanning]
 == Route Scanning
 
-By default, browserless tests scan the classpath for routes and error views.
+Browserless tests scan the classpath for routes and error views.
+An application context scans the packages passed to [methodname]`create()` or to the builder's [methodname]`withViewPackages()`, and their sub-packages.
+
+Base classes and extensions scan the whole classpath by default.
 `@ViewPackages(classes = MyView.class)` restricts scanning to the packages of the supplied classes and their sub-packages.
 `@ViewPackages(packages = "com.example.views")` accepts package names instead.
 Both attributes may be combined.
 An empty `@ViewPackages` restricts scanning to the test class's package and its sub-packages.
 
-In Spring tests, `@SpringBootTest` loads the full application context; `@ContextConfiguration` selects a narrower configuration.
+In Spring tests, `@SpringBootTest` loads the full Spring application context; `@SpringJUnitConfig` or `@ContextConfiguration` selects a narrower configuration.
 See <<spring-security#,Spring Security Integration>> for access-control initialization when using a reduced context.
 
 == Navigating to Views
 
-With the default environment setup, the loaded view is the root view.
+A new window, like the default base-class setup, opens the root view.
 The custom CDI setup registers routes after initialization and navigates explicitly in the test.
 
-To navigate to another registered view, use the [methodname]`navigate()` methods provided by the base class:
+To navigate to another registered view, use the [methodname]`navigate()` methods of the window, or of the base class or extension:
 
 - For a normal view with only a path defined
 +
@@ -78,7 +95,7 @@ You can also retrieve the current view at any time with [methodname]`getCurrentV
 
 [source,java]
 ----
-HasElement view = getCurrentView();
+HasElement view = window.getCurrentView();
 ----
 
 
@@ -89,10 +106,10 @@ Use [methodname]`fireShortcut()` to simulate keyboard shortcuts registered with 
 [source,java]
 ----
 // Simulate pressing Enter
-fireShortcut(Key.ENTER);
+window.fireShortcut(Key.ENTER);
 
 // Simulate Ctrl+S
-fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
+window.fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
 ----
 
 == Components That Don't Exist Yet
