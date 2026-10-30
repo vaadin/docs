@@ -203,6 +203,7 @@ public class CrudEditorExample extends VerticalLayout {
             this.category = category;
         }
 
+        // tag::data-model[]
         // Items are identified by their ID, so that the saved copy of an item
         // matches the item shown in the grid
         @Override
@@ -214,6 +215,7 @@ public class CrudEditorExample extends VerticalLayout {
         public int hashCode() {
             return Long.hashCode(id);
         }
+        // end::data-model[]
 
         @Override
         public String toString() {
