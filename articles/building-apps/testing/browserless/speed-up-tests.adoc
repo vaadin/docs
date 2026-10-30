@@ -9,7 +9,7 @@ order: 120
 
 = Speed Up Browserless Tests
 
-By default, browserless tests scan the entire classpath for routes and error views and, in Spring Boot projects, load the full application context. For large projects this can slow down test startup. The following techniques help reduce bootstrap time.
+Browserless tests scan the classpath for routes and error views and, in Spring Boot projects, load the full application context. For large projects this can slow down test startup. The following techniques help reduce bootstrap time.
 With Java EE/CDI, the setup already registers routes and beans explicitly; keep its Weld archive and route registrations small instead.
 
 
@@ -21,23 +21,18 @@ Keep only the changes that give a useful improvement.
 
 == Restrict Package Scanning
 
-Restrict the default route scanning to the packages that contain your views.
-Use a class from each view package to keep the scan focused and safe to refactor.
-The example is for Spring Boot:
+An application context scans only the packages of the classes passed to [methodname]`create()`, and their sub-packages.
+Pass a class from each package that contains views the test needs, rather than a class from a top-level package that contains the whole application.
+Classes keep the scan focused and safe to refactor:
 
 [source,java]
 ----
-import org.springframework.boot.test.context.SpringBootTest;
-import com.vaadin.browserless.SpringBrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
-
-@SpringBootTest
-@ViewPackages(classes = MyView.class)
-class MyViewTest extends SpringBrowserlessTest {
-}
+app = BrowserlessApplicationContext.create(MyView.class, MainLayout.class);
 ----
 
-See <<{articles}/flow/testing/browserless/test-environment#route-scanning,Route Scanning>> for all annotation forms.
+The base classes scan the whole classpath by default.
+Restrict them with the [annotationname]`@ViewPackages` annotation, such as `@ViewPackages(classes = MyView.class)` on the test class.
+See <<{articles}/flow/testing/browserless/test-environment#route-scanning,Route Scanning>> for all forms.
 
 
 [role="since:com.vaadin:vaadin@V25.4"]
@@ -55,11 +50,11 @@ Override the property in the tests:
 ----
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import com.vaadin.browserless.SpringBrowserlessTest;
 
 @SpringBootTest
 @TestPropertySource(properties = "vaadin.copilot.enable=false")
-class MyViewTest extends SpringBrowserlessTest {
+class MyViewTest {
+    // Autowire the application context as in the setup guide.
 }
 ----
 
@@ -70,7 +65,7 @@ See <<{articles}/flow/testing/browserless/test-configuration#copilot,Copilot>> f
 [#using-a-reduced-application-context]
 == Use a Reduced Spring Application Context
 
-Instead of [annotationname]`@SpringBootTest`, which loads the full application context, you can annotate the test with [annotationname]`@ContextConfiguration` to provide only the beans needed for the test. This is useful when you want to replace real services with test doubles.
+Instead of [annotationname]`@SpringBootTest`, which loads the full application context, you can annotate the test with [annotationname]`@SpringJUnitConfig` to provide only the beans needed for the test. This is useful when you want to replace real services with test doubles.
 
 For a view that injects a service, register a test implementation with the same interface.
 This example uses a service-backed variant of the greeting view:
@@ -104,25 +99,47 @@ Place each public type in its own file. Put the test in the view's package:
 
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ContextConfiguration;
-import com.vaadin.browserless.SpringBrowserlessTest;
-import com.vaadin.browserless.ViewPackages;
-import com.vaadin.flow.component.notification.Notification;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
 
-@ViewPackages(classes = ServiceGreetingView.class)
-@ContextConfiguration(classes = GreetingTestConfig.class)
-class ServiceGreetingViewTest extends SpringBrowserlessTest {
+@SpringJUnitConfig(GreetingTestConfig.class)
+class ServiceGreetingViewTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                ServiceGreetingView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
     @Test
     void greeting_usesTestService() {
-        var view = navigate(ServiceGreetingView.class);
-        test(view.name).setValue("Test");
-        test(view.sayHello).click();
-        Notification notification = find(Notification.class).single();
-        Assertions.assertEquals("Hello Test", test(notification).getText());
+        window.navigate(ServiceGreetingView.class);
+        window.findTextField().withLabel("Your name").setValue("Test");
+        window.findButton().withText("Say hello").click();
+        Assertions.assertEquals("Hello Test",
+                window.findNotification().getText());
     }
 }
 
@@ -135,13 +152,17 @@ class GreetingTestConfig {
 }
 ----
 
+[annotationname]`@SpringJUnitConfig` runs the test with Spring's JUnit extension and loads only the given configuration, so the Spring application context contains the test service but not the rest of the application.
+It also doesn't component-scan the shared browserless application context from <<setup-spring-boot#shared-application-context,the setup guide>>, so the test creates one of its own for each test, scanning only the package of the tested view.
+A test that extends [classname]`SpringBrowserlessTest`, which registers Spring's JUnit extension itself, selects the configuration with [annotationname]`@ContextConfiguration(classes = GreetingTestConfig.class)` instead.
+
 Annotate the configuration with [annotationname]`@TestConfiguration` rather than [annotationname]`@Configuration`.
 Spring Boot's component scan skips test configuration classes, so the test service doesn't also end up in the `@SpringBootTest` contexts of other tests in the same package, where it would conflict with the application's service.
 
 
 [NOTE]
 ====
-Prefer replacing services this way -- a [annotationname]`@TestConfiguration` selected with [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
+Prefer replacing services this way -- a [annotationname]`@TestConfiguration` selected with [annotationname]`@SpringJUnitConfig` or [annotationname]`@ContextConfiguration` -- over bean overrides such as [annotationname]`@MockitoBean` or [annotationname]`@MockBean`, especially when other test classes in the same run authenticate with [annotationname]`@WithUserDetails`, [annotationname]`@WithMockUser`, or a similar annotation.
 
 Bean overrides create separate cached Spring contexts and can affect authentication in browserless test suites.
 See <<{articles}/flow/testing/browserless/spring-security#application-context-isolation,Application Context Isolation>> for the integration behavior.
@@ -152,46 +173,50 @@ For service-level tests that don't need the Vaadin environment, test the service
 
 [role="since:com.vaadin:vaadin@V25.2"]
 [#sharing-the-vaadin-environment-across-tests]
-== Share the Vaadin Environment in Plain Java
+== Share the Vaadin Environment Across Tests
 
-By default, the Vaadin environment -- the session, the UI, and all routes -- is created before every test method and torn down after. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
+By default, each test creates its own application context, user, and window -- the session, the UI, and the views it navigates to -- and closes them afterwards. For classes with many tests that navigate to views sharing the same [classname]`MainLayout`, this setup cost can dominate the test runtime.
 
-To reuse a single Vaadin environment across all test methods in a class, register a static [classname]`BrowserlessClassExtension` with [annotationname]`@RegisterExtension`. The extension initializes the environment once before all tests and tears it down after all tests, sharing the same [classname]`UI` instance across every method. Use the extension instance for navigation and queries.
-This option applies to plain Java tests; keep the framework-specific base class for Spring and Quarkus tests.
+To reuse a single Vaadin environment across all test methods in a class, create the application context and the window in a static [annotationname]`@BeforeAll` method, and close the context in an [annotationname]`@AfterAll` method.
+Every test then uses the same [classname]`UI` instance:
 
 .Shared Environment Example
 [source,java]
 ----
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import com.vaadin.browserless.BrowserlessClassExtension;
-import com.vaadin.browserless.ViewPackages;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
 
-@ViewPackages(classes = HelloWorldView.class)
 class HelloWorldViewSharedTest {
 
-    @RegisterExtension
-    static BrowserlessClassExtension extension = new BrowserlessClassExtension();
+    private static BrowserlessApplicationContext app;
+    private static BrowserlessUIContext window;
 
     @BeforeAll
-    static void setup() {
-        extension.navigate(HelloWorldView.class);
+    static void setUp() {
+        app = BrowserlessApplicationContext.create(HelloWorldView.class);
+        window = app.newUser().newWindow();
+        window.navigate(HelloWorldView.class);
+    }
+
+    @AfterAll
+    static void tearDown() {
+        app.close();
     }
 
     @Test
     void name_isInitiallyEmpty() {
-        Assertions.assertEquals("", extension.find(TextField.class)
-                .withLabel("Your name").single().getValue());
+        Assertions.assertEquals("", window.findTextField()
+                .withLabel("Your name").component().getValue());
     }
 
     @Test
     void greetingButton_isEnabled() {
-        Assertions.assertTrue(extension.find(Button.class)
-                .withText("Say hello").single().isEnabled());
+        Assertions.assertTrue(window.findButton()
+                .withText("Say hello").component().isEnabled());
     }
 }
 ----
@@ -199,14 +224,20 @@ class HelloWorldViewSharedTest {
 These read-only tests use the `HelloWorldView` from <<setup-without-spring#,the plain Java setup guide>>.
 They can run in either order because neither changes the shared UI.
 
+To share less, keep the application context in the static field, but create a new user and window in a [annotationname]`@BeforeEach` method, and close the user with `window.getUser().close()` in an [annotationname]`@AfterEach` method.
+Each test then gets a fresh session and UI, while the tests still share the Vaadin service.
+
+In Spring Boot, the tests already share the application context bean from <<setup-spring-boot#shared-application-context,the setup guide>>, and each test opens and closes its own user.
+To share the window too, open it in a static [annotationname]`@BeforeAll` method that gets the bean as a parameter, such as `static void openWindow(@Autowired BrowserlessApplicationContext app)`, and don't close the user.
+
 [WARNING]
 With a shared environment, state leaks between tests. Tests that mutate state must reset it explicitly.
 Re-navigating can reset view-local state, but does not reset session or application-owned data. Prefer a shared environment for read-only or independent interactions; stick with the default per-method lifecycle when tests mutate shared state in conflicting ways.
 
-[NOTE]
-The base test classes -- [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- always reinitialize the Vaadin environment before each test method. Annotating them with [annotationname]`@TestInstance(PER_CLASS)` therefore does not share the Vaadin environment, although it can still be useful for sharing other per-class state. To share the Vaadin environment, use a static [classname]`BrowserlessClassExtension` instead.
+The application context is bound to the thread that creates it, so this works with JUnit's default sequential execution, which runs [annotationname]`@BeforeAll`, the tests, and [annotationname]`@AfterAll` of a class on the same thread.
 
-See <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>> for the lifecycle contracts of the extensions.
+[NOTE]
+The base test classes -- [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest` -- always reinitialize the Vaadin environment before each test method. Annotating them with [annotationname]`@TestInstance(PER_CLASS)` therefore does not share the Vaadin environment, although it can still be useful for sharing other per-class state. In a plain Java test without an application context, a static [classname]`BrowserlessClassExtension` shares the environment instead; see <<{articles}/flow/testing/browserless/extensions#,JUnit 6 Extensions>>.
 
 
 [discussion-id]`A3B7E2F1-5D89-4C6A-9E12-7F4A8B3C6D50`

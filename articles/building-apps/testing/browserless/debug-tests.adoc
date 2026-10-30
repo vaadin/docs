@@ -11,12 +11,12 @@ order: 60
 
 When a browserless test fails, the error message may not show what the UI looked like at that moment.
 The component tree -- a text representation of every component in the UI -- shows exactly what was on screen.
-The examples use the plain Java setup; for another framework, change the base class as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
+The examples use the plain Java setup, with a `window` field created in a [annotationname]`@BeforeEach` method; for another framework, create the application context as described in <<./#use-examples-with-your-framework,Use the Examples with Your Framework>>.
 
 
 == Read the Tree of a Failed Query
 
-A component query that finds no match, or more matches than expected, includes the component tree in its error message.
+A locator or a component query that finds no match, or more matches than expected, includes the component tree in its error message.
 Suppose you have a view like this:
 
 .`GreetingView.java`
@@ -52,15 +52,15 @@ And a test for it:
 [source,java]
 ----
 @Test
-public void clickSayHello_showsGreeting() {
-    GreetingView view = navigate(GreetingView.class);
-    test(view.sayHello).click();
-    Notification notification = find(Notification.class).single();
-    Assertions.assertEquals("Hello World", test(notification).getText());
+void clickSayHello_showsGreeting() {
+    window.navigate(GreetingView.class);
+    window.findButton().withText("Say hello").click();
+    Assertions.assertEquals("Hello World",
+            window.findNotification().getText());
 }
 ----
 
-The test fails because no [classname]`Notification` was found. The error message of the failed query includes the UI tree:
+The test fails because no [classname]`Notification` was found. The error message of the failed lookup includes the UI tree:
 
 ----
 └── MockedUI[]
@@ -80,10 +80,9 @@ Set the name before clicking the button, then rerun the test:
 
 [source,java]
 ----
-test(view.name).setValue("World");
-test(view.sayHello).click();
-Notification notification = find(Notification.class).single();
-Assertions.assertEquals("Hello World", test(notification).getText());
+window.findTextField().withLabel("Your name").setValue("World");
+window.findButton().withText("Say hello").click();
+Assertions.assertEquals("Hello World", window.findNotification().getText());
 ----
 
 See <<{articles}/flow/testing/browserless/snapshots#reading-a-snapshot,Snapshot Format>> for the properties represented in the tree.
@@ -91,18 +90,22 @@ See <<{articles}/flow/testing/browserless/snapshots#reading-a-snapshot,Snapshot 
 
 == Show the Tree for Other Failures
 
-An assertion that fails after a successful query, such as a comparison of a component's text, doesn't include the tree.
+An assertion that fails after a successful lookup, such as a comparison of a component's text, doesn't include the tree.
 To get the tree for every failed test in a class, add the [annotationname]`@ExtendWith(TreeOnFailureExtension.class)` annotation to the test class:
 
 [source,java]
 ----
 @ExtendWith(TreeOnFailureExtension.class)
-class GreetingViewTest extends BrowserlessTest {
-    ...
+class GreetingViewTest {
+    // Create the application context in @BeforeEach,
+    // and close it in @AfterEach.
 }
 ----
 
-With Java EE/CDI, add the same annotation to your `AbstractCdiViewTest` subclass:
+The extension prints the UI of the window that the test used last.
+It runs before [annotationname]`@AfterEach` methods, so it works when the application context is closed in an [annotationname]`@AfterEach` method, but not when the test closes it itself, for example with try-with-resources.
+With a base class, add the annotation to the test class in the same way.
+With Java EE/CDI, add it to your [classname]`AbstractCdiViewTest` subclass:
 
 [source,java]
 ----
@@ -120,10 +123,10 @@ The extension is in the `com.vaadin.browserless` package, and `@ExtendWith` is i
 
 == Tips for Reading the Tree
 
-- **Look for what's missing.** If a query like `find(Notification.class).single()` fails, the tree shows that the component isn't there. Check the tree for clues about why it wasn't created.
+- **Look for what's missing.** If a lookup like `window.findNotification()` fails, the tree shows that the component isn't there. Check the tree for clues about why it wasn't created.
 - **Check property values.** When an assertion on a component's text or value fails, find that component in the tree and compare its actual properties to what you expected.
-- **Watch for unexpected components.** If `find(Button.class).single()` fails because multiple buttons were found, the tree shows all of them so you can narrow your query.
-- **Inspect the layout hierarchy.** If a component appears in the tree but a scoped query like `findInView(TextField.class)` can't find it, the tree helps you see whether the component is nested inside the expected parent.
+- **Watch for unexpected components.** If `window.findButton().withText("Save")` fails because several buttons match, the tree shows all of them so you can narrow your filters.
+- **Inspect the layout hierarchy.** If a component appears in the tree but a scoped lookup like `window.findTextField().inside(view)` can't find it, the tree helps you see whether the component is nested inside the expected parent.
 
 
 [discussion-id]`7B14417A-0C9B-4B46-8945-AC2564AD5F82`

@@ -1,15 +1,17 @@
 ---
 title: Test Configuration
 page-title: How to configure the Vaadin environment of a browserless test
-description: Set Vaadin application properties, feature flags, and Lookup services for a single test class or test method.
-meta-description: Configure Vaadin application properties, feature flags, and Lookup services for a single browserless test with the BrowserlessTestConfig annotation.
+description: Set Vaadin application properties, feature flags, and Lookup services for an application context, a test class, or a test method.
+meta-description: Configure Vaadin application properties, feature flags, and Lookup services for a browserless test, in the application context builder or with an annotation.
 order: 46
 ---
 
 
 = [since:com.vaadin:vaadin@V25.3]#Test Configuration#
 
-`@BrowserlessTestConfig` declares Vaadin application properties, feature flags, and Lookup services for the standard browserless environment.
+A browserless test can set Vaadin application properties, feature flags, and Lookup services for the environment it creates.
+An <<multi-user#,application context>> takes them from the builder that creates it.
+The base classes and the JUnit extensions read them from the [annotationname]`@BrowserlessTestConfig` annotation.
 Each configuration belongs to the environment created for its test and is discarded with that environment.
 This is Vaadin test configuration, not a replacement for Spring, Quarkus, or CDI bean configuration.
 
@@ -34,6 +36,9 @@ For a step-by-step example, see <<{articles}/building-apps/testing/browserless/c
 | Implementation classes registered with the Vaadin [classname]`Lookup`, such as an [interfacename]`InstantiatorFactory` or a [interfacename]`ResourceProvider`.
 |===
 
+The table lists the attributes of the annotation.
+The application context builder has a method for each: [methodname]`withApplicationProperty()` and [methodname]`withApplicationProperties()`, [methodname]`withFeatureFlags()` and [methodname]`withFeatureFlag()`, and [methodname]`withLookupServices()`.
+
 The `browserless` application property itself stays enforced and cannot be overridden.
 
 
@@ -47,8 +52,12 @@ The default is set before the test configuration is applied, so a test that need
 
 [source,java]
 ----
-@BrowserlessTestConfig(applicationProperties = "copilot.enable=true")
+app = BrowserlessApplicationContext.create(builder -> builder
+        .withViewPackages(MyView.class)
+        .withApplicationProperty("copilot.enable", "true"));
 ----
+
+With a base class or an extension, use `@BrowserlessTestConfig(applicationProperties = "copilot.enable=true")`.
 
 With Spring, Copilot first looks for `vaadin.copilot.enable` in the Spring environment, and falls back to the browserless default only if the property isn't defined there.
 If the application sets `vaadin.copilot.enable` explicitly, for example in [filename]`application.properties`, that value also applies to the tests.
@@ -57,6 +66,7 @@ To disable Copilot in such a project, override the property for the tests, for e
 
 == Merging Class and Method Configuration
 
+This section applies to the annotation, which base classes and extensions read.
 Every annotation a test inherits contributes to the configuration, rather than being shadowed by the nearest one. The merge works entry by entry: a property name or feature identifier declared in more than one place takes the value of the highest-ranking declaration, while the names declared only once all apply. The closer a declaration is to the test method, the higher it ranks: the method first, then the test class, then superclasses from the nearest up, and then, for a [annotationname]`@Nested` test, enclosing classes from the innermost out. A method-level feature setting replaces the class-level value for that identifier without removing unrelated application properties.
 
 [source,java]
@@ -78,17 +88,7 @@ A method-level annotation needs an environment built for each test method. When 
 
 == Configuring without Annotations
 
-The same settings can be built in code. On a JUnit 6 extension:
-
-[source,java]
-----
-@RegisterExtension
-BrowserlessExtension extension = new BrowserlessExtension()
-        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
-        .withFeatureFlags("defaultAutoResponsiveFormLayout");
-----
-
-On the application context builder of a multi-user test:
+The same settings can be built in code. On the application context builder:
 
 [source,java]
 ----
@@ -112,7 +112,17 @@ try (var app = BrowserlessApplicationContext.create(builder -> builder
 
 [methodname]`from(...)` reads a single annotation -- the one declared on the given class, or the one inherited from its nearest annotated superclass -- rather than merging the whole hierarchy the way an extension does.
 
-Or by overriding [methodname]`testConfiguration()` on a test that extends a base class:
+On a JUnit 6 extension:
+
+[source,java]
+----
+@RegisterExtension
+BrowserlessExtension extension = new BrowserlessExtension()
+        .withApplicationProperty("devmode.sessionSerialization.enabled", "true")
+        .withFeatureFlags("defaultAutoResponsiveFormLayout");
+----
+
+On a test that extends a base class, by overriding [methodname]`testConfiguration()`:
 
 [source,java]
 ----
@@ -129,7 +139,7 @@ On an extension, a configuration built in code wins over the class-level annotat
 
 .Spring Properties Win
 [NOTE]
-With Spring, a Vaadin property defined in the Spring environment, such as `vaadin.devmode.sessionSerialization.enabled` in [filename]`application.properties`, is applied by [classname]`SpringServlet` on top of the test configuration, and therefore wins over [annotationname]`@BrowserlessTestConfig`. Use [annotationname]`@TestPropertySource` to override such a property for a test. Properties that are not Vaadin init parameters are unaffected.
+With Spring, a Vaadin property defined in the Spring environment, such as `vaadin.devmode.sessionSerialization.enabled` in [filename]`application.properties`, is applied by [classname]`SpringServlet` on top of the test configuration, and therefore wins over both the application context builder and [annotationname]`@BrowserlessTestConfig`. Use [annotationname]`@TestPropertySource` to override such a property for a test. Properties that are not Vaadin init parameters are unaffected.
 
 
 [discussion-id]`CD70CAA5-6506-4810-BED5-0F54DCE2F0FA`

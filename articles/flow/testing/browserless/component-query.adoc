@@ -9,9 +9,9 @@ order: 18
 
 = Querying Components in Browserless Tests
 
-The [classname]`BrowserlessTest` base class can get the instantiated view, but child components may not always be directly accessible. For example, components may be stored in private fields or may not be referenced at all in the view class.
+Navigating a window returns the instantiated view, but child components may not always be directly accessible. For example, components may be stored in private fields or may not be referenced at all in the view class.
 
-To overcome this limitation, [classname]`BrowserlessTest` provides a component query functionality that lets you search the component tree for the components you need to interact with in test methods.
+To overcome this limitation, each window provides a component query functionality that lets you search its component tree for the components you need to interact with in test methods. Base classes and extensions provide the same methods.
 
 
 == Component Queries
@@ -23,11 +23,11 @@ Once the query is ready with all conditions configured, use a terminal operator 
 [source,java]
 ----
 // Get the TextField
-TextField nameField = find(TextField.class).single();
+TextField nameField = window.find(TextField.class).single();
 ----
 
 [NOTE]
-[classname]`BrowserlessTest` retains [methodname]`$()` and [methodname]`$view()` as deprecated aliases for [methodname]`find()` and [methodname]`findInView()`, scheduled for removal in 2.0. The newer composition-based APIs ([classname]`BrowserlessExtension`, [classname]`BrowserlessClassExtension`, and [classname]`BrowserlessUIContext`) only expose [methodname]`find()` and [methodname]`findInView()`.
+The base classes retain [methodname]`$()` and [methodname]`$view()` as deprecated aliases for [methodname]`find()` and [methodname]`findInView()`, scheduled for removal. Windows ([classname]`BrowserlessUIContext`) and the JUnit 6 extensions only expose [methodname]`find()` and [methodname]`findInView()`.
 
 
 === Scoping Queries
@@ -37,10 +37,10 @@ You can also restrict search scope to the children of the current view by using 
 [source,java]
 ----
 // Get the TextField in the current view
-TextField nameField = findInView(TextField.class).single();
+TextField nameField = window.findInView(TextField.class).single();
 
 // Get the TextField nested in a container
-TextField nameField = find(TextField.class, view.formLayout).single();
+TextField nameField = window.find(TextField.class, view.formLayout).single();
 ----
 
 The query object has many filtering methods that can be used to refine the search.
@@ -48,14 +48,14 @@ The query object has many filtering methods that can be used to refine the searc
 [source,java]
 ----
 // Get the TextField with the given label
-TextField nameField = findInView(TextField.class)
+TextField nameField = window.findInView(TextField.class)
         .withLabel("First name")
         .single();
 
 // Get all TextFields in the view that satisfy the conditions
 Predicate<TextField> fieldHasNotValue = field -> field.getOptionalValue().isEmpty();
 Predicate<TextField> fieldIsInvalid = TextField::isInvalid;
-List<TextField> textField = findInView(TextField.class)
+List<TextField> textField = window.findInView(TextField.class)
         .withCondition(fieldHasNotValue.or(fieldIsInvalid))
         .all();
 ----
@@ -161,20 +161,20 @@ Here are a few examples:
 [source,java]
 ----
 // Find a button by its text
-Button save = find(Button.class).withText("Save").single();
+Button save = window.find(Button.class).withText("Save").single();
 
 // Find a TextField by its label
-TextField name = find(TextField.class).withLabel("First name").single();
+TextField name = window.find(TextField.class).withLabel("First name").single();
 
 // Find the primary button
-Button primary = find(Button.class)
+Button primary = window.find(Button.class)
         .withTheme(ButtonVariant.LUMO_PRIMARY).single();
 
 // Find a TextField by CSS class
-TextField styled = find(TextField.class).withClassName("highlighted").single();
+TextField styled = window.find(TextField.class).withClassName("highlighted").single();
 
 // Find checkboxes with a specific value
-Checkbox checked = find(Checkbox.class).withValue(true).single();
+Checkbox checked = window.find(Checkbox.class).withValue(true).single();
 ----
 
 
@@ -191,7 +191,7 @@ Button submit = new Button("Submit");
 submit.setTestId("submit-button");
 
 // In the test
-Button submitButton = find(Button.class).testId("submit-button");
+Button submitButton = window.find(Button.class).testId("submit-button");
 ----
 
 To combine a test ID with other filter conditions, use the [methodname]`withTestId()` filter method instead and finish the chain with a regular terminal operator. Since test IDs are expected to be unique, both forms fail if more than one component matches. See <<{articles}/building-apps/testing/browserless/test-user-interactions#test-ids, Getting Started>> for more on test IDs.
@@ -206,7 +206,7 @@ Components such as [classname]`Card`, [classname]`Dialog`, and [classname]`Split
 [source,java]
 ----
 // Only the buttons the card put in its footer
-List<Button> footerButtons = test(card).find(Button.class)
+List<Button> footerButtons = window.test(card).find(Button.class)
         .withinSlot("footer").all();
 ----
 
@@ -223,7 +223,7 @@ Use [methodname]`exists()` to check whether a query has results without throwing
 
 [source,java]
 ----
-if (find(Notification.class).exists()) {
+if (window.find(Notification.class).exists()) {
     // A notification is open
 }
 ----
@@ -236,13 +236,13 @@ You can assert the number of results directly in the query chain:
 [source,java]
 ----
 // Expect exactly 3 text fields
-List<TextField> fields = find(TextField.class).withResultsSize(3).all();
+List<TextField> fields = window.find(TextField.class).withResultsSize(3).all();
 
 // Expect between 1 and 5 results
-List<Button> buttons = find(Button.class).withResultsSize(1, 5).all();
+List<Button> buttons = window.find(Button.class).withResultsSize(1, 5).all();
 
 // Expect at least 1 result
-List<Grid> grids = find(Grid.class).withMinResults(1).all();
+List<Grid> grids = window.find(Grid.class).withMinResults(1).all();
 ----
 
 
@@ -255,7 +255,7 @@ You may sometimes need to do a query for components nested inside the UI, in a h
 ----
 
 // Search for all 'VerticalLayout's in the view
-TextField textField = findInView(VerticalLayout.class)
+TextField textField = window.findInView(VerticalLayout.class)
         // take the second one and start searching for 'TextField's
         .thenOn(2, TextField.class)
         // filter for disabled 'TextField's
@@ -280,15 +280,15 @@ grid.addComponentColumn(person -> new Checkbox(person.isSubscriber()))
         .setKey("subscriber");
 
 // Finds nothing: no row has rendered yet
-List<Checkbox> checkboxes = find(Checkbox.class).all();
+List<Checkbox> checkboxes = window.find(Checkbox.class).all();
 ----
 
 [classname]`GridTester` renders the cell on request:
 
 [source,java]
 ----
-Checkbox checkbox = (Checkbox) test(grid).getCellComponent(0, "subscriber");
-test(checkbox).click();
+Checkbox checkbox = (Checkbox) window.test(grid).getCellComponent(0, "subscriber");
+window.test(checkbox).click();
 ----
 
 [since:com.vaadin:vaadin@V25.3]#The tester hands out the component the grid actually rendered, which is the one a browser shows: reading the same cell twice gives the same instance, and that instance is replaced when the row renders anew, after [methodname]`refreshItem(...)` for example. A row the client has not asked for yet is scrolled into view first, the way a user reaches it, and a cell the grid does not render at all, such as one in a hidden column, throws.#
@@ -307,12 +307,12 @@ The content of an overlay, such as a context menu, is attached to the UI only wh
 [source,java]
 ----
 // Empty while the menu is closed
-find(Div.class).withText("Rename").all();
+window.find(Div.class).withText("Rename").all();
 
-test(menu).open();
+window.test(menu).open();
 
 // One match
-find(Div.class).withText("Rename").all();
+window.find(Div.class).withText("Rename").all();
 ----
 
 For a worked example, see <<{articles}/building-apps/testing/browserless/test-user-interactions#,Test User Interactions>>.
