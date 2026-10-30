@@ -59,7 +59,7 @@ public class AdminView extends Div { }
 public class ProfileView extends Div { }
 
 @Route("special/preview-feature")
-public class ProfileView extends Div { }
+public class PreviewFeatureView extends Div { }
 
 @Route("")
 public class HomeView extends Div { }
@@ -71,7 +71,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin").hasAnyRole(ROLE_ADMIN)
+                .requestMatchers("/admin").hasRole("ADMIN")
                 .requestMatchers("/protected/**").authenticated()
                 .requestMatchers("/special/**")
                     .access((authentication, object) -> {
@@ -267,13 +267,21 @@ public class FooBarSecurityAccessPathChecker implements AccessPathChecker {
 
 public class NavigationAccessCheckerInitializer implements VaadinServiceInitListener {
 
-    public NavigationControlAccessCheckerInitializer() {
+    private final NavigationAccessControl accessControl;
+
+    public NavigationAccessCheckerInitializer() {
         accessControl = new NavigationAccessControl(List.of(
             new RoutePathAccessChecker(new FooBarSecurityAccessPathChecker()),
             new CustomChecker(),
             new VotingNavigationAccessChecker()
         ), new CustomDecisionResolver());
         accessControl.setLoginView(LoginView.class);
+    }
+
+    @Override
+    public void serviceInit(ServiceInitEvent serviceInitEvent) {
+        serviceInitEvent.getSource().addUIInitListener(uiInitEvent ->
+            uiInitEvent.getUI().addBeforeEnterListener(accessControl));
     }
 }
 ----
