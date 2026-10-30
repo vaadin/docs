@@ -28,7 +28,7 @@ By default, any view without an annotation is secured; it acts as if it has the 
 
 == Configuring a Security Realm
 
-A _security realm_ is a mechanism for storing and mapping users to their passwords and roles. Configuring a security realm depends on the application server you're using to run the Vaadin application. For example, if you use Apache Tomcat or TomEE, follow link:https://tomcat.apache.org/tomcat-10.0-doc/realm-howto.html[Tomcat Realm Configuration] instructions.
+A _security realm_ is a mechanism for storing and mapping users to their passwords and roles. Configuring a security realm depends on the application server you're using to run the Vaadin application. For example, if you use Apache Tomcat or TomEE, follow link:https://tomcat.apache.org/tomcat-11.0-doc/realm-howto.html[Tomcat Realm Configuration] instructions.
 
 
 == Handling User Log In & Out
@@ -88,7 +88,6 @@ Having a log-in view is one of the basic requirements of many authentication and
 ----
 @Route("login")
 @PageTitle("Login")
-@AnonymousAllowed
 public class LoginView extends VerticalLayout implements BeforeEnterObserver,
         ComponentEventListener<AbstractLogin.LoginEvent> {
 
@@ -131,6 +130,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver,
 }
 ----
 
+The log-in view doesn't need an access annotation: [classname]`NavigationAccessControl` always allows navigation to the log-in view set in <<#adding-vaadinserviceinitlistener,Adding VaadinServiceInitListener>>.
+
 In this example, Vaadin's Login Form component is used for the sake of brevity. However, you could instead implement a more verbose log-in view.
 
 
@@ -141,6 +142,7 @@ Typically, you'd let the user log out by using a log-out button. The following e
 .[filename]`MainLayout.java`
 [source,java]
 ----
+@AnonymousAllowed // <1>
 public class MainLayout extends AppLayout {
 
     public MainLayout() {
@@ -161,13 +163,14 @@ public class MainLayout extends AppLayout {
     }
 }
 ----
+<1> The access annotations of a layout are checked in addition to those of the views inside it. This layout hosts both public and protected views, so it allows anonymous access.
 
 
 == Adding `VaadinServiceInitListener`
 
 To restrict access to views, a [classname]`VaadinServiceInitListener` must be registered for the [classname]`VaadinService` to initialize and enable the [classname]`NavigationAccessControl` for all UIs:
 
-.[filename]`NavigationControlAccessCheckerInitializer.java`
+.[filename]`NavigationAccessCheckerInitializer.java`
 [source,java]
 ----
 import com.vaadin.flow.server.ServiceInitEvent;
@@ -179,7 +182,7 @@ public class NavigationAccessCheckerInitializer implements VaadinServiceInitList
 
     private NavigationAccessControl accessControl;
 
-    public NavigationControlAccessCheckerInitializer() {
+    public NavigationAccessCheckerInitializer() {
         accessControl = new NavigationAccessControl(); // <1>
         accessControl.setLoginView(LoginView.class); // <2>
     }
@@ -206,13 +209,13 @@ This class still needs to be loaded, so you should follow the instructions in th
 
 == Enable Loading of VaadinServiceInitListener
 
-To enable the Java SPI loading mechanism to load the [classname]`NavigationControlAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
+To enable the Java SPI loading mechanism to load the [classname]`NavigationAccessCheckerInitializer` as the [classname]`VaadinServiceInitListener`, there are a few things to do.
 
 First, under the `resources/META-INF/services` directory, create a file named exactly `com.vaadin.flow.server.VaadinServiceInitListener`.
 
-Next, put the fully qualified name of the [classname]`NavigationControlAccessCheckerInitializer` into this newly created file. For example, if the [classname]`NavigationControlAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file, `org.vaadin.example.security.NavigationControlAccessCheckerInitializer`.
+Next, put the fully qualified name of the [classname]`NavigationAccessCheckerInitializer` into this newly created file. For example, if the [classname]`NavigationAccessCheckerInitializer` class is in the `org.vaadin.example.security` package, the following value should be in the file, `org.vaadin.example.security.NavigationAccessCheckerInitializer`.
 
-This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`NavigationControlAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
+This Service Provider configuration file triggers the Java SPI loading mechanism to load [classname]`NavigationAccessCheckerInitializer` during application startup. For more information on this, see <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
 
 
 == Access Annotations
@@ -232,7 +235,7 @@ Below are some usage examples:
 .Allow All Users to Navigate to View
 [source,java]
 ----
-@Route(value = "", layout = MainView.class)
+@Route(value = "", layout = MainLayout.class)
 @PageTitle("Public View")
 @AnonymousAllowed
 public class PublicView extends VerticalLayout {
@@ -243,7 +246,7 @@ public class PublicView extends VerticalLayout {
 .Allow Only Authenticated Users to Navigate to View
 [source,java]
 ----
-@Route(value = "private", layout = MainView.class)
+@Route(value = "private", layout = MainLayout.class)
 @PageTitle("Private View")
 @PermitAll
 public class PrivateView extends VerticalLayout {
@@ -254,17 +257,19 @@ public class PrivateView extends VerticalLayout {
 .Allow Only Users with `ADMIN` Role to Navigate to View
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
-@RolesAllowed("ROLE_ADMIN") // <- Should match one of the user's roles (case-sensitive)
+@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
     // ...
 }
 ----
 
+Role names are passed unchanged to [methodname]`HttpServletRequest.isUserInRole()`, so they have to match the role names of the security realm exactly.
+
 Now, if the application is started by navigating to `http://localhost:8080`, `PublicView` contents should be available without any authentication. However, by navigating to `http://localhost:8080/private` or `http://localhost:8080/admin`, the user is redirected to the specified `LoginView`.
 
-If the user is already authenticated and tries to navigate to a view for which they have no permission, an error message is displayed. The message depends on the application mode: In development mode, Vaadin shows an _Access denied_ message with the list of available routes. In production mode, Vaadin shows the [classname]`RouteAccessDeniedError` view, which shows the _Could not navigate to 'RequestedRouteName'_ message by default. For security reasons, the message doesn't say whether the navigation target exists.
+If the user is already authenticated and tries to navigate to a view for which they have no permission, an error message is displayed. The default handler, [classname]`RouteAccessDeniedError`, reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. For security reasons, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows the _Could not navigate to 'RequestedRouteName'_ message by default.
 
 // TODO: Consider adding more details and snippet code to showcase how the following can be achieved:
 // 1. login with some users with different roles
@@ -275,19 +280,19 @@ The following example shows how the security annotations are inherited from the 
 .Inheriting Security Annotations from Parent Class
 [source,java]
 ----
-@RolesAllowed("ROLE_ADMIN")
+@RolesAllowed("ADMIN")
 public abstract class AbstractAdminView extends VerticalLayout {
     // ...
 }
 
-@Route(value = "user-listing", layout = MainView.class)
+@Route(value = "user-listing", layout = MainLayout.class)
 @PageTitle("User Listing")
 public class UserListingView extends AbstractAdminView {
     // ...
 }
 ----
 
-Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. By design, the annotations aren't read from parent layouts or parent views. This would make it unnecessarily complex to determine which security level should be applied. If multiple annotations are specified on a single view class, the following rules are applied:
+Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. Security annotations on parent layouts are also checked: if a parent layout lacks an access annotation, access to the views within it is denied. Both the layout and the view must grant access for navigation to succeed. If multiple annotations are specified on a single view class, the following rules are applied:
 
 - `DenyAll` overrides other annotations;
 - `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`; and

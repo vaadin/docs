@@ -16,7 +16,9 @@ From time to time, Vaadin users perform security tests on the framework and repo
 
 The settings `script-src 'unsafe-inline' 'unsafe-eval'` and `style-src 'unsafe-inline'` are required during Vaadin application start, that is, the bootstrap process. The bootstrap process that starts the application loads the client-side engine, which is the part of the framework that runs in the browser. It consists of JavaScript logic for the communication protocol and DOM control, for example, but not of the application code. The engine is a static resource, and once it's loaded, it's started by a script that the bootstrap page includes inline. The engine then evaluates the JavaScript expressions that the server sends -- those of [methodname]`executeJs()` and of the event data expressions -- by constructing functions from them in the browser, which is what `unsafe-eval` permits.
 
-Hence, these settings are architectural limitations in Vaadin, so that the framework can start its client-side engine in the browser.
+Hence, these settings are needed so that the framework can start its client-side engine in the browser.
+
+[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter prepares applications for a strict, nonce-based policy without these keywords in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. The `strict` mode isn't usable for applications yet, because Vaadin itself still uses APIs that need `eval`, for example for the event data of click listeners. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter, and <<strict-csp#,Content Security Policy>> for running with a strict policy today.
 
 Reported as: Missing or insecure “Content-Security-Policy” header
 
@@ -36,14 +38,7 @@ Many tools report a Cross-Site Request Forgery (CSRF) vulnerability when Vaadin 
 pass:[<!-- vale Vale.Spelling = NO -->]
 pass:[<!-- vale Vale.Terms = NO -->]
 
-- FlowBootstrap.(hash).js
-- FlowBootstrap.(hash).js.br
-- FlowClient.(hash).js
-- FlowClient.(hash).js.br
-- generated-flow-imports-fallback.(hash).js
-- generated-flow-imports-fallback.(hash).js.br
-- generated-flow-imports.(hash).js
-- generated-flow-imports.(hash).js.br
+- VAADIN/build/(bundle-name)-(hash).(js | css)
 - web-component/web-component-(ui | bootstrap).(js | html)
 - VAADIN/build/webcomponenthtml-(hash).js
 - web-component/(exported-web-component-tag).js
@@ -59,24 +54,14 @@ As mentioned earlier, some tools misrepresent getting static resources, especial
 Reported as: Authentication Bypass Using HTTP Verb Tampering
 
 
-== Temporary File Download
-
-Some tools mark downloading the [filename]`vaadinBootstrap.js` file as an issue. This file is a required part of starting the application, and is a static resource.
-
-
 == Oracle Log File Information Disclosure
 
 Some tools that check for this don't check the content of the response, only the response status. Vaadin doesn't send server log files to the client, even though the response status is set to 200.
 
 
-== Content Type Incorrectly Stated
-
-This happens when Vaadin sends user events to the server and receives JSON data back. The response content type is `text/plain`, even though the response is JavaScript. This is done because some older Portlet vendors don't treat JavaScript responses correctly, hence the client side receives incoherent instructions. The data returned from the server is never treated as a script on the client, so there is no security risk here.
-
-
 == Open Redirection &ndash; DOM-Based
 
-This issue is reported because `vaadinBootstrap.js` indeed opens a new HTTP request. This is done to fetch the initial application state. On first request to an application URL, Vaadin replies with the bootstrap file, which, in turn loads the theme, client-side engine, and application state.
+This issue is reported because the client-side bootstrap script opens a new HTTP request to the application URL. This is done to fetch the initial application state. On first request to an application URL, Vaadin replies with the bootstrap page, which in turn loads the client-side engine and the application state.
 
 The way this request is done can't be used by an attacker to modify the application state. Hence, this is a false positive.
 

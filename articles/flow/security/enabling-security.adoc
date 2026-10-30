@@ -26,21 +26,20 @@ To enable the mechanism in a Vaadin Flow Spring Boot application without any sec
 - Spring Security dependencies;
 - Log-out capability;
 - Security configuration class that uses [classname]`VaadinSecurityConfigurer`; and
-- One of these annotations on each view class: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`.
+- One of these annotations on each view class and on each layout class: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`. The log-in view is the only exception.
 
 A complete example project, including the source code from this document, is available at https://github.com/vaadin/flow-crm-tutorial[`github.com/vaadin/flow-crm-tutorial`].
 
 
 == Log-in View
 
-A log-in view is a basic requirement of many authentication and authorization mechanisms. It allows you to redirect anonymous users to that page, before allowing them to view any protected resources. The log-in view should always be accessible by anonymous users.
+A log-in view is a basic requirement of many authentication and authorization mechanisms. It allows you to redirect anonymous users to that page, before allowing them to view any protected resources. Navigation access control always allows navigation to the configured log-in view, so the view doesn't need an access annotation.
 
 .[classname]`LoginView.java`
 [source,java]
 ----
-@Route("login")
+@Route(value = "login", autoLayout = false)
 @PageTitle("Login")
-@AnonymousAllowed
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private LoginForm login = new LoginForm();
@@ -71,6 +70,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
 This example uses Vaadin's Login Form component for brevity in this implementation. However, there's no requirement to use it. Use whatever log-in view you prefer.
 
+Setting `autoLayout = false` keeps the log-in view out of an automatic layout -- a class annotated with [annotationname]`@Layout` -- so that the log-in form isn't shown inside the application's main layout and navigation.
+
 
 == Spring Security Dependencies
 
@@ -90,72 +91,9 @@ To enable Spring Security, certain dependencies should be added to the project. 
 ----
 
 
-== Log-Out Capability
-
-To initiate logging out of a web applications, you would typically provide a log-out button. Here is a basic implementation of a log-out button shown on the header of the main layout:
-
-.[filename]`MainLayout.java`
-[source,java]
-----
-public class MainLayout extends AppLayout {
-
-    private SecurityService securityService;
-
-    public MainLayout(@Autowired SecurityService securityService) {
-        this.securityService = securityService;
-
-        H1 logo = new H1("Vaadin CRM");
-        logo.addClassName("logo");
-        HorizontalLayout header;
-        if (securityService.getAuthenticatedUser() != null) {
-            Button logout = new Button("Logout", click ->
-                    securityService.logout());
-            header = new HorizontalLayout(logo, logout);
-        } else {
-            header = new HorizontalLayout(logo);
-        }
-
-        // Other page components omitted.
-
-        addToNavbar(header);
-    }
-}
-----
-
-The method of getting the authenticated user and logging them out may vary from one application to another. Here's a basic example of this with the Spring Security API:
-
-.[filename]`SecurityService.java`
-[source,java]
-----
-@Component
-public class SecurityService {
-
-    private static final String LOGOUT_SUCCESS_URL = "/";
-
-    public UserDetails getAuthenticatedUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Object principal = context.getAuthentication().getPrincipal();
-        if (principal instanceof UserDetails) {
-            return (UserDetails) context.getAuthentication().getPrincipal();
-        }
-        // Anonymous or no authentication.
-        return null;
-    }
-
-    public void logout() {
-        UI.getCurrentOrThrow().getPage().setLocation(LOGOUT_SUCCESS_URL);
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.logout(
-                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
-                null);
-    }
-}
-----
-
-
 == Security Utilities
 
-To access authenticated user details and to simplify the handling of logout, Vaadin provides an [classname]`AuthenticationContext` component -- which is strictly integrated with Spring Security -- that can be injected into views and services.
+To access authenticated user details and to log users out, Vaadin provides an [classname]`AuthenticationContext` component -- which is strictly integrated with Spring Security -- that can be injected into views and services.
 
 The [classname]`AuthenticationContext` by design does not implement [classname]`java.io.Serializable`. Vaadin view fields referencing this object must be defined `transient`. The class exposes the following utility methods:
 
@@ -167,11 +105,13 @@ The [classname]`AuthenticationContext` by design does not implement [classname]`
 - [methodname]`hasAuthority(String authority)`, [methodname]`hasAnyAuthority(String... authorities)`, [methodname]`hasAllAuthorities(String... authorities)` check if the user has been granted certain authorities.
 - [methodname]`logout` initiates the Spring Security logout process and redirects the user to the configured logout URL.
 
-Here's an implementation of a log-out button shown on the header of the main layout that uses the [classname]`AuthenticationContext` component:
+[[log-out-capability]]
+To initiate logging out of a web application, you would typically provide a log-out button. Here's an implementation of a log-out button shown on the header of the main layout that uses the [classname]`AuthenticationContext` component:
 
 .[filename]`MainLayout.java`
 [source,java]
 ----
+@AnonymousAllowed // <1>
 public class MainLayout extends AppLayout {
 
     private final transient AuthenticationContext authContext;
@@ -197,6 +137,7 @@ public class MainLayout extends AppLayout {
     }
 }
 ----
+<1> A layout needs an access annotation of its own, as described in <<annotation-inheritance,Annotation Inheritance & Overrides>>. This layout hosts both public and protected views, so it allows anonymous access. Its header only shows the log-out button to authenticated users.
 
 The same component also covers programmatic access checks elsewhere in the application, such as deciding whether to render a navigation item or to enable an action. Roles are given without the role prefix, which [classname]`AuthenticationContext` adds when comparing against the granted authorities (see <<role-prefix, Roles & the Role Prefix>>). An application migrating from a custom security mechanism therefore doesn't need a security utility class of its own:
 
@@ -210,6 +151,42 @@ if (authContext.hasRole("ADMIN")) { // Not "ROLE_ADMIN".
 ----
 
 Hiding a navigation item is a usability measure, not a security measure. The view it points to still needs its own access annotation, since a user can navigate there by entering the URL directly.
+
+
+=== Custom Security Utilities
+
+[classname]`AuthenticationContext` covers what most applications need. If you still want a security utility of your own -- for example, to combine the user lookup with application-specific logic, such as loading your own user entity from a repository -- you can build it directly on the Spring Security API. Here's a basic example that shows the underlying calls:
+
+.[filename]`SecurityService.java`
+[source,java]
+----
+@Component
+public class SecurityService {
+
+    private static final String LOGOUT_SUCCESS_URL = "/";
+
+    public Optional<UserDetails> getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication != null
+                && authentication.getPrincipal() instanceof UserDetails userDetails) {
+            return Optional.of(userDetails);
+        }
+        // Anonymous or no authentication.
+        return Optional.empty();
+    }
+
+    public void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation(LOGOUT_SUCCESS_URL);
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(
+                VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
+                null);
+    }
+}
+----
+
+You can inject the service into views in the same way as [classname]`AuthenticationContext`. Unlike [methodname]`AuthenticationContext.logout()`, the [methodname]`logout()` method in this example only clears the security context and redirects to a fixed URL. It doesn't run the other logout handlers or the logout success URL configured for Spring Security.
 
 
 == Security Configuration Class
@@ -234,10 +211,10 @@ public class SecurityConfiguration {
             .permitAll());
 
         // Configure Vaadin's security using VaadinSecurityConfigurer
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { // <3>
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { // <2>
             // This is important to register your login view to the
             // navigation access control mechanism:
-            configurer.loginView(LoginView.class); // <4>
+            configurer.loginView(LoginView.class); // <3>
 
             // You can add any possible extra configurations of your own
             // here (the following is just an example):
@@ -268,12 +245,13 @@ public class SecurityConfiguration {
     }
 }
 ----
-
-Notice the including of [annotationname]`@EnableWebSecurity` and [annotationname]`@Configuration` annotations on top of the above class. As their names imply, they instruct Spring to enable its security features.
+<1> Enables Spring Security's web security support. Together with [annotationname]`@Configuration`, it makes Spring pick up the security filter chain defined in the class.
+<2> Applies the Vaadin-specific Spring Security configuration.
+<3> Registers the log-in view with Spring Security's form login and with navigation access control.
 
 [classname]`VaadinSecurityConfigurer` is a helper class that configures the common Vaadin-related Spring Security settings. By using it, the view-based access control mechanism is enabled automatically, and no further configuration is needed.
 
-The [classname]`VaadinSecurityConfigurer` handles all of the Vaadin-related configuration. For example, it ignores static resources, enables `CSRF` checking while ignoring unnecessary checking for Vaadin internal requests, and configures proper exception handling for Vaadin applications.
+The [classname]`VaadinSecurityConfigurer` handles all of the Vaadin-related configuration. For example, it permits access to Vaadin's static resources, enables `CSRF` checking while ignoring unnecessary checking for Vaadin internal requests, and configures proper exception handling for Vaadin applications.
 
 The log-in view can be configured via the provided [methodname]`loginView()` method on the configurer.
 
@@ -291,19 +269,13 @@ A hand-written [methodname]`formLogin()` configuration does none of that. The in
 
 .Never Use Hard-Coded Credentials in Production
 [WARNING]
-The implementation of the [methodname]`userDetailsService()` method is just an in-memory implementation for the sake of brevity in this documentation. In a normal application, you can change the Spring Security configuration to use an authentication provider for Lightweight Directory Access Protocol (LDAP), JAAS, and other real-world sources. See  https://dzone.com/articles/flow/spring-security-authentication[Spring Security authentication providers] to read more about them.
+The implementation of the [methodname]`userDetailsService()` method is just an in-memory implementation for the sake of brevity in this documentation. In a normal application, you can change the Spring Security configuration to use an authentication provider for Lightweight Directory Access Protocol (LDAP), JAAS, and other real-world sources. See the https://docs.spring.io/spring-security/reference/servlet/authentication/index.html[Spring Security authentication documentation] to read more about them.
 
 The most important configuration in the previous example is the call to [methodname]`configurer.loginView(LoginView.class)`. This is how the view-based access control mechanism knows where to redirect users when they try to navigate to a protected view.
 
-The log-in view should always be accessible by anonymous users, so it should have the [annotationname]`@AnonymousAllowed` annotation. This is especially important when using the variant of the [methodname]`loginView` method where you provide the route path -- although this signature is meant to be used with https://vaadin.com/hilla[Hilla] views, not with Flow views.
+The log-in view is always accessible to anonymous users: navigation access control allows navigation to the configured log-in view regardless of its access annotations, and the configurer permits HTTP requests to the log-in page. The log-in view therefore doesn't need the [annotationname]`@AnonymousAllowed` annotation.
 
 For additional information about navigation access control, consult the <<{articles}/flow/security/advanced-topics/navigation-access-control#, related documentation>>.
-
-.Component-Based Security Configuration
-[NOTE]
-Spring Security 5.7.0 deprecates the `WebSecurityConfigurerAdapter`. Migrate to a component-based security configuration.
-
-The component-based security configuration shown in the `SecurityConfiguration` example above is the recommended approach. Read more about  https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter[updating from WebSecurityConfigurerAdapter to component-based security configuration].
 
 Once the `LoginView` is ready, and you've set it as the log-in view in the security configuration, you're ready to move ahead and see how the security annotations work on the views.
 
@@ -324,7 +296,7 @@ Below is an example using [annotationname]`@AnonymousAllowed` to enable all user
 
 [source,java]
 ----
-@Route(value = "", layout = MainView.class)
+@Route(value = "", layout = MainLayout.class)
 @PageTitle("Public View")
 @AnonymousAllowed
 public class PublicView extends VerticalLayout {
@@ -336,7 +308,7 @@ This next example is using [annotationname]`@PermitAll` to allow only authentica
 
 [source,java]
 ----
-@Route(value = "private", layout = MainView.class)
+@Route(value = "private", layout = MainLayout.class)
 @PageTitle("Private View")
 @PermitAll
 public class PrivateView extends VerticalLayout {
@@ -348,7 +320,7 @@ This example is using [annotationname]`@RolesAllowed` to enable only the users w
 
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
 @RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
 public class AdminView extends VerticalLayout {
@@ -388,6 +360,7 @@ static GrantedAuthorityDefaults grantedAuthorityDefaults() {
 ----
 
 
+[[annotation-inheritance]]
 === Annotation Inheritance & Overrides
 
 As shown in the example here, the security annotations are inherited from the closest parent class that has them. Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes.
@@ -399,7 +372,7 @@ public abstract class AbstractAdminView extends VerticalLayout {
     // ...
 }
 
-@Route(value = "user-listing", layout = MainView.class)
+@Route(value = "user-listing", layout = MainLayout.class)
 @PageTitle("User Listing")
 public class UserListingView extends AbstractAdminView {
     // ...
@@ -424,7 +397,7 @@ The following example shows how to use [classname]`AuthenticationContext` to ret
 [source,java]
 ----
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.H2;;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -442,9 +415,8 @@ public class MyView extends VerticalLayout {
         // Ensure that the class used by getAuthenticatedUser() matches the object type created
         // by the authentication providers used in Spring Security.
         authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
-            boolean isAdmin = user.getAuthorities().stream()
-                    .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
-            if (isAdmin) {
+            add(new H2("Welcome " + user.getUsername()));
+            if (authContext.hasRole("ADMIN")) { // Not "ROLE_ADMIN".
                 add(new Button("Admin button"));
             } else {
                 add(new H2("You are not an admin"));
@@ -459,9 +431,7 @@ public class MyView extends VerticalLayout {
 
 If the user is already authenticated and tries to navigate to a view for which they don't have permission, an error message is displayed. The message depends on the application mode.
 
-In development mode, Vaadin shows the [classname]`RouteAccessDeniedError` view, which shows an _Access Denied_ message with a list of available routes. In production mode, Vaadin shows the [classname]`RouteAccessDeniedError` view, which shows by default a message that reads, _Could Not Navigate to 'RequestedRouteName'_. As a security precaution, the message won't say whether the navigation target exists.
-
-The [classname]`RouteAccessDeniedError` is not by default a view, but a reroute to the [classname]`RouteNotFoundError` view for better backwards compatibility.
+The default error handler for denied access, [classname]`RouteAccessDeniedError`, doesn't render anything itself. It reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. As a security precaution, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows by default a message that reads, _Could not navigate to 'RequestedRouteName'_.
 
 
 == Custom Error Messages for Unauthorized Views
@@ -476,6 +446,7 @@ The following is one example of this approach, using a custom error by overridin
 
 [source,java]
 ----
+@PermitAll // <1>
 public class CustomAccessDeniedError extends RouteAccessDeniedError {
     @Override
     public int setErrorParameter(BeforeEnterEvent event,
@@ -485,6 +456,7 @@ public class CustomAccessDeniedError extends RouteAccessDeniedError {
     }
 }
 ----
+<1> Overrides the [annotationname]`@AnonymousAllowed` annotation that [classname]`RouteAccessDeniedError` carries, for the reason explained below.
 
 This next example provides a custom error by implementing an interface:
 
@@ -511,7 +483,7 @@ If you want to reroute to a different error type, you would do something like th
 
 [source,java]
 ----
-@Route(value = "admin", layout = MainView.class)
+@Route(value = "admin", layout = MainLayout.class)
 @PageTitle("Admin View")
 @RolesAllowed("ADMIN")
 @AccessDeniedErrorRouter(rerouteToError = NotFoundException.class)
@@ -520,7 +492,7 @@ public class AdminView extends VerticalLayout {
 }
 ----
 
-[classname]`AccessDeniedErrorRouter` annotation redirects by default to [classname]`AccessDeniedException`, if not changed. Annotation is to be used together with [annotationname]`@Route`, or if present, together with access annotation: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`.
+By default, the [annotationname]`@AccessDeniedErrorRouter` annotation reroutes to the error view for [classname]`AccessDeniedException`. The exception class given in `rerouteToError` needs a public no-argument constructor. The annotation is to be used together with [annotationname]`@Route`, or if present, together with access annotation: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`.
 
 
 == Navigation Access Control & Spring's URL-Pattern-Based HTTP Security
@@ -562,40 +534,26 @@ For more information about navigation access control consult the <<{articles}/fl
 
 Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views. Doing so might cause unwanted access configurations, and would be an unnecessary complication in the authorization of views.
 
+== Testing Access Control
+
+Browserless tests support Spring Security, so you can test view access control without starting a browser or a server. Annotate a test with Spring Security's [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser` to navigate as a user with given roles, or as an anonymous user, and assert which view is shown. See <<{articles}/flow/testing/browserless/spring-security#,Spring Security Integration>> for the reference, and <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>> for a guide with examples.
+
+To test services that are protected with Spring method security, see <<{articles}/building-apps/security/protect-services#testing-method-security,Testing Method Security>>.
+
+
 == Spring Concurrency Support with Vaadin
 
 Spring Security provides built-in https://docs.spring.io/spring-security/reference/servlet/integrations/concurrency.html[concurrency support] to propagate security contexts across asynchronous operations. One of the key components for this is [classname]`DelegatingSecurityContextExecutor`, which wraps an [classname]`Executor` and ensures that the [classname]`SecurityContext` is properly propagated to background tasks.
 
-In a Vaadin application, [classname]`VaadinSecurityContextHolderStrategy` should be initialized before any custom [classname]`DelegatingSecurityContextExecutor` bean is created. This ensures that the correct security context holder is used, preventing potential issues with authentication propagation in async tasks.
-
-To guarantee that [classname]`VaadinSecurityContextHolderStrategy` is set before the [classname]`DelegatingSecurityContextExecutor` bean is instantiated, consider the following approaches:
-
-* add `@DependsOn("VaadinSecurityContextHolderStrategy")` to the custom [classname]`DelegatingSecurityContextExecutor` bean definition to explicitly enforce the initialization order
-* instead of relying on implicit ordering, have [classname]`VaadinSecurityContextHolderStrategy` directly injected into the bean method definition and manually wire it into the [classname]`DelegatingSecurityContextExecutor` instance.
-
+Vaadin provides a [interfacename]`SecurityContextHolderStrategy` bean that is aware of the Vaadin session, and installs it in Spring Security's [classname]`SecurityContextHolder` only after all singleton beans have been created. A [classname]`DelegatingSecurityContextExecutor` that is itself defined as a bean is created before that, so it would pick up Spring Security's default strategy. Inject the strategy into the bean method and wire it into the executor explicitly:
 
 [source,java]
-.Using @DependsOn
-----
-@Bean
-@DependsOn("VaadinSecurityContextHolderStrategy")
-public DelegatingSecurityContextAsyncTaskExecutor taskExecutor() {
-    var delegate = new ThreadPoolTaskExecutor();
-    //configure the executor
-    delegate.initialize();
-
-    return new DelegatingSecurityContextAsyncTaskExecutor(delegate);
-}
-----
-
-[source,java]
-.Injecting VaadinSecurityContextHolderStrategy Manually
 ----
 @Bean
 public DelegatingSecurityContextAsyncTaskExecutor taskExecutor(
-    VaadinAwareSecurityContextHolderStrategy strategy) {
+        SecurityContextHolderStrategy strategy) {
     var delegate = new ThreadPoolTaskExecutor();
-    //configure the executor
+    // Configure the executor
     delegate.initialize();
 
     var executor = new DelegatingSecurityContextAsyncTaskExecutor(delegate);
@@ -604,42 +562,38 @@ public DelegatingSecurityContextAsyncTaskExecutor taskExecutor(
 }
 ----
 
-By applying either of these solutions, you ensure that the correct security context holder is used for asynchronous task execution in a Vaadin application.
+This ensures that the correct security context holder is used for asynchronous task execution in a Vaadin application.
 
 
 == Spring Impersonation with Vaadin
 
-A common use case for secured applications is when a user has a problem and the admin or super user wants to log in as the troubled user to see things from their prospective to better assist them. It can be helpful for customer support analysis when the support person can access the system as the actual user.
+A common use case for secured applications is when a user has a problem and the admin or super user wants to log in as the troubled user to see things from their perspective to better assist them. It can be helpful for customer support analysis when the support person can access the system as the actual user.
 
 An insecure solution -- which is basically a security breach -- would be to ask the customer to provide their password, or for the administrator to retrieve it from the system. Neither of these methods should be used. Instead, Spring Security has an impersonation feature.
 
 By using impersonation, the system knows who has really logged in. Therefore, it can track an impersonator's actions for an audit log, if there is one in place.
 
-To add impersonation for a Vaadin application, create the [classname]`SwitchUserFilter` bean as follows:
+To add impersonation to a Vaadin application, add Spring Security's [classname]`SwitchUserFilter` to the security filter chain, and secure the impersonation endpoints with the appropriate request matchers. By default, the filter switches users on `POST` requests to `/login/impersonate`, and ends the impersonation on `POST` requests to `/logout/impersonate`:
 
 [source,java]
 ----
-  @Bean
-  public SwitchUserFilter switchUserFilter(SecurityContextHolderStrategy strategy) {
-    SwitchUserFilter filter = new SwitchUserFilter();
-    filter.setSecurityContextHolderStrategy(strategy);
-    filter.setUserDetailsService(userDetailsService());
-    filter.setSwitchUserMatcher(antMatcher(HttpMethod.GET, "/impersonate"));
-    filter.setExitUserMatcher(antMatcher(HttpMethod.GET, "/impersonate/exit"));
-    filter.setTargetUrl("/");
-    return filter;
-  }
-----
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http,
+        UserDetailsService userDetailsService,
+        SecurityContextHolderStrategy strategy,
+        ApplicationEventPublisher eventPublisher) throws Exception {
+    var switchUserFilter = new SwitchUserFilter();
+    switchUserFilter.setSecurityContextHolderStrategy(strategy);
+    switchUserFilter.setUserDetailsService(userDetailsService);
+    switchUserFilter.setTargetUrl("/");
+    switchUserFilter.setApplicationEventPublisher(eventPublisher);
+    switchUserFilter.afterPropertiesSet();
+    http.addFilterAfter(switchUserFilter, AuthorizationFilter.class);
 
-To secure the impersonation endpoints, configure the HttpSecurity object with the appropriate matchers like so:
-
-[source,java]
-----
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     // Authorize impersonation for admin/impersonated admin
-    http.authorizeHttpRequests(auth -> auth.requestMatchers("/impersonate").hasAnyRole("ADMIN", "PREVIOUS_ADMINISTRATOR"));
-    http.authorizeHttpRequests(auth -> auth.requestMatchers("/impersonate/exit").hasRole("PREVIOUS_ADMINISTRATOR"));
+    http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/login/impersonate").hasAnyRole("ADMIN", "PREVIOUS_ADMINISTRATOR")
+            .requestMatchers("/logout/impersonate").hasRole("PREVIOUS_ADMINISTRATOR"));
 
     // Configure Vaadin's security using VaadinSecurityConfigurer
     http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
@@ -647,30 +601,60 @@ To secure the impersonation endpoints, configure the HttpSecurity object with th
     });
 
     return http.build();
-    // Other configurations
-  }
+}
 ----
+
+The filter is added after the [classname]`AuthorizationFilter`, so that the authorization rules are checked before a user is switched. Don't declare the filter as a bean of its own: Spring Boot would then also register it as a servlet filter outside the security filter chain. Since the filter isn't a bean, call [methodname]`afterPropertiesSet()` yourself -- it creates the success and failure handlers -- and pass it the [interfacename]`ApplicationEventPublisher`, so that it publishes an [classname]`AuthenticationSwitchUserEvent` for your audit log whenever a user is switched.
 
 This allows users with the `ADMIN` role or when impersonating admin to call the impersonate endpoint.
 
-To impersonate a user, a call to the `impersonate` URL needs to be done.
+The impersonation endpoints are protected by Spring Security's CSRF protection, like any other `POST` request outside of Vaadin's internal requests. To call them from a view, submit a form that includes Spring Security's CSRF token. Vaadin adds the token and the name of its request parameter to the page as `_csrf` and `_csrf_parameter` meta tags, so the form can read them from there. The meta tags are only present when CSRF protection is enabled, so the form skips the token otherwise:
 
 [source,java]
 ----
-Button impersonate = new Button("Impersonate user", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate?username=user"))
-);
+private void postToSecurityEndpoint(String url, String username) {
+    UI.getCurrentOrThrow().getPage().executeJs("""
+            const meta = name =>
+                document.querySelector(`meta[name="${name}"]`)?.content;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = $0;
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.append(input);
+            };
+            const csrfParameter = meta('_csrf_parameter');
+            if (csrfParameter) {
+                addField(csrfParameter, meta('_csrf'));
+            }
+            if ($1) {
+                addField('username', $1);
+            }
+            document.body.append(form);
+            form.submit();
+            """, url, username);
+}
 ----
 
-This has the admin impersonate the `user` account without having to know their password.
-
-To exit impersonation, call the exit URL like this:
+To impersonate a user, submit the user name to the impersonate endpoint:
 
 [source,java]
 ----
-Button exitImpersonation = new Button("Exit impersonation", e ->
-  getUI().ifPresent(ui -> ui.getPage().setLocation("/impersonate/exit"))
-);
+Button impersonate = new Button("Impersonate user",
+        e -> postToSecurityEndpoint("login/impersonate", "user"));
+----
+
+This has the admin impersonate the `user` account without having to know their password. The URL is relative: Vaadin sets the base URL of the page to the root of the application, so the URL also works when the application isn't deployed at the root context path.
+
+To exit impersonation, submit to the exit endpoint:
+
+[source,java]
+----
+Button exitImpersonation = new Button("Exit impersonation",
+        e -> postToSecurityEndpoint("logout/impersonate", null));
 ----
 
 
