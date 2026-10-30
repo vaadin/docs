@@ -26,27 +26,49 @@ Start with <<{articles}/building-apps/testing/browserless/setup-spring-boot#,the
 === Simulate Users with a Secured Context
 
 With [annotationname]`@SpringBootTest`, view access control works without extra setup.
-Create the browserless application context with [methodname]`createSecured()` instead of [methodname]`create()`, and give each user the credentials to simulate when you create it:
+Define the shared browserless application context with [methodname]`createSecured()` instead of [methodname]`create()`:
+
+.`BrowserlessContextConfiguration.java`
+[source,java]
+----
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.Authentication;
+import com.vaadin.browserless.SecuredBrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
+@Configuration
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    SecuredBrowserlessApplicationContext<Authentication> browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.createSecured(
+                applicationContext, Application.class);
+    }
+}
+----
+
+A secured context is also a [classname]`BrowserlessApplicationContext`, so tests that don't need credentials can keep autowiring that type; their [methodname]`newUser()` creates an anonymous user.
+Give each user the credentials to simulate when you create it:
 
 * [methodname]`newUser()` creates an anonymous user, like Spring Security's [annotationname]`@WithAnonymousUser`.
 * [methodname]`newUser("admin", "ADMIN")` creates an authenticated user with the given username and roles, like [annotationname]`@WithMockUser`. A role without the `ROLE_` prefix gets it.
 * [methodname]`newUser(authentication)` installs any [classname]`Authentication` object, for example one built from your own user details.
 
-The credentials are in place before the user's window opens and navigates to the root route, so a logged-in user isn't redirected to the login view, and custom redirect logic for authenticated users works as expected:
+The credentials are in place before the user's window opens and navigates to the root route, so a logged-in user isn't redirected to the login view, and custom redirect logic for authenticated users works as expected.
+Each test creates its user with try-with-resources, so that the user is closed when the test ends:
 
 .Tests with Simulated Users
 [source,java]
 ----
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import com.vaadin.browserless.SecuredBrowserlessApplicationContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.html.Anchor;
 
@@ -54,62 +76,55 @@ import com.vaadin.flow.component.html.Anchor;
 class ViewSecurityTest {
 
     @Autowired
-    private ApplicationContext applicationContext;
-
     private SecuredBrowserlessApplicationContext<Authentication> app;
-
-    @BeforeEach
-    void setUp() {
-        app = SpringBrowserlessApplicationContext.createSecured(
-                applicationContext, PublicView.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
 
     @Test
     void anonymousUser_protectedView_redirectToLogin() {
-        var window = app.newUser().newWindow();
-
-        window.navigate("protected", LoginView.class);
+        try (var anonymous = app.newUser()) {
+            anonymous.newWindow().navigate("protected", LoginView.class);
+        }
     }
 
     @Test
     void anonymousUser_publicView_signInLinkPresent() {
-        var window = app.newUser().newWindow();
+        try (var anonymous = app.newUser()) {
+            var window = anonymous.newWindow();
 
-        // public view is default page
-        Assertions.assertInstanceOf(PublicView.class, window.getCurrentView());
+            // public view is default page
+            Assertions.assertInstanceOf(PublicView.class,
+                    window.getCurrentView());
 
-        Anchor anchor = window.find(Anchor.class).withText("Sign in").single();
-        Assertions.assertTrue(
-                window.test(anchor).isUsable(),
-                "Sign in link should be available for anonymous user");
+            Anchor anchor = window.find(Anchor.class).withText("Sign in")
+                    .single();
+            Assertions.assertTrue(
+                    window.test(anchor).isUsable(),
+                    "Sign in link should be available for anonymous user");
+        }
     }
 
     @Test
     void adminUser_adminView_viewShown() {
-        var window = app.newUser("admin", "ADMIN").newWindow();
+        try (var admin = app.newUser("admin", "ADMIN")) {
+            var window = admin.newWindow();
 
-        window.navigate(AdminRoleView.class);
+            window.navigate(AdminRoleView.class);
 
-        Assertions.assertTrue(
-                window.find(Avatar.class).single().isVisible(),
-                "Avatar should be visible for logged users");
+            Assertions.assertTrue(
+                    window.find(Avatar.class).single().isVisible(),
+                    "Avatar should be visible for logged users");
+        }
     }
 }
 ----
 
-The context scans the package of `PublicView` for routes, so keep `LoginView` and the protected views in that package or its sub-packages, or pass a class from each of their packages.
-Each test creates its own user, so the tests don't need the `@BeforeEach` method to open a window.
+Closing the user also clears its authentication from the test thread, so that it doesn't leak into the next test.
 Spring Security test annotations, such as [annotationname]`@WithMockUser`, don't affect the users of a secured context.
 
 
 === Test with a Reduced Application Context
 
 In a test that selects its beans with [annotationname]`@SpringJUnitConfig` or [annotationname]`@ContextConfiguration` instead of loading the full application context, register view access control yourself.
+Such a test doesn't component-scan the shared bean, so it also creates a secured application context of its own for each test, as described in <<setup-spring-boot#context-per-test,Create an Application Context for Each Test>>.
 Vaadin applies access control through a [classname]`NavigationAccessControl` registered as a [classname]`BeforeEnterListener` for the UI.
 Provide a [classname]`VaadinServiceInitListener` that registers it, in a test configuration class:
 

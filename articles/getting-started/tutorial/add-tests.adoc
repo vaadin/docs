@@ -133,23 +133,49 @@ Saving still fails, but now the database rejects the negative price, because the
 
 The service test calls the service directly. To check what the user sees, you also have to test the view. Vaadin's browserless tests do this without a browser. They run the view in the same JVM as the test. They simulate what a user does: open a URL, select a grid row, type into a field, and click a button. Since they don't need a browser or a web server, they run almost as fast as the service test.
 
-Create a new class named `ProductCatalogViewTest` in the same directory:
+A browserless test runs against a _browserless application context_, which plays the role of the running application in the test. Define it once, and let all view tests share it. Create a new class named `BrowserlessContextConfiguration` in the `src/test/java/com/example` directory, next to where the `Application` class is in `src/main/java`:
+
+.BrowserlessContextConfiguration.java
+[source,java]
+----
+package com.example;
+
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration // <1>
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    BrowserlessApplicationContext browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.create(applicationContext,
+                Application.class); // <2>
+    }
+}
+----
+<1> `@Configuration` makes the class a source of Spring beans. It's in the same package as the `Application` class, so `@SpringBootTest` finds it.
+<2> Create the browserless application context on top of Spring's application context, so that it creates views through Spring, and the view gets the real service. Passing `Application.class` makes it look for views in the package of the `Application` class and its sub-packages: the whole application, including the main layout.
+
+Spring creates the browserless application context once, and shares it with every test that starts the same Spring application context. It also closes it when the tests are done.
+
+Now create a new class named `ProductCatalogViewTest` in the `src/test/java/com/example/product` directory:
 
 .ProductCatalogViewTest.java
 [source,java]
 ----
 package com.example.product;
 
-import com.example.Application;
 import com.vaadin.browserless.BrowserlessApplicationContext;
 import com.vaadin.browserless.BrowserlessUIContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 
 import java.math.BigDecimal;
 
@@ -160,43 +186,40 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProductCatalogViewTest {
 
     @Autowired
-    private ApplicationContext applicationContext; // <1>
+    private BrowserlessApplicationContext app; // <1>
 
-    private BrowserlessApplicationContext app;
     private BrowserlessUIContext window;
 
     @BeforeEach
-    void setUp() {
-        app = SpringBrowserlessApplicationContext.create(applicationContext,
-                Application.class); // <2>
-        window = app.newUser().newWindow(); // <3>
+    void openWindow() {
+        window = app.newUser().newWindow(); // <2>
     }
 
     @AfterEach
-    void tearDown() {
-        app.close(); // <4>
+    void closeUser() {
+        window.getUser().close(); // <3>
     }
 
     @Test
     void selectRow_showsProductInDrawer() {
-        window.navigate(ProductCatalogView.class); // <5>
-        var grid = window.findGrid(ProductCatalogItem.class); // <6>
+        window.navigate(ProductCatalogView.class); // <4>
+        var grid = window.findGrid(ProductCatalogItem.class); // <5>
 
-        grid.select(0); // <7>
+        grid.select(0); // <6>
 
-        var nameField = window.findTextField().withLabel("Name"); // <8>
+        var nameField = window.findTextField().withLabel("Name"); // <7>
         assertEquals(grid.getRow(0).name(), nameField.component().getValue());
     }
 
     @Test
     void saveNegativePrice_showsErrorMessage() {
-        window.navigate(ProductCatalogView.class, 1L); // <9>
+        window.navigate(ProductCatalogView.class, 1L); // <8>
         var priceField = window.findBigDecimalField().withLabel("Price");
 
-        priceField.setValue(new BigDecimal("-1.00")); // <10>
+        priceField.setValue(new BigDecimal("-1.00")); // <9>
         window.findButton().withText("Save").click();
 
-        assertTrue(priceField.component().isInvalid()); // <11>
+        assertTrue(priceField.component().isInvalid()); // <10>
         assertEquals("Enter a price of 0 or more",
                 priceField.component().getErrorMessage());
     }
@@ -209,22 +232,21 @@ class ProductCatalogViewTest {
         window.findButton().withText("Save").click();
 
         assertEquals("The SKU is already in use. Please enter another one.",
-                window.findNotification().getText()); // <12>
+                window.findNotification().getText()); // <11>
     }
 }
 ----
-<1> Spring injects its application context, which holds the beans of the application that `@SpringBootTest` started.
-<2> Before each test, create a browserless application context on top of the Spring one. It plays the role of the running application in the test, and creates views through Spring, so the view gets the real service. Passing `Application.class` makes it look for views in the package of the `Application` class and its sub-packages: the whole application, including the main layout.
-<3> Create a simulated user, and open a browser window for them. The window opens the root route, like a browser that opens the application's address. The tests do everything through this window.
-<4> After each test, close the browserless application context, together with the user and the window. Spring keeps its application context for the next test.
-<5> `navigate()` opens the view in the window, as if the user had entered its URL in the browser.
-<6> `findGrid()` returns a _locator_ for the grid: it finds the component in the window, and offers the actions that a user can perform on it. Passing the item type of the grid gives you a locator that knows the type of the rows.
-<7> Select the first row, as if the user had clicked it.
-<8> The Name field is in the drawer, and `withLabel()` finds it by its label. If the drawer didn't open, the locator would find no field when the test reads its value with `component()`, and the test would fail.
-<9> Open product 1 directly, using the route parameter that you added in the <<deep-link#,Deep Link>> step.
-<10> The locator enters the value the way a user does, so the binder validates it. It also fails the test unless the field is visible and enabled, since a user couldn't type into it otherwise.
-<11> `component()` returns the field itself. The binder has marked it as invalid, and shows the error message next to it.
-<12> Find the notification that the view opens when saving fails, and read its text.
+<1> Spring injects the browserless application context.
+<2> Before each test, create a simulated user, and open a browser window for them. The window opens the root route, like a browser that opens the application's address. The tests do everything through this window.
+<3> After each test, close the user. This ends the user's session, so that the next test starts with a new user.
+<4> `navigate()` opens the view in the window, as if the user had entered its URL in the browser.
+<5> `findGrid()` returns a _locator_ for the grid: it finds the component in the window, and offers the actions that a user can perform on it. Passing the item type of the grid gives you a locator that knows the type of the rows.
+<6> Select the first row, as if the user had clicked it.
+<7> The Name field is in the drawer, and `withLabel()` finds it by its label. If the drawer didn't open, the locator would find no field when the test reads its value with `component()`, and the test would fail.
+<8> Open product 1 directly, using the route parameter that you added in the <<deep-link#,Deep Link>> step.
+<9> The locator enters the value the way a user does, so the binder validates it. It also fails the test unless the field is visible and enabled, since a user couldn't type into it otherwise.
+<10> `component()` returns the field itself. The binder has marked it as invalid, and shows the error message next to it.
+<11> Find the notification that the view opens when saving fails, and read its text.
 
 The tests find fields by their labels, and buttons by their text, the same way a user finds them on the screen. The view has only one grid, so the test finds it without a filter. This way, the tests don't depend on how the view stores its components, and the view doesn't have to expose them to the tests.
 
@@ -242,6 +264,32 @@ Maven also runs the tests when you build the application for production with `./
 == Complete Code for This Step
 
 This step doesn't change the application code. If a test fails although you haven't changed anything since the last step, compare your application classes with the <<deep-link#complete-code-for-this-step,complete code of the Deep Link step>>. These listings show the test classes as they should look at the end of this step.
+
+.BrowserlessContextConfiguration.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example;
+
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    BrowserlessApplicationContext browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.create(applicationContext,
+                Application.class);
+    }
+}
+----
+====
 
 .ProductCatalogServiceTest.java
 [%collapsible]
@@ -311,16 +359,13 @@ class ProductCatalogServiceTest {
 ----
 package com.example.product;
 
-import com.example.Application;
 import com.vaadin.browserless.BrowserlessApplicationContext;
 import com.vaadin.browserless.BrowserlessUIContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 
 import java.math.BigDecimal;
 
@@ -331,21 +376,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProductCatalogViewTest {
 
     @Autowired
-    private ApplicationContext applicationContext;
-
     private BrowserlessApplicationContext app;
+
     private BrowserlessUIContext window;
 
     @BeforeEach
-    void setUp() {
-        app = SpringBrowserlessApplicationContext.create(applicationContext,
-                Application.class);
+    void openWindow() {
         window = app.newUser().newWindow();
     }
 
     @AfterEach
-    void tearDown() {
-        app.close();
+    void closeUser() {
+        window.getUser().close();
     }
 
     @Test

@@ -54,7 +54,7 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @TestPropertySource(properties = "vaadin.copilot.enable=false")
 class MyViewTest {
-    // Create the application context as in the setup guide.
+    // Autowire the application context as in the setup guide.
 }
 ----
 
@@ -153,6 +153,7 @@ class GreetingTestConfig {
 ----
 
 [annotationname]`@SpringJUnitConfig` runs the test with Spring's JUnit extension and loads only the given configuration, so the Spring application context contains the test service but not the rest of the application.
+It also doesn't component-scan the shared browserless application context from <<setup-spring-boot#shared-application-context,the setup guide>>, so the test creates one of its own for each test, scanning only the package of the tested view.
 A test that extends `SpringBrowserlessTest`, which registers Spring's JUnit extension itself, selects the configuration with [annotationname]`@ContextConfiguration(classes = GreetingTestConfig.class)` instead.
 
 Annotate the configuration with [annotationname]`@TestConfiguration` rather than [annotationname]`@Configuration`.
@@ -223,9 +224,11 @@ class HelloWorldViewSharedTest {
 These read-only tests use the `HelloWorldView` from <<setup-without-spring#,the plain Java setup guide>>.
 They can run in either order because neither changes the shared UI.
 
-In a Spring test, the static method gets the Spring application context as a parameter, such as `static void setUp(@Autowired ApplicationContext applicationContext)`, and passes it to `SpringBrowserlessApplicationContext.create()`.
 To share less, keep the application context in the static field, but create a new user and window in a `@BeforeEach` method, and close the user with `window.getUser().close()` in an `@AfterEach` method.
 Each test then gets a fresh session and UI, while the tests still share the Vaadin service.
+
+In Spring Boot, the tests already share the application context bean from <<setup-spring-boot#shared-application-context,the setup guide>>, and each test opens and closes its own user.
+To share the window too, open it in a static `@BeforeAll` method that gets the bean as a parameter, such as `static void openWindow(@Autowired BrowserlessApplicationContext app)`, and don't close the user.
 
 [WARNING]
 With a shared environment, state leaks between tests. Tests that mutate state must reset it explicitly.

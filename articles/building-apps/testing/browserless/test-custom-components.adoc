@@ -49,9 +49,130 @@ try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
 ----
 
 
+== Create a Custom Locator
+
+A custom locator gives a composite, a page object, or a domain-specific widget the same fluent API as the built-in locators, and it's the lightest way to wrap the interactions with your own components.
+Subclass [classname]`Locator` with the recursive self-type so filter steps stay fluent, and expose the actions you want the test to see.
+Scope the inner locators with [methodname]`inside(this)` so they only match descendants of the resolved composite.
+The following example assumes a `PersonForm` with [guilabel]*Name* and [guilabel]*Email* text fields and a [guibutton]*Submit* button:
+
+.`PersonFormLocator.java`
+[source,java]
+----
+import com.vaadin.browserless.locator.Locator;
+import com.vaadin.flow.component.button.ButtonLocator;
+import com.vaadin.flow.component.textfield.TextFieldLocator;
+
+public class PersonFormLocator
+        extends Locator<PersonForm, PersonFormLocator> {
+
+    public PersonFormLocator() {
+        super(PersonForm.class);
+    }
+
+    public PersonFormLocator fillIn(String name, String email) {
+        new TextFieldLocator().withLabel("Name").inside(this).setValue(name);
+        new TextFieldLocator().withLabel("Email").inside(this).setValue(email);
+        return this;
+    }
+
+    public void submit() {
+        new ButtonLocator().withText("Submit").inside(this).click();
+    }
+}
+----
+
+Tests reach the custom locator through [methodname]`find(Supplier<L>)`, for example in a test window that contains the form:
+
+[source,java]
+----
+window.find(PersonFormLocator::new)
+        .fillIn("Ada", "ada@example.com")
+        .submit();
+----
+
+
+[#set-a-value-as-the-user]
+== Set a Value as the User Would
+
+For an add-on or your own component that has no locator, the component's Java API is usually good enough in a test: reading its state through the API is always fine, and it's much less work than a tester of its own.
+Setting a value is the exception.
+A value set with the component's [methodname]`setValue()` comes from the server, so its value change event reports [methodname]`isFromClient()` as `false`, and a view that reacts only to user changes ignores it.
+
+For a `HarbourView` that enables its [guibutton]*Save* button only after the user picks a location in the `LocationField` of a map add-on, this test fails:
+
+[source,java]
+----
+window.navigate(HarbourView.class);
+window.find(LocationField.class).withLabel("Location").single()
+        .setValue("60.088,22.085");
+// Fails: the Save button "is not usable because it is not enabled"
+window.findButton().withText("Save").click();
+----
+
+Write a small locator that sets the value the way a user would.
+The protected [methodname]`setValueAsUser()` method of [classname]`ComponentTester` does that, so the locator reaches it through a private subclass:
+
+.`LocationFieldLocator.java`
+[source,java]
+----
+import com.vaadin.browserless.ComponentTester;
+import com.vaadin.browserless.locator.HasLabelFilter;
+import com.vaadin.browserless.locator.Locator;
+
+/** Locator for the map add-on's location field. */
+public class LocationFieldLocator
+        extends Locator<LocationField, LocationFieldLocator>
+        implements HasLabelFilter<LocationField, LocationFieldLocator> {
+
+    public LocationFieldLocator() {
+        super(LocationField.class);
+    }
+
+    /**
+     * Sets the location as if the user had dropped a pin on the map.
+     * Doesn't test the map itself.
+     */
+    public void dropPin(String location) {
+        new UserInput(component()).enter(location);
+    }
+
+    private static class UserInput extends ComponentTester<LocationField> {
+
+        UserInput(LocationField field) {
+            super(field);
+        }
+
+        void enter(String value) {
+            ensureComponentIsUsable();
+            setValueAsUser(value);
+        }
+    }
+}
+----
+
+[interfacename]`HasLabelFilter` adds [methodname]`withLabel()` to the locator. The other `Has*Filter` interfaces in the `com.vaadin.browserless.locator` package add the other filters of the built-in locators in the same way.
+The test uses the locator through [methodname]`find()`:
+
+[source,java]
+----
+window.navigate(HarbourView.class);
+window.find(LocationFieldLocator::new).withLabel("Location")
+        .dropPin("60.088,22.085");
+window.findButton().withText("Save").click();
+
+Assertions.assertEquals("Saved", window.findNotification().getText());
+----
+
+The locator skips the map itself: whether the user can drop a pin on it.
+Say so in its Javadoc, and cover that part in the add-on's own tests or in a browser test.
+
+
 == Build a Custom Tester
 
-When you create custom components, you can build testers for them too. Custom testers extend [classname]`ComponentTester` and use the [annotationname]`@Tests` annotation to declare which component they test.
+A custom tester is the heavier option.
+It's worth it for a component that you ship as an add-on, or that many test suites use: once registered, [methodname]`test()` returns it for the component in every test.
+Custom testers extend [classname]`ComponentTester` and use the [annotationname]`@Tests` annotation to declare which component they test.
 
 
 === Create the Component
@@ -218,124 +339,6 @@ class PersonFormViewTest {
 
 [methodname]`withComponentTesterPackages()` also accepts package names.
 A test that extends a base class declares the package with the [annotationname]`@ComponentTesterPackages` annotation on the test class instead, such as `@ComponentTesterPackages("com.example.application.views.personform")`.
-
-
-== Create a Custom Locator
-
-For composites, page objects, or domain-specific widgets, subclass [classname]`Locator` with the recursive self-type so filter steps stay fluent, and expose the actions you want the test to see.
-Scope inner queries with [methodname]`inside(this)` so they only match descendants of the resolved composite.
-The following example assumes a `PersonForm` with fields identified by `pf-name` and `pf-email`, and a button identified by `pf-submit`:
-
-.`PersonFormLocator.java`
-[source,java]
-----
-import com.vaadin.browserless.locator.Locator;
-import com.vaadin.flow.component.button.ButtonLocator;
-import com.vaadin.flow.component.textfield.TextFieldLocator;
-
-public class PersonFormLocator
-        extends Locator<PersonForm, PersonFormLocator> {
-
-    public PersonFormLocator() {
-        super(PersonForm.class);
-    }
-
-    public PersonFormLocator fillIn(String name, String email) {
-        new TextFieldLocator().withId("pf-name").inside(this).setValue(name);
-        new TextFieldLocator().withId("pf-email").inside(this).setValue(email);
-        return this;
-    }
-
-    public void submit() {
-        new ButtonLocator().withId("pf-submit").inside(this).click();
-    }
-}
-----
-
-Tests reach the custom locator through [methodname]`find(Supplier<L>)`, for example in a test window that contains the form:
-
-[source,java]
-----
-window.find(PersonFormLocator::new)
-        .fillIn("Ada", "ada@example.com")
-        .submit();
-----
-
-
-[#set-a-value-as-the-user]
-== Set a Value as the User Would
-
-For an add-on or your own component that has no locator, the component's Java API is usually good enough in a test: reading its state through the API is always fine, and it's much less work than a tester of its own.
-Setting a value is the exception.
-A value set with the component's [methodname]`setValue()` comes from the server, so its value change event reports [methodname]`isFromClient()` as `false`, and a view that reacts only to user changes ignores it.
-
-For a `HarbourView` that enables its [guibutton]*Save* button only after the user picks a location in the `LocationField` of a map add-on, this test fails:
-
-[source,java]
-----
-window.navigate(HarbourView.class);
-window.find(LocationField.class).withLabel("Location").single()
-        .setValue("60.088,22.085");
-// Fails: the Save button "is not usable because it is not enabled"
-window.findButton().withText("Save").click();
-----
-
-Write a small locator that sets the value the way a user would.
-The protected [methodname]`setValueAsUser()` method of [classname]`ComponentTester` does that, so the locator reaches it through a private subclass:
-
-.`LocationFieldLocator.java`
-[source,java]
-----
-import com.vaadin.browserless.ComponentTester;
-import com.vaadin.browserless.locator.HasLabelFilter;
-import com.vaadin.browserless.locator.Locator;
-
-/** Locator for the map add-on's location field. */
-public class LocationFieldLocator
-        extends Locator<LocationField, LocationFieldLocator>
-        implements HasLabelFilter<LocationField, LocationFieldLocator> {
-
-    public LocationFieldLocator() {
-        super(LocationField.class);
-    }
-
-    /**
-     * Sets the location as if the user had dropped a pin on the map.
-     * Doesn't test the map itself.
-     */
-    public void dropPin(String location) {
-        new UserInput(component()).enter(location);
-    }
-
-    private static class UserInput extends ComponentTester<LocationField> {
-
-        UserInput(LocationField field) {
-            super(field);
-        }
-
-        void enter(String value) {
-            ensureComponentIsUsable();
-            setValueAsUser(value);
-        }
-    }
-}
-----
-
-[interfacename]`HasLabelFilter` adds [methodname]`withLabel()` to the locator. The other `Has*Filter` interfaces in the `com.vaadin.browserless.locator` package add the other filters of the built-in locators in the same way.
-The test uses the locator through [methodname]`find()`:
-
-[source,java]
-----
-window.navigate(HarbourView.class);
-window.find(LocationFieldLocator::new).withLabel("Location")
-        .dropPin("60.088,22.085");
-window.findButton().withText("Save").click();
-
-Assertions.assertEquals("Saved", window.findNotification().getText());
-----
-
-The locator skips the map itself: whether the user can drop a pin on it.
-Say so in its Javadoc, and cover that part in the add-on's own tests or in a browser test.
 
 
 [#gestures]

@@ -62,6 +62,8 @@ class ResponsiveFormLayoutTest {
 
 `ResponsiveFormView` stands for the view whose behavior depends on the setting.
 The Spring and Quarkus factories take the same configurer: `SpringBrowserlessApplicationContext.create(applicationContext, builder -> ...)` and `QuarkusBrowserlessApplicationContext.create(builder -> ...)`.
+In Spring Boot, put the settings that every test needs in the configurer of the <<setup-spring-boot#shared-application-context,shared bean>>.
+A test class that needs different settings creates an application context of its own for each test, as described in <<setup-spring-boot#context-per-test,Create an Application Context for Each Test>>.
 Choose an identifier from <<{articles}/flow/configuration/feature-flags#,Feature Flags>>; an unknown identifier fails instead of silently enabling a new feature.
 The example checks the flag itself; in your tests, assert the application behavior that the setting changes.
 The settings are local to the application context, so the test doesn't need to edit a feature-flags file or reset system properties afterwards.
@@ -104,10 +106,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestPropertySource;
 import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
 import com.vaadin.flow.server.VaadinService;
 import com.vaadin.flow.server.startup.ApplicationConfiguration;
 
@@ -117,20 +118,18 @@ import com.vaadin.flow.server.startup.ApplicationConfiguration;
 class SessionSerializationTest {
 
     @Autowired
-    private ApplicationContext applicationContext;
-
     private BrowserlessApplicationContext app;
 
+    private BrowserlessUIContext window;
+
     @BeforeEach
-    void setUp() {
-        app = SpringBrowserlessApplicationContext.create(applicationContext,
-                HelloWorldView.class);
-        app.newUser().newWindow();
+    void openWindow() {
+        window = app.newUser().newWindow();
     }
 
     @AfterEach
-    void tearDown() {
-        app.close();
+    void closeUser() {
+        window.getUser().close();
     }
 
     @Test
@@ -141,6 +140,8 @@ class SessionSerializationTest {
     }
 }
 ----
+
+`@TestPropertySource` gives the test class a Spring application context of its own, and with it a shared browserless application context of its own, which applies the property.
 
 [#base-classes-and-extensions]
 == Configure a Base Class or an Extension

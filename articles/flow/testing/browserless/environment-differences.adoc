@@ -16,12 +16,14 @@ Plain Java and Quarkus tests use their own framework setup, and the <<cdi#,Java 
 [#test-lifecycle]
 == Order of Test Setup
 
-With an application context, the sequence is:
+With an application context that a test configuration defines as a bean, the sequence is:
 
-. JUnit creates the test instance and Spring injects its `@Autowired` fields, including the Spring `ApplicationContext`, before any Vaadin environment exists.
-. The test's `@BeforeEach` method, or the test method itself, creates the browserless application context from the Spring application context. For a secured context, each user's authentication is installed when the test creates the user.
-. Each window that the test opens creates its UI and navigates to the root route.
-. The test closes the browserless application context, typically in an `@AfterEach` method. Spring keeps its application context cached for other tests.
+. Spring creates the browserless application context when it starts the Spring application context, before the first test that uses it. Later tests with the same Spring configuration reuse both.
+. JUnit creates the test instance and Spring injects its `@Autowired` fields, including the browserless application context. No Vaadin session exists yet.
+. The test's `@BeforeEach` method, or the test method itself, creates a user and opens a window. For a secured context, the user's authentication is installed when the test creates the user. The window creates its UI and navigates to the root route.
+. The test closes the user, typically in an `@AfterEach` method. Spring closes the browserless application context when it closes the Spring application context.
+
+With an application context that the test creates itself, the test's `@BeforeEach` method creates the context from the autowired Spring `ApplicationContext`, and its `@AfterEach` method closes it, together with all users and windows.
 
 For `SpringBrowserlessTest`, the default sequence is:
 
