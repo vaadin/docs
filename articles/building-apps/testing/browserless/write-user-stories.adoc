@@ -1,0 +1,236 @@
+---
+title: Write Tests as User Stories
+page-title: Write Browserless Tests as User Stories | Vaadin
+description: Structure browserless tests as readable use cases, with actors for the users and page objects for the views.
+meta-description: Write Vaadin browserless tests that read as user stories, with actor classes for the users and page objects for the views, so the tests document the use cases.
+order: 55
+---
+
+
+= Write Tests as User Stories
+
+Browserless tests can run whole use cases -- several users, several views, and the backend -- in milliseconds.
+Write them so that someone who has never seen the code, such as a product owner, can read a test method aloud and recognize the use case.
+The tests then double as a specification of what the application does.
+
+The examples use the Spring Boot setup from <<setup-spring-boot#,Set Up Browserless Tests with Spring Boot>>, and the locators described in <<test-user-interactions#locators,Test User Interactions>>.
+
+
+== A Use Case as a Test
+
+A harbor lets boaters book berths.
+`BookingView` has a [guilabel]*Boat* field and a button for each berth that's free when the view opens, such as [guibutton]*Book B12*.
+A click books the berth and shows a notification: "B12 is yours", or "B12 was just taken" when another boater got there first.
+A `BookingService` keeps the bookings.
+
+Each use case becomes one test method, named after the use case and its outcome:
+
+[source,java]
+----
+@Test
+void boaterWhoLosesTheRaceBooksAnotherBerth() {
+    Boater alice = new Boater("S/Y Alice");
+    Boater bob = new Boater("S/Y Bob");
+
+    alice.books("B12");
+    bob.books("B12");
+    assertTrue(bob.wasToldThat("B12 was just taken"));
+
+    bob.books("B11");
+    assertEquals("S/Y Bob", harbor.boatIn("B11"));
+}
+----
+
+The test method says who does what, and what should happen.
+It doesn't say where anything is on the screen.
+That knowledge lives in two layers below the story, written once and reused by every test:
+
+[cols="1,2,2"]
+|===
+| Layer | Knows | Example
+
+| Test method
+| The use case: who does what, and the outcome.
+| `bob.books("B12")`
+
+| Actor
+| What a user in a role does, in the words of the domain.
+| `Boater.books(berth)`
+
+| Page object
+| Where things are on one view: the locators.
+| `BookingPage.clickBook(berth)`
+|===
+
+
+== Write the Page Object
+
+A page object is the only place that knows the labels, button texts, and component types of one view, so a change to the layout of the view is fixed in one place.
+Put it in the test sources, in the package of the view:
+
+.`BookingPage.java`
+[source,java]
+----
+import com.vaadin.browserless.BrowserlessUIContext;
+
+/** Where things are on BookingView. */
+class BookingPage {
+
+    private final BrowserlessUIContext window;
+
+    BookingPage(BrowserlessUIContext window) {
+        this.window = window;
+    }
+
+    void open() {
+        window.navigate(BookingView.class);
+    }
+
+    void enterBoat(String boat) {
+        window.findTextField().withLabel("Boat").setValue(boat);
+    }
+
+    void clickBook(String berth) {
+        window.findButton().withText("Book " + berth).click();
+    }
+
+    boolean hasBookButtonFor(String berth) {
+        return window.findButton().withText("Book " + berth).exists();
+    }
+
+    String notification() {
+        return window.findNotification().getText();
+    }
+}
+----
+
+Name the methods after what's on the page, and return what the user sees -- strings, numbers, or lists of texts -- rather than components.
+The tests then can't reach past the page object into the UI.
+
+
+== Write the Actors and the Stories
+
+An actor uses a page object to do what a user in a role does.
+Each actor opens a window for a user of its own, so several actors in one test are several people using the application at the same time:
+
+.`BerthBookingTest.java`
+[source,java]
+----
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
+@SpringBootTest
+class BerthBookingTest {
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private BookingService harbor;
+
+    private BrowserlessApplicationContext app;
+
+    @BeforeEach
+    void openAnEmptyHarbor() {
+        harbor.clear();
+        app = SpringBrowserlessApplicationContext.create(applicationContext,
+                BookingView.class);
+    }
+
+    @AfterEach
+    void closeTheApplication() {
+        app.close();
+    }
+
+    @Test
+    void boaterBooksAFreeBerth() {
+        Boater alice = new Boater("S/Y Alice");
+
+        alice.books("B12");
+
+        assertTrue(alice.wasToldThat("B12 is yours"));
+        assertEquals("S/Y Alice", harbor.boatIn("B12"));
+    }
+
+    @Test
+    void boaterWhoLosesTheRaceBooksAnotherBerth() {
+        Boater alice = new Boater("S/Y Alice");
+        Boater bob = new Boater("S/Y Bob");
+
+        alice.books("B12");
+        bob.books("B12");
+        assertTrue(bob.wasToldThat("B12 was just taken"));
+
+        bob.books("B11");
+        assertEquals("S/Y Bob", harbor.boatIn("B11"));
+    }
+
+    @Test
+    void berthsAlreadyTakenAreNotOffered() {
+        new Boater("S/Y Alice").books("B12");
+
+        Boater bob = new Boater("S/Y Bob");
+
+        assertFalse(bob.isOffered("B12"));
+        assertTrue(bob.isOffered("B11"));
+    }
+
+    /** A boater in their own browser window. */
+    class Boater {
+
+        private final BookingPage page =
+                new BookingPage(app.newUser().newWindow());
+
+        Boater(String boat) {
+            page.open();
+            page.enterBoat(boat);
+        }
+
+        void books(String berth) {
+            page.clickBook(berth);
+        }
+
+        boolean wasToldThat(String message) {
+            return message.equals(page.notification());
+        }
+
+        boolean isOffered(String berth) {
+            return page.hasBookButtonFor(berth);
+        }
+    }
+}
+----
+
+The actor is an inner class, so that it can reach the application context.
+When several test classes share an actor, make it a top-level class in the test sources that takes the application context in its constructor.
+An actor whose story crosses several views holds a page object for each, all on the same window.
+
+The [annotationname]`@BeforeEach` method states the starting situation in the words of the domain -- an empty harbor -- rather than as steps in the UI.
+For a starting situation that varies, add named helper methods, such as `givenFreeBerths("B11", "B12")`.
+
+
+== Guidelines
+
+* *Name each test after its use case and outcome*, in the words of the domain: `boaterBooksAFreeBerth`, not `testBookButton`.
+* *Keep UI mechanics out of the test method.* Locators and window calls belong in page objects. A short test of a single view, whose locator calls already read as user steps, can keep them inline.
+* *Find components the way the user does*: by label, by text, or by accessible name with [methodname]`withAriaLabel()`. Use a <<test-user-interactions#test-ids,test ID>> only when nothing that the user perceives tells two components apart.
+* *Assert the outcomes that the user or the business cares about*: what the user is told or sees, and the resulting state in the backend; see <<test-user-interactions#backend,Check the Outcome in the Backend>>.
+* *Write one use case per test.* Give the alternative and failure paths that matter tests of their own -- not only the happy path.
+* *Give every person in the story an actor, with a user and a window of their own.* Races, sharing, and collaboration are use cases too; see <<test-multiple-users#,Test Multiple Users and Windows>>.
+* *Give actors the roles of their part in the story.* With a secured application context, create the actor's user with credentials, such as `app.newUser("hilda", "ADMIN")`; see <<test-view-access#,Test View Access Control>>.
+
+A failing story means either a bug in the UI or a wrong assumption in the story.
+Decide which before you change anything, and don't weaken the story to make the test pass.
+
+
+[discussion-id]`E625EEFE-1147-4781-B8F4-2E00EB5AD27A`
