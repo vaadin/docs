@@ -10,7 +10,7 @@ order: 30
 = Set Up Browserless Tests with Quarkus
 
 Use this guide for a Quarkus application with Flow views.
-Tests extend `QuarkusBrowserlessTest` and run with `@QuarkusTest`.
+Tests run with [annotationname]`@QuarkusTest`, and create the Vaadin environment with [classname]`QuarkusBrowserlessApplicationContext`.
 For a Java EE application that uses Vaadin CDI and Weld, use <<setup-cdi#,the separate CDI setup>>.
 
 == Add Dependencies
@@ -38,43 +38,67 @@ With the Vaadin BOM imported, add these test dependencies to your [filename]`pom
 ----
 
 
+[#first-browserless-test]
 == Create a Test
 
 Create this view:
 
 include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
 
-Create a test class that extends [classname]`QuarkusBrowserlessTest`, in the same Java package as the view under `src/test/java`:
+Create a test class in the same Java package as the view under `src/test/java`:
 
 .`HelloWorldViewTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-class HelloWorldViewTest extends QuarkusBrowserlessTest {
+class HelloWorldViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(
+                HelloWorldView.class); // <1>
+        window = app.newUser().newWindow(); // <2>
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close(); // <3>
+    }
+
     @Test
-    public void setText_clickButton_notificationIsShown() {
-        final HelloWorldView helloView = navigate(HelloWorldView.class);
+    void setText_clickButton_notificationIsShown() {
+        window.navigate(HelloWorldView.class); // <4>
 
-        test(helloView.name).setValue("Test");
-        test(helloView.sayHello).click();
+        window.findTextField().withLabel("Your name").setValue("Test");
+        window.findButton().withText("Say hello").click();
 
-        Notification notification = find(Notification.class).single();
-        Assertions.assertEquals("Hello Test", test(notification).getText());
+        Assertions.assertEquals("Hello Test",
+                window.findNotification().getText());
     }
 }
 ----
+<1> Creates the application context, which creates views through Quarkus dependency injection. It scans the package of [classname]`HelloWorldView` and its sub-packages for routes; if your views are in several packages, pass a class from each.
+<2> Creates a user with its own Vaadin session, and opens a window for that user. The window shows the root route.
+<3> Closes the application context, together with every user and window created from it.
+<4> The test drives the UI through the window: it finds components by their label or text, and types and clicks, as a user does.
 
-See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test method does.
 
 [NOTE]
 [annotationname]`@QuarkusTest` starts the application and its HTTP server, which browserless tests don't use.
-The [classname]`QuarkusBrowserlessTest` tests still run in a mocked Vaadin environment.
+The browserless tests still run in a mocked Vaadin environment.
 
 
 == Run the Test
@@ -138,23 +162,77 @@ A test that uses the profile gets the alternative injected into the view:
 .`MockServiceViewTest.java`
 [source,java]
 ----
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
 @TestProfile(MockServiceProfile.class)
-class MockServiceViewTest extends QuarkusBrowserlessTest {
+class MockServiceViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(WelcomeView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
     @Test
     void view_usesMockService() {
-        WelcomeView view = navigate(WelcomeView.class);
+        WelcomeView view = window.navigate(WelcomeView.class);
         Assertions.assertEquals("Hello Quarkus from the mock service",
                 view.greeting.getText());
     }
 }
 ----
+
+
+[#base-class]
+== Extend a Base Class Instead
+
+A test can also extend [classname]`QuarkusBrowserlessTest`, which creates the Vaadin environment with one user and one window before each test method, and closes it afterwards.
+The test then calls the window methods on itself:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import com.vaadin.flow.component.notification.Notification;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+class HelloWorldViewTest extends QuarkusBrowserlessTest {
+    @Test
+    public void setText_clickButton_notificationIsShown() {
+        final HelloWorldView helloView = navigate(HelloWorldView.class);
+
+        test(helloView.name).setValue("Test");
+        test(helloView.sayHello).click();
+
+        Notification notification = find(Notification.class).single();
+        Assertions.assertEquals("Hello Test", test(notification).getText());
+    }
+}
+----
+
+The base class scans the whole classpath for routes, unless the test class has a [annotationname]`@ViewPackages` annotation.
+It applies the Quarkus [annotationname]`@TestSecurity` annotation to its user; see <<test-view-access#quarkus-test-security,Use Quarkus Test Security>>.
+See <<./#base-classes,Base Classes>> for when to choose a base class.
 
 
 == Next Steps

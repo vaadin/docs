@@ -10,7 +10,7 @@ order: 10
 = Set Up Browserless Tests with Spring Boot
 
 Use this guide for a Spring Boot application.
-Tests extend `SpringBrowserlessTest` and run with the Spring application context.
+Tests run with [annotationname]`@SpringBootTest`, and share a browserless application context that a test configuration defines as a Spring bean.
 For another application framework, choose its guide in <<./#choose-your-framework,Browserless Testing>>.
 
 == Add Dependencies
@@ -37,13 +37,208 @@ Spring Boot's test starter is also required; Spring Boot projects typically have
 == Create a Test
 
 Views in Spring Boot applications typically get their services through dependency injection.
-[classname]`SpringBrowserlessTest` creates views through the Spring application context, and [annotationname]`@SpringBootTest` makes the full application context available to the test.
+[annotationname]`@SpringBootTest` starts the Spring application context for the test, and [classname]`SpringBrowserlessApplicationContext` creates views through it, so that views get the same beans as in the running application.
+
+[#shared-application-context]
+=== Define the Application Context Once
+
+Define the browserless application context as a bean in a test configuration class.
+Put the class in `src/test/java`, in the package of your [annotationname]`@SpringBootApplication` class, so that the component scan of [annotationname]`@SpringBootTest` finds it:
+
+.`BrowserlessContextConfiguration.java`
+[source,java]
+----
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
+@Configuration
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    BrowserlessApplicationContext browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.create(applicationContext,
+                Application.class); // <1>
+    }
+}
+----
+<1> Creates the browserless application context on top of the Spring one. It scans the package of your [classname]`Application` class and its sub-packages for routes, which covers the views and layouts of the whole application.
+
+Spring creates the bean once, when it starts the Spring application context, and every test that uses the same Spring application context shares it.
+Spring also closes it when it closes the Spring application context.
+If the application uses Spring Security, define the bean with [methodname]`createSecured()` instead; see <<test-view-access#spring-secured-context,Test View Access Control>>.
+
+=== Write the Test
 
 Given a simple view like this:
 
 include::{root}/articles/building-apps/testing/browserless/_hello-world-view.adoc[]
 
 A browserless test for it looks like this:
+
+.`HelloWorldViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+@SpringBootTest
+class HelloWorldViewTest {
+
+    @Autowired
+    private BrowserlessApplicationContext app; // <1>
+
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void openWindow() {
+        window = app.newUser().newWindow(); // <2>
+    }
+
+    @AfterEach
+    void closeUser() {
+        window.getUser().close(); // <3>
+    }
+
+    @Test
+    void setText_clickButton_notificationIsShown() {
+        window.navigate(HelloWorldView.class); // <4>
+
+        window.findTextField().withLabel("Your name").setValue("Test");
+        window.findButton().withText("Say hello").click();
+
+        Assertions.assertEquals("Hello Test",
+                window.findNotification().getText());
+    }
+
+}
+----
+<1> Spring injects the shared browserless application context.
+<2> Creates a user with its own Vaadin session, and opens a window for that user. The window shows the root route.
+<3> Closes the user and its window after the test. This ends the user's session, and clears the Vaadin state, such as `UI.getCurrent()`, from the test thread, so that the next test starts clean.
+<4> The test drives the UI through the window: it finds components by their label or text, and types and clicks, as a user does.
+
+Place the test in `src/test/java`, in the same Java package as the view.
+See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test method does.
+
+The tests share one Vaadin service, as the users of a running application do, and each test has a user and a session of its own.
+The application context is bound to the thread that creates it, so the tests must run on that thread, as they do with JUnit's default sequential execution.
+
+
+== Run the Test
+
+Run the test from your IDE or with `mvn test`.
+The test passes when entering a name and clicking the button shows the expected notification.
+
+
+[#session-scoped-beans]
+== Access Session-Scoped Beans
+
+A Spring test field is injected before the test opens its window, so before the user's Vaadin session exists.
+If a test needs an application bean with [annotationname]`@VaadinSessionScope`, inject an [interfacename]`ObjectProvider` and resolve the bean after the window exists:
+
+.`CartViewSessionTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+@SpringBootTest
+class CartViewSessionTest {
+
+    @Autowired
+    private BrowserlessApplicationContext app;
+
+    @Autowired
+    private ObjectProvider<Cart> cartProvider;
+
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void openWindow() {
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void closeUser() {
+        window.getUser().close();
+    }
+
+    @Test
+    void addItem_cartContainsItem() {
+        window.navigate(CartView.class);
+        Cart cart = cartProvider.getObject();
+
+        window.findButton().withText("Add to cart").click();
+
+        Assertions.assertEquals(1, cart.getItems().size());
+    }
+}
+----
+
+This example assumes a session-scoped [classname]`Cart` service and a [classname]`CartView` whose [guibutton]*Add to cart* button adds an item to the cart.
+The provider resolves the bean for the user whose window is active -- here the only window, which the preceding [methodname]`navigate()` call used.
+Each test has a user of its own, so each test gets an empty cart.
+In a test with several users, call [methodname]`activate()` on a window of the intended user before resolving the bean.
+The same approach works for a bean with Spring's `@SessionScope`, which can also be injected directly.
+See <<{articles}/flow/testing/browserless/environment-differences#session-scoped-beans,Spring Session-Scoped Beans>> for scope guarantees and other deferred-lookup options.
+
+
+[#context-per-test]
+== Create an Application Context for Each Test
+
+Some tests need an application context of their own instead of the shared one:
+
+* a test with several users, which closes all of them at once by closing its context; see <<test-multiple-users#,Test Multiple Users and Windows>>,
+* a test class that needs different Vaadin settings, such as a feature flag; see <<configure-tests#,Configure a Browserless Test>>, and
+* a test that selects a narrower Spring configuration with [annotationname]`@SpringJUnitConfig`, which doesn't component-scan the shared bean; see <<speed-up-tests#using-a-reduced-application-context,Use a Reduced Spring Application Context>>.
+
+Such a test creates the context from the Spring application context before each test, and closes it afterwards:
+
+[source,java]
+----
+@Autowired
+private ApplicationContext applicationContext;
+
+private BrowserlessApplicationContext app;
+
+@BeforeEach
+void setUp() {
+    app = SpringBrowserlessApplicationContext.create(applicationContext,
+            CartView.class);
+}
+
+@AfterEach
+void tearDown() {
+    app.close();
+}
+----
+
+Closing the application context closes every user and window created from it.
+The context scans only the packages of the classes passed to [methodname]`create()`, and their sub-packages.
+
+
+[#base-class]
+== Extend a Base Class Instead
+
+A test can also extend [classname]`SpringBrowserlessTest`, which creates the Vaadin environment with one user and one window before each test method, and closes it afterwards.
+The test then calls the window methods on itself:
 
 .`HelloWorldViewTest.java`
 [source,java]
@@ -71,60 +266,16 @@ class HelloWorldViewTest extends SpringBrowserlessTest {
 }
 ----
 
-Place the test in `src/test/java`, in the same Java package as the view, so that the test can read the view's package-private fields.
-See <<test-user-interactions#how-a-browserless-test-works,How a Browserless Test Works>> for what each line of the test does.
-
-
-== Run the Test
-
-Run the test from your IDE or with `mvn test`.
-The test passes when entering a name and clicking the button shows the expected notification.
-
-
-[#session-scoped-beans]
-== Access Session-Scoped Beans
-
-A Spring test field is injected before the browserless Vaadin session exists.
-If a test needs an application bean with `@VaadinSessionScope`, inject an `ObjectProvider` and resolve the bean after environment setup:
-
-.`CartViewSessionTest.java`
-[source,java]
-----
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import com.vaadin.browserless.SpringBrowserlessTest;
-
-@SpringBootTest
-class CartViewSessionTest extends SpringBrowserlessTest {
-
-    @Autowired
-    private ObjectProvider<Cart> cartProvider;
-
-    @Test
-    void addItem_cartContainsItem() {
-        CartView view = navigate(CartView.class);
-        Cart cart = cartProvider.getObject();
-
-        test(view.addButton).click();
-
-        Assertions.assertEquals(1, cart.getItems().size());
-    }
-}
-----
-
-This example assumes a session-scoped `Cart` service and a `CartView` whose [guibutton]*Add to cart* button, in the `addButton` field, adds an item to the cart.
-Resolve the bean in the test method, or in a subclass `@BeforeEach` method after the inherited environment setup.
-The same approach works for a bean with Spring's `@SessionScope`, which can also be injected directly.
-See <<{articles}/flow/testing/browserless/environment-differences#session-scoped-beans,Spring Session-Scoped Beans>> for scope guarantees and other deferred-lookup options.
+The base class scans the whole classpath for routes, unless the test class has a [annotationname]`@ViewPackages` annotation.
+It applies Spring Security test annotations, such as [annotationname]`@WithMockUser`, to its user; see <<test-view-access#spring-security-annotations,Use Spring Security Test Annotations>>.
+See <<./#base-classes,Base Classes>> for when to choose a base class.
 
 
 == Next Steps
 
 * <<test-user-interactions#,Test User Interactions>> explains how the test works and how to cover more complex views.
 * <<debug-tests#,Debug a Failing Browserless Test>> helps when a test fails.
+* <<{articles}/flow/testing/browserless/multi-user#,Application, User, and Window Contexts>> describes the context API in detail.
 * <<{articles}/flow/testing/browserless/test-environment#,Test Environment and Lifecycle>> describes the environment lifecycle and the navigation API.
 
 
