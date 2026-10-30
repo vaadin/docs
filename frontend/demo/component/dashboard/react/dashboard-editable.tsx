@@ -175,8 +175,8 @@ function Example() {
     {
       text: 'Add widget',
       children: Object.values(WidgetType).map((type) => ({
-        text: widgetTitles[type as WidgetType],
-        action: () => addWidget(type as WidgetType),
+        text: widgetTitles[type],
+        action: () => addWidget(type),
       })),
     },
     {
