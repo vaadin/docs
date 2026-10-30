@@ -52,7 +52,7 @@ function Example() {
       label="Choose doctor"
       itemLabelPath="displayName"
       filteredItems={filteredItems.value}
-      style={{ '--vaadin-combo-box-overlay-width': '16em' } as React.CSSProperties}
+      style={{ '--vaadin-combo-box-overlay-width': '16em' }}
       onFilterChanged={filterChanged}
       renderer={renderPerson}
     />
