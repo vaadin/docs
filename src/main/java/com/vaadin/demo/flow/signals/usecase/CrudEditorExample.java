@@ -127,17 +127,20 @@ public class CrudEditorExample extends VerticalLayout {
 
     static private List<Item> listItems() {
         // A mutable list, so that new items can be added to the grid
-        return new ArrayList<>(List.of(new Item(1, "Laptop", "Tech"),
-                new Item(2, "Desk Chair", "Office"),
-                new Item(3, "Monitor", "Tech"), new Item(4, "Keyboard", "Tech"),
-                new Item(5, "Mouse Pad", "Office"),
-                new Item(6, "Printer Paper", "Office"),
-                new Item(7, "Stapler", "Office"),
-                new Item(8, "Desk", "Stationary"),
-                new Item(9, "Notebook", "Office"),
-                new Item(10, "Pen Set", "Office"),
-                new Item(11, "Cable Ties", "Tech"),
-                new Item(12, "Extension Cord", "Tech")));
+        List<Item> items = new ArrayList<>();
+        items.add(new Item(1, "Laptop", "Tech"));
+        items.add(new Item(2, "Desk Chair", "Office"));
+        items.add(new Item(3, "Monitor", "Tech"));
+        items.add(new Item(4, "Keyboard", "Tech"));
+        items.add(new Item(5, "Mouse Pad", "Office"));
+        items.add(new Item(6, "Printer Paper", "Office"));
+        items.add(new Item(7, "Stapler", "Office"));
+        items.add(new Item(8, "Desk", "Stationary"));
+        items.add(new Item(9, "Notebook", "Office"));
+        items.add(new Item(10, "Pen Set", "Office"));
+        items.add(new Item(11, "Cable Ties", "Tech"));
+        items.add(new Item(12, "Extension Cord", "Tech"));
+        return items;
     }
 
     static private @NonNull Item saveItem(@NonNull Item item) {
