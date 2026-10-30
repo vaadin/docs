@@ -15,7 +15,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 
-@Route("form-binging-with-signals")
+@Route("form-binding-with-signals")
 public class BinderIntegrationExample extends VerticalLayout {
 
     // tag::snippet[]

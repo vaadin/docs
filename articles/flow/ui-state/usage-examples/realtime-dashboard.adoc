@@ -71,11 +71,11 @@ The view registers a callback with the scheduler service:
 include::{root}/src/main/java/com/vaadin/demo/flow/signals/usecase/RealtimeDashboard.java[tags=constructor,indent=0]
 ----
 
-The service doesn't know about signals or UI components. It just calls the callback periodically with new data. The comment highlights an important point: you don't need `UI.access()` because signals handle thread safety internally.
+The service doesn't know about signals or UI components. It just calls the callback periodically with new data. The comment highlights an important point: you don't need `UI.access()` because signals handle thread safety internally. The view registers the callback with [methodname]`whenAttached()`, and the service returns a [classname]`Registration` that cancels the scheduled task. This way, updates run only while the view is attached and don't keep running after the user has left the view.
 
 [NOTE]
 ====
-For real-time updates to reach users immediately, you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> in your application. Without push, updates only appear when the user interacts with the UI.
+For real-time updates to reach users immediately, you need to <<{articles}/building-apps/server-push#enabling-push,enable push>> in your application. Without push, updates only appear when the user interacts with the UI.
 ====
 
 
@@ -154,7 +154,7 @@ The chart has separate effects for different update concerns:
 
 1. *Data binding effects* - One per series, updates series data when its signal changes
 2. *Category effect* - Updates x-axis labels when `timelineCategoriesSignal` changes
-3. *Redraw effect* - Watches all timeline signals and triggers chart redraw
+3. *Redraw effect* - Watches all timeline signals and the categories signal, and triggers chart redraw
 
 This separation of concerns makes the code easier to understand and debug. Each effect has a single responsibility.
 
@@ -169,11 +169,12 @@ Signal.effect(chart, () -> {
     berlinTimelineSignal.get();
     londonTimelineSignal.get();
     newYorkTimelineSignal.get();
+    timelineCategoriesSignal.get();
     chart.drawChart();
 });
 ----
 
-This effect calls `get()` on each timeline signal to register dependencies, then calls `chart.drawChart()`. When any of the three signals change, the effect re-runs and redraws the chart.
+This effect calls `get()` on each timeline signal and on the categories signal to register dependencies, then calls `chart.drawChart()`. When any of these signals change, the effect re-runs and redraws the chart. Series data and categories changes are sent to the browser only when the chart is redrawn, so the effect must depend on all of them.
 
 [TIP]
 ====

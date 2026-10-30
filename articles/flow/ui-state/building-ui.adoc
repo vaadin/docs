@@ -34,9 +34,9 @@ ValueSignal<String> greetingSignal = new ValueSignal<>("Hello");
 
 Span greetingSpan = new Span();
 greetingSpan.bindText(greetingSignal);
-// Displays "Hello!"
+// Displays "Hello"
 
-name.set("Hi");
+greetingSignal.set("Hi");
 // Automatically updates to "Hi"
 ----
 
@@ -123,7 +123,7 @@ toggleButton.addClickListener(e -> showDetails.update(v -> !v));
 // Clicking toggles panel visibility
 ----
 
-Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`; pass `null` to [methodname]`bindVisible()` to remove the binding. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
+Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`, so change the visibility by updating the signal instead. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
 
 
 === Conditional Visibility
@@ -201,7 +201,7 @@ Use [methodname]`bindValue()` on form fields to create two-way binding. Changes 
 
 [source,java]
 ----
-import com.vaadin.flow.signals.shared.SharedValueSignal;
+import com.vaadin.flow.signals.local.ValueSignal;
 
 ValueSignal<String> username = new ValueSignal<>("");
 
@@ -422,7 +422,7 @@ grid.bindThemeNames(themes);
 themes.set(List.of("row-stripes", "compact", "no-border"));
 ----
 
-These methods are convenience shortcuts for [methodname]`getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
+These methods are convenience shortcuts for [methodname]`getElement().getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
 
 [source,java]
 ----
@@ -430,8 +430,8 @@ ValueSignal<Boolean> compact = new ValueSignal<>(false);
 ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
 
 Grid<Person> grid = new Grid<>();
-grid.getThemeList().bind("compact", compact);
-grid.getThemeList().bind("row-stripes", rowStripes);
+grid.getElement().getThemeList().bind("compact", compact);
+grid.getElement().getThemeList().bind("row-stripes", rowStripes);
 ----
 
 [NOTE]
@@ -572,7 +572,7 @@ For example, bind the selection of a [classname]`Grid` to a signal through the s
 
 [source,java]
 ----
-ValueSignal<Person> selectedPerson = new ValueSignal<>();
+ValueSignal<Person> selectedPerson = new ValueSignal<>(null);
 
 Grid<Person> grid = new Grid<>(Person.class);
 grid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
@@ -731,7 +731,7 @@ public class TaskManager extends VerticalLayout {
         Button addButton = new Button("Add Task");
         addButton.bindEnabled(newTaskText.map(t -> !t.isBlank()));
         addButton.addClickListener(e -> {
-            tasks.insertLast(new Task(newTaskText.get(), false));
+            tasks.insertLast(new Task(newTaskText.peek(), false));
             newTaskText.set("");
         });
 
