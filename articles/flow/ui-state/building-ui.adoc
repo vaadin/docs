@@ -155,6 +155,8 @@ saveButton.bindVisible(() -> formDirty.get() && !submitting.get());
 // Shows only while there are unsaved changes and no submission is in progress
 ----
 
+A lambda or computed signal passed to a binding must read at least one signal every time it runs, like an effect. Watch out for `&&` and `||` that skip the signal reads. See <<effects-computed#bindings-and-computed-signals,Bindings and Computed Signals>>.
+
 
 == Binding Enabled State
 
@@ -211,6 +213,45 @@ usernameField.bindValue(username, username::set);
 // User types "john" -> username.get() returns "john"
 // username.set("jane") -> field displays "jane"
 ----
+
+
+[[write-callback]]
+=== When the Write Callback Runs
+
+While the field is attached, the write callback runs for every change of the field value that doesn't come from the signal. This covers the user editing the field, calls to [methodname]`setValue()` and [methodname]`clear()`, and changes that the component makes to its own value. For example, [methodname]`ComboBox.setItems()` clears the value, which passes `null` to the write callback. With `signal::set` as the callback, the signal is cleared as well.
+
+To keep the selection when you replace the items, save the signal's value before the call and set it back afterwards:
+
+[source,java]
+----
+ValueSignal<String> city = new ValueSignal<>(null);
+ComboBox<String> cityField = new ComboBox<>("City");
+cityField.bindValue(city, city::set);
+
+void reloadCities(List<String> cities) {
+    String selected = city.peek();
+    cityField.setItems(cities); // Clears the field and the signal
+    if (selected != null && cities.contains(selected)) {
+        city.set(selected);
+    }
+}
+----
+
+The callback doesn't have to write the value it receives. After the callback returns, the field compares the signal's value with the new value. If they differ, the field shows the signal's value instead, and doesn't fire a value change event. A callback can therefore reject a value by leaving the signal unchanged:
+
+[source,java]
+----
+ValueSignal<Integer> quantity = new ValueSignal<>(1);
+IntegerField quantityField = new IntegerField("Quantity");
+quantityField.bindValue(quantity, value -> {
+    if (value != null && value > 0) {
+        quantity.set(value);
+    }
+    // Otherwise, the field goes back to the current quantity
+});
+----
+
+In the same way, when the callback writes a different value to the signal, such as a trimmed string, the field shows the value that the signal holds.
 
 
 === Supported Field Types
