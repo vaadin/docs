@@ -97,7 +97,7 @@ Always read the signal values you depend on *before* branching on the context fl
 [[when-effects-run]]
 === When Effects Run
 
-A signal change made while the component's UI is the current UI -- in an event listener of that UI, or inside [methodname]`UI.access()` for that UI -- runs the dependent effects and bindings of attached components before [methodname]`set()` or [methodname]`update()` returns:
+A signal change made while the component's UI is the current UI -- in an event listener of that UI, or inside [methodname]`UI.access()` for that UI -- runs the dependent effects and bindings of attached components before [methodname]`set()` or [methodname]`update()` returns. Inside [methodname]`Signal.runInTransaction()`, the changes are applied when the transaction commits, so the effects run then:
 
 [source,java]
 ----
@@ -112,7 +112,7 @@ label.getText(); // Returns "Count: 5"
 
 When one action changes several signals in a row, each change has updated the UI before the next one starts. Code that depends on the order can rely on this, for example code that saves the value of a filter, replaces the choices of the filter field, and then sets the filter back.
 
-A change made on any other thread, such as a background thread or a request of another UI or session, doesn't run the effect inline. The effect is queued and runs later through [methodname]`UI.access()`, and [methodname]`EffectContext.isBackgroundChange()` returns `true` for that run. Effects of detached components don't run at all. When the component is attached again, the effect runs if a dependency has changed in the meantime.
+A change made on any other thread, such as a background thread or a request of another UI or session, doesn't run the effect inline. The effect is queued and runs later through [methodname]`UI.access()`, and [methodname]`EffectContext.isBackgroundChange()` returns `true` for that run. Apart from the first run when they're created, effects and bindings of detached components don't run. When the component is attached again, the effect runs if a dependency has changed in the meantime.
 
 Changes from background threads reach the browser only when server push is enabled. See <<local-signals#,Local Signals>> for updating signals from background threads.
 
@@ -135,7 +135,7 @@ Signal.effect(detailLayout, () -> {
 });
 ----
 
-Bindings and effects stop when their component is detached, so remove the old components when the effect re-runs, as [methodname]`removeAll()` does above. Use [methodname]`Signal.untracked()` around the construction only when it reads signals with [methodname]`get()` that the effect shouldn't re-run for. See <<#executing-code-without-tracking,Executing Code without Tracking>>.
+Bindings and effects are inactive while their component is detached, so the components that the effect removes stop updating. Remove the old components when the effect re-runs, as [methodname]`removeAll()` does above. Use [methodname]`Signal.untracked()` around the construction only when it reads signals with [methodname]`get()` that the effect shouldn't re-run for. See <<#executing-code-without-tracking,Executing Code without Tracking>>.
 
 
 === Custom Effects for Non-Bindable Properties
@@ -398,6 +398,11 @@ Signal.effect(this, ctx -> {
 });
 ----
 
+[NOTE]
+====
+Conditional reads are still valid when *every* branch reads a signal that itself controls the condition — as in the <<dependency-tracking,Dependency Tracking>> example, where `showDetails.get()` is always read and decides which other signal to read. The pitfall is specifically reading a signal only on *some* runs, especially behind a context flag that is constant for a given run.
+====
+
 [[bindings-and-computed-signals]]
 === Bindings and Computed Signals
 
@@ -413,12 +418,7 @@ save.bindVisible(Signal.computed(() -> canWrite && shown.get() != null));
 save.bindVisible(Signal.computed(() -> shown.get() != null && canWrite));
 ----
 
-The binding runs its callback right away, even before the component is attached, so the exception comes from the binding method call. Its message mentions an effect action even though the code only creates a binding.
-
-[NOTE]
-====
-Conditional reads are still valid when *every* branch reads a signal that itself controls the condition — as in the <<dependency-tracking,Dependency Tracking>> example, where `showDetails.get()` is always read and decides which other signal to read. The pitfall is specifically reading a signal only on *some* runs, especially behind a context flag that is constant for a given run.
-====
+The binding runs its callback once when it's created, even if the component isn't attached yet, so the exception comes from the binding method call. After that first run, the binding is inactive until the component is attached. The exception message mentions an effect action even though the code only creates a binding.
 
 
 == Best Practices
