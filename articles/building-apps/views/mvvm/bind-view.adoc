@@ -69,7 +69,43 @@ The view does what only a UI can do: it shows notifications and dialogs, navigat
 
 == Pass State to Child Components
 
-A large view is often built from child UI components, such as a filter bar, a list, and an editor. A child UI component receives its state from the view; it never creates a ViewModel of its own. Pass a child either the whole ViewModel, or only the signals and commands that it needs. The latter keeps the child reusable in other views.
+A large view is built from child UI components, such as a list and an editor, as <<{articles}/building-apps/ui-basics/compose#,Compose with Components>> describes. A ViewModel doesn't change how you split the view into components. It changes where the state lives: in the ViewModel, instead of in the view.
+
+A one-off child component, which exists only inside this view, receives its state from the view. Pass it either the whole ViewModel, or only the signals and commands that it needs:
+
+[source,java]
+----
+class TicketGrid extends VerticalLayout {
+
+    TicketGrid(Signal<List<Ticket>> tickets, Signal<Ticket> selected,
+            SerializableConsumer<Ticket> select) {
+        Grid<Ticket> grid = new Grid<>();
+        grid.addColumn(Ticket::title).setHeader("Title");
+        bindItems(grid, tickets).setIdentifierProvider(Ticket::id);
+        grid.asSingleSelect().bindValue(selected, select);
+        add(grid);
+    }
+}
+----
+
+[source,java]
+----
+// In the view
+add(new TicketGrid(viewModel.tickets(), viewModel.selected(),
+        viewModel::select), new TicketEditor(viewModel));
+----
+
+The two children don't know about each other, and the view doesn't pass anything from one to the other. The grid calls [methodname]`select()`, and the editor follows the state of the ViewModel. Without a ViewModel, the view would listen to the grid, and call a setter on the editor.
+
+A reusable component, such as a card that shows a person in many views, knows nothing about the ViewModel. It accepts generic values, and reports the user's actions with events or callbacks, which the parent passes on to commands:
+
+[source,java]
+----
+master.addEmployeeSelectedListener(
+        event -> viewModel.select(event.getEmployee()));
+----
+
+To show state from a signal, a reusable component takes a read-only [classname]`Signal` rather than a [classname]`ValueSignal`, or offers a bind method next to its setter. The [classname]`SignalPropertySupport` helper makes such a method easy to write; see <<{articles}/flow/ui-state/element-bindings#signalpropertysupport-helper,SignalPropertySupport Helper>>. The component then works both in plain views and in views with a ViewModel.
 
 Only the route view creates a ViewModel. If the ViewModel has child ViewModels, the parent ViewModel creates them, as <<write-viewmodel#split-a-growing-viewmodel,Split a Growing ViewModel>> describes.
 

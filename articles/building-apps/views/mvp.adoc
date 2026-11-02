@@ -197,6 +197,29 @@ class TicketsPresenterTest {
 The tests check what the presenter told the view to do. Instead of writing a fake view, you can use a mocking library, and verify the calls to the view interface. Either way, the tests depend on the view interface: when you change it, you also change the fake or the verified calls.
 
 
+== MVP in a Component Tree
+
+MVP doesn't change how you split a view into child UI components, as <<{articles}/building-apps/ui-basics/compose#,Compose with Components>> describes. The presenter talks only to the route view, through the view interface. The route view implements the interface by calling setters on its child components, and passes their events and callbacks on to the presenter:
+
+[source,java]
+----
+@Override
+public void showTicket(Ticket ticket) {
+    editor.setTicket(ticket); // A child component of the view
+}
+----
+
+[source,java]
+----
+grid.addTicketSelectedListener(
+        event -> presenter.select(event.getTicket()));
+----
+
+This is the style of setters and events that Compose with Components describes, with the decisions moved from the view into the presenter.
+
+Keep one presenter for each route view. Don't give each child component a presenter of its own that calls the presenters of other components. If a child component is complex enough to need a presenter, keep the presenter inside the child, and let the child talk to its parent through its own setters and events, like any other UI component.
+
+
 == MVP and MVVM Compared
 
 Both patterns move the UI logic of a view out of the UI components, into a plain Java class that you test with JUnit. They differ in how the UI follows the state:
@@ -255,7 +278,7 @@ Tests tied to the view interface::
 The tests check calls to the view. A change to the view interface changes the tests, even when the behavior stays the same.
 
 Large views get tangled::
-When a large view is split into parts, each with a presenter of its own, the presenters tend to call each other, and the flow of a user's action becomes hard to follow.
+When a large view is split into parts, each with a presenter of its own, the presenters tend to call each other, and the flow of a user's action becomes hard to follow. <<#mvp-in-a-component-tree,MVP in a Component Tree>> shows how to avoid this.
 
 
 === Pros and Cons of MVVM
