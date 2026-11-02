@@ -1,0 +1,236 @@
+---
+title: Getting Started
+page-title: Getting Started with Browserless Testing | Vaadin
+description: Maven dependencies and a minimal test class for browserless tests in plain Java, Spring Boot, Quarkus, and Java EE/CDI projects.
+meta-description: Add the Vaadin browserless test dependencies for plain Java, Spring Boot, Quarkus, or Java EE/CDI, and start from a minimal test class skeleton.
+order: 5
+---
+
+
+= Getting Started with Browserless Testing
+
+This page lists the test dependencies for each supported application framework, and a minimal test class that the snippets on the following pages build on.
+For a complete example with a view and a passing test, see the setup guide for your framework in <<{articles}/building-apps/testing/browserless#choose-your-framework,Browserless Testing>>.
+
+
+== Dependencies
+
+With the Vaadin Bill-of-Materials (BOM) imported in a Maven project, add the dependencies for your framework with a `test` scope.
+The BOM defines the versions of the Vaadin artifacts.
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Plain Java"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Spring Boot"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Quarkus"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-quarkus</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Java EE/CDI"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.jboss.weld</groupId>
+    <artifactId>weld-junit5</artifactId>
+    <version>5.0.3.Final</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+--
+
+The Java EE/CDI setup also needs a managed JUnit version; see <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>> for the `junit-bom` import.
+
+
+== Minimal Test Class
+
+A test creates an <<multi-user#,application context>>, opens a window for a user, and navigates to the view under test.
+The application context scans the package of the class passed to it, and its sub-packages, for routes.
+Closing the application context also closes every user and window created from it.
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Plain Java"></source-info>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+class MyViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(MyView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+[source,java]
+----
+<source-info group="Spring Boot"></source-info>
+// BrowserlessContextConfiguration.java, in the package of the
+// @SpringBootApplication class
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
+@Configuration
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    BrowserlessApplicationContext browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.create(applicationContext,
+                Application.class);
+    }
+}
+
+// MyViewTest.java
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+@SpringBootTest
+class MyViewTest {
+
+    @Autowired
+    private BrowserlessApplicationContext app;
+
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void openWindow() {
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void closeUser() {
+        window.getUser().close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+[source,java]
+----
+<source-info group="Quarkus"></source-info>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+class MyViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(MyView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+--
+
+In Spring Boot, the application context is a bean that every test sharing the Spring application context uses, and Spring closes it.
+Each test closes only its own user.
+
+Java EE/CDI tests extend an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`.
+See <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>> for that base class, and <<cdi#,CDI Test Integration>> for its lifecycle.
+
+
+== Using the Snippets on the Following Pages
+
+The snippets on the following pages call the testing methods on `window`, the [classname]`BrowserlessUIContext` of the minimal test class, and create further users and windows from `app`.
+The base classes [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest`, and the <<extensions#,JUnit extensions>>, provide the same testing methods for a single user and window; see <<test-environment#entry-points,Entry Points and Framework Integration>>.
+
+
+[discussion-id]`4D59DA39-8F41-49F4-B25D-09074A06FA3A`
