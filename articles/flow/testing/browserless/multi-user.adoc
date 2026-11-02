@@ -41,6 +41,146 @@ They differ from an application context as follows:
 The <<cdi#,CDI integration>> extends a base class; the application context API doesn't apply its custom setup.
 
 
+[#setting-up-an-application-context]
+== Setting Up an Application Context
+
+A test class that uses an application context creates it, opens the users and windows it needs, and closes it afterwards.
+The application context scans the package of the class passed to it, and its sub-packages, for routes.
+Closing the application context also closes every user and window created from it.
+
+In Spring Boot, a test configuration in the package of the [annotationname]`@SpringBootApplication` class defines the application context as a bean.
+Every test that uses the same Spring application context shares the bean, and Spring closes it; each test closes only its own user.
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Plain Java"></source-info>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+class MyViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(MyView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+[source,java]
+----
+<source-info group="Spring Boot"></source-info>
+// BrowserlessContextConfiguration.java, in the package of the
+// @SpringBootApplication class
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.SpringBrowserlessApplicationContext;
+
+@Configuration
+public class BrowserlessContextConfiguration {
+
+    @Bean
+    BrowserlessApplicationContext browserlessApplicationContext(
+            ApplicationContext applicationContext) {
+        return SpringBrowserlessApplicationContext.create(applicationContext,
+                Application.class);
+    }
+}
+
+// MyViewTest.java
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+@SpringBootTest
+class MyViewTest {
+
+    @Autowired
+    private BrowserlessApplicationContext app;
+
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void openWindow() {
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void closeUser() {
+        window.getUser().close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+[source,java]
+----
+<source-info group="Quarkus"></source-info>
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+class MyViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = QuarkusBrowserlessApplicationContext.create(MyView.class);
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void myTest() {
+        MyView view = window.navigate(MyView.class);
+        // Find components and simulate user actions through the window
+    }
+}
+----
+--
+
+For complete examples, see the setup guide for your framework in <<{articles}/building-apps/testing/browserless#choose-your-framework,Browserless Testing>>.
+
+
 == Application, User, and Window
 
 The API exposes three nested contexts that mirror Vaadin's runtime hierarchy.

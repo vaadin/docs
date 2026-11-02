@@ -107,139 +107,68 @@ A secured application context needs only the application's own Spring Security o
 
 == Minimal Test Class
 
-A test creates an <<multi-user#,application context>>, opens a window for a user, and navigates to the view under test.
-The application context scans the package of the class passed to it, and its sub-packages, for routes.
-Closing the application context also closes every user and window created from it.
+A test class extends the base class of its framework.
+Before each test method, the base class creates the Vaadin environment with one user and one window, and opens the root view; after the test method, it cleans the environment up.
+The test calls the testing methods, such as [methodname]`navigate()`, on itself.
 
 [.example]
 --
 [source,java]
 ----
 <source-info group="Plain Java"></source-info>
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.BrowserlessTest;
+import com.vaadin.browserless.locator.Locators;
 
-class MyViewTest {
-
-    private BrowserlessApplicationContext app;
-    private BrowserlessUIContext window;
-
-    @BeforeEach
-    void setUp() {
-        app = BrowserlessApplicationContext.create(MyView.class);
-        window = app.newUser().newWindow();
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
+class MyViewTest extends BrowserlessTest implements Locators {
 
     @Test
     void myTest() {
-        MyView view = window.navigate(MyView.class);
-        // Find components and simulate user actions through the window
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
     }
 }
 ----
 [source,java]
 ----
 <source-info group="Spring Boot"></source-info>
-// BrowserlessContextConfiguration.java, in the package of the
-// @SpringBootApplication class
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
-
-@Configuration
-public class BrowserlessContextConfiguration {
-
-    @Bean
-    BrowserlessApplicationContext browserlessApplicationContext(
-            ApplicationContext applicationContext) {
-        return SpringBrowserlessApplicationContext.create(applicationContext,
-                Application.class);
-    }
-}
-
-// MyViewTest.java
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.BrowserlessUIContext;
+import com.vaadin.browserless.SpringBrowserlessTest;
+import com.vaadin.browserless.locator.Locators;
 
 @SpringBootTest
-class MyViewTest {
-
-    @Autowired
-    private BrowserlessApplicationContext app;
-
-    private BrowserlessUIContext window;
-
-    @BeforeEach
-    void openWindow() {
-        window = app.newUser().newWindow();
-    }
-
-    @AfterEach
-    void closeUser() {
-        window.getUser().close();
-    }
+class MyViewTest extends SpringBrowserlessTest implements Locators {
 
     @Test
     void myTest() {
-        MyView view = window.navigate(MyView.class);
-        // Find components and simulate user actions through the window
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
     }
 }
 ----
 [source,java]
 ----
 <source-info group="Quarkus"></source-info>
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.BrowserlessUIContext;
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
+import com.vaadin.browserless.locator.Locators;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-class MyViewTest {
-
-    private BrowserlessApplicationContext app;
-    private BrowserlessUIContext window;
-
-    @BeforeEach
-    void setUp() {
-        app = QuarkusBrowserlessApplicationContext.create(MyView.class);
-        window = app.newUser().newWindow();
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
+class MyViewTest extends QuarkusBrowserlessTest implements Locators {
 
     @Test
     void myTest() {
-        MyView view = window.navigate(MyView.class);
-        // Find components and simulate user actions through the window
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
     }
 }
 ----
 --
 
-In Spring Boot, the application context is a bean that every test sharing the Spring application context uses, and Spring closes it.
-Each test closes only its own user.
+Implementing [interfacename]`Locators` adds the typed <<locators#,locator>> entry points, such as [methodname]`findButton()`, to the test class.
+The base class scans the whole classpath for routes, unless the test class has a <<test-environment#route-scanning,`@ViewPackages`>> annotation.
 
 Java EE/CDI tests extend an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`.
 See <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>> for that base class, and <<cdi#,CDI Test Integration>> for its lifecycle.
@@ -247,8 +176,10 @@ See <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless
 
 == Using the Snippets on the Following Pages
 
-The snippets on the following pages call the testing methods on `window`, the [classname]`BrowserlessUIContext` of the minimal test class, and create further users and windows from `app`.
-The base classes [classname]`BrowserlessTest`, [classname]`SpringBrowserlessTest`, and [classname]`QuarkusBrowserlessTest`, and the <<extensions#,JUnit extensions>>, provide the same testing methods for a single user and window; see <<test-environment#entry-points,Entry Points and Framework Integration>>.
+Most snippets on the following pages call the testing methods on `window`, a window of an <<multi-user#,application context>>.
+In a test that extends a base class, call the same methods on the test class itself: `window.findButton()` becomes `findButton()`.
+
+Snippets that create users and windows from `app` need an application context, which a test sets up when it needs several users or windows, or more control over the Vaadin environment; see <<multi-user#setting-up-an-application-context,Setting Up an Application Context>>.
 
 
 [discussion-id]`4D59DA39-8F41-49F4-B25D-09074A06FA3A`
