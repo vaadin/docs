@@ -477,7 +477,7 @@ public static class CustomAccessDeniedError extends Component
 
 [interfacename]`HasErrorParameter` error view needs an access control annotation, so that Vaadin allows navigation to it. The example above uses [annotationname]`@PermitAll`, but [annotationname]`@RolesAllowed` can also be used. [annotationname]`@AnonymousAllowed` isn't recommended, as it exposes information about access restrictions to the anonymous users.
 
-The same applies to custom [classname]`RouteNotFoundError` subclasses, which need more than an annotation. See <<#custom-not-found-view,Custom Not-Found View>>.
+Custom [classname]`RouteNotFoundError` subclasses also need a security annotation to be accessible, and with Spring Security they need a change to the security configuration, too. See <<#custom-not-found-view,Custom Not-Found View>>.
 
 If you want to reroute to a different error type, you would do something like the following example. It reroutes unauthorized administrative views to the [classname]`RouteNotFoundError` view, which is the default view for [classname]`NotFoundException` type.
 
@@ -503,13 +503,12 @@ A custom not-found view -- a class extending [classname]`RouteNotFoundError`, or
 . *A security annotation on the view*, so that navigation access control allows it to render.
 . *A relaxed catch-all request rule*, so that requests for non-existing pages reach the Vaadin servlet. By default, [classname]`VaadinSecurityConfigurer` denies every request that isn't explicitly allowed. A URL that doesn't match any route, entered in the browser's address bar or opened from a bookmark, is therefore denied by Spring Security before Vaadin can show the not-found view. The annotation doesn't change this.
 
-The following example annotates the view with [annotationname]`@AnonymousAllowed`, so that all users see it. Unlike the access denied view, a not-found view doesn't reveal anything about access restrictions, so it's safe to show it to anonymous users. Use [annotationname]`@PermitAll` instead if users who aren't signed in should be sent to the log-in view.
+The following example annotates the view with [annotationname]`@PermitAll`, so that signed-in users see it, and users who aren't signed in are sent to the log-in view. Use [annotationname]`@AnonymousAllowed` instead if users who aren't signed in can navigate in your application, for example between public views. If the view has a parent layout, set with [annotationname]`@ParentLayout`, the layout needs to allow the same users, or navigation access control blocks the view.
 
 .[filename]`CustomNotFoundView.java`
 [source,java]
 ----
-@ParentLayout(MainLayout.class)
-@AnonymousAllowed
+@PermitAll
 public class CustomNotFoundView extends RouteNotFoundError {
 
     @Override
@@ -539,7 +538,7 @@ SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 This doesn't expose your views: they're still protected at the HTTP layer by the request matchers of [classname]`VaadinSecurityConfigurer`, and by navigation access control. However, the catch-all rule also covers every other endpoint of the application, such as REST controllers or Spring Boot Actuator endpoints. Protect those with rules of their own before relaxing the catch-all rule, as rules added to `http` before the configurer are applied first.
 
-If only signed-in users need to see the not-found view, use `AuthorizedUrl::authenticated` instead of `AuthorizedUrl::permitAll`. Users who aren't signed in are then sent to the log-in view for any unknown URL, and other unmatched endpoints require authentication. See <<vaadin-security-configurer#configurer,Vaadin Security Configurer>> for the other options of [methodname]`anyRequest()`.
+If only signed-in users need to see the not-found view, use `AuthorizedUrl::authenticated` instead of `AuthorizedUrl::permitAll`. Users who aren't signed in are then sent to the log-in view for any unknown URL, and other unmatched endpoints require authentication. See <<vaadin-security-configurer#configurer,Vaadin Security Configurer>> for the other options of [methodname]`anyRequest()`, and <<{articles}/building-apps/ui-basics/handle-errors#,Handle Errors>> for a guide to the error views of an application.
 
 
 == Navigation Access Control & Spring's URL-Pattern-Based HTTP Security
