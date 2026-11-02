@@ -98,13 +98,14 @@ SharedValueSignal<String> first = items.insertFirst("First").signal();
 SharedValueSignal<String> last = items.insertLast("Last").signal();
 
 // Insert after a specific entry
-items.insertAt("After First", ListPosition.after(first));
+SharedValueSignal<String> afterFirst =
+    items.insertAt("After First", ListPosition.after(first)).signal();
 
 // Insert before a specific entry
 items.insertAt("Before Last", ListPosition.before(last));
 
 // Insert between two adjacent entries (requires the two to be adjacent)
-items.insertAt("Between", ListPosition.between(first, last));
+items.insertAt("Between", ListPosition.between(first, afterFirst));
 
 // Equivalent to insertFirst / insertLast
 items.insertAt("New First", ListPosition.first());
@@ -275,7 +276,7 @@ String optimistic = signal.peek();
 String confirmed = signal.peekConfirmed();
 ----
 
-Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an  implementation for asynchronous updates and confirmations in a cluster environment.
+Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an implementation for asynchronous updates and confirmations in a cluster environment.
 
 In single JVM deployments, `peekConfirmed()` typically returns the same value as `peek()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
@@ -318,7 +319,7 @@ counter.incrementBy(1); // Atomic operation, UI updates automatically
 
 == Signal Scope Patterns
 
-Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@VaadinUIScope`, or `@VaadinRouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
+Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@UIScope`, or `@RouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
 
 
 === Session-Scoped Signals
@@ -389,7 +390,7 @@ public class DashboardView extends VerticalLayout {
     public DashboardView() {
         Button increment = new Button("Increment");
         increment.addClickListener(e ->
-            counterSignal.set(counterSignal.get() + 1));
+            counterSignal.update(count -> count + 1));
 
         Span counter = new Span();
         counter.bindText(counterSignal.map(count -> "Count: " + count));
@@ -512,7 +513,7 @@ field.bindValue(value, value::set);
 // Changes sync both ways: field to signal and signal to field
 ----
 
-Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+Note that you need to <<{articles}/building-apps/server-push#enabling-push,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
 ====
 
 
