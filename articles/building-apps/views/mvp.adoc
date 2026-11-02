@@ -1,0 +1,342 @@
+---
+title: Structure Views with MVP
+page-title: How to structure Vaadin views with Model-View-Presenter
+description: Learn how the Model-View-Presenter pattern works in a Vaadin view, how it compares to MVVM, and when to use which.
+meta-description: Structure Vaadin views with Model-View-Presenter. Compare MVP with MVVM, and learn when to use which pattern, and when neither of them is worth the extra code.
+order: 35
+---
+
+
+= Structure Views with MVP
+:toclevels: 2
+
+Model-View-Presenter (MVP) is a pattern that many Vaadin applications use to separate the UI logic of a view from the UI components. The documentation of older Vaadin versions described it as one of the most common patterns for large applications, and many of the applications that are now being migrated to newer versions use it.
+
+This guide shows how MVP looks in a Flow view, and compares it with <<mvvm#,Model-View-ViewModel (MVVM)>>, which builds on signals. It then helps you decide when to use which, and when neither is worth the extra code.
+
+
+== How MVP Works
+
+MVP splits a view into three roles:
+
+- The *Model* is the application itself: its application services, domain classes, and DTOs.
+- The *Presenter* holds the UI logic. It reacts to the user's actions, calls the Model, and tells the view what to show.
+- The *View* is passive. It shows what the presenter tells it to, and reports the user's actions to the presenter.
+
+The presenter sees the view only through an interface, which doesn't mention Vaadin. The presenter is therefore plain Java: it has no dependency on Vaadin at all, and you can test it with a fake implementation of the view interface. A Vaadin class implements the interface, and that class is the only one that knows about UI components.
+
+The difference to MVVM is in how the UI follows the state. In MVP, the presenter pushes every change to the view by calling the view interface. In MVVM, the ViewModel exposes its state as signals, and the view binds its UI components to them once.
+
+
+== The Example
+
+The example is the ticket triage view of the <<mvvm#the-example,MVVM series>>, built with MVP and cut down to its core: a searchable list of tickets, an editor for the title of the selected ticket, and a *Save* button that's enabled only when the title has changes and isn't blank. Selecting another ticket while there are unsaved changes asks the user first. The Model is the same [classname]`TicketService` and [classname]`Ticket` record.
+
+
+=== Define the View Interface
+
+The view interface lists everything that the presenter can do to the view. Name its methods after what the view shows, not after UI components:
+
+.TicketsView.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvp/TicketsView.java[tags=full,indent=0]
+----
+
+A question to the user is a method too. The view asks the question in its own way, and passes the answer back by calling the presenter.
+
+
+=== Write the Presenter
+
+The presenter keeps the state of the view in plain fields. It receives the view in its constructor, together with the application services:
+
+.TicketsPresenter.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvp/TicketsPresenter.java[tags=full,indent=0]
+----
+
+After every change, the presenter tells the view what to show. Whether *Save* is enabled depends on two things, whether the title has changes and whether it's valid. Therefore, every method that changes the draft ends by calling [methodname]`updateEditor()`, which works out both again and pushes them to the view. The [methodname]`keepEditing()` method selects the opened ticket again, because the grid still shows the row that the user clicked.
+
+
+=== Implement the View
+
+The route class implements the view interface. It creates the presenter in its constructor, and passes itself to it:
+
+.TicketsViewImpl.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvp/TicketsViewImpl.java[tags=create,indent=0]
+----
+
+The listeners only pass the user's actions on to the presenter. When the presenter sets the value of a field, the field fires a value change event in the same way as when the user changes it. Without the [methodname]`isFromClient()` checks, the view would report the presenter's own changes back to the presenter as if the user had made them.
+
+The rest of the class implements the view interface:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvp/TicketsViewImpl.java[tags=implement,indent=0]
+----
+
+Setting the items of a grid clears its selection, so [methodname]`showTickets()` selects the same ticket again. The view handles this detail of the grid itself, so that the presenter doesn't need to know about it.
+
+The view also loads the tickets after navigation, and asks the user before leaving with unsaved changes, in the same way as the <<mvvm/dialogs-and-navigation#protect-unsaved-changes,MVVM version>>. It asks the presenter with [methodname]`hasUnsavedChanges()`.
+
+
+=== Test the Presenter
+
+Test the presenter with plain JUnit, and give it a fake view that remembers what the presenter told it:
+
+.TicketsPresenterTest.java
+[source,java]
+----
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class TicketsPresenterTest {
+
+    // Remembers what the presenter last told the view to do
+    static class FakeTicketsView implements TicketsView {
+        List<Ticket> tickets;
+        Ticket selected;
+        Ticket shown;
+        String titleError;
+        boolean saveEnabled;
+        boolean confirmingDiscard;
+
+        @Override
+        public void showTickets(List<Ticket> tickets) {
+            this.tickets = tickets;
+        }
+
+        @Override
+        public void selectTicket(Ticket ticket) {
+            selected = ticket;
+        }
+
+        @Override
+        public void showTicket(Ticket ticket) {
+            shown = ticket;
+        }
+
+        @Override
+        public void showTitleError(String error) {
+            titleError = error;
+        }
+
+        @Override
+        public void setSaveEnabled(boolean enabled) {
+            saveEnabled = enabled;
+        }
+
+        @Override
+        public void confirmDiscard() {
+            confirmingDiscard = true;
+        }
+
+        @Override
+        public void showSaved() {
+        }
+    }
+
+    FakeTicketsView view;
+    TicketsPresenter presenter;
+
+    Ticket printer;
+    Ticket vpn;
+
+    @BeforeEach
+    void setUp() {
+        view = new FakeTicketsView();
+        presenter = new TicketsPresenter(new TicketService(), view);
+        presenter.refresh();
+        printer = view.tickets.get(0);
+        vpn = view.tickets.get(2);
+    }
+
+    @Test
+    void blankTitleCannotBeSaved() {
+        presenter.select(printer);
+        presenter.titleChanged(" ");
+
+        assertEquals("Title is required", view.titleError);
+        assertFalse(view.saveEnabled);
+    }
+
+    @Test
+    void switchingTicketsWithUnsavedChangesAsksFirst() {
+        presenter.select(printer);
+        presenter.titleChanged("Printer on fire again");
+
+        presenter.select(vpn);
+
+        assertTrue(view.confirmingDiscard);
+        assertEquals(printer, view.shown);
+    }
+
+    @Test
+    void keepingTheChangesSelectsTheTicketAgain() {
+        presenter.select(printer);
+        presenter.titleChanged("Printer on fire again");
+        presenter.select(vpn);
+
+        presenter.keepEditing();
+
+        assertEquals(printer, view.selected);
+        assertTrue(presenter.hasUnsavedChanges());
+    }
+}
+----
+
+The tests check what the presenter told the view to do. Instead of writing a fake view, you can use a mocking library, and verify the calls to the view interface. Either way, the tests depend on the view interface: when you change it, you also change the fake or the verified calls.
+
+
+== MVP and MVVM Compared
+
+Both patterns move the UI logic of a view out of the UI components, into a plain Java class that you test with JUnit. They differ in how the UI follows the state:
+
+[cols="1,2,2",options="header"]
+|===
+| |MVP |MVVM
+
+|How the UI follows the state
+|The presenter calls the view interface after every change
+|The view binds its UI components to signals once
+
+|A rule over combined state
+|Worked out again, and pushed to the view, after every change that might affect it
+|A derived signal, stated once
+
+|Classes for each view
+|View interface, presenter, and view implementation
+|ViewModel and view
+
+|What the UI logic depends on
+|Nothing from Vaadin
+|Vaadin's signals, but no UI components
+
+|What the tests check
+|What the presenter told the view to do
+|The state of the ViewModel
+|===
+
+
+=== Pros and Cons of MVP
+
+MVP has these strengths:
+
+Independent of the UI framework::
+The presenter is plain Java. When you migrate an application from an older Vaadin version, or from another Java UI framework, you rewrite the view implementations, and keep the presenters and their tests. If the presenter doesn't use any Vaadin types, an old and a new view implementation can even share it while you migrate the views one at a time, for example with <<{articles}/tools/mpr#,Multiplatform Runtime>>.
+
+Explicit contract::
+The view interface lists everything that the presenter can do to the UI. It's easy to review, and one developer can work on the presenter while another builds the view.
+
+Imperative and familiar::
+Each change to the UI is a method call that you can follow in a debugger. Many Java developers know the pattern, and many existing applications use it.
+
+MVP has these weaknesses:
+
+Updates by hand::
+The presenter has to update every part of the UI that depends on the state it changes. A forgotten call leaves the UI out of date. The compiler doesn't notice, and the tests notice only if they check that part of the UI. As the rules combine more state, methods like [methodname]`updateEditor()` grow, and more methods have to call them.
+
+More code::
+Each view needs three classes, and showing one more value in the view touches all of them: a method in the interface, its implementation, and a call in the presenter.
+
+State in two places::
+The state lives in the presenter, and again in the UI components: the values of the fields and the selection of the grid. The view implementation has to keep the two in step, as the example does when it filters the presenter's own changes with [methodname]`isFromClient()` and selects the ticket again after replacing the items.
+
+Tests tied to the view interface::
+The tests check calls to the view. A change to the view interface changes the tests, even when the behavior stays the same.
+
+Large views get tangled::
+When a large view is split into parts, each with a presenter of its own, the presenters tend to call each other, and the flow of a user's action becomes hard to follow.
+
+
+=== Pros and Cons of MVVM
+
+MVVM has these strengths:
+
+Derived instead of pushed::
+A rule is a derived signal, stated once, and every UI component that is bound to it follows it. Nothing can forget to update the UI.
+
+Less code::
+MVVM needs no view interface. A field binds to a signal and a command in one line.
+
+State in one place::
+The signals of the ViewModel are the only copy of the state. A field doesn't pass a value that it got from its signal back to the ViewModel, so the view needs no checks to tell the ViewModel's changes from the user's.
+
+Tests that check state::
+The tests read the state of the ViewModel. Replacing a button with a menu item doesn't change them, as long as the item calls the same command.
+
+Shared state::
+Several UI components, and child components, bind to the same signals, so the parts of a view share state without calling each other.
+
+MVVM has these weaknesses:
+
+Depends on Vaadin::
+The ViewModel uses no UI components, but it depends on the signal classes of Vaadin, and needs a Vaadin version that has them. It doesn't survive a change of UI framework as it is.
+
+Gaps in the bindings::
+Vaadin doesn't have bind methods yet for every property, such as the items of a grid and the error message of a field. Until it does, the application needs small helpers, as <<mvvm/bind-view#bind-grids-and-error-messages,Bind the View>> shows.
+
+A new way of thinking::
+Developers have to learn to derive state instead of setting it, to read signals with [methodname]`peek()` in commands, and to keep effects out of the ViewModel. One-off interactions, such as a notification after a save, need a returned outcome, because they aren't state.
+
+
+== When to Use Which
+
+[cols="2,1",options="header"]
+|===
+|Situation |Pattern
+
+|A new view with rules over combined state, shared state, flows, or background work
+|MVVM
+
+|A view that you're rewriting anyway, in an application with signals
+|MVVM
+
+|An application that uses MVP, and that you're migrating to a newer Vaadin version
+|MVP
+
+|UI logic that has to work with more than one UI framework, or one that you plan to replace
+|MVP
+
+|A view that shows none of the <<mvvm#when-to-use-mvvm,signs of a complex view>>
+|Neither
+|===
+
+When you migrate an application that uses MVP, keep MVP during the migration. Port the view implementations, and keep the presenters and their tests as they are. The tests then show that the UI logic still works on the new version. Changing the pattern at the same time would change the code that the tests check, and you couldn't tell whether a failure comes from the migration or from the new pattern.
+
+After the migration, you don't have to convert anything. Move a view to MVVM when you change it substantially anyway, and its updates by hand get in the way. A mix of patterns in one application is fine, as long as each view uses one of them.
+
+Use MVP for a new view only when its UI logic really must not depend on Vaadin. Most applications never change their UI framework, and paying for that option in every view rarely pays off.
+
+
+== When Neither Is Worth It
+
+Both patterns cost extra code. Most views don't need either: a login view, a settings view, a read-only page, a list with one filter, or a form that loads and saves one entity. Build those as plain views, with [classname]`Binder` for the forms, and use signals in the view when a few UI components share some state. <<mvvm#when-to-use-mvvm,When to Use MVVM>> lists the signs that a view has outgrown that.
+
+MVP costs the most for a simple view, because it needs three classes for each view, however simple the view is.
+
+Testing alone isn't a reason to use either pattern. A browserless test runs a plain view without a browser, and checks what the user sees after clicking and typing. See <<{articles}/building-apps/testing/browserless#,Browserless Tests>>. A separate presenter or ViewModel pays off when the view has rules worth testing on their own, not when the only rule is that a button calls a service.
+
+
+== Move from MVP to MVVM
+
+When you move a view from MVP to MVVM, the presenter becomes the ViewModel, and the view implementation becomes the view:
+
+. Remove the view from the presenter's constructor. Keep the application services.
+. Turn each field that holds state into a private signal.
+. Turn each method that the presenter calls on the view to show something into a read-only signal. A value that the presenter works out, such as whether *Save* is enabled, becomes a derived signal. Remove the code that pushes the values, such as [methodname]`updateEditor()`.
+. Keep the methods that the view calls as commands.
+. Turn each question that the presenter asks the view into state, such as `confirmingDiscard`, or into an outcome that a command returns.
+. In the view, bind the UI components to the signals instead of implementing the view interface, and remove the interface. A listener with an [methodname]`isFromClient()` check becomes a [methodname]`bindValue()` call.
+. In the tests, replace the fake view with assertions on the signals, read with [methodname]`peek()`.
+
+The result is the ViewModel of <<mvvm/write-viewmodel#,Write a ViewModel>>. Move one view at a time, and run its tests after each step.
