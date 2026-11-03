@@ -42,7 +42,9 @@ pass:[<!-- vale Vale.Spelling = NO -->]
 
 pass:[<!-- vale Vale.Spelling = YES -->]
 
-The example in the above section only adds the nonce to the application. It doesn't help with handling all of the dynamic functions, `eval` calls, and chunk loading. An application that needs to use strict CSP must provide a JavaScript file for handling these issues in a CSP-compliant way.
+The example in the above section only adds the nonce to the application. It doesn't help with handling all of the dynamic functions and `eval` calls that application code and components may still need. An application that needs to use strict CSP must provide a JavaScript file for handling these issues in a CSP-compliant way.
+
+Loading a route whose JavaScript is in a lazily loaded chunk doesn't need this handling: the chunk loader is a function declared in the bundle, so nothing is compiled from a string when the chunk loads.
 
 The Function constructor and `eval` must be overridden. Also, the application developer needs to provide equivalent pre-defined JavaScript functions for any calls made by the application. A snippet of this is shown below as an example:
 
@@ -57,12 +59,7 @@ window.Function = function(...args) {
     return functions.get(key);
   }
 
-  if (key.startsWith("return window.Vaadin.Flow.loadOnDemand(")) {
-    const chunk = key.split("return window.Vaadin.Flow.loadOnDemand('").pop().split("');").pop();
-    return function (chunk) {return window.Vaadin.Flow.loadOnDemand(chunk);};
-  }
-
-  // Expression was not found in functions map, and was not chunk-loading call, so log it to console
+  // Expression was not found in functions map, so log it to console
   const code = args[args.length - 1];
   // Ignore the stats gatherer which isn't used in production mode
   if (code.indexOf("var StatisticsGatherer") == -1) {
