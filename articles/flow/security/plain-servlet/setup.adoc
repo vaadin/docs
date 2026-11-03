@@ -215,8 +215,6 @@ public class NavigationAccessCheckerInitializer implements VaadinServiceInitList
 <2> Sets the view to which users who aren't authenticated are redirected.
 <3> Adds the access control as a [interfacename]`BeforeEnterListener` to every UI, so that it checks every navigation.
 
-
-
 Vaadin loads the listener with the Java Service Provider Interface (SPI). Create a file named `com.vaadin.flow.server.VaadinServiceInitListener` in the `META-INF/services` directory of the application resources, and put the fully qualified name of the listener class into it, for example:
 
 .[filename]`src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`
@@ -230,7 +228,7 @@ For more information, see <<{articles}/flow/advanced/service-init-listener#,Vaad
 
 === Customizing Navigation Access Control
 
-To customize navigation access control, pass the navigation access checkers and the decision resolver to the [classname]`NavigationAccessControl` constructor. Flow doesn't provide an [interfacename]`AccessPathChecker` for plain servlet applications, but you can implement one that integrates with the security framework that you use. The following example activates a path-based checker, two custom checkers, and a custom decision resolver, as described in <<../access-control/navigation-access-control#customization,Customization>>:
+To customize navigation access control, pass the navigation access checkers and the decision resolver to the [classname]`NavigationAccessControl` constructor. Flow doesn't provide an [interfacename]`AccessPathChecker` for plain servlet applications, but you can implement one that integrates with the security framework that you use. The following example replaces the constructor of the [classname]`NavigationAccessCheckerInitializer` class above. It activates a path-based checker and two custom checkers in addition to the annotation checker, and a custom decision resolver, as described in <<../access-control/navigation-access-control#customization,Customization>>:
 
 .Custom NavigationAccessControl in a Plain Servlet Application
 [source,java]
@@ -243,26 +241,18 @@ public class FooBarSecurityAccessPathChecker implements AccessPathChecker {
     }
 }
 
-public class NavigationAccessCheckerInitializer implements VaadinServiceInitListener {
-
-    private final NavigationAccessControl accessControl;
-
-    public NavigationAccessCheckerInitializer() {
-        accessControl = new NavigationAccessControl(List.of(
-            new RoutePathAccessChecker(new FooBarSecurityAccessPathChecker()),
-            new CustomChecker(),
-            new VotingNavigationAccessChecker()
-        ), new CustomDecisionResolver());
-        accessControl.setLoginView(LoginView.class);
-    }
-
-    @Override
-    public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        serviceInitEvent.getSource().addUIInitListener(uiInitEvent ->
-            uiInitEvent.getUI().addBeforeEnterListener(accessControl));
-    }
+// In NavigationAccessCheckerInitializer:
+public NavigationAccessCheckerInitializer() {
+    accessControl = new NavigationAccessControl(List.of(
+        new AnnotatedViewAccessChecker(), // <1>
+        new RoutePathAccessChecker(new FooBarSecurityAccessPathChecker()),
+        new CustomChecker(),
+        new VotingNavigationAccessChecker()
+    ), new CustomDecisionResolver());
+    accessControl.setLoginView(LoginView.class);
 }
 ----
+<1> The list replaces the default checkers, which consist of only [classname]`AnnotatedViewAccessChecker`. Include it to keep checking the access annotations.
 
 
 == Access Annotations
