@@ -74,7 +74,8 @@ the conventions.
 
 The review runs when a pull request to `main` opens or becomes ready for
 review. Drafts, cherry-picks, version updates, and `chore` pull requests get no
-automatic review. To request a review, use one of these:
+automatic review. To request a review of a pull request to any branch, use
+one of these:
 
 - Comment `/code-review` on the pull request.
 - Request a review from `vaadin-review-bot`.
