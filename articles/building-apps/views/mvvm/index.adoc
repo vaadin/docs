@@ -11,41 +11,89 @@ order: 30
 
 As a view grows, its state and its rules spread across listeners. A listener on the grid updates the form, a listener on the form enables the button, and a third one keeps the two in step. Before long, nobody can tell which listener sets what, and the only way to test a rule is to click through the view.
 
-The Model-View-ViewModel (MVVM) pattern moves that state and those rules out of the view, into a class of their own:
+The Model-View-ViewModel (MVVM) pattern moves that state and those rules out of the view, into a class of their own called the ViewModel. The view binds its UI components to the ViewModel, and passes the user's actions to it. The following diagram shows a view that edits the title of a ticket:
 
-- The *View* is what the user sees: the UI components, their layout, and their bindings.
-- The *ViewModel* is what the view knows and can do: its state, and the actions a user can take.
-- The *Model* is the application itself: its application services, domain classes, and DTOs.
+image::images/mvvm.png["A diagram of a view with a title field and a Save button, a ViewModel with commands and signals, and a Model with a ticket service. Arrows show the user's actions going to the commands, and a binding going from a signal to the Save button."]
 
-<<{articles}/flow/ui-state#,Signals>> make the pattern cheap in Flow. The ViewModel keeps its state in signals, the view binds its UI components to those signals once, and every change reaches the screen without listeners that copy values around. Because the ViewModel has no UI components, you can test the view's rules with plain JUnit tests that run in milliseconds.
+. The user types in the title field. The field passes the new title to the [methodname]`setTitle()` command of the ViewModel.
+. The command updates the `draft` signal, which holds the ticket that the user is editing.
+. The `canSave` signal is derived from the draft, so it changes with it.
+. The *Save* button is bound to `canSave`, so the button is enabled or disabled without any code in the view.
+. When the user clicks *Save*, the button calls the [methodname]`save()` command.
+. The command passes the ticket to the `TicketService`, which saves it.
+
+In code, the ViewModel looks like this:
+
+[source,java]
+----
+class TicketEditorViewModel {
+
+    private final TicketService ticketService; // The Model
+    private final ValueSignal<Ticket> draft; // The state
+
+    TicketEditorViewModel(TicketService ticketService, Ticket ticket) {
+        this.ticketService = ticketService;
+        this.draft = new ValueSignal<>(ticket);
+    }
+
+    Signal<String> title() {
+        return draft.map(Ticket::title);
+    }
+
+    // A rule, derived from the state
+    Signal<Boolean> canSave() {
+        return draft.map(ticket -> !ticket.title().isBlank());
+    }
+
+    // Commands: what the user can do
+    void setTitle(String title) {
+        draft.update(ticket -> ticket.withTitle(title));
+    }
+
+    void save() {
+        ticketService.save(draft.peek());
+    }
+}
+----
+
+The view creates the ViewModel, and binds its UI components to it once:
+
+[source,java]
+----
+var viewModel = new TicketEditorViewModel(ticketService, ticket);
+
+TextField title = new TextField("Title");
+title.bindValue(viewModel.title(), viewModel::setTitle);
+
+Button save = new Button("Save", event -> viewModel.save());
+save.bindEnabled(viewModel.canSave());
+----
+
+<<{articles}/flow/ui-state#,Signals>> make the pattern cheap in Flow. Every change reaches the screen through the bindings, without listeners that copy values around. Because the ViewModel has no UI components, you can test its rules, such as "a ticket with a blank title can't be saved", with plain JUnit tests that run in milliseconds.
+
+This example is small enough not to need a ViewModel; <<#when-to-use-mvvm,When to Use MVVM>> explains when one pays off. The guides in this series build a larger view that does.
 
 
 == The Roles
 
-[cols="1,2,2,2",options="header"]
+[cols="1,3,2",options="header"]
 |===
-| | Model | ViewModel | View
+|Part |What It Does |In the Example
 
-|Is
-|Application services, domain classes, DTOs, and repositories
-|One plain Java class for each complex view
-|The [annotationname]`@Route` class and its child components
+|View
+|Creates the UI components and lays them out. It shows what the ViewModel holds, and tells the ViewModel what the user does.
+|The title field and the *Save* button
 
-|Holds
-|Business rules, persistence, transactions, and security
-|The view's state in signals, the rules derived from that state, and the commands a user can trigger
-|UI components, layout, and bindings
+|ViewModel
+|Remembers the state of the view, such as the ticket that the user is editing, and decides what the view shows, such as whether *Save* is enabled. It has no UI components.
+|`draft`, `canSave`, [methodname]`setTitle()`, and [methodname]`save()`
 
-|Uses
-|--
-|The Model
-|The ViewModel
-
-|Never touches
-|The view or its ViewModel
-|UI components, [classname]`UI`, [classname]`Notification`, [classname]`Binder`, or the router
-|Services, other than handing them to the ViewModel
+|Model
+|The rest of the application: the services that load and save data, and the data itself. It knows nothing about the view.
+|The `TicketService`, and the `Ticket` record
 |===
+
+Each part uses only the one next to it: the view uses the ViewModel, and the ViewModel uses the Model. Because the ViewModel never uses UI components, you can test it on its own.
 
 The Model is the same no matter how the view is built. The <<{articles}/building-apps/business-logic/add-service#,Add a Service>> guide shows how to build application services.
 
@@ -106,7 +154,7 @@ If your application already uses the Model-View-Presenter pattern, see <<../mvp#
 
 == The Example
 
-The guides in this series build a ticket triage view for a support desk. The view lists tickets next to an editor for the selected ticket, and has these rules:
+The guides in this series build a larger version of the ticket editor: a ticket triage view for a support desk. The view lists tickets next to an editor for the selected ticket, and has these rules:
 
 - Searching and filtering by status narrow the list.
 - Clicking a ticket opens it in the editor. *Save* is enabled only when the ticket has changes and its title isn't blank. A blank title shows an error on the field.

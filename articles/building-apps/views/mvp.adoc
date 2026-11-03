@@ -13,7 +13,91 @@ order: 35
 
 Model-View-Presenter (MVP) is a pattern that many Vaadin applications use to separate the UI logic of a view from the UI components. The documentation of older Vaadin versions described it as one of the most common patterns for large applications, and many of the applications that are now being migrated to newer versions use it.
 
-This article shows how MVP looks in a Flow view, and compares it with <<mvvm#,Model-View-ViewModel (MVVM)>>, which builds on signals. It then discusses when to use which, and when neither is worth the extra code.
+In MVP, a presenter holds the UI logic of a view, and the view is passive: it shows what the presenter tells it to, and reports the user's actions to the presenter. The following diagram shows a view that edits the title of a ticket, the same view as at the start of <<mvvm#,Structure Views with MVVM>>:
+
+image::images/mvp.png["A diagram of a view with a title field, a Save button, and a view interface method, a presenter with methods and a field, and a Model with a ticket service. Arrows show the user's actions going to the presenter, and the presenter calling the view interface to enable the Save button."]
+
+. The user types in the title field. The view passes the new title to the [methodname]`titleChanged()` method of the presenter.
+. The presenter stores the new title in its `draft` field.
+. It then calls [methodname]`updateEditor()`, which works out whether the ticket can be saved.
+. [methodname]`updateEditor()` calls [methodname]`setSaveEnabled()` on the view, through the view interface.
+. The view enables or disables the *Save* button.
+. When the user clicks *Save*, the view calls the [methodname]`save()` method of the presenter.
+. The presenter passes the ticket to the `TicketService`, which saves it.
+
+In code, the presenter sees the view only through an interface:
+
+[source,java]
+----
+// The view, as the presenter sees it
+interface TicketEditorView {
+    void setSaveEnabled(boolean enabled);
+}
+----
+
+[source,java]
+----
+class TicketEditorPresenter {
+
+    private final TicketService ticketService; // The Model
+    private final TicketEditorView view;
+    private Ticket draft; // The state
+
+    TicketEditorPresenter(TicketService ticketService, TicketEditorView view,
+            Ticket ticket) {
+        this.ticketService = ticketService;
+        this.view = view;
+        this.draft = ticket;
+        updateEditor();
+    }
+
+    void titleChanged(String title) {
+        draft = draft.withTitle(title);
+        updateEditor();
+    }
+
+    void save() {
+        ticketService.save(draft);
+    }
+
+    // Works out the rule, and pushes the outcome to the view
+    private void updateEditor() {
+        view.setSaveEnabled(!draft.title().isBlank());
+    }
+}
+----
+
+The Flow view implements the interface, and passes the user's actions to the presenter:
+
+[source,java]
+----
+class TicketEditorViewImpl extends VerticalLayout
+        implements TicketEditorView {
+
+    private final Button save = new Button("Save");
+
+    TicketEditorViewImpl(TicketService ticketService, Ticket ticket) {
+        var presenter = new TicketEditorPresenter(ticketService, this, ticket);
+
+        TextField title = new TextField("Title");
+        title.setValue(ticket.title());
+        title.addValueChangeListener(
+                event -> presenter.titleChanged(event.getValue()));
+
+        save.addClickListener(event -> presenter.save());
+        add(title, save);
+    }
+
+    @Override
+    public void setSaveEnabled(boolean enabled) {
+        save.setEnabled(enabled);
+    }
+}
+----
+
+In MVVM, the same rule is a derived signal that the *Save* button is bound to. In MVP, the presenter works out the rule and pushes the outcome to the view itself, in steps 3 to 5.
+
+This article shows how MVP looks in a larger Flow view, and compares it with Model-View-ViewModel (MVVM), which builds on signals. It then discusses when to use which, and when neither is worth the extra code.
 
 .Deep Dive - Recommended Approach
 [IMPORTANT]
@@ -28,9 +112,7 @@ MVP splits a view into three roles:
 - The *Presenter* holds the UI logic. It reacts to the user's actions, calls the Model, and tells the view what to show.
 - The *View* is passive. It shows what the presenter tells it to, and reports the user's actions to the presenter.
 
-The presenter sees the view only through an interface, which doesn't mention Vaadin. The presenter is therefore plain Java: it has no dependency on Vaadin at all, and you can test it with a fake implementation of the view interface. A Vaadin class implements the interface, and that class is the only one that knows about UI components.
-
-The difference to MVVM is in how the UI follows the state. In MVP, the presenter pushes every change to the view by calling the view interface. In MVVM, the ViewModel exposes its state as signals, and the view binds its UI components to them once.
+The view interface doesn't mention Vaadin. The presenter is therefore plain Java: it has no dependency on Vaadin at all, and you can test it with a fake implementation of the view interface. A Vaadin class implements the interface, and that class is the only one that knows about UI components.
 
 
 == The Example
@@ -226,6 +308,12 @@ Keep one presenter for each route view. Don't give each child component a presen
 
 
 == How the Patterns Differ
+
+The following diagram shows the ticket editor from the start of this article, built with MVVM:
+
+image::{articles}/building-apps/views/mvvm/images/mvvm.png["A diagram of the same ticket editor built with MVVM. The Save button is bound to a derived signal in the ViewModel, instead of being enabled by a call from a presenter."]
+
+A derived signal and a binding take the place of steps 3 to 5 of the MVP version. Nothing in the ViewModel calls the view.
 
 Both patterns move the UI logic of a view out of the UI components, into a plain Java class that you test with JUnit. They differ in how the UI follows the state:
 
