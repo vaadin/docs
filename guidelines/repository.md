@@ -65,6 +65,24 @@ one.
 Frontend examples are linted with ESLint (`npm run lint`) and formatted with
 Prettier (`.prettierrc`).
 
+## Automated Review
+
+The Code Review workflow reviews a pull request with Claude. It posts the
+findings as one review by `vaadin-review-bot`. A review of pages and examples
+checks accuracy against the product source, clarity, examples, placement, and
+the conventions.
+
+The review runs when a pull request to `main` opens or becomes ready for
+review. Drafts, cherry-picks, version updates, and `chore` pull requests get no
+automatic review. To request a review, use one of these:
+
+- Comment `/code-review` on the pull request.
+- Request a review from `vaadin-review-bot`.
+
+Only users with write access can start a review. A pull request from a fork
+gets no review. The findings are suggestions.
+The author decides which of them to address.
+
 ## Previewing
 
 `npm run dspublisher:start` serves the site with live reload on
