@@ -1,24 +1,20 @@
 ---
 title: Content Security Policy
-page-title: How to enable strict CSP in Vaadin Flow
-description: How to enable strict Content Security Policy.
+page-title: Content Security Policy in Vaadin Flow
+description: The Content Security Policy settings that Vaadin Flow needs, and how to use a strict policy.
 meta-description: Discover how to implement strict content security policies in Vaadin Flow for enhanced security.
 order: 30
 ---
 
 = Content Security Policy
 
-Content Security Policy (https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP[CSP]) is a browser standard that helps to mitigate certain types of attacks. Strict CSP allows the application to define rules for how JavaScript can be loaded and run in the browser. This provides an additional layer of security against Cross-Site Scripting (XSS), data injection, data theft, site defacement and malware distribution.
+A Content Security Policy (https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP[CSP]) is a browser standard that helps to mitigate certain types of attacks, such as Cross-Site Scripting (XSS) and data injection. With a CSP, the application defines rules for how scripts and other resources can be loaded and run in the browser. This page describes the settings that Vaadin Flow needs, and how to use a strict, nonce-based policy.
 
 
 [[required-settings]]
 == Required Settings
 
-The settings `script-src 'unsafe-inline' 'unsafe-eval'` and `style-src 'unsafe-inline'` are required during Vaadin application start, that is, the bootstrap process. The bootstrap process that starts the application loads the client-side engine, which is the part of the framework that runs in the browser. It consists of JavaScript logic for the communication protocol and DOM control, for example, but not of the application code. The engine is a static resource, and once it's loaded, it's started by a script that the bootstrap page includes inline. The engine then evaluates the JavaScript expressions that the server sends -- those of [methodname]`executeJs()` and of the event data expressions -- by constructing functions from them in the browser, which is what `unsafe-eval` permits.
-
-Hence, these settings are needed so that the framework can start its client-side engine in the browser.
-
-[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter prepares applications for a strict, nonce-based policy without these keywords in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. The `strict` mode isn't usable for applications yet, because Vaadin itself still uses APIs that need `eval`, for example for the event data of click listeners. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter. The following sections describe how to run with a strict policy today.
+Vaadin Flow needs the settings `script-src 'unsafe-inline' 'unsafe-eval'` and `style-src 'unsafe-inline'`. The bootstrap page starts the Flow client engine -- the part of the framework that runs in the browser -- with an inline script. The engine then runs the JavaScript expressions that the server sends, such as those of [methodname]`executeJs()` and of event data expressions, by constructing functions from them, which is what `unsafe-eval` permits.
 
 
 == Vaadin & Strict CSP
@@ -32,7 +28,7 @@ Strict CSP implemented this way is only available when the Vaadin application is
 
 == Creating Random Nonce
 
-To create the random nonce value, the application needs to have an [interfacename]`IndexHtmlRequestListener`, which must generate and add the nonce to the index file response and all script tags, like this for example:
+The application generates the nonce for each request of the bootstrap page in an <<{articles}/flow/advanced/modifying-the-bootstrap-page#IndexHtmlRequestListener-interface,`IndexHtmlRequestListener`>>. In its [methodname]`modifyIndexHtmlResponse()` method, the listener adds the nonce to the `Content-Security-Policy` header and to all script tags of the page:
 
 [source,java]
 ----
@@ -52,7 +48,7 @@ pass:[<!-- vale Vale.Spelling = NO -->]
 
 pass:[<!-- vale Vale.Spelling = YES -->]
 
-The example in the above section only adds the nonce to the application. It doesn't help with handling all of the dynamic functions, `eval` calls, and chunk loading. An application that needs to use strict CSP must provide a JavaScript file for handling these issues in a CSP-compliant way.
+The nonce alone doesn't cover the dynamic functions, `eval` calls, and chunk loading. An application that needs to use strict CSP must provide a JavaScript file for handling these issues in a CSP-compliant way.
 
 The Function constructor and `eval` must be overridden. Also, the application developer needs to provide equivalent pre-defined JavaScript functions for any calls made by the application. A snippet of this is shown below as an example:
 
@@ -126,5 +122,10 @@ functions.set("$0,$1,return $0.$connector.confirm($1)",
 ----
 
 An example application using strict CSP is available https://github.com/vaadin/flow-crm-tutorial/tree/24.5-strict-csp[on GitHub]. Files containing the required changes are https://github.com/vaadin/flow-crm-tutorial/blob/24.5-strict-csp/src/main/java/com/example/application/Application.java[`Application.java`] and https://github.com/vaadin/flow-crm-tutorial/blob/24.5-strict-csp/src/main/frontend/csp.js[`csp.js`].
+
+== Checking Compatibility
+
+[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter prepares applications for a strict, nonce-based policy without these keywords in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. The `strict` mode can't be used for applications yet, because Vaadin itself still uses APIs that need `eval`, for example for the event data of click listeners. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter.
+
 
 [discussion-id]`B5E8EEC6-0F7E-49C5-8121-0906827BE4A5`
