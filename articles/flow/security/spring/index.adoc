@@ -3,173 +3,22 @@ title: Spring Applications
 page-title: How to secure Vaadin Spring applications with Spring Security
 description: Securing a Vaadin Flow application with Spring Security, using the built-in security helpers.
 meta-description: Learn how to secure a Vaadin Flow Spring Boot application with Spring Security and the built-in security helpers, such as VaadinSecurityConfigurer.
-order: 10
+order: 20
 ---
-
 
 
 = Spring Applications
 
-Vaadin's built-in security helpers integrate with Spring Security. In a Spring Boot application, [classname]`VaadinSecurityConfigurer` applies the Spring Security configuration that a Vaadin application needs, and enables view access control. This page describes the minimal setup. The pages below describe its parts in detail.
+Vaadin's built-in security helpers integrate with Spring Security. In a Spring Boot application, [classname]`VaadinSecurityConfigurer` applies the Spring Security configuration that a Vaadin application needs, and enables view access control. <<setup#,Setting Up Spring Security>> describes the minimal setup.
 
-For Spring applications that don't use Spring Security, see <<without-spring-security#,Without Spring Security>>. For applications that don't use Spring, see <<../plain-servlet#,Plain Servlet Applications>>. For task-oriented guides, see <<{articles}/building-apps/security#,Building Apps > Security>>.
-
-
-== Overview
-
-Securing a Spring Boot application takes the following:
-
-- the Spring Security dependency;
-- a log-in view;
-- a security configuration class that uses [classname]`VaadinSecurityConfigurer`; and
-- an access annotation on each view class and on each layout class, as described in <<../access-control#,View Access Control>>. The log-in view is the only exception.
-
-A complete example project is available at https://github.com/vaadin/flow-crm-tutorial[`github.com/vaadin/flow-crm-tutorial`].
-
-
-
-== Spring Security Dependency
-
-Add the Spring Boot starter for Spring Security to the project:
-
-.[filename]`pom.xml`
-[source,xml]
-----
-<dependencies>
-    <!-- other dependencies -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    <!-- other dependencies -->
-</dependencies>
-----
-
-
-== Log-in View
-
-The log-in view is where navigation access control sends users who aren't authenticated when they try to open a protected view. The following example uses the <<{articles}/components/login#,Login>> component, but any view works:
-
-.[classname]`LoginView.java`
-[source,java]
-----
-@Route(value = "login", autoLayout = false)
-@PageTitle("Login")
-public class LoginView extends VerticalLayout implements BeforeEnterObserver {
-
-    private LoginForm login = new LoginForm();
-
-    public LoginView() {
-        addClassName("login-view");
-        setSizeFull();
-
-        setJustifyContentMode(JustifyContentMode.CENTER);
-        setAlignItems(Alignment.CENTER);
-
-        login.setAction("login");
-
-        add(new H1("Test Application"), login);
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        if(beforeEnterEvent.getLocation()
-            .getQueryParameters()
-            .getParameters()
-            .containsKey("error")) {
-            login.setError(true);
-        }
-    }
-}
-----
-
-[methodname]`setAction("login")` makes the form send the credentials to Spring Security's form login, which redirects back to the log-in view with the `error` query parameter if the log-in fails. Setting `autoLayout = false` keeps the log-in view out of an automatic layout -- a class annotated with [annotationname]`@Layout` -- so that the log-in form isn't shown inside the application's main layout.
-
-The log-in view doesn't need an access annotation. Navigation access control always allows navigation to the configured log-in view, and [classname]`VaadinSecurityConfigurer` permits HTTP requests to it.
-
-
-== Security Configuration Class
-
-The security configuration class applies [classname]`VaadinSecurityConfigurer` to the Spring Security filter chain, and registers the log-in view. The class can have any name. This is a minimal implementation:
-
-.[filename]`SecurityConfiguration.java`
-[source,java]
-----
-<source-info group="VaadinSecurityConfigurer"></source-info>
-@EnableWebSecurity // <1>
-@Configuration
-public class SecurityConfiguration {
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Configure your static resources with public access
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/public/**")
-            .permitAll());
-
-        // Configure Vaadin's security using VaadinSecurityConfigurer
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> { // <2>
-            // This is important to register your login view to the
-            // navigation access control mechanism:
-            configurer.loginView(LoginView.class); // <3>
-
-            // You can add any possible extra configurations of your own
-            // here (the following is just an example):
-            // configurer.enableCsrfConfiguration(false);
-        });
-
-        return http.build();
-    }
-
-    /**
-     * Demo UserDetailsManager which only provides two hardcoded
-     * in memory users and their roles.
-     * NOTE: This shouldn't be used in real world applications.
-     */
-    @Bean
-    public UserDetailsManager userDetailsService() {
-        UserDetails user =
-                User.withUsername("user")
-                        .password("{noop}user")
-                        .roles("USER")
-                        .build();
-        UserDetails admin =
-                User.withUsername("admin")
-                        .password("{noop}admin")
-                        .roles("ADMIN")
-                        .build();
-        return new InMemoryUserDetailsManager(user, admin);
-    }
-}
-----
-<1> Enables Spring Security's web security support. Together with [annotationname]`@Configuration`, it makes Spring pick up the security filter chain defined in the class.
-<2> Applies the Vaadin-specific Spring Security configuration.
-<3> Registers the log-in view with Spring Security's form login and with navigation access control.
-
-[classname]`VaadinSecurityConfigurer` handles the Vaadin-related configuration, and enables view access control. For example, it permits access to Vaadin's static resources, enables `CSRF` checking while ignoring unnecessary checking for Vaadin internal requests, and configures proper exception handling for Vaadin applications. See <<vaadin-security-configurer#,Vaadin Security Configurer>> for everything that it configures, and for its options.
-
-.Configure Form Login Through the Configurer
-[WARNING]
-====
-Configure form login with [methodname]`loginView()` rather than by calling Spring Security's [methodname]`formLogin()` directly. The configurer applies [classname]`FormLoginConfigurer` internally, and at the same time permits Vaadin's internal requests, ignores them in the CSRF check, installs a Vaadin-aware request cache and success handler, and registers the log-in view with navigation access control.
-
-A hand-written [methodname]`formLogin()` configuration does none of that. The internal request that the log-in view itself makes to the server is then treated as an unauthenticated request and redirected back to the log-in view, which produces an endless redirect loop -- typically visible as an `ERR_TOO_MANY_REDIRECTS` page or a "Connection lost" notification instead of a working log-in form.
-====
-
-.Never Use Hard-Coded Credentials in Production
-[WARNING]
-The implementation of the [methodname]`userDetailsService()` method is an in-memory implementation for the sake of brevity in this documentation. In a normal application, you can change the Spring Security configuration to use an authentication provider for Lightweight Directory Access Protocol (LDAP), JAAS, and other real-world sources. See the https://docs.spring.io/spring-security/reference/servlet/authentication/index.html[Spring Security authentication documentation] to read more about them.
-
-
-== Testing Access Control
-
-Browserless tests support Spring Security, so you can test view access control without starting a browser or a server. Annotate a test with Spring Security's [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser` to navigate as a user with given roles, or as an anonymous user, and assert which view is shown. See <<{articles}/flow/testing/browserless/spring-security#,Spring Security Integration>> for the reference, and <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>> for a guide with examples.
-
-To test services that are protected with Spring method security, see <<{articles}/building-apps/security/protect-services#testing-method-security,Testing Method Security>>.
+For Spring applications that don't use Spring Security, see <<without-spring-security#,Without Spring Security>>. For task-oriented guides, see <<{articles}/building-apps/security#,Building Apps > Security>>.
 
 
 == Topics
 
 section_outline::[]
+
+- <<{articles}/flow/testing/browserless/spring-security#,Testing Access Control>>
 
 
 [discussion-id]`4C8D835D-4E6E-4D81-BEA1-A865FEB17BAD`

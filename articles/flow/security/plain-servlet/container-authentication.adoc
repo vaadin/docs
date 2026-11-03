@@ -1,0 +1,85 @@
+---
+title: Container-Managed Authentication
+page-title: How to use servlet container authentication with Vaadin
+description: Letting the servlet container authenticate the users of a plain servlet Vaadin application.
+meta-description: Learn how to use servlet container authentication with security realms in Tomcat and Jetty for a plain servlet Vaadin application.
+order: 20
+---
+
+
+= Container-Managed Authentication
+
+Instead of checking the credentials against its own user store, as in <<setup#,Setting Up Security>>, an application can let the servlet container authenticate its users. The container checks the credentials against a _security realm_, which is a repository of users, their passwords, and their roles, and sets the user on the request itself.
+
+[methodname]`HttpServletRequest.login()` logs a user in through the realm. Replace [methodname]`authenticate()` of the [classname]`SecurityUtils` class in <<setup#authenticating-users,Setting Up Security>> with the following, and leave out the filter:
+
+[source,java]
+----
+public static boolean authenticate(String username, String password) {
+    HttpServletRequest request = VaadinServletRequest.getCurrent()
+            .getHttpServletRequest();
+    try {
+        request.login(username, password);
+        request.changeSessionId(); // Protects against session fixation.
+        return true;
+    } catch (ServletException e) {
+        return false; // The credentials don't match.
+    }
+}
+----
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`, so they have to match the role names of the realm exactly.
+
+How to configure a realm depends on the servlet container. Some containers also require an authentication method, configured with `<login-config>` in [filename]`web.xml`, before [methodname]`login()` can be used. See the documentation of your container. The following examples use realms that read the users from a file, which is convenient for development. Both containers also provide realms that read the users from a database.
+
+
+=== Tomcat
+
+Tomcat's `UserDatabaseRealm` reads the users from [filename]`conf/tomcat-users.xml`:
+
+.`$CATALINA_HOME/conf/tomcat-users.xml`
+[source,xml]
+----
+<tomcat-users>
+  <role rolename="admin" />
+  <role rolename="user" />
+  <user username="test" password="password1" roles="user" />
+  <user username="admin" password="password2" roles="user,admin" />
+</tomcat-users>
+----
+
+To read the users from a database instead, use `DataSourceRealm`. See https://tomcat.apache.org/tomcat-11.0-doc/realm-howto.html[Realm Configuration] in the Tomcat documentation.
+
+
+=== Jetty
+
+Jetty's `HashLoginService` reads the users from a properties file:
+
+.`$JETTY_HOME/etc/jetty-users.properties`
+[source,properties]
+----
+test: password1,user
+admin: password2,user,admin
+----
+
+.`$JETTY_HOME/etc/jetty.xml`
+[source,xml]
+----
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+  <Set name="war"><SystemProperty name="jetty.home" default="."/>/webapps/my-app</Set>
+
+  <Get name="securityHandler">
+    <Set name="loginService">
+      <New class="org.eclipse.jetty.security.HashLoginService">
+        <Set name="name">my-app</Set>
+        <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/jetty-users.properties</Set>
+      </New>
+    </Set>
+  </Get>
+</Configure>
+----
+
+To read the users from a database instead, use `JDBCLoginService`. See the Jetty documentation for its configuration.
+
+
+[discussion-id]`A0A3832E-663B-47A6-B108-78F36B608B77`

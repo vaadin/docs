@@ -10,7 +10,7 @@ include::{articles}/_vaadin-version.adoc[]
 
 = Setting Up Security
 
-Vaadin's built-in view access control also works in applications that don't use Spring. This page describes how to set it up in a plain servlet application. For Spring Boot applications, see <<../spring#,Spring Applications>>.
+This page describes how to set up view access control in a plain servlet application.
 
 Securing a plain servlet application takes the following:
 
@@ -22,7 +22,101 @@ Securing a plain servlet application takes the following:
 
 == Authenticating Users
 
-Navigation access control reads the current user from [methodname]`HttpServletRequest.getUserPrincipal()`, and checks roles with [methodname]`HttpServletRequest.isUserInRole()`. The application can authenticate users against its own user store, such as a database, or let the servlet container do it. <<authentication#,Authenticating Users>> describes both approaches, and the [classname]`SecurityUtils` class that the examples on this page use.
+Navigation access control reads the current user from [methodname]`HttpServletRequest.getUserPrincipal()`, and checks roles with [methodname]`HttpServletRequest.isUserInRole()`. The following example authenticates users against the application's own user store, such as a database table, and keeps the authenticated user in the HTTP session. If the servlet container authenticates the users instead, see <<container-authentication#,Container-Managed Authentication>>.
+
+The user is kept in the session as a [interfacename]`Principal` that also holds the user's roles:
+
+.[filename]`AppUser.java`
+[source,java]
+----
+public record AppUser(String name, Set<String> roles)
+        implements Principal, Serializable {
+
+    @Override
+    public String getName() {
+        return name;
+    }
+}
+----
+
+A servlet filter wraps each request of an authenticated user, so that the request returns the user and checks the user's roles:
+
+.[filename]`AuthenticationFilter.java`
+[source,java]
+----
+@WebFilter(urlPatterns = "/*", asyncSupported = true) // <1>
+public class AuthenticationFilter extends HttpFilter {
+
+    static final String USER_ATTRIBUTE = AppUser.class.getName();
+
+    @Override
+    protected void doFilter(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpSession session = request.getSession(false);
+        AppUser user = session == null ? null
+                : (AppUser) session.getAttribute(USER_ATTRIBUTE);
+        if (user == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        chain.doFilter(new HttpServletRequestWrapper(request) {
+            @Override
+            public Principal getUserPrincipal() {
+                return user;
+            }
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return user.roles().contains(role);
+            }
+        }, response);
+    }
+}
+----
+<1> Enables asynchronous processing, which push needs for transports that suspend the request, such as long polling.
+
+[classname]`SecurityUtils` logs users in by storing the user in the session, and logs them out by invalidating the session:
+
+.[filename]`SecurityUtils.java`
+[source,java]
+----
+public class SecurityUtils {
+
+    public static boolean isAuthenticated() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        return request != null && request.getUserPrincipal() != null;
+    }
+
+    public static boolean authenticate(String username, String password) {
+        AppUser user = findUser(username, password); // <1>
+        if (user == null) {
+            return false;
+        }
+        HttpServletRequest request = VaadinServletRequest.getCurrent()
+                .getHttpServletRequest(); // <2>
+        request.changeSessionId(); // <3>
+        request.getSession().setAttribute(
+                AuthenticationFilter.USER_ATTRIBUTE, user);
+        return true;
+    }
+
+    public static void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation("./"); // <4>
+        VaadinSession.getCurrent().getSession().invalidate();
+    }
+
+    // ...
+}
+----
+<1> Checks the credentials against the user store of the application, for example by loading the user from a database and comparing a password hash. Returns `null` if they don't match. Never store passwords in plain text.
+<2> The current request is available only in threads that handle a request, so call [methodname]`authenticate()` from a listener, not from a background thread.
+<3> Gives the session a new ID, to protect against session fixation.
+<4> Redirects to the root of the application. The URL is relative, because Vaadin sets the base URL of the page to the root of the application, so it also works when the application is deployed under a context path.
+
+The filter sets the user on the requests that follow the log-in request, not on the log-in request itself. The log-in view therefore reloads the page after a successful log-in, as shown in <<#log-in-view,Log-in View>>.
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`. With the filter above, [annotationname]`@RolesAllowed("ADMIN")` matches a user whose roles contain `ADMIN`.
 
 
 [[log-in-view]]
@@ -136,9 +230,9 @@ For more information, see <<{articles}/flow/advanced/service-init-listener#,Vaad
 
 == Access Annotations
 
-Annotate each view class and each layout class with an access annotation, as described in <<../access-control#,View Access Control>>. The log-in view is the only exception.
+Annotate each view class and each layout class with an access annotation, as described in <<../access-control/annotations#,Annotation-Based Access Control>>. The log-in view is the only exception.
 
-[annotationname]`@AnonymousAllowed` is part of Vaadin. [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, and [annotationname]`@DenyAll` come from the Jakarta Annotations API, which Vaadin doesn't add to your project. Add it to the dependencies in your [filename]`pom.xml` file:
+The annotation-based access checks need an additional dependency. [annotationname]`@AnonymousAllowed` is part of Vaadin, but [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, and [annotationname]`@DenyAll` are part of the Jakarta Annotations API, which Vaadin doesn't add to your project. Add it to the dependencies in your [filename]`pom.xml` file:
 
 [source,xml,subs="+attributes"]
 ----

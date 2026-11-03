@@ -1,95 +1,22 @@
 ---
 title: View Access Control
 page-title: How to control access to views in Vaadin Flow
-description: Controlling which users can navigate to which views with access annotations.
-meta-description: Learn how to control access to Vaadin Flow views with the @AnonymousAllowed, @PermitAll, @RolesAllowed, and @DenyAll annotations, and how they're inherited.
-order: 20
+description: Controlling which users can navigate to which views.
+meta-description: Learn how Vaadin Flow controls access to views with navigation access control, access annotations, and custom access checkers.
+order: 10
 ---
 
 
 = View Access Control
 
-View access control decides whether the current user may navigate to a view. The rules are defined with the following annotations on view classes:
+View access control decides whether the current user may navigate to a view. It works the same way in Spring applications and in plain servlet applications, and is the foundation that the setup pages of both build on.
 
-- [annotationname]`@AnonymousAllowed` permits anyone to navigate to a view without any authentication or authorization.
-- [annotationname]`@PermitAll` allows any authenticated user to navigate to a view.
-- [annotationname]`@RolesAllowed` grants access to users having the roles specified in the annotation value.
-- [annotationname]`@DenyAll` disallows everyone from navigating to a view. This is the default: a view without an access annotation behaves as if it had [annotationname]`@DenyAll`.
+Vaadin provides the following tools for it:
 
-The annotations are enforced by <<navigation-access-control#,navigation access control>>. In a Spring application, [classname]`VaadinSecurityConfigurer` enables it automatically, as described in <<../spring#,Spring Applications>>. In other applications, enable it as described in <<../plain-servlet/setup#,Setting Up Security>>. Once it's enabled, none of the views are accessible until one of these annotations -- except [annotationname]`@DenyAll` -- is applied to them. For what users see when navigation is denied, see <<error-views#,Access-Denied & Not-Found Views>>.
-
-The following example uses [annotationname]`@AnonymousAllowed` to let all users navigate to a view:
-
-[source,java]
-----
-@Route(value = "", layout = MainLayout.class)
-@PageTitle("Public View")
-@AnonymousAllowed
-public class PublicView extends VerticalLayout {
-    // ...
-}
-----
-
-[annotationname]`@PermitAll` lets any authenticated user navigate to a view, regardless of their roles:
-
-[source,java]
-----
-@Route(value = "private", layout = MainLayout.class)
-@PageTitle("Private View")
-@PermitAll
-public class PrivateView extends VerticalLayout {
-    // ...
-}
-----
-
-[annotationname]`@RolesAllowed` lets only users with one of the given roles navigate to a view:
-
-[source,java]
-----
-@Route(value = "admin", layout = MainLayout.class)
-@PageTitle("Admin View")
-@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
-public class AdminView extends VerticalLayout {
-    // ...
-}
-----
-
-How role names are matched depends on the application. With Spring Security, they're matched against the granted authorities, as described in <<../spring/roles-and-authorities#,Roles & Authorities>>. In other applications, they're passed unchanged to [methodname]`HttpServletRequest.isUserInRole()`.
-
-
-== Parent Layouts
-
-Access annotations on parent layouts are checked as well. This applies to automatic layouts -- classes annotated with [annotationname]`@Layout` -- to parent layouts set with the `layout` attribute of [annotationname]`@Route`, and to layouts defined with [annotationname]`@ParentLayout`. Both the layout and the view must grant access for navigation to succeed. A layout without an access annotation denies access to every view inside it, so a layout that hosts both public and protected views needs [annotationname]`@AnonymousAllowed`.
-
-
-[[annotation-inheritance]]
-== Annotation Inheritance
-
-Access annotations are inherited from the closest parent class that has them. Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. In the following example, [classname]`UserListingView` requires the `ADMIN` role:
-
-[source,java]
-----
-@RolesAllowed("ADMIN")
-public abstract class AbstractAdminView extends VerticalLayout {
-    // ...
-}
-
-@Route(value = "user-listing", layout = MainLayout.class)
-@PageTitle("User Listing")
-public class UserListingView extends AbstractAdminView {
-    // ...
-}
-----
-
-
-
-== Multiple Annotations on a Class
-
-Use one access annotation per class. If a class has more than one, the following rules apply:
-
-- [annotationname]`@DenyAll` overrides the other annotations;
-- [annotationname]`@AnonymousAllowed` overrides [annotationname]`@RolesAllowed` and [annotationname]`@PermitAll`; and
-- [annotationname]`@RolesAllowed` overrides [annotationname]`@PermitAll`.
+- <<navigation-access-control#,Navigation access control>> checks every navigation against a set of rules, and redirects users who aren't logged in to the log-in view.
+- <<annotations#,Access annotations>> on view classes, such as [annotationname]`@RolesAllowed`, are the most common way to define the rules.
+- Custom access checkers define rules of your own, for example based on the data that a view shows. See <<navigation-access-control#custom-navigation-access-checker,Custom Navigation Access Checker>>.
+- <<error-views#,Error views>> define what users see when navigation is denied.
 
 
 == Topics
