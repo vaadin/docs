@@ -9,9 +9,7 @@ order: 10
 
 = Navigation Access Control
 
-Navigation Access Control is a Flow security feature in which you can allow or deny the navigation to a certain view based on different and pluggable rules. When active, the access control intercepts navigation events, evaluates all configured rules. It then decides whether the target view should be rendered, or if the access should be denied.
-
-Navigation Access Control is an improvement and a replacement of the [classname]`ViewAccessChecker` mechanism available in previous Vaadin versions. It provides annotation-based view security. It also expands the capabilities of the former access checker by introducing a new path-based check and by allowing custom rules, which are set by implementing the [interfacename]`NavigationAccessChecker` interface.
+Navigation access control decides, for every navigation, whether the current user may open the target view. It evaluates a set of pluggable rules -- such as the access annotations described in <<index#,View Access Control>> -- and then either renders the view, redirects the user to the log-in view, or shows an error view.
 
 
 == Architecture
@@ -33,102 +31,29 @@ image::images/navigation_access_control.svg[Navigation Access Control Architectu
 The [interfacename]`AccessCheckDecisionResolver` analyzes the results and provides the final decision. The access control uses that decision to proceed with the navigation or reroute to the login view or to an error page.
 
 
-=== Navigation Access Checkers
+=== Access Check Results
 
-Vaadin Flow provides two implementations of [interfacename]`NavigationAccessChecker` interface: [classname]`AnnotatedViewAccessChecker` and [classname]`RoutePathAccessChecker`.
+Each navigation access checker returns an [classname]`AccessCheckResult`, which holds the decision taken by the checker -- and potentially an informative reason about the decision. The decision can be `ALLOW`, `DENY`, `NEUTRAL`, or `REJECT`. `ALLOW` and `DENY` are self-explanatory. `NEUTRAL` means that the checker doesn't have enough information to make a decision, and it delegates the responsibility to the other configured checkers. `REJECT` has the same meaning of `DENY`, but it's used to signal a critical situation where the checker cannot make the decision because of a system configuration error.
 
-==== AnnotatedViewAccessChecker
-
-[classname]`AnnotatedViewAccessChecker` works in the same way as the former [classname]`ViewAccessChecker`. It looks for security annotation ([annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`) on the target view class. It evaluates them against the current navigation context. [classname]`AnnotatedViewAccessChecker` delegates the check to an instance of [classname]`AccessAnnotationChecker`, that can be extended to provide custom rules.
-
-==== RoutePathAccessChecker
-
-[classname]`RoutePathAccessChecker` evaluates instead the path used to navigate to a view. It requires an implementation of [interfacename]`AccessPathChecker`, that is responsible for the effective path verification.
-
-The Vaadin Spring add-on offers an [interfacename]`AccessPathChecker` implementation based on Spring Security configuration. The path used to navigate to the target view is evaluated using the Spring [interfacename]`WebInvocationPrivilegeEvaluator` component, that applies the rules defined by the request matchers configured for Spring Security.
-
-This means that to protect a Flow route, you can configure a Spring request matchers matching the route path, and use the authorization helpers to define the access grants, as in the following example.
-
-[source,java]
-----
-<source-info group="VaadinSecurityConfigurer"></source-info>
-@Route("admin")
-public class AdminView extends Div { }
-
-@Route("protected/profile")
-public class ProfileView extends Div { }
-
-@Route("special/preview-feature")
-public class PreviewFeatureView extends Div { }
-
-@Route("")
-public class HomeView extends Div { }
-
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin").hasRole("ADMIN")
-                .requestMatchers("/protected/**").authenticated()
-                .requestMatchers("/special/**")
-                    .access((authentication, object) -> {
-                        // Custom authorization logic
-                        return new AuthorizationDecision(isPremiumUser(authentication));
-                    })
-                .requestMatchers("/")
-                .permitAll()
-        );
-
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            // Configure Vaadin security settings
-        });
-
-        return http.build();
-    }
-}
-----
-
-Integration with other security frameworks can be accomplished similarly by providing a specific [interfacename]`AccessPathChecker` implementation.
-
-==== Implementing a Custom Navigation Access Checker
-
-If the above checkers aren't enough to fulfill the project requirements, a custom [classname]`NavigationAccessChecker` can be implemented. [classname]`NavigationAccessChecker` has a single method that takes a [classname]`NavigationContext` as input and produces an [classname]`AccessCheckResult` as output.
-
-The [classname]`NavigationContext` provides information about the current navigation, such as target view class and location, potential authenticated user and its roles.
-
-The [classname]`AccessCheckResult` holds the decision taken by the checker -- and potentially an informative reason about the decision. The decision can be `ALLOW`, `DENY`, `NEUTRAL`, or `REJECT`. `ALLOW` and `DENY` are self-explanatory. `NEUTRAL` means that the checker doesn't have enough information to make a decision, and it delegates the responsibility to the other configured checkers. `REJECT` has the same meaning of `DENY`, but it's used to signal a critical situation where the checker cannot make the decision because of a system configuration error.
-
-In development mode, a rejection is handled by throwing an exception so that the situation can be detected immediately. The [classname]`AccessCheckResult` object is created by calling its factory methods [methodname]`allow`, [methodname]`deny`, [methodname]`neutral`, or [methodname]`reject`. In alternative, similar methods can be called on [classname]`NavigationContext` instance.
-
-For example, a navigation access check implementation that allows access to a voting view only when voting has been marked as open, could look like the following code:
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/flow/auth/VotingNavigationAccessChecker.java[tags=snippet]
-----
+In development mode, a rejection is handled by throwing an exception so that the situation can be detected immediately. The [classname]`AccessCheckResult` object is created by calling its factory methods [methodname]`allow`, [methodname]`deny`, [methodname]`neutral`, or [methodname]`reject`. Alternatively, the same methods can be called on [classname]`NavigationContext` instance.
 
 
-==== Navigation Error Handling Phase
+== Built-in Access Checkers
 
-When implementing a custom [classname]`NavigationAccessChecker`, it's important to know that the checker is called also when the navigation is rerouted to an error handler view. The [classname]`NavigationContext` class provides the [methodname]`isErrorHandling()` method to verify if the call happens during a navigation error handling phase. In this case, a custom checker would probably abstain from making a decision for the internal navigation, by returning a `NEUTRAL` result.
-
-.Neutral Result on Error Handling Phase
-[source,java]
-----
-@Override
-public AccessCheckResult check(NavigationContext context) {
-    if (context.isErrorHandling()) {
-        return AccessCheckResult.neutral();
-    }
-    ....
-}
-----
+Flow provides two implementations of the [interfacename]`NavigationAccessChecker` interface.
 
 
-=== Decision Resolver
+=== AnnotatedViewAccessChecker
+
+[classname]`AnnotatedViewAccessChecker` looks for an access annotation ([annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`) on the target view class. It evaluates them against the current navigation context. [classname]`AnnotatedViewAccessChecker` delegates the check to an instance of [classname]`AccessAnnotationChecker`, that can be extended to provide custom rules.
+
+
+=== RoutePathAccessChecker
+
+[classname]`RoutePathAccessChecker` evaluates the path used to navigate to a view. It requires an implementation of [interfacename]`AccessPathChecker`, that is responsible for the effective path verification. Vaadin's Spring integration provides an implementation that evaluates the path against the Spring Security configuration, as described in <<#url-pattern-based-security,URL-Pattern-Based Security>>. For other security frameworks, provide your own [interfacename]`AccessPathChecker` implementation.
+
+
+== Decision Resolver
 
 The [interfacename]`AccessCheckDecisionResolver` component is responsible for analyzing the results provided by the navigation access checkers, and for computing the final decision to grant or deny access to a view.
 
@@ -168,26 +93,14 @@ The reason is that, in this case, the target of the navigation is supposed to be
 |===
 
 
-If the default implementation doesn't fit the requirements of the project, you can implement your own [interfacename]`AccessCheckDecisionResolver`. The interface defines a single method that takes as input the results computed by the navigation access checker and the current navigation context. Its output is an [classname]`AccessCheckResult`.
-
-In the following example, the decision resolver allows access to the view if at least one of the checkers provided an `ALLOW` result:
-
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/flow/auth/CustomDecisionResolver.java[tags=snippet]
-----
-
-
 == Configuration
 
-Navigation Access Control is enabled automatically on Spring Boot projects using <<{articles}/flow/security/spring/vaadin-security-configurer#,VaadinSecurityConfigurer>>. To enable the feature in plain Java projects, follow the specific <<{articles}/flow/security/plain-servlet/setup#, documentation page>>.
-
-This section shows how to customize Navigation Access Control for both Spring and plain Java projects.
+In a Spring application, [classname]`VaadinSecurityConfigurer` enables navigation access control automatically. In a plain servlet application, a [interfacename]`VaadinServiceInitListener` enables it, as described in <<../plain-servlet/setup#,Setting Up Security>>. The following sections show how to customize it.
 
 
-=== Spring Projects
+=== Spring Applications
 
-When using [classname]`VaadinSecurityConfigurer` for configuring Spring Security, the Navigation Access Control feature is enabled by default. You can disable it by calling the [methodname]`enableNavigationAccessControl(false)` method on the configurer. For backward compatibility, only the [classname]`AnnotatedViewAccessChecker` is active by default.
+When using [classname]`VaadinSecurityConfigurer` for configuring Spring Security, the Navigation Access Control feature is enabled by default. You can disable it by calling the [methodname]`enableNavigationAccessControl(false)` method on the configurer. By default, only the [classname]`AnnotatedViewAccessChecker` is active.
 
 For a fine-grained configuration, you can expose a bean of type [classname]`NavigationAccessControlConfigurer`. [classname]`NavigationAccessControlConfigurer` allows activating out-of-the-box navigation access checkers or adding new ones, providing a custom decision resolver, completely disable the functionality, etc.
 
@@ -247,8 +160,49 @@ Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for more info
 [[url-pattern-based-security]]
 ==== URL-Pattern-Based Security
 
-The Navigation Access Control feature allows mixing any of the view access annotations with Spring's URL-pattern-based HTTP security -- which possibly exists in older Vaadin Spring Boot applications.
-However, it may result in extra configuration, since the security annotation on the views and the URL-pattern-based rules must be consistent.
+With [classname]`RoutePathAccessChecker`, a Flow route is protected by Spring Security request matchers for its path, in the same way as any other URL. The path used to navigate to the view is evaluated with Spring's [interfacename]`WebInvocationPrivilegeEvaluator`:
+
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+@Route("admin")
+public class AdminView extends Div { }
+
+@Route("protected/profile")
+public class ProfileView extends Div { }
+
+@Route("special/preview-feature")
+public class PreviewFeatureView extends Div { }
+
+@Route("")
+public class HomeView extends Div { }
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin").hasRole("ADMIN")
+                .requestMatchers("/protected/**").authenticated()
+                .requestMatchers("/special/**")
+                    .access((authentication, object) -> {
+                        // Custom authorization logic
+                        return new AuthorizationDecision(isPremiumUser(authentication));
+                    })
+                .requestMatchers("/")
+                .permitAll()
+        );
+
+        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+            // Configure Vaadin security settings
+        });
+
+        return http.build();
+    }
+}
+----
 
 URL-based security can be enabled by activating the [classname]`RoutePathAccessChecker` component provided by Flow. To activate it, you need to define a [classname]`NavigationAccessControlConfigurer` bean in your Spring configuration, creating a new instance of that class and calling the [methodname]`withRoutePathAccessChecker()` method.
 
@@ -265,9 +219,6 @@ NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
 <1> Activation of annotation base view access checker.
 <2> Activation of Spring URL-pattern-based checker.
 
-[IMPORTANT]
-If you add the bean definition method in the same configuration class where you use [classname]`VaadinSecurityConfigurer`, the method must be declared `static`, to prevent bootstrap errors because of circular dependencies in bean definitions.
-
 You can also activate only the [classname]`RoutePathAccessChecker`, if you prefer to centralize the authorization configuration by only using the Spring Security URL-pattern-based security feature.
 
 .Activate Only URL-Pattern-Based Security
@@ -280,18 +231,12 @@ NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
 }
 ----
 
-Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views. Doing so might cause unwanted access configurations, and would be an unnecessary complication in the authorization of views.
+When both checkers are active, the access annotations and the request matchers for the same view must agree. If one of them allows the navigation and the other denies it, the default decision resolver rejects the navigation, as described in <<#decision-resolver,Decision Resolver>>. To keep the rules for a view in one place, use only one of the two mechanisms for it.
 
 
-=== Plain Java Projects
+=== Plain Servlet Applications
 
-Navigation Access Control settings in plain Java projects is documented in this <<{articles}/flow/security/plain-servlet/setup#adding-vaadinserviceinitlistener, separate page>>.
-
-To apply custom settings, you need to create the [classname]`NavigationAccessControl` instance, providing the list of navigation access checkers and the decision resolver to be used.
-
-It's important to know that for plain Java projects, there is no out-of-the-box support for route path access checking. However, as described earlier, it is possible to implement a custom [interfacename]`AccessPathChecker` that integrates with the security framework used in the project.
-
-Here is how you can implement the example of the previous paragraph, in a non-Spring Java project:
+In a plain servlet application, pass the navigation access checkers and the decision resolver to the [classname]`NavigationAccessControl` constructor. Flow doesn't provide an [interfacename]`AccessPathChecker` for plain servlet applications, but you can implement one that integrates with the security framework that you use. The following example is the plain servlet equivalent of the Spring example in <<#spring-applications,Spring Applications>>:
 
 .Custom NavigationAccessControl in Plain Java Project
 [source,java]
@@ -326,6 +271,49 @@ public class NavigationAccessCheckerInitializer implements VaadinServiceInitList
 ----
 
 
+== Customization
+
+=== Custom Navigation Access Checker
+
+If the built-in checkers aren't enough, a custom [classname]`NavigationAccessChecker` can be implemented. [classname]`NavigationAccessChecker` has a single method that takes a [classname]`NavigationContext` as input and produces an [classname]`AccessCheckResult` as output.
+
+The [classname]`NavigationContext` provides information about the current navigation, such as target view class and location, potential authenticated user and its roles.
+
+For example, a navigation access check implementation that allows access to a voting view only when voting has been marked as open, could look like the following code:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/auth/VotingNavigationAccessChecker.java[tags=snippet]
+----
+
+
+=== Navigation Error Handling Phase
+
+When implementing a custom [classname]`NavigationAccessChecker`, it's important to know that the checker is called also when the navigation is rerouted to an error handler view. The [classname]`NavigationContext` class provides the [methodname]`isErrorHandling()` method to verify if the call happens during a navigation error handling phase. In this case, a custom checker would probably abstain from making a decision for the internal navigation, by returning a `NEUTRAL` result.
+
+.Neutral Result on Error Handling Phase
+[source,java]
+----
+@Override
+public AccessCheckResult check(NavigationContext context) {
+    if (context.isErrorHandling()) {
+        return AccessCheckResult.neutral();
+    }
+    ....
+}
+----
+
+
+=== Custom Decision Resolver
+
+If the default implementation doesn't fit the requirements of the project, you can implement your own [interfacename]`AccessCheckDecisionResolver`. The interface defines a single method that takes as input the results computed by the navigation access checker and the current navigation context. Its output is an [classname]`AccessCheckResult`.
+
+In the following example, the decision resolver allows access to the view if at least one of the checkers provided an `ALLOW` result:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/auth/CustomDecisionResolver.java[tags=snippet]
+----
 
 
 [discussion-id]`4164EB30-201D-4FD3-940F-03630A752AD5`

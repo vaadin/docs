@@ -9,27 +9,27 @@ order: 20
 
 = Access-Denied & Not-Found Views
 
-When navigation access control denies navigation to a view, Vaadin shows an error view instead. This page describes the default behavior, and how to customize the error views.
+When navigation access control denies navigation to a view, Vaadin shows an error view instead of the view. This page describes the default behavior, how to customize the access-denied view, and what a custom not-found view needs in a secured application.
 
 
 [[error-messages-for-unauthorized-views]]
-== Default Error Message
+== Default Behavior
 
-If the user is already authenticated and tries to navigate to a view for which they don't have permission, an error message is displayed. The message depends on the application mode.
-
-The default error handler for denied access, [classname]`RouteAccessDeniedError`, doesn't render anything itself. It reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. As a security precaution, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows by default a message that reads, _Could not navigate to 'RequestedRouteName'_.
+Users who aren't authenticated are redirected to the log-in view. For authenticated users without permission, Vaadin uses the default error handler for denied access, [classname]`RouteAccessDeniedError`. It doesn't render anything itself. It reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. As a security precaution, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows by default a message that reads, _Could not navigate to 'RequestedRouteName'_.
 
 
 [[custom-error-messages-for-unauthorized-views]]
-== Custom Error Messages
+== Custom Access-Denied View
 
-Vaadin shows by default the [classname]`RouteAccessDeniedError` view for unauthorized views. This can be customized in the following ways:
+You can customize what users see when access is denied in three ways:
 
-- Providing custom implementation by overriding [classname]`RouteAccessDeniedError` class;
-- Providing custom implementation by implementing [interfacename]`HasErrorParameter<AccessDeniedException>` interface; and
-- Rerouting to a different error type with [annotationname]`@AccessDeniedErrorRouter` annotation.
+- by extending [classname]`RouteAccessDeniedError`;
+- by implementing [interfacename]`HasErrorParameter<AccessDeniedException>`; or
+- by rerouting to a different error type with the [annotationname]`@AccessDeniedErrorRouter` annotation.
 
-The following is one example of this approach, using a custom error by overriding a class:
+An error view needs an access annotation of its own, so that navigation access control allows navigation to it. Use [annotationname]`@PermitAll` or [annotationname]`@RolesAllowed`. [annotationname]`@AnonymousAllowed` isn't recommended, as it exposes information about access restrictions to anonymous users.
+
+The following example extends [classname]`RouteAccessDeniedError`:
 
 [source,java]
 ----
@@ -43,9 +43,9 @@ public class CustomAccessDeniedError extends RouteAccessDeniedError {
     }
 }
 ----
-<1> Overrides the [annotationname]`@AnonymousAllowed` annotation that [classname]`RouteAccessDeniedError` carries, for the reason explained below.
+<1> Overrides the [annotationname]`@AnonymousAllowed` annotation that [classname]`RouteAccessDeniedError` carries, for the reason explained above.
 
-This next example provides a custom error by implementing an interface:
+The following example implements [interfacename]`HasErrorParameter`:
 
 [source,java]
 ----
@@ -62,11 +62,7 @@ public static class CustomAccessDeniedError extends Component
 }
 ----
 
-[interfacename]`HasErrorParameter` error view needs an access control annotation, so that Vaadin allows navigation to it. The example above uses [annotationname]`@PermitAll`, but [annotationname]`@RolesAllowed` can also be used. [annotationname]`@AnonymousAllowed` isn't recommended, as it exposes information about access restrictions to the anonymous users.
-
-Custom [classname]`RouteNotFoundError` subclasses also need a security annotation to be accessible, and with Spring Security they need a change to the security configuration, too. See <<#custom-not-found-view,Custom Not-Found View>>.
-
-If you want to reroute to a different error type, you would do something like the following example. It reroutes unauthorized administrative views to the [classname]`RouteNotFoundError` view, which is the default view for [classname]`NotFoundException` type.
+The following example reroutes denied navigation to an administrative view to the not-found view, which is the default view for [classname]`NotFoundException`. Users without access then can't tell whether the view exists:
 
 [source,java]
 ----
@@ -79,18 +75,13 @@ public class AdminView extends VerticalLayout {
 }
 ----
 
-By default, the [annotationname]`@AccessDeniedErrorRouter` annotation reroutes to the error view for [classname]`AccessDeniedException`. The exception class given in `rerouteToError` needs a public no-argument constructor. The annotation is to be used together with [annotationname]`@Route`, or if present, together with access annotation: [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, or [annotationname]`@DenyAll`.
+Without `rerouteToError`, the annotation reroutes to the error view for [classname]`AccessDeniedException`. The exception class given in `rerouteToError` needs a public no-argument constructor.
 
 
 [[custom-not-found-view]]
 == Custom Not-Found View
 
-A custom not-found view -- a class extending [classname]`RouteNotFoundError`, or implementing [interfacename]`HasErrorParameter<NotFoundException>` -- needs two things to be shown in an application secured with [classname]`VaadinSecurityConfigurer`:
-
-. *A security annotation on the view*, so that navigation access control allows it to render.
-. *A relaxed catch-all request rule*, so that requests for non-existing pages reach the Vaadin servlet. By default, [classname]`VaadinSecurityConfigurer` denies every request that isn't explicitly allowed. A URL that doesn't match any route, entered in the browser's address bar or opened from a bookmark, is therefore denied by Spring Security before Vaadin can show the not-found view. The annotation doesn't change this.
-
-The following example annotates the view with [annotationname]`@PermitAll`, so that signed-in users see it, and users who aren't signed in are sent to the log-in view. Use [annotationname]`@AnonymousAllowed` instead if users who aren't signed in can navigate in your application, for example between public views. If the view has a parent layout, set with [annotationname]`@ParentLayout`, the layout needs to allow the same users, or navigation access control blocks the view.
+A custom not-found view -- a class extending [classname]`RouteNotFoundError`, or implementing [interfacename]`HasErrorParameter<NotFoundException>` -- needs an access annotation, so that navigation access control allows it to render. The following example annotates the view with [annotationname]`@PermitAll`, so that signed-in users see it, and users who aren't signed in are sent to the log-in view. Use [annotationname]`@AnonymousAllowed` instead if users who aren't signed in can navigate in your application, for example between public views. If the view has a parent layout, set with [annotationname]`@ParentLayout`, the layout needs to allow the same users, or navigation access control blocks the view.
 
 .[filename]`CustomNotFoundView.java`
 [source,java]
@@ -105,7 +96,11 @@ public class CustomNotFoundView extends RouteNotFoundError {
         return HttpStatusCode.NOT_FOUND.getCode();
     }
 }
-----
+
+
+=== With Spring Security
+
+In an application secured with [classname]`VaadinSecurityConfigurer`, the not-found view also needs a relaxed catch-all request rule, so that requests for non-existing pages reach the Vaadin servlet. By default, [classname]`VaadinSecurityConfigurer` denies every request that isn't explicitly allowed. A URL that doesn't match any route, entered in the browser's address bar or opened from a bookmark, is therefore denied by Spring Security before Vaadin can show the not-found view. The annotation doesn't change this.
 
 The security configuration then relaxes the catch-all rule with [methodname]`anyRequest()`:
 

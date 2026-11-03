@@ -1,0 +1,191 @@
+---
+title: Authenticating Users
+page-title: How to authenticate users in a plain servlet Vaadin application
+description: Providing the authenticated user to view access control in an application without Spring.
+meta-description: Learn how to authenticate users in a plain servlet Vaadin application, either against your own user store or with servlet container authentication.
+order: 20
+---
+
+
+= Authenticating Users
+
+Navigation access control reads the current user from [methodname]`HttpServletRequest.getUserPrincipal()`, and checks roles with [methodname]`HttpServletRequest.isUserInRole()`. It works with any authentication mechanism that sets the user on the request. In a plain servlet application, there are two common ways to do that:
+
+<<#application-managed-authentication,Application-managed authentication>> :: The application checks the credentials against its own user store, such as a database table, and keeps the authenticated user in the HTTP session. A servlet filter sets the user on each request. This needs no configuration in the servlet container.
+<<#container-managed-authentication,Container-managed authentication>> :: The servlet container checks the credentials against a _security realm_ that is configured in the container, and sets the user on the request itself.
+
+Both approaches provide the same [classname]`SecurityUtils` methods, which the log-in view and the log-out button in <<setup#,Setting Up Security>> use.
+
+
+[[application-managed-authentication]]
+== Application-Managed Authentication
+
+The following example keeps the authenticated user in the session as a [interfacename]`Principal` that also holds the user's roles:
+
+.[filename]`AppUser.java`
+[source,java]
+----
+public record AppUser(String name, Set<String> roles)
+        implements Principal, Serializable {
+
+    @Override
+    public String getName() {
+        return name;
+    }
+}
+----
+
+A servlet filter wraps each request of an authenticated user, so that the request returns the user and checks the user's roles:
+
+.[filename]`AuthenticationFilter.java`
+[source,java]
+----
+@WebFilter("/*")
+public class AuthenticationFilter extends HttpFilter {
+
+    static final String USER_ATTRIBUTE = AppUser.class.getName();
+
+    @Override
+    protected void doFilter(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpSession session = request.getSession(false);
+        AppUser user = session == null ? null
+                : (AppUser) session.getAttribute(USER_ATTRIBUTE);
+        if (user == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        chain.doFilter(new HttpServletRequestWrapper(request) {
+            @Override
+            public Principal getUserPrincipal() {
+                return user;
+            }
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return user.roles().contains(role);
+            }
+        }, response);
+    }
+}
+----
+
+[classname]`SecurityUtils` logs users in by storing the user in the session, and logs them out by invalidating the session:
+
+.[filename]`SecurityUtils.java`
+[source,java]
+----
+public class SecurityUtils {
+
+    public static boolean isAuthenticated() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        return request != null && request.getUserPrincipal() != null;
+    }
+
+    public static boolean authenticate(String username, String password) {
+        AppUser user = findUser(username, password); // <1>
+        if (user == null) {
+            return false;
+        }
+        HttpServletRequest request = VaadinServletRequest.getCurrent()
+                .getHttpServletRequest(); // <2>
+        request.changeSessionId(); // <3>
+        request.getSession().setAttribute(
+                AuthenticationFilter.USER_ATTRIBUTE, user);
+        return true;
+    }
+
+    public static void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation("./"); // <4>
+        VaadinSession.getCurrent().getSession().invalidate();
+    }
+
+    // ...
+}
+----
+<1> Checks the credentials against the user store of the application, for example by loading the user from a database and comparing a password hash. Returns `null` if they don't match. Never store passwords in plain text.
+<2> The current request is available only in threads that handle a request, so call [methodname]`authenticate()` from a listener, not from a background thread.
+<3> Gives the session a new ID, to protect against session fixation.
+<4> Redirects to the root of the application. The URL is relative, because Vaadin sets the base URL of the page to the root of the application, so it also works when the application is deployed under a context path.
+
+The filter sets the user on the requests that follow the log-in request, not on the log-in request itself. The log-in view therefore reloads the page after a successful log-in, as shown in <<setup#log-in-view,Log-in View>>.
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`. With the filter above, [annotationname]`@RolesAllowed("ADMIN")` matches a user whose roles contain `ADMIN`.
+
+
+[[container-managed-authentication]]
+== Container-Managed Authentication
+
+With container-managed authentication, the servlet container checks the credentials against a security realm, which is a repository of users, their passwords, and their roles. [methodname]`HttpServletRequest.login()` logs a user in through the realm. Replace [methodname]`authenticate()` in the example above with the following, and leave out the filter:
+
+[source,java]
+----
+public static boolean authenticate(String username, String password) {
+    HttpServletRequest request = VaadinServletRequest.getCurrent()
+            .getHttpServletRequest();
+    try {
+        request.login(username, password);
+        request.changeSessionId(); // Protects against session fixation.
+        return true;
+    } catch (ServletException e) {
+        return false; // The credentials don't match.
+    }
+}
+----
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`, so they have to match the role names of the realm exactly.
+
+How to configure a realm depends on the servlet container. Some containers also require an authentication method, configured with `<login-config>` in [filename]`web.xml`, before [methodname]`login()` can be used. See the documentation of your container. The following examples use realms that read the users from a file, which is convenient for development. Both containers also provide realms that read the users from a database.
+
+
+=== Tomcat
+
+Tomcat's `UserDatabaseRealm` reads the users from [filename]`conf/tomcat-users.xml`:
+
+.`$CATALINA_HOME/conf/tomcat-users.xml`
+[source,xml]
+----
+<tomcat-users>
+  <role rolename="admin" />
+  <role rolename="user" />
+  <user username="test" password="password1" roles="user" />
+  <user username="admin" password="password2" roles="user,admin" />
+</tomcat-users>
+----
+
+To read the users from a database instead, use `DataSourceRealm`. See https://tomcat.apache.org/tomcat-11.0-doc/realm-howto.html[Realm Configuration] in the Tomcat documentation.
+
+
+=== Jetty
+
+Jetty's `HashLoginService` reads the users from a properties file:
+
+.`$JETTY_HOME/etc/jetty-users.properties`
+[source,properties]
+----
+test: password1,user
+admin: password2,user,admin
+----
+
+.`$JETTY_HOME/etc/jetty.xml`
+[source,xml]
+----
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+  <Set name="war"><SystemProperty name="jetty.home" default="."/>/webapps/my-app</Set>
+
+  <Get name="securityHandler">
+    <Set name="loginService">
+      <New class="org.eclipse.jetty.security.HashLoginService">
+        <Set name="name">my-app</Set>
+        <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/jetty-users.properties</Set>
+      </New>
+    </Set>
+  </Get>
+</Configure>
+----
+
+To read the users from a database instead, use `JDBCLoginService`. See the Jetty documentation for its configuration.
+
+
+[discussion-id]`A0A3832E-663B-47A6-B108-78F36B608B77`
