@@ -28,18 +28,31 @@ Strict CSP implemented this way is only available when the Vaadin application is
 
 == Creating Random Nonce
 
-The application generates the nonce for each request of the bootstrap page in an <<{articles}/flow/advanced/modifying-the-bootstrap-page#IndexHtmlRequestListener-interface,`IndexHtmlRequestListener`>>. In its [methodname]`modifyIndexHtmlResponse()` method, the listener adds the nonce to the `Content-Security-Policy` header and to all script tags of the page:
+The application generates a new nonce for each request of the bootstrap page in an <<{articles}/flow/advanced/modifying-the-bootstrap-page#IndexHtmlRequestListener-interface,`IndexHtmlRequestListener`>>. The listener sends the nonce in the `Content-Security-Policy` header, and adds it to the scripts and module preload links of the page. The `csp-nonce` meta tag provides the nonce to the module preload links that the page adds later, when it loads more of the application. The following example registers the listener in a Spring application:
 
 [source,java]
 ----
-String nonce = UUID.randomUUID().toString();
+@Bean
+VaadinServiceInitListener cspNonceInjector() {
+    return event -> event.addIndexHtmlRequestListener(response -> {
+        if (!response.getVaadinRequest().getService()
+                .getDeploymentConfiguration().isProductionMode()) {
+            return; // Strict CSP works only in production mode
+        }
+        String nonce = UUID.randomUUID().toString();
 
-// Add a header to make the browser require the nonce in all script tags
-response.getVaadinResponse().setHeader("Content-Security-Policy",
-        "script-src 'nonce-" + nonce + "'");
+        // Make the browser require the nonce for all scripts
+        response.getVaadinResponse().setHeader("Content-Security-Policy",
+                "script-src 'nonce-" + nonce + "'");
 
-// Add the nonce to all script tags in the host page
-response.getDocument().getElementsByTag("script").attr("nonce", nonce);
+        // Add the nonce to the scripts and module preloads of the page
+        Document document = response.getDocument();
+        document.select("script, link[rel=modulepreload]")
+                .attr("nonce", nonce);
+        document.head().appendElement("meta")
+                .attr("property", "csp-nonce").attr("nonce", nonce);
+    });
+}
 ----
 
 pass:[<!-- vale Vale.Spelling = NO -->]
@@ -48,13 +61,11 @@ pass:[<!-- vale Vale.Spelling = NO -->]
 
 pass:[<!-- vale Vale.Spelling = YES -->]
 
-The nonce alone doesn't cover the dynamic functions, `eval` calls, and chunk loading. An application that needs to use strict CSP must provide a JavaScript file for handling these issues in a CSP-compliant way.
-
-The Function constructor and `eval` must be overridden. Also, the application developer needs to provide equivalent pre-defined JavaScript functions for any calls made by the application. A snippet of this is shown below as an example:
+The nonce alone doesn't cover the JavaScript that the server sends as strings. The Flow client engine runs it by constructing functions with the [classname]`Function` constructor, which a strict policy blocks. An application that uses strict CSP must therefore override the [classname]`Function` constructor and `eval()` with versions that return pre-defined functions instead. Put the overrides into a JavaScript file, such as [filename]`src/main/frontend/csp.js`, and load it with `@JsModule("./csp.js")` on the main layout of the application:
 
 [source,javascript]
 ----
-// Override the Function constructor with a version that uses inlined code if available
+// Override the Function constructor with a version that uses pre-defined functions
 const originalFunction = window.Function;
 window.Function = function(...args) {
   const key = args.join(",");
@@ -63,65 +74,64 @@ window.Function = function(...args) {
     return functions.get(key);
   }
 
-  if (key.startsWith("return window.Vaadin.Flow.loadOnDemand(")) {
-    const chunk = key.split("return window.Vaadin.Flow.loadOnDemand('").pop().split("');").pop();
-    return function (chunk) {return window.Vaadin.Flow.loadOnDemand(chunk);};
+  // Calls that load the frontend chunk of a view
+  const chunkCall = key.match(/^return window\.Vaadin\.Flow\.loadOnDemand\('([^']*)'\);$/);
+  if (chunkCall) {
+    const chunk = chunkCall[1];
+    return function() { return window.Vaadin.Flow.loadOnDemand(chunk); };
   }
 
-  // Expression was not found in functions map, and was not chunk-loading call, so log it to console
+  // Log the code to add to the functions map
   const code = args[args.length - 1];
-  // Ignore the stats gatherer which isn't used in production mode
-  if (code.indexOf("var StatisticsGatherer") == -1) {
-    const snippet = `functions.set("${key}",\n  function(${args.slice(0, -1).join(',')}) {${code}});`
-    console.warn(snippet);
-  }
+  console.warn(`functions.set(${JSON.stringify(key)},\n  function(${args.slice(0, -1).join(',')}) {${code}});`);
 
   // Fall back to the original constructor.
-  // This will fail in strict CSP mode, but this way the browser will report an error.
-  return originalFunction.apply(null, args)
-}
+  // This fails in strict CSP mode, but this way the browser reports an error.
+  return originalFunction.apply(null, args);
+};
 
-// Override eval(..) with a version that uses inlined code if available
+// Override eval() with a version that uses pre-defined functions
 const originalEval = window.eval;
 window.eval = function(script) {
   const originalArg = script;
-  // Removes parenthesis used by Vaadin Charts
-  if (script.length > 1 && script.substring(0, 1) === "(" && script.substring(script.length - 1) === ")") {
+  // Removes parentheses used by Vaadin Charts
+  if (script.length > 1 && script.startsWith("(") && script.endsWith(")")) {
     script = script.substring(1, script.length - 1);
   }
   if (evalCalls.has(script)) {
     return evalCalls.get(script);
-  } else {
-    let snippet = "";
-    if (script.startsWith("function")) {
-      snippet = `evalCalls.set("${script}",\n  ${script});`
-    } else {
-      snippet = `evalCalls.set("${script}",\n  function() {return ${script}});`
-    }
-    console.warn(snippet);
-
-    // Fall back to the original eval.
-    // This will fail in strict CSP mode, but this way the browser will report an error.
-    originalEval.apply(null, originalArg);
   }
-}
+
+  // Log the code to add to the evalCalls map
+  if (script.startsWith("function")) {
+    console.warn(`evalCalls.set(${JSON.stringify(script)},\n  ${script});`);
+  } else {
+    console.warn(`evalCalls.set(${JSON.stringify(script)},\n  function() {return ${script}});`);
+  }
+
+  // Fall back to the original eval().
+  // This fails in strict CSP mode, but this way the browser reports an error.
+  return originalEval(originalArg);
+};
 ----
 
-In the example here, `functions` and `evalCalls` provide mapping from string to a predefined function. The next snippet shows a couple of examples only where a real application would have many more of these mappings:
+The `functions` and `evalCalls` maps map the code that the server sends to pre-defined functions. Which entries an application needs depends on the components and features that it uses, and on the Vaadin version. To collect them, run the application in production mode without the `Content-Security-Policy` header, and use every view and feature. For every function that's missing from the maps, the overrides log a line to the browser console that you can copy into the file. Collect the entries again after upgrading Vaadin.
+
+The following snippet shows a few entries. A real application has many more:
 
 [source,javascript]
 ----
+const functions = new Map();
+functions.set("event,element,return (event.shiftKey)",
+  function(event,element) {return (event.shiftKey)});
+functions.set("$0,if ($0) window.Vaadin.Flow.gridConnector.initLazy($0)",
+  function($0) {if ($0) window.Vaadin.Flow.gridConnector.initLazy($0)});
+
 const evalCalls = new Map();
 evalCalls.set("'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'",
-    function() {return 'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'});
-
-const functions = new Map();
-functions.set("$0,$1,return $0.$connector.confirm($1)",
-    function($0,$1) {return $0.$connector.confirm($1)});
-
+  function() {return 'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'});
 ----
 
-An example application using strict CSP is available https://github.com/vaadin/flow-crm-tutorial/tree/24.5-strict-csp[on GitHub]. Files containing the required changes are https://github.com/vaadin/flow-crm-tutorial/blob/24.5-strict-csp/src/main/java/com/example/application/Application.java[`Application.java`] and https://github.com/vaadin/flow-crm-tutorial/blob/24.5-strict-csp/src/main/frontend/csp.js[`csp.js`].
 
 == Checking Compatibility
 
