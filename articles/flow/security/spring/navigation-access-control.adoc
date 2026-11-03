@@ -74,7 +74,23 @@ Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for more info
 [[url-pattern-based-security]]
 == URL-Pattern-Based Security
 
-With [classname]`RoutePathAccessChecker`, a Flow route is protected by Spring Security request matchers for its path, in the same way as any other URL. The path used to navigate to the view is evaluated with Spring's [interfacename]`WebInvocationPrivilegeEvaluator`:
+With [classname]`RoutePathAccessChecker`, a Flow route is protected by Spring Security request matchers for its path, in the same way as any other URL. The path used to navigate to the view is evaluated with Spring's [interfacename]`WebInvocationPrivilegeEvaluator`.
+
+Only [classname]`AnnotatedViewAccessChecker` is active by default, so first activate [classname]`RoutePathAccessChecker` with a [classname]`NavigationAccessControlConfigurer` bean, as described in <<#configuring-the-access-checkers,Configuring the Access Checkers>>:
+
+[source,java]
+----
+@Bean
+static NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+    return new NavigationAccessControlConfigurer()
+            .withAnnotatedViewAccessChecker() // <1>
+            .withRoutePathAccessChecker(); // <2>
+}
+----
+<1> Keeps checking the access annotations. Leave this out to use only the request matchers.
+<2> Checks the route paths against the request matchers.
+
+Then protect the route paths with request matchers:
 
 [source,java]
 ----
@@ -115,33 +131,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-}
-----
-
-URL-based security can be enabled by activating the [classname]`RoutePathAccessChecker` component provided by Flow. To activate it, you need to define a [classname]`NavigationAccessControlConfigurer` bean in your Spring configuration, creating a new instance of that class and calling the [methodname]`withRoutePathAccessChecker()` method.
-
-.Activate Both Annotated Views and URL-Pattern-Based Security
-[source,java]
-----
-@Bean
-NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
-    return new NavigationAccessControlConfigurer()
-            .withAnnotatedViewAccessChecker() // <1>
-            .withRoutePathAccessChecker();    // <2>
-}
-----
-<1> Activation of annotation base view access checker.
-<2> Activation of Spring URL-pattern-based checker.
-
-You can also activate only the [classname]`RoutePathAccessChecker`, if you prefer to centralize the authorization configuration by only using the Spring Security URL-pattern-based security feature.
-
-.Activate Only URL-Pattern-Based Security
-[source,java]
-----
-@Bean
-NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
-    return new NavigationAccessControlConfigurer()
-            .withRoutePathAccessChecker();
 }
 ----
 
