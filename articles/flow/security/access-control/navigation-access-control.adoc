@@ -14,13 +14,21 @@ Navigation access control decides, for every navigation, whether the current use
 
 == Architecture
 
-The Navigation Access Control mechanism is composed of three fundamental components: [classname]`NavigationAccessControl`; [interfacename]`NavigationAccessChecker`; and [interfacename]`AccessCheckDecisionResolver`.
+Navigation access control consists of three parts:
 
-[classname]`NavigationAccessControl` is the entry point for navigation security. It listens for navigation events, and it evaluates all security rules. Based on the results, it allows or denies access to the target view.
+[cols="1,2"]
+|===
+| Component | Role
 
-[interfacename]`NavigationAccessChecker` interface implementers represent the security rules that are evaluated during a navigation event.
+| [classname]`NavigationAccessControl`
+| The entry point. It listens for navigation events, evaluates the security rules, and allows or denies access to the target view based on the result.
 
-[interfacename]`AccessCheckDecisionResolver` has the responsibility of taking the final decision to allow or deny a navigation, based on the result of the evaluation of the security rules.
+| [interfacename]`NavigationAccessChecker`
+| A security rule that's evaluated during navigation. Several checkers can be active at the same time.
+
+| [interfacename]`AccessCheckDecisionResolver`
+| Takes the final decision to allow or deny navigation, based on the results of all checkers.
+|===
 
 [.fill.white]
 [link=images/navigation_access_control.svg]
@@ -50,7 +58,7 @@ Flow provides two implementations of the [interfacename]`NavigationAccessChecker
 
 === RoutePathAccessChecker
 
-[classname]`RoutePathAccessChecker` evaluates the path used to navigate to a view. It requires an implementation of [interfacename]`AccessPathChecker`, that is responsible for the effective path verification. Vaadin's Spring integration provides an implementation that evaluates the path against the Spring Security configuration, as described in <<#url-pattern-based-security,URL-Pattern-Based Security>>. For other security frameworks, provide your own [interfacename]`AccessPathChecker` implementation.
+[classname]`RoutePathAccessChecker` evaluates the path used to navigate to a view. It requires an implementation of [interfacename]`AccessPathChecker`, that is responsible for the effective path verification. Vaadin's Spring integration provides an implementation that evaluates the path against the Spring Security configuration, as described in <<../spring/navigation-access-control#url-pattern-based-security,URL-Pattern-Based Security>>. For other security frameworks, provide your own [interfacename]`AccessPathChecker` implementation.
 
 
 == Decision Resolver
@@ -95,180 +103,7 @@ The reason is that, in this case, the target of the navigation is supposed to be
 
 == Configuration
 
-In a Spring application, [classname]`VaadinSecurityConfigurer` enables navigation access control automatically. In a plain servlet application, a [interfacename]`VaadinServiceInitListener` enables it, as described in <<../plain-servlet/setup#,Setting Up Security>>. The following sections show how to customize it.
-
-
-=== Spring Applications
-
-When using [classname]`VaadinSecurityConfigurer` for configuring Spring Security, the Navigation Access Control feature is enabled by default. You can disable it by calling the [methodname]`enableNavigationAccessControl(false)` method on the configurer. By default, only the [classname]`AnnotatedViewAccessChecker` is active.
-
-For a fine-grained configuration, you can expose a bean of type [classname]`NavigationAccessControlConfigurer`. [classname]`NavigationAccessControlConfigurer` allows activating out-of-the-box navigation access checkers or adding new ones, providing a custom decision resolver, completely disable the functionality, etc.
-
-[NOTE]
-If [classname]`VaadinSecurityConfigurer` is not used, exposing the [classname]`NavigationAccessControlConfigurer` bean is mandatory to activate navigation access control.
-
-In the following example, Navigation Access Control is configured to activate route path checker, a custom checker instance and all available [interfacename]`NavigationAccessChecker` beans that extend [classname]`VotingNavigationAccessChecker`. It also provides a custom decision resolver.
-
-.Customize NavigationAccessControl in Spring Project
-[source,java]
-----
-@Bean
-NavigationAccessControlConfigurer navigationAccessControlConfigurerCustomizer() {
-    return new NavigationAccessControlConfigurer()
-            .withRoutePathAccessChecker() // <1>
-            .withNavigationAccessChecker(new CustomChecker()) // <2>
-            .withAvailableNavigationAccessCheckers(checker ->
-                checker instanceof VotingNavigationAccessChecker  // <3>
-            )
-            .withDecisionResolver(new CustomDecisionResolver()); // <4>
-}
-----
-<1> Activates the route path access checker. The implementation is provided by the Vaadin Spring module and exposed as a bean.
-<2> Adds a custom navigation access checker, by creating a new instance.
-<3> Activates all registered navigation access checker bean, that matches the predicate.
-<4> Sets a custom decision resolver.
-
-[IMPORTANT]
-When using [classname]`VaadinSecurityConfigurer` in the same configuration class where you define the [classname]`NavigationAccessControlConfigurer` bean, make sure to declare the bean method as `static` to prevent bootstrap errors due to circular dependencies in bean definitions.
-
-.Define NavigationAccessControlConfigurer Bean with VaadinSecurityConfigurer
-[source,java]
-----
-<source-info group="VaadinSecurityConfigurer"></source-info>
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-    @Bean
-    static NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
-        return new NavigationAccessControlConfigurer()
-            .withRoutePathAccessChecker()
-            .withDecisionResolver(new CustomDecisionResolver());
-    }
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            // VaadinSecurityConfigurer will use the NavigationAccessControlConfigurer bean
-        }).build();
-    }
-}
-----
-
-Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for more information on how navigation access control can be customized.
-
-
-[[url-pattern-based-security]]
-==== URL-Pattern-Based Security
-
-With [classname]`RoutePathAccessChecker`, a Flow route is protected by Spring Security request matchers for its path, in the same way as any other URL. The path used to navigate to the view is evaluated with Spring's [interfacename]`WebInvocationPrivilegeEvaluator`:
-
-[source,java]
-----
-<source-info group="VaadinSecurityConfigurer"></source-info>
-@Route("admin")
-public class AdminView extends Div { }
-
-@Route("protected/profile")
-public class ProfileView extends Div { }
-
-@Route("special/preview-feature")
-public class PreviewFeatureView extends Div { }
-
-@Route("")
-public class HomeView extends Div { }
-
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin").hasRole("ADMIN")
-                .requestMatchers("/protected/**").authenticated()
-                .requestMatchers("/special/**")
-                    .access((authentication, object) -> {
-                        // Custom authorization logic
-                        return new AuthorizationDecision(isPremiumUser(authentication));
-                    })
-                .requestMatchers("/")
-                .permitAll()
-        );
-
-        http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            // Configure Vaadin security settings
-        });
-
-        return http.build();
-    }
-}
-----
-
-URL-based security can be enabled by activating the [classname]`RoutePathAccessChecker` component provided by Flow. To activate it, you need to define a [classname]`NavigationAccessControlConfigurer` bean in your Spring configuration, creating a new instance of that class and calling the [methodname]`withRoutePathAccessChecker()` method.
-
-.Activate Both Annotated Views and URL-Pattern-Based Security
-[source,java]
-----
-@Bean
-NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
-    return new NavigationAccessControlConfigurer()
-            .withAnnotatedViewAccessChecker() // <1>
-            .withRoutePathAccessChecker();    // <2>
-}
-----
-<1> Activation of annotation base view access checker.
-<2> Activation of Spring URL-pattern-based checker.
-
-You can also activate only the [classname]`RoutePathAccessChecker`, if you prefer to centralize the authorization configuration by only using the Spring Security URL-pattern-based security feature.
-
-.Activate Only URL-Pattern-Based Security
-[source,java]
-----
-@Bean
-NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
-    return new NavigationAccessControlConfigurer()
-            .withRoutePathAccessChecker();
-}
-----
-
-When both checkers are active, the access annotations and the request matchers for the same view must agree. If one of them allows the navigation and the other denies it, the default decision resolver rejects the navigation, as described in <<#decision-resolver,Decision Resolver>>. To keep the rules for a view in one place, use only one of the two mechanisms for it.
-
-
-=== Plain Servlet Applications
-
-In a plain servlet application, pass the navigation access checkers and the decision resolver to the [classname]`NavigationAccessControl` constructor. Flow doesn't provide an [interfacename]`AccessPathChecker` for plain servlet applications, but you can implement one that integrates with the security framework that you use. The following example is the plain servlet equivalent of the Spring example in <<#spring-applications,Spring Applications>>:
-
-.Custom NavigationAccessControl in Plain Java Project
-[source,java]
-----
-public class FooBarSecurityAccessPathChecker implements AccessPathChecker {
-    @Override
-    public boolean hasAccess(
-        String path, Principal principal, Predicate<String> roleChecker) {
-        // implementation omitted
-    }
-}
-
-public class NavigationAccessCheckerInitializer implements VaadinServiceInitListener {
-
-    private final NavigationAccessControl accessControl;
-
-    public NavigationAccessCheckerInitializer() {
-        accessControl = new NavigationAccessControl(List.of(
-            new RoutePathAccessChecker(new FooBarSecurityAccessPathChecker()),
-            new CustomChecker(),
-            new VotingNavigationAccessChecker()
-        ), new CustomDecisionResolver());
-        accessControl.setLoginView(LoginView.class);
-    }
-
-    @Override
-    public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        serviceInitEvent.getSource().addUIInitListener(uiInitEvent ->
-            uiInitEvent.getUI().addBeforeEnterListener(accessControl));
-    }
-}
-----
+In a Spring application, [classname]`VaadinSecurityConfigurer` enables navigation access control automatically. See <<../spring/navigation-access-control#,Customizing Navigation Access Control>> for how to customize it there, including URL-pattern-based security. In a plain servlet application, a [interfacename]`VaadinServiceInitListener` enables it, as described in <<../plain-servlet/setup#adding-vaadinserviceinitlistener,Setting Up Security>>.
 
 
 == Customization

@@ -1,0 +1,38 @@
+---
+title: Custom Error Views
+page-title: How to make custom error views reachable with Spring Security in Vaadin
+description: The security configuration that custom error views need in a Spring Security application.
+meta-description: Learn how to configure Spring Security so that custom not-found and access-denied views in a Vaadin Flow application are reachable for users.
+order: 60
+---
+
+
+= Custom Error Views
+
+<<../access-control/error-views#,Access-Denied & Not-Found Views>> describes how to create custom error views for routes that don't exist or that the user can't access. With Spring Security, a custom not-found view also needs additional security configuration to be reachable for users.
+
+
+[[custom-not-found-view]]
+== Custom Not-Found View
+
+In an application secured with [classname]`VaadinSecurityConfigurer`, the not-found view also needs a relaxed catch-all request rule, so that requests for non-existing pages reach the Vaadin servlet. By default, [classname]`VaadinSecurityConfigurer` denies every request that isn't explicitly allowed. A URL that doesn't match any route, entered in the browser's address bar or opened from a bookmark, is therefore denied by Spring Security before Vaadin can show the not-found view. The annotation doesn't change this.
+
+The security configuration then relaxes the catch-all rule with [methodname]`anyRequest()`:
+
+.[filename]`SecurityConfiguration.java`
+[source,java]
+----
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+        configurer.loginView(LoginView.class)
+                .anyRequest(AuthorizedUrl::permitAll); // <1>
+    });
+    return http.build();
+}
+----
+<1> Lets requests that match no other rule reach the Vaadin servlet, which shows the not-found view for them.
+
+This doesn't expose your views: they're still protected at the HTTP layer by the request matchers of [classname]`VaadinSecurityConfigurer`, and by navigation access control. However, the catch-all rule also covers every other endpoint of the application, such as REST controllers or Spring Boot Actuator endpoints. Protect those with rules of their own before relaxing the catch-all rule, as rules added to `http` before the configurer are applied first.
+
+If only signed-in users need to see the not-found view, use `AuthorizedUrl::authenticated` instead of `AuthorizedUrl::permitAll`. Users who aren't signed in are then sent to the log-in view for any unknown URL, and other unmatched endpoints require authentication. See <<../spring/security-configuration#,Security Configuration>> for the other options of [methodname]`anyRequest()`, and <<{articles}/building-apps/ui-basics/handle-errors#,Handle Errors>> for a guide to the error views of an application.
