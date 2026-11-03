@@ -1,0 +1,147 @@
+---
+title: Start with an AI Agent
+page-title: Start a Vaadin Application with an AI Coding Agent
+description: Create a project, connect your coding agent to Vaadin's documentation, and let the agent build and verify your first view.
+meta-description: Start a Vaadin application with Claude Code, Codex, Cursor, or another AI coding agent. Add the MCP server and skills, then let the agent build and verify a view.
+order: 5
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+= Start with an AI Agent
+
+This page takes you from nothing to a running application that an AI coding agent has changed, in about ten minutes. At the end, you have:
+
+* a Spring Boot project with a Vaadin UI, running on your computer,
+* your coding agent connected to Vaadin's documentation, and to Vaadin's skills if it supports them, and
+* a view that the agent built and applied to the running application.
+
+The page is a short path through pages that have the details. <<{articles}/building-apps/agentic-development#,Agentic Development>> explains the pieces, and the <<{articles}/building-apps/agentic-development/dev-loop-tutorial#,Dev Loop Tutorial>> runs a full session and measures what it costs.
+
+
+== Before You Start
+
+You need three things:
+
+* *A Java Development Kit (JDK), version {vaadin-start-java-version} or newer.* If you don't have one, download and install link:https://adoptium.net/temurin/releases/[Eclipse Temurin] for your operating system. To check which version you have, run `java -version` in a terminal.
+* *A Java IDE*, to read and run the code the agent writes. If you don't have one, download and install link:https://www.jetbrains.com/idea/download/[IntelliJ IDEA]. You can use it for free. See the <<dev-environment#,Development Environment>> guide for other options.
+* *An AI coding agent.* Claude Code and Codex get the most from this page, because the Vaadin Skills plugin sets them up in one step. Cursor, GitHub Copilot, Gemini CLI, Junie, and Windsurf work with the Vaadin MCP server. See <<{articles}/building-apps/agentic-development/mcp/supported-tools#,Supported Tools>>.
+
+.Let the Agent Set Itself Up
+[TIP]
+Instead of doing steps 1 and 2 yourself, you can paste the setup prompt from link:https://vaadin.com/ai[Vaadin's AI page] into your agent. It checks your JDK, connects the agent to Vaadin's MCP servers and skills, adds the Vaadin plugin to your IDE, and creates a starter project. Stop the application that the prompt started, and continue from <<#start-the-application,step 3>>.
+
+
+== 1. Create the Project
+
+Open link:https://start.vaadin.com[Vaadin Start] and keep the sample view. It gives the agent an existing view, a service, and an entity to work from. Under *AI Development Tool*, select your agent. The project then includes the agent's configuration file for the Vaadin MCP server. <<starters/start#ai-development-tool,Vaadin Start>> lists the file for each agent.
+
+link:https://start.vaadin.com/[Open Vaadin Start, role="button primary water"]
+
+Download the project, unzip it, and open the project directory in your IDE. In IntelliJ IDEA, select menu:File[Open], pick the unzipped directory, and click [guibutton]*Trust Project* if asked. For other IDEs, see the <<dev-environment/import#,import guides>>.
+
+
+== 2. Give the Agent Vaadin's Documentation
+
+Vaadin adds components and methods faster than a model's training data is refreshed, so an agent working from memory writes code against a version of Vaadin that may never have existed. The <<{articles}/building-apps/agentic-development/mcp#,Vaadin MCP server>> answers from the real documentation instead. The configuration file from Vaadin Start connects your agent to it for this project.
+
+If you use Claude Code or Codex, also install the <<{articles}/building-apps/agentic-development/agent-skills#,Vaadin Skills>> plugin. It configures the MCP server for every project, and adds skills that teach the agent how to generate an Aura theme, give a view a polished design, and lay out a form:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace add vaadin/agent-marketplace
+/plugin install vaadin-skills@vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace add vaadin/agent-marketplace --ref main
+codex plugin add vaadin-skills@vaadin-marketplace
+----
+--
+
+Start a new session of the agent in the project directory. In Claude Code, `/mcp` shows whether the `vaadin` server is connected.
+
+For other agents, the configuration from Vaadin Start is enough. The <<{articles}/building-apps/agentic-development/mcp/supported-tools#,Supported Tools>> guides show how to add the server by hand, for example to a project that you didn't create with Vaadin Start.
+
+
+[[start-the-application]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== 3. Start the Application
+
+Writing the code is the part agents are good at. Finding out whether a change took effect in the running application is the part they are bad at. The <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>> gives the agent one command that compiles its edits, applies them to the running application, and reports the result.
+
+:preview-feature: The Dev Loop CLI
+:ticket-url: https://github.com/vaadin/flow/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+Install it in the project directory:
+
+[source,terminal]
+----
+mvn vaadin:install-dev-cli
+----
+
+The goal writes the CLI into [filename]`.vaadin/`, and the skills that teach the agent to use it into [filename]`.agents/skills/` and [filename]`.claude/skills/`. Commit these files, like [filename]`mvnw`. They are project tooling, and every developer and every agent on the repository should get the same instructions.
+
+Then start the application:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="macOS/Linux"></source-info>
+.vaadin/vaadin-dev start
+----
+
+[source,terminal]
+----
+<source-info group="Windows"></source-info>
+.\.vaadin\vaadin-dev.cmd start
+----
+--
+
+The first start takes a while, as Maven and npm download the required dependencies. Later starts take about half a minute. When the command returns, open http://localhost:8080 and leave the page open: the dev loop pushes stylesheet changes to the page that's connected.
+
+The dev loop owns the application's process, so don't also start the application from your IDE or with `spring-boot:run`. If you'd rather run the application from the IDE, or your project uses Gradle, skip the dev loop and follow <<dev-environment/run#,Run a Project>> instead. The agent then edits the code, and the IDE applies the changes with hotswap.
+
+
+== 4. Ask the Agent to Build a View
+
+Give the agent a task. For example:
+
+[quote]
+Add a view at the path `hello` with a text field that asks for the user's name, and a button labelled Say Hello. When the button is clicked, show a greeting with the name below the button. Later clicks update the greeting in place.
+
+You don't need to mention the dev loop or the documentation. The installed skills tell the agent to look up the API and to apply its edits to the running application, and to treat an edit that hasn't been applied as unfinished.
+
+Watch what the agent does. It should look up the components it uses, create a view class with a `@Route` annotation, and then run `.vaadin/vaadin-dev apply`. The last lines of that command say whether the change went live. They also say whether the dev loop had to restart the application to get it there. When the agent reports that it's done, open http://localhost:8080/hello and try the view.
+
+If the agent runs `mvn compile` or restarts the application by hand instead, the skills aren't in place. Check that step 3 wrote the [filename]`.agents/skills/` and [filename]`.claude/skills/` directories, and that you started the agent in the project directory.
+
+
+== 5. Make a Second Change
+
+Ask for a change to the look of the view:
+
+[quote]
+Give the hello view more breathing room, and show the greeting in a larger font.
+
+A stylesheet change is pushed to the open page without reloading it. If the agent changes the view class instead, the new bytecode is swapped into the running application, and the page keeps its state. Either way, the application doesn't restart.
+
+The <<{articles}/building-apps/agentic-development/dev-loop-tutorial#step-5,Dev Loop Tutorial>> shows what each kind of change reports, including a change that has to restart the application, and what to do when the result isn't what you expected.
+
+
+== Next Steps
+
+You have an application that an agent can change and verify on its own. From here:
+
+* The <<{articles}/building-apps/agentic-development/dev-loop-tutorial#,Dev Loop Tutorial>> runs a full session with three kinds of changes, and measures what it costs in tokens and time.
+* The <<tutorial#,Tutorial>> teaches the concepts that the agent used, by building a complete application yourself, one step at a time.
+* <<dev-environment/ai-agent#,Set Up an AI Agent>> covers the per-machine setup, including the Vaadin Directory MCP server for add-ons. <<{articles}/building-apps/agentic-development/agent-tools#,Agent Tools>> adds checks of the agent's work.
+* <<{articles}/building-apps/ai#,AI in Your Application>> shows how to add AI features to the application itself, such as a chat or a form that fills itself from a prompt.
+* <<next-steps#,Next Steps>> lists the Building Apps guides that most applications need next.
