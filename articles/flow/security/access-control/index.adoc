@@ -1,14 +1,97 @@
 ---
 title: View Access Control
-page-title: View access control in Vaadin Flow
-description: Reference for controlling which users can navigate to which views.
-meta-description: Reference for Vaadin Flow view access control, covering the access annotations and the navigation access control that enforces them.
+page-title: How to control access to views in Vaadin Flow
+description: Controlling which users can navigate to which views with access annotations.
+meta-description: Learn how to control access to Vaadin Flow views with the @AnonymousAllowed, @PermitAll, @RolesAllowed, and @DenyAll annotations, and how they're inherited.
 order: 20
 ---
 
 
 = View Access Control
 
-View access control decides whether the current user may navigate to a view. It works in Spring applications and in plain servlet applications alike.
+View access control decides whether the current user may navigate to a view. The rules are defined with the following annotations on view classes:
+
+- [annotationname]`@AnonymousAllowed` permits anyone to navigate to a view without any authentication or authorization.
+- [annotationname]`@PermitAll` allows any authenticated user to navigate to a view.
+- [annotationname]`@RolesAllowed` grants access to users having the roles specified in the annotation value.
+- [annotationname]`@DenyAll` disallows everyone from navigating to a view. This is the default; if a view isn't annotated, the [annotationname]`@DenyAll` logic is applied.
+
+The annotations are enforced by <<navigation-access-control#,navigation access control>>. In a Spring application, [classname]`VaadinSecurityConfigurer` enables it automatically, as described in <<../spring#,Spring Applications>>. In other applications, enable it as described in <<../plain-servlet/setup#,Setting Up Security>>. Once it's enabled, none of the views are accessible until one of these annotations -- except [annotationname]`@DenyAll` -- is applied to them.
+
+Below is an example using [annotationname]`@AnonymousAllowed` to enable all users to navigate to this view:
+
+[source,java]
+----
+@Route(value = "", layout = MainLayout.class)
+@PageTitle("Public View")
+@AnonymousAllowed
+public class PublicView extends VerticalLayout {
+    // ...
+}
+----
+
+This next example is using [annotationname]`@PermitAll` to allow only authenticated users -- with any role -- to navigate to this view:
+
+[source,java]
+----
+@Route(value = "private", layout = MainLayout.class)
+@PageTitle("Private View")
+@PermitAll
+public class PrivateView extends VerticalLayout {
+    // ...
+}
+----
+
+This example is using [annotationname]`@RolesAllowed` to enable only the users with `ADMIN` role to navigate to this view:
+
+[source,java]
+----
+@Route(value = "admin", layout = MainLayout.class)
+@PageTitle("Admin View")
+@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
+public class AdminView extends VerticalLayout {
+    // ...
+}
+----
+
+How role names are matched depends on the application. With Spring Security, they're matched against the granted authorities, as described in <<../spring/roles-and-authorities#,Roles & Authorities>>. In other applications, they're passed unchanged to [methodname]`HttpServletRequest.isUserInRole()`.
+
+
+[[annotation-inheritance]]
+== Annotation Inheritance & Overrides
+
+As shown in the example here, the security annotations are inherited from the closest parent class that has them. Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes.
+
+[source,java]
+----
+@RolesAllowed("ADMIN")
+public abstract class AbstractAdminView extends VerticalLayout {
+    // ...
+}
+
+@Route(value = "user-listing", layout = MainLayout.class)
+@PageTitle("User Listing")
+public class UserListingView extends AbstractAdminView {
+    // ...
+}
+----
+
+Security annotations on parent layouts are also checked. This applies to auto-layouts (i.e., classes annotated with [annotationname]`@Layout`), to parent layouts set via the `layout` attribute in [annotationname]`@Route`, and to layouts defined with [annotationname]`@ParentLayout`. If a parent layout lacks an access annotation, the default [annotationname]`@DenyAll` logic is applied to the layout, and access to views within it is denied. Both the layout and the view must independently grant access for navigation to succeed. If multiple annotations are specified on a single view class, the following rules are applied:
+
+- `DenyAll` overrides other annotations;
+- `AnonymousAllowed` overrides `RolesAllowed`, as well as `PermitAll`; and
+- `RolesAllowed` overrides `PermitAll`.
+
+Specifying more than one of the above access annotations on a view class isn't recommended. Besides the fact that there's probably no logical reason to do so, it would be confusing.
+
+
+== Testing Access Control
+
+Browserless tests support Spring Security, so you can test view access control without starting a browser or a server. Annotate a test with Spring Security's [annotationname]`@WithMockUser` or [annotationname]`@WithAnonymousUser` to navigate as a user with given roles, or as an anonymous user, and assert which view is shown. See <<{articles}/flow/testing/browserless/spring-security#,Spring Security Integration>> for the reference, and <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>> for a guide with examples.
+
+To test services that are protected with Spring method security, see <<{articles}/building-apps/security/protect-services#testing-method-security,Testing Method Security>>.
+
+
+== Topics
 
 section_outline::[]

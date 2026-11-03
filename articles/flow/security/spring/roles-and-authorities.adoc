@@ -1,0 +1,37 @@
+---
+title: Roles & Authorities
+page-title: How roles and the role prefix work in Vaadin with Spring Security
+description: How role names in access annotations map to Spring Security authorities.
+meta-description: Learn how Vaadin maps role names in access annotations and AuthenticationContext to Spring Security authorities, and how to change the ROLE_ prefix.
+order: 40
+---
+
+
+= Roles & Authorities
+
+Spring Security distinguishes between _authorities_, which are arbitrary strings, and _roles_, which are authorities carrying a prefix. The default prefix is `ROLE_`. Role names in [annotationname]`@RolesAllowed` are given without the prefix, and the prefix is added when the granted authorities are checked. So [annotationname]`@RolesAllowed("ADMIN")` matches the granted authority `ROLE_ADMIN`.
+
+This matters when writing a custom [interfacename]`UserDetailsService` or authentication provider, since the authorities have to be created with the prefix included:
+
+[source,java]
+----
+List<GrantedAuthority> authorities = user.getRoles().stream()
+        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        .collect(Collectors.toList());
+----
+
+The [methodname]`roles()` builder method of Spring's [classname]`User` class adds the prefix for you, whereas [methodname]`authorities()` doesn't. That's why the examples in this documentation use `User.withUsername("admin").roles("ADMIN")` to grant the `ROLE_ADMIN` authority.
+
+.Missing Prefixes Fail Silently
+[WARNING]
+If the authority is stored as `ADMIN` instead of `ROLE_ADMIN`, no error is reported. The role check never matches: views annotated with [annotationname]`@RolesAllowed("ADMIN")` become inaccessible, and any menu item shown conditionally on that role disappears. If a role check doesn't behave as expected, log [methodname]`AuthenticationContext.getGrantedAuthorities()` and confirm that the authorities carry the prefix.
+
+To use a prefix other than `ROLE_`, or none at all, define a [classname]`GrantedAuthorityDefaults` bean. Vaadin picks up the configured prefix and applies it to the access annotations and to the role-checking methods of [classname]`AuthenticationContext`:
+
+[source,java]
+----
+@Bean
+static GrantedAuthorityDefaults grantedAuthorityDefaults() {
+    return new GrantedAuthorityDefaults(""); // No prefix.
+}
+----

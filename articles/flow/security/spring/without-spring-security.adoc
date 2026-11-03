@@ -1,0 +1,178 @@
+---
+title: Without Spring Security
+page-title: How to secure a Vaadin Spring application without Spring Security
+description: Using view access control in a Spring Boot application that doesn't use Spring Security.
+meta-description: Learn how to use Vaadin's view access control in a Spring Boot application without Spring Security, with your own authentication and access annotations.
+order: 80
+---
+
+
+= Without Spring Security
+
+Vaadin's built-in security helpers are designed to be used with Spring Security. However, the core of view access control -- [classname]`NavigationAccessControl` and the access annotations -- doesn't depend on Spring Security. It reads the current user from [methodname]`HttpServletRequest.getUserPrincipal()`, and checks roles with [methodname]`HttpServletRequest.isUserInRole()`. It therefore works with any authentication mechanism that sets the user on the request.
+
+This page describes how to use view access control in a Spring Boot application that doesn't have Spring Security on the class path. The setup is the same as in <<../plain-servlet/setup#,plain servlet applications>>, except that the parts are registered as Spring beans.
+
+Vaadin configures navigation access control automatically only when Spring Security is present. Without it, the following aren't available:
+
+- [classname]`VaadinSecurityConfigurer` and the HTTP security configuration that it applies;
+- [classname]`AuthenticationContext`;
+- URL-pattern-based access checking with [classname]`RoutePathAccessChecker`; and
+- the integrations described on the other pages of this section, such as OAuth2 login.
+
+Securing an application without Spring Security takes the following:
+
+- a way to authenticate users, and to set the user on the request;
+- a log-in view;
+- a [interfacename]`VaadinServiceInitListener` bean that enables navigation access control; and
+- an access annotation on each view class and on each layout class, as described in <<../access-control#,View Access Control>>. The log-in view is the only exception.
+
+
+== Setting the User on the Request
+
+How users are authenticated depends on the application. Servlet container authentication sets the user on the request without any further code, as described in <<../plain-servlet/servlet-container-authentication#,Servlet-Container Authentication>>. Otherwise, you can store the authenticated user in the HTTP session, and set it on each request with a servlet filter.
+
+The following example stores the user as a [interfacename]`Principal` that also holds the user's roles:
+
+.[filename]`AppUser.java`
+[source,java]
+----
+public record AppUser(String name, Set<String> roles)
+        implements Principal, Serializable {
+
+    @Override
+    public String getName() {
+        return name;
+    }
+}
+----
+
+The filter wraps each request of an authenticated user, so that the request returns the user and the user's roles. Spring Boot registers a [interfacename]`Filter` bean for all requests automatically:
+
+.[filename]`AuthenticationFilter.java`
+[source,java]
+----
+@Component
+public class AuthenticationFilter extends OncePerRequestFilter {
+
+    static final String USER_ATTRIBUTE = AppUser.class.getName();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        AppUser user = session == null ? null
+                : (AppUser) session.getAttribute(USER_ATTRIBUTE);
+        if (user == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        chain.doFilter(new HttpServletRequestWrapper(request) {
+            @Override
+            public Principal getUserPrincipal() {
+                return user;
+            }
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return user.roles().contains(role);
+            }
+        }, response);
+    }
+}
+----
+
+A service logs users in by storing the user in the session, and logs them out by invalidating the session:
+
+.[filename]`AuthenticationService.java`
+[source,java]
+----
+@Component
+public class AuthenticationService {
+
+    public boolean login(String username, String password) {
+        AppUser user = findUser(username, password); // <1>
+        if (user == null) {
+            return false;
+        }
+        var request = VaadinServletRequest.getCurrent()
+                .getHttpServletRequest();
+        request.changeSessionId(); // <2>
+        request.getSession().setAttribute(
+                AuthenticationFilter.USER_ATTRIBUTE, user);
+        return true;
+    }
+
+    public void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation("/");
+        VaadinSession.getCurrent().getSession().invalidate();
+    }
+
+    // ...
+}
+----
+<1> Checks the credentials against the user store of the application, and returns `null` if they don't match. Never store passwords in plain text.
+<2> Gives the session a new ID, to protect against session fixation.
+
+The filter sets the user on the requests that follow the log-in request, not on the log-in request itself. The log-in view therefore reloads the page after a successful login, instead of navigating to another view within the same request.
+
+
+== Log-in View
+
+The log-in view calls the service when the user submits the form:
+
+.[filename]`LoginView.java`
+[source,java]
+----
+@Route(value = "login", autoLayout = false)
+public class LoginView extends VerticalLayout {
+
+    public LoginView(AuthenticationService authService) {
+        LoginForm login = new LoginForm();
+        login.addLoginListener(event -> {
+            if (authService.login(event.getUsername(),
+                    event.getPassword())) {
+                getUI().ifPresent(ui -> ui.getPage().setLocation("/"));
+            } else {
+                login.setError(true);
+            }
+        });
+        add(login);
+    }
+}
+----
+
+The log-in view doesn't need an access annotation: [classname]`NavigationAccessControl` always allows navigation to the configured log-in view.
+
+
+== Enabling Navigation Access Control
+
+Navigation access control is enabled with a [interfacename]`VaadinServiceInitListener` that adds [classname]`NavigationAccessControl` as a [interfacename]`BeforeEnterListener` to every UI. In a Spring application, Vaadin picks up the listener as a bean, so it doesn't need to be registered under `META-INF/services` as in a plain servlet application:
+
+.[filename]`NavigationAccessControlInitializer.java`
+[source,java]
+----
+@Component
+public class NavigationAccessControlInitializer
+        implements VaadinServiceInitListener {
+
+    private final NavigationAccessControl accessControl;
+
+    public NavigationAccessControlInitializer() {
+        accessControl = new NavigationAccessControl();
+        accessControl.setLoginView(LoginView.class); // <1>
+    }
+
+    @Override
+    public void serviceInit(ServiceInitEvent event) {
+        event.getSource().addUIInitListener(uiInitEvent -> uiInitEvent
+                .getUI().addBeforeEnterListener(accessControl));
+    }
+}
+----
+<1> Sets the view to which users who aren't authenticated are redirected.
+
+To customize the access checkers or the decision resolver, pass them to the [classname]`NavigationAccessControl` constructor, as described in <<../access-control/navigation-access-control#plain-java-projects,Navigation Access Control>>.
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`. With the filter above, [annotationname]`@RolesAllowed("ADMIN")` therefore matches a user whose roles contain `ADMIN`.

@@ -180,7 +180,7 @@ include::{root}/src/main/java/com/vaadin/demo/flow/auth/CustomDecisionResolver.j
 
 == Configuration
 
-Navigation Access Control is enabled automatically on Spring Boot projects using <<{articles}/flow/security/spring/vaadin-security-configurer.adoc#configurer,VaadinSecurityConfigurer>>. To enable the feature in plain Java projects, follow the specific <<{articles}/flow/security/plain-servlet/setup#, documentation page>>.
+Navigation Access Control is enabled automatically on Spring Boot projects using <<{articles}/flow/security/spring/vaadin-security-configurer#,VaadinSecurityConfigurer>>. To enable the feature in plain Java projects, follow the specific <<{articles}/flow/security/plain-servlet/setup#, documentation page>>.
 
 This section shows how to customize Navigation Access Control for both Spring and plain Java projects.
 
@@ -242,6 +242,45 @@ public class SecurityConfig {
 ----
 
 Consult the [classname]`NavigationAccessControlConfigurer` Javadoc for more information on how navigation access control can be customized.
+
+
+[[url-pattern-based-security]]
+==== URL-Pattern-Based Security
+
+The Navigation Access Control feature allows mixing any of the view access annotations with Spring's URL-pattern-based HTTP security -- which possibly exists in older Vaadin Spring Boot applications.
+However, it may result in extra configuration, since the security annotation on the views and the URL-pattern-based rules must be consistent.
+
+URL-based security can be enabled by activating the [classname]`RoutePathAccessChecker` component provided by Flow. To activate it, you need to define a [classname]`NavigationAccessControlConfigurer` bean in your Spring configuration, creating a new instance of that class and calling the [methodname]`withRoutePathAccessChecker()` method.
+
+.Activate Both Annotated Views and URL-Pattern-Based Security
+[source,java]
+----
+@Bean
+NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+    return new NavigationAccessControlConfigurer()
+            .withAnnotatedViewAccessChecker() // <1>
+            .withRoutePathAccessChecker();    // <2>
+}
+----
+<1> Activation of annotation base view access checker.
+<2> Activation of Spring URL-pattern-based checker.
+
+[IMPORTANT]
+If you add the bean definition method in the same configuration class where you use [classname]`VaadinSecurityConfigurer`, the method must be declared `static`, to prevent bootstrap errors because of circular dependencies in bean definitions.
+
+You can also activate only the [classname]`RoutePathAccessChecker`, if you prefer to centralize the authorization configuration by only using the Spring Security URL-pattern-based security feature.
+
+.Activate Only URL-Pattern-Based Security
+[source,java]
+----
+@Bean
+NavigationAccessControlConfigurer navigationAccessControlConfigurer() {
+    return new NavigationAccessControlConfigurer()
+            .withRoutePathAccessChecker();
+}
+----
+
+Vaadin strongly recommends not to mix Spring's URL-pattern-based HTTP security and this view-based access control mechanism targeting the same views. Doing so might cause unwanted access configurations, and would be an unnecessary complication in the authorization of views.
 
 
 === Plain Java Projects

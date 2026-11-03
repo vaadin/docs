@@ -9,16 +9,16 @@ order: 10
 
 = Setting Up Security
 
-As described on the <<{articles}/flow/security/spring/enabling-security#, enabling security>> documentation page, Vaadin Flow comes with built-in security helpers that are most convenient to implement with Spring Boot and Spring Security. Although it's recommended to use Spring Security, it isn't always necessary.
+As described in <<{articles}/flow/security/spring#,Spring Applications>>, Vaadin Flow comes with built-in security helpers that are most convenient to implement with Spring Boot and Spring Security. Although it's recommended to use Spring Security, it isn't always necessary.
 
-This page describes how to use Vaadin Flow's built-in security helpers in a _plain_ Java project.
+This page describes how to use Vaadin Flow's built-in security helpers in a plain servlet application, without Spring.
 
 [NOTE]
-Separate instructions are available for Spring Boot and Spring Security. If your project is a Spring Boot project, follow the instructions provided on the <<{articles}/flow/security/spring/enabling-security#, enabling security>> documentation page.
+Separate instructions are available for Spring Boot and Spring Security. If your project is a Spring Boot project, follow the instructions in <<{articles}/flow/security/spring#,Spring Applications>>, or in <<{articles}/flow/security/spring/without-spring-security#,Without Spring Security>> if it doesn't use Spring Security.
 
 Vaadin built-in helpers enable a view-based access control mechanism that uses the [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, and [annotationname]`@DenyAll` annotations on view classes to define the access control rules.
 
-By default, any view without an annotation is secured; it acts as if it has the [annotationname]`@DenyAll` annotation. To enable and use this mechanism, the following should be added to a plain Java Flow application, if they aren't already included:
+By default, any view without an annotation is secured; it acts as if it has the [annotationname]`@DenyAll` annotation. To enable and use this mechanism, the following should be added to a plain servlet application, if they aren't already included:
 
 - Security realm;
 - Log-in view and log-out capability;
@@ -220,84 +220,11 @@ This Service Provider configuration file triggers the Java SPI loading mechanism
 
 == Access Annotations
 
-Before some access annotation examples, consider the annotations and their meaning when applied to a view:
+Annotate each view class and each layout class with an access annotation, as described in <<../access-control#,View Access Control>>. The log-in view is the only exception.
 
-- [annotationname]`@AnonymousAllowed` permits anyone to navigate to the view without any authentication or authorization.
-- [annotationname]`@PermitAll` allows any authenticated user to navigate to the view.
-- [annotationname]`@RolesAllowed` grants access to users having the roles specified in the annotation value.
-- [annotationname]`@DenyAll` disallows everyone from navigating to the view. This is the default: if a view isn't annotated at all, the [annotationname]`@DenyAll` logic is applied.
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`HttpServletRequest.isUserInRole()`, so they have to match the role names of the security realm exactly.
 
+With this setup, users who aren't authenticated are redirected to the log-in view when they try to navigate to a view that requires authentication. For what authenticated users see when they navigate to a view for which they have no permission, see <<../access-control/error-views#,Access-Denied & Not-Found Views>>.
 
-== Examples
-
-Below are some usage examples:
-
-.Allow All Users to Navigate to View
-[source,java]
-----
-@Route(value = "", layout = MainLayout.class)
-@PageTitle("Public View")
-@AnonymousAllowed
-public class PublicView extends VerticalLayout {
-    // ...
-}
-----
-
-.Allow Only Authenticated Users to Navigate to View
-[source,java]
-----
-@Route(value = "private", layout = MainLayout.class)
-@PageTitle("Private View")
-@PermitAll
-public class PrivateView extends VerticalLayout {
-    // ...
-}
-----
-
-.Allow Only Users with `ADMIN` Role to Navigate to View
-[source,java]
-----
-@Route(value = "admin", layout = MainLayout.class)
-@PageTitle("Admin View")
-@RolesAllowed("ADMIN") // <- Should match one of the user's roles (case-sensitive)
-public class AdminView extends VerticalLayout {
-    // ...
-}
-----
-
-Role names are passed unchanged to [methodname]`HttpServletRequest.isUserInRole()`, so they have to match the role names of the security realm exactly.
-
-Now, if the application is started by navigating to `http://localhost:8080`, `PublicView` contents should be available without any authentication. However, by navigating to `http://localhost:8080/private` or `http://localhost:8080/admin`, the user is redirected to the specified `LoginView`.
-
-If the user is already authenticated and tries to navigate to a view for which they have no permission, an error message is displayed. The default handler, [classname]`RouteAccessDeniedError`, reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. For security reasons, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows the _Could not navigate to 'RequestedRouteName'_ message by default.
-
-// TODO: Consider adding more details and snippet code to showcase how the following can be achieved:
-// 1. login with some users with different roles
-// 2. save the requested URL to redirect to it after a successful login
-
-The following example shows how the security annotations are inherited from the closest parent class that has them:
-
-.Inheriting Security Annotations from Parent Class
-[source,java]
-----
-@RolesAllowed("ADMIN")
-public abstract class AbstractAdminView extends VerticalLayout {
-    // ...
-}
-
-@Route(value = "user-listing", layout = MainLayout.class)
-@PageTitle("User Listing")
-public class UserListingView extends AbstractAdminView {
-    // ...
-}
-----
-
-Annotating a child class overrides any inherited annotations. Interfaces aren't checked for annotations, only classes. Security annotations on parent layouts are also checked: if a parent layout lacks an access annotation, access to the views within it is denied. Both the layout and the view must grant access for navigation to succeed. If multiple annotations are specified on a single view class, the following rules are applied:
-
-- `DenyAll` overrides other annotations;
-- `AnonymousAllowed` overrides `RolesAllowed` and `PermitAll`; and
-- `RolesAllowed` overrides `PermitAll`.
-
-You shouldn't specify more than one of the above access annotations on a view class. It's confusing and probably has no logical purpose.
 
 [discussion-id]`5D3E1BB8-9D7C-4FAD-9381-8DBB3C65F6A8`
