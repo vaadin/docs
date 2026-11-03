@@ -11,7 +11,6 @@ include::{articles}/_vaadin-version.adoc[]
 = Getting Started with Browserless Testing
 
 This page lists the test dependencies for each supported application framework, and a minimal test class that the snippets on the following pages build on.
-For a complete example with a view and a passing test, see the setup guide for your framework in <<{articles}/building-apps/testing/browserless#choose-your-framework,Browserless Testing>>.
 
 
 == Dependencies
@@ -96,10 +95,19 @@ The BOM defines the versions of the Vaadin artifacts.
     <artifactId>junit-jupiter</artifactId>
     <scope>test</scope>
 </dependency>
+
+<!-- In <dependencyManagement>, unless your parent POM already manages JUnit -->
+<dependency>
+    <groupId>org.junit</groupId>
+    <artifactId>junit-bom</artifactId>
+    <version>{junit-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
 ----
 --
 
-The Java EE/CDI setup also needs a managed JUnit version; see <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>> for the `junit-bom` import.
+A Java EE/CDI project also needs <<{articles}/flow/integrations/cdi#add-dependencies,Vaadin CDI>> and the provided Jakarta EE APIs, which the application already has.
 
 The optional security dependencies provide the test annotations that set the user of the <<spring-security#,Spring>> and <<quarkus#security-integration,Quarkus>> base classes.
 A secured application context needs only the application's own Spring Security or Quarkus Security.
@@ -118,9 +126,8 @@ The test calls the testing methods, such as [methodname]`navigate()`, on itself.
 <source-info group="Plain Java"></source-info>
 import org.junit.jupiter.api.Test;
 import com.vaadin.browserless.BrowserlessTest;
-import com.vaadin.browserless.locator.Locators;
 
-class MyViewTest extends BrowserlessTest implements Locators {
+class MyViewTest extends BrowserlessTest {
 
     @Test
     void myTest() {
@@ -135,10 +142,9 @@ class MyViewTest extends BrowserlessTest implements Locators {
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.vaadin.browserless.SpringBrowserlessTest;
-import com.vaadin.browserless.locator.Locators;
 
 @SpringBootTest
-class MyViewTest extends SpringBrowserlessTest implements Locators {
+class MyViewTest extends SpringBrowserlessTest {
 
     @Test
     void myTest() {
@@ -151,12 +157,25 @@ class MyViewTest extends SpringBrowserlessTest implements Locators {
 ----
 <source-info group="Quarkus"></source-info>
 import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.locator.Locators;
 import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-class MyViewTest extends QuarkusBrowserlessTest implements Locators {
+class MyViewTest extends QuarkusBrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
+----
+[source,java]
+----
+<source-info group="Java EE/CDI"></source-info>
+import org.junit.jupiter.api.Test;
+
+class MyViewTest extends CdiBrowserlessTest {
 
     @Test
     void myTest() {
@@ -167,17 +186,29 @@ class MyViewTest extends QuarkusBrowserlessTest implements Locators {
 ----
 --
 
-Implementing [interfacename]`Locators` adds the typed <<locators#,locator>> entry points, such as [methodname]`findButton()`, to the test class.
 The base class scans the whole classpath for routes, unless the test class has a <<test-environment#route-scanning,`@ViewPackages`>> annotation.
 
-Java EE/CDI tests extend an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`.
-See <<{articles}/building-apps/testing/browserless/setup-cdi#,Set Up Browserless Tests with Java EE/CDI>> for that base class, and <<cdi#,CDI Test Integration>> for its lifecycle.
+A Java EE/CDI test extends [classname]`CdiBrowserlessTest`, an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`.
+See <<cdi#test-base-class,CDI Test Integration>> for that class.
+
+
+=== Locators
+
+The optional [interfacename]`Locators` interface provides additional convenience methods: typed <<locators#,locator>> entry points, such as [methodname]`findButton()` and [methodname]`findTextField()`.
+To use them in a test that extends a base class, implement the interface in the test class:
+
+[source,java]
+----
+class MyViewTest extends BrowserlessTest implements Locators {
+    // ...
+}
+----
 
 
 == Using the Snippets on the Following Pages
 
 Most snippets on the following pages call the testing methods on `window`, a window of an <<multi-user#,application context>>.
-In a test that extends a base class, call the same methods on the test class itself: `window.findButton()` becomes `findButton()`.
+In a test that extends a base class, call the same methods on the test class itself: `window.navigate()` becomes `navigate()`, and `window.findButton()` becomes `findButton()` when the test class implements [interfacename]`Locators`.
 
 Snippets that create users and windows from `app` need an application context, which a test sets up when it needs several users or windows, or more control over the Vaadin environment; see <<multi-user#setting-up-an-application-context,Setting Up an Application Context>>.
 
