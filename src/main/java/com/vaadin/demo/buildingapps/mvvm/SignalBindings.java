@@ -17,9 +17,9 @@ import com.vaadin.flow.function.SerializableSupplier;
 import com.vaadin.flow.signals.Signal;
 
 /**
- * Binds ViewModel signals to components where Vaadin has no bind method yet.
- * Each binding is an effect owned by the component, so it ends when the
- * component is detached.
+ * Binds ViewModel signals to components where Vaadin has no bind method. Each
+ * binding is an effect owned by the component, so it ends when the component is
+ * detached.
  */
 public final class SignalBindings {
 
@@ -36,8 +36,7 @@ public final class SignalBindings {
      * Shows the items of a list signal in a grid. The items are set once and
      * refreshed on every change, because setting them again would clear a bound
      * selection. In multi-select mode, set the selection mode first, so that
-     * the select-all checkbox is kept right too. Remove this once Grid has its
-     * own: https://github.com/vaadin/flow-components/issues/10577
+     * the select-all checkbox is kept right too.
      *
      * @return the data view, for example to set an identifier provider
      */
@@ -89,8 +88,7 @@ public final class SignalBindings {
 
     /**
      * Shows items loaded page by page in a grid, and refreshes them whenever
-     * the query signal changes. Remove this once Grid has its own:
-     * https://github.com/vaadin/flow-components/issues/10577
+     * the query signal changes.
      *
      * @return the data view, for example to set an identifier provider
      */
