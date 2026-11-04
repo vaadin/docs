@@ -220,7 +220,7 @@ private void sendMessage(String sender, String message) {
         if (sending.cancel(false)) { // <5>
             Notification.show("Message not sent");
         } else {
-            Notification.show("The message was already sent");
+            Notification.show("The message can no longer be stopped");
         }
     });
 
@@ -233,9 +233,9 @@ private void sendMessage(String sender, String message) {
 ----
 <1> The `TaskScheduler` waits five seconds before starting the send. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use it.
 <2> The scheduler only triggers the send and hands it over to the `TaskExecutor`. A slow send would otherwise block the scheduling thread pool, as explained in <</building-apps/business-logic/background-jobs#task-scheduling-caveats,Task Scheduling Caveats>>.
-<3> The send runs in a background thread, where the current user's security context isn't available. Pass the user to it as a parameter, and don't protect the called method with method-level security, as explained in <</building-apps/business-logic/background-jobs/jobs#security,Security>>.
+<3> The send runs in a background thread, where the current user's security context isn't available. Check that the user is allowed to send before scheduling, while the security context is still available, and pass the user to the background task as a parameter. Don't rely on method-level security in the method that the task calls. See <</building-apps/business-logic/background-jobs/jobs#security,Security>> for details.
 <4> Unlike other notifications with interactive content, this one closes automatically: the Undo button is only useful while the action can still be cancelled, so the notification stays open for exactly that long.
-<5> `cancel()` returns `false` if the task has already started or finished. In that case, the action can't be undone anymore.
+<5> `cancel()` returns `false` once the send has been handed over to the `TaskExecutor`. From then on, the action can't be undone anymore.
 
 If the action needs to update the UI when it's performed, use server push as described in <</building-apps/server-push#,Server Push>>.
 
