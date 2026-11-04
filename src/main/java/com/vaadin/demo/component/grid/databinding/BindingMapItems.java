@@ -14,6 +14,7 @@ import com.vaadin.flow.data.binder.Binder;
 
 public class BindingMapItems extends VerticalLayout {
     public BindingMapItems() {
+        // tag::body[]
         List<String> months = List.of("Jan", "Feb", "Mar", "Apr");
         List<Map<String, Object>> rows = new ArrayList<>();
         for (String product : List.of("Laptops", "Phones", "Tablets")) {
@@ -23,7 +24,6 @@ public class BindingMapItems extends VerticalLayout {
             rows.add(row);
         }
 
-        // tag::body[]
         Grid<Map<String, Object>> grid = new Grid<>();
         GridListDataView<Map<String, Object>> dataView = grid.setItems(rows);
         // Map equality depends on its content, so use a stable key as the
