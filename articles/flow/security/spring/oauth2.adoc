@@ -16,7 +16,12 @@ This page focuses on how to configure a Spring Boot project to integrate OAuth2 
 
 == Application Configuration
 
-To start, add the `spring-security-oauth2-client` dependency to your project. When using Spring Boot, use the following starter:
+OAuth2 login needs the OAuth2 client of Spring Security, and a client registration for the provider in the application configuration. For a step-by-step guide with Keycloak as the provider, including how to register the application at Keycloak, see <<{articles}/building-apps/security/connect-identity-provider#,Connect an Identity Provider>>.
+
+
+=== Dependency
+
+With Spring Boot, add the OAuth2 client starter. It includes the Spring Security starter:
 
 [.example]
 --
@@ -25,8 +30,8 @@ To start, add the `spring-security-oauth2-client` dependency to your project. Wh
 [source,xml]
 ----
 <dependency>
-	<groupId>org.springframework.boot</groupId>
-	<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
 </dependency>
 ----
 
@@ -38,24 +43,25 @@ implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-cli
 
 --
 
-Next, add the OAuth2 provider settings to the application's configuration file. The following example configuration integrates a https://www.keycloak.org/[Keycloak] OAuth2 provider. To setup a test environment, refer to the <<{articles}/tools/sso/integrations/keycloak#, Keycloak Integration>> in Vaadin SSO Kit documentation.
+
+=== Client Registration
+
+Configure the provider and the credentials of the application with the `spring.security.oauth2.client` properties. The following example registers the application at a Keycloak realm:
 
 [.example]
 --
 
-.application.properties
-[source,java]
+.`application.properties`
+[source,properties]
 ----
-spring.security.oauth2.client.registration.keycloak.provider=keycloak
-spring.security.oauth2.client.registration.keycloak.client-id=my-client-id
-spring.security.oauth2.client.registration.keycloak.client-secret=<<client secret>>
-spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
-spring.security.oauth2.client.registration.keycloak.scope=openid,profile
+spring.security.oauth2.client.registration.keycloak.client-id=my-app
+spring.security.oauth2.client.registration.keycloak.client-secret=${KEYCLOAK_CLIENT_SECRET}
+spring.security.oauth2.client.registration.keycloak.scope=openid,profile,email
 
-spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak.local:8180/realms/my-app
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://localhost:8180/realms/my-realm
 ----
 
-.application.yaml
+.`application.yaml`
 [source,yaml]
 ----
 spring:
@@ -64,18 +70,22 @@ spring:
       client:
         registration:
           keycloak:
-            client-id: my-client-id
-            client-secret: <<client secret>>
-            authorization-grant-type: authorization_code
-            scope: openid,profile
+            client-id: my-app
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            scope: openid,profile,email
         provider:
           keycloak:
-            issuer-uri: http://keycloak.local:8180/realms/my-app
+            issuer-uri: http://localhost:8180/realms/my-realm
 ----
 
 --
 
-For integration with other OAuth2 providers, refer to the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html#oauth2login-common-oauth2-provider[Spring Security documentation].
+`keycloak`:: The _registration ID_. You choose it, and it appears in the URLs that Spring Security uses for the login, such as `/oauth2/authorization/keycloak`, which <<#enable-oauth2-login-in-vaadin,Enable OAuth2 Login in Vaadin>> uses as the login page.
+`client-id` and `client-secret`:: The credentials of the application at the provider. Read the secret from an environment variable, so that it doesn't end up in version control.
+`scope`:: The `openid` scope makes the login an OpenID Connect login. The `profile` and `email` scopes give the application the name and email address of the user.
+`issuer-uri`:: The URL of the provider. Spring Security reads the endpoints and signing keys of the provider from its discovery document.
+
+For other providers, and for providers that have no discovery document, see the https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html#oauth2login-common-oauth2-provider[Spring Security documentation].
 
 
 == Enable OAuth2 Login in Vaadin
