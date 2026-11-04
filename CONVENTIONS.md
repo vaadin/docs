@@ -79,8 +79,8 @@ pull request check reports only these lines. A line that you move counts as
 added. Leave findings on other lines for a separate change.
 
 When Vale reports a long sentence, split it. Give an aside or an example its
-own sentence. Turn a list of three or more items into a bulleted list. Keep
-every fact.
+own sentence. When a list of three or more items makes the sentence long, turn
+it into a bulleted list. Keep every fact.
 
 Use the term that means exactly one thing: "UI component" rather than
 "component" when other kinds of component could be meant, and "Vaadin views"
