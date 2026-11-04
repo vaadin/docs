@@ -1,21 +1,16 @@
 ---
-title: Vaadin Security Configurer
-page-title: How to use Vaadin Security Configurer
-description: How to use VaadinSecurityConfigurer to configure security in a Vaadin Flow application using built-in security helpers with Spring Boot.
+title: Security Configuration
+page-title: How to configure Spring Security for Vaadin Flow
+description: Configuring Spring Security for a Vaadin application with VaadinSecurityConfigurer.
 meta-description: Learn how to use VaadinSecurityConfigurer to configure security in a Vaadin Flow application with Spring Boot using built-in security helpers.
 order: 20
 ---
 
-[#configurer]
-=== VaadinSecurityConfigurer
+= Security Configuration
 
-==== Overview
+[classname]`VaadinSecurityConfigurer` is a Spring Security HTTP configurer for Vaadin applications. It applies the Spring Security configuration that Flow and React views need -- such as permitting Vaadin's internal requests, CSRF handling, and the log-in and log-out flow -- and enables view access control. Like other Spring Security configurers, it's applied to an [classname]`HttpSecurity` instance with [methodname]`with()`, and can be combined with your own configuration.
 
-`VaadinSecurityConfigurer` is a Spring Security HTTP configurer specifically designed for Vaadin applications.
-It provides built-in customizers to configure security settings for Flow views and React views by integrating with Spring Security and specialized methods to handle view access control and default security workflows in Vaadin applications.
-This configurer follows Spring Security's recommended patterns for security configuration and allows for modular, composable security customization.
-
-==== Usage
+== Usage
 
 The `VaadinSecurityConfigurer` can be used in a Spring Security configuration class to set up security for Vaadin applications:
 
@@ -34,7 +29,7 @@ public class SecurityConfig {
 }
 ----
 
-==== Applied Configurers
+== Applied Configurers
 
 The `VaadinSecurityConfigurer` applies several other Spring Security configurers to set up the security filter chain:
 
@@ -47,7 +42,7 @@ The `VaadinSecurityConfigurer` applies several other Spring Security configurers
 * `AuthorizeHttpRequestsConfigurer` — To permit internal framework requests and other public endpoints (can be disabled)
 * `SessionManagementConfigurer` — To handle expired sessions in a way the Vaadin client understands (can be disabled)
 
-==== Shared Objects
+== Shared Objects
 
 The following beans are shared by this configurer (if not already shared):
 
@@ -60,9 +55,9 @@ The following beans are shared by this configurer (if not already shared):
 * `ClientRegistrationRepository` — The repository of the OAuth2 client registrations of the application
 * `OidcUserService` — The service that loads the authenticated user, shared only when Keycloak role mapping is enabled with `keycloakRoleMapping()`
 
-==== Configuration Methods
+== Configuration Methods
 
-===== Login View Configuration
+=== Login View Configuration
 
 [source,java]
 ----
@@ -95,7 +90,7 @@ Configures a React login view and the logout success URL.
 [since:com.vaadin:vaadin@V25.3]#An unauthenticated request for a sub-resource of a protected path -- a stylesheet, a script, an image, or a font -- is answered with `401 Unauthorized` instead of being redirected to the login view.# A redirect can't be rendered as the resource the browser asked for, and it ends in a redirect loop that reports the login view rather than the resource that was denied. Requests for a page keep the redirect. The two are told apart by the `Sec-Fetch-Dest` header the browser sends, and a request without that header counts as a page request.
 
 
-===== OAuth2 Configuration
+=== OAuth2 Configuration
 
 [source,java]
 ----
@@ -116,9 +111,9 @@ Configures the login page for OAuth2 authentication and the post-logout redirect
 public VaadinSecurityConfigurer keycloakRoleMapping()
 ----
 
-[since:com.vaadin:vaadin@V25.4]#Enables mapping of Keycloak realm and client roles to Spring Security granted authorities (disabled by default).# Keycloak puts the roles of a user into the access token, so they aren't part of the authenticated user by default. Enabling the mapping decodes the access token and maps its roles, which makes `@RolesAllowed("admin")` and `hasRole("admin")` match a Keycloak role named `admin`. Works only together with `oauth2LoginPage(String)` and its overloads. See <<{articles}/flow/integrations/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> for details.
+[since:com.vaadin:vaadin@V25.4]#Enables mapping of Keycloak realm and client roles to Spring Security granted authorities (disabled by default).# Keycloak puts the roles of a user into the access token, so they aren't part of the authenticated user by default. Enabling the mapping decodes the access token and maps its roles, which makes `@RolesAllowed("admin")` and `hasRole("admin")` match a Keycloak role named `admin`. Works only together with `oauth2LoginPage(String)` and its overloads. See <<{articles}/flow/security/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> for details.
 
-===== Logout Configuration
+=== Logout Configuration
 
 [source,java]
 ----
@@ -134,7 +129,7 @@ public VaadinSecurityConfigurer addLogoutHandler(LogoutHandler logoutHandler)
 
 Adds a `LogoutHandler` to the list of logout handlers.
 
-===== Feature Toggles
+=== Feature Toggles
 
 [source,java]
 ----
@@ -194,7 +189,7 @@ public VaadinSecurityConfigurer enableNavigationAccessControl(boolean enableNavi
 
 Enables or disables configuration of `NavigationAccessControl`. `NavigationAccessControl` is enabled by default.
 
-===== Request Matchers
+=== Request Matchers
 
 [source,java]
 ----
@@ -207,7 +202,7 @@ Pass `null` to disable the automatic catch-all rule and configure the access rul
 
 .Catch-all Rule and Custom Not-Found Pages
 [NOTE]
-Because the default rule denies access, any request that doesn't match a Vaadin route -- including a request for a non-existing page -- is blocked at the HTTP layer before it reaches the Vaadin servlet. A custom [classname]`RouteNotFoundError` view therefore isn't shown for such requests unless this rule is relaxed. See <<enabling-security#custom-not-found-view,Custom Not-Found View>> for the required configuration.
+Because the default rule denies access, any request that doesn't match a Vaadin route -- including a request for a non-existing page -- is blocked at the HTTP layer before it reaches the Vaadin servlet. A custom [classname]`RouteNotFoundError` view therefore isn't shown for such requests unless this rule is relaxed. See <<error-views#custom-not-found-view,Custom Not-Found View>> for the required configuration.
 
 [source,java]
 ----
@@ -216,28 +211,9 @@ public RequestMatcher defaultPermitMatcher()
 
 Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific matchers, including those for framework internal requests, anonymous browser-callable services, allowed Hilla views, anonymous routes, custom web icons, and default security configurations.
 
-==== Examples
+== Examples
 
-===== Basic Configuration
-
-[classname]`VaadinSecurityConfigurer` exposes a factory method [methodname]`vaadin` that creates a new instance of the `VaadinSecurityConfigurer`:
-
-[source,java]
-----
-@Configuration
-@EnableWebSecurity
-public class SecurityConfig {
-
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginView.class);
-        }).build();
-    }
-}
-----
-
-===== Multiple Filter Chains
+=== Multiple Filter Chains
 
 To configure multiple filter chains, use `@Order` annotation to specify the order of the filter chains. The lower the order value, the higher the priority of the filter chain.
 
@@ -269,7 +245,7 @@ public class SecurityConfig {
 }
 ----
 
-Example of two separate security filters: one for handling stateless Spring Boot APIs with token-based authentication, and another for a stateful Vaadin web application with login view.
+The following example separates a stateless filter chain for a REST API with token-based authentication from the stateful filter chain of the Vaadin application:
 
 [source,java]
 ----
@@ -331,20 +307,9 @@ public class SecurityConfig {
 }
 ----
 
-===== Custom Authorization Rules
+=== Custom Authorization Rules
 
-In Spring Security, *Custom Authorization Rules* are developer-defined rules that control who can access certain HTTP routes or resources. In Vaadin, they complement the access control already applied to views through annotations like `@PermitAll` or `@RolesAllowed`.
-
-====== Use Cases
-
-- Protect REST endpoints that are not part of Vaadin navigation.
-- Define public routes that don’t require authentication (`/public/**`).
-- Restrict specific areas based on roles (`/admin-only/**`).
-- Allow access to error pages without authentication (`/error`).
-
-====== How It Works With Vaadin
-
-Vaadin uses annotations to control access to views at the navigation level, while Spring Security applies these *Custom Authorization Rules* at the HTTP request level. Both layers work together to ensure a secure application.
+Request matchers added to [classname]`HttpSecurity` before the configurer protect HTTP resources that aren't Vaadin views, such as REST endpoints or public pages. They complement the access annotations on the views, which navigation access control checks:
 
 [source,java]
 ----
@@ -359,17 +324,8 @@ public class SecurityConfig {
                 .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/error").permitAll());
 
-        var logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
-        logoutSuccessHandler.setDefaultTargetUrl("/public/logged-out");
-        // Redirects the browser also when logging out from a view
-        logoutSuccessHandler.setRedirectStrategy(new UidlRedirectStrategy());
-
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
-            configurer.loginView(LoginView.class)
-                    .logoutSuccessHandler(logoutSuccessHandler)
-                    .addLogoutHandler((request, response, authentication) -> {
-                        // Custom logout logic
-                    });
+            configurer.loginView(LoginView.class);
         });
 
         return http.build();
@@ -377,7 +333,38 @@ public class SecurityConfig {
 }
 ----
 
-===== Handling Expired Sessions
+
+=== Custom Logout Handling
+
+The following example redirects users to a public page after logging out, and runs custom logic when they log out:
+
+[source,java]
+----
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    // The page after logging out is accessible without authentication
+    http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/public/logged-out").permitAll());
+
+    var logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
+    logoutSuccessHandler.setDefaultTargetUrl("/public/logged-out");
+    // Redirects the browser also when logging out from a view
+    logoutSuccessHandler.setRedirectStrategy(new UidlRedirectStrategy());
+
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+        configurer.loginView(LoginView.class)
+                .logoutSuccessHandler(logoutSuccessHandler)
+                .addLogoutHandler((request, response, authentication) -> {
+                    // Custom logout logic
+                });
+    });
+
+    return http.build();
+}
+----
+
+
+=== Handling Expired Sessions
 
 When an application limits each user to one active session with Spring Security's concurrency control, logging in on a second device must invalidate the session on the first device. Configure the maximum number of sessions on `sessionManagement()`, and `VaadinSecurityConfigurer` automatically makes sure the browser with the invalidated session shows Vaadin's session-expired dialog and reloads, instead of getting a plain-text page it can't use:
 
@@ -410,50 +397,9 @@ http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
                 .sendRedirect("/session-expired")));
 ----
 
-===== Disabling Features
+=== Disabling Features
 
-The `VaadinSecurityConfigurer` provides some security features enabled by
-default to ensure smooth integration between Vaadin and Spring Security.
-In certain scenarios, you may disable these defaults to apply your own
-custom security configuration.
-
-====== Features That Can Be Disabled
-
-- **CSRF Configuration** (`enableCsrfConfiguration(false)`):
-  By default, the configurer automatically sets up Spring Security’s CSRF
-  filter so that Vaadin internal framework requests (such as UIDL, heartbeat,
-  and push) are processed without issues.
-  Disabling this means you will need to handle CSRF configuration yourself,
-  ensuring that internal Vaadin requests are not blocked.
-
-- **Navigation Access Control** (`enableNavigationAccessControl(false)`):
-  Vaadin enables `NavigationAccessControl` by default to check access
-  annotations (such as `@PermitAll` or `@RolesAllowed`) when navigating
-  between views.
-  Disabling this means Vaadin will no longer enforce annotation-based
-  navigation security, and you will need to implement your own access control
-  logic for view navigation.
-
-- **Session Management Configuration** (`enableSessionManagementConfiguration(false)`):
-  By default, the configurer installs [classname]`VaadinExpiredSessionStrategy` so
-  that a session expired by Spring Security concurrency control is handled in a
-  way the Vaadin client understands.
-  Disabling this restores Spring Security's default expired-session response,
-  which the Vaadin client can't process.
-
-====== When To Disable
-
-You should only disable these features if:
-
-- You have a clear, secure, and tested replacement for the default behavior.
-
-- You understand the implications of removing these protections.
-
-- Your application has special requirements that conflict with the defaults.
-
-In most applications, keeping these features enabled is the recommended and
-safest option.
-
+The configuration that the configurer applies can be turned off feature by feature with the methods described in <<#feature-toggles,Feature Toggles>>. Disable a feature only if you replace it with configuration of your own. For example, without the CSRF configuration, Spring Security's CSRF filter blocks Vaadin's internal requests unless you configure it yourself. The following example disables the CSRF configuration and navigation access control:
 
 [source,java]
 ----
