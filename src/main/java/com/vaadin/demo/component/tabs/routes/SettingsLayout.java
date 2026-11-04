@@ -20,7 +20,6 @@ public class SettingsLayout extends VerticalLayout
     private final Map<Class<? extends Component>, Tab> tabsByView = new HashMap<>();
 
     public SettingsLayout() {
-        tabs.setAutoselect(false);
         addTab("Profile", ProfileView.class);
         addTab("Notifications", NotificationsView.class);
         add(tabs);
@@ -36,6 +35,7 @@ public class SettingsLayout extends VerticalLayout
     public void afterNavigation(AfterNavigationEvent event) {
         // The first element of the active chain is the view being shown
         Class<?> view = event.getActiveChain().getFirst().getClass();
+        // null clears the selection when the view has no tab
         tabs.setSelectedTab(tabsByView.get(view));
     }
 }
