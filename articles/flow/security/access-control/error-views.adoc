@@ -1,0 +1,101 @@
+---
+title: Access-Denied & Not-Found Views
+page-title: How to customize access-denied and not-found views in Vaadin
+description: Customizing the views shown when navigation to a view is denied or the view doesn't exist.
+meta-description: Learn how to customize the error views that Vaadin shows when access to a view is denied, and how to show a custom not-found view with Spring Security.
+order: 30
+---
+
+
+= Access-Denied & Not-Found Views
+
+When navigation access control denies navigation to a view, Vaadin shows an error view instead of the view. This page describes the default behavior, how to customize the access-denied view, and what a custom not-found view needs in a secured application.
+
+
+[[error-messages-for-unauthorized-views]]
+== Default Behavior
+
+Users who aren't authenticated are redirected to the log-in view. For authenticated users without permission, Vaadin uses the default error handler for denied access, [classname]`RouteAccessDeniedError`. It doesn't render anything itself. It reroutes to the not-found error, so the user sees the same [classname]`RouteNotFoundError` view as for a route that doesn't exist. As a security precaution, the message therefore doesn't say whether the navigation target exists. In development mode, the view lists the available routes. In production mode, it shows by default a message that reads, _Could not navigate to 'RequestedRouteName'_.
+
+
+[[custom-error-messages-for-unauthorized-views]]
+== Custom Access-Denied View
+
+You can customize what users see when access is denied in three ways:
+
+- by extending [classname]`RouteAccessDeniedError`
+- by implementing [interfacename]`HasErrorParameter<AccessDeniedException>`
+- by rerouting to a different error type with the [annotationname]`@AccessDeniedErrorRouter` annotation
+
+An error view needs an access annotation of its own, so that navigation access control allows navigation to it. Use [annotationname]`@PermitAll` or [annotationname]`@RolesAllowed`. [annotationname]`@AnonymousAllowed` isn't recommended, as it exposes information about access restrictions to anonymous users.
+
+The following example extends [classname]`RouteAccessDeniedError`:
+
+[source,java]
+----
+@PermitAll // <1>
+public class CustomAccessDeniedError extends RouteAccessDeniedError {
+    @Override
+    public int setErrorParameter(BeforeEnterEvent event,
+            ErrorParameter<AccessDeniedException> parameter) {
+        getElement().setText("Nothing to see here, please move on");
+        return HttpStatusCode.FORBIDDEN.getCode();
+    }
+}
+----
+<1> Overrides the [annotationname]`@AnonymousAllowed` annotation that [classname]`RouteAccessDeniedError` carries, for the reason explained above.
+
+The following example implements [interfacename]`HasErrorParameter`:
+
+[source,java]
+----
+@Tag(Tag.DIV)
+@PermitAll
+public static class CustomAccessDeniedError extends Component
+        implements HasErrorParameter<AccessDeniedException> {
+    @Override
+    public int setErrorParameter(BeforeEnterEvent event,
+            ErrorParameter<AccessDeniedException> parameter) {
+        getElement().setText("Access denied.");
+        return HttpStatusCode.FORBIDDEN.getCode();
+    }
+}
+----
+
+The following example reroutes denied navigation to an administrative view to the not-found view, which is the default view for [classname]`NotFoundException`. Users without access then can't tell whether the view exists:
+
+[source,java]
+----
+@Route(value = "admin", layout = MainLayout.class)
+@PageTitle("Admin View")
+@RolesAllowed("ADMIN")
+@AccessDeniedErrorRouter(rerouteToError = NotFoundException.class)
+public class AdminView extends VerticalLayout {
+    // ...
+}
+----
+
+Without `rerouteToError`, the annotation reroutes to the error view for [classname]`AccessDeniedException`. The exception class given in `rerouteToError` needs a public no-argument constructor.
+
+
+[[custom-not-found-view]]
+== Custom Not-Found View
+
+A custom not-found view -- a class extending [classname]`RouteNotFoundError`, or implementing [interfacename]`HasErrorParameter<NotFoundException>` -- needs an access annotation, so that navigation access control allows it to render. The following example annotates the view with [annotationname]`@PermitAll`, so that signed-in users see it, and users who aren't signed in are sent to the log-in view. Use [annotationname]`@AnonymousAllowed` instead if users who aren't signed in can navigate in your application, for example between public views. If the view has a parent layout, set with [annotationname]`@ParentLayout`, the layout needs to allow the same users, or navigation access control blocks the view.
+
+.[filename]`CustomNotFoundView.java`
+[source,java]
+----
+@PermitAll
+public class CustomNotFoundView extends RouteNotFoundError {
+
+    @Override
+    public int setErrorParameter(BeforeEnterEvent event,
+            ErrorParameter<NotFoundException> parameter) {
+        getElement().setText("The page you're looking for doesn't exist.");
+        return HttpStatusCode.NOT_FOUND.getCode();
+    }
+}
+----
+
+In an application secured with Spring Security, the not-found view also needs a change to the security configuration, as described in <<../spring/error-views#,Custom Error Views>>.
