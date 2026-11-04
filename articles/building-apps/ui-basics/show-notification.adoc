@@ -206,17 +206,18 @@ For actions that can't be reverted once they've been performed, such as sending 
 
 [source,java]
 ----
-private void sendMessage(String message) {
+private void sendMessage(String sender, String message) {
     ScheduledFuture<?> sending = taskScheduler.schedule( // <1>
-            () -> messageService.send(message),
+            () -> taskExecutor.execute( // <2>
+                    () -> messageService.send(sender, message)), // <3>
             Instant.now().plusSeconds(5));
 
     Notification notification = new Notification();
-    notification.setDuration(5000); // <2>
+    notification.setDuration(5000); // <4>
 
     Button undoButton = new Button("Undo", event -> {
         notification.close();
-        if (sending.cancel(false)) { // <3>
+        if (sending.cancel(false)) { // <5>
             Notification.show("Message not sent");
         } else {
             Notification.show("The message was already sent");
@@ -230,9 +231,11 @@ private void sendMessage(String message) {
     notification.open();
 }
 ----
-<1> The message is sent by a background task after five seconds. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use the `TaskScheduler`.
-<2> The notification stays open for as long as the action can be undone.
-<3> `cancel()` returns `false` if the task has already started or finished. In that case, the action can't be undone anymore.
+<1> The `TaskScheduler` waits five seconds before starting the send. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use it.
+<2> The scheduler only triggers the send and hands it over to the `TaskExecutor`. A slow send would otherwise block the scheduling thread pool, as explained in <</building-apps/business-logic/background-jobs#task-scheduling-caveats,Task Scheduling Caveats>>.
+<3> The send runs in a background thread, where the current user's security context isn't available. Pass the user to it as a parameter, and don't protect the called method with method-level security, as explained in <</building-apps/business-logic/background-jobs/jobs#security,Security>>.
+<4> Unlike other notifications with interactive content, this one closes automatically: the Undo button is only useful while the action can still be cancelled, so the notification stays open for exactly that long.
+<5> `cancel()` returns `false` if the task has already started or finished. In that case, the action can't be undone anymore.
 
 If the action needs to update the UI when it's performed, use server push as described in <</building-apps/server-push#,Server Push>>.
 
