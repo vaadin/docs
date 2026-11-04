@@ -128,4 +128,16 @@ public class SalesSummaryCard extends Div {
 <3> Cancelling the future prevents `showSummary()` from running after the component has been detached. The job itself keeps running unless it checks for cancellation; see <</building-apps/business-logic/background-jobs/interaction/futures#cancelling,Cancelling>>.
 <4> The placeholder is replaced with the real content through a server push.
 
-To show an error message instead of the content when loading fails, add an `exceptionally()` callback as described in <<#exceptional-completion,Exceptional Completion>>. Cancelling the future on detach also completes it exceptionally, with a `CancellationException` (wrapped in a `CompletionException` in dependent stages), so ignore that exception in the callback; otherwise the user sees an error message every time they navigate away before the data has loaded. Because the data is loaded on attach, it's loaded again if the component is detached and attached again. If that's not what you want, keep track of whether the data has already been loaded.
+To show an error message instead of the content when loading fails, add an `exceptionally()` callback as described in <<#exceptional-completion,Exceptional Completion>>. Cancelling the future on detach also completes it exceptionally, so the callback runs as well when the user navigates away before the data has loaded. When `exceptionally()` is chained after `thenAccept()`, the callback receives a `CompletionException` caused by a `CancellationException`. Ignore it, so that no error message is shown:
+
+[source,java]
+----
+private void onLoadingFailed(Throwable error) {
+    if (error.getCause() instanceof CancellationException) {
+        return; // The component was detached before the data was loaded
+    }
+    Notification.show("Failed to load the sales summary");
+}
+----
+
+Because the data is loaded on attach, it's loaded again if the component is detached and attached again. If that's not what you want, keep track of whether the data has already been loaded.
