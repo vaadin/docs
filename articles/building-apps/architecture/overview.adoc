@@ -1,7 +1,7 @@
 ---
 title: Architecture Overview
 page-title: Vaadin application architecture explained in one diagram
-description: The parts of an application with a Vaadin UI, where each one runs, and how they communicate.
+description: The parts of an application with a Vaadin UI, where each one runs, how they communicate, and how a UI component works.
 meta-description: See the architecture of a Vaadin application in one diagram, with what runs in the browser and on the server, and how its views reach your application services.
 order: 1
 ---
@@ -49,6 +49,23 @@ Either way, you don't need to design a REST API for your own user interface.
 == At Build Time
 
 The JavaScript and CSS that the browser needs -- the Vaadin components, the Flow client engine, your React views, and your styles -- are packaged into a _frontend bundle_. The browser loads it when it opens the application. In a production build, the Vaadin Maven or Gradle plugin creates the bundle with https://vite.dev/[Vite], or uses a pre-compiled bundle when the application doesn't need one of its own. <<{articles}/flow/production/production-build#,Production Build>> describes when each one is used, and <<{articles}/flow/configuration/development-mode#,Development Mode>> describes how the frontend is served during development.
+
+
+== How a UI Component Works
+
+A Vaadin component, such as Button, has two halves: a web component that the browser renders, and, for Flow views, a Java class that you use on the server. The following diagram shows them for a button:
+
+[.fill]
+[link=images/component-architecture.png]
+image::images/component-architecture.png[A diagram of a Vaadin button: the vaadin-button web component, the Flow client engine, and a React view in the browser; the Element, the Button Java component, and a Flow view on the server]
+
+* *The web component* is a custom HTML element, such as `<vaadin-button>`. Its JavaScript comes from an npm package, and is part of the frontend bundle. The web component renders itself, and reacts to user input such as typing or hovering in the browser, without a round trip.
+* *The Java component*, such as [classname]`Button`, is what a Flow view uses. It extends [classname]`Component`, and its API -- [methodname]`setText()`, [methodname]`addClickListener()`, and so on -- works on its root [classname]`Element`. The [classname]`Element` is the server-side counterpart of the element in the browser: its attributes, properties, children, and event listeners.
+* *The Flow client engine* keeps each [classname]`Element` in sync with its element in the browser. It applies the changes made on the server, and sends back the events that the server listens to.
+* *Annotations* on the Java class connect the two halves: [annotationname]`@Tag` names the HTML element, and [annotationname]`@NpmPackage` and [annotationname]`@JsModule` tell the build which JavaScript the component needs.
+* *A React view* uses the same web component through a React wrapper, such as `<Button>` from `@vaadin/react-components`. It doesn't involve the Java component or the Flow client engine.
+
+You can build components of your own in the same way. See <<{articles}/building-apps/components#,Components>> for how-to guides, such as wrapping an existing web component, and the <<{articles}/flow/component-internals#,Component Internals>> reference for the details.
 
 
 == Where to Go Next
