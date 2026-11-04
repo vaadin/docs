@@ -75,12 +75,14 @@ Update the cross references to the old page in the same change.
 
 Run Vale on every page you change. Fix the errors and warnings that it reports
 on the lines you add or change, unless the finding is a false positive. The
-pull request check reports only these lines. A line that you move counts as
-added. Leave findings on other lines for a separate change.
+pull request check reports only these lines. A line that you move within a page
+or to another page counts as added. The lines of a page that you only rename
+do not. Leave findings on other lines for a separate change.
 
-When Vale reports a long sentence, split it. Give an aside or an example its
-own sentence. When a list of three or more items makes the sentence long, turn
-it into a bulleted list. Keep every fact.
+A local run also suggests splitting a sentence that is too long. On the lines
+you add or change, split it. Give an aside or an example its own sentence.
+When a list of three or more items makes the sentence long, turn it into a
+bulleted list. Keep every fact.
 
 Use the term that means exactly one thing: "UI component" rather than
 "component" when other kinds of component could be meant, and "Vaadin views"
