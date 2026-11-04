@@ -45,8 +45,7 @@ class CatalogViewModel {
         load();
     }
 
-    // Ignores the answer of the running request. A request that hasn't
-    // started yet doesn't run at all, but one that has started finishes.
+    // Ignores the answer of the running request, and cancels its future
     void cancel() {
         latestRequest.incrementAndGet();
         CompletableFuture<?> future = running;
