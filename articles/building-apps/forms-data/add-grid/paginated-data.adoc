@@ -124,11 +124,17 @@ include::{root}/src/main/java/com/vaadin/demo/buildingapps/grid/PaginatedGridVie
 
 The callback function runs whenever the grid needs more data, so a failing service call, such as a database timeout, can happen at any time while the user scrolls. If the exception isn't caught, it ends up in the application's error handler, and the user doesn't get any feedback about the rows that failed to load.
 
-Catch the exception in the callback, tell the user what happened, and return an empty result. The grid treats the empty result as the end of the data and stops requesting more rows. Refreshing the data provider resets the grid and loads the data again, so you can offer that as a retry action:
+Catch the exception in the callback, tell the user what happened, and return an empty result. If the failing page isn't the first one, the grid assumes it scrolled past the end of the data and requests the earlier pages again, until it reaches the start of the data and ends up empty. Remember that the load failed, so that these repeated calls neither query the failing service again nor open another notification. Refreshing the data provider resets the grid and loads the data again, so you can offer that as a retry action:
 
 [source,java]
 ----
+private boolean loadFailed;
+
+// In the view class:
 grid.setItems(query -> {
+    if (loadFailed) {
+        return Stream.empty();
+    }
     try {
         return service.findItems(
                 query.getOffset(),
@@ -138,6 +144,7 @@ grid.setItems(query -> {
             .stream();
     } catch (DataAccessException e) {
         log.error("Error loading items", e);
+        loadFailed = true;
         showLoadError(grid);
         return Stream.empty();
     }
@@ -148,6 +155,7 @@ private void showLoadError(Grid<?> grid) {
     notification.addThemeVariants(NotificationVariant.ERROR);
     var retryButton = new Button("Retry", event -> {
         notification.close();
+        loadFailed = false;
         grid.getDataProvider().refreshAll();
     });
     notification.add(new Span("Loading the data failed."), retryButton);
