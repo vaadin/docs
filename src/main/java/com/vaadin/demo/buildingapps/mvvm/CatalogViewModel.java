@@ -45,7 +45,7 @@ class CatalogViewModel {
         load();
     }
 
-    // Stops the running request, and ignores its answer
+    // Ignores the answer of the running request, and cancels its future
     void cancel() {
         latestRequest.incrementAndGet();
         CompletableFuture<?> future = running;
