@@ -221,7 +221,7 @@ public class AppShell implements AppShellConfigurator {
 
 Modifications in [methodname]`AppShellConfigurator.configurePage()` have priority over the equivalent annotations. Annotations don't cover all of the cases that can be achieved when overriding the [methodname]`AppShellConfigurator.configurePage()` method.
 
-==== Forcing a Page Reload After an Invalid Server Response[[vaadin-refresh]]
+==== Forcing a Page Reload or Redirect After an Invalid Server Response[[vaadin-refresh]]
 
 If the XHR response can't be parsed as JSON, Vaadin looks for a “Vaadin-Refresh” string anywhere inside the response text. If it's present, Vaadin reloads the page instead of showing an error message. Usually such responses are served by some 3rd party servers and then you need to add the refresh token as a meta tag to the HTML page served by it.
 
@@ -242,6 +242,21 @@ Sample HTML response with the meta tag
 </body>
 </html>
 ----
+
+To send the user to another page instead of reloading the current one, put a URL after the token, separated by a colon: `Vaadin-Refresh: <url>`. For example, a maintenance page served by a proxy can redirect the users of the application to a static page:
+
+[source,html]
+----
+<meta http-equiv="X-V-Ref" content="Vaadin-Refresh: ./maintenance.html ">
+----
+
+Vaadin assigns the URL to `window.location.href` as it is, so the browser resolves a relative URL against the base URL of the Vaadin page:
+
+* A path-relative URL, such as `./maintenance.html` or `maintenance.html`, resolves against the root of the Vaadin application, regardless of the current route. The user stays on the same host, so one response can serve several domains or context paths.
+* A root-relative URL, such as `/maintenance.html`, resolves against the root of the server, not of the application.
+* An absolute URL, such as `https://example.com/maintenance.html`, is used as it is.
+
+The URL ends at the first whitespace character. Keep a space between the URL and the closing quote of the attribute, as in the example above. Otherwise, the quote and the rest of the markup become part of the URL. Percent-encode any spaces in the URL.
 
 But sometimes due to proxy or firewall timeout, a new session is served for the client, without the client being aware of that. In such cases you need to add the refresh token in Vaadin bootstrap page.
 
