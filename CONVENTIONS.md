@@ -73,8 +73,16 @@ Update the cross references to the old page in the same change.
 
 ## Writing
 
-Run Vale on every page you change. Fix the errors and warnings it reports —
-the pull request check reports those — unless the finding is a false positive.
+Run Vale on every page you change. Fix the errors and warnings that it reports
+on the lines you add or change, unless the finding is a false positive. The
+pull request check reports only these lines. A line that you move within a page
+or to another page counts as added. The lines of a page that you only rename
+do not. Leave findings on other lines for a separate change.
+
+When a sentence that you add or change is too long, split it. Give an aside or
+an example its own sentence. When a list of three or more items makes the
+sentence long, turn it into a bulleted list. Keep every fact. A local run of
+Vale reports long sentences as suggestions.
 
 Use the term that means exactly one thing: "UI component" rather than
 "component" when other kinds of component could be meant, and "Vaadin views"
