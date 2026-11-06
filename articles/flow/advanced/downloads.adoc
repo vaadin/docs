@@ -133,6 +133,30 @@ If the content should be inlined to the page, this have to be set explicitly by 
 Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-and-conditions.md")).inline(), AttachmentType.INLINE, "View Terms and Conditions");
 ----
 
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Setting the Content Type
+
+By default, `forFile`, `forClassResource`, `forServletResource`, and `fromInputStream` handlers take the content type from the MIME type that the servlet container maps to the file name, falling back to `application/octet-stream` for an extension it doesn't map. The [methodname]`withContentType` method sets the content type explicitly instead, which is useful for file types the servlet container doesn't recognize, such as `.vtt` subtitle files:
+
+[source,java]
+----
+Anchor download = new Anchor(DownloadHandler.forFile(new File("captions.vtt")).withContentType("text/vtt"), "Download Captions");
+----
+
+A content type that a [classname]`DownloadResponse` gives for a particular download still takes precedence over the one set with [methodname]`withContentType`, as it's the more specific one. The [methodname]`getContentType` method returns the type set with [methodname]`withContentType`, or `null` if none was set.
+
+The built-in handlers apply the type set with [methodname]`withContentType` themselves. A custom handler that extends [classname]`AbstractDownloadHandler` and sets the content type of its own response should take it from [methodname]`resolveContentType(String, VaadinResponse)`, which returns the type set with [methodname]`withContentType`, or else the type the servlet container maps to the given file name:
+
+[source,java]
+----
+@Override
+public void handleDownloadRequest(DownloadEvent downloadEvent) {
+    downloadEvent.setContentType(
+            resolveContentType("report.csv", downloadEvent.getResponse()));
+    // write the response...
+}
+----
+
 [#onclick]
 [role="since:com.vaadin:vaadin@V25.4"]
 == Starting a Download From a Component Click
